@@ -1,6 +1,6 @@
 //! 🏠️ Exact original Host payload custody follows physical geometry and store closure.
 use super::*;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
 
 struct HostShared<T:RetireOwned+Sync>(Arc<T>);
 impl<T:RetireOwned+Sync> RetireOwned for HostShared<T>{

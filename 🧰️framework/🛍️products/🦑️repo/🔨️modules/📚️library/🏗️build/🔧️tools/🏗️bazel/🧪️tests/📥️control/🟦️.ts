@@ -10,10 +10,10 @@ import {Database} from "bun:sqlite";
 import fixture from "./🔣️.json";
 import birthSchemaComponent from"../../🧬️schema/🔣️.json";const birthSchema=birthSchemaComponent.definitions.ActionBirth;
 const policy=birthSchemaComponent.definitions.Policy.const;
-import {withBuildTestInvocationV1} from "../../../../🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import * as routing from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runOwnedCommand} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {runOwnedCommand} from "@semio-tech/process/execution";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 test.skipIf(!process.env.SEMIO_TEST_ARTIFACT_DIR)("Bazel control drains leaf processes before enclosing birth receipts and refuses missing receipts",async()=>withBuildTestInvocationV1(async original=>{
  const source=await readFile(new URL("../../📜️script.ts",import.meta.url),"utf8"),ast=ts.createSourceFile("backend.ts",source,ts.ScriptTarget.Latest,true),names=["initializeBazelControlTextV1","bazelBirthParametersAllowedV1","bazelCancellationControl"],body=names.map(name=>{const node=ast.statements.find(value=>ts.isFunctionDeclaration(value)&&value.name?.text===name);if(!node)throw Error("Actual control function required");return node.getText(ast).replace(/^export /u,"");}).join("\n"),factory=runInNewContext(ts.transpile(body+"\nbazelCancellationControl;",{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}),{...routing,validateJsonSchemaSubset,randomUUID,createServer,AbortController,Buffer,JSON,Error,Map,Set,Promise,setTimeout,clearTimeout,policy,birthSchema,componentSchema:birthSchemaComponent}),admit=new Ajv({strict:true}).compile(birthSchema.definitions.ControlRole),database=new Database(":memory:"),directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"sc-"+process.pid);await mkdir(directory,{recursive:false});

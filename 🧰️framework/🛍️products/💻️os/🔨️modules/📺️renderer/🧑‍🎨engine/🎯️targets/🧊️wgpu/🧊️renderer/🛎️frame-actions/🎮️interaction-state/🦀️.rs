@@ -223,13 +223,13 @@ impl AppInteractionState {
         if pointer.kind == ui_render::PointerKind::Touch {
             if let Some(target) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id) {
                 let outcome = match target.kind {
-                    ui_wgpu::wgpu::SurfaceKind::TiledMap => self
+                    semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => self
                         .shell
                         .surfaces.tiled_map_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
                         .map(|surface| semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
-                    ui_wgpu::wgpu::SurfaceKind::Board2d => self
+                    semio_framework_ui_declaration::ui::SurfaceKind::Board2d => self
                         .shell
                         .surfaces.board2d_states
                         .get(&target.host_id)
@@ -268,7 +268,7 @@ impl AppInteractionState {
 
     /// 🎡️ Applies one notch to the captured published scene, never to overlapping peers.
     pub fn apply_scene_wheel(&mut self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
-        use ui_wgpu::wgpu::SurfaceKind;
+        use semio_framework_ui_declaration::ui::SurfaceKind;
         if !self.shell.input.scene_pointer_target_is_published(target) {
             return Ok(());
         }
@@ -280,13 +280,13 @@ impl AppInteractionState {
         let outcome = match target.kind {
             SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
                 if state.session.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
-                enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
+                enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)
             }),
             SurfaceKind::NodeGraph => self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
                 let outcome = semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ());
                 if outcome.is_ok() {
@@ -296,13 +296,13 @@ impl AppInteractionState {
             }),
             SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
                 semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
             }),
             SurfaceKind::Board2d => self.shell.surfaces.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
                 semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, &mut self.input).map(|_| ())
             }),
@@ -316,7 +316,7 @@ impl AppInteractionState {
     }
 
     pub async fn handle_pointer_button(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
-        use ui_wgpu::wgpu::SurfaceKind;
+        use semio_framework_ui_declaration::ui::SurfaceKind;
         self.last_pointer_x = x;
         self.last_pointer_y = y;
         self.pointer_down = down;
@@ -337,7 +337,7 @@ impl AppInteractionState {
         semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
             let Some(owner) = self.pointer_capture.press(pointer.id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
-                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 return;
             };
             owner
@@ -358,7 +358,7 @@ impl AppInteractionState {
         if down && !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), pointer.id) {
             self.pointer_capture.release(pointer.id);
             self.pointer_down = self.pointer_capture.any_active();
-            self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+            self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
             return;
         }
         if down && target.kind == SurfaceKind::World3d && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
@@ -369,7 +369,7 @@ impl AppInteractionState {
         let host_id = &target.host_id;
         let outcome = match target.kind {
             SurfaceKind::World3d => {
-                self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits))
+                self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits))
             }
             SurfaceKind::NodeGraph => {
                 let outcome = self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
@@ -429,7 +429,7 @@ impl AppInteractionState {
     }
 
     pub async fn handle_pointer_move(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
-        use ui_wgpu::wgpu::SurfaceKind;
+        use semio_framework_ui_declaration::ui::SurfaceKind;
         let (drag_dx, drag_dy) = self.pointer_capture.advance(pointer.id, x, y).unwrap_or((0.0, 0.0));
         self.last_pointer_x = x;
         self.last_pointer_y = y;
@@ -460,7 +460,7 @@ impl AppInteractionState {
                 continue;
             };
             if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
-                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 return;
             }
         }

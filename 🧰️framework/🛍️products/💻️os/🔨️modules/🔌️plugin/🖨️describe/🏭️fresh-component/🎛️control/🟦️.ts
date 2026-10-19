@@ -1,5 +1,4 @@
-import {parseCargoCommandEntryPolicyV1,type CargoCommandEntryPolicyV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts";
-import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
+import { parseCargoCommandEntryPolicyV1, type CargoCommandEntryPolicyV1, parseCargoPreparationStorageV1, type CargoPreparationStorageV1 } from "@semio-tech/repo-lib/cargo";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type {FreshBuildControlV1} from "../../🧾️source-epoch/🟦️.ts";
 

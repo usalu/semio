@@ -1,13 +1,13 @@
 //! 🧊️ Actual private WGPU execution, resource custody and prepared presentation.
 #[path="🎮️execution/🦀️.rs"]
 mod gpu;
-pub(crate) mod kernel_3d_scene {
+pub mod kernel_3d_scene {
     pub use semio_framework_ui_scene_algebra::*;
     pub use semio_framework_ui_scene_camera::*;
     pub use semio_framework_ui_scene_mesh::*;
     pub use semio_framework_ui_scene_pass::*;
 }
-pub(crate) use semio_framework_ui_theme::geometry;
+pub use semio_framework_ui_theme::geometry;
 pub use semio_framework_ui_wgpu_draw_execution::{MeshGpuTable,MeshGpuSourceReturn,RasterKeepSetV1,RasterResidencyLedger,RasterTextureCleanupStep,RasterTextureWitness,MESH_GPU_KEEP_VERSION_CAPACITY};
 pub use gpu::{GpuContext,PreparedGpuPresentCursor,PreparedGpuReadback};
 

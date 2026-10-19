@@ -1,20 +1,23 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{panels};
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel}, diff::{Entry, ModelDiff, patches::StoreyPatch}};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::panels;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::edges_of;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainGrid, CurtainPanel};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout;
 use semio_framework_test_fixtures::fixture_text;
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
@@ -104,7 +107,7 @@ fn the_panel_grid_rounds_up_and_never_drops_below_one() {
 #[semio_framework_async_macros::async_test]
 async fn a_curtain_wall_depends_on_its_storey_and_the_storey_its_top_targets() {
     let snapshot = model();
-    let steps = plan::build(&snapshot, kinds::closure(kinds::CURTAINS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::CURTAINS));
     let parents = |id: &str| steps.iter().find(|step| step.key == ModelNode::CurtainLayout(id.into())).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents("cw-ground"), vec![ModelNode::Storey("st-ground".into())]);
     assert_eq!(parents("cw-first"), vec![ModelNode::Storey("st-first".into()), ModelNode::Storey("st-roof".into())]);
@@ -112,7 +115,7 @@ async fn a_curtain_wall_depends_on_its_storey_and_the_storey_its_top_targets() {
 }
 
 fn with_override(snapshot: &mut ModelSnapshot, id: &str, curtain: &str, u: u32, v: u32, panel: CurtainPanel) {
-    snapshot.curtain_panel_overrides.insert(id.into(), crate::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
+    snapshot.curtain_panel_overrides.insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
 }
 
 #[semio_framework_async_macros::async_test]

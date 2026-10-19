@@ -7,18 +7,8 @@ import { dirname, join, resolve } from "node:path";
 import { admitNativeBuildPipelineV1, admitNativeBuildPlanV1, type NativeBuildGenerationV1, type NativeBuildJobV1, type NativeBuildPipelineV1, type NativeBuildPlanV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts";
 import { ownerEnvironmentV1 } from "../📦️artifacts/📋️native-orchestration/🌱️environment/🟦️.ts";
 import { repoCacheDirectory } from "../🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
 
-/** 🔒️ The binding generator must have the same identity as the locked Rust crate. */
-export function wasmBindgenVersion(lock: string): string {
-  const versions = [...lock.matchAll(/^name = "wasm-bindgen"\r?\nversion = "([^"]+)"$/gm)].map((match) => match[1]!);
-  if (versions.length !== 1) throw new Error("Cargo.lock must resolve exactly one wasm-bindgen version");
-  return versions[0]!;
-}
-
-/** 🗃️ Where Cargo writes for this repository: uplifted deliverables (`target`) and shared intermediates (`build`). */
-export {cargoDirectories,cargoTargetDirectory,cargoBuildDirectory} from "./🗂️directories/🟦️.ts";
-export type {CargoDirectories} from "./🗂️directories/🟦️.ts";
 
 //#region 🧩️ReleaseComponentPlan
 /** 🎚️ The one component profile a release compiles (ticket 26/09/23 wave A2): the selected `release`, staged into the

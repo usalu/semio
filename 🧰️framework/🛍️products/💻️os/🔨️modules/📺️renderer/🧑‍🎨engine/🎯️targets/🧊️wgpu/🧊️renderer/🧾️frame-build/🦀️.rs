@@ -210,7 +210,7 @@ impl FrameEnginePackets {
 
 pub struct AppFrameBuild {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub input: ui_wgpu::wgpu::PreparedRenderInput,
+    pub input: semio_framework_ui_prepared::PreparedRenderInput,
     pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub engine_packets: FrameEnginePackets,
     pub generation: semio_framework_trace::Generation,
@@ -224,10 +224,10 @@ pub struct AppFrameBuild {
 
 pub struct AppFrameAfterChrome {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    pub resource_input: Option<semio_framework_ui_prepared::PreparedRenderInput>,
     pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
-    pub upload_rejected: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
-    pub draw_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
+    pub upload_rejected: Option<semio_framework_ui_prepared::PreparedRenderUpload>,
+    pub draw_rejected: Option<semio_framework_ui_prepared::PreparedRenderInputRejected>,
     pub engine_packets: Option<FrameEnginePackets>,
     pub fullscreen: Option<bool>,
     pub cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
@@ -247,12 +247,12 @@ pub struct FrameBuildCursor {
     pub previous_draw: Option<DrawList>,
     pub previous_overlay: Option<DrawList>,
     pub icon_checked: bool,
-    pub icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
-    pub icon_upload: Option<ui_wgpu::wgpu::PreparedRenderUpload>,
+    pub icon_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
+    pub icon_upload: Option<semio_framework_ui_prepared::PreparedRenderUpload>,
     pub engine_resources: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasBuildContext>,
     pub world_resources: Option<infinite_world::world::World3dBuildContext>,
-    pub resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
-    pub input_rejected: Option<ui_wgpu::wgpu::PreparedRenderInputRejected>,
+    pub resource_input: Option<semio_framework_ui_prepared::PreparedRenderInput>,
+    pub input_rejected: Option<semio_framework_ui_prepared::PreparedRenderInputRejected>,
     pub engine_packets: FrameEnginePackets,
     pub engine_rejected: Option<semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPacket>,
     pub world_rejected: Option<infinite_world::world::World3dBuildRejected>,
@@ -405,8 +405,8 @@ pub struct FrameFinishCursor {
     pub shell_maintenance: bool,
     pub settle: bool,
     pub glyph_started: bool,
-    pub glyph_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
-    pub icon_pages: Option<ui_wgpu::wgpu::PreparedAtlasPages>,
+    pub glyph_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
+    pub icon_pages: Option<semio_framework_ui_prepared::PreparedAtlasPages>,
 }
 
 #[derive(Clone, Copy)]
@@ -434,7 +434,7 @@ impl FrameFinishCursor {
         for pages in [&mut self.icon_pages, &mut self.glyph_pages] {
             if let Some(owner) = pages.as_mut() {
                 if !owner.terminal_is_empty() { return frame_child_step(owner.close_original_step(grant), grant, owner.terminal_is_empty()); }
-                let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedAtlasPages>>();
+                let bytes = std::mem::size_of::<Option<semio_framework_ui_prepared::PreparedAtlasPages>>();
                 if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
                 *pages = None;
                 return frame_inline_progress(bytes);
@@ -561,7 +561,7 @@ pub fn frame_received_child(step:Result<InteractiveJobCloseStep,semio_framework_
 
 pub struct AppFramePresentation {
     pub retained: semio_framework_job::RetainedCloneGrant,
-    pub packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
+    pub packet: Option<semio_framework_ui_prepared::PreparedRenderPacket>,
     pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub engine_packets: FrameEnginePackets,
     pub generation: semio_framework_trace::Generation,
@@ -599,7 +599,7 @@ impl AppFrameBuild {
             #[cfg(not(target_arch = "wasm32"))]
             job_progress,
         } = self;
-        let (job, job_rejected) = match ui_wgpu::wgpu::PreparedRenderJob::try_new(input) {
+        let (job, job_rejected) = match semio_framework_ui_prepared::PreparedRenderJob::try_new(input) {
             Ok(job) => (Some(job), None),
             Err(rejected) => (None, Some(rejected)),
         };

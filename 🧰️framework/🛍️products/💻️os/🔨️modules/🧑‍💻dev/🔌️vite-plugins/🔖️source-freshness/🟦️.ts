@@ -168,7 +168,7 @@ function retireStaleModule(server: FreshnessServer, file: string): void {
   server.watcher.emit("change", file);
 }
 
-export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedInDirectory" | "tracks"> }) {
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedFile" | "movedInDirectory" | "tracks"> }) {
   return {
     name: "semio-source-watch",
     apply: "serve" as const,
@@ -179,8 +179,9 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
         if (name === null || unwatched.test(name)) return;
         const path = join(root, name);
         const directory = dirname(path);
+        const changed = (): boolean => freshness?.tracks(path) !== true || freshness.movedFile(path);
         if (eventType !== "rename") {
-          server.watcher.emit("change", path);
+          if (changed()) server.watcher.emit("change", path);
           for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
           return;
         }
@@ -196,7 +197,7 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
           return;
         }
         if (freshness?.tracks(path) !== true) server.watcher.emit("add", path);
-        server.watcher.emit("change", path);
+        if (changed()) server.watcher.emit("change", path);
         for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
       }));
       server.httpServer?.once("close", () => {

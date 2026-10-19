@@ -1,9 +1,12 @@
 //! 🔺️ Diff constructor for `SetRoofShape`: a sparse roof patch of exactly the provided fields that differ. A pitched shape has pitches
 //! in (0, 89 degrees), the overhang is not negative and the base offset is finite; providing only equal values, or no field, is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{overhang_fault, shape_fault};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules::{overhang_fault, shape_fault};
 use crate::standards::v1::subsets::any::schema::mutations::set_roof_shape::SetRoofShape;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RoofPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::RoofPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetRoofShape, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

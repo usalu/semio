@@ -1,0 +1,65 @@
+{
+ "name": "uic-wgpu",
+ "crates": [
+  "semio-framework-ui",
+  "semio-framework-ui-wgpu-light",
+  "semio-framework-ui-wgpu-input",
+  "semio-framework-ui-wgpu-layout",
+  "semio-framework-ui-wgpu-mounted-layout",
+  "semio-framework-ui-wgpu-widget-kit",
+  "semio-framework-ui-wgpu-controls",
+  "semio-framework-ui-wgpu-events",
+  "semio-framework-ui-wgpu-paint",
+  "semio-framework-ui-wgpu-widgets",
+  "semio-framework-ui-wgpu-hosting",
+  "semio-framework-ui-wgpu-engine-surface",
+  "semio-framework-ui-wgpu-engine",
+  "semio-framework-ui-wgpu-paint-reference",
+  "semio-framework-ui-wgpu-events-laws",
+  "semio-framework-ui-wgpu-paint-laws",
+  "semio-framework-ui-wgpu-engine-laws",
+  "semio-framework-ui-wgpu-laws",
+  "semio-framework-ui-theme",
+  "semio-framework-ui-text",
+  "semio-framework-ui-action",
+  "semio-framework-ui-wgpu-input-laws",
+  "semio-framework-ui-wgpu-layout-laws",
+  "semio-framework-ui-wgpu-mounted-layout-laws",
+  "semio-framework-ui-select-behavior",
+  "semio-framework-ui-wgpu-events-control-laws",
+  "semio-framework-ui-wgpu-engine-scene-laws"
+ ],
+ "features": {
+  "semio-framework-ui": [
+   "wgpu-engine",
+   "testkit",
+   "wgpu"
+  ],
+  "semio-framework-ui-wgpu-engine": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-mounted-layout": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-paint": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-hosting": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-engine-surface": [
+   "testkit"
+  ]
+ },
+ "base": {
+  "rev": "7880cc36f78",
+  "crates": [
+   "semio-framework-ui",
+   "semio-framework-ui-theme",
+   "semio-framework-ui-text",
+   "semio-framework-ui-action",
+   "semio-framework-ui-select-behavior"
+  ]
+ },
+ "note": "wgpu carve: ui crate wgpu+wgpu-engine+testkit at HEAD vs the twelve wgpu crates"
+}

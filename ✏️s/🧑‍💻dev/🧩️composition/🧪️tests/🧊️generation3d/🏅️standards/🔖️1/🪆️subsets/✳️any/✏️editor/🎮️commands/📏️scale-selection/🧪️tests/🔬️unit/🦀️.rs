@@ -42,7 +42,7 @@ async fn an_ids_less_scale_transforms_the_framework_owned_graph_selection() {
     assert!(projection.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == SCALE_ID && neuron_kind == "brep.xform.scale")));
     assert_eq!(scale_factors(&projection.host_snapshot), [4.0; 3]);
     drop(projection);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🧯️ A scale that names nothing at all changes nothing.

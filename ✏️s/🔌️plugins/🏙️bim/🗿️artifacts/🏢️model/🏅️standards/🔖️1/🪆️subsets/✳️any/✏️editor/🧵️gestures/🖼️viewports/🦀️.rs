@@ -7,18 +7,19 @@
 //!
 //! Both read the layout of the sheet (`sheet-layout`) for the windows and show the window they would write as a ghost with its position or scale.
 
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::editor::bim::gestures::plane::{dist, point2, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::entities::sheets::{next_view, scale_of};
-use crate::editor::bim::modes::edit::windows::sheet;
-use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
-use crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
-use crate::standards::v1::subsets::any::schema::{snapshot::{view_is_drawn, Viewport}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{dist, point2, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::sheets::{next_view, scale_of};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
+use semio_s_artifact_bim_model_mut_any_146::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
+use semio_s_artifact_bim_model_mut_any_37::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{view_is_drawn, Viewport};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 🚫️ The model has no view the tool could put on the sheet.
 pub const VIEW_MISSING: &str = "bim.create.view-missing";
@@ -72,7 +73,7 @@ fn ghost(placed: &PlacedViewport, text: String) -> Preview {
 
 /// 🔧️ The scale handles of the selected viewports of a sheet: a dot on the bottom right corner of each window.
 pub fn handles(layout: &SheetLayout, selected: &[String]) -> Vec<Mark> {
-    layout.viewports.iter().filter(|placed| selected.contains(&placed.viewport)).map(|placed| Mark::dot(sheet::handle_of(&placed.window), Style::Handle)).collect()
+    layout.viewports.iter().filter(|placed| selected.contains(&placed.viewport)).map(|placed| Mark::dot(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::handle_of(&placed.window), Style::Handle)).collect()
 }
 
 //#region 🔖️Arrange
@@ -95,13 +96,13 @@ impl Arrange {
         let Some(layout) = layout(ctx) else { return Step::default() };
         let reach = pointer.tolerance * PICK_PIXELS;
         let merge = pointer.modifiers.merge();
-        let handle = layout.viewports.iter().filter(|placed| ctx.selected.contains(&placed.viewport)).find(|placed| dist(sheet::handle_of(&placed.window), pointer.at) <= reach);
+        let handle = layout.viewports.iter().filter(|placed| ctx.selected.contains(&placed.viewport)).find(|placed| dist(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::handle_of(&placed.window), pointer.at) <= reach);
         if let Some(placed) = handle {
             let pad = if placed.cropped { 0.0 } else { 2.0 * WINDOW_PADDING };
             self.drag = Drag::Scale { id: placed.viewport.clone(), window: placed.window, pad, scale: placed.scale, to: placed.scale };
             return Step::default();
         }
-        match sheet::pick(layout, pointer.at, 0.0) {
+        match semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::pick(layout, pointer.at, 0.0) {
             Some(placed) => {
                 self.drag = Drag::Move { id: placed.viewport.clone(), origin: pointer.at, grab: [pointer.at[0] - placed.window.x, pointer.at[1] - placed.window.y], to: [placed.window.x, placed.window.y] };
                 Step::select(vec![("viewport".to_string(), placed.viewport.clone())], merge)

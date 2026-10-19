@@ -7,8 +7,8 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 /** 🖥️ `@semio-tech/framework-os-shell-rs` task router: `bun ./📜️script.ts <check|test|typegen|schema-check|preview-generated>`. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import {runRepositoryCargoCommandV1,runRepositoryCargoTests} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1,readRepositoryCargoGeneratedCapturePolicyV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts";
+import { runAdmittedCargoCommandV1, runAdmittedCargoPackageTestsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { launchRepositoryCargoV1, readRepositoryCargoLaunchV1, readRepositoryCargoGeneratedCapturePolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {OwnedCommandFailure,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🟦️.ts";
@@ -17,14 +17,14 @@ import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/�
 
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check","--manifest-path","Cargo.toml"],this.root,process.env,buildBudgetMs());
+    await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check","--manifest-path","Cargo.toml"],this.root,process.env,buildBudgetMs());
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-shell"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-framework-os-shell"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -57,7 +57,7 @@ const OWNED_JSON_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/shel
 const OWNED_JSON_SCHEMA_DIALECT = "http://json-schema.org/draft-07/schema#";
 
 async function runTypegenExportTest(root:string,outPath:string,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
-  await runRepositoryCargoCommandV1(invocation,phaseControl,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
+  await runAdmittedCargoCommandV1(invocation,phaseControl,workspace,["test","--features","typegen",TYPEGEN_TEST_FILTER],root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs());
 }
 
 /** 🧬️ Renders `🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts` from `<owner>/🧬️schema` — the schema module's Rust
@@ -151,7 +151,7 @@ class SchemaCheckScript extends BundleScript {
       for (const problem of problems) console.error(`framework-os-shell schema-check: ${problem}`);
       throw Error("framework-os-shell schema ownership disagreement");
     }
-    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],this.root,process.env,buildBudgetMs());
+    await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--features","typegen",SCHEMA_GATE_TEST_FILTER],this.root,process.env,buildBudgetMs());
     console.log(`framework-os-shell schema-check: ${declared.length} 🔣️.json \`$defs\` exports agree with the Rust registry, the rendered mirror and 🧬️schema/🟦️.ts.`);
   }
 }

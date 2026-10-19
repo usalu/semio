@@ -134,7 +134,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_preview;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigPack};
 
-                type TestApp = VcsArtifactApp<EditorApp<Generation2dPlayApp>>;
+                type TestApp = crate::app_fixture::Generation2dApp;
                 fn manifest() -> App { crate::app_fixture::generation2d_manifest_for_tests() }
 
                 async fn load_exact<O: WindowConfigOwner>(app: &mut TestApp, window_id: &str, state: O::State) -> Result<(), String> {
@@ -147,8 +147,8 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
 
                 async fn dispatch(app: &mut TestApp, view: Option<&ViewModel>, command: Generation2dCommand) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 71, view_state: view.cloned(), ..artifact_app_laws::meta("generation2d-window-camera-ownership") };
-                    Box::pin(app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.map_err(|error| format!("{error:?}"))?;
-                    Box::pin(artifact_app_laws::settle_registered_typed_operation(app, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.map_err(|error| format!("{error:?}"))
+                    Box::pin(app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.map_err(|error| format!("{error:?}"))?;
+                    Box::pin(artifact_app_laws::settle_registered_typed_operation(&mut app.0, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.map_err(|error| format!("{error:?}"))
                 }
 
                 /// 🧵️ A generation command authors no transient of its own: it carries the `previewEval` run start,
@@ -165,25 +165,23 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 }
 
                 async fn main_scene(app: &mut TestApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
-                    let tree = Box::pin(app.render(flow::GENERATION2D_PLAY_BODY_MAIN, None, view)).await.map_err(|error| format!("{error:?}"))?;
-                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, flow::GENERATION2D_PLAY_BODY_MAIN, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                     artifact_app_laws::decode_fixture_scene(&json).map_err(|error| format!("{error}: {json}"))
                 }
 
                 async fn canvas_scene(app: &mut TestApp, body: &str, view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene, String> {
-                    let tree = Box::pin(app.render(body, None, view)).await.map_err(|error| format!("{error:?}"))?;
-                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                     artifact_app_laws::decode_fixture_scene(&json).map_err(|error| format!("{error}: {json}"))
                 }
 
                 async fn retained_rejection(view: Option<ViewModel>) -> (Box<TestApp>, String) {
-                    let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    let mut app = Box::new(TestApp(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
                     app.bind_instance_id(71).await;
                     let meta = ActionMeta { instance_id: 71, view_state: view, ..artifact_app_laws::meta("generation2d-window-rejection") };
                     let command = Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } });
-                    let observed = match Box::pin(app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await {
+                    let observed = match Box::pin(app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await {
                         Err(error) => format!("{error:?}"),
-                        Ok(_) => match Box::pin(artifact_app_laws::settle_registered_typed_operation(&mut *app, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await {
+                        Ok(_) => match Box::pin(artifact_app_laws::settle_registered_typed_operation(&mut app.0, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await {
                             Err(error) => format!("{error:?}"),
                             Ok(receipt) => format!("unexpected receipt: {:?}", receipt.lanes),
                         },
@@ -214,7 +212,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 let generate_left_value = semio_framework_os_kernel::Viewport2d { x: 51.0, y: 52.0, zoom: 1.5 };
                 let generate_right_value = semio_framework_os_kernel::Viewport2d { x: 61.0, y: 62.0, zoom: 1.6 };
 
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut app = Box::new(TestApp(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
                 app.bind_instance_id(71).await;
                 let outcome: Result<(), String> = Box::pin(async {
                     load_exact::<edit_preview::config::Generation2dEditPreviewWindowConfigOwner>(&mut app, "edit-left", edit_preview::config::Generation2dEditPreviewWindowConfig { viewport: edit_left_value }).await?;
@@ -277,9 +275,9 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                     if packs.len() != 6 { return Err(format!("expected six exact Generation2d packs, got {}", packs.len())); }
                     let expected: std::collections::BTreeMap<_, _> = packs.iter().map(|pack| ((pack.window_id.clone(), pack.window_kind_id.clone()), (pack.files.pack.clone(), pack.files.spr.clone()))).collect();
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                    let mut reopened = Box::new(TestApp(artifact_app_laws::new_app_with_registry::<EditorApp<Generation2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
                     reopened.bind_instance_id(71).await;
-                    semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_after, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::load_document(&mut reopened.0, &document_after, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                     reopened.load_config_pack(&app_after).await.map_err(|error| format!("{error:?}"))?;
                     drop(document_before);
                     drop(app_before);
@@ -298,7 +296,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     drop(reopened_generate);
                     drop(restored);
                     drop(expected);
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                    artifact_app_laws::close_registered_fixture_app(&mut reopened.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, reopened.1.cx()).expect("original caller paid app close");
                     let reopened_terminal_empty = reopened.close_terminal_is_empty();
                     drop(reopened);
                     if !reopened_terminal_empty { return Err("reopened Generation2d app was not terminal-empty after close".into()); }
@@ -319,7 +317,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     ] {
                         let (mut rejected, observed) = Box::pin(retained_rejection(view)).await;
                         let rejected_as_expected = !observed.starts_with("unexpected receipt:") && observed.contains(public_fault);
-                        artifact_app_laws::close_registered_fixture_app(&mut *rejected, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                        artifact_app_laws::close_registered_fixture_app(&mut rejected.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, rejected.1.cx()).expect("original caller paid app close");
                         let terminal_empty = rejected.close_terminal_is_empty();
                         drop(rejected);
                         if !terminal_empty { rejection_faults.push(format!("rejection app for {case} was not terminal-empty after close")); }
@@ -329,7 +327,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     Ok(())
                 }).await;
                 if let Err(error) = &outcome { eprintln!("[TRACE] Generation2d exact-window runtime failure before primary close: {error}"); }
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
                 let primary_terminal_empty = app.close_terminal_is_empty();
                 drop(app);
                 assert!(primary_terminal_empty, "Generation2d primary app was not terminal-empty after close");

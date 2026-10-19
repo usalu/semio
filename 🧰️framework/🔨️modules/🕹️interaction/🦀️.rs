@@ -9,7 +9,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde::Serialize;
-use ui_wgpu::wgpu::IconName;
+use semio_framework_ui_declaration::IconName;
 
 #[path = "👆️gesture/🦀️.rs"]
 pub mod gesture;

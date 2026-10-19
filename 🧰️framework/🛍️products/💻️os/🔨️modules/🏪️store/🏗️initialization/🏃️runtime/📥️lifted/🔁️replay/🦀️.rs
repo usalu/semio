@@ -58,7 +58,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     where
         P: Send + Sync + 'static,
     {
-        RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes() + semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>(), depth: 2, ..Default::default() }
+        RetirementDemand { capacity_bytes: ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes() + semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>(), depth: 2, ..Default::default() }
     }
 
     /// 🎟️ Makes `next` the current projection under one funded turn: the displaced projection moves into a returned-read
@@ -80,7 +80,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
             Ok((owner, mut receipt)) => {
                 *self.close_active = Some(owner);
                 *self.current = Some(Arc::new(next));
-                receipt.retained_capacity_bytes += semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>();
+                receipt.retained_capacity_bytes += semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>();
                 Ok(receipt)
             }
             Err((error, previous, alias)) => {

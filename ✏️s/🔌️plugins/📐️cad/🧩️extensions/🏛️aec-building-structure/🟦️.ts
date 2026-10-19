@@ -129,19 +129,3 @@ export function register(): void {
 }
 // #endregion 📦️Register
 
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts`. */
-export type AecBuildingStructureTestDependencies = {
-  readonly AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID: typeof AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID;
-  readonly STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID: typeof STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID;
-  readonly STRUCTURE_STABILITY_STAT_ID: typeof STRUCTURE_STABILITY_STAT_ID;
-  readonly core: typeof core;
-  readonly qualifiedTransformationId: typeof qualifiedTransformationId;
-  readonly solidRef: typeof solidRef;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID, STRUCTURE_STABILITY_STAT_ID, core, qualifiedTransformationId, solidRef }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

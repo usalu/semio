@@ -24,7 +24,7 @@ fn build_pcurve(surface: &Surface, curve3: &Curve3, tol: f64) -> (Curve2, bool) 
             (Curve2::Ellipse { center: Pnt2::new(center.x, center.y), x_axis: Vec2::new(x_local.x, x_local.y), major_radius: *major_radius, minor_radius: planar_pcurve_sense(frame, cf) * *minor_radius }, true)
         }
         (Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }, Curve3::Line { origin, dir }) => {
-            if let (Some((_, axis_dir)), Some(unit)) = (super::super::shared::axis_of(surface), dir.normalized()) {
+            if let (Some((_, axis_dir)), Some(unit)) = (super::super::intersection_numerics::axis_of(surface), dir.normalized()) {
                 if unit.cross(axis_dir).norm() <= tol.max(1e-12) {
                     return (linear_pcurve_on_axisymmetric(surface, *origin, unit), true);
                 }
@@ -32,10 +32,10 @@ fn build_pcurve(surface: &Surface, curve3: &Curve3, tol: f64) -> (Curve2, bool) 
             sample_and_fit_pcurve(surface, curve3, tol)
         }
         (Surface::Cylinder { .. } | Surface::Cone { .. } | Surface::Sphere { .. } | Surface::Torus { .. }, Curve3::Circle { frame: cf, .. } | Curve3::Ellipse { frame: cf, .. }) => {
-            if let Some((_, axis_dir)) = super::super::shared::axis_of(surface) {
+            if let Some((_, axis_dir)) = super::super::intersection_numerics::axis_of(surface) {
                 if let Some(n) = cf.z.normalized() {
                     if n.cross(axis_dir).norm() <= tol.max(1e-12) {
-                        let (u0, v0) = super::super::shared::exact_uv(surface, curve3.eval(0.0));
+                        let (u0, v0) = super::super::intersection_numerics::exact_uv(surface, curve3.eval(0.0));
                         let sign = if n.dot(axis_dir) >= 0.0 { 1.0 } else { -1.0 };
                         return (Curve2::Line { origin: Pnt2::new(u0, v0), dir: Vec2::new(sign, 0.0) }, true);
                     }
@@ -77,8 +77,8 @@ fn planar_pcurve_sense(plane: &Frame3, conic: &Frame3) -> f64 {
 /// samples (no fitting — the relation genuinely is affine for a ruling).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn linear_pcurve_on_axisymmetric(surface: &Surface, origin: Pnt3, dir: Vec3) -> Curve2 {
-    let (u0, v0) = super::super::shared::exact_uv(surface, origin);
-    let (u1, v1) = super::super::shared::exact_uv(surface, origin + dir);
+    let (u0, v0) = super::super::intersection_numerics::exact_uv(surface, origin);
+    let (u1, v1) = super::super::intersection_numerics::exact_uv(surface, origin + dir);
     let mut du = u1 - u0;
     if du > std::f64::consts::PI {
         du -= std::f64::consts::TAU;
@@ -100,8 +100,8 @@ fn linear_pcurve_on_axisymmetric(surface: &Surface, origin: Pnt3, dir: Vec3) -> 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn meridian_pcurve_on_torus(surface: &Surface, curve3: &Curve3) -> Curve2 {
     let eps = 1e-4;
-    let (u0, v0) = super::super::shared::exact_uv(surface, curve3.eval(0.0));
-    let (u1, v1) = super::super::shared::exact_uv(surface, curve3.eval(eps));
+    let (u0, v0) = super::super::intersection_numerics::exact_uv(surface, curve3.eval(0.0));
+    let (u1, v1) = super::super::intersection_numerics::exact_uv(surface, curve3.eval(eps));
     let unwrap = |mut d: f64| {
         if d > std::f64::consts::PI {
             d -= std::f64::consts::TAU;
@@ -117,7 +117,7 @@ fn meridian_pcurve_on_torus(surface: &Surface, curve3: &Curve3) -> Curve2 {
 }
 
 /// 🏄 Samples `curve3` across its natural domain, inverts each sample exactly via
-/// [`super::shared::exact_uv`], unwraps periodic directions, and globally interpolates — a
+/// [`super::super::intersection_numerics::exact_uv`], unwraps periodic directions, and globally interpolates — a
 /// certified-error NURBS p-curve for the pairs `build_pcurve` has no closed form for.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_and_fit_pcurve(surface: &Surface, curve3: &Curve3, _tol: f64) -> (Curve2, bool) {
@@ -128,24 +128,24 @@ fn sample_and_fit_pcurve(surface: &Surface, curve3: &Curve3, _tol: f64) -> (Curv
     for i in 0..n {
         let t = domain.0 + (domain.1 - domain.0) * (i as f64 / (n - 1) as f64);
         params.push(t);
-        let (u, v) = super::super::shared::exact_uv(surface, curve3.eval(t));
+        let (u, v) = super::super::intersection_numerics::exact_uv(surface, curve3.eval(t));
         pts2.push(Pnt2::new(u, v));
     }
     if surface.is_u_periodic() {
         let mut us: Vec<f64> = pts2.iter().map(|p| p.x).collect();
-        super::super::shared::unwrap_periodic(&mut us, std::f64::consts::TAU);
+        super::super::intersection_numerics::unwrap_periodic(&mut us, std::f64::consts::TAU);
         for (p, u) in pts2.iter_mut().zip(us) {
             p.x = u;
         }
     }
     if surface.is_v_periodic() {
         let mut vs: Vec<f64> = pts2.iter().map(|p| p.y).collect();
-        super::super::shared::unwrap_periodic(&mut vs, std::f64::consts::TAU);
+        super::super::intersection_numerics::unwrap_periodic(&mut vs, std::f64::consts::TAU);
         for (p, v) in pts2.iter_mut().zip(vs) {
             p.y = v;
         }
     }
-    let curve2 = super::super::shared::interpolate_params_2d(&pts2, &params).unwrap_or(Curve2::Line { origin: pts2[0], dir: Vec2::ZERO });
+    let curve2 = super::super::intersection_numerics::interpolate_params_2d(&pts2, &params).unwrap_or(Curve2::Line { origin: pts2[0], dir: Vec2::ZERO });
     (curve2, false)
 }
 
@@ -189,7 +189,7 @@ pub(super) fn finish_intcurve(curve3: Curve3, surf_a: &Surface, surf_b: &Surface
 /// [`IntCurve::domain`] unmodified: every consumer that samples across that domain (this file's
 /// own `assert_on_both`, any downstream trim) computed `t0 + (t1 - t0) * frac` on `±∞`, i.e. `NaN`
 /// at every sample. Bounded the same way `curve_surface::curve_sample_domain` already bounds an
-/// infinite line against a single surface (`shared::line_domain_against_surface`) — here against
+/// infinite line against a single surface (`intersection_numerics::line_domain_against_surface`) — here against
 /// BOTH supports, unioned, since the line lies on both.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn finite_curve3_domain(curve3: &Curve3, surf_a: &Surface, surf_b: &Surface, tol: f64) -> (f64, f64) {
@@ -198,8 +198,8 @@ fn finite_curve3_domain(curve3: &Curve3, surf_a: &Surface, surf_b: &Surface, tol
         return (d0, d1);
     }
     let Curve3::Line { origin, dir } = curve3 else { return (d0, d1) };
-    let bound_a = super::super::shared::line_domain_against_surface(origin, dir, surf_a, tol);
-    let bound_b = super::super::shared::line_domain_against_surface(origin, dir, surf_b, tol);
+    let bound_a = super::super::intersection_numerics::line_domain_against_surface(origin, dir, surf_a, tol);
+    let bound_b = super::super::intersection_numerics::line_domain_against_surface(origin, dir, surf_b, tol);
     match (bound_a, bound_b) {
         (Ok(a), Ok(b)) => (a.0.min(b.0), a.1.max(b.1)),
         (Ok(a), Err(_)) => a,

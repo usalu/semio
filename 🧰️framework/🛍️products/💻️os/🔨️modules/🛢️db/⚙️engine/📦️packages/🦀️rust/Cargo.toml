@@ -28,7 +28,7 @@ semio-framework-os-kernel-db-artifact = { path = "../../../🗿️artifact/📦�
 semio-framework-os-kernel-db-artifact-engine = { path = "../../../🗿️artifact/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-compact = { path = "../../../🗜️compact/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../🧱️catalog-codec/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine-capability-open = { path = "../../🔭️capability-open/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine-catalog-bootstrap = { path = "../../🥾️catalog-bootstrap/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine-catalog-create = { path = "../../🏗️catalog-create/📦️packages/🦀️rust" }
@@ -50,7 +50,7 @@ semio-framework-replication = { workspace = true }
 semio-framework-os-kernel-db-artifact = { path = "../../../🗿️artifact/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-artifact-contract = { path = "../../../🗿️artifact/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-artifact-history = { path = "../../../🗿️artifact/📜️history/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-engine-base = { path = "../../🧱️base/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-engine-base = { path = "../../🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-engine-capability-open = { path = "../../🔭️capability-open/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-engine-catalog-bootstrap = { path = "../../🥾️catalog-bootstrap/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-engine-catalog-create = { path = "../../🏗️catalog-create/📦️packages/🦀️rust", features = ["testkit"] }

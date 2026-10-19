@@ -196,15 +196,15 @@ pub fn plan_world3d_paint_abort(session_state: &WorldSessionState, selection_sta
 
 pub const INTERACTION_TARGETS_EMPTY: &str = "[]";
 
-pub(crate) fn world_interaction_targets(surface: Option<&str>, object: Option<&str>, granularity: Option<&str>, bare_id: bool) -> Result<WorldInteractionText, ui_wgpu::wgpu::BoundedActionFault> {
+pub(crate) fn world_interaction_targets(surface: Option<&str>, object: Option<&str>, granularity: Option<&str>, bare_id: bool) -> Result<WorldInteractionText, semio_framework_ui_action::BoundedActionFault> {
     use std::fmt::Write;
     let mut text = WorldInteractionText::default();
-    text.write_char('[').map_err(|_| ui_wgpu::wgpu::BoundedActionFault::StringCredits)?;
+    text.write_char('[').map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
     if let (Some(surface), Some(object), Some(granularity)) = (surface, object, granularity) {
         let id = if bare_id { ["", "", object] } else { [surface, WORLD_ITEM_PATH_DELIMITER, object] };
-        world_write_interaction_target(&mut text, granularity, &id).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::StringCredits)?;
+        world_write_interaction_target(&mut text, granularity, &id).map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
     }
-    text.write_char(']').map_err(|_| ui_wgpu::wgpu::BoundedActionFault::StringCredits)?;
+    text.write_char(']').map_err(|_| semio_framework_ui_action::BoundedActionFault::StringCredits)?;
     Ok(text)
 }
 
@@ -236,9 +236,9 @@ pub fn publish_world3d_plan_step(
     session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, scene_state: &mut WorldSceneState,
     plan: &mut WorldInteractionPlan,
     generation: u64,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
     context: &mut semio_framework_job::StepContext<'_>,
-) -> Result<WorldInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
+) -> Result<WorldInteractionStep, semio_framework_ui_action::BoundedActionFault> {
     if context.should_yield() {
         return Ok(WorldInteractionStep::Pending);
     }
@@ -258,7 +258,7 @@ pub fn publish_world3d_plan_step(
             let controller = plan.string(action.strings[0].expect("camera controller span"));
             let surface = plan.string(action.strings[1].expect("camera surface span"));
             let action_id = "setCamera";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "camera", "position", "target", "zoom", "up"])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "camera", "position", "target", "zoom", "up"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -309,7 +309,7 @@ pub fn publish_world3d_plan_step(
             let controller = plan.string(action.strings[0].expect("navigation controller span"));
             let surface = plan.string(action.strings[1].expect("navigation surface span"));
             let action_id = "noteWorldNavigation";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "gestures", WORLD_NAVIGATION_GESTURE_IDS[0], WORLD_NAVIGATION_GESTURE_IDS[1], WORLD_NAVIGATION_GESTURE_IDS[2]])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "windowId", surface, "gestures", WORLD_NAVIGATION_GESTURE_IDS[0], WORLD_NAVIGATION_GESTURE_IDS[1], WORLD_NAVIGATION_GESTURE_IDS[2]])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -328,7 +328,7 @@ pub fn publish_world3d_plan_step(
             let controller = plan.string(action.strings[0].expect("paint controller span"));
             let surface = plan.string(action.strings[1].expect("paint surface span"));
             let action_id = "paintAt";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "phase", "commit"])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "phase", "commit"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -345,7 +345,7 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("paint surface span"));
             let reason = WorldCancelReason::from_button(action.numbers[0] as i16).code();
             let action_id = "paintAt";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "phase", "abort", "reason", reason])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "phase", "abort", "reason", reason])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -363,7 +363,7 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("paint surface span"));
             let object = plan.string(action.strings[2].expect("paint object span"));
             let action_id = "paintAt";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "u", "v", "phase", "stream"])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "u", "v", "phase", "stream"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -380,7 +380,7 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("surface span"));
             let object = plan.string(action.strings[2].expect("surface object span"));
             let action_id = "worldSurfacePlace";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "pane", surface, "objectId", object, "position", "normal"])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "pane", surface, "objectId", object, "position", "normal"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -405,7 +405,7 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("relocate surface span"));
             let object = plan.string(action.strings[2].expect("relocate object span"));
             let action_id = "worldRelocate";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "position"])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "position"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -429,7 +429,7 @@ pub fn publish_world3d_plan_step(
             let method = plan.string(action.strings[6].expect("selection method span"));
             let action_id = "interactionSelect";
             let targets = world_interaction_targets(surface, object, granularity, action.numbers[0] != 0.0)?;
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "targets", targets.as_str(), "merge", merge, "method", method])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "targets", targets.as_str(), "merge", merge, "method", method])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -448,7 +448,7 @@ pub fn publish_world3d_plan_step(
             let granularity = action.strings[4].map(|span| plan.string(span));
             let action_id = "interactionHover";
             let targets = world_interaction_targets(surface, object, granularity, action.numbers[0] != 0.0)?;
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets", targets.as_str()])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "domainId", domain, "channel", "pointer", "targets", targets.as_str()])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -494,8 +494,8 @@ pub fn publish_world3d_plan_step(
             let hit = action.strings[2].map(|span| plan.string(span));
             let action_id = "worldVortexHover";
             let bytes = match hit {
-                Some(hit) => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId", hit])?,
-                None => ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId"])?,
+                Some(hit) => semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId", hit])?,
+                None => semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId"])?,
             };
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
@@ -517,7 +517,7 @@ pub fn publish_world3d_plan_step(
             let hit = plan.string(action.strings[2].expect("vortex selection id span"));
             let merge = plan.string(action.strings[3].expect("vortex selection merge span"));
             let action_id = "worldVortexSelect";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId", hit, "merge", merge])?;
+            let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "fullId", hit, "merge", merge])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;

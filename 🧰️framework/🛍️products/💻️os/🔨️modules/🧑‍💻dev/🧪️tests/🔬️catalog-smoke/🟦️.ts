@@ -4,7 +4,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 

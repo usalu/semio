@@ -36,7 +36,7 @@
                 transient_generation: 0,
                 window_config_authority: None,
                 window_transient_authority: None,
-                publication_lanes: &[ArtifactToolPublicationLane::Presence],
+                publication_lanes: &[ArtifactToolPublicationLane::Presence], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                 session: None,
                 session_rejected: None,
                 reserved_producer: None, completion: None,

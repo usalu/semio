@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallBaseSlab`: an absolute `SetWallBaseSlab` back to the base slab of the wall (none when it stood on its storey), none when the wall is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetWallBaseSlab, base: &ModelSnapshot) -> Vec<Op>
 where

@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_wall_type::DeleteWallType;
 use crate::standards::v1::subsets::any::schema::mutations::create_wall_type::CreateWallType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateWallType, base: &ModelSnapshot) -> Vec<Op>
 where

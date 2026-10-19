@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { buildOsCommands } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import {
   keyboardEventMatchesChord,

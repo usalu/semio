@@ -68,7 +68,7 @@ func materialize(ctx *host.Context, name string, tree moveTree) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	workspace.RootDir = dir
+	workspace.SetRootDir(dir)
 	for _, directory := range tree.Directories {
 		if err := os.MkdirAll(filepath.Join(dir, filepath.FromSlash(directory)), 0o755); err != nil {
 			return "", err

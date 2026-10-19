@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+const load = (f: string) => (JSON.parse(readFileSync(f, "utf8")).summary.violations as { from: string; to: string; rule: { name: string } }[]).filter((v) => v.rule.name === "no-cross-package-relative-@semio-tech/framework");
+const a = load(process.argv[2]!), b = load(process.argv[3]!);
+const key = (v: { from: string; to: string }) => v.from + "\0" + v.to;
+const A = new Set(a.map(key)), B = new Set(b.map(key));
+const strip = (s: string) => s.replace(/[^\x00-\x7f]/gu, "");
+const added = b.filter((v) => !A.has(key(v))), removed = a.filter((v) => !B.has(key(v)));
+console.log("before", A.size, "after", B.size, "added", added.length, "removed", removed.length);
+console.log("ADDED"); for (const v of added) console.log("  ", strip(v.from).slice(-70), "->", strip(v.to).slice(-70));
+console.log("REMOVED"); for (const v of removed) console.log("  ", strip(v.from).slice(-70), "->", strip(v.to).slice(-70));

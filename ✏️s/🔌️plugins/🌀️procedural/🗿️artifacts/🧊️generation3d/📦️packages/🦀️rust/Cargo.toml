@@ -76,7 +76,6 @@ machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️
 semio-framework-tool-machine = { workspace = true }
 semio-framework-os-flow = { workspace = true }
 semio-framework-os-infinite = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-styling = { workspace = true }
 semio-s-artifact-procedural-3d-add-widget = { workspace = true }

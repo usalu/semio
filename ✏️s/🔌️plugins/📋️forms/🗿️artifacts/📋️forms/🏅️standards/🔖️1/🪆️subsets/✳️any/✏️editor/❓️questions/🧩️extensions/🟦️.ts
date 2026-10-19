@@ -1,5 +1,5 @@
 import type { LocalizedLabel, ShellLocale, ShellTerminology } from "@semio-tech/framework/manifest";
-import type { DslValue, FormQuestion } from "../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { DslValue, FormQuestion } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 import{parseFormsValue}from"../../../🧬️schema/🌱️value/🟦️.ts";
 
 export type ExtensionSurface = { surface: "blueprint" } | { surface: "try"; windowId: string; windowKindId: "forms-try" };

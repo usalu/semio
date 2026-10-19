@@ -10,8 +10,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runCargo } from "@semio-tech/process/execution";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { blake3Hex } from "@semio-tech/framework/hash";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
@@ -325,7 +325,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
     const retainedFixtureLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️db-io-retained-fixtures", "🦀️.rs"), "utf8");
     assert(retainedFixtureLaws.includes("fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch()"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -531,7 +531,7 @@ export class WalCommittedTransactionsCheckScript extends BundleScript {
     assert(source.includes("fn wal_read_canonical_varint"), "retained readers must reject noncanonical and overflowing u64 fields");
     console.log(`wal-retained-decoder-independent-oracle: behavior-oracles=retained LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -636,7 +636,7 @@ export class WalCommittedCompactionCheckScript extends BundleScript {
     assert(laws.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
     console.log("wal-committed-compaction-independent-oracle: abort effects excluded, global payloads retained, header-only highest preserved");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -781,7 +781,7 @@ export class WalRecoveryCheckScript extends BundleScript {
     const walRetainedLawsSource = readFileSync(join(owner, "🧪️tests/🔬️retained/🦀️.rs"), "utf8");
     for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : law.startsWith("db_wal::retained_tests::") ? walRetainedLawsSource : walLawsSource).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) {
           console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`wal-recovery-native-receipts: ${JSON.stringify(receipts)}`);
@@ -830,7 +830,7 @@ export class WalCapacityCheckScript extends BundleScript {
     assert(source.includes("fn wal_transaction_frame_bytes("), "missing transaction byte preflight before writes");
     assert(source.includes("const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;"), "WAL and storage must share one byte ceiling");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) {
           console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`wal-capacity-native-receipts: ${JSON.stringify(receipts)}`);
@@ -864,7 +864,7 @@ export class WalSegmentStateCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("wal-segment-state-check accepts only --native");
     const checks = walSegmentStateOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: ["--all-features"], groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib" },

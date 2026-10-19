@@ -3,11 +3,13 @@
 
 use crate::editor::bim::panels::properties::{data};
 use crate::editor::bim::panels::properties::{input_row, ROOT};
-use crate::editor::bim::entities::property_text;
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::{self as effective, Issue, Source};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, PropertyDef}};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::property_text;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::{Issue, Source};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyDef;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::UiAssemblyResult;
@@ -67,7 +69,7 @@ pub fn effective_rows(snapshot: &ModelSnapshot, inference: &ModelInference, id: 
 //#region 🔖️Apply
 /// 🧰️ One button per template that applies to the kind of the holder and defines a default: it gives the holder the defaults the template defines.
 pub fn apply_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
-    let Some(target) = effective::target_of(snapshot, id) else { return Vec::new() };
+    let Some(target) = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::target_of(snapshot, id) else { return Vec::new() };
     snapshot
         .property_templates
         .iter()

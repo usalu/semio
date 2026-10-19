@@ -15,7 +15,8 @@ pub(crate) mod context {
     /// without its exact terminal-empty shallow-shell witness". Dereferences to the app and drains the
     /// same retained close ladder (`PluginApp::close_step`) the runtime uses on the way out — the twin
     /// of block5d's `Block5dAppFixture`.
-    pub struct Block3dAppFixture(Block3dApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct Block3dAppFixture(pub Block3dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for Block3dAppFixture {
         type Target = Block3dApp;
@@ -32,19 +33,9 @@ pub(crate) mod context {
     
     impl Drop for Block3dAppFixture {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                let Ok(demand) = self.0.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
-                    break;
-                };
-                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-                if self.0.close_step(grant).is_err() {
-                    break;
-                }
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Block3d app fixture did not reach its terminal-empty close witness");
         }
     }
     
@@ -63,22 +54,23 @@ pub(crate) mod context {
     /// every retained typed command with `interactive-job.live-instance`, and an app bound to another
     /// id never settles the operations this harness drives.
     pub async fn app_with_registry() -> Block3dAppFixture {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<Block3dPlayApp>>(block3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        Block3dAppFixture(app)
+        Block3dAppFixture(app, scope)
     }
     
     /// 🔁️ Admits one typed command and SETTLES it through the same bounded continuation, maintenance
     /// and ACK protocol the plugin host drives. Without the settle the command is only admitted: the
     /// document keeps the value it had before, which is why every count/identity assertion in this
     /// file used to read the boot document back (block5d's `dispatch` settles the same way).
-    pub async fn dispatch(app: &mut Block3dApp, command: Block3dCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut Block3dAppFixture, command: Block3dCommand) -> InvocationResult {
         let window_id = match &command {
             Block3dCommand::HoverSurface(payload) => payload.window_id.clone(),
             Block3dCommand::PlaceVortex(payload) => payload.window_id.clone(),
             Block3dCommand::LeaveSurface(_) => BLOCK3D_DEFAULT_WINDOW_ID.into(),
             _ => {
-                let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+                let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
                 settle(app).await;
                 return result;
             }
@@ -90,21 +82,21 @@ pub(crate) mod context {
     
     /// 🪟️ Admits a window-scoped command WITHOUT settling it: the window-transient partition law
     /// drives the publication itself, turn by turn, to count the lanes each hover/leave/place reaches.
-    pub async fn dispatch_in_window(app: &mut Block3dApp, command: Block3dCommand, window_id: &str) -> InvocationResult {
+    pub async fn dispatch_in_window(app: &mut Block3dAppFixture, command: Block3dCommand, window_id: &str) -> InvocationResult {
         let view_state = world_view_state(window_id);
-        app.dispatch_typed(command, &ActionMeta { view_state: Some(view_state), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
+        app.0.dispatch_typed(command, &ActionMeta { view_state: Some(view_state), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
     }
     
     /// 🕰️ Admits one framework-RESERVED history verb (`undo`/`redo`/checkpoints) and settles it —
     /// `handle_action` only admits such a verb; the ledger moves on the following turns.
-    pub async fn settle_history_verb(app: &mut Block3dApp, verb: &str) {
-        let admitted = app.handle_action(verb, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|error| panic!("{verb}: {error:?}"));
-        semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|error| panic!("{verb} settle: {error:?}"));
+    pub async fn settle_history_verb(app: &mut Block3dAppFixture, verb: &str) {
+        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{verb}: {error:?}"));
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|error| panic!("{verb} settle: {error:?}"));
     }
     
     /// 🫧️ Drives the admitted typed operation to its publication, exactly as the host's reactor turn does.
-    pub async fn settle(app: &mut Block3dApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle typed operation");
+    pub async fn settle(app: &mut Block3dAppFixture) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
     }
     
     pub fn world_view_state(window_id: &str) -> ViewModel {
@@ -119,7 +111,7 @@ pub(crate) mod context {
     
     /// 📚️ Runs the `setActiveExample` handler and lands its `LoadDocument` effect exactly like the runtime does: an example
     /// switch is a whole-document load, so the handler must emit no mutation and the app only changes through the load.
-    pub async fn load_example(app: &mut Block3dApp, id: &str) {
+    pub async fn load_example(app: &mut Block3dAppFixture, id: &str) {
         let snapshot = app.snapshot().expect("snapshot");
         let config = semio_s_artifact_block_3d_editor_config::Block3dConfig::default();
         let emit = semio_s_artifact_block_3d_editor_commands::set_active_example::handle(
@@ -131,19 +123,19 @@ pub(crate) mod context {
         assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
         for effect in emit.effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                semio_framework_plugin::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the example loads");
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example loads");
             }
         }
     }
 
-    pub async fn render(app: &mut Block3dApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
+    pub async fn render(app: &mut Block3dAppFixture, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
     
     /// ☑️ Window measures are collected PER LIVE WINDOW INSTANCE (`EditorApp::window_measures` walks
     /// `ViewModel::window_instances`), so an empty view model yields an empty map — the harness mirrors
     /// the shell and opens the one world window this app lays out by default.
-    pub async fn main_window_measures(app: &mut Block3dApp) -> Vec<semio_framework_plugin::WindowMeasure> {
+    pub async fn main_window_measures(app: &mut Block3dAppFixture) -> Vec<semio_framework_plugin::WindowMeasure> {
         app.window_measures(&world_view_state(BLOCK3D_DEFAULT_WINDOW_ID)).await.get(BLOCK3D_DEFAULT_WINDOW_ID).cloned().unwrap_or_default()
     }
 }
@@ -172,9 +164,9 @@ fn block_on_preview_law<F: std::future::Future>(future: F) -> F::Output {
 /// outbox, which `has_pending_typed_operations` counts, so every operation spun here until the 30 s
 /// deadline and reported "did not finish". `settle_registered_typed_operation` is the framework's own
 /// turn driver and drains all of them.
-async fn drive_preview_operation(app: &mut Block3dApp, stage: &str) -> Result<(u64, u64, u64), String> {
+async fn drive_preview_operation(app: &mut Block3dAppFixture, stage: &str) -> Result<(u64, u64, u64), String> {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .map_err(|error| format!("block3d preview {stage} publication fault: {error:?}"))?;
     let lanes = |wanted: TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count() as u64;
@@ -378,7 +370,7 @@ fn brush_preview_publications_are_partitioned_by_trusted_window_context() {
         Ok(())
     }
     .await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     outcome.expect("window-partitioned brush preview");
         }))
         .expect("spawn Block3d window-transient law")
@@ -506,7 +498,7 @@ async fn world_scene_projects_only_the_supplied_window_preview() {
     assert_eq!(projected["position"], serde_json::json!([1.0, 2.0, 3.0]));
     assert_eq!(projected["direction"], serde_json::json!([0.0, 1.0, 0.0]));
     assert!(find_preview(&without_preview).is_none(), "a window without transient preview must render none");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -585,7 +577,7 @@ async fn set_active_representation_writes_config_not_document() {
 async fn export_media_catalog_out_wraps_the_puzzle3d_fragment() {
     let mut app = new_app().await;
     crate::unit_tests::context::load_example(&mut app, set_active_example::BLOCK3D_EXAMPLE_CAPSULE).await;
-    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "catalog:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {

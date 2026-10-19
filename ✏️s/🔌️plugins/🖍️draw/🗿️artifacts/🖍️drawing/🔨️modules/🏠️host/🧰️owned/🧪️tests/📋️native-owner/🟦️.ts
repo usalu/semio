@@ -7,7 +7,7 @@ import {createHash} from "node:crypto";
 import {semioSchemaAjvV1} from "@semio-tech/framework/schema/oracles/validator";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 import { readRetirementCopyDemandLaw, retirementCopyDemand } from "@semio-tech/framework/value/retirement/testing/fixtures";
-import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 const OWNER_ROOTS=["🦀️.rs","🏟️arena/🦀️.rs","🔏️digest/🦀️.rs"];
 

@@ -1,0 +1,3 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts","leaf":"📇️document-model","names":["Run","Style","Block","Doc","Family","Recipe","para","heading","style","baseDoc","withBlocks","withStyles"],"doc":"📇️ The semio document model every document recipe is written against: runs, styles, blocks and their builders."}
+]

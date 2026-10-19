@@ -6,21 +6,21 @@ import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{withRepositoryCacheStoreV1,withRepositoryCacheStoreFixtureV1,withRepositoryCacheStoreConsumerV1,type RepositoryCacheStoreV1}from"../🟦️.ts";
 import*as issuance from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import corpus from"./🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 test("cache consumer neutral fixture protocol agrees with Ajv and SQLite",()=>{const fixture=corpus.request;const validate=new Ajv({strict:true}).compile(schema.definitions.ConsumerFixture);expect(validate(fixture)).toBe(true);for(const request of[fixture,...corpus.invalidRequests])expect(Boolean(validate(request))).toBe(validateJsonSchemaSubset(schema.definitions.ConsumerFixture,request,schema).length===0);const db=new Database(":memory:");try{db.exec("create table policy(filesystem integer,allocation integer,pending integer)");const row=schema.definitions.ConsumerFixturePolicy.const;db.query("insert into policy values(?,?,?)").run(row.filesystemBytes,row.allocationBytes,schema.definitions.ConsumerPolicy.const.maximumPending);expect(db.query("select allocation<=filesystem bounded,pending from policy").get()).toEqual({bounded:1,pending:32});}finally{db.close();}});
 test("cache consumer actual shared owner holds its image through accepted detached work",()=>withBuildTestInvocationV1(async root=>{
  const order:string[]=[];let pending:Promise<void>|undefined,retiredEarly=false;
  await withRepositoryCacheStoreV1(process.cwd(),"diagnostics",root,createIssuedResourceControlV1(root,"cache:store-entry",0),parent=>withRepositoryCacheStoreFixtureV1(parent,root,{version:1,kind:"consumer-lifetime"},async store=>{order.push("body");pending=issuance.withIssuedResourceOperationV1(store.control,async()=>{await new Promise(done=>setTimeout(done,40));try{await store.recheck();}catch{retiredEarly=true;}order.push("accepted");});}));
  order.push("returned");await pending;expect(order).toEqual(["body","accepted","returned"]);expect(retiredEarly).toBe(false);
-}),30000);
+}));
 
 import{AsyncLocalStorage}from"node:async_hooks";
 import{join}from"node:path";
 import{randomBytes}from"node:crypto";
-import{acquireResourceLease,resourceLeasePathV1,checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{acquireResourceLease,resourceLeasePathV1,checkResourceLeaseControl}from"@semio-tech/process/leases";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 const outside=AsyncLocalStorage.snapshot(),child=process.env.SEMIO_CACHE_CONSUMER_CHILD;
 function borrow<T>(store:RepositoryCacheStoreV1,body:(phase:RepositoryCacheStoreV1["control"])=>Promise<T>,phase=store.control):Promise<T>{const task=withRepositoryCacheStoreConsumerV1({storage:store.storage,control:store.control,invocation:store.invocation,phaseControl:phase},body);if(!task)throw Error("Exact actual store consumer expected");return task;}
 async function oracle(root:issuance.ScriptInvocation,control:RepositoryCacheStoreV1["control"],resource:string,expected:string):Promise<void>{const result=await captureOwnedCommandResultV1("python3",["-c",'import sqlite3,sys\ndb=sqlite3.connect(sys.argv[1],timeout=0)\ntry:\n db.execute("BEGIN EXCLUSIVE"); print("free"); db.rollback()\nexcept sqlite3.OperationalError as error:\n if "locked" not in str(error): raise\n print("held")\nfinally: db.close()',resourceLeasePathV1(join(process.cwd(),".cache/b/l/m/data"),resource)],process.cwd(),{control,env:issuance.scriptInvocationEnvironment(root,process.env),output:{maximumBytes:4096,maximumLines:32}});expect(result.status,result.stderr).toBe(0);expect(result.stdout.trim()).toBe(expected);}
@@ -58,7 +58,7 @@ if(!child)test("cache consumer detached actual artifact waiter and Node reader d
 
 import{withViteArtifactInputsV1}from"../../../../../../🌐️vite/📥️inputs/🟦️.ts";
 
-import{registerBuildTestLawV1}from"../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withRepositoryArtifactGroupV1,withRepositoryArtifactGroupTaskV1}from"../../../../../../📦️artifacts/👓️reading/📚️group/🟦️.ts";
 import{existsSync}from"node:fs";
 import{lstat}from"node:fs/promises";

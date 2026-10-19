@@ -2,9 +2,9 @@
 //! changes, read from the base. Empty when any listed element has no placement of the given kind, any placement is not finite, or no
 //! placement changes.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Placement};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement;
 use crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 pub fn inverse<Op>(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<Op>
@@ -15,7 +15,7 @@ where
         .placements
         .iter()
         .map(|(id, target)| {
-            let current = elements::state(base, id).filter(|current| current.same_kind(target) && target.numbers().iter().all(|number| number.is_finite()))?;
+            let current = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::state(base, id).filter(|current| current.same_kind(target) && target.numbers().iter().all(|number| number.is_finite()))?;
             let changes = current != target.clone().mounted_like(&current);
             Some((id.clone(), current, changes))
         })

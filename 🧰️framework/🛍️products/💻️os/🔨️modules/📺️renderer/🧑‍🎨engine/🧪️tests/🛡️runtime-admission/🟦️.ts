@@ -1,7 +1,7 @@
 /** 🛡 Runtime diagnostics switch, descriptor load admission, tutorial document wire and plugin session ownership. */
 import { RUNTIME_DIAGNOSTICS_KEY, runtimeDiagnosticsEnabled, setRuntimeDiagnostics } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
-import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
-import { kernelDescriptorLoadFixture as descriptorLoadFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "@semio-tech/framework-actor/shard-runtime";
+import { kernelDescriptorLoadFixture as descriptorLoadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { tutorialDocumentTrackFixture as tutorialDocumentFixture } from "../../../../../../../🔨️modules/🎓️onboarding/🧪️tests/🧫️fixtures/🟦️.ts";

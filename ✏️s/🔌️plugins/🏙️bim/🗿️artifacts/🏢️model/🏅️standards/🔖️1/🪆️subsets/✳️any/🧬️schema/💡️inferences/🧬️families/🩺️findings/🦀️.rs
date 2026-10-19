@@ -2,10 +2,12 @@
 //! family which does not exist or is not of category `Profile` is a dangling profile reference of the column type, beam type, curtain wall type, wall sweep or railing that holds it. The module is
 //! free of the diagnostic vocabulary: `compute` maps a [`FindingCode`] to its `DiagnosticCode`.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::dep_value;
-use crate::standards::v1::subsets::any::schema::snapshot::ParameterKind;
-use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyIssueCode, FamilyValue};
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, Profile};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::dep_value;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::FamilyIssueCode;
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -73,7 +75,7 @@ pub fn reference_findings(snapshot: &ModelSnapshot, families: &BTreeMap<&str, &F
 
 /// 🔑️ What `reference_findings` reads of the snapshot: the profile references of the holders.
 pub fn reference_dependency(snapshot: &ModelSnapshot) -> DslValue {
-    DslValue::object(profile_holders(snapshot).into_iter().map(|(holder, named)| (holder, crate::standards::v1::subsets::any::schema::inferences::element_solids::dep_value(&named.into_iter().collect::<Vec<_>>()))))
+    DslValue::object(profile_holders(snapshot).into_iter().map(|(holder, named)| (holder, semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::dep_value(&named.into_iter().collect::<Vec<_>>()))))
 }
 
 

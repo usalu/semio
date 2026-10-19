@@ -1,27 +1,30 @@
 //! 🧪️ The coordination panels: the clash tree by set, group and clash with its four actions, the rules tree by rule and violation, the issues tree by status with comments and actions, in both languages.
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
-use crate::standards::v1::subsets::any::schema::{snapshot::Issue, snapshot::IssueStatus, snapshot::ModelSnapshot, snapshot::Rule, snapshot::RuleSeverity, inferences::ModelInference};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, ModelSnapshot, Rule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueStatus, RuleSeverity};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_plugin::{BuiltNode, TreeWindows};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
-use crate::editor::bim::panels::outliner::{item, leaf};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{item, leaf};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashGroup, ClashKind, ClashSetResult};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashGroup, ClashKind, ClashSetResult};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::comments_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::comments_of;
 #[allow(unused_imports)]
 use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiValue};
 #[allow(unused_imports)]
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use crate::editor::bim::panels::coordination::{CLIP, clip};
 use crate::editor::bim::panels::coordination::*;
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding;
-use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, IssueComment, IssuePriority, RuleKind, RuleScope};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssuePriority, RuleKind, RuleScope};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::IssueComment;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
@@ -42,17 +45,17 @@ fn project(node: BuiltNode) -> String {
 
 fn clashes_text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    project(render_clashes(snapshot, inference, crate::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, CLASHES_KEY)).expect("the clash panel renders"))
+    project(render_clashes(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, CLASHES_KEY)).expect("the clash panel renders"))
 }
 
 fn rules_text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    project(render_rules(snapshot, inference, crate::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, RULES_KEY)).expect("the rules panel renders"))
+    project(render_rules(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, RULES_KEY)).expect("the rules panel renders"))
 }
 
 fn issues_text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    project(render_issues(snapshot, crate::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, ISSUES_KEY)).expect("the issues panel renders"))
+    project(render_issues(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, ISSUES_KEY)).expect("the issues panel renders"))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -127,7 +130,7 @@ fn with_issues() -> ModelSnapshot {
         labels: Vec::new(),
         elements: elements.iter().map(|id| id.to_string()).collect(),
         clash: Some(ClashRef { set: "cs-frame".into(), first: "b-1".into(), second: "c-1".into() }).filter(|_| viewpoint),
-        viewpoint: viewpoint.then(|| crate::standards::v1::subsets::any::schema::snapshot::IssueViewpoint { camera: crate::standards::v1::subsets::any::schema::snapshot::ViewCamera { target: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }, section: None, isolate: Vec::new() }),
+        viewpoint: viewpoint.then(|| semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::IssueViewpoint { camera: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewCamera { target: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }, section: None, isolate: Vec::new() }),
     };
     snapshot.issues.insert("i-1".into(), issue("Beam hits column", IssueStatus::Open, &["b-1", "c-1"], true));
     snapshot.issues.insert("i-2".into(), issue("Slab edge", IssueStatus::Closed, &[], false));

@@ -1,9 +1,9 @@
-import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokenPairs, rustTokenSegments, rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 import { collectDecls, superReach, type ModuleDecl } from "../🧱️decl-tree/🟦️.ts";
 import { absolutizeSuperPaths, declaredNames } from "../🧪️test-closure/🟦️.ts";
 import { identifierSet, parseRustSourceTree, useLeafNames, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { flattenUse, pruneUseLeaves } from "./🌳️use-tree/🟦️.ts";
-import { hoistAggregateSupport } from "./🧰️support-hoist/🟦️.ts";
+import { hoistAggregateSupport, type AggregateName, type AggregateScope } from "./🧰️support-hoist/🟦️.ts";
 import { absolutizeBeyond } from "../🪜️lift-kids/🟦️.ts";
 
 /** 🧬️ One variant of a transparent mutation aggregate: the single-field tuple wrapping a leaf payload. */
@@ -436,11 +436,6 @@ function payloadDefinition(decls: readonly ModuleDecl[], readText: (absolute: st
   }
   return found;
 }
-
-type AggregateName = { readonly kind: "import" | "module"; readonly statement: string } | { readonly kind: "item" };
-
-/** 🔭️ What the namespace of an aggregate module offers to a leaf below it: its imports (as absolute statements), its public child modules and its own items. */
-export type AggregateScope = { readonly names: ReadonlyMap<string, AggregateName>; readonly glob: boolean };
 
 /** 🔭️ Reads the names an aggregate module file puts in scope for the leaves mounted below it. */
 export function aggregateScope(text: string, eff: readonly string[], isComponent: boolean): AggregateScope {

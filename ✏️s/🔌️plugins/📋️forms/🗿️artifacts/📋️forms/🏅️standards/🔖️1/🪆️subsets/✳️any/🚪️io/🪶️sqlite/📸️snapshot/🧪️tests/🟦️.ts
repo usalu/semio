@@ -9,7 +9,7 @@ import{exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase}from"@semio
 import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import{NativeDecodeControl}from"@semio-tech/framework/value/decode";
 import type{IntrinsicValue}from"@semio-tech/framework";
-import type{FormExpr}from"../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormExpr } from "../../../../🧬️schema/🧱️form-model/🟦️.ts";
 function portableValue(value:any):any{
  switch(value.kind){case"null":return{kind:"null"};case"boolean":case"text":return{kind:value.kind,value:value.value};case"unsigned":case"signed":return{kind:value.kind,value:BigInt(value.value)};case"float":return{kind:"float",value:{bits:BigInt("0x"+value.bits)}};case"bytes":return{kind:"bytes",value:new Uint8Array(value.octets)};case"array":return{kind:"array",items:value.items.map(portableValue)};case"object":return{kind:"object",members:value.members.map((member:any)=>({name:member.name,value:portableValue(member.value)}))};default:throw Error("fixture variant");}
 }

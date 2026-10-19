@@ -16,9 +16,7 @@ fn close_job(mut job: impl semio_framework_job::InteractiveJob) {
     semio_framework_job::InteractiveJob::begin_close(&mut job);
     let mut turns = 0usize;
     while !semio_framework_job::InteractiveJob::terminal_is_empty(&job) {
-        if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } = semio_framework_job::InteractiveJob::close_step(&mut job, grant(usize::MAX)) {
-            panic!("DEFLATE job close was refused: {kind:?}");
-        }
+        semio_framework_job::close_with_self_funded_context(grant(usize::MAX), |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("DEFLATE job close was refused");
         turns += 1;
         assert!(turns < HASH_SIZE + WINDOW + 4_096);
     }
@@ -30,11 +28,11 @@ fn deflate_job_zero_grant_preserves_input_and_one_opportunity_close_is_exact() {
     let mut job = DeflateEncodeJob::new(vec![1, 2, 3], 1);
     let pointer = job.input.as_ptr();
     InteractiveJob::begin_close(&mut job);
-    assert_eq!(InteractiveJob::close_step(&mut job, grant(0)), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0), |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
     assert_eq!(job.input.as_ptr(), pointer);
     let mut opportunities = 0usize;
     while !InteractiveJob::terminal_is_empty(&job) {
-        let step = InteractiveJob::close_step(&mut job, grant(1));
+        let step = semio_framework_job::close_with_self_funded_context(grant(1), |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         if let InteractiveJobCloseStep::Pending { progress } = step {
             assert!(progress.copied_items <= 1);
         }

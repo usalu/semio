@@ -12,6 +12,11 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 
+/// 🧮️ The export oracles this crate's scene laws call drive an original fixture caller, whose paid receipts the heap witness proves.
+#[cfg(test)]
+#[global_allocator]
+static LAYOUT_ENGINE_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 //#region 🔖️Io
 /// 🔌️ Layout's typed media I/O surface (`AppDefinition.io`) — the implicit `document:in`/`document:out`
 /// pair (keyed by the `2d.layout` artifact kind `create_layout_app` already declares) plus the two

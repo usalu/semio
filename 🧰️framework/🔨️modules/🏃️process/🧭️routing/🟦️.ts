@@ -8,9 +8,11 @@ export {createIssuedResourceControlV1} from "./📥️invocation/🏃️process/
 export abstract class Script<Capabilities extends object = object> {
   protected readonly root: string;
   protected readonly repoRoot: string;
+  protected readonly invocation: ScriptInvocation<Capabilities>;
 
-  constructor(root: string, repoRoot: string, protected readonly invocation: ScriptInvocation<Capabilities>) {
+  constructor(root: string, repoRoot: string, invocation: ScriptInvocation<Capabilities>) {
     checkScriptInvocation(invocation);
+    this.invocation = invocation;
     this.root = root;
     this.repoRoot = repoRoot;
   }

@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { createServer, type Plugin } from "vite";
 import { afterEach, describe, expect, it } from "vitest";
 import fixture from "../🧫️fixtures/🩺️runtime-diagnostics/🔣️.json" with { type: "json" };
-import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
-import { wgpuBrowserSelectionPlugin } from "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts";
+import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
+import { wgpuBrowserSelectionPlugin } from "@semio-tech/framework-renderer-wgpu/server";
 
 const originalServerSwitch = process.env.VITE_SEMIO_RUNTIME_DIAGNOSTICS;
 

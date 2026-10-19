@@ -13,7 +13,7 @@ fn slider_ui(id: &str, value: f64) -> UiNode {
 
 #[test]
 fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     for pointer in law["pointer"].as_array().unwrap() {
         let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == pointer["case"]).unwrap();
         let bounds = Rect::new(case["bounds"][0].as_f64().unwrap() as f32, case["bounds"][1].as_f64().unwrap() as f32, case["bounds"][2].as_f64().unwrap() as f32, case["bounds"][3].as_f64().unwrap() as f32);
@@ -26,7 +26,7 @@ fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
             if case["inline"] == "rtl" { FlowInline::Rtl } else { FlowInline::Ltr },
             1.0,
             0.0,
-            crate::wgpu::theme::Theme::default().gap_standard,
+            semio_framework_ui_theme::Theme::default().gap_standard,
         );
         match pointer["emits"].as_f64() {
             Some(expected) => assert!((fired.and_then(|fired| fired.input).and_then(|value| value.as_f64()).unwrap() - expected).abs() < 0.000_001, "{}", pointer["case"]),
@@ -37,7 +37,7 @@ fn slider_pointer_mapping_is_confined_to_the_shared_track_cell() {
 
 #[test]
 fn slider_external_unit_sibling_is_inert_and_never_enters_track_value_mapping() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let unit = &law["unit"];
     let placement = unit["placements"].as_array().unwrap().iter().find(|placement| placement["kind"] == "standalone").unwrap();
     let bounds = Rect::new(placement["bounds"][0].as_f64().unwrap() as f32, placement["bounds"][1].as_f64().unwrap() as f32, placement["bounds"][2].as_f64().unwrap() as f32, placement["bounds"][3].as_f64().unwrap() as f32);
@@ -210,7 +210,7 @@ fn slider_key_values_match_reacts_step_multiplier_and_clamp() {
 /// canvas receives — the same rows the contract twins and React's `Slider` answer.
 #[test]
 fn slider_key_values_answer_the_shared_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     for row in fixture["keys"].as_array().expect("key rows").iter().filter(|row| !row["min"].is_null() && !row["max"].is_null() && row["step"].as_f64().is_some_and(|step| step > 0.0)) {
         let number = |field: &str| row[field].as_f64().expect("fixture number");
         let UiNode::Slider(mut slider) = slider_ui("s", number("current")) else { unreachable!() };
@@ -234,7 +234,7 @@ fn slider_key_values_answer_the_shared_keyboard_law_rows() {
 /// the local controlled draft drives later keys while an older declaration is still visible.
 #[test]
 fn slider_readout_editing_matches_the_neutral_react_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️slider-readout-editing/🔣️.json")).expect("Slider editing fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/⌨️slider-readout-editing/🔣️.json")).expect("Slider editing fixture");
     let range = &fixture["slider"];
     let double_click = &fixture["doubleClick"];
     let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");

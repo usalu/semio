@@ -70,11 +70,11 @@ fn validate_component_scene_bounds_the_tool_run_trace_lane_on_every_scene_kind()
     world.tool_run_trace = Some("AAQBDQQBA".into());
     let error = validate_ui_node(&build_world_3d_scene("world", "controller", world), &limits).expect_err("oversized trace lane should be rejected");
     assert!(error.contains("world3d.toolRunTrace has 9 bytes (max 8)"), "{error}");
-    let canvas = semio_framework_ui_scene_plane::Canvas2dScene { tool_run_trace: Some("A".repeat(9)), ..ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into()) };
+    let canvas = semio_framework_ui_scene_plane::Canvas2dScene { tool_run_trace: Some("A".repeat(9)), ..semio_framework_ui_declaration::ui::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into()) };
     let node = semio_framework_ui_declaration::ui::build_canvas_2d_scene("canvas", "controller", canvas);
     let error = validate_ui_node(&node, &limits).expect_err("oversized canvas trace lane should be rejected");
     assert!(error.contains("canvas2d.toolRunTrace has 9 bytes (max 8)"), "{error}");
-    let board = semio_framework_ui_scene_plane::Board2dScene { tool_run_trace: Some("A".repeat(9)), ..ui_wgpu::wgpu::Board2dScene::base("{}".into(), "{}".into(), true) };
+    let board = semio_framework_ui_scene_plane::Board2dScene { tool_run_trace: Some("A".repeat(9)), ..semio_framework_ui_declaration::ui::Board2dScene::base("{}".into(), "{}".into(), true) };
     let error = validate_ui_node(&semio_framework_ui_declaration::ui::build_board2d_scene("board", "controller", board), &limits).expect_err("oversized board trace lane should be rejected");
     assert!(error.contains("board2d.toolRunTrace has 9 bytes (max 8)"), "{error}");
 }

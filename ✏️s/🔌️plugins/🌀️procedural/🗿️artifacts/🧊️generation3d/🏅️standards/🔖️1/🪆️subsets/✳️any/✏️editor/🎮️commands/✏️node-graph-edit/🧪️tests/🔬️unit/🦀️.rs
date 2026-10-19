@@ -7,7 +7,7 @@ use semio_s_artifact_procedural_3d_node_graph_edit::*;
 use crate::app_fixture::app;
 use crate::app_fixture::dispatch;
 use crate::app_fixture::snapshot;
-use crate::app_fixture::Generation3dApp;
+use crate::app_fixture::Generation3dAppFixture;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
@@ -61,15 +61,15 @@ fn slider_value(host_snapshot: &FlowHostSnapshot, widget_id: &str) -> Option<f64
 
 /// 🕹️ One `nodeGraphEdit` exactly as a host sends it (`operations` plus the press's top-level `gesture`/`commit`/`abort`),
 /// settled through the registered ladder.
-async fn send(app: &mut Generation3dApp, args: serde_json::Value) {
+async fn send(app: &mut Generation3dAppFixture, args: serde_json::Value) {
     let action_meta = meta("local");
     let args: semio_framework_value::DslValue = args.into();
-    app.handle_action("nodeGraphEdit", Some(&args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit admitted");
-    settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("nodeGraphEdit settles");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "nodeGraphEdit", Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("nodeGraphEdit admitted");
+    settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("nodeGraphEdit settles");
 }
 
 /// 🧾️ Every applied history row that carries document operations, oldest first.
-async fn edit_rows(app: &mut Generation3dApp) -> Vec<HistoryEntry> {
+async fn edit_rows(app: &mut Generation3dAppFixture) -> Vec<HistoryEntry> {
     let mut rows: Vec<HistoryEntry> = PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
@@ -77,7 +77,7 @@ async fn edit_rows(app: &mut Generation3dApp) -> Vec<HistoryEntry> {
 
 /// 📍️ Lays every widget of the document out on the canvas (the `reorganize` verb, ONE setup edit), so a node drag has base
 /// positions; answers the placed ids with their base positions.
-async fn place_every_widget(app: &mut Generation3dApp) -> Vec<(String, (f64, f64))> {
+async fn place_every_widget(app: &mut Generation3dAppFixture) -> Vec<(String, (f64, f64))> {
     dispatch(app, Generation3dCommand::Reorganize(semio_s_artifact_procedural_3d_editor_commands::reorganize::Reorganize {})).await;
     let read = snapshot(app);
     read.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()

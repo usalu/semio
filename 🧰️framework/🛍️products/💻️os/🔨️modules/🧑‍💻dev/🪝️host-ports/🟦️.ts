@@ -7,9 +7,9 @@ import type { CatalogAdmissionPortV1, DocumentAccessPortV1, PluginDistributionPo
 import accessPolicy from "../../📇️directory/🛡️access-policy/🔣️.json" with { type: "json" };
 import { directoryAccessPermits, parseDirectoryAccessPolicyV1 } from "../../📇️directory/🛡️access-policy/🧬️schema/🟦️.ts";
 import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { MODULE_EXTENSION_ROUTE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT } from "../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
-import pluginModuleStoreWorkerUrl from "../../🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts?worker&url";
+import { MODULE_EXTENSION_ROUTE } from "@semio-tech/plugin-registry/deployment";
+import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT } from "@semio-tech/plugin-registry/hub-source";
+import pluginModuleStoreWorkerUrl from "@semio-tech/plugin-registry/hub-source/service-worker?worker&url";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../🔌️plugin/📇️registry/🟦️.ts";
 import { WASM_BINDINGS_V1 } from "./🕸️wasm-bindings/🟦️.ts";
 

@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }

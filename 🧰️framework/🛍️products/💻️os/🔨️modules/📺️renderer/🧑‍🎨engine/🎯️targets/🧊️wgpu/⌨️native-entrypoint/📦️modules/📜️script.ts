@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import {readNativeCallerAuthorityV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withPlaygroundSessionV1} from "../../../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { repositoryCargoNetworkV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {createRequestedIssuedResourceControlV1, receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
@@ -9,12 +9,12 @@ import {runtimeCatalogBuildInventoryV1} from "../../../../../../🔌️plugin/�
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../../🔌️plugin/📦️packages/🦀️rust/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { nativeRuntimeDirectory, publishNativeRuntime } from "./🟦️.ts";
-import { buildComponentClosureV1 } from "../../../../../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import { buildComponentClosureV1 } from "../../../../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts";
 
 const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";

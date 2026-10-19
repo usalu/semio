@@ -1,11 +1,10 @@
 //! 📋️ Manifest of the BIM editor: the action argument folding, the keybindings and the app manifest stitch of `create_bim_app`. See [`super`].
 
-use crate::editor::bim::commands::gesture_keys;
-use crate::editor::bim::modes::edit;
-use crate::editor::bim::modes::edit::windows::{family, plan, schedule, section, sheet, world};
-use crate::editor::bim::panels::{families as families_panel, classification as classification_panel, diagnostics as diagnostics_panel, coordination as coordination_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::{families as families_panel, classification as classification_panel, properties as properties_panel};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnostics as diagnostics_panel, library as library_panel};
+use semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination as coordination_panel;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use semio_framework_plugin::ActionDefinition;
@@ -58,7 +57,7 @@ pub const COMMAND_KEYBINDINGS: &[(&str, &str)] = &[("mod+z", "undo"), ("mod+shif
 
 /// ⌨️ Every keybinding of the editor in registration order: the commands, the utilities and the keys of a gesture in progress. No key is bound twice.
 pub fn all_keybindings() -> Vec<(&'static str, &'static str)> {
-    COMMAND_KEYBINDINGS.iter().copied().chain(crate::editor::bim::utilities::keybindings()).chain(crate::editor::bim::gestures::GESTURE_KEYBINDINGS.iter().copied()).chain(gesture_keys::KEYBINDINGS.iter().copied()).collect()
+    COMMAND_KEYBINDINGS.iter().copied().chain(semio_s_artifact_bim_model_kit::editor::bim::utilities::keybindings()).chain(semio_s_artifact_bim_model_gestures::editor::bim::gestures::GESTURE_KEYBINDINGS.iter().copied()).chain(semio_s_artifact_bim_model_gestures::editor::bim::commands::gesture_keys::KEYBINDINGS.iter().copied()).collect()
 }
 
 /// 🗂️ One framework-predefined panel tab whose nested tabs carry the editor's unique panel ids.
@@ -70,19 +69,19 @@ fn framework_panel_tab(id: &str, label: LocalizedLabel, group: PanelGroup, child
 pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
     let mut builder = Editor::builder(BIM_MODEL_DIALECT)
         .document(["semio", "bim"])
-        .artifact_kind(crate::standards::v1::subsets::any::schema::artifact_kind())
+        .artifact_kind(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::artifact_kind())
         .icon_id("building")
-        .mode_def(edit::definition())
-        .default_mode_id(edit::BIM_EDIT_MODE_EDIT)
-        .window_kind_def(plan::definition())
-        .window_kind_def(world::definition())
-        .window_kind_def(section::definition())
-        .window_kind_def(schedule::definition())
-        .window_kind_def(family::definition())
-        .window_kind_def(family::view_definition())
-        .window_kind_def(sheet::definition())
-        .default_layout(edit::layout())
-        .panel_tab_def(outliner_panel::definition())
+        .mode_def(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::definition())
+        .default_mode_id(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::BIM_EDIT_MODE_EDIT)
+        .window_kind_def(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::definition())
+        .window_kind_def(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::definition())
+        .window_kind_def(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::definition())
+        .window_kind_def(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::definition())
+        .window_kind_def(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::definition())
+        .window_kind_def(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::view_definition())
+        .window_kind_def(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::definition())
+        .default_layout(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::layout())
+        .panel_tab_def(semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::definition())
         .panel_tab_def(framework_panel_tab(
             FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
             LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -96,22 +95,22 @@ pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
             vec![
                 properties_panel::definition(),
                 diagnostics_panel::definition(),
-                crate::editor::bim::panels::options::definition(),
+                semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options::definition(),
                 coordination_panel::clashes_definition(),
                 coordination_panel::rules_definition(),
                 coordination_panel::issues_definition(),
             ],
         ))
         .io(bim_io());
-    for definition in crate::editor::bim::interaction::definitions() {
+    for definition in semio_s_artifact_bim_model_interaction::editor::bim::interaction::definitions() {
         builder = builder.interaction(definition);
     }
-    for utility in crate::editor::bim::utilities::definitions() {
+    for utility in semio_s_artifact_bim_model_kit::editor::bim::utilities::definitions() {
         builder = builder.utility(utility);
     }
     for action in command_actions() {
         let id = action.id.clone();
-        let pointer = crate::editor::bim::gestures::POINTER_COMMAND_IDS.contains(&id.as_str());
+        let pointer = semio_s_artifact_bim_model_gestures::editor::bim::gestures::POINTER_COMMAND_IDS.contains(&id.as_str());
         let described = ActionDefinition { in_palette: !pointer, ..action.with_args(bim_action_args(&id)) };
         builder = builder.action_with(described).action_interactive_job(&id, InteractiveJobClassification::Migrated);
         if pointer {

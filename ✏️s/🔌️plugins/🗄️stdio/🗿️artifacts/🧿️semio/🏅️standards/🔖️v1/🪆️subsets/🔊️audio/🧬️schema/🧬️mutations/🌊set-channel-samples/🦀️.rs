@@ -12,13 +12,13 @@ pub struct SetChannelSamples {
     pub samples: Vec<f32>,
 }
 
-impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetChannelSamples {
+impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetChannelSamples {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "channel-samples", kind: "set-channel-samples", record: "SetChannelSamples" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

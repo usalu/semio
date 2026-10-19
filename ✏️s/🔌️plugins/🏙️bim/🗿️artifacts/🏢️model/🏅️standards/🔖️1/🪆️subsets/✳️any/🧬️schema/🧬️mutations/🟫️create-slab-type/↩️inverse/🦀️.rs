@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_slab_type::DeleteSlabType;
 use crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateSlabType, base: &ModelSnapshot) -> Vec<Op>
 where

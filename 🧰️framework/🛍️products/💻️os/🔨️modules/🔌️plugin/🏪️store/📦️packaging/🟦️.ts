@@ -1,10 +1,8 @@
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
+import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
+import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import {buildComponentClosureV1} from "../../🏗️build/🧩️driver-stages/🟦️.ts";
 import {componentStageTargetV1} from "../../🖨️describe/🧩️component-stage/🟦️.ts";
 import {withComponentModelV1} from "../../📦️model/👓️reading/🟦️.ts";
@@ -12,7 +10,7 @@ import {readArtifactBytesV1} from "../../🌐️browser-bundle/📦️distributi
 import {packExtensionPackage,type ExtensionPackageManifestRecord} from "../📥️installation/🟦️.ts";
 import {extensionPackageRequestV1} from "./📋️contract/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import publicationSchema from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import {join,resolve} from "node:path";
 import {writeFile} from "node:fs/promises";
 /** 🎁️ Builds one actual model and retains its verified reader through funded extension package publication. */

@@ -88,26 +88,26 @@ impl EnergyTickPublication {
         Ok(RetirementDemand { release_bytes: self.bytes.capacity(), depth: usize::from(self.bytes.capacity() != 0), ..Default::default() })
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
         let demand = match self.retirement_demands() {
             Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            Err(error) => return Err(error),
         };
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         if !self.single.terminal_is_empty() {
-            return match self.single.close_step(grant) {
+            return Ok(match self.single.close_step(grant) {
                 Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
+                Err(error) => return Err(error),
+            });
         }
         if self.bytes.capacity() != 0 {
             let released_bytes = self.bytes.capacity();
             self.bytes = Vec::new();
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
         }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
     }
 
     pub(super) fn terminal_is_empty(&self) -> bool {
@@ -409,11 +409,8 @@ impl EnergySimulationRunJob {
     /// 🤝️ Pays back the delivered tick turn by turn from the next call's own wallet before the run resumes.
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         let publication = self.publication.as_mut().expect("a delivered tick publication is staged");
-        let step = publication.close_step(cx.retained_grant());
+        let step = match publication.close_step(cx.retained_grant()) { Ok(step) => step, Err(error) => { cx.consume_retained(error.retained_progress())?; return Err(error) } };
         cx.consume_retained(step.progress())?;
-        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
-            return Err(ValueError::literal(kind, "energy tick publication close was refused").with_retained_progress(progress));
-        }
         if publication.terminal_is_empty() {
             self.publication = None;
         }
@@ -476,8 +473,9 @@ fn acknowledge_checkpoint(job: &mut EnergyJob, generation: Generation, cx: &mut 
     false
 }
 
-impl InteractiveJob for EnergySimulationRunJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+impl EnergySimulationRunJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
             return self.retire_delivered(cx);
         }
@@ -508,6 +506,10 @@ impl InteractiveJob for EnergySimulationRunJob {
             }
         }
     }
+}
+
+impl InteractiveJob for EnergySimulationRunJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -530,62 +532,64 @@ impl InteractiveJob for EnergySimulationRunJob {
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.begin_close();
-        let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        let idle = InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(grant);
-            if publication.terminal_is_empty() {
-                self.publication = None;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            self.begin_close();
+            let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            let idle = InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
+            if self.terminal_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
             }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
-            };
-        }
-        if let Some(job) = self.numerical.as_mut() {
-            return match InteractiveJob::close_step(job, grant) {
-                InteractiveJobCloseStep::Complete { progress } => {
-                    self.numerical = None;
-                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
+            if let Some(publication) = self.publication.as_mut() {
+                let step = publication.close_step(grant)?;
+                if publication.terminal_is_empty() {
+                    self.publication = None;
                 }
-                pending => pending,
-            };
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return idle;
-        }
-        if let Some(rejected) = self.rejected.as_mut() {
-            return match rejected.close_step(grant) {
-                InteractiveJobCloseStep::Complete { .. } if rejected.terminal_is_empty() => {
-                    self.rejected = None;
-                    InteractiveJobCloseStep::Pending { progress: one }
-                }
-                InteractiveJobCloseStep::Complete { .. } => InteractiveJobCloseStep::Blocked,
-                pending => pending,
-            };
-        }
-        if let Some(capture) = self.capture.take() {
-            self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        if let Some(close) = self.capture_close.as_mut() {
-            return match close.close_step(grant) {
-                InteractiveJobCloseStep::Complete { .. } => {
-                    self.capture_close = None;
-                    InteractiveJobCloseStep::Pending { progress: one }
-                }
-                pending => pending,
-            };
-        }
-        if self.snapshot.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+                return Ok(match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            if let Some(job) = self.numerical.as_mut() {
+                return Ok(match cx.with_retained_loan(grant, |same| InteractiveJob::close_step(job, same))? {
+                    InteractiveJobCloseStep::Complete { progress } => {
+                        self.numerical = None;
+                        InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
+                    }
+                    pending => pending,
+                });
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(idle);
+            }
+            if let Some(rejected) = self.rejected.as_mut() {
+                return Ok(match rejected.close_step(grant) {
+                    InteractiveJobCloseStep::Complete { .. } if rejected.terminal_is_empty() => {
+                        self.rejected = None;
+                        InteractiveJobCloseStep::Pending { progress: one }
+                    }
+                    InteractiveJobCloseStep::Complete { .. } => InteractiveJobCloseStep::Blocked,
+                    pending => pending,
+                });
+            }
+            if let Some(capture) = self.capture.take() {
+                self.capture_close = Some(EnergyModelCloseCursor::new(capture.finish()));
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            if let Some(close) = self.capture_close.as_mut() {
+                return Ok(match close.close_step(grant) {
+                    InteractiveJobCloseStep::Complete { .. } => {
+                        self.capture_close = None;
+                        InteractiveJobCloseStep::Pending { progress: one }
+                    }
+                    pending => pending,
+                });
+            }
+            if self.snapshot.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

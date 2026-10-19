@@ -5,7 +5,7 @@
 //! run of the edited log reaches.
 
 use crate::editor::forms::commands::add_question::AddQuestion;
-use crate::editor::forms::unit_tests::context::{dispatch, forms_app, FormsApp};
+use crate::editor::forms::unit_tests::context::{dispatch, forms_app, OwnedFormsApp};
 use crate::editor::forms::FormsCommand;
 use crate::FormQuestion;
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravelStage, Severity};
@@ -17,58 +17,58 @@ fn object(entries: Vec<(&str, DslValue)>) -> DslValue {
     DslValue::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
 
-async fn number_question(app: &mut FormsApp) -> String {
+async fn number_question(app: &mut OwnedFormsApp) -> String {
     dispatch(app, FormsCommand::AddQuestion(AddQuestion { kind: "number".into(), step_id: None })).await;
     crate::schema::flatten_questions(&app.snapshot().expect("projection")).into_iter().map(|(_, question)| question).find(|question| question.kind == "number").expect("a number question").id
 }
 
-fn question(app: &FormsApp, id: &str) -> FormQuestion {
+fn question(app: &OwnedFormsApp, id: &str) -> FormQuestion {
     crate::schema::locate_question(&app.snapshot().expect("projection"), id).expect("the question").question
 }
 
 /// 🎚️ One `patchQuestions` dispatch as the inspector sends it: `{questionIds, field, value}`, with `{gesture, commit}` while
 /// it is a press of a number field, settled.
-async fn patch(app: &mut FormsApp, id: &str, field: &str, value: f64, press: Option<(&str, bool)>) {
+async fn patch(app: &mut OwnedFormsApp, id: &str, field: &str, value: f64, press: Option<(&str, bool)>) {
     let mut args = vec![("questionIds", DslValue::Array(vec![DslValue::String(id.into())])), ("field", DslValue::String(field.into())), ("value", DslValue::float(value))];
     if let Some((gesture, commit)) = press {
         args.extend([("gesture", DslValue::String(gesture.into())), ("commit", DslValue::Bool(commit))]);
     }
-    app.handle_action("patchQuestions", Some(&object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the field dispatch is admitted");
-    settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the field dispatch settles");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the field dispatch is admitted");
+    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the field dispatch settles");
 }
 
 /// 🧯️ The host cancel of a press (`blur`): it carries no value and is settled by the runtime itself.
-async fn cancel(app: &mut FormsApp, gesture: &str) {
+async fn cancel(app: &mut OwnedFormsApp, gesture: &str) {
     let args = object(vec![("questionIds", DslValue::Array(Vec::new())), ("field", DslValue::String("max".into())), ("gesture", DslValue::String(gesture.into())), ("abort", DslValue::String("blur".into()))]);
-    app.handle_action("patchQuestions", Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the cancel is admitted");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the cancel is admitted");
 }
 
 /// 🧾️ The history rows that carry a document edit, oldest first.
-async fn edit_rows(app: &mut FormsApp) -> Vec<HistoryEntry> {
+async fn edit_rows(app: &mut OwnedFormsApp) -> Vec<HistoryEntry> {
     let mut rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
 }
 
-async fn history_edit(app: &mut FormsApp, verb: &str, args: Vec<(&str, DslValue)>) -> DslValue {
-    app.handle_action(verb, Some(&object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
+async fn history_edit(app: &mut OwnedFormsApp, verb: &str, args: Vec<(&str, DslValue)>) -> DslValue {
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(object(args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}")).output
 }
 
-async fn accepted(app: &mut FormsApp, verb: &str, args: Vec<(&str, DslValue)>) {
+async fn accepted(app: &mut OwnedFormsApp, verb: &str, args: Vec<(&str, DslValue)>) {
     let output = history_edit(app, verb, args).await;
     assert!(output.get("rejected").is_none(), "{verb} was refused: {output:?}");
 }
 
-async fn time_travel_stage(app: &mut FormsApp) -> Option<HistoryTimeTravelStage> {
+async fn time_travel_stage(app: &mut OwnedFormsApp) -> Option<HistoryTimeTravelStage> {
     app.history_snapshot().await.expect("history").time_travel.map(|status| status.stage)
 }
 
-async fn pump_time_travel(app: &mut FormsApp, done: impl Fn(Option<HistoryTimeTravelStage>) -> bool) {
+async fn pump_time_travel(app: &mut OwnedFormsApp, done: impl Fn(Option<HistoryTimeTravelStage>) -> bool) {
     for _ in 0..10_000 {
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);
@@ -120,7 +120,7 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
     patch(&mut app, &id, "max", 90.0, Some(("q.max:6", false))).await;
     accepted(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(target))]).await;
     let args = object(vec![("questionIds", DslValue::Array(vec![DslValue::String(id.clone())])), ("field", DslValue::String("max".into())), ("value", DslValue::float(80.0)), ("gesture", DslValue::String("q.max:6".into())), ("commit", DslValue::Bool(false))]);
-    let Err(refused) = app.handle_action("patchQuestions", Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await else { panic!("the frozen press keeps moving: its ticks are refused") };
+    let Err(refused) = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "patchQuestions", Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await else { panic!("the frozen press keeps moving: its ticks are refused") };
     assert_eq!(refused.code.0.as_str(), "timeTravel.frozen");
     accepted(&mut app, "historyEditExit", Vec::new()).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
@@ -131,7 +131,7 @@ async fn a_history_edit_freezes_an_open_press_with_zero_trace() {
 
 //#region ⏪️ReplayLaws
 /// 🧪️ A number question whose maximum was scrubbed to 60 and whose minimum was then set to 50: the press's mutation id.
-async fn scrubbed_then_bounded(app: &mut FormsApp) -> (String, String) {
+async fn scrubbed_then_bounded(app: &mut OwnedFormsApp) -> (String, String) {
     let id = number_question(app).await;
     patch(app, &id, "max", 80.0, Some(("q.max:3", false))).await;
     patch(app, &id, "max", 60.0, Some(("q.max:3", true))).await;

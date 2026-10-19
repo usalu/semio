@@ -1,5 +1,5 @@
 # 🔺️ Sparse CAD document diff over composed model, drawing and topology child identities.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import CadReference from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 # import CadNode from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type CadDiff {

@@ -1,6 +1,6 @@
-import schema from "./🧬️schema/🔣️.json";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import {readScriptProcessJsonV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 const admission=structuredClone(schema),policy=Object.freeze({...admission.definitions.Policy.const});
 export const VITE_RUNTIME_CHANNELS_ENV_V1=policy.environment;
 export type ViteRuntimeChannelV1=Readonly<{name:string;endpoint:string;secret:string}>;

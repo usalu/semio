@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "contract": "A resident scope attaches to an instance only when the bound brand check approves exactly that scope, owner, activation and lifetime; an unbound seam refuses every scope and the matcher binds exactly once.",
+  "cases": [
+    { "id": "unbound-refuses-every-scope", "bound": false, "approves": true, "expected": false },
+    { "id": "bound-approving-matcher-accepts", "bound": true, "approves": true, "expected": true },
+    { "id": "bound-rejecting-matcher-refuses", "bound": true, "approves": false, "expected": false }
+  ],
+  "doubleBind": { "firstAccepted": true, "secondRefusedWith": "Resident scope matcher is already bound" }
+}

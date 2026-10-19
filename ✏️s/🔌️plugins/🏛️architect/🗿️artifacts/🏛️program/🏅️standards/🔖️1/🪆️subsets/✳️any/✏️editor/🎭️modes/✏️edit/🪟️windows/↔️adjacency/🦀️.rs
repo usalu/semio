@@ -2,8 +2,8 @@
 //! beside a lower-triangle pair tree, each pair cycling its `AdjacencyKind` on activation.
 
 use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
-use crate::editor::architect::base::ui_label;
-use crate::editor::architect::base::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::architect::editor_vocabulary::ui_label;
+use crate::editor::architect::editor_vocabulary::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
@@ -82,7 +82,7 @@ pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectAdjacencyWindowC
     let matrix = adjacency_matrix(program);
     let n = matrix.element_ids.len();
     if n == 0 {
-        return crate::editor::architect::base::ui_node(semio_framework_ui_contract::text(ui_label("Add program elements to edit adjacencies.")?), "architect-adjacency.empty");
+        return crate::editor::architect::editor_vocabulary::ui_node(semio_framework_ui_contract::text(ui_label("Add program elements to edit adjacencies.")?), "architect-adjacency.empty");
     }
     let headers: Vec<_> = matrix.element_ids.iter().enumerate().collect();
     let rows: Vec<(usize, Vec<MatrixCell>)> = (1..n)

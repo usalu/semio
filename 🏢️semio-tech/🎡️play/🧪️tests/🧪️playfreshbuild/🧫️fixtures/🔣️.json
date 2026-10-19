@@ -2,6 +2,7 @@
   "version": 1,
   "target": "@semio-tech/semio-tech-play:build",
   "catalogAdmission": "refuse",
+  "environmentProtocol": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧬️schema/🔣️.json",
   "launch": {
     "name": "📦️build🏢️semio-tech🎡️play🆕️fresh",
     "files": [
@@ -31,7 +32,7 @@
       "control"
     ],
     "callers": [
-      "📜️script.ts",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts",
       "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts"
     ],
     "bypass": "runNativeBuildDriverV1",
@@ -99,22 +100,28 @@
     ],
     "prerequisites": [
       "workspace:deps-wasm-opt",
-      "@semio-tech/plugin-registry:generate"
+      "@semio-tech/plugin-registry:generate",
+      "@semio-tech/assets:build"
     ],
     "bundleAfter": [
       "job:flow-wasm",
       "job:surface-wasm",
+      "job:editor-wasm",
+      "job:graph-wasm",
       "job:puzzle-wasm",
       "job:map-tiles"
     ],
     "pagesAfter": [
       "job:bundle",
       "job:support",
-      "components:publish"
+      "job:canvas-runtime-assets",
+      "components:complete"
     ],
     "laneJobs": [
       "flow-wasm",
       "surface-wasm",
+      "editor-wasm",
+      "graph-wasm",
       "puzzle-wasm"
     ],
     "verifyTarget": "release-verify",

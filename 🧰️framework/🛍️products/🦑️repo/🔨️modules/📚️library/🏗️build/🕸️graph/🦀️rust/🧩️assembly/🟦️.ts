@@ -1,9 +1,9 @@
 /** 🧩️ Assembly: module exporting `selectedRustGraphAssemblyLimitsV1`, `SelectedRustGraphAssemblyV1`, `SelectedRustGraphAssemblyFactsV1`, `SelectedRustGraphProjectV1` and more. */
 import{types}from"node:util";
 import{fileURLToPath}from"node:url";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{compileJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{captureBoundedSourceRevisionV1}from"../../../📥️inputs/🔏️revision/🟨️.mjs";
 import type declared from"./🧬️schema/🔣️.json";
 const sourcePath=fileURLToPath(import.meta.url),policyPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",import.meta.url)),budgetPath=fileURLToPath(new URL("../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json",import.meta.url)),sourceRevision=captureBoundedSourceRevisionV1(sourcePath,8388608),policyRevision=captureBoundedSourceRevisionV1(policyPath,65536,true),budgetRevision=captureBoundedSourceRevisionV1(budgetPath,65536,true),schema=JSON.parse(policyRevision.text!)as typeof declared,budget=JSON.parse(budgetRevision.text!)as{maximumSnapshotBytes:number};

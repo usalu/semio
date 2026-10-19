@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-quiz",
+ "crates": ["semio-framework-quiz", "semio-framework-quiz-schema", "semio-framework-quiz-tests", "semio-framework-quiz-tests-runs", "semio-framework-quiz-tests-support"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-framework-quiz", "semio-framework-quiz-schema", "semio-framework-quiz-tests"]},
+ "note": "HDR-4: quiz companion split into two companions and a fixture support crate"
+}

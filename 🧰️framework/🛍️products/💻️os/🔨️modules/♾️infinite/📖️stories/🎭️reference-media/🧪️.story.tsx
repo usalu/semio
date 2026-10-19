@@ -8,7 +8,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { referenceMediaKindFromUrl, referenceMediaPort } from "@semio-tech/ui-react";
 import { useEffect, useRef, useState, type ReactElement } from "react";
-import { decodeReferenceImage, referenceImageSourceDimensions, streamReferenceImageBitmapRows } from "../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts";
+import { decodeReferenceImage, referenceImageSourceDimensions, streamReferenceImageBitmapRows } from "@semio-tech/framework-renderer-wgpu/reference-image-decode";
 
 import sketchUrl from "../../🖼️assets/✏️sketch/🖼️.png";
 import abbauAufbauUrl from "../../🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🖼️.jpg";

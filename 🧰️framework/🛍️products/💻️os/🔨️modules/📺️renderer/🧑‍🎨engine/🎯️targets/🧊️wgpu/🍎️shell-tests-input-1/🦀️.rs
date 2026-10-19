@@ -51,7 +51,13 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use ui_contract::{SurfaceId, UiDocumentLease};
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Rect, Theme, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowStackCorner};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowStackCorner};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use winit::window::Window;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-input/🦀️.rs"]

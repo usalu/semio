@@ -1,7 +1,7 @@
 use super::*;
-use crate::wgpu::component::ui::UiPresence;
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::Label;
+use semio_framework_ui_declaration::ui::UiPresence;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_locale::Label;
 use std::collections::HashMap;
 
 fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {
@@ -88,10 +88,10 @@ fn browser_cursor_fixture_matches_every_canonical_theme_projection() {
 }
 
 //#region 🔖️RetainedTreeCursorTests
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{UiInputNode, UiStackNode, UiTextNode};
-use crate::wgpu::events::ScrollAxis;
-use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{UiInputNode, UiStackNode, UiTextNode};
+use semio_framework_ui_wgpu_events::ScrollAxis;
+use semio_framework_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
 
 fn leaf(node: UiNode) -> (UiTree, NodeId) {
     let mut tree = UiTree::new();

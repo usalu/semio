@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, rows, string, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, rows, string, target};
 
 #[test]
 fn a_building_grid_lists_vertical_lines_as_u_axes_and_horizontal_lines_as_v_axes() {

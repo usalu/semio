@@ -1,7 +1,7 @@
 import base from "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts";
 import { defineConfig } from "vitest/config";
 import { resolve } from "node:path";
-import { repoTestArtifactEnvironment } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { repoTestArtifactEnvironment } from "@semio-tech/process/execution";
 const artifactDirectory = repoTestArtifactEnvironment(resolve(import.meta.dirname, "../../../../../../../../.."), "registry-composition").SEMIO_TEST_ARTIFACT_DIR!;
 const paths = (rows: readonly string[]) => rows.map(path => resolve(import.meta.dirname, path));
 const node = paths(["../../../../../../../../🔨️modules/🔲️pixels/🎯️selection/🧪️tests/🟦️.ts","../../✅️catalog-complete/🟦️.ts", "../../🎬️host-activation/🟦️.ts", "../../📖️generated-projection/🟦️.ts", "../../../../../📺️renderer/🧑‍🎨engine/🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts"]);

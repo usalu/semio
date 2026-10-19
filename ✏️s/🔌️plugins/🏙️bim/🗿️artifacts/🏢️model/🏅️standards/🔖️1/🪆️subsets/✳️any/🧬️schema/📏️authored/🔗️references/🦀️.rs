@@ -1,7 +1,8 @@
 //! 🔗️ `references`: the attach references of the authored walls. A wall points at the roof, slab or ceiling its top is attached to and at the slab its base stands on; those elements point at nothing,
 //! so the graph of authored references is read straight from the records, never from an inferred surface.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, Wall};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 
 /// 🧭️ The roof, slab or ceiling a top constraint is attached to and its offset above the underside of that element.
 pub fn top_target(top: &TopConstraint) -> Option<(&str, f64)> {

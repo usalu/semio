@@ -10,6 +10,8 @@ members = [
     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🍰️companion-primitives/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🧷️companion-support/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/❓️quiz/🧪️tests/🎞️companion-runs/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/❓️quiz/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/🔨️modules/⚙️kinematics/📦️packages/🦀️rust",
@@ -84,7 +86,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧱️core/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧱️flow-host-model/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗃️operators/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🌿️vcs/⚖️laws/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
@@ -103,7 +105,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📦️packages/🦀️rust",
@@ -118,7 +120,6 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🏠️space/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🏭️factory/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust",
@@ -132,7 +133,6 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🥧️bin-2/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust",
@@ -377,6 +377,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📜️history/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️lifecycle/🏪️stores/🧪️tests/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📨️dispatch/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧩️extensions/📦️packages/🦀️rust",
@@ -443,7 +444,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🥾️catalog-bootstrap/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️base/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🆔️ids/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🌐️cluster/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🎚️policy/📦️packages/🦀️rust",
@@ -528,7 +529,7 @@ members = [
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/🌐️labels/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🖥️terminal/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧭️cli/📦️packages/🦀️rust",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️core/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️invocation-catalog/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧾️launch/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust",
@@ -636,6 +637,7 @@ exclude = [
     "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math",
     "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling",
     "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+    "✏️s/🔌️plugins/🔋️energy/🧩️extensions/🌦️epw",
     "✏️s/🔌️plugins/🔱️trinity",
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting",
     "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
@@ -774,7 +776,7 @@ exclude = [
     "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space",
-    "✏️s/🔌️plugins/🪐️space/🫀️core",
+    "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents",
     "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows",
@@ -937,7 +939,6 @@ semio-framework-ui-backend-metal = { path = "🧰️framework/🔨️modules/�
 semio-framework-ui-backend-d3d12 = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust" }
 semio-framework-ui-backend-vulkan = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust" }
 semio-framework-ui-host = { path = "🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust" }
-semio-framework-ui = { path = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 
 # ---- plugin (62) ----

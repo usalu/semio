@@ -1,7 +1,7 @@
 /** 🔣️ Wires JSON wire input has explicit finite JSON semantics. */
 import {parseDslValue} from "@semio-tech/framework/value/schema";
 import {binary64} from "@semio-tech/framework/value/ieee754";
-import {parseArtifactChild} from "@semio-tech/framework-os/modules/store/child/schema";
+import {parseArtifactChild} from "@semio-tech/framework/schema/artifact-reference";
 import {parseSchemaRecord} from "@semio-tech/framework/schema/record";
 import type{WiresValue}from"../../../../🧬️schema/🌱️value/🟦️.ts";
 import type{WiresSnapshot}from"../../../../🧬️schema/📸️snapshot/🟦️.ts";

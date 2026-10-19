@@ -2,14 +2,13 @@
 //! arc segments, and the area of the straight cut poché and the length of the straight lines per style. Built from the plans and the sheet frames the writer snaps its coordinates with,
 //! so the numbers are those of the written geometry. Arcs are counted, never measured (a third-party library can only sample them).
 
-use crate::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
-use crate::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
-use crate::standards::v1::subsets::any::io::export::svg::drawing::tint;
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::tint;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🪧️ What the oracle measures of one kind of annotation primitive: how many paths or texts of the kind a view draws and the straight length of its paths in metres.
@@ -133,7 +132,7 @@ pub fn project(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework>)
 
 /// 📊️ The report of `model`'s export.
 pub fn projection(model: &ModelSnapshot) -> Projection {
-    inference::with_inference(None, model, |inferred| project(model, &inferred.view_linework))
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, model, |inferred| project(model, &inferred.view_linework))
 }
 
 fn quote(text: &str) -> String {

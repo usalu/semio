@@ -1,7 +1,7 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { defineOwnedTestConfig, uiReactBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 import { createWorkspaceViteResolveConfig } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../🔌️plugins/📐️cad");
@@ -32,6 +32,13 @@ const DOMAIN_FILES = [
   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
 ];
 
+const INTEGRATION_TEST_FILES = [
+  `${ARTIFACT_EDITOR_ENGINE}/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts`,
+  "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+  "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts",
+];
+const SOURCE_TEST_FILES = DOMAIN_FILES.filter((file) => !file.includes("/🏃️runtime/") && !file.includes("/🧱️brepjs/") && !file.includes("/🗺️spatial/"));
+
 /** 🧪️ Vitest for `@semio-tech/cad-js` — one project covering all 10 domain files: artifact `✏️editor/⚙️engine` (renderer/stately/runtime/actions/artifact), `🌐️spatial-kernel` module `⚙️engine` (brepjs/geometry/spatial/semio), and `💡️inferences` schema leaf; base `environment` is `node`, renderer opts into jsdom via its own `@vitest-environment jsdom` file pragma (vitest 4 dropped `environmentMatchGlobs`). In-source suites use `includeSource` only (`include: []`) so vitest does not double-collect. */
 export default defineOwnedTestConfig({
   root: testRoot,
@@ -44,8 +51,8 @@ export default defineOwnedTestConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/cad-js",
-    include: ["✏️s/🔌️plugins/📐️cad/🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔬️layering/🟦️.ts"].map(fromRepo),
-    includeSource: DOMAIN_FILES.map(fromRepo),
+    include: ["✏️s/🔌️plugins/📐️cad/🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔬️layering/🟦️.ts", ...INTEGRATION_TEST_FILES].map(fromRepo),
+    includeSource: SOURCE_TEST_FILES.map(fromRepo),
     coverage: { include: [...DOMAIN_FILES, `${ARTIFACT_EDITOR_ENGINE}/📺️renderer/*/🟦️.{ts,tsx}`].map(fromRepo) },
     environment: "node",
     passWithNoTests: false,

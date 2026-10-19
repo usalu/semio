@@ -3,7 +3,7 @@ import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import type { PdfColorSpace } from "../🌈️color/🟦️.ts";
 import type { PdfDictEntry, PdfObject } from "../🧩️cos/🟦️.ts";
 import type { PdfImageBody } from "../🖼️resource/🟦️.ts";
-import type { PdfLineCap, PdfLineJoin } from "../🖼️resource/🎚️state/🟦️.ts";
+import type { PdfLineCap, PdfLineJoin } from "../🖊️line-style/🟦️.ts";
 
 export type PdfOp =
   | { op: "setLineWidth"; width: Binary64 }

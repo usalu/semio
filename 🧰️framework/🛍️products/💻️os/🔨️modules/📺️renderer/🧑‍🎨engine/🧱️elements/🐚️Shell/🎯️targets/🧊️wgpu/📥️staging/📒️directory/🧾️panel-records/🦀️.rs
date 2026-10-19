@@ -114,7 +114,7 @@ pub fn agent_chat_entry_node(entry: &semio_framework_os_renderer_wgpu_agent_elem
             icon_id: IconName::Square,
             label: Label::data(shell_chrome_string("chat.cancel", is_de)),
             action: ActionDescriptor { controller_id: "framework".into(), action: "cancelToolCall".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "invocationId": entry.id().to_string() }) },
-            style: Some(ui_wgpu::wgpu::component::ui::StyleSpec { variant: Some("ghost".into()), size: None, density: None }),
+            style: Some(semio_framework_ui_declaration::ui::StyleSpec { variant: Some("ghost".into()), size: None, density: None }),
             presence: UiPresence::default(),
             menu: None,
         }));

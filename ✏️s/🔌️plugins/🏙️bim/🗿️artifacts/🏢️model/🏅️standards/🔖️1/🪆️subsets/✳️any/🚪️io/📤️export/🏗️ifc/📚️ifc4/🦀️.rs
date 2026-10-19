@@ -8,13 +8,15 @@
 //! 🔖 `IoFidelity::Lossy`: parametric constraints and derived inferences have no IFC slot; geometry, identity, types, templates and classification chains are exact.
 //! 📎 https://standards.buildingsmart.org/IFC/DEV/IFC4_3/RC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc4;
-#[cfg(test)] use crate::standards::v1::subsets::any::io::export::ifc::codec;
-use crate::standards::v1::subsets::any::io::export::ifc::data::property_value;
+#[cfg(test)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::property_value;
 use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind, TemplateTarget};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};

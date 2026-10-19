@@ -571,7 +571,7 @@ impl OsHost {
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             original_snapshot:None,
-            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, ui_wgpu::wgpu::SemioCursor::Default, false, None)),
+            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default, false, None)),
             frame_build: semio_framework_os_renderer_wgpu_frame_job::frame_job::FrameBuildHandle::new(),
             surface_resize: semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
             component_surface_close: None,

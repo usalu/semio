@@ -1,0 +1,19 @@
+{
+ "summary": [
+  { "package": "@semio-tech/repo-lib", "newExportEntries": 2, "importerEdges": 2 }
+ ],
+ "byPackage": {
+  "@semio-tech/repo-lib": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts": {
+    "proposedSubpath": "./discovery/taxonomy-authority",
+    "symbols": ["loadCatalogTaxonomy", "semanticDirectoryKindId"],
+    "importers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔮️oracle-source-ownership/🟦️.ts"]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts": {
+    "proposedSubpath": "./discovery/file-kind-resolution",
+    "symbols": ["implementationLeafBasenameFinding"],
+    "importers": ["🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔮️oracle-source-ownership/🟦️.ts"]
+   }
+  }
+ }
+}

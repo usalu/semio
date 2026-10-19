@@ -2,12 +2,12 @@ import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦�
 import { build } from "esbuild";
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 import { readFileSync, mkdtempSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import fixture from "./🧫️fixtures/🔣️.json";
-import schema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json";
+import schema from "@semio-tech/process/artifacts/native-build/schema.json";
 const root=resolve(import.meta.dir,"../../../../../../../..");
 
 test("All Cargo workspaces consume selected inline profiles without authored manifest tables", async () => {

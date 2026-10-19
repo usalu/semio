@@ -1,32 +1,36 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ramps::RailPoint;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairLanding;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{HostSide, Railing, RailingHost, Ramp, Slab};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::RailPoint;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairLanding;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{HostSide, RailingHost};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Railing, Ramp, Slab};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, extents_of, point};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, extents_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{edge_path, railing_meshes, stations_of, RailSpec};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::slabs::top_plane;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{edge_path, railing_meshes, stations_of, RailSpec};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, ElementSolid, SolidBuilder};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs::top_plane;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, ElementSolid, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairRun, StairWinder};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairRun, StairWinder};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::f64::consts::PI;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::*;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of as ramp_run_of;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of as stair_run_of;
-use crate::standards::v1::subsets::any::schema::snapshot::{Infill, Point2, Stair, StairFlight, TopConstraint, Turn, Vertex};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::{host_paths, Host, landing_walk, HostFault, unresolved, hosted_solid, length_of};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of as ramp_run_of;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::run_of as stair_run_of;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Infill, Point2, StairFlight, TopConstraint, Turn, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
 
 const EPS: f64 = 1e-9;
 
@@ -44,12 +48,12 @@ fn stair(flight: StairFlight) -> Stair {
         top: TopConstraint::Unconnected { height: 2.8 },
         max_riser: 0.18,
         min_tread: 0.25,
-        stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER,
+        stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER,
         nosing: 0.0,
         tread_thickness: 0.04,
-        riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER,
+        riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER,
         landing_depth: 1.0,
-        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
+        phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New,
         name: String::new(),
     }
 }
@@ -60,14 +64,14 @@ fn railing(host: Option<RailingHost>) -> Railing {
         path: Vec::new(),
         height: 1.0,
         post_spacing: 1.2,
-        profile: crate::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(),
-        post_profile: crate::standards::v1::subsets::any::schema::snapshot::standard_post_profile(),
+        profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(),
+        post_profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_post_profile(),
         baluster: None,
         infill: Infill::None,
         material: "m".into(),
         base_offset: 0.0,
         host,
-        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
+        phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New,
         name: String::new(),
     }
 }
@@ -138,7 +142,7 @@ fn a_u_turn_stair_joins_its_flights_on_the_far_side_of_the_landing() {
 
 #[test]
 fn landing_walk_goes_counter_clockwise_on_the_right_and_clockwise_on_the_left() {
-    use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairLanding;
+    use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairLanding;
     let landing = StairLanding { after_flight: 0, z: 1.0, centre: Point2 { x: 0.0, y: 0.0 }, direction: 0.0, width: 2.0, depth: 2.0 };
     let entry = (-1.0, -1.0);
     let exit = (1.0, 1.0);
@@ -195,7 +199,7 @@ fn a_rail_on_a_ramp_follows_the_walking_surface_inside_its_edge() {
 
 fn slab() -> Slab {
     let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
-    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() }
+    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: String::new() }
 }
 
 #[test]
@@ -216,7 +220,7 @@ fn a_rail_on_a_slab_edge_stands_inside_or_outside_on_the_top_plane() {
 
 #[test]
 fn a_sloped_slab_lifts_the_rail_with_its_plane() {
-    let slab = Slab { slope: Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.1 }), ..slab() };
+    let slab = Slab { slope: Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: 0.0, angle: 0.1 }), ..slab() };
     let level = level();
     let mut host = on("sl", HostSide::Left, 0.0);
     host.edge = 0;
@@ -233,7 +237,7 @@ fn a_missing_or_curved_slab_edge_cannot_be_followed() {
     far.edge = 9;
     assert_eq!(host_paths(&railing(Some(far.clone())), &far, &Host::Slab { slab: &slab, own: &level }), Err(HostFault::Edge));
     assert!(unresolved(&railing(Some(far)), Some(&slab)));
-    let mut curved = crate::standards::v1::subsets::any::schema::snapshot::Slab { boundary: slab.boundary.clone(), ..slab.clone() };
+    let mut curved = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Slab { boundary: slab.boundary.clone(), ..slab.clone() };
     curved.boundary[0].bulge = 0.4;
     let edge = on("sl", HostSide::Left, 0.0);
     assert_eq!(host_paths(&railing(Some(edge.clone())), &edge, &Host::Slab { slab: &curved, own: &level }), Err(HostFault::Edge));
@@ -249,7 +253,7 @@ fn a_hosted_railing_is_a_solid_of_its_authored_sections_and_absent_without_a_hos
     assert_eq!(solid.family, SolidFamily::Railing);
     assert!(solid.volume > 0.0 && solid.groups.iter().any(|group| group.part == parts::POST) && solid.groups.iter().any(|group| group.part == parts::RAIL));
     assert!(hosted_solid(&hosted, None).is_empty());
-    let thick = Railing { profile: crate::standards::v1::subsets::any::schema::snapshot::Profile::Rectangle { width: 0.12, depth: 0.08 }, ..hosted.clone() };
+    let thick = Railing { profile: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile::Rectangle { width: 0.12, depth: 0.08 }, ..hosted.clone() };
     assert!(hosted_solid(&thick, Some(&Host::Stair(&run))).volume > solid.volume);
 }
 

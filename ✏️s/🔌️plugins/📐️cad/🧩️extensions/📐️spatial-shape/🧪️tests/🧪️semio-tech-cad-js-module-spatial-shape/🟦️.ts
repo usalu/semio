@@ -1,6 +1,8 @@
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { core } from "@semio-tech/cad-js";
-import type { SpatialShapeTestDependencies } from "../../🟦️.ts";
+import { core } from "@semio-tech/cad-js";
+import type { SpatialShapeTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import * as vitestRuntime from "vitest";
+import { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID } from "../../🟦️.ts";
 
 type TestSource = { readonly url: string };
 
@@ -63,3 +65,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const dependencies: SpatialShapeTestDependencies = { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID, core, solidRef: core.solidRef };
+await registerTests1(vitestRuntime, dependencies, { url: new URL("../../🟦️.ts", import.meta.url).href });

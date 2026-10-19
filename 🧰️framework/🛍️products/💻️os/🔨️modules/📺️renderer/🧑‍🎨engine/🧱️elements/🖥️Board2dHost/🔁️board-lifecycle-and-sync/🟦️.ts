@@ -2,8 +2,8 @@
 import { useEffect, useLayoutEffect } from "react";
 import { useCanvasAppearanceSync } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/framework/canvas/react-renderer";
-import { type Board2dWasmSession, type Board2dPeer } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1, type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
+import { type Board2dPeer } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { parseBoard2dAreaBrushSize, parseBoard2dTransformFlags, parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
 import { applyBoard2dHighlightedIds, applySnapshotToSession, applyToSession, boardPeerOwnsGesture, registerBoard2dPeer, unregisterBoard2dPeer } from "../🔄️session-sync/🟦️.ts";
 import type { BoardCore2 } from "../💡️board-suggestions-and-events/🟦️.ts";

@@ -1,0 +1,12 @@
+{
+  "purpose": "Packages imported by files that lie outside any workspace package directory; the isolated linker links them nowhere, so they must be declared in root package.json devDependencies (the existing pattern: ajv, vite, vitest, @iarna/toml, lodash). NOT applied: manifest freeze.",
+  "verifiedStoreVersions": {
+    "jsonc-parser": "3.3.1", "pathe": "2.0.3", "minimatch": "9.0.3", "string-argv": "0.4.0", "commander": "13.1.0", "diff": "8.0.4",
+    "yargs-parser": "21.1.1", "ignore": "7.0.12", "smol-toml": "1.6.1", "es-module-lexer": "2.3.2", "mdast-util-from-markdown": "2.1.0",
+    "@noble/hashes": "2.4.0", "zod": "4.6.7", "resolve.exports": "2.0.3", "postcss": "8.5.30", "iconv-lite": "0.7.3", "fflate": "0.8.3",
+    "fast-check": "3.23.2", "yaml": "2.9.0", "immer": "10.1.1", "fast-json-stable-stringify": "2.1.0", "i18next": "25.10.10",
+    "react-i18next": "16.6.6", "@xyflow/react": "12.12.0", "@react-three/fiber": "9.8.2", "@tailwindcss/vite": "4.3.3",
+    "@vitejs/plugin-react": "5.2.0", "@types/react-dom": "19.3.0", "@types/three": "0.180.0", "@types/lodash": "4.17.24"
+  },
+  "notInstalledAnywhere": ["execa (tests/process-budgets)", "postcss-load-config (tests/tool-configuration-ownership)", "@types/yargs-parser"]
+}

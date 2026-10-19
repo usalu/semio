@@ -14,7 +14,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use ui_wgpu::wgpu::IconName;
+use semio_framework_ui_declaration::IconName;
 use semio_framework_kernel_identity::CapabilityId;
 use semio_framework_kernel_ui::UiDirtyScope;
 use semio_framework_manifest_address::{PlatformKeybinding, UtilityRef};

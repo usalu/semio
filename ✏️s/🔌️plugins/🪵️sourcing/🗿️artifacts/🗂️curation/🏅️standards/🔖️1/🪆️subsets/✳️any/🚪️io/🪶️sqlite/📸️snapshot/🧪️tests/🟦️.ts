@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import distinctChild from "./🧫️fixtures/🪆️distinct/🔣️.json";
 
 import{expect,test}from"bun:test";
@@ -9,7 +9,6 @@ import fixture from"./🧫️fixtures/🔣️.json";
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as sqliteOwner from"../🟦️.ts";
 import {binary32,binary64,type Binary32,type Binary64} from "@semio-tech/framework/value/ieee754";

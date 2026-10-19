@@ -1,5 +1,5 @@
 import {createHash} from "node:crypto";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import selectionSchema from "../../🧬️schema/🚪️selection.json" with {type:"json"};
 import registrySchema from "../../🧬️schema/📋️owners.json" with {type:"json"};
 import admissionSchema from "../../🧬️schema/🚪️admission.json" with {type:"json"};

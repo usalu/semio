@@ -24,7 +24,7 @@ pub struct PresentedInputGeometry {
     pub retained_body_rects: Vec<(String, Rect)>,
     pub media_owners: Vec<(String, Option<semio_framework_os_renderer_wgpu_media_slots::PresentedMediaOwner>)>,
     pub media_blocked: bool,
-    pub retained_surfaces: Vec<(String, ui_wgpu::wgpu::UiSurfaceToken)>,
+    pub retained_surfaces: Vec<(String, semio_framework_ui_wgpu_engine::UiSurfaceToken)>,
     pub dock_canvas_bounds: Rect,
     pub dock_axis_separator: f32,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, WindowStackCorner, Rect, Vec<f32>)>,

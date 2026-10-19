@@ -142,7 +142,7 @@ fn the_inference_job_publishes_a_twenty_five_byte_preview() {
         let mut receipt = semio_framework_job::RetainedCloneProgress::default();
         let grant = semio_framework_job::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
         let budget = semio_framework_job::StepBudget::new(1, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, grant);
-        let mut context = semio_framework_job::StepContext::new(operation_id, generation, budget, cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation_id, generation, budget, cancel.clone(), &mut sequence, &mut receipt);
         let preview = match semio_framework_job::drive_step(&mut job, &mut context, "wfc.grid2d.inference.preview.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("inference step admission") {
             Some(semio_framework_job::JobOutcomeBorrow::PreviewReady { payload, .. }) => Some((0..payload.page_count()).flat_map(|index| payload.page(index).expect("page").to_vec()).collect::<Vec<u8>>()),
             Some(semio_framework_job::JobOutcomeBorrow::Complete { .. } | semio_framework_job::JobOutcomeBorrow::Cancelled { .. } | semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("expected a preview before the terminal outcome"),
@@ -163,8 +163,8 @@ fn the_inference_job_publishes_a_twenty_five_byte_preview() {
                     maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned job quotes its release demand"),
                     maximum_depth: job.next_close_depth_demand().expect("a locally owned job quotes its depth demand").max(1),
                 };
-                let step = job.close_step(grant);
-                assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. }), "a locally owned job close has no external owner and no refusal");
+                let step = semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn");
+                assert!(!matches!(step, semio_framework_job::InteractiveJobCloseStep::Blocked), "a locally owned job close has no external owner and no refusal");
             }
             panic!("inference close stalled");
         }

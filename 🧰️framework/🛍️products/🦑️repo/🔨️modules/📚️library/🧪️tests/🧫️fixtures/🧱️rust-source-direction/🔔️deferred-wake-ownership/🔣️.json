@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "neutralFixture": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧫️fixtures/🔣️.json",
+  "neutralFixture": "🧰️framework/🔨️modules/⏳️async/🔔️deferred-wake/🧪️tests/🧫️fixtures/🔣️.json",
   "neutralRouter": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts",
-  "writerFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧫️fixtures/🔔️deferred-wake/🔣️.json",
+  "writerFixture": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🔐️writer/🧪️tests/🧫️fixtures/🔔️deferred-wake/🔣️.json",
   "writerRouter": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/✍️wal-checks/🟦️.ts",
   "caseIds": [
     "cross-key-refusal",

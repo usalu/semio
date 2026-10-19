@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-s-artifact-stdio-pptx-base-vocabulary = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

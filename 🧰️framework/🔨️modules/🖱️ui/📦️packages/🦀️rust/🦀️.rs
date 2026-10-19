@@ -1,12 +1,10 @@
-//! 🖱️ Handcrafted semio UI. One crate, one target per feature: `tui` renders to terminal cells,
-//! `wgpu` renders declarative components (and, with `wgpu-engine`, a retained-mode GPU engine).
-//! The two share `ui_styling` tokens and the co-located `🧱️elements/<Element>/` widget sources but
-//! nothing else — hence features rather than sibling crates, so a wasm32-wasip2 program component
-//! pulling in the component types never links winit/parley/swash.
-
-#[cfg(feature = "wgpu")]
-#[path = "../../🎯️targets/🧊️wgpu/🦀️.rs"]
-pub mod wgpu;
+//! 🖱️ Target-neutral UI facts shared by every UI target: whether a session may offer its authored
+//! introduction. The terminal target lives in the `semio-framework-ui-tui-*` crates and the wgpu
+//! target in the `semio-framework-ui-wgpu-*` crates.
 
 #[path = "../../🎓️introduction/🦀️.rs"]
 pub mod introduction;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🔬️targets-wgpu-case-wiring-law/🦀️.rs"]
+mod case_wiring_law_tests;

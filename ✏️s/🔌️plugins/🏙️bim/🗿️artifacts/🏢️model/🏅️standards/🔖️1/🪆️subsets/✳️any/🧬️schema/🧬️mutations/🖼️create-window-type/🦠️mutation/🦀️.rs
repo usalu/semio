@@ -1,6 +1,7 @@
 //! 🖼️ `create-window-type` payload. Brings a new window type into the library; it needs a free id, an existing material and valid dimensions.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, WindowType}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WindowType};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

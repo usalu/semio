@@ -1,10 +1,10 @@
 /** 🪢 Owned ui intake admission rounds and the react host activation reason. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import type { UiNodeRecord } from "@semio-tech/framework";
-import type { ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import type { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import type { ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import type { ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
+import type { ActivationRegistry } from "@semio-tech/framework-kernel";
+import type { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import type { ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client";
+import type { ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import type { PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { flushMicrotasks, type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";

@@ -132,9 +132,9 @@ func ResolveHookEvent(name string, client string, toolName string, input json.Ra
 
 // 🔹️RunHook runs a hook.
 func RunHook(ctx model.HookContext) model.HookResult {
-	previousRoot := workspace.RootDir
+	previousRoot := workspace.GetRootDir()
 	defer func() {
-		workspace.RootDir = previousRoot
+		workspace.SetRootDir(previousRoot)
 		workspace.GitignoreMutex.Lock()
 		workspace.CachedGitignore = nil
 		workspace.GitignoreLoaded = false

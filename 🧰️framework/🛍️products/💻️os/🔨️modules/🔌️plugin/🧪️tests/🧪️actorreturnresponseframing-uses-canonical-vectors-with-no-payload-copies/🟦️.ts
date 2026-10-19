@@ -1,8 +1,8 @@
-import { loadReturnResponseFramingSchema, loadReturnResponseFramingFixture, loadActorReturnResponseFixture, loadActorReturnFixture, loadActorReturnSchema, loadCreditMetadataInboxFixture, loadResponseCreditMetadataFixture, loadActorReturnResponseSchema, loadReturnResponseCreditSchema, loadReturnResponseCreditFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { loadReturnResponseFramingSchema, loadReturnResponseFramingFixture, loadActorReturnResponseFixture, loadActorReturnFixture, loadActorReturnSchema, loadCreditMetadataInboxFixture, loadResponseCreditMetadataFixture, loadActorReturnResponseSchema, loadReturnResponseCreditSchema, loadReturnResponseCreditFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("@semio-tech/framework-actor/return/response"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint } = dependencies;
 
   const { it, expect } = vitest;
@@ -19,7 +19,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     return (value: number | bigint): Buffer => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(encode(bytes)); };
   };
   it("ActorReturnResponseFraming uses canonical vectors with no payload copies or backing escape", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
+    const api = await import("@semio-tech/framework-actor/return/response");
     const schema = await loadReturnResponseFramingSchema(); const framing = await loadReturnResponseFramingFixture();
     const fixture = await loadActorReturnResponseFixture(); const returned = await loadActorReturnFixture();
     const returnedSchema = await loadActorReturnSchema(); const { valueSchema: value } = await import("@semio-tech/value-ts/schema"); const { actorInstanceLifecycleSchema: lifetime } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts"); const { actorBytePageSchema: page } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
@@ -54,7 +54,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("ActorReturnResponseFraming keeps malformed bodies and incomplete authority failed", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"); const fixture = await loadActorReturnResponseFixture();
+    const api = await import("@semio-tech/framework-actor/return/response"); const fixture = await loadActorReturnResponseFixture();
     const returned = await loadActorReturnFixture();
     const reject = (bytes: readonly number[]) => {
       const parser = new api.ActorReturnResponseFraming();
@@ -144,9 +144,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       ts.forEachChild(node, visitShim);
     };
     visitWorker(worker); visitShim(shim); expect(requests).toEqual(fixture.workerRequestKinds); expect(replies).toEqual(fixture.workerReplyKinds); expect(effects).toEqual(fixture.hostEffectKinds); expect(effectReplies).toEqual(fixture.hostReplyKinds);
-    const client = shard.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "ShardClient");
+    const client = shard.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "ShardRequestTransport");
     const handler = client && ts.isClassDeclaration(client) ? client.members.find(node => ts.isMethodDeclaration(node) && node.name.getText(shard) === "handleMessage")?.getText(shard) : null;
-    expect(handler).toBeTruthy(); expect(handler!.indexOf("message.kind")).toBeLessThan(handler!.indexOf("captureResponse(message)")); expect(handler!.indexOf("this.pending.get(message.requestId)")).toBeLessThan(handler!.indexOf("captureResponse(message)"));
+    expect(handler).toBeTruthy(); expect(handler!.indexOf("message.kind")).toBeLessThan(handler!.indexOf("captureResponse(message)")); expect(handler!.indexOf("this.state.pending.get(message.requestId)")).toBeLessThan(handler!.indexOf("captureResponse(message)"));
     expect(worker.text.includes("msg.returnDrive")).toBe(false);
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
@@ -302,7 +302,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(fixture.maximumBackingBytes).toBe(ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES);
   });
   it("ActorReturnResponse header routing preserves exact authority without decoding malformed bodies", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
+    const api = await import("@semio-tech/framework-actor/return/response");
     const fixture = await loadActorReturnResponseFixture();
     const uint = await oracle();
     for (const row of fixture.headerCases) {
@@ -325,7 +325,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const invalid of [new Uint8Array(maximum), new SharedArrayBuffer(16), new Proxy(maximum, {}), new ArrayBuffer(fixture.maximumBytes + 1)]) expect(() => api.readActorReturnResponseHeader(invalid)).toThrow();
   });
   it("ActorReturnResponse codec preserves transport correlation and closed fault variants", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
+    const api = await import("@semio-tech/framework-actor/return/response");
     const fixture = await loadActorReturnResponseFixture();
     for (const row of fixture.vectors) {
       const value = hydrate(row.value);
@@ -341,7 +341,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(() => api.encodeActorReturnResponse({ kind: "result", activationGeneration: 8n, transportRequestSequence: 1, result: hydrate(fixture.vectors[0]!.value.result) })).toThrow();
   });
   it("ActorReturnResponse maximum page is exact and decoder rejects non-owning backings", async () => {
-    const api = await import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts");
+    const api = await import("@semio-tech/framework-actor/return/response");
     const fixture = await loadActorReturnResponseFixture();
     const returned = await loadActorReturnFixture();
     const { createActorBytePage } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");

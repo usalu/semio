@@ -1,5 +1,4 @@
-use crate::standards::v1::subsets::any::schema::snapshot::values::Phase;
-use crate::standards::v1::subsets::any::schema::snapshot::phases::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 
 #[test]
 fn every_phase_round_trips_through_its_key() {

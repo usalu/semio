@@ -54,9 +54,9 @@ type entrypointContractFixture struct {
 	Flow              []string `json:"flow"`
 }
 
-// 🧫️ Resolves protocol vectors through the current repository identity.
+// 🧫️ Resolves protocol vectors owned by the sibling protocol module from this module's own directory, never from a repository root.
 func repositoryContractFixture(name string) string {
-	return filepath.Join(client.GetRootDir(), "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🔌️mcp", "🧪️tests", "🧫️fixtures", name)
+	return filepath.Join("..", "..", "🔌️mcp", "🧪️tests", "🧫️fixtures", name)
 }
 
 func TestRepositoryEntrypointContract(t *testing.T) {

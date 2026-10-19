@@ -48,7 +48,7 @@ fn an_emphasized_retained_text_node_strikes_every_glyph_twice_without_moving_the
     assert!(regular_steps.iter().all(|count| *count <= 1), "a regular run still costs at most one strike per grant: {regular_steps:?}");
     assert!(semibold_steps.contains(&2), "an emphasized run must emit BOTH strikes of a glyph inside ONE grant, never split across two: {semibold_steps:?}");
     assert_eq!(semibold_xs.len(), regular_xs.len() * 2, "every emphasized glyph is struck exactly twice");
-    let offset = crate::wgpu::text::faux_bold_offset(Theme::default().font_size_emphasized);
+    let offset = semio_framework_ui_text::faux_bold_offset(Theme::default().font_size_emphasized);
     assert!(offset > 0.0);
     assert!(semibold_xs.windows(2).any(|pair| (pair[1] - pair[0] - offset).abs() < 0.001), "the second strike sits exactly `faux_bold_offset` along x");
     assert!(regular_xs.first().is_some_and(|x| semibold_xs.first().is_some_and(|semibold| (semibold - x).abs() < 0.001)), "the FIRST strike lands on the same pen position, so the advance — and every wrap point priced from it — is untouched");
@@ -175,7 +175,7 @@ fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
     let tree_of = |id: &str, item: &str| UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None });
     let (mut tree, root, theme, _) = setup(&tree_of("mounted", "row"));
     let Some(node) = tree.node_mut(root) else { panic!("retained tree root") };
-    node.spec = crate::wgpu::tree::WidgetSpec(tree_of("never-mounted", "ghost"));
+    node.spec = semio_framework_ui_retained_tree::tree::WidgetSpec(tree_of("never-mounted", "ghost"));
     let mut cursor = RetainedInteractiveSyncCursor::default();
     let mut complete = false;
     for _ in 0..256 {

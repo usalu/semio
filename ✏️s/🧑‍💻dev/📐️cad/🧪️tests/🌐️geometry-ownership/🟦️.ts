@@ -4,9 +4,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 export function geometryOwnershipLaws(): void {
-  const root = getWorkspaceRoot();
+  const root = findWorkspaceRoot();
   const owner = join(root,"✏️s/🧑‍💻dev/📐️cad");
   const read = (path:string) => readFileSync(join(root,path),"utf8");
   const fixture = JSON.parse(readFileSync(join(owner,"🧫️fixtures/🌐️geometry-ownership/🔣️.json"),"utf8"));

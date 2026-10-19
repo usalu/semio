@@ -8,7 +8,7 @@ import { hostArmedViewContext, windowViewContext } from "../../../../../../../�
 import Ajv2020 from "ajv/dist/2020";
 import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🔣️label-resolution.json";
 import * as THREE from "three";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { render, waitFor } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { deriveUtilityNodes, actionSemanticsForKind, resolveWindowActions, resolveModeTools, type ActionDefinition, type AppDefinition, type AppModeDefinition, type AppWindowKindDefinition, type CommandDefinition, type UtilityDefinition, type WindowMeasure } from "@semio-tech/framework";

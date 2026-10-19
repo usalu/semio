@@ -343,19 +343,19 @@ pub mod generation_forms {
 
     use super::{default_value_for_block, flatten_playbook_blocks, DslValue, FromValue, PlaybookSpec, PlaybookValues, ToValue};
     #[cfg(test)] use super::{PlaybookBlock};
-    use ui_wgpu::wgpu::ActionDescriptor;
+    use semio_framework_ui_declaration::layout::ActionDescriptor;
     use semio_framework_ui_locale::Label;
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::LocalizedLabel;
     use semio_framework_ui_locale::Terminology;
     
-    use ui_wgpu::wgpu::UiNode;
-    use ui_wgpu::wgpu::UiPresence;
-    use ui_wgpu::wgpu::UiTreeActionPlacement;
-    use ui_wgpu::wgpu::UiTreeItemAction;
-    use ui_wgpu::wgpu::UiTreeItemNode;
-    use ui_wgpu::wgpu::UiTreeNode;
-    use ui_wgpu::wgpu::UiTreeSectionNode;
+    use semio_framework_ui_declaration::ui::UiNode;
+    use semio_framework_ui_declaration::ui::UiPresence;
+    use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
+    use semio_framework_ui_declaration::ui::UiTreeItemAction;
+    use semio_framework_ui_declaration::ui::UiTreeItemNode;
+    use semio_framework_ui_declaration::ui::UiTreeNode;
+    use semio_framework_ui_declaration::ui::UiTreeSectionNode;
 
     //#region 🔖️Types
     #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
@@ -688,7 +688,9 @@ pub mod builder_kit {
 
     use super::{DslValue, FromValue, PlaybookSpec};
     use semio_framework::ProgramContributionEntry;
-    use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
+    use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
+use semio_framework_ui_declaration::IconName;
 
     //#region 🔖️Config
     #[derive(Clone, Debug)]
@@ -755,13 +757,13 @@ pub mod builder_kit {
 
     pub fn build_playbook_list_scene(spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>) -> BlockListScene {
         BlockListScene {
-            steps: spec.steps.iter().map(|step| ui_wgpu::wgpu::BlockListStep {
+            steps: spec.steps.iter().map(|step| semio_framework_ui_declaration::ui::BlockListStep {
                 id: step.id.clone(),title: step.title.clone(),description: step.description.clone(),target: None,
-                blocks: step.blocks.iter().map(|block| ui_wgpu::wgpu::BlockListBlock {
+                blocks: step.blocks.iter().map(|block| semio_framework_ui_declaration::ui::BlockListBlock {
                     id: block.id.clone(),label: block.label.clone(),kind: block.kind.clone(),description: block.description.clone(),target: None,
                 }).collect(),
             }).collect(),
-            palette: palette.iter().map(|entry| ui_wgpu::wgpu::BlockListPaletteEntry {
+            palette: palette.iter().map(|entry| semio_framework_ui_declaration::ui::BlockListPaletteEntry {
                 block_kind: entry.block_kind.clone(),label: entry.label.clone(),icon_id: entry.icon_id.as_str().to_owned(),
             }).collect(),
             selected_id: selected_id.map(String::from),

@@ -1,5 +1,5 @@
 /** 🧩️ PDF 1.7 snapshot types of COS objects, indirect references and stream filters. */
-import type { PdfDate } from "../📇️metadata/🟦️.ts";
+import type { PdfDate } from "../📆️date/🟦️.ts";
 
 export interface PdfDictEntry {
   key: string;

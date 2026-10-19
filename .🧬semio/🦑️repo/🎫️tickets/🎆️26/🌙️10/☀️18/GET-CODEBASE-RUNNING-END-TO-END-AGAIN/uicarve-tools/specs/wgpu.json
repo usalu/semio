@@ -1,0 +1,5087 @@
+{
+ "tree": "wgpu",
+ "roots": [
+  "crate"
+ ],
+ "crates": {
+  "light": {
+   "pkg": "semio-framework-ui-wgpu-light",
+   "id": "ui-wgpu-light",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light",
+   "desc": "semio wgpu light tier: minimap geometry, tree window request rule, presence bar and tabs builders",
+   "mounts": [
+    {
+     "name": "minimap",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🗺️minimap/🦀️.rs"
+    },
+    {
+     "name": "tree_window",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🪟️window/🦀️.rs"
+    },
+    {
+     "name": "presence_bar",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "tabs",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🎯️targets/🧊️wgpu/🦀️.rs"
+    }
+   ]
+  },
+  "input": {
+   "pkg": "semio-framework-ui-wgpu-input",
+   "id": "ui-wgpu-input",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/🦀️.rs",
+   "desc": "semio wgpu input state: hit registry, pointer and keyboard actions, clipboard intents"
+  },
+  "layout": {
+   "pkg": "semio-framework-ui-wgpu-layout",
+   "id": "ui-wgpu-layout",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack",
+   "desc": "semio wgpu layout stack: chrome metrics, layout rules and the flex solver",
+   "mounts": [
+    {
+     "name": "chrome",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖥️chrome/🦀️.rs"
+    },
+    {
+     "name": "layout",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧮️layout/🦀️.rs"
+    },
+    {
+     "name": "flex",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🦀️.rs"
+    }
+   ]
+  },
+  "mounted": {
+   "pkg": "semio-framework-ui-wgpu-mounted-layout",
+   "id": "ui-wgpu-mounted-layout",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs",
+   "desc": "semio wgpu mounted layout: retained layout job, tree row metrics and retained hit registration"
+  },
+  "kit": {
+   "pkg": "semio-framework-ui-wgpu-widget-kit",
+   "id": "ui-wgpu-widget-kit",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/🦀️.rs",
+   "desc": "semio wgpu widget kit: immediate-mode context, interaction maps, widget node model and text drawing"
+  },
+  "controls": {
+   "pkg": "semio-framework-ui-wgpu-controls",
+   "id": "ui-wgpu-controls",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🔘️controls",
+   "desc": "semio wgpu control renderers: select, slider, stepper, input, button, toggle, key value, ring and icon selector",
+   "mounts": [
+    {
+     "name": "select",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "slider",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "stepper",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "input_element",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "button",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "toggle",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "key_value",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔑️KeyValue/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "ring",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⭕️Ring/🎯️targets/🧊️wgpu/🦀️.rs"
+    },
+    {
+     "name": "icon_selector",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎴️IconSelector/🎯️targets/🧊️wgpu/🦀️.rs"
+    }
+   ]
+  },
+  "events": {
+   "pkg": "semio-framework-ui-wgpu-events",
+   "id": "ui-wgpu-events",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs",
+   "desc": "semio wgpu event router: hit test, capture, focus, overlays, drag and drop, tooltips and commands"
+  },
+  "paint": {
+   "pkg": "semio-framework-ui-wgpu-paint",
+   "id": "ui-wgpu-paint",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs",
+   "desc": "semio wgpu retained paint: node walk, overlays, select popups, images, skeletons and tooltips"
+  },
+  "widgets": {
+   "pkg": "semio-framework-ui-wgpu-widgets",
+   "id": "ui-wgpu-widgets",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🦀️.rs",
+   "desc": "semio wgpu immediate-mode widget measure and render dispatch with the tree element"
+  },
+  "hosting": {
+   "pkg": "semio-framework-ui-wgpu-hosting",
+   "id": "ui-wgpu-hosting",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting",
+   "desc": "semio wgpu hosting: accessibility projection, cursors, shell, window host and scene slots",
+   "mounts": [
+    {
+     "name": "accessibility",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/♿️accessibility/🦀️.rs"
+    },
+    {
+     "name": "cursor",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/👆️cursor/🦀️.rs"
+    },
+    {
+     "name": "shell",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🐚️shell/🦀️.rs"
+    },
+    {
+     "name": "host",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs",
+     "cfg": "#[cfg(not(target_os = \"wasi\"))]"
+    },
+    {
+     "name": "scene_slots",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs"
+    }
+   ]
+  },
+  "engine_surface": {
+   "pkg": "semio-framework-ui-wgpu-engine-surface",
+   "id": "ui-wgpu-engine-surface",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/🦀️.rs",
+   "desc": "semio wgpu engine surfaces: windows, tooltips, retained paint walk, surface registry and document ingress"
+  },
+  "paintref": {
+   "pkg": "semio-framework-ui-wgpu-paint-reference",
+   "id": "ui-wgpu-paint-reference",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🔬️reference/🦀️.rs",
+   "desc": "semio wgpu immediate paint reference: the golden oracle the retained paint laws compare against"
+  },
+  "events-laws": {
+   "pkg": "semio-framework-ui-wgpu-events-laws",
+   "id": "ui-wgpu-events-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu event router laws: hit test, capture, focus, overlays, drag and drop, keyboard and control commit",
+   "tests_only": true,
+   "owner": "events"
+  },
+  "events-control-laws": {
+   "pkg": "semio-framework-ui-wgpu-events-control-laws",
+   "id": "ui-wgpu-events-control-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧪️tests/🎛️companion-control",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🧪️tests/🎛️companion-control/🦀️.rs",
+   "desc": "semio wgpu event router control laws: retained control commit and the scrub press gesture",
+   "tests_only": true,
+   "owner": "events"
+  },
+  "engine-scene-laws": {
+   "pkg": "semio-framework-ui-wgpu-engine-scene-laws",
+   "id": "ui-wgpu-engine-scene-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🧪️tests/🎬️companion-scene",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🧪️tests/🎬️companion-scene/🦀️.rs",
+   "desc": "semio wgpu engine scene laws: hostile retained documents, section collapse, select origin, presented source and physical job close",
+   "tests_only": true,
+   "owner": "engine"
+  },
+  "paint-laws": {
+   "pkg": "semio-framework-ui-wgpu-paint-laws",
+   "id": "ui-wgpu-paint-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu retained paint laws: fixtures, steppers, sliders, select popups, carets, grants, progress and skeletons",
+   "tests_only": true,
+   "owner": "paint"
+  },
+  "engine-laws": {
+   "pkg": "semio-framework-ui-wgpu-engine-laws",
+   "id": "ui-wgpu-engine-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu engine laws: scene lifetime, frame storm, overlays, goldens, document ingress and presented source",
+   "tests_only": true,
+   "owner": "engine"
+  },
+  "input-laws": {
+   "pkg": "semio-framework-ui-wgpu-input-laws",
+   "id": "ui-wgpu-input-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu input laws: hit registry, pointer and keyboard actions against the widget kit",
+   "tests_only": true,
+   "owner": "input"
+  },
+  "layout-laws": {
+   "pkg": "semio-framework-ui-wgpu-layout-laws",
+   "id": "ui-wgpu-layout-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu layout laws: tree row rectangles and the table row grid against the engine, events and paint",
+   "tests_only": true,
+   "owner": "layout"
+  },
+  "mounted-laws": {
+   "pkg": "semio-framework-ui-wgpu-mounted-layout-laws",
+   "id": "ui-wgpu-mounted-layout-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu retained hit target laws against the engine",
+   "tests_only": true,
+   "owner": "mounted"
+  },
+  "laws": {
+   "pkg": "semio-framework-ui-wgpu-laws",
+   "id": "ui-wgpu-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧪️tests/🥣️companion",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧪️tests/🥣️companion/🦀️.rs",
+   "desc": "semio wgpu cross-crate laws: document tree reconcile, conformance corpus, theme token parity, text renderer, prepared engine, prepared raster refusal and clipboard ingress",
+   "tests_only": true,
+   "extra": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs"
+   ],
+   "targets": [
+    [
+     "original_prepared_raster_refusal",
+     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs"
+    ],
+    [
+     "original_clipboard_ingress",
+     "🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs"
+    ]
+   ]
+  },
+  "engine": {
+   "pkg": "semio-framework-ui-wgpu-engine",
+   "id": "ui-wgpu-engine",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine",
+   "root": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+   "desc": "semio wgpu retained-mode engine: the `Ui` facade over surfaces, events, layout and paint"
+  }
+ },
+ "rules": [
+  {
+   "from": "wgpu::accessibility",
+   "crate": "hosting",
+   "to": "accessibility"
+  },
+  {
+   "from": "wgpu::chrome",
+   "crate": "layout",
+   "to": "chrome"
+  },
+  {
+   "from": "wgpu::cursor",
+   "crate": "hosting",
+   "to": "cursor"
+  },
+  {
+   "from": "wgpu::engine",
+   "crate": "engine",
+   "to": ""
+  },
+  {
+   "from": "wgpu::events",
+   "crate": "events",
+   "to": ""
+  },
+  {
+   "from": "wgpu::flex",
+   "crate": "layout",
+   "to": "flex"
+  },
+  {
+   "from": "wgpu::host",
+   "crate": "hosting",
+   "to": "host"
+  },
+  {
+   "from": "wgpu::input",
+   "crate": "input",
+   "to": ""
+  },
+  {
+   "from": "wgpu::layout",
+   "crate": "layout",
+   "to": "layout"
+  },
+  {
+   "from": "wgpu::minimap",
+   "crate": "light",
+   "to": "minimap"
+  },
+  {
+   "from": "wgpu::mounted_layout",
+   "crate": "mounted",
+   "to": ""
+  },
+  {
+   "from": "wgpu::hit",
+   "crate": "mounted",
+   "to": "hit"
+  },
+  {
+   "from": "wgpu::paint",
+   "crate": "paint",
+   "to": ""
+  },
+  {
+   "from": "wgpu::scene_slots",
+   "crate": "hosting",
+   "to": "scene_slots"
+  },
+  {
+   "from": "wgpu::shell",
+   "crate": "hosting",
+   "to": "shell"
+  },
+  {
+   "from": "wgpu::widgets",
+   "crate": "widgets",
+   "to": ""
+  },
+  {
+   "from": "wgpu::widgets_kit",
+   "crate": "kit",
+   "to": ""
+  },
+  {
+   "from": "wgpu::engine_surface",
+   "crate": "engine_surface",
+   "to": ""
+  },
+  {
+   "from": "wgpu::select",
+   "crate": "controls",
+   "to": "select"
+  },
+  {
+   "from": "wgpu::button",
+   "crate": "controls",
+   "to": "button"
+  },
+  {
+   "from": "wgpu::input_element",
+   "crate": "controls",
+   "to": "input_element"
+  },
+  {
+   "from": "wgpu::toggle",
+   "crate": "controls",
+   "to": "toggle"
+  },
+  {
+   "from": "wgpu::key_value",
+   "crate": "controls",
+   "to": "key_value"
+  },
+  {
+   "from": "wgpu::slider",
+   "crate": "controls",
+   "to": "slider"
+  },
+  {
+   "from": "wgpu::stepper",
+   "crate": "controls",
+   "to": "stepper"
+  },
+  {
+   "from": "wgpu::ring",
+   "crate": "controls",
+   "to": "ring"
+  },
+  {
+   "from": "wgpu::icon_selector",
+   "crate": "controls",
+   "to": "icon_selector"
+  },
+  {
+   "from": "wgpu::tree_element",
+   "crate": "widgets",
+   "to": "tree_element"
+  },
+  {
+   "from": "wgpu::tree_window",
+   "crate": "light",
+   "to": "tree_window"
+  },
+  {
+   "from": "wgpu::presence_bar",
+   "crate": "light",
+   "to": "presence_bar"
+  },
+  {
+   "from": "wgpu::tabs",
+   "crate": "light",
+   "to": "tabs"
+  },
+  {
+   "from": "wgpu::input::RetainedHitRegistration",
+   "crate": "mounted",
+   "to": "hit::RetainedHitRegistration"
+  },
+  {
+   "from": "wgpu::input::RetainedSceneHit",
+   "crate": "mounted",
+   "to": "hit::RetainedSceneHit"
+  },
+  {
+   "from": "wgpu::input::RetainedTreeRow",
+   "crate": "mounted",
+   "to": "hit::RetainedTreeRow"
+  },
+  {
+   "from": "wgpu::input::retained_hit_registration",
+   "crate": "mounted",
+   "to": "hit::retained_hit_registration"
+  },
+  {
+   "from": "wgpu::input::retained_hit_target_tests",
+   "crate": "mounted",
+   "to": "hit::retained_hit_target_tests"
+  },
+  {
+   "from": "wgpu::input::retained_scene_hit",
+   "crate": "mounted",
+   "to": "hit::retained_scene_hit"
+  },
+  {
+   "from": "wgpu::input::retained_tree_chevron_registration",
+   "crate": "mounted",
+   "to": "hit::retained_tree_chevron_registration"
+  },
+  {
+   "from": "wgpu::input::retained_tree_drag_handle_registration",
+   "crate": "mounted",
+   "to": "hit::retained_tree_drag_handle_registration"
+  },
+  {
+   "from": "wgpu::input::retained_tree_row",
+   "crate": "mounted",
+   "to": "hit::retained_tree_row"
+  },
+  {
+   "from": "wgpu::input::retained_tree_section_header_band",
+   "crate": "mounted",
+   "to": "hit::retained_tree_section_header_band"
+  },
+  {
+   "from": "wgpu::widgets::ControlNode",
+   "crate": "kit",
+   "to": "ControlNode"
+  },
+  {
+   "from": "wgpu::widgets::InputMeta",
+   "crate": "kit",
+   "to": "InputMeta"
+  },
+  {
+   "from": "wgpu::widgets::KeyValueEntry",
+   "crate": "kit",
+   "to": "KeyValueEntry"
+  },
+  {
+   "from": "wgpu::widgets::RingMeta",
+   "crate": "kit",
+   "to": "RingMeta"
+  },
+  {
+   "from": "wgpu::widgets::SelectItem",
+   "crate": "kit",
+   "to": "SelectItem"
+  },
+  {
+   "from": "wgpu::widgets::SelectPopupWheelScope",
+   "crate": "kit",
+   "to": "SelectPopupWheelScope"
+  },
+  {
+   "from": "wgpu::widgets::SliderMeta",
+   "crate": "kit",
+   "to": "SliderMeta"
+  },
+  {
+   "from": "wgpu::widgets::StepperMeta",
+   "crate": "kit",
+   "to": "StepperMeta"
+  },
+  {
+   "from": "wgpu::widgets::TreeItem",
+   "crate": "kit",
+   "to": "TreeItem"
+  },
+  {
+   "from": "wgpu::widgets::TreeItemAction",
+   "crate": "kit",
+   "to": "TreeItemAction"
+  },
+  {
+   "from": "wgpu::widgets::TreeSection",
+   "crate": "kit",
+   "to": "TreeSection"
+  },
+  {
+   "from": "wgpu::widgets::WidgetContext",
+   "crate": "kit",
+   "to": "WidgetContext"
+  },
+  {
+   "from": "wgpu::widgets::WidgetInteractionMaps",
+   "crate": "kit",
+   "to": "WidgetInteractionMaps"
+  },
+  {
+   "from": "wgpu::widgets::WidgetNode",
+   "crate": "kit",
+   "to": "WidgetNode"
+  },
+  {
+   "from": "wgpu::widgets::affine_glyph_tests",
+   "crate": "kit",
+   "to": "affine_glyph_tests"
+  },
+  {
+   "from": "wgpu::widgets::draw_icon",
+   "crate": "kit",
+   "to": "draw_icon"
+  },
+  {
+   "from": "wgpu::widgets::draw_text",
+   "crate": "kit",
+   "to": "draw_text"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_face",
+   "crate": "kit",
+   "to": "draw_text_face"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_face_affine_on",
+   "crate": "kit",
+   "to": "draw_text_face_affine_on"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_face_on",
+   "crate": "kit",
+   "to": "draw_text_face_on"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_on",
+   "crate": "kit",
+   "to": "draw_text_on"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_overlay",
+   "crate": "kit",
+   "to": "draw_text_overlay"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_overlay_on",
+   "crate": "kit",
+   "to": "draw_text_overlay_on"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_weighted",
+   "crate": "kit",
+   "to": "draw_text_weighted"
+  },
+  {
+   "from": "wgpu::widgets::draw_text_wrapped",
+   "crate": "kit",
+   "to": "draw_text_wrapped"
+  },
+  {
+   "from": "wgpu::widgets::gizmo",
+   "crate": "kit",
+   "to": "gizmo"
+  },
+  {
+   "from": "wgpu::widgets::measure_text_width",
+   "crate": "kit",
+   "to": "measure_text_width"
+  },
+  {
+   "from": "wgpu::widgets::pen_glyph_run",
+   "crate": "kit",
+   "to": "pen_glyph_run"
+  },
+  {
+   "from": "wgpu::widgets::register_input_meta",
+   "crate": "kit",
+   "to": "register_input_meta"
+  },
+  {
+   "from": "wgpu::widgets::register_select_meta",
+   "crate": "kit",
+   "to": "register_select_meta"
+  },
+  {
+   "from": "wgpu::widgets::register_toggle_meta",
+   "crate": "kit",
+   "to": "register_toggle_meta"
+  },
+  {
+   "from": "wgpu::widgets::render_scroll_region",
+   "crate": "kit",
+   "to": "render_scroll_region"
+  },
+  {
+   "from": "wgpu::widgets::wrap_text",
+   "crate": "kit",
+   "to": "wrap_text"
+  },
+  {
+   "from": "wgpu::widgets::constrain_number_input",
+   "crate": "kit",
+   "to": "constrain_number_input"
+  },
+  {
+   "from": "wgpu::events::constrain_number_input",
+   "crate": "kit",
+   "to": "constrain_number_input"
+  },
+  {
+   "from": "wgpu::engine::LANE_WHEEL",
+   "crate": "engine_surface",
+   "to": "LANE_WHEEL"
+  },
+  {
+   "from": "wgpu::engine::LayoutWorkerAdmission",
+   "crate": "engine_surface",
+   "to": "LayoutWorkerAdmission"
+  },
+  {
+   "from": "wgpu::engine::PresentedTooltip",
+   "crate": "engine_surface",
+   "to": "PresentedTooltip"
+  },
+  {
+   "from": "wgpu::engine::RETAINED_HIT_REGISTRY_CAPACITY",
+   "crate": "engine_surface",
+   "to": "RETAINED_HIT_REGISTRY_CAPACITY"
+  },
+  {
+   "from": "wgpu::engine::RETAINED_PAINT_DEPTH_CREDITS",
+   "crate": "engine_surface",
+   "to": "RETAINED_PAINT_DEPTH_CREDITS"
+  },
+  {
+   "from": "wgpu::engine::RetainedPaintFrame",
+   "crate": "engine_surface",
+   "to": "RetainedPaintFrame"
+  },
+  {
+   "from": "wgpu::engine::RetainedPaintPhase",
+   "crate": "engine_surface",
+   "to": "RetainedPaintPhase"
+  },
+  {
+   "from": "wgpu::engine::RetainedPaintVisit",
+   "crate": "engine_surface",
+   "to": "RetainedPaintVisit"
+  },
+  {
+   "from": "wgpu::engine::RetainedPaintWalk",
+   "crate": "engine_surface",
+   "to": "RetainedPaintWalk"
+  },
+  {
+   "from": "wgpu::engine::RetainedPaintWalkStep",
+   "crate": "engine_surface",
+   "to": "RetainedPaintWalkStep"
+  },
+  {
+   "from": "wgpu::engine::RetainedTooltipPaint",
+   "crate": "engine_surface",
+   "to": "RetainedTooltipPaint"
+  },
+  {
+   "from": "wgpu::engine::SurfaceLane",
+   "crate": "engine_surface",
+   "to": "SurfaceLane"
+  },
+  {
+   "from": "wgpu::engine::SurfaceLaneEntry",
+   "crate": "engine_surface",
+   "to": "SurfaceLaneEntry"
+  },
+  {
+   "from": "wgpu::engine::SurfaceLaneRing",
+   "crate": "engine_surface",
+   "to": "SurfaceLaneRing"
+  },
+  {
+   "from": "wgpu::engine::SurfaceLayoutReason",
+   "crate": "engine_surface",
+   "to": "SurfaceLayoutReason"
+  },
+  {
+   "from": "wgpu::engine::ThemePropagationCursor",
+   "crate": "engine_surface",
+   "to": "ThemePropagationCursor"
+  },
+  {
+   "from": "wgpu::engine::ThemePropagationPhase",
+   "crate": "engine_surface",
+   "to": "ThemePropagationPhase"
+  },
+  {
+   "from": "wgpu::engine::UI_FRAME_OVERLAY_CHROME",
+   "crate": "engine_surface",
+   "to": "UI_FRAME_OVERLAY_CHROME"
+  },
+  {
+   "from": "wgpu::engine::UI_RETIRED_COMPONENT_SCENE_CAPACITY",
+   "crate": "engine_surface",
+   "to": "UI_RETIRED_COMPONENT_SCENE_CAPACITY"
+  },
+  {
+   "from": "wgpu::engine::UiCandidateBaseline",
+   "crate": "engine_surface",
+   "to": "UiCandidateBaseline"
+  },
+  {
+   "from": "wgpu::engine::UiCandidateBaselineStep",
+   "crate": "engine_surface",
+   "to": "UiCandidateBaselineStep"
+  },
+  {
+   "from": "wgpu::engine::UiCaretSource",
+   "crate": "engine_surface",
+   "to": "UiCaretSource"
+  },
+  {
+   "from": "wgpu::engine::UiDocumentIngress",
+   "crate": "engine_surface",
+   "to": "UiDocumentIngress"
+  },
+  {
+   "from": "wgpu::engine::UiDocumentIngressFault",
+   "crate": "engine_surface",
+   "to": "UiDocumentIngressFault"
+  },
+  {
+   "from": "wgpu::engine::UiDocumentIngressStatus",
+   "crate": "engine_surface",
+   "to": "UiDocumentIngressStatus"
+  },
+  {
+   "from": "wgpu::engine::UiFramePaintCensus",
+   "crate": "engine_surface",
+   "to": "UiFramePaintCensus"
+  },
+  {
+   "from": "wgpu::engine::UiFrameStep",
+   "crate": "engine_surface",
+   "to": "UiFrameStep"
+  },
+  {
+   "from": "wgpu::engine::UiLayoutStep",
+   "crate": "engine_surface",
+   "to": "UiLayoutStep"
+  },
+  {
+   "from": "wgpu::engine::UiOverlayPlacement",
+   "crate": "engine_surface",
+   "to": "UiOverlayPlacement"
+  },
+  {
+   "from": "wgpu::engine::UiPresentedCaret",
+   "crate": "engine_surface",
+   "to": "UiPresentedCaret"
+  },
+  {
+   "from": "wgpu::engine::UiPresentedSourceIdentity",
+   "crate": "engine_surface",
+   "to": "UiPresentedSourceIdentity"
+  },
+  {
+   "from": "wgpu::engine::UiPresentedTreeLoan",
+   "crate": "engine_surface",
+   "to": "UiPresentedTreeLoan"
+  },
+  {
+   "from": "wgpu::engine::UiSceneHit",
+   "crate": "engine_surface",
+   "to": "UiSceneHit"
+  },
+  {
+   "from": "wgpu::engine::UiSealedVisibilityCandidate",
+   "crate": "engine_surface",
+   "to": "UiSealedVisibilityCandidate"
+  },
+  {
+   "from": "wgpu::engine::UiSurfaceAdmissionRejected",
+   "crate": "engine_surface",
+   "to": "UiSurfaceAdmissionRejected"
+  },
+  {
+   "from": "wgpu::engine::UiSurfaceClosePhase",
+   "crate": "engine_surface",
+   "to": "UiSurfaceClosePhase"
+  },
+  {
+   "from": "wgpu::engine::UiSurfaceCloseStep",
+   "crate": "engine_surface",
+   "to": "UiSurfaceCloseStep"
+  },
+  {
+   "from": "wgpu::engine::UiSurfaceRegistry",
+   "crate": "engine_surface",
+   "to": "UiSurfaceRegistry"
+  },
+  {
+   "from": "wgpu::engine::UiSurfaceSlot",
+   "crate": "engine_surface",
+   "to": "UiSurfaceSlot"
+  },
+  {
+   "from": "wgpu::engine::UiWindow",
+   "crate": "engine_surface",
+   "to": "UiWindow"
+  },
+  {
+   "from": "wgpu::engine::UiWindowClockStep",
+   "crate": "engine_surface",
+   "to": "UiWindowClockStep"
+  },
+  {
+   "from": "wgpu::engine::UiWorkerRetirementRefusal",
+   "crate": "engine_surface",
+   "to": "UiWorkerRetirementRefusal"
+  },
+  {
+   "from": "wgpu::engine::close_layout_worker_session",
+   "crate": "engine_surface",
+   "to": "close_layout_worker_session"
+  },
+  {
+   "from": "wgpu::engine::consume_layout_retirement",
+   "crate": "engine_surface",
+   "to": "consume_layout_retirement"
+  },
+  {
+   "from": "wgpu::engine::intersect_rect",
+   "crate": "engine_surface",
+   "to": "intersect_rect"
+  },
+  {
+   "from": "wgpu::engine::mark_window_paint_dirty",
+   "crate": "engine_surface",
+   "to": "mark_window_paint_dirty"
+  },
+  {
+   "from": "wgpu::engine::offset_rect",
+   "crate": "engine_surface",
+   "to": "offset_rect"
+  },
+  {
+   "from": "wgpu::engine::paint_retained_tooltip",
+   "crate": "engine_surface",
+   "to": "paint_retained_tooltip"
+  },
+  {
+   "from": "wgpu::engine::presented_caret",
+   "crate": "engine_surface",
+   "to": "presented_caret"
+  },
+  {
+   "from": "wgpu::engine::push_clipped_retained_hit",
+   "crate": "engine_surface",
+   "to": "push_clipped_retained_hit"
+  },
+  {
+   "from": "wgpu::engine::push_retained_hit",
+   "crate": "engine_surface",
+   "to": "push_retained_hit"
+  },
+  {
+   "from": "wgpu::engine::register_retained_hit",
+   "crate": "engine_surface",
+   "to": "register_retained_hit"
+  },
+  {
+   "from": "wgpu::engine::retained_first_child",
+   "crate": "engine_surface",
+   "to": "retained_first_child"
+  },
+  {
+   "from": "wgpu::engine::retained_node_clip",
+   "crate": "engine_surface",
+   "to": "retained_node_clip"
+  },
+  {
+   "from": "wgpu::engine::retained_tooltip_paint",
+   "crate": "engine_surface",
+   "to": "retained_tooltip_paint"
+  },
+  {
+   "from": "wgpu::engine::retire_surface_scene",
+   "crate": "engine_surface",
+   "to": "retire_surface_scene"
+  },
+  {
+   "from": "wgpu::engine::scene_slot_for_node_absolute",
+   "crate": "engine_surface",
+   "to": "scene_slot_for_node_absolute"
+  },
+  {
+   "from": "wgpu::engine::stage_label",
+   "crate": "engine_surface",
+   "to": "stage_label"
+  },
+  {
+   "from": "wgpu::engine::synchronize_presented_row_reason",
+   "crate": "engine_surface",
+   "to": "synchronize_presented_row_reason"
+  },
+  {
+   "from": "wgpu::engine::synchronize_presented_tooltip",
+   "crate": "engine_surface",
+   "to": "synchronize_presented_tooltip"
+  },
+  {
+   "from": "wgpu::engine::theme_layout_identity",
+   "crate": "engine_surface",
+   "to": "theme_layout_identity"
+  },
+  {
+   "from": "wgpu::engine::tooltip_label_in_tree",
+   "crate": "engine_surface",
+   "to": "tooltip_label_in_tree"
+  },
+  {
+   "from": "wgpu::engine::ui_document_ingress_generation",
+   "crate": "engine_surface",
+   "to": "ui_document_ingress_generation"
+  },
+  {
+   "from": "wgpu::engine::worker_lane",
+   "crate": "engine_surface",
+   "to": "worker_lane"
+  },
+  {
+   "from": "wgpu::paint::push_stepper_chrome",
+   "crate": "controls",
+   "to": "stepper::push_stepper_chrome"
+  },
+  {
+   "from": "wgpu::paint::push_stepper_icon",
+   "crate": "controls",
+   "to": "stepper::push_stepper_icon"
+  },
+  {
+   "from": "wgpu::paint::PANEL_HEADER",
+   "crate": "paintref",
+   "to": "PANEL_HEADER"
+  },
+  {
+   "from": "wgpu::paint::clear_dirty_paint",
+   "crate": "paintref",
+   "to": "clear_dirty_paint"
+  },
+  {
+   "from": "wgpu::paint::edit_selection_bounds",
+   "crate": "paintref",
+   "to": "edit_selection_bounds"
+  },
+  {
+   "from": "wgpu::paint::find_child_by_key",
+   "crate": "paintref",
+   "to": "find_child_by_key"
+  },
+  {
+   "from": "wgpu::paint::paint_button",
+   "crate": "paintref",
+   "to": "paint_button"
+  },
+  {
+   "from": "wgpu::paint::paint_component_scene",
+   "crate": "paintref",
+   "to": "paint_component_scene"
+  },
+  {
+   "from": "wgpu::paint::paint_control",
+   "crate": "paintref",
+   "to": "paint_control"
+  },
+  {
+   "from": "wgpu::paint::paint_external_slot",
+   "crate": "paintref",
+   "to": "paint_external_slot"
+  },
+  {
+   "from": "wgpu::paint::paint_field",
+   "crate": "paintref",
+   "to": "paint_field"
+  },
+  {
+   "from": "wgpu::paint::paint_group",
+   "crate": "paintref",
+   "to": "paint_group"
+  },
+  {
+   "from": "wgpu::paint::paint_icon_select",
+   "crate": "paintref",
+   "to": "paint_icon_select"
+  },
+  {
+   "from": "wgpu::paint::paint_image",
+   "crate": "paintref",
+   "to": "paint_image"
+  },
+  {
+   "from": "wgpu::paint::paint_input",
+   "crate": "paintref",
+   "to": "paint_input"
+  },
+  {
+   "from": "wgpu::paint::paint_key_value",
+   "crate": "paintref",
+   "to": "paint_key_value"
+  },
+  {
+   "from": "wgpu::paint::paint_node",
+   "crate": "paintref",
+   "to": "paint_node"
+  },
+  {
+   "from": "wgpu::paint::paint_node_self",
+   "crate": "paintref",
+   "to": "paint_node_self"
+  },
+  {
+   "from": "wgpu::paint::paint_number_stepper",
+   "crate": "paintref",
+   "to": "paint_number_stepper"
+  },
+  {
+   "from": "wgpu::paint::paint_ring",
+   "crate": "paintref",
+   "to": "paint_ring"
+  },
+  {
+   "from": "wgpu::paint::paint_section",
+   "crate": "paintref",
+   "to": "paint_section"
+  },
+  {
+   "from": "wgpu::paint::paint_select",
+   "crate": "paintref",
+   "to": "paint_select"
+  },
+  {
+   "from": "wgpu::paint::paint_slider",
+   "crate": "paintref",
+   "to": "paint_slider"
+  },
+  {
+   "from": "wgpu::paint::paint_stack",
+   "crate": "paintref",
+   "to": "paint_stack"
+  },
+  {
+   "from": "wgpu::paint::paint_text",
+   "crate": "paintref",
+   "to": "paint_text"
+  },
+  {
+   "from": "wgpu::paint::paint_toggle",
+   "crate": "paintref",
+   "to": "paint_toggle"
+  },
+  {
+   "from": "wgpu::paint::paint_tree",
+   "crate": "paintref",
+   "to": "paint_tree"
+  },
+  {
+   "from": "wgpu::paint::paint_tree_guides",
+   "crate": "paintref",
+   "to": "paint_tree_guides"
+  },
+  {
+   "from": "wgpu::paint::paint_tree_item",
+   "crate": "paintref",
+   "to": "paint_tree_item"
+  },
+  {
+   "from": "wgpu::paint::paint_tree_widget",
+   "crate": "paintref",
+   "to": "paint_tree_widget"
+  },
+  {
+   "from": "wgpu::paint::sync_interactive_state",
+   "crate": "paintref",
+   "to": "sync_interactive_state"
+  },
+  {
+   "from": "wgpu::paint::sync_interactive_state_node",
+   "crate": "paintref",
+   "to": "sync_interactive_state_node"
+  },
+  {
+   "from": "wgpu::paint::sync_select_popup_rows",
+   "crate": "paintref",
+   "to": "sync_select_popup_rows"
+  },
+  {
+   "from": "wgpu::paint::sync_tree_item_drag_source",
+   "crate": "paintref",
+   "to": "sync_tree_item_drag_source"
+  },
+  {
+   "from": "wgpu::paint::sync_tree_row_drag_sources",
+   "crate": "paintref",
+   "to": "sync_tree_row_drag_sources"
+  },
+  {
+   "from": "wgpu::select::SELECT_COLLISION_PADDING",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_COLLISION_PADDING"
+  },
+  {
+   "from": "wgpu::select::SELECT_CONTENT_MIN_WIDTH",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_CONTENT_MIN_WIDTH"
+  },
+  {
+   "from": "wgpu::select::SELECT_PAGE_STEP",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_PAGE_STEP"
+  },
+  {
+   "from": "wgpu::select::SELECT_SCROLL_MIN_STEP",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_SCROLL_MIN_STEP"
+  },
+  {
+   "from": "wgpu::select::SELECT_SIDE_OFFSET",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_SIDE_OFFSET"
+  },
+  {
+   "from": "wgpu::select::SELECT_TYPEAHEAD_RESET_SECONDS",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SELECT_TYPEAHEAD_RESET_SECONDS"
+  },
+  {
+   "from": "wgpu::select::SelectKey",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SelectKey"
+  },
+  {
+   "from": "wgpu::select::SelectMove",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SelectMove"
+  },
+  {
+   "from": "wgpu::select::SelectOpenIntent",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SelectOpenIntent"
+  },
+  {
+   "from": "wgpu::select::SelectPopupGeometry",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "SelectPopupGeometry"
+  },
+  {
+   "from": "wgpu::select::normalize_nfkd_text",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "normalize_nfkd_text"
+  },
+  {
+   "from": "wgpu::select::normalize_select_text",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "normalize_select_text"
+  },
+  {
+   "from": "wgpu::select::select_available_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_available_height"
+  },
+  {
+   "from": "wgpu::select::select_clamped_scroll",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_clamped_scroll"
+  },
+  {
+   "from": "wgpu::select::select_key",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_key"
+  },
+  {
+   "from": "wgpu::select::select_menu_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_menu_height"
+  },
+  {
+   "from": "wgpu::select::select_menu_painted_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_menu_painted_height"
+  },
+  {
+   "from": "wgpu::select::select_menu_top",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_menu_top"
+  },
+  {
+   "from": "wgpu::select::select_moved_index",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_moved_index"
+  },
+  {
+   "from": "wgpu::select::select_open_index",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_open_index"
+  },
+  {
+   "from": "wgpu::select::select_popup_geometry",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_popup_geometry"
+  },
+  {
+   "from": "wgpu::select::select_popup_row_hit_rect",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_popup_row_hit_rect"
+  },
+  {
+   "from": "wgpu::select::select_popup_row_rect",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_popup_row_rect"
+  },
+  {
+   "from": "wgpu::select::select_popup_viewport_rect",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_popup_viewport_rect"
+  },
+  {
+   "from": "wgpu::select::select_revealed_scroll",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_revealed_scroll"
+  },
+  {
+   "from": "wgpu::select::select_row_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_row_height"
+  },
+  {
+   "from": "wgpu::select::select_row_rect",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_row_rect"
+  },
+  {
+   "from": "wgpu::select::select_scroll_button_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_button_height"
+  },
+  {
+   "from": "wgpu::select::select_scroll_control_id",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_control_id"
+  },
+  {
+   "from": "wgpu::select::select_scroll_control_parts",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_control_parts"
+  },
+  {
+   "from": "wgpu::select::select_scroll_direction_at",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_direction_at"
+  },
+  {
+   "from": "wgpu::select::select_scroll_key",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_key"
+  },
+  {
+   "from": "wgpu::select::select_scroll_pending_key",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_pending_key"
+  },
+  {
+   "from": "wgpu::select::select_scroll_step",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_step"
+  },
+  {
+   "from": "wgpu::select::select_scroll_viewport_height",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scroll_viewport_height"
+  },
+  {
+   "from": "wgpu::select::select_scrolled_offset",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scrolled_offset"
+  },
+  {
+   "from": "wgpu::select::select_scrolled_row_window",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_scrolled_row_window"
+  },
+  {
+   "from": "wgpu::select::select_typeahead_index",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_typeahead_index"
+  },
+  {
+   "from": "wgpu::select::select_visible_rows",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "select_visible_rows"
+  },
+  {
+   "from": "wgpu::IconName",
+   "ident": "semio_framework_ui_declaration",
+   "to": "IconName"
+  },
+  {
+   "from": "wgpu::AppLabels",
+   "ident": "semio_framework_ui_locale",
+   "to": "AppLabels"
+  },
+  {
+   "from": "wgpu::Label",
+   "ident": "semio_framework_ui_locale",
+   "to": "Label"
+  },
+  {
+   "from": "wgpu::Locale",
+   "ident": "semio_framework_ui_locale",
+   "to": "Locale"
+  },
+  {
+   "from": "wgpu::LocalizedLabel",
+   "ident": "semio_framework_ui_locale",
+   "to": "LocalizedLabel"
+  },
+  {
+   "from": "wgpu::Terminology",
+   "ident": "semio_framework_ui_locale",
+   "to": "Terminology"
+  },
+  {
+   "from": "wgpu::component",
+   "ident": "semio_framework_ui_declaration",
+   "to": ""
+  },
+  {
+   "from": "wgpu::arena",
+   "ident": "semio_framework_ui_arena",
+   "to": ""
+  },
+  {
+   "from": "wgpu::tree",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree"
+  },
+  {
+   "from": "wgpu::reconcile",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "reconcile"
+  },
+  {
+   "from": "wgpu::draw_types",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": ""
+  },
+  {
+   "from": "wgpu::geometry",
+   "ident": "semio_framework_ui_theme",
+   "to": "geometry"
+  },
+  {
+   "from": "wgpu::prepared",
+   "ident": "semio_framework_ui_prepared",
+   "to": ""
+  },
+  {
+   "from": "wgpu::raster_ownership",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": ""
+  },
+  {
+   "from": "wgpu::action",
+   "ident": "semio_framework_ui_action",
+   "to": ""
+  },
+  {
+   "from": "wgpu::text",
+   "ident": "semio_framework_ui_text",
+   "to": ""
+  },
+  {
+   "from": "wgpu::theme",
+   "ident": "semio_framework_ui_theme",
+   "to": ""
+  },
+  {
+   "from": "wgpu::build_shell_context_menu_specs",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::build_shell_context_menu_specs"
+  },
+  {
+   "from": "wgpu::collect_window_kind_ids_from_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::collect_window_kind_ids_from_layout"
+  },
+  {
+   "from": "wgpu::create_default_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::create_default_layout"
+  },
+  {
+   "from": "wgpu::create_named_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::create_named_layout"
+  },
+  {
+   "from": "wgpu::create_stack_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::create_stack_layout"
+  },
+  {
+   "from": "wgpu::create_tab_stack_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::create_tab_stack_layout"
+  },
+  {
+   "from": "wgpu::create_window_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::create_window_layout"
+  },
+  {
+   "from": "wgpu::default_viewport_engagement",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::default_viewport_engagement"
+  },
+  {
+   "from": "wgpu::even_window_layout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::even_window_layout"
+  },
+  {
+   "from": "wgpu::framework_panel_tab_label",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::framework_panel_tab_label"
+  },
+  {
+   "from": "wgpu::merge_named_layouts",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::merge_named_layouts"
+  },
+  {
+   "from": "wgpu::organize_context_menu",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::organize_context_menu"
+  },
+  {
+   "from": "wgpu::partition_window_measures",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::partition_window_measures"
+  },
+  {
+   "from": "wgpu::ribbon_parent_label",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::ribbon_parent_label"
+  },
+  {
+   "from": "wgpu::ActionDescriptor",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::ActionDescriptor"
+  },
+  {
+   "from": "wgpu::MeasureSelectItem",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::MeasureSelectItem"
+  },
+  {
+   "from": "wgpu::NamedLayout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::NamedLayout"
+  },
+  {
+   "from": "wgpu::ShellMenuAction",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::ShellMenuAction"
+  },
+  {
+   "from": "wgpu::StyleSpec",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::StyleSpec"
+  },
+  {
+   "from": "wgpu::WindowEngagement",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagement"
+  },
+  {
+   "from": "wgpu::WindowEngagementControl",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementControl"
+  },
+  {
+   "from": "wgpu::WindowEngagementInput",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementInput"
+  },
+  {
+   "from": "wgpu::WindowEngagementOption",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementOption"
+  },
+  {
+   "from": "wgpu::WindowEngagementPossible",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementPossible"
+  },
+  {
+   "from": "wgpu::WindowEngagementRingOption",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementRingOption"
+  },
+  {
+   "from": "wgpu::WindowEngagementSelectItem",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementSelectItem"
+  },
+  {
+   "from": "wgpu::WindowEngagementSlot",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementSlot"
+  },
+  {
+   "from": "wgpu::WindowEngagementStatus",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementStatus"
+  },
+  {
+   "from": "wgpu::WindowEngagementToggleGroupOption",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowEngagementToggleGroupOption"
+  },
+  {
+   "from": "wgpu::WindowLayout",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayout"
+  },
+  {
+   "from": "wgpu::WindowLayoutAxisNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayoutAxisNode"
+  },
+  {
+   "from": "wgpu::WindowLayoutChild",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayoutChild"
+  },
+  {
+   "from": "wgpu::WindowLayoutRoot",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayoutRoot"
+  },
+  {
+   "from": "wgpu::WindowLayoutStackNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayoutStackNode"
+  },
+  {
+   "from": "wgpu::WindowLayoutWindowNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowLayoutWindowNode"
+  },
+  {
+   "from": "wgpu::WindowMeasure",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowMeasure"
+  },
+  {
+   "from": "wgpu::WindowOptions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowOptions"
+  },
+  {
+   "from": "wgpu::WindowStackCorner",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::WindowStackCorner"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_HISTORY_BODY_KEY",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_HISTORY_BODY_KEY"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_ARTIFACT_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_ARTIFACT_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_CATALOGUE_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_CATALOGUE_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_HISTORY_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_HISTORY_LABEL"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_INSPECTION_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_INSPECTION_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_INSPECTION_LABEL"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_PARAMETERS_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_PARAMETERS_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID"
+  },
+  {
+   "from": "wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL"
+  },
+  {
+   "from": "wgpu::RIBBON_PARENT_CATEGORIES",
+   "ident": "semio_framework_ui_declaration",
+   "to": "layout::RIBBON_PARENT_CATEGORIES"
+  },
+  {
+   "from": "wgpu::utility_button",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::utility_button"
+  },
+  {
+   "from": "wgpu::utility_collection",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::utility_collection"
+  },
+  {
+   "from": "wgpu::utility_separator",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::utility_separator"
+  },
+  {
+   "from": "wgpu::utility_toggle",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::utility_toggle"
+  },
+  {
+   "from": "wgpu::UtilityCategory",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::UtilityCategory"
+  },
+  {
+   "from": "wgpu::UtilityNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "utilities::UtilityNode"
+  },
+  {
+   "from": "wgpu::Rect",
+   "ident": "semio_framework_ui_theme",
+   "to": "geometry::Rect"
+  },
+  {
+   "from": "wgpu::build_presence_bar",
+   "crate": "light",
+   "to": "presence_bar::build_presence_bar"
+  },
+  {
+   "from": "wgpu::presence_bar_chip_accessible_text",
+   "crate": "light",
+   "to": "presence_bar::presence_bar_chip_accessible_text"
+  },
+  {
+   "from": "wgpu::presence_bar_chip_text",
+   "crate": "light",
+   "to": "presence_bar::presence_bar_chip_text"
+  },
+  {
+   "from": "wgpu::presence_color",
+   "crate": "light",
+   "to": "presence_bar::presence_color"
+  },
+  {
+   "from": "wgpu::presence_css_var",
+   "crate": "light",
+   "to": "presence_bar::presence_css_var"
+  },
+  {
+   "from": "wgpu::presence_empty_label",
+   "crate": "light",
+   "to": "presence_bar::presence_empty_label"
+  },
+  {
+   "from": "wgpu::presence_overflow_label",
+   "crate": "light",
+   "to": "presence_bar::presence_overflow_label"
+  },
+  {
+   "from": "wgpu::PresenceActivity",
+   "crate": "light",
+   "to": "presence_bar::PresenceActivity"
+  },
+  {
+   "from": "wgpu::PresenceAppearance",
+   "crate": "light",
+   "to": "presence_bar::PresenceAppearance"
+  },
+  {
+   "from": "wgpu::PresenceHsl",
+   "crate": "light",
+   "to": "presence_bar::PresenceHsl"
+  },
+  {
+   "from": "wgpu::PresencePeerRow",
+   "crate": "light",
+   "to": "presence_bar::PresencePeerRow"
+  },
+  {
+   "from": "wgpu::PresenceRole",
+   "crate": "light",
+   "to": "presence_bar::PresenceRole"
+  },
+  {
+   "from": "wgpu::PRESENCE_BAR_DEFAULT_MAX",
+   "crate": "light",
+   "to": "presence_bar::PRESENCE_BAR_DEFAULT_MAX"
+  },
+  {
+   "from": "wgpu::shell_floor_paints",
+   "ident": "semio_framework_ui_theme",
+   "to": "shell_floor_paints"
+  },
+  {
+   "from": "wgpu::GlassStyle",
+   "ident": "semio_framework_ui_theme",
+   "to": "GlassStyle"
+  },
+  {
+   "from": "wgpu::Level",
+   "ident": "semio_framework_ui_theme",
+   "to": "Level"
+  },
+  {
+   "from": "wgpu::Rgba",
+   "ident": "semio_framework_ui_theme",
+   "to": "Rgba"
+  },
+  {
+   "from": "wgpu::SurfaceFill",
+   "ident": "semio_framework_ui_theme",
+   "to": "SurfaceFill"
+  },
+  {
+   "from": "wgpu::SurfaceScope",
+   "ident": "semio_framework_ui_theme",
+   "to": "SurfaceScope"
+  },
+  {
+   "from": "wgpu::Theme",
+   "ident": "semio_framework_ui_theme",
+   "to": "Theme"
+  },
+  {
+   "from": "wgpu::gizmo",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "gizmo"
+  },
+  {
+   "from": "wgpu::mesh_content_version",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "mesh_content_version"
+  },
+  {
+   "from": "wgpu::paint_selection_marquee",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "paint_selection_marquee"
+  },
+  {
+   "from": "wgpu::DrawList",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "DrawList"
+  },
+  {
+   "from": "wgpu::RasterKeepCursorV1",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "RasterKeepCursorV1"
+  },
+  {
+   "from": "wgpu::RasterKeepStepV1",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "RasterKeepStepV1"
+  },
+  {
+   "from": "wgpu::Arena",
+   "ident": "semio_framework_ui_arena",
+   "to": "Arena"
+  },
+  {
+   "from": "wgpu::NodeId",
+   "ident": "semio_framework_ui_arena",
+   "to": "NodeId"
+  },
+  {
+   "from": "wgpu::apply_canvas_cursor",
+   "crate": "hosting",
+   "to": "cursor::apply_canvas_cursor"
+  },
+  {
+   "from": "wgpu::apply_window_cursor",
+   "crate": "hosting",
+   "to": "cursor::apply_window_cursor"
+  },
+  {
+   "from": "wgpu::resolve_semio_cursor",
+   "crate": "hosting",
+   "to": "cursor::resolve_semio_cursor"
+  },
+  {
+   "from": "wgpu::CursorDragState",
+   "crate": "hosting",
+   "to": "cursor::CursorDragState"
+  },
+  {
+   "from": "wgpu::SemioCursor",
+   "crate": "hosting",
+   "to": "cursor::SemioCursor"
+  },
+  {
+   "from": "wgpu::ear_clip_polygon",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "ear_clip_polygon"
+  },
+  {
+   "from": "wgpu::IconAtlas",
+   "ident": "semio_framework_ui_draw_contract",
+   "to": "IconAtlas"
+  },
+  {
+   "from": "wgpu::EditState",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::EditState"
+  },
+  {
+   "from": "wgpu::LayoutBucket",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::LayoutBucket"
+  },
+  {
+   "from": "wgpu::Node",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::Node"
+  },
+  {
+   "from": "wgpu::NodeFlags",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::NodeFlags"
+  },
+  {
+   "from": "wgpu::NodeKey",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::NodeKey"
+  },
+  {
+   "from": "wgpu::NodeKeyRef",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::NodeKeyRef"
+  },
+  {
+   "from": "wgpu::PaintBucket",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::PaintBucket"
+  },
+  {
+   "from": "wgpu::UiTree",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::UiTree"
+  },
+  {
+   "from": "wgpu::WidgetSpec",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::WidgetSpec"
+  },
+  {
+   "from": "wgpu::WidgetState",
+   "ident": "semio_framework_ui_retained_tree",
+   "to": "tree::WidgetState"
+  },
+  {
+   "from": "wgpu::overlay_rect",
+   "crate": "events",
+   "to": "overlay_rect"
+  },
+  {
+   "from": "wgpu::resolve_anchored_placement",
+   "crate": "events",
+   "to": "resolve_anchored_placement"
+  },
+  {
+   "from": "wgpu::resolve_centered_placement",
+   "crate": "events",
+   "to": "resolve_centered_placement"
+  },
+  {
+   "from": "wgpu::resolve_overlay_placement",
+   "crate": "events",
+   "to": "resolve_overlay_placement"
+  },
+  {
+   "from": "wgpu::resolve_overlay_placement_side",
+   "crate": "events",
+   "to": "resolve_overlay_placement_side"
+  },
+  {
+   "from": "wgpu::resolve_select_inline_left",
+   "crate": "events",
+   "to": "resolve_select_inline_left"
+  },
+  {
+   "from": "wgpu::AccessibilityUiEvent",
+   "crate": "events",
+   "to": "AccessibilityUiEvent"
+  },
+  {
+   "from": "wgpu::AnchoredPlacement",
+   "crate": "events",
+   "to": "AnchoredPlacement"
+  },
+  {
+   "from": "wgpu::CaptureKind",
+   "crate": "events",
+   "to": "CaptureKind"
+  },
+  {
+   "from": "wgpu::DismissPolicy",
+   "crate": "events",
+   "to": "DismissPolicy"
+  },
+  {
+   "from": "wgpu::DragGhost",
+   "crate": "events",
+   "to": "DragGhost"
+  },
+  {
+   "from": "wgpu::DragPayload",
+   "crate": "events",
+   "to": "DragPayload"
+  },
+  {
+   "from": "wgpu::DragSession",
+   "crate": "events",
+   "to": "DragSession"
+  },
+  {
+   "from": "wgpu::EventModifiers",
+   "crate": "events",
+   "to": "EventModifiers"
+  },
+  {
+   "from": "wgpu::ImeEvent",
+   "crate": "events",
+   "to": "ImeEvent"
+  },
+  {
+   "from": "wgpu::OpenOverlay",
+   "crate": "events",
+   "to": "OpenOverlay"
+  },
+  {
+   "from": "wgpu::OverlayAlign",
+   "crate": "events",
+   "to": "OverlayAlign"
+  },
+  {
+   "from": "wgpu::OverlayAnchor",
+   "crate": "events",
+   "to": "OverlayAnchor"
+  },
+  {
+   "from": "wgpu::OverlayKind",
+   "crate": "events",
+   "to": "OverlayKind"
+  },
+  {
+   "from": "wgpu::OverlayPlacement",
+   "crate": "events",
+   "to": "OverlayPlacement"
+  },
+  {
+   "from": "wgpu::OverlayRect",
+   "crate": "events",
+   "to": "OverlayRect"
+  },
+  {
+   "from": "wgpu::OverlaySide",
+   "crate": "events",
+   "to": "OverlaySide"
+  },
+  {
+   "from": "wgpu::PointerButton",
+   "crate": "events",
+   "to": "PointerButton"
+  },
+  {
+   "from": "wgpu::ResolvedOverlayPlacement",
+   "crate": "events",
+   "to": "ResolvedOverlayPlacement"
+  },
+  {
+   "from": "wgpu::ScrollAxis",
+   "crate": "events",
+   "to": "ScrollAxis"
+  },
+  {
+   "from": "wgpu::TooltipStep",
+   "crate": "events",
+   "to": "TooltipStep"
+  },
+  {
+   "from": "wgpu::UiCommand",
+   "crate": "events",
+   "to": "UiCommand"
+  },
+  {
+   "from": "wgpu::UiEvent",
+   "crate": "events",
+   "to": "UiEvent"
+  },
+  {
+   "from": "wgpu::TOOLTIP_DWELL_SECONDS",
+   "crate": "events",
+   "to": "TOOLTIP_DWELL_SECONDS"
+  },
+  {
+   "from": "wgpu::TOOLTIP_HOVER_OUT_SECONDS",
+   "crate": "events",
+   "to": "TOOLTIP_HOVER_OUT_SECONDS"
+  },
+  {
+   "from": "wgpu::SceneHost",
+   "crate": "hosting",
+   "to": "scene_slots::SceneHost"
+  },
+  {
+   "from": "wgpu::ScenePaintCursor",
+   "crate": "hosting",
+   "to": "scene_slots::ScenePaintCursor"
+  },
+  {
+   "from": "wgpu::ScenePaintCursorError",
+   "crate": "hosting",
+   "to": "scene_slots::ScenePaintCursorError"
+  },
+  {
+   "from": "wgpu::ScenePaintStep",
+   "crate": "hosting",
+   "to": "scene_slots::ScenePaintStep"
+  },
+  {
+   "from": "wgpu::SceneSlot",
+   "crate": "hosting",
+   "to": "scene_slots::SceneSlot"
+  },
+  {
+   "from": "wgpu::SlotContent",
+   "crate": "hosting",
+   "to": "scene_slots::SlotContent"
+  },
+  {
+   "from": "wgpu::Shell",
+   "crate": "hosting",
+   "to": "shell::Shell"
+  },
+  {
+   "from": "wgpu::ShellEvent",
+   "crate": "hosting",
+   "to": "shell::ShellEvent"
+  },
+  {
+   "from": "wgpu::checked_action_string_bytes",
+   "ident": "semio_framework_ui_action",
+   "to": "checked_action_string_bytes"
+  },
+  {
+   "from": "wgpu::intent_is_stale",
+   "ident": "semio_framework_ui_action",
+   "to": "intent_is_stale"
+  },
+  {
+   "from": "wgpu::ActionQueueReceipt",
+   "ident": "semio_framework_ui_action",
+   "to": "ActionQueueReceipt"
+  },
+  {
+   "from": "wgpu::ActionQueueReceiptSource",
+   "ident": "semio_framework_ui_action",
+   "to": "ActionQueueReceiptSource"
+  },
+  {
+   "from": "wgpu::BoundedAction",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedAction"
+  },
+  {
+   "from": "wgpu::BoundedActionBatchReservation",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionBatchReservation"
+  },
+  {
+   "from": "wgpu::BoundedActionBuilder",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionBuilder"
+  },
+  {
+   "from": "wgpu::BoundedActionClaim",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionClaim"
+  },
+  {
+   "from": "wgpu::BoundedActionClaimBatch",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionClaimBatch"
+  },
+  {
+   "from": "wgpu::BoundedActionFault",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionFault"
+  },
+  {
+   "from": "wgpu::BoundedActionQueue",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionQueue"
+  },
+  {
+   "from": "wgpu::BoundedActionReservation",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedActionReservation"
+  },
+  {
+   "from": "wgpu::BoundedClaimedActionDraft",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedClaimedActionDraft"
+  },
+  {
+   "from": "wgpu::BoundedClaimedActionReservation",
+   "ident": "semio_framework_ui_action",
+   "to": "BoundedClaimedActionReservation"
+  },
+  {
+   "from": "wgpu::PreparedClaimedAction",
+   "ident": "semio_framework_ui_action",
+   "to": "PreparedClaimedAction"
+  },
+  {
+   "from": "wgpu::PreparedClaimedActionBatch",
+   "ident": "semio_framework_ui_action",
+   "to": "PreparedClaimedActionBatch"
+  },
+  {
+   "from": "wgpu::QueuedActionDescriptor",
+   "ident": "semio_framework_ui_action",
+   "to": "QueuedActionDescriptor"
+  },
+  {
+   "from": "wgpu::RetainedStringAction",
+   "ident": "semio_framework_ui_action",
+   "to": "RetainedStringAction"
+  },
+  {
+   "from": "wgpu::RetainedStringActionStep",
+   "ident": "semio_framework_ui_action",
+   "to": "RetainedStringActionStep"
+  },
+  {
+   "from": "wgpu::UiIntentAddress",
+   "ident": "semio_framework_ui_action",
+   "to": "UiIntentAddress"
+  },
+  {
+   "from": "wgpu::UiIntentAdmission",
+   "ident": "semio_framework_ui_action",
+   "to": "UiIntentAdmission"
+  },
+  {
+   "from": "wgpu::UiIntentBindings",
+   "ident": "semio_framework_ui_action",
+   "to": "UiIntentBindings"
+  },
+  {
+   "from": "wgpu::UiIntentCommand",
+   "ident": "semio_framework_ui_action",
+   "to": "UiIntentCommand"
+  },
+  {
+   "from": "wgpu::UiIntentSequencer",
+   "ident": "semio_framework_ui_action",
+   "to": "UiIntentSequencer"
+  },
+  {
+   "from": "wgpu::ACTION_ITEM_BYTE_CAPACITY",
+   "ident": "semio_framework_ui_action",
+   "to": "ACTION_ITEM_BYTE_CAPACITY"
+  },
+  {
+   "from": "wgpu::ACTION_NODE_CAPACITY",
+   "ident": "semio_framework_ui_action",
+   "to": "ACTION_NODE_CAPACITY"
+  },
+  {
+   "from": "wgpu::ACTION_STRING_BYTE_CAPACITY",
+   "ident": "semio_framework_ui_action",
+   "to": "ACTION_STRING_BYTE_CAPACITY"
+  },
+  {
+   "from": "wgpu::INTENT_DELTA_FIELD",
+   "ident": "semio_framework_ui_action",
+   "to": "INTENT_DELTA_FIELD"
+  },
+  {
+   "from": "wgpu::INTENT_VALUE_FIELD",
+   "ident": "semio_framework_ui_action",
+   "to": "INTENT_VALUE_FIELD"
+  },
+  {
+   "from": "wgpu::RETAINED_ACTION_STRING_BYTE_CAPACITY",
+   "ident": "semio_framework_ui_action",
+   "to": "RETAINED_ACTION_STRING_BYTE_CAPACITY"
+  },
+  {
+   "from": "wgpu::RETAINED_ACTION_STRING_PAGE_BYTES",
+   "ident": "semio_framework_ui_action",
+   "to": "RETAINED_ACTION_STRING_PAGE_BYTES"
+  },
+  {
+   "from": "wgpu::chrome_item_bg",
+   "crate": "layout",
+   "to": "chrome::chrome_item_bg"
+  },
+  {
+   "from": "wgpu::chrome_item_text",
+   "crate": "layout",
+   "to": "chrome::chrome_item_text"
+  },
+  {
+   "from": "wgpu::foreground_on_fill",
+   "crate": "layout",
+   "to": "chrome::foreground_on_fill"
+  },
+  {
+   "from": "wgpu::item_bg",
+   "crate": "layout",
+   "to": "chrome::item_bg"
+  },
+  {
+   "from": "wgpu::item_text",
+   "crate": "layout",
+   "to": "chrome::item_text"
+  },
+  {
+   "from": "wgpu::measure_action_item",
+   "crate": "layout",
+   "to": "chrome::measure_action_item"
+  },
+  {
+   "from": "wgpu::push_chrome_border",
+   "crate": "layout",
+   "to": "chrome::push_chrome_border"
+  },
+  {
+   "from": "wgpu::push_chrome_group_border",
+   "crate": "layout",
+   "to": "chrome::push_chrome_group_border"
+  },
+  {
+   "from": "wgpu::push_control_border",
+   "crate": "layout",
+   "to": "chrome::push_control_border"
+  },
+  {
+   "from": "wgpu::push_icon",
+   "crate": "layout",
+   "to": "chrome::push_icon"
+  },
+  {
+   "from": "wgpu::push_window_cap_border",
+   "crate": "layout",
+   "to": "chrome::push_window_cap_border"
+  },
+  {
+   "from": "wgpu::UiDriverChrome",
+   "crate": "layout",
+   "to": "chrome::UiDriverChrome"
+  },
+  {
+   "from": "wgpu::UiDriverDrag",
+   "crate": "layout",
+   "to": "chrome::UiDriverDrag"
+  },
+  {
+   "from": "wgpu::UiDriverLabelTier",
+   "crate": "layout",
+   "to": "chrome::UiDriverLabelTier"
+  },
+  {
+   "from": "wgpu::UiDriverLabels",
+   "crate": "layout",
+   "to": "chrome::UiDriverLabels"
+  },
+  {
+   "from": "wgpu::UiDriverTooltips",
+   "crate": "layout",
+   "to": "chrome::UiDriverTooltips"
+  },
+  {
+   "from": "wgpu::ICON_TINY",
+   "crate": "layout",
+   "to": "chrome::ICON_TINY"
+  },
+  {
+   "from": "wgpu::ICON_TREE_ROW",
+   "crate": "layout",
+   "to": "chrome::ICON_TREE_ROW"
+  },
+  {
+   "from": "wgpu::SIZE_TINY",
+   "crate": "layout",
+   "to": "chrome::SIZE_TINY"
+  },
+  {
+   "from": "wgpu::SurfaceLane",
+   "crate": "engine_surface",
+   "to": "SurfaceLane"
+  },
+  {
+   "from": "wgpu::Ui",
+   "crate": "engine",
+   "to": "Ui"
+  },
+  {
+   "from": "wgpu::UiCaretSource",
+   "crate": "engine_surface",
+   "to": "UiCaretSource"
+  },
+  {
+   "from": "wgpu::UiFrameStep",
+   "crate": "engine_surface",
+   "to": "UiFrameStep"
+  },
+  {
+   "from": "wgpu::UiLayoutStep",
+   "crate": "engine_surface",
+   "to": "UiLayoutStep"
+  },
+  {
+   "from": "wgpu::UiOverlayPlacement",
+   "crate": "engine_surface",
+   "to": "UiOverlayPlacement"
+  },
+  {
+   "from": "wgpu::UiPresentedCaret",
+   "crate": "engine_surface",
+   "to": "UiPresentedCaret"
+  },
+  {
+   "from": "wgpu::UiPresentedTreeLoan",
+   "crate": "engine_surface",
+   "to": "UiPresentedTreeLoan"
+  },
+  {
+   "from": "wgpu::UiSceneHit",
+   "crate": "engine_surface",
+   "to": "UiSceneHit"
+  },
+  {
+   "from": "wgpu::UiSurfaceToken",
+   "crate": "engine",
+   "to": "UiSurfaceToken"
+  },
+  {
+   "from": "wgpu::UiWindowClockStep",
+   "crate": "engine_surface",
+   "to": "UiWindowClockStep"
+  },
+  {
+   "from": "wgpu::UI_LAYOUT_SURFACE_SLOTS",
+   "crate": "engine",
+   "to": "UI_LAYOUT_SURFACE_SLOTS"
+  },
+  {
+   "from": "wgpu::clipboard_read_text",
+   "crate": "hosting",
+   "to": "host::clipboard_read_text"
+  },
+  {
+   "from": "wgpu::clipboard_write_text",
+   "crate": "hosting",
+   "to": "host::clipboard_write_text"
+  },
+  {
+   "from": "wgpu::dispatch_window_event",
+   "crate": "hosting",
+   "to": "host::dispatch_window_event"
+  },
+  {
+   "from": "wgpu::modifiers_from_winit",
+   "crate": "hosting",
+   "to": "host::modifiers_from_winit"
+  },
+  {
+   "from": "wgpu::pointer_coords",
+   "crate": "hosting",
+   "to": "host::pointer_coords"
+  },
+  {
+   "from": "wgpu::WindowInputState",
+   "crate": "hosting",
+   "to": "host::WindowInputState"
+  },
+  {
+   "from": "wgpu::ClipboardContent",
+   "crate": "hosting",
+   "to": "host::ClipboardContent"
+  },
+  {
+   "from": "wgpu::ClipboardContentBorrow",
+   "crate": "hosting",
+   "to": "host::ClipboardContentBorrow"
+  },
+  {
+   "from": "wgpu::ClipboardIoJob",
+   "crate": "hosting",
+   "to": "host::ClipboardIoJob"
+  },
+  {
+   "from": "wgpu::ClipboardIoJobInitializer",
+   "crate": "hosting",
+   "to": "host::ClipboardIoJobInitializer"
+  },
+  {
+   "from": "wgpu::ClipboardIntentRecipient",
+   "crate": "input",
+   "to": "ClipboardIntentRecipient"
+  },
+  {
+   "from": "wgpu::ClipboardIntentSource",
+   "crate": "input",
+   "to": "ClipboardIntentSource"
+  },
+  {
+   "from": "wgpu::OriginalClipboardIntent",
+   "crate": "input",
+   "to": "OriginalClipboardIntent"
+  },
+  {
+   "from": "wgpu::DragAxis",
+   "crate": "input",
+   "to": "DragAxis"
+  },
+  {
+   "from": "wgpu::DragState",
+   "crate": "input",
+   "to": "DragState"
+  },
+  {
+   "from": "wgpu::HitKind",
+   "crate": "input",
+   "to": "HitKind"
+  },
+  {
+   "from": "wgpu::HitTarget",
+   "crate": "input",
+   "to": "HitTarget"
+  },
+  {
+   "from": "wgpu::InputState",
+   "crate": "input",
+   "to": "InputState"
+  },
+  {
+   "from": "wgpu::KeyAction",
+   "crate": "input",
+   "to": "KeyAction"
+  },
+  {
+   "from": "wgpu::PointerCallbacks",
+   "crate": "input",
+   "to": "PointerCallbacks"
+  },
+  {
+   "from": "wgpu::PointerModifiers",
+   "crate": "input",
+   "to": "PointerModifiers"
+  },
+  {
+   "from": "wgpu::TreeDragState",
+   "crate": "input",
+   "to": "TreeDragState"
+  },
+  {
+   "from": "wgpu::TreeDropPosition",
+   "crate": "input",
+   "to": "TreeDropPosition"
+  },
+  {
+   "from": "wgpu::RetainedHitRegistration",
+   "crate": "mounted",
+   "to": "hit::RetainedHitRegistration"
+  },
+  {
+   "from": "wgpu::RetainedSceneHit",
+   "crate": "mounted",
+   "to": "hit::RetainedSceneHit"
+  },
+  {
+   "from": "wgpu::admit_ui_image",
+   "crate": "paint",
+   "to": "admit_ui_image"
+  },
+  {
+   "from": "wgpu::close_ui_image_ledger_step",
+   "crate": "paint",
+   "to": "close_ui_image_ledger_step"
+  },
+  {
+   "from": "wgpu::paint_overlay_backdrop",
+   "crate": "paint",
+   "to": "paint_overlay_backdrop"
+  },
+  {
+   "from": "wgpu::paint_overlay_surface",
+   "crate": "paint",
+   "to": "paint_overlay_surface"
+  },
+  {
+   "from": "wgpu::paint_retained_glyph_step",
+   "crate": "paint",
+   "to": "paint_retained_glyph_step"
+  },
+  {
+   "from": "wgpu::paint_retained_glyph_step_flowed",
+   "crate": "paint",
+   "to": "paint_retained_glyph_step_flowed"
+  },
+  {
+   "from": "wgpu::paint_retained_glyph_step_weighted",
+   "crate": "paint",
+   "to": "paint_retained_glyph_step_weighted"
+  },
+  {
+   "from": "wgpu::paint_tooltip",
+   "crate": "paint",
+   "to": "paint_tooltip"
+  },
+  {
+   "from": "wgpu::skeleton_blocks",
+   "crate": "paint",
+   "to": "skeleton_blocks"
+  },
+  {
+   "from": "wgpu::skeleton_kind",
+   "crate": "paint",
+   "to": "skeleton_kind"
+  },
+  {
+   "from": "wgpu::skeleton_replaces_content",
+   "crate": "paint",
+   "to": "skeleton_replaces_content"
+  },
+  {
+   "from": "wgpu::take_ui_image_upload",
+   "crate": "paint",
+   "to": "take_ui_image_upload"
+  },
+  {
+   "from": "wgpu::tooltip_surface_size",
+   "crate": "paint",
+   "to": "tooltip_surface_size"
+  },
+  {
+   "from": "wgpu::ui_image_content_rect",
+   "crate": "paint",
+   "to": "ui_image_content_rect"
+  },
+  {
+   "from": "wgpu::ui_image_natural_size",
+   "crate": "paint",
+   "to": "ui_image_natural_size"
+  },
+  {
+   "from": "wgpu::RetainedGlyphCursor",
+   "crate": "paint",
+   "to": "RetainedGlyphCursor"
+  },
+  {
+   "from": "wgpu::RetainedGlyphStep",
+   "crate": "paint",
+   "to": "RetainedGlyphStep"
+  },
+  {
+   "from": "wgpu::RetainedTextFlow",
+   "crate": "paint",
+   "to": "RetainedTextFlow"
+  },
+  {
+   "from": "wgpu::SkeletonKind",
+   "crate": "paint",
+   "to": "SkeletonKind"
+  },
+  {
+   "from": "wgpu::UiImageAdmission",
+   "crate": "paint",
+   "to": "UiImageAdmission"
+  },
+  {
+   "from": "wgpu::UiImageUpload",
+   "crate": "paint",
+   "to": "UiImageUpload"
+  },
+  {
+   "from": "wgpu::OVERLAY_BACKDROP_ALPHA",
+   "crate": "paint",
+   "to": "OVERLAY_BACKDROP_ALPHA"
+  },
+  {
+   "from": "wgpu::RETAINED_NODE_TEXT_MAX_BYTES",
+   "crate": "paint",
+   "to": "RETAINED_NODE_TEXT_MAX_BYTES"
+  },
+  {
+   "from": "wgpu::SKELETON_MAX_BLOCKS",
+   "crate": "paint",
+   "to": "SKELETON_MAX_BLOCKS"
+  },
+  {
+   "from": "wgpu::UI_IMAGE_LEDGER_ENTRIES",
+   "crate": "paint",
+   "to": "UI_IMAGE_LEDGER_ENTRIES"
+  },
+  {
+   "from": "wgpu::UI_IMAGE_MAX_BOX_HEIGHT",
+   "crate": "paint",
+   "to": "UI_IMAGE_MAX_BOX_HEIGHT"
+  },
+  {
+   "from": "wgpu::UI_IMAGE_MAX_DIMENSION",
+   "crate": "paint",
+   "to": "UI_IMAGE_MAX_DIMENSION"
+  },
+  {
+   "from": "wgpu::UI_IMAGE_SOURCE_MAX_BYTES",
+   "crate": "paint",
+   "to": "UI_IMAGE_SOURCE_MAX_BYTES"
+  },
+  {
+   "from": "wgpu::OffscreenPresentToken",
+   "ident": "semio_framework_ui_prepared",
+   "to": "OffscreenPresentToken"
+  },
+  {
+   "from": "wgpu::PreparedAtlasAuthority",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedAtlasAuthority"
+  },
+  {
+   "from": "wgpu::PreparedAtlasPages",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedAtlasPages"
+  },
+  {
+   "from": "wgpu::PreparedPresenterWitness",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedPresenterWitness"
+  },
+  {
+   "from": "wgpu::PreparedRasterGeneration",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterGeneration"
+  },
+  {
+   "from": "wgpu::PreparedRasterKeepCursorV1",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterKeepCursorV1"
+  },
+  {
+   "from": "wgpu::PreparedRasterKeepStepV1",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterKeepStepV1"
+  },
+  {
+   "from": "wgpu::PreparedRasterPages",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterPages"
+  },
+  {
+   "from": "wgpu::PreparedRasterProducer",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterProducer"
+  },
+  {
+   "from": "wgpu::PreparedRasterProducerStep",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterProducerStep"
+  },
+  {
+   "from": "wgpu::PreparedRasterRejected",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterRejected"
+  },
+  {
+   "from": "wgpu::PreparedRasterReservation",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRasterReservation"
+  },
+  {
+   "from": "wgpu::PreparedRenderEviction",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderEviction"
+  },
+  {
+   "from": "wgpu::PreparedRenderGate",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderGate"
+  },
+  {
+   "from": "wgpu::PreparedRenderInput",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderInput"
+  },
+  {
+   "from": "wgpu::PreparedRenderInputRejected",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderInputRejected"
+  },
+  {
+   "from": "wgpu::PreparedRenderJob",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderJob"
+  },
+  {
+   "from": "wgpu::PreparedRenderJobRejected",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderJobRejected"
+  },
+  {
+   "from": "wgpu::PreparedRenderLimits",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderLimits"
+  },
+  {
+   "from": "wgpu::PreparedRenderPacket",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderPacket"
+  },
+  {
+   "from": "wgpu::PreparedRenderReceiver",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderReceiver"
+  },
+  {
+   "from": "wgpu::PreparedRenderRejection",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderRejection"
+  },
+  {
+   "from": "wgpu::PreparedRenderReplacement",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderReplacement"
+  },
+  {
+   "from": "wgpu::PreparedRenderUpload",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderUpload"
+  },
+  {
+   "from": "wgpu::PreparedRenderUsage",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PreparedRenderUsage"
+  },
+  {
+   "from": "wgpu::RasterContentIdentity",
+   "ident": "semio_framework_ui_prepared",
+   "to": "RasterContentIdentity"
+  },
+  {
+   "from": "wgpu::RenderDirective",
+   "ident": "semio_framework_ui_prepared",
+   "to": "RenderDirective"
+  },
+  {
+   "from": "wgpu::UiPresentToken",
+   "ident": "semio_framework_ui_prepared",
+   "to": "UiPresentToken"
+  },
+  {
+   "from": "wgpu::PREPARED_RASTER_ITEM_BYTES",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PREPARED_RASTER_ITEM_BYTES"
+  },
+  {
+   "from": "wgpu::PREPARED_RASTER_PAGE_BYTES",
+   "ident": "semio_framework_ui_prepared",
+   "to": "PREPARED_RASTER_PAGE_BYTES"
+  },
+  {
+   "from": "wgpu::SceneRasterBegin",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterBegin"
+  },
+  {
+   "from": "wgpu::SceneRasterDescriptor",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterDescriptor"
+  },
+  {
+   "from": "wgpu::SceneRasterGpuWitness",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterGpuWitness"
+  },
+  {
+   "from": "wgpu::SceneRasterIdentity",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterIdentity"
+  },
+  {
+   "from": "wgpu::SceneRasterLease",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterLease"
+  },
+  {
+   "from": "wgpu::SceneRasterMeshSeal",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterMeshSeal"
+  },
+  {
+   "from": "wgpu::SceneRasterMovedPixels",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterMovedPixels"
+  },
+  {
+   "from": "wgpu::SceneRasterPool",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterPool"
+  },
+  {
+   "from": "wgpu::SceneRasterPoolLimits",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterPoolLimits"
+  },
+  {
+   "from": "wgpu::SceneRasterProfile",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterProfile"
+  },
+  {
+   "from": "wgpu::SceneRasterReleaseWitness",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterReleaseWitness"
+  },
+  {
+   "from": "wgpu::SceneRasterWriteMode",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterWriteMode"
+  },
+  {
+   "from": "wgpu::SceneRasterWriter",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SceneRasterWriter"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_GPU_RESIDENT_BYTES",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_GPU_RESIDENT_BYTES"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_ITEM_BYTES",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_ITEM_BYTES"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_LEASE_CAPACITY",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_LEASE_CAPACITY"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_POOL_BYTES",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_POOL_BYTES"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_POOL_SLOTS",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_POOL_SLOTS"
+  },
+  {
+   "from": "wgpu::SCENE_RASTER_TRANSFER_BYTES",
+   "ident": "semio_framework_ui_raster_owner",
+   "to": "SCENE_RASTER_TRANSFER_BYTES"
+  },
+  {
+   "from": "wgpu::kernel_3d_scene",
+   "ident": "ui_scene",
+   "to": "math"
+  },
+  {
+   "from": "wgpu::aabb_intersects_frustum",
+   "ident": "ui_scene",
+   "to": "math::aabb_intersects_frustum"
+  },
+  {
+   "from": "wgpu::axis_rotate_angle",
+   "ident": "ui_scene",
+   "to": "math::axis_rotate_angle"
+  },
+  {
+   "from": "wgpu::camera_grid_fade_distance",
+   "ident": "ui_scene",
+   "to": "math::camera_grid_fade_distance"
+  },
+  {
+   "from": "wgpu::directional_shadow_frustum_planes",
+   "ident": "ui_scene",
+   "to": "math::directional_shadow_frustum_planes"
+  },
+  {
+   "from": "wgpu::directional_shadow_texture_matrix",
+   "ident": "ui_scene",
+   "to": "math::directional_shadow_texture_matrix"
+  },
+  {
+   "from": "wgpu::directional_shadow_view_projection",
+   "ident": "ui_scene",
+   "to": "math::directional_shadow_view_projection"
+  },
+  {
+   "from": "wgpu::frame_distance_for_radius",
+   "ident": "ui_scene",
+   "to": "math::frame_distance_for_radius"
+  },
+  {
+   "from": "wgpu::frame_orbit_to_bounds",
+   "ident": "ui_scene",
+   "to": "math::frame_orbit_to_bounds"
+  },
+  {
+   "from": "wgpu::frustum_planes",
+   "ident": "ui_scene",
+   "to": "math::frustum_planes"
+  },
+  {
+   "from": "wgpu::grid_placement_anchor",
+   "ident": "ui_scene",
+   "to": "math::grid_placement_anchor"
+  },
+  {
+   "from": "wgpu::gumball_axis_drag_plane_normal",
+   "ident": "ui_scene",
+   "to": "math::gumball_axis_drag_plane_normal"
+  },
+  {
+   "from": "wgpu::gumball_extent",
+   "ident": "ui_scene",
+   "to": "math::gumball_extent"
+  },
+  {
+   "from": "wgpu::gumball_eye",
+   "ident": "ui_scene",
+   "to": "math::gumball_eye"
+  },
+  {
+   "from": "wgpu::gumball_project_ray_onto_axis",
+   "ident": "ui_scene",
+   "to": "math::gumball_project_ray_onto_axis"
+  },
+  {
+   "from": "wgpu::interpolate_mesh_uv",
+   "ident": "ui_scene",
+   "to": "math::interpolate_mesh_uv"
+  },
+  {
+   "from": "wgpu::lod_from_camera_distance",
+   "ident": "ui_scene",
+   "to": "math::lod_from_camera_distance"
+  },
+  {
+   "from": "wgpu::lod_grid_fade_alpha",
+   "ident": "ui_scene",
+   "to": "math::lod_grid_fade_alpha"
+  },
+  {
+   "from": "wgpu::lod_progressive_grid_layers",
+   "ident": "ui_scene",
+   "to": "math::lod_progressive_grid_layers"
+  },
+  {
+   "from": "wgpu::marquee_is_crossing_from_path",
+   "ident": "ui_scene",
+   "to": "math::marquee_is_crossing_from_path"
+  },
+  {
+   "from": "wgpu::mesh3d_abort",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_abort"
+  },
+  {
+   "from": "wgpu::mesh3d_abort_demands",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_abort_demands"
+  },
+  {
+   "from": "wgpu::mesh3d_abort_step",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_abort_step"
+  },
+  {
+   "from": "wgpu::mesh3d_allocate_capacity_byte_demand",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_allocate_capacity_byte_demand"
+  },
+  {
+   "from": "wgpu::mesh3d_allocate_step",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_allocate_step"
+  },
+  {
+   "from": "wgpu::mesh3d_begin",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_begin"
+  },
+  {
+   "from": "wgpu::mesh3d_begin_capacity_byte_demand",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_begin_capacity_byte_demand"
+  },
+  {
+   "from": "wgpu::mesh3d_begin_close",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_begin_close"
+  },
+  {
+   "from": "wgpu::mesh3d_close_demands",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_close_demands"
+  },
+  {
+   "from": "wgpu::mesh3d_close_step",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_close_step"
+  },
+  {
+   "from": "wgpu::mesh3d_component_capacity_byte_demand",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_component_capacity_byte_demand"
+  },
+  {
+   "from": "wgpu::mesh3d_component_admission_step",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_component_admission_step"
+  },
+  {
+   "from": "wgpu::mesh3d_move_component_references",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_move_component_references"
+  },
+  {
+   "from": "wgpu::Mesh3dOwnershipStep",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dOwnershipStep"
+  },
+  {
+   "from": "wgpu::ComponentReferenceTable",
+   "ident": "ui_scene",
+   "to": "math::ComponentReferenceTable"
+  },
+  {
+   "from": "wgpu::mesh3d_read_write_u32",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_read_write_u32"
+  },
+  {
+   "from": "wgpu::mesh3d_read_write_vec3",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_read_write_vec3"
+  },
+  {
+   "from": "wgpu::mesh3d_seal",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_seal"
+  },
+  {
+   "from": "wgpu::mesh3d_terminal_is_empty",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_terminal_is_empty"
+  },
+  {
+   "from": "wgpu::mesh3d_update_vec3",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_update_vec3"
+  },
+  {
+   "from": "wgpu::mesh3d_write_edge",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_write_edge"
+  },
+  {
+   "from": "wgpu::mesh3d_write_u32",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_write_u32"
+  },
+  {
+   "from": "wgpu::mesh3d_write_vec2",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_write_vec2"
+  },
+  {
+   "from": "wgpu::mesh3d_write_vec3",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_write_vec3"
+  },
+  {
+   "from": "wgpu::mesh3d_write_vec4",
+   "ident": "ui_scene",
+   "to": "math::mesh3d_write_vec4"
+  },
+  {
+   "from": "wgpu::pick_closest_mesh_url",
+   "ident": "ui_scene",
+   "to": "math::pick_closest_mesh_url"
+  },
+  {
+   "from": "wgpu::point_in_polygon",
+   "ident": "ui_scene",
+   "to": "math::point_in_polygon"
+  },
+  {
+   "from": "wgpu::project_point",
+   "ident": "ui_scene",
+   "to": "math::project_point"
+  },
+  {
+   "from": "wgpu::quat_from_basis",
+   "ident": "ui_scene",
+   "to": "math::quat_from_basis"
+  },
+  {
+   "from": "wgpu::ray_aabb_slab",
+   "ident": "ui_scene",
+   "to": "math::ray_aabb_slab"
+  },
+  {
+   "from": "wgpu::ray_pick_instance",
+   "ident": "ui_scene",
+   "to": "math::ray_pick_instance"
+  },
+  {
+   "from": "wgpu::ray_pick_mesh_detail",
+   "ident": "ui_scene",
+   "to": "math::ray_pick_mesh_detail"
+  },
+  {
+   "from": "wgpu::ray_plane_point",
+   "ident": "ui_scene",
+   "to": "math::ray_plane_point"
+  },
+  {
+   "from": "wgpu::ray_segment_closest",
+   "ident": "ui_scene",
+   "to": "math::ray_segment_closest"
+  },
+  {
+   "from": "wgpu::ray_segment_distance",
+   "ident": "ui_scene",
+   "to": "math::ray_segment_distance"
+  },
+  {
+   "from": "wgpu::RaySegmentClosest",
+   "ident": "ui_scene",
+   "to": "math::RaySegmentClosest"
+  },
+  {
+   "from": "wgpu::rect_contains",
+   "ident": "ui_scene",
+   "to": "math::rect_contains"
+  },
+  {
+   "from": "wgpu::rotate_vector",
+   "ident": "ui_scene",
+   "to": "math::rotate_vector"
+  },
+  {
+   "from": "wgpu::screen_segment_distance",
+   "ident": "ui_scene",
+   "to": "math::screen_segment_distance"
+  },
+  {
+   "from": "wgpu::screen_select_components",
+   "ident": "ui_scene",
+   "to": "math::screen_select_components"
+  },
+  {
+   "from": "wgpu::screen_select_instances",
+   "ident": "ui_scene",
+   "to": "math::screen_select_instances"
+  },
+  {
+   "from": "wgpu::transform_aabb",
+   "ident": "ui_scene",
+   "to": "math::transform_aabb"
+  },
+  {
+   "from": "wgpu::vec3_from_f64",
+   "ident": "ui_scene",
+   "to": "math::vec3_from_f64"
+  },
+  {
+   "from": "wgpu::Camera3d",
+   "ident": "ui_scene",
+   "to": "math::Camera3d"
+  },
+  {
+   "from": "wgpu::ComponentSource3d",
+   "ident": "ui_scene",
+   "to": "math::ComponentSource3d"
+  },
+  {
+   "from": "wgpu::Instance3d",
+   "ident": "ui_scene",
+   "to": "math::Instance3d"
+  },
+  {
+   "from": "wgpu::LineDraw3d",
+   "ident": "ui_scene",
+   "to": "math::LineDraw3d"
+  },
+  {
+   "from": "wgpu::LineVertex3d",
+   "ident": "ui_scene",
+   "to": "math::LineVertex3d"
+  },
+  {
+   "from": "wgpu::Mat4",
+   "ident": "ui_scene",
+   "to": "math::Mat4"
+  },
+  {
+   "from": "wgpu::Mat4Math",
+   "ident": "ui_scene",
+   "to": "math::Mat4Math"
+  },
+  {
+   "from": "wgpu::Mesh3dFault",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dFault"
+  },
+  {
+   "from": "wgpu::Mesh3dField",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dField"
+  },
+  {
+   "from": "wgpu::Mesh3dItem",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dItem"
+  },
+  {
+   "from": "wgpu::Mesh3dComponentAdmissionStep",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dComponentAdmissionStep"
+  },
+  {
+   "from": "wgpu::Mesh3dItemCursor",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dItemCursor"
+  },
+  {
+   "from": "wgpu::Mesh3dLease",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dLease"
+  },
+  {
+   "from": "wgpu::Mesh3dPageCursor",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dPageCursor"
+  },
+  {
+   "from": "wgpu::Mesh3dSchema",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dSchema"
+  },
+  {
+   "from": "wgpu::Mesh3dWriteToken",
+   "ident": "ui_scene",
+   "to": "math::Mesh3dWriteToken"
+  },
+  {
+   "from": "wgpu::OrbitController",
+   "ident": "ui_scene",
+   "to": "math::OrbitController"
+  },
+  {
+   "from": "wgpu::ProceduralGrid3d",
+   "ident": "ui_scene",
+   "to": "math::ProceduralGrid3d"
+  },
+  {
+   "from": "wgpu::SceneColorSource3d",
+   "ident": "ui_scene",
+   "to": "math::SceneColorSource3d"
+  },
+  {
+   "from": "wgpu::SceneDraw3d",
+   "ident": "ui_scene",
+   "to": "math::SceneDraw3d"
+  },
+  {
+   "from": "wgpu::SceneInstanceMaterial3d",
+   "ident": "ui_scene",
+   "to": "math::SceneInstanceMaterial3d"
+  },
+  {
+   "from": "wgpu::SceneLighting3d",
+   "ident": "ui_scene",
+   "to": "math::SceneLighting3d"
+  },
+  {
+   "from": "wgpu::SceneMaterial3d",
+   "ident": "ui_scene",
+   "to": "math::SceneMaterial3d"
+  },
+  {
+   "from": "wgpu::SceneMaterialDraw3d",
+   "ident": "ui_scene",
+   "to": "math::SceneMaterialDraw3d"
+  },
+  {
+   "from": "wgpu::SceneAuthoredMaterial3d",
+   "ident": "ui_scene",
+   "to": "math::SceneAuthoredMaterial3d"
+  },
+  {
+   "from": "wgpu::SceneMaterialAlpha3d",
+   "ident": "ui_scene",
+   "to": "math::SceneMaterialAlpha3d"
+  },
+  {
+   "from": "wgpu::SceneMaterialKind3d",
+   "ident": "ui_scene",
+   "to": "math::SceneMaterialKind3d"
+  },
+  {
+   "from": "wgpu::ScenePass3d",
+   "ident": "ui_scene",
+   "to": "math::ScenePass3d"
+  },
+  {
+   "from": "wgpu::SceneRenderProfile3d",
+   "ident": "ui_scene",
+   "to": "math::SceneRenderProfile3d"
+  },
+  {
+   "from": "wgpu::SceneSectionRole3d",
+   "ident": "ui_scene",
+   "to": "math::SceneSectionRole3d"
+  },
+  {
+   "from": "wgpu::SceneShadow3d",
+   "ident": "ui_scene",
+   "to": "math::SceneShadow3d"
+  },
+  {
+   "from": "wgpu::SceneShadowRole3d",
+   "ident": "ui_scene",
+   "to": "math::SceneShadowRole3d"
+  },
+  {
+   "from": "wgpu::SceneTextureFilter3d",
+   "ident": "ui_scene",
+   "to": "math::SceneTextureFilter3d"
+  },
+  {
+   "from": "wgpu::SceneTextureSampler3d",
+   "ident": "ui_scene",
+   "to": "math::SceneTextureSampler3d"
+  },
+  {
+   "from": "wgpu::SceneTextureWrap3d",
+   "ident": "ui_scene",
+   "to": "math::SceneTextureWrap3d"
+  },
+  {
+   "from": "wgpu::SceneViewportMask3d",
+   "ident": "ui_scene",
+   "to": "math::SceneViewportMask3d"
+  },
+  {
+   "from": "wgpu::TexturedDraw3d",
+   "ident": "ui_scene",
+   "to": "math::TexturedDraw3d"
+  },
+  {
+   "from": "wgpu::TexturedInstance3d",
+   "ident": "ui_scene",
+   "to": "math::TexturedInstance3d"
+  },
+  {
+   "from": "wgpu::Vec3",
+   "ident": "ui_scene",
+   "to": "math::Vec3"
+  },
+  {
+   "from": "wgpu::Vec3Math",
+   "ident": "ui_scene",
+   "to": "math::Vec3Math"
+  },
+  {
+   "from": "wgpu::ICON_SHADOW_MAP_SIZE",
+   "ident": "ui_scene",
+   "to": "math::ICON_SHADOW_MAP_SIZE"
+  },
+  {
+   "from": "wgpu::PROCEDURAL_GRID_CELL_THICKNESS",
+   "ident": "ui_scene",
+   "to": "math::PROCEDURAL_GRID_CELL_THICKNESS"
+  },
+  {
+   "from": "wgpu::PROCEDURAL_GRID_FADE_STRENGTH",
+   "ident": "ui_scene",
+   "to": "math::PROCEDURAL_GRID_FADE_STRENGTH"
+  },
+  {
+   "from": "wgpu::PROCEDURAL_GRID_SECTION_THICKNESS",
+   "ident": "ui_scene",
+   "to": "math::PROCEDURAL_GRID_SECTION_THICKNESS"
+  },
+  {
+   "from": "wgpu::WORLD_FRAME_BOUNDS_MARGIN",
+   "ident": "ui_scene",
+   "to": "math::WORLD_FRAME_BOUNDS_MARGIN"
+  },
+  {
+   "from": "wgpu::WORLD_SHADOW_FAR",
+   "ident": "ui_scene",
+   "to": "math::WORLD_SHADOW_FAR"
+  },
+  {
+   "from": "wgpu::WORLD_SHADOW_HALF_EXTENT",
+   "ident": "ui_scene",
+   "to": "math::WORLD_SHADOW_HALF_EXTENT"
+  },
+  {
+   "from": "wgpu::WORLD_SHADOW_LIGHT_DISTANCE",
+   "ident": "ui_scene",
+   "to": "math::WORLD_SHADOW_LIGHT_DISTANCE"
+  },
+  {
+   "from": "wgpu::WORLD_SHADOW_MAP_SIZE",
+   "ident": "ui_scene",
+   "to": "math::WORLD_SHADOW_MAP_SIZE"
+  },
+  {
+   "from": "wgpu::WORLD_SHADOW_NEAR",
+   "ident": "ui_scene",
+   "to": "math::WORLD_SHADOW_NEAR"
+  },
+  {
+   "from": "wgpu::adaptive_orbit_camera_far",
+   "ident": "ui_scene",
+   "to": "math::adaptive_orbit_camera_far"
+  },
+  {
+   "from": "wgpu::camera_grid_visible_radius",
+   "ident": "ui_scene",
+   "to": "math::camera_grid_visible_radius"
+  },
+  {
+   "from": "wgpu::default_projection_spec",
+   "ident": "ui_scene",
+   "to": "math::default_projection_spec"
+  },
+  {
+   "from": "wgpu::frame_projection_orbit_to_bounds",
+   "ident": "ui_scene",
+   "to": "math::frame_projection_orbit_to_bounds"
+  },
+  {
+   "from": "wgpu::frame_projection_orbit_to_spec_bounds",
+   "ident": "ui_scene",
+   "to": "math::frame_projection_orbit_to_spec_bounds"
+  },
+  {
+   "from": "wgpu::lod_grid_step_world",
+   "ident": "ui_scene",
+   "to": "math::lod_grid_step_world"
+  },
+  {
+   "from": "wgpu::lod_orbit_distance_for_camera",
+   "ident": "ui_scene",
+   "to": "math::lod_orbit_distance_for_camera"
+  },
+  {
+   "from": "wgpu::projection_spec_family",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_family"
+  },
+  {
+   "from": "wgpu::projection_spec_fov_degrees",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_fov_degrees"
+  },
+  {
+   "from": "wgpu::projection_spec_matrix",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_matrix"
+  },
+  {
+   "from": "wgpu::projection_spec_oblique_shear",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_oblique_shear"
+  },
+  {
+   "from": "wgpu::projection_spec_orientation_look",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_orientation_look"
+  },
+  {
+   "from": "wgpu::projection_spec_project_ndc",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_project_ndc"
+  },
+  {
+   "from": "wgpu::projection_spec_project_point",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_project_point"
+  },
+  {
+   "from": "wgpu::projection_spec_project_segment",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_project_segment"
+  },
+  {
+   "from": "wgpu::ProjectedSegment3d",
+   "ident": "ui_scene",
+   "to": "math::ProjectedSegment3d"
+  },
+  {
+   "from": "wgpu::projection_spec_ray_from_screen",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_ray_from_screen"
+  },
+  {
+   "from": "wgpu::projection_spec_unproject_ndc",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_unproject_ndc"
+  },
+  {
+   "from": "wgpu::projection_spec_view_proj",
+   "ident": "ui_scene",
+   "to": "math::projection_spec_view_proj"
+  },
+  {
+   "from": "wgpu::world_projection_matched_ortho_zoom",
+   "ident": "ui_scene",
+   "to": "math::world_projection_matched_ortho_zoom"
+  },
+  {
+   "from": "wgpu::world_projection_matched_perspective_distance",
+   "ident": "ui_scene",
+   "to": "math::world_projection_matched_perspective_distance"
+  },
+  {
+   "from": "wgpu::world_projection_ortho_zoom",
+   "ident": "ui_scene",
+   "to": "math::world_projection_ortho_zoom"
+  },
+  {
+   "from": "wgpu::world_projection_view_half_extent",
+   "ident": "ui_scene",
+   "to": "math::world_projection_view_half_extent"
+  },
+  {
+   "from": "wgpu::CameraProjection3d",
+   "ident": "ui_scene",
+   "to": "math::CameraProjection3d"
+  },
+  {
+   "from": "wgpu::WorldCardinalView",
+   "ident": "ui_scene",
+   "to": "math::WorldCardinalView"
+  },
+  {
+   "from": "wgpu::WorldProjectionOrientation",
+   "ident": "ui_scene",
+   "to": "math::WorldProjectionOrientation"
+  },
+  {
+   "from": "wgpu::WORLD_LOD_REFERENCE_FOV_DEG",
+   "ident": "ui_scene",
+   "to": "math::WORLD_LOD_REFERENCE_FOV_DEG"
+  },
+  {
+   "from": "wgpu::WORLD_ORBIT_CAMERA_MIN_FAR",
+   "ident": "ui_scene",
+   "to": "math::WORLD_ORBIT_CAMERA_MIN_FAR"
+  },
+  {
+   "from": "wgpu::WORLD_ORBIT_CAMERA_NEAR",
+   "ident": "ui_scene",
+   "to": "math::WORLD_ORBIT_CAMERA_NEAR"
+  },
+  {
+   "from": "wgpu::SceneCurvilinear3d",
+   "ident": "ui_scene",
+   "to": "math::SceneCurvilinear3d"
+  },
+  {
+   "from": "wgpu::WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM",
+   "ident": "ui_scene",
+   "to": "math::WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM"
+  },
+  {
+   "from": "wgpu::WORLD_PROJECTION_FRAME_PADDING",
+   "ident": "ui_scene",
+   "to": "math::WORLD_PROJECTION_FRAME_PADDING"
+  },
+  {
+   "from": "wgpu::gap_for_token",
+   "crate": "layout",
+   "to": "layout::gap_for_token"
+  },
+  {
+   "from": "wgpu::layout_horizontal",
+   "crate": "layout",
+   "to": "layout::layout_horizontal"
+  },
+  {
+   "from": "wgpu::layout_vertical",
+   "crate": "layout",
+   "to": "layout::layout_vertical"
+  },
+  {
+   "from": "wgpu::padding_for_token",
+   "crate": "layout",
+   "to": "layout::padding_for_token"
+  },
+  {
+   "from": "wgpu::faux_bold_offset",
+   "ident": "semio_framework_ui_text",
+   "to": "faux_bold_offset"
+  },
+  {
+   "from": "wgpu::fetch_font_bytes",
+   "ident": "semio_framework_ui_text",
+   "to": "fetch_font_bytes"
+  },
+  {
+   "from": "wgpu::FontAtlas",
+   "ident": "semio_framework_ui_text",
+   "to": "FontAtlas"
+  },
+  {
+   "from": "wgpu::TextFace",
+   "ident": "semio_framework_ui_text",
+   "to": "TextFace"
+  },
+  {
+   "from": "wgpu::TextWeight",
+   "ident": "semio_framework_ui_text",
+   "to": "TextWeight"
+  },
+  {
+   "from": "wgpu::draw_icon",
+   "crate": "kit",
+   "to": "draw_icon"
+  },
+  {
+   "from": "wgpu::draw_text",
+   "crate": "kit",
+   "to": "draw_text"
+  },
+  {
+   "from": "wgpu::draw_text_face",
+   "crate": "kit",
+   "to": "draw_text_face"
+  },
+  {
+   "from": "wgpu::draw_text_face_on",
+   "crate": "kit",
+   "to": "draw_text_face_on"
+  },
+  {
+   "from": "wgpu::draw_text_overlay",
+   "crate": "kit",
+   "to": "draw_text_overlay"
+  },
+  {
+   "from": "wgpu::draw_text_weighted",
+   "crate": "kit",
+   "to": "draw_text_weighted"
+  },
+  {
+   "from": "wgpu::draw_text_wrapped",
+   "crate": "kit",
+   "to": "draw_text_wrapped"
+  },
+  {
+   "from": "wgpu::measure_widget",
+   "crate": "widgets",
+   "to": "measure_widget"
+  },
+  {
+   "from": "wgpu::render_scroll_region",
+   "crate": "kit",
+   "to": "render_scroll_region"
+  },
+  {
+   "from": "wgpu::render_widget",
+   "crate": "widgets",
+   "to": "render_widget"
+  },
+  {
+   "from": "wgpu::wrap_text",
+   "crate": "kit",
+   "to": "wrap_text"
+  },
+  {
+   "from": "wgpu::ControlNode",
+   "crate": "kit",
+   "to": "ControlNode"
+  },
+  {
+   "from": "wgpu::InputMeta",
+   "crate": "kit",
+   "to": "InputMeta"
+  },
+  {
+   "from": "wgpu::KeyValueEntry",
+   "crate": "kit",
+   "to": "KeyValueEntry"
+  },
+  {
+   "from": "wgpu::RingMeta",
+   "crate": "kit",
+   "to": "RingMeta"
+  },
+  {
+   "from": "wgpu::SelectItem",
+   "crate": "kit",
+   "to": "SelectItem"
+  },
+  {
+   "from": "wgpu::SliderMeta",
+   "crate": "kit",
+   "to": "SliderMeta"
+  },
+  {
+   "from": "wgpu::StepperMeta",
+   "crate": "kit",
+   "to": "StepperMeta"
+  },
+  {
+   "from": "wgpu::TreeItem",
+   "crate": "kit",
+   "to": "TreeItem"
+  },
+  {
+   "from": "wgpu::TreeItemAction",
+   "crate": "kit",
+   "to": "TreeItemAction"
+  },
+  {
+   "from": "wgpu::TreeSection",
+   "crate": "kit",
+   "to": "TreeSection"
+  },
+  {
+   "from": "wgpu::WidgetContext",
+   "crate": "kit",
+   "to": "WidgetContext"
+  },
+  {
+   "from": "wgpu::WidgetInteractionMaps",
+   "crate": "kit",
+   "to": "WidgetInteractionMaps"
+  },
+  {
+   "from": "wgpu::WidgetNode",
+   "crate": "kit",
+   "to": "WidgetNode"
+  },
+  {
+   "from": "wgpu::arm_select_scroll",
+   "crate": "controls",
+   "to": "select::arm_select_scroll"
+  },
+  {
+   "from": "wgpu::clear_select_scroll",
+   "crate": "controls",
+   "to": "select::clear_select_scroll"
+  },
+  {
+   "from": "wgpu::normalize_nfkd_text",
+   "ident": "semio_framework_ui_select_behavior",
+   "to": "normalize_nfkd_text"
+  },
+  {
+   "from": "wgpu::AppliedTextSplice",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::AppliedTextSplice"
+  },
+  {
+   "from": "wgpu::BlockListBlock",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockListBlock"
+  },
+  {
+   "from": "wgpu::BlockListPaletteEntry",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockListPaletteEntry"
+  },
+  {
+   "from": "wgpu::BlockListScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockListScene"
+  },
+  {
+   "from": "wgpu::BlockListSelectionTarget",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockListSelectionTarget"
+  },
+  {
+   "from": "wgpu::BlockListStep",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockListStep"
+  },
+  {
+   "from": "wgpu::BlockPaletteEntry",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::BlockPaletteEntry"
+  },
+  {
+   "from": "wgpu::Board2dScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Board2dScene"
+  },
+  {
+   "from": "wgpu::CONTEXT_MENU_GROUP_ID_PREFIX",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::CONTEXT_MENU_GROUP_ID_PREFIX"
+  },
+  {
+   "from": "wgpu::CONTEXT_MENU_OVERFLOW_CATEGORY",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::CONTEXT_MENU_OVERFLOW_CATEGORY"
+  },
+  {
+   "from": "wgpu::Canvas2dFraming",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dFraming"
+  },
+  {
+   "from": "wgpu::Canvas2dRejectedSnapshotPage",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dRejectedSnapshotPage"
+  },
+  {
+   "from": "wgpu::Canvas2dScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dScene"
+  },
+  {
+   "from": "wgpu::Canvas2dSnapshotDescriptor",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dSnapshotDescriptor"
+  },
+  {
+   "from": "wgpu::Canvas2dSnapshotFault",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dSnapshotFault"
+  },
+  {
+   "from": "wgpu::Canvas2dSnapshotLease",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dSnapshotLease"
+  },
+  {
+   "from": "wgpu::Canvas2dSnapshotPage",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dSnapshotPage"
+  },
+  {
+   "from": "wgpu::Canvas2dSnapshotWriteToken",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Canvas2dSnapshotWriteToken"
+  },
+  {
+   "from": "wgpu::ContextMenuHit",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuHit"
+  },
+  {
+   "from": "wgpu::ContextMenuItemSpec",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuItemSpec"
+  },
+  {
+   "from": "wgpu::ContextMenuPoint",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuPoint"
+  },
+  {
+   "from": "wgpu::ContextMenuRequest",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuRequest"
+  },
+  {
+   "from": "wgpu::ContextMenuResponse",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuResponse"
+  },
+  {
+   "from": "wgpu::ContextMenuSelectionGroup",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuSelectionGroup"
+  },
+  {
+   "from": "wgpu::ContextMenuSurfaceTarget",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuSurfaceTarget"
+  },
+  {
+   "from": "wgpu::ContextMenuTextContext",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ContextMenuTextContext"
+  },
+  {
+   "from": "wgpu::DRAFT_SPLICES_ARGUMENT",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::DRAFT_SPLICES_ARGUMENT"
+  },
+  {
+   "from": "wgpu::DiffViewScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::DiffViewScene"
+  },
+  {
+   "from": "wgpu::DraftChange",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::DraftChange"
+  },
+  {
+   "from": "wgpu::DraftChangesJsonCursor",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::DraftChangesJsonCursor"
+  },
+  {
+   "from": "wgpu::EventFeedScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::EventFeedScene"
+  },
+  {
+   "from": "wgpu::GraphTimelineScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::GraphTimelineScene"
+  },
+  {
+   "from": "wgpu::IconRenderScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::IconRenderScene"
+  },
+  {
+   "from": "wgpu::InkCanvasInteractionDomain",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::InkCanvasInteractionDomain"
+  },
+  {
+   "from": "wgpu::InkCanvasScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::InkCanvasScene"
+  },
+  {
+   "from": "wgpu::LocatedTextSplice",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::LocatedTextSplice"
+  },
+  {
+   "from": "wgpu::NodeGraphEdgeRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphEdgeRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphFindItem",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphFindItem"
+  },
+  {
+   "from": "wgpu::NodeGraphHover",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphHover"
+  },
+  {
+   "from": "wgpu::NodeGraphInteractionDomain",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphInteractionDomain"
+  },
+  {
+   "from": "wgpu::NodeGraphNodeRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphNodeRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphOperatorChannelRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphOperatorChannelRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphOperatorRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphOperatorRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphOperatorVariadicRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphOperatorVariadicRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphPortRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphPortRecord"
+  },
+  {
+   "from": "wgpu::NodeGraphScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::NodeGraphScene"
+  },
+  {
+   "from": "wgpu::Paint2dScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::Paint2dScene"
+  },
+  {
+   "from": "wgpu::SceneDoc",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::SceneDoc"
+  },
+  {
+   "from": "wgpu::SurfaceKind",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::SurfaceKind"
+  },
+  {
+   "from": "wgpu::TEXT_EDITOR_TYPING_BUFFER_ARG",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TEXT_EDITOR_TYPING_BUFFER_ARG"
+  },
+  {
+   "from": "wgpu::TEXT_EDITOR_TYPING_COMMIT_ARG",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TEXT_EDITOR_TYPING_COMMIT_ARG"
+  },
+  {
+   "from": "wgpu::TEXT_EDITOR_TYPING_IDLE_MS",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TEXT_EDITOR_TYPING_IDLE_MS"
+  },
+  {
+   "from": "wgpu::TEXT_SPLICE_CONTEXT_SCALARS",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TEXT_SPLICE_CONTEXT_SCALARS"
+  },
+  {
+   "from": "wgpu::TableCell",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TableCell"
+  },
+  {
+   "from": "wgpu::TableScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TableScene"
+  },
+  {
+   "from": "wgpu::TextEditorScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TextEditorScene"
+  },
+  {
+   "from": "wgpu::TextSplice",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TextSplice"
+  },
+  {
+   "from": "wgpu::TextSpliceComposition",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TextSpliceComposition"
+  },
+  {
+   "from": "wgpu::TiledMapScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::TiledMapScene"
+  },
+  {
+   "from": "wgpu::UI_INSPECTOR_MIXED_PLACEHOLDER",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UI_INSPECTOR_MIXED_PLACEHOLDER"
+  },
+  {
+   "from": "wgpu::UiButtonNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiButtonNode"
+  },
+  {
+   "from": "wgpu::UiComponentSceneNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiComponentSceneNode"
+  },
+  {
+   "from": "wgpu::UiControlNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiControlNode"
+  },
+  {
+   "from": "wgpu::UiDropOverlaySpec",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiDropOverlaySpec"
+  },
+  {
+   "from": "wgpu::UiExternalSlotNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiExternalSlotNode"
+  },
+  {
+   "from": "wgpu::UiFieldNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiFieldNode"
+  },
+  {
+   "from": "wgpu::UiGroupNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiGroupNode"
+  },
+  {
+   "from": "wgpu::UiIconSelectNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiIconSelectNode"
+  },
+  {
+   "from": "wgpu::UiImageNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiImageNode"
+  },
+  {
+   "from": "wgpu::UiInputNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiInputNode"
+  },
+  {
+   "from": "wgpu::UiInspectorFieldGroup",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiInspectorFieldGroup"
+  },
+  {
+   "from": "wgpu::UiInspectorMixedNumber",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiInspectorMixedNumber"
+  },
+  {
+   "from": "wgpu::UiInspectorMixedText",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiInspectorMixedText"
+  },
+  {
+   "from": "wgpu::UiInspectorMixedToggle",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiInspectorMixedToggle"
+  },
+  {
+   "from": "wgpu::UiKeyValueEntry",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiKeyValueEntry"
+  },
+  {
+   "from": "wgpu::UiKeyValueNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiKeyValueNode"
+  },
+  {
+   "from": "wgpu::UiMenuRef",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiMenuRef"
+  },
+  {
+   "from": "wgpu::UiNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiNode"
+  },
+  {
+   "from": "wgpu::UiNumberStepperNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiNumberStepperNode"
+  },
+  {
+   "from": "wgpu::UiPeerMark",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiPeerMark"
+  },
+  {
+   "from": "wgpu::UiPresence",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiPresence"
+  },
+  {
+   "from": "wgpu::UiProgressNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiProgressNode"
+  },
+  {
+   "from": "wgpu::UiRingNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiRingNode"
+  },
+  {
+   "from": "wgpu::UiSectionNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiSectionNode"
+  },
+  {
+   "from": "wgpu::UiSelectItem",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiSelectItem"
+  },
+  {
+   "from": "wgpu::UiSelectNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiSelectNode"
+  },
+  {
+   "from": "wgpu::UiSeparatorNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiSeparatorNode"
+  },
+  {
+   "from": "wgpu::UiSliderNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiSliderNode"
+  },
+  {
+   "from": "wgpu::UiStackNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiStackNode"
+  },
+  {
+   "from": "wgpu::UiState",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiState"
+  },
+  {
+   "from": "wgpu::UiStatus",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiStatus"
+  },
+  {
+   "from": "wgpu::UiTextNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTextNode"
+  },
+  {
+   "from": "wgpu::UiToggleNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiToggleNode"
+  },
+  {
+   "from": "wgpu::UiTreeActionPlacement",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeActionPlacement"
+  },
+  {
+   "from": "wgpu::UiTreeItemAction",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeItemAction"
+  },
+  {
+   "from": "wgpu::UiTreeItemNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeItemNode"
+  },
+  {
+   "from": "wgpu::UiTreeNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeNode"
+  },
+  {
+   "from": "wgpu::UiTreeSectionNode",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeSectionNode"
+  },
+  {
+   "from": "wgpu::UiTreeWindow",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeWindow"
+  },
+  {
+   "from": "wgpu::UiTreeWindowRowExtent",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::UiTreeWindowRowExtent"
+  },
+  {
+   "from": "wgpu::VirtualFileSystemScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::VirtualFileSystemScene"
+  },
+  {
+   "from": "wgpu::WORLD3D_ANNOTATION_ARROW_PX",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_ANNOTATION_ARROW_PX"
+  },
+  {
+   "from": "wgpu::WORLD3D_ANNOTATION_LABEL_GAP_PX",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_ANNOTATION_LABEL_GAP_PX"
+  },
+  {
+   "from": "wgpu::WORLD3D_ANNOTATION_MARKER_PX",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_ANNOTATION_MARKER_PX"
+  },
+  {
+   "from": "wgpu::WORLD3D_ANNOTATION_STROKE_PX",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_ANNOTATION_STROKE_PX"
+  },
+  {
+   "from": "wgpu::WORLD3D_SCALAR_NO_DATA_RGB",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_SCALAR_NO_DATA_RGB"
+  },
+  {
+   "from": "wgpu::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY"
+  },
+  {
+   "from": "wgpu::WORLD3D_SNAPSHOT_PAGE_CAPACITY",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_SNAPSHOT_PAGE_CAPACITY"
+  },
+  {
+   "from": "wgpu::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY"
+  },
+  {
+   "from": "wgpu::World3dAnnotation",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dAnnotation"
+  },
+  {
+   "from": "wgpu::World3dAnnotationLayer",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dAnnotationLayer"
+  },
+  {
+   "from": "wgpu::World3dColorRamp",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dColorRamp"
+  },
+  {
+   "from": "wgpu::World3dHighlight",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dHighlight"
+  },
+  {
+   "from": "wgpu::World3dLabelAlign",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dLabelAlign"
+  },
+  {
+   "from": "wgpu::World3dLegendLines",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dLegendLines"
+  },
+  {
+   "from": "wgpu::World3dMarkerShape",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dMarkerShape"
+  },
+  {
+   "from": "wgpu::World3dModellingOptions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dModellingOptions"
+  },
+  {
+   "from": "wgpu::World3dModellingStrings",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dModellingStrings"
+  },
+  {
+   "from": "wgpu::World3dPickGranularity",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dPickGranularity"
+  },
+  {
+   "from": "wgpu::World3dPresentation",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dPresentation"
+  },
+  {
+   "from": "wgpu::World3dPresentationClear",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dPresentationClear"
+  },
+  {
+   "from": "wgpu::World3dProjectedAnnotation",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dProjectedAnnotation"
+  },
+  {
+   "from": "wgpu::World3dProjectedArc",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dProjectedArc"
+  },
+  {
+   "from": "wgpu::World3dRejectedSnapshotPage",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dRejectedSnapshotPage"
+  },
+  {
+   "from": "wgpu::World3dScalarDomain",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dScalarDomain"
+  },
+  {
+   "from": "wgpu::World3dScalarField",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dScalarField"
+  },
+  {
+   "from": "wgpu::World3dScene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dScene"
+  },
+  {
+   "from": "wgpu::World3dSection",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSection"
+  },
+  {
+   "from": "wgpu::World3dSnapshotDescriptor",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotDescriptor"
+  },
+  {
+   "from": "wgpu::World3dSnapshotDrawPermit",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotDrawPermit"
+  },
+  {
+   "from": "wgpu::World3dSnapshotFault",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotFault"
+  },
+  {
+   "from": "wgpu::World3dSnapshotItem",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotItem"
+  },
+  {
+   "from": "wgpu::World3dSnapshotLease",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotLease"
+  },
+  {
+   "from": "wgpu::World3dSnapshotPage",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotPage"
+  },
+  {
+   "from": "wgpu::World3dSnapshotPageKind",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotPageKind"
+  },
+  {
+   "from": "wgpu::World3dSnapshotSpan",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotSpan"
+  },
+  {
+   "from": "wgpu::World3dSnapshotWriteToken",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSnapshotWriteToken"
+  },
+  {
+   "from": "wgpu::World3dSubElementDefaults",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dSubElementDefaults"
+  },
+  {
+   "from": "wgpu::World3dText",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dText"
+  },
+  {
+   "from": "wgpu::World3dTone",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::World3dTone"
+  },
+  {
+   "from": "wgpu::WorldChunkingRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WorldChunkingRecord"
+  },
+  {
+   "from": "wgpu::WorldLodRecord",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WorldLodRecord"
+  },
+  {
+   "from": "wgpu::WorldMeshLodEntry",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::WorldMeshLodEntry"
+  },
+  {
+   "from": "wgpu::board2d_actions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::board2d_actions"
+  },
+  {
+   "from": "wgpu::build_block_list_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_block_list_scene"
+  },
+  {
+   "from": "wgpu::build_board2d_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_board2d_scene"
+  },
+  {
+   "from": "wgpu::build_canvas_2d_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_canvas_2d_scene"
+  },
+  {
+   "from": "wgpu::build_diff_view_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_diff_view_scene"
+  },
+  {
+   "from": "wgpu::build_event_feed_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_event_feed_scene"
+  },
+  {
+   "from": "wgpu::build_graph_timeline_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_graph_timeline_scene"
+  },
+  {
+   "from": "wgpu::build_icon_render_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_icon_render_scene"
+  },
+  {
+   "from": "wgpu::build_ink_canvas_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_ink_canvas_scene"
+  },
+  {
+   "from": "wgpu::build_node_graph_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_node_graph_scene"
+  },
+  {
+   "from": "wgpu::build_paint_2d_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_paint_2d_scene"
+  },
+  {
+   "from": "wgpu::build_table_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_table_scene"
+  },
+  {
+   "from": "wgpu::build_text_editor_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_text_editor_scene"
+  },
+  {
+   "from": "wgpu::build_tiled_map_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_tiled_map_scene"
+  },
+  {
+   "from": "wgpu::build_virtual_file_system_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_virtual_file_system_scene"
+  },
+  {
+   "from": "wgpu::build_world_3d_scene",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::build_world_3d_scene"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_abort_write",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_abort_write"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_abort_write_step",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_abort_write_step"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_admit_page",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_admit_page"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_begin",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_begin"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_begin_close",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_begin_close"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_close_step",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_close_step"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_seal",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_seal"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_terminal_is_empty",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_terminal_is_empty"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_with_page",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_with_page"
+  },
+  {
+   "from": "wgpu::canvas2d_snapshot_write_terminal_is_empty",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::canvas2d_snapshot_write_terminal_is_empty"
+  },
+  {
+   "from": "wgpu::compose_draft_step",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::compose_draft_step"
+  },
+  {
+   "from": "wgpu::context_menu_group_label",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::context_menu_group_label"
+  },
+  {
+   "from": "wgpu::decode_surface_doc",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::decode_surface_doc"
+  },
+  {
+   "from": "wgpu::encode_surface_doc",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::encode_surface_doc"
+  },
+  {
+   "from": "wgpu::format_world3d_legend_value",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::format_world3d_legend_value"
+  },
+  {
+   "from": "wgpu::ink_canvas_actions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ink_canvas_actions"
+  },
+  {
+   "from": "wgpu::node_graph_actions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::node_graph_actions"
+  },
+  {
+   "from": "wgpu::project_world3d_annotations",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::project_world3d_annotations"
+  },
+  {
+   "from": "wgpu::scene_lane_hash",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::scene_lane_hash"
+  },
+  {
+   "from": "wgpu::text_editor_actions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::text_editor_actions"
+  },
+  {
+   "from": "wgpu::text_editor_code_input",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::text_editor_code_input"
+  },
+  {
+   "from": "wgpu::text_editor_json_view",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::text_editor_json_view"
+  },
+  {
+   "from": "wgpu::text_identifier_bounds_at",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::text_identifier_bounds_at"
+  },
+  {
+   "from": "wgpu::text_identifier_occurrences_json",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::text_identifier_occurrences_json"
+  },
+  {
+   "from": "wgpu::tiled_map_actions",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::tiled_map_actions"
+  },
+  {
+   "from": "wgpu::ui_control_to_node",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_control_to_node"
+  },
+  {
+   "from": "wgpu::ui_declarative_sections_to_tree",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_declarative_sections_to_tree"
+  },
+  {
+   "from": "wgpu::ui_empty_state",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_empty_state"
+  },
+  {
+   "from": "wgpu::ui_error_state",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_error_state"
+  },
+  {
+   "from": "wgpu::ui_external_slot",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_external_slot"
+  },
+  {
+   "from": "wgpu::ui_image",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_image"
+  },
+  {
+   "from": "wgpu::ui_import_drop_zone",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_import_drop_zone"
+  },
+  {
+   "from": "wgpu::ui_inspector_all_equal",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_all_equal"
+  },
+  {
+   "from": "wgpu::ui_inspector_groups_to_tree",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_groups_to_tree"
+  },
+  {
+   "from": "wgpu::ui_inspector_mixed_number",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_mixed_number"
+  },
+  {
+   "from": "wgpu::ui_inspector_mixed_select",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_mixed_select"
+  },
+  {
+   "from": "wgpu::ui_inspector_mixed_slider",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_mixed_slider"
+  },
+  {
+   "from": "wgpu::ui_inspector_mixed_text",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_mixed_text"
+  },
+  {
+   "from": "wgpu::ui_inspector_mixed_toggle",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_mixed_toggle"
+  },
+  {
+   "from": "wgpu::ui_inspector_readonly_field",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_readonly_field"
+  },
+  {
+   "from": "wgpu::ui_inspector_stepper_field",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_stepper_field"
+  },
+  {
+   "from": "wgpu::ui_inspector_toggle_field",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_toggle_field"
+  },
+  {
+   "from": "wgpu::ui_inspector_vec3_group",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_inspector_vec3_group"
+  },
+  {
+   "from": "wgpu::ui_node_to_control",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_node_to_control"
+  },
+  {
+   "from": "wgpu::ui_recovery_panel",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_recovery_panel"
+  },
+  {
+   "from": "wgpu::ui_stack_vertical",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_stack_vertical"
+  },
+  {
+   "from": "wgpu::ui_text",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_text"
+  },
+  {
+   "from": "wgpu::ui_tree_stamp_presence",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::ui_tree_stamp_presence"
+  },
+  {
+   "from": "wgpu::world3d_camera_json",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_camera_json"
+  },
+  {
+   "from": "wgpu::world3d_chunking_json",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_chunking_json"
+  },
+  {
+   "from": "wgpu::world3d_default_lod_json",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_default_lod_json"
+  },
+  {
+   "from": "wgpu::world3d_fit_json",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_fit_json"
+  },
+  {
+   "from": "wgpu::world3d_modelling_lane_text",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_modelling_lane_text"
+  },
+  {
+   "from": "wgpu::world3d_modelling_strings",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_modelling_strings"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_abort_write",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_abort_write"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_abort_write_step",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_abort_write_step"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_admit_page",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_admit_page"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_begin",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_begin"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_begin_close",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_begin_close"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_claim_draw_permit",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_claim_draw_permit"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_close_step",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_close_step"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_seal",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_seal"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_terminal_is_empty",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_terminal_is_empty"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_with_page",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_with_page"
+  },
+  {
+   "from": "wgpu::world3d_snapshot_write_terminal_is_empty",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_snapshot_write_terminal_is_empty"
+  },
+  {
+   "from": "wgpu::world3d_sub_element_paint",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::world3d_sub_element_paint"
+  },
+  {
+   "from": "wgpu::write_draft_changes_json_into",
+   "ident": "semio_framework_ui_declaration",
+   "to": "ui::write_draft_changes_json_into"
+  }
+ ],
+ "unresolved": [],
+ "alias": {
+  "component": [
+   "semio_framework_ui_declaration",
+   []
+  ],
+  "arena": [
+   "semio_framework_ui_arena",
+   []
+  ],
+  "tree": [
+   "semio_framework_ui_retained_tree",
+   [
+    "tree"
+   ]
+  ],
+  "draw_types": [
+   "semio_framework_ui_draw_contract",
+   []
+  ],
+  "geometry": [
+   "semio_framework_ui_theme",
+   [
+    "geometry"
+   ]
+  ],
+  "prepared": [
+   "semio_framework_ui_prepared",
+   []
+  ],
+  "raster_ownership": [
+   "semio_framework_ui_raster_owner",
+   []
+  ],
+  "action": [
+   "semio_framework_ui_action",
+   []
+  ],
+  "text": [
+   "semio_framework_ui_text",
+   []
+  ],
+  "theme": [
+   "semio_framework_ui_theme",
+   []
+  ],
+  "kernel_3d_scene": [
+   "ui_scene",
+   [
+    "math"
+   ]
+  ]
+ }
+}

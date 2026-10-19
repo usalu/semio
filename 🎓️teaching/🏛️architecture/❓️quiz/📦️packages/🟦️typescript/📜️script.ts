@@ -1,17 +1,14 @@
 #!/usr/bin/env bun
 import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `@teaching/architecture-quiz` task router: `bun ./📜️script.ts <dev|dev-site|build|test [quick|long|exhaustive]|test-e2e [dev] [rehearsal] [--serial] [--keep] [--proctor <executable>] [Playwright arguments…]|typecheck|check|publish|docker-image-build [--tag <tag>] [--jobs <n>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]|docker-stack-bundle [--tag <tag>] [--out <directory>]|deploy-check [--tag <tag>] [--jobs <n>]>`. */
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { playgroundDevPortString, playgroundPortEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🏗️build/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import { buildQuizImage, checkQuizCatalog, checkQuizDeployment, checkQuizImage, checkQuizStack, publishQuizImage, publishQuizSite, stageQuizStackBundle } from "../../🚀️deploy/🟦️.ts";
 import { runQuizEndToEnd } from "../../🎭️e2e/🟦️.ts";
@@ -60,12 +57,12 @@ class TypecheckScript extends BundleScript {
 }
 class CheckScript extends BundleScript {
   async run(): Promise<void> {
-    await checkQuizCatalog(this.invocation, this.repoRoot);
+    await checkQuizCatalog(this.repoRoot);
   }
 }
 class PublishScript extends BundleScript {
   async run(): Promise<void> {
-    await publishQuizSite(this.root, () => runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, [], VITE_CONFIG));
+    await publishQuizSite(this.invocation, this.repoRoot, this.root, () => runViteBuild(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, [], VITE_CONFIG));
   }
 }
 class DockerImageBuildScript extends BundleScript {

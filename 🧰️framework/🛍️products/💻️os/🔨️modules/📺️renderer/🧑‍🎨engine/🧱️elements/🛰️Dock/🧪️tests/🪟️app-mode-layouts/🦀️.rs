@@ -7,7 +7,10 @@
 //! a mode whose second window has no engine surface.
 use semio_framework_os_renderer_wgpu_dock::*;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{FontAtlas, Rect, Theme, WindowLayout};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::layout::WindowLayout;
 
 use semio_framework_test_fixtures::fixture_text;
 use {semio_framework::AppDefinition,semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::ModeDefinition,semio_framework::Modes,semio_framework::WindowKindDefinition,semio_framework::WindowKinds};

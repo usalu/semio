@@ -1,6 +1,6 @@
 //#region 🧾️TypedContract
 import type { AccessibilitySpec, ActionBinding, Activity, Align, Component, DropOverlaySpec, EdgeSpace, GridTrack, Justify, KeyValueEntry, LayoutSpec, MenuRef, RowAction, RowTarget, SelectItem, Sizing, SpaceToken, StyleSpec, TreeWindow, UiNodeRecord, UiNumberBound, UiNumberLimits as ContractUiNumberLimits, UiSurfaceKind, UiValue } from "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
-import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../../🔌️host/🟦️.ts";
 import { RetainedUiWireValueCursor, type RetainedUiWireStep } from "../🟦️.ts";
 import { UiSurfaceBytes, type UiSurfaceByteRetirement } from "../🔢️bytes/🟦️.ts";
 import { takeOwnedNativeBuffer } from "../🔒️transport/🟦️.ts";
@@ -19,7 +19,7 @@ type Bytes = { value: UiSurfaceBytes | null; next: Bytes | null };
 type PayloadLink = { value: OwnedUiPayload<unknown> | null; next: PayloadLink | null };
 type Root<T> = { value: T | undefined; references: number; owned: Owned | null; bytes: Bytes | null; children: PayloadLink | null; fields: NodeFields | null; kind: Profile | null };
 const OWNER_MINT = Object.freeze({});
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> { return typeof value === "object" && value !== null && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype; }
 function text(value: unknown): string { if (typeof value !== "string") throw new Error("Expected UI text"); return value; }
@@ -103,7 +103,7 @@ export class UiPayloadRetirement<T> {
   #child: UiPayloadRetirement<unknown> | null = null;
   private constructor(root: Root<T>) { this.#root = root; }
   static { retirePayload = <V>(root: Root<V>) => new UiPayloadRetirement(root); }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "typed-retire");
     if (!this.#root) return step("complete", "typed-retire");
     const root = this.#root;
@@ -202,7 +202,7 @@ export class UiNodeRetirement {
   #index = 0;
   private constructor(root: NodeRoot) { this.#root = root; }
   static { retireNode = root => new UiNodeRetirement(root); }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "node-retire");
     if (!this.#root) return step("complete", "node-retire");
     const root = this.#root;
@@ -444,7 +444,7 @@ export class RetainedUiTypedCursor<P extends Profile> {
   constructor(input: unknown, profile: P) { this.#profile = profile; this.#decoder = new RetainedUiWireValueCursor(input, profile === "node" || profile === "component" ? profile : "value"); }
   get profile(): P { return this.#profile; }
   get failure(): string | null { return this.#failure; }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", this.#phase);
     if (this.#closing || this.#failure) return step("rejected", this.#phase);
     if (this.#payload) return step("ready", this.#phase);
@@ -463,7 +463,7 @@ export class RetainedUiTypedCursor<P extends Profile> {
   }
   takeResult(): OwnedUiPayload<RetainedUiTypedValues[P]> | null { if (this.#closing || this.#failure || this.#phase !== "typed-ready") return null; const payload = this.#payload; this.#payload = null; this.#phase = "typed-taken"; return payload; }
   beginClose(): void { this.#closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "typed-close");
     if (!this.#closing) throw new Error("Begin typed UI close before advancing retirement");
     const builder = this.#builder.active ?? this.#builder;
@@ -496,7 +496,7 @@ export class RetainedUiChildIdsCursor {
     Object.freeze(this);
   }
   get failure(): string | null { return this.#failure; }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "native-child-field");
     if (this.#closing || this.#failure) return step("rejected", "native-child-field");
     if (this.#ready) return step("ready", "native-child-field");
@@ -513,7 +513,7 @@ export class RetainedUiChildIdsCursor {
   }
   takeResult(): OwnedUiPayload<number[]> | null { if (!this.#ready || this.#closing || this.#failure) return null; const result = this.#payload; this.#payload = null; return result; }
   beginClose(): void { this.#closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "native-child-close"); if (!this.#closing) throw new Error("Native child close has not begun");
     if (this.#payload) { this.#retirement = this.#payload.beginClose(); this.#payload = null; return step("pending", "native-child-close", 64); }
     if (this.#retirement) { const current = this.#retirement.advance(grant); if (current.kind === "complete") this.#retirement = null; return { ...current, kind: "pending" }; }

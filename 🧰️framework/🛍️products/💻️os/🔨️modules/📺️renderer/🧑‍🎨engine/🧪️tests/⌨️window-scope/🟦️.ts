@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import { SHELL_KEYBINDINGS } from "@semio-tech/ui-react";
 import { decodeWorldProjectionTemplateId, worldProjectionSpecIconId } from "@semio-tech/infinite-world-r3f";
-import { TOOL_RUN_STEP_CHORD } from "../../../../../../../🔨️modules/⏯️tool-run/🏷️actions-labels/🟦️.ts";
+import { TOOL_RUN_STEP_CHORD } from "@semio-tech/framework-tool-run-ts/actions";
 import {
   KEYBINDING_UNOWNED_LABEL,
   chordCarriesAcceleratorV1,

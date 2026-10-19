@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 /** 📦️ sequence sequence Rust artifact package router. */
 import { resolve } from "node:path";
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { sequenceSnapshotFixtureAssetSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️snapshot-fixture-asset/🟦️.ts";
 import { testArtifactIoDescriptorParity } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️descriptor-parity/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
 
@@ -22,7 +22,7 @@ if (segments[0] === "sequence-window-ownership") {
       testSequenceWindowOwnershipOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(windowsRoot, "📜️script/🫧️transient/🧬️schema/🟦️.ts"), join(configRoot, "🧪️tests/🔬️window/🟦️.ts"), join(this.repoRoot, "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sequence-sequence", "--lib", "sequence_window_ownership_", "--", "--nocapture"], this.repoRoot);
       }
       return;
@@ -35,7 +35,7 @@ const segments = process.argv.slice(2);
 if (segments[0] === "test" && segments[1] === "io-descriptor-parity") {
   testArtifactIoDescriptorParity();
   if (segments[2] !== "oracle") {
-    const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+    const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
     await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sequence-sequence", "--lib", "artifact_io_", "--", "--nocapture"], resolve(import.meta.dir, "../../../../../../.."));
   }
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-sequence-sequence", { packages: ["semio-s-artifact-sequence-sequence", "semio-s-artifact-sequence-sequence-editor", "semio-s-artifact-sequence-sequence-inferences", "semio-s-artifact-sequence-sequence-schema", "semio-s-artifact-sequence-sequence-tests", "semio-s-artifact-sequence-sequence-v1"], ...{

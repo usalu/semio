@@ -4,8 +4,8 @@
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type DocumentExecutionProtocolV1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenBrowserActorV1, documentBrowserActorLeaseFromPlanV1, type DocumentBrowserActorSourceV1, type DocumentClosedBrowserActorV1 } from "@semio-tech/framework/directory/schema/browser-actor";
-import { componentReceiptValueV1, encodeComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { componentReceiptValueV1, encodeComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES } from "@semio-tech/plugin-registry/deployment/schema";
 import { requireHubDatum } from "../../../🧪️testing/📖️source-readers/🟦️.ts";
 
 export function documentOpenNeutralObject(value: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, any> {

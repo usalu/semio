@@ -3,14 +3,14 @@
   "cases": [
     {
       "id": "domains",
-      "fixture": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
+      "fixture": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
       "schema": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧬️schema/🛂️mutation-source-authority/🧭️domains.json",
       "former": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json",
       "sha256": "57053e1707ec1dea51bc28d4676ce4091b63a3d53e59383d4ed5d36be2e7cb4e",
       "consumers": [
         {
           "source": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧪️tests/🔬️mutation-leaf-metadata/🦀️.rs",
-          "fixtureReference": "../../🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+          "fixtureReference": "../../🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
         },
         {
           "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🛂️mutation-source-authority/🟦️.ts",
@@ -18,7 +18,7 @@
         },
         {
           "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🔬️mutation-source-authority/🦀️.rs",
-          "fixtureReference": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
+          "fixtureReference": "../../../../../../../🔨️modules/📡️replication/🎮️mutation/🧪️tests/🧫️fixtures/🛂️mutation-source-authority/🧭️domains.json"
         }
       ]
     },
@@ -39,7 +39,7 @@
         },
         {
           "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs",
-          "fixtureReference": "../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"
+          "fixtureReference": "../../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🎛️inline-tree-controls/🔣️.json"
         }
       ]
     },
@@ -62,14 +62,14 @@
     },
     {
       "id": "paint-editing",
-      "fixture": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json",
+      "fixture": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json",
       "schema": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧬️schema/✏️editing/🔣️.json",
       "former": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json",
       "sha256": "95c6be9e2e39ba7c9dc9da515ecb5d8a079c88fd88b950cce5e253d91ee17133",
       "consumers": [
         {
           "source": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
-          "fixtureReference": "../../🧫️fixtures/✏️editing/🔣️.json"
+          "fixtureReference": "../🧫️fixtures/✏️editing/🔣️.json"
         },
         {
           "source": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧪️tests/🟦️.ts",

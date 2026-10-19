@@ -110,7 +110,7 @@
     "🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🔣️.json",
     "🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
     "🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🛂️admission/🧬️schema/🎟️original.json",
-    "🪐️space/🫀️core/🧬️schema/🔣️.json",
+    "🪐️space/🫀️catalog-documents/🧬️schema/🔣️.json",
     "🪐️space/🗿️artifacts/🏠️home/🏭️bridge/🧬️schema/🔣️.json",
     "🪐️space/🗿️artifacts/🪐️space/🏭️bridge/🧬️schema/🔣️.json",
     "🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/🧬️schema/🔣️.json",
@@ -203,11 +203,11 @@
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️committed-fixtures/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-part/🧪️tests/🌱️appends-part-c/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
@@ -235,67 +235,67 @@
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📊️csv/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🔋️energy/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️model-graph/🧪️tests/🧬️families/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📄️sheets/🧪️tests/🧰️testkit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📄️sheets/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧊️gltf/🧪️tests/🧰️testkit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📏️authored/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🎨️svg/🧪️tests/🧰️testkit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🎨️svg/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧾️json/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🌿️gbxml/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🔬️projection/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏗️frame/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏘️zoning/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🏰️walls/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🔥️energy/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🧪️tests/🔭️schema4/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🪑️components/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🏗️ifc/🛝️ramps/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔙️cascade-restore/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
@@ -315,7 +315,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖊️ink-apply-events/🧪️tests/🔬️unit/🦀️.rs",
-      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/Cargo.toml"
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml"
     },
     {
       "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",

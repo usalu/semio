@@ -1,6 +1,6 @@
 //! 📢️ Fault notices of the BIM editor: the localized fault notice table. See [`super`].
 
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_framework_ui_locale::LocalizedLabel;
 use crate::editor::bim::*;
 

@@ -1,6 +1,6 @@
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation;
-use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::set_sample_rate;
 use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
 use crate::schema::diff::SemioDiff;
 use crate::{schema::snapshot::SemioSnapshot, schema::snapshot::SemioSubsetSnapshot};
@@ -268,7 +268,7 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
 /// its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
-    use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::insert_row;
+    use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::insert_row;
     use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };

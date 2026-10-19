@@ -2,7 +2,7 @@
 //! none when the opening is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &MoveOpening, base: &ModelSnapshot) -> Vec<Op>
 where

@@ -46,6 +46,19 @@ function declaration(file: ts.SourceFile, name: string): ts.FunctionDeclaration 
   return found[0]!;
 }
 
+/** 🧾️ The validator and every audit function it calls: `validateTaxonomy` calls the audit context factory and one rule group function per taxonomy folder, each imported from a sibling module. */
+function validatorOwners(): readonly Readonly<{ path: string; syntax: ts.SourceFile; declaration: ts.FunctionDeclaration }>[] {
+  const validatorCalls = new Set(nodes(declaration(authority, "validateTaxonomy").body!, ts.isCallExpression).map((node) => node.expression.getText(authority)));
+  return authority.statements.filter(ts.isImportDeclaration).flatMap((statement) => {
+    const bindings = statement.importClause?.namedBindings;
+    const names = bindings && ts.isNamedImports(bindings) ? bindings.elements.map((element) => element.name.text).filter((name) => validatorCalls.has(name)) : [];
+    if (names.length === 0) return [];
+    const path = resolve(library, "🔍️discovery", (statement.moduleSpecifier as ts.StringLiteral).text.replace(/^\.\.\//u, "").replace(/\/🟦️\.ts$/u, ""), "🟦️.ts");
+    const syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    return names.map((name) => ({ path, syntax, declaration: declaration(syntax, name) }));
+  });
+}
+
 /** 🔬️ Instruments only this exact compiled declaration closure, never the process-global RegExp. */
 function compiled(compiler: typeof compilers[number], factory: boolean): { oneOff: typeof taxonomyPathPatternMatches; create: () => Matcher; expressions: RegExp[]; tests: () => number } {
   const names = ["taxonomyPatternExpression", "taxonomyPathPatternMatches", ...(factory ? [vector.factory] : [])];
@@ -183,10 +196,11 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   expect(nodes(loader, ts.isPropertyAssignment).some((node) => node.name.getText(normalizer) === "pathMatcher" && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(normalizer) === "createTaxonomyPathMatcher")).toBe(true);
   for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
   expect(loader.getText(normalizer)).toContain('if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path)');
-  const validator = declaration(authority, "validateTaxonomy"), validationCalls = nodes(validator, ts.isCallExpression);
-  expect(validationCalls.filter((node) => node.expression.getText(source) === "createTaxonomyPathMatcher")).toHaveLength(1);
-  expect(validationCalls.filter((node) => ["taxonomyPathPatternMatches", "taxonomyPatternExpression"].includes(node.expression.getText(source)))).toEqual([]);
-  expect(validationCalls.filter((node) => node.expression.getText(source) === "pathMatcher.matches")).toHaveLength(2);
+  const auditOwners = validatorOwners(), validationCalls = [declaration(authority, "validateTaxonomy"), ...auditOwners.map((entry) => entry.declaration)].flatMap((owner) => nodes(owner, ts.isCallExpression));
+  expect(auditOwners).toHaveLength(21);
+  expect(validationCalls.filter((node) => node.expression.getText() === "createTaxonomyPathMatcher")).toHaveLength(1);
+  expect(validationCalls.filter((node) => ["taxonomyPathPatternMatches", "taxonomyPatternExpression"].includes(node.expression.getText()))).toEqual([]);
+  expect(validationCalls.filter((node) => node.expression.getText() === "pathMatcher.matches")).toHaveLength(2);
 });
 
 for (const compiler of compilers) test("actual load caches content facts while capturing fresh isolated schema and matcher sessions: " + compiler.id, () => {
@@ -285,7 +299,7 @@ test("the owned factory interface and actual declarations satisfy strict TypeScr
   expect(ts.getPreEmitDiagnostics(program).map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"))).toEqual([]);
 });
 
-const matcherTypeOwners = [...normalizationSourceFiles(normalizerPath).keys()].concat(sourcePath, authorityPath);
+const matcherTypeOwners = [...new Set([...normalizationSourceFiles(normalizerPath).keys(), sourcePath, authorityPath, ...validatorOwners().map((entry) => entry.path)])];
 let matcherTypeProgram: ts.Program | undefined;
 
 for (const path of matcherTypeOwners) test("changed runtime matcher declarations and call sites are strictly typed: " + relative(library, path), () => {

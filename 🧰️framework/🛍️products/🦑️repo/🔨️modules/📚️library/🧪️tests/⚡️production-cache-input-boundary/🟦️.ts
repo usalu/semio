@@ -8,7 +8,7 @@ import Ajv from "ajv";
 import { minimatch } from "minimatch";
 import { filterUsingGlobPatterns, getTargetInputs } from "nx/src/hasher/task-hasher";
 import { createIssuedResourceControlV1, createScriptProcessEnvelope, withScriptInvocationSignalV1, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { withBuildTestInvocationV1 } from "../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 import cachePlugin, { cacheInternals } from "../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Vector = Readonly<{

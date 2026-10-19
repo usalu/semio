@@ -1,7 +1,7 @@
 /** 📏️ Windows: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withExactSourceReadBatchV1,readExactSourceFileV1,readExactSourceJsonV1,exactSourceReadBatchFactsV1,type ExactSourceFileV1}from"../../🧮️digest/📥️read/🟨️.mjs";
-import{withArtifactDescriptorV1,artifactDescriptorCustodyV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{withArtifactDescriptorV1,artifactDescriptorCustodyV1}from"@semio-tech/framework/filesystem/observation/descriptor";
 import{mkdtempSync,mkdirSync,writeFileSync,renameSync,rmSync,appendFileSync,truncateSync}from"node:fs";
 import{open}from"node:fs/promises";
 import{join,relative,parse,sep}from"node:path";

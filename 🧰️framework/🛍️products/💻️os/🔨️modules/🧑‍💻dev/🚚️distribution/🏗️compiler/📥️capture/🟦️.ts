@@ -1,13 +1,11 @@
-import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import {viteStorageLayoutV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { viteStorageLayoutV1 } from "@semio-tech/repo-lib/dev";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {scriptInvocationEnvironment,withScriptInvocationSignalV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import {open,lstat} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {join,resolve} from "node:path";

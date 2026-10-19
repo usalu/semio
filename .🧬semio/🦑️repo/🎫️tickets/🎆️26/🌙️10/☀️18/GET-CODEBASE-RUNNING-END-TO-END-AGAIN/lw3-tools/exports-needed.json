@@ -1,0 +1,105 @@
+{
+  "summary": {
+    "rule": "plugin-no-extension-or-artifact-<plugin>",
+    "reason": "plugin-level packages (raster-js, puzzle-js, energy-js) publish artifact/extension files through glue files that live under the plugin package dir; the glue imports the artifact, so the plugin owner depends on its artifact. Fix = artifact-level packages (the stdio/puzzle-2d pattern) so the glue lives under the artifact owner. Needs a workspace entry in ✏️s/package.json and a bun.lock refresh, both frozen.",
+    "newPackages": 2,
+    "removals": 1,
+    "violationsCleared": 5
+  },
+  "byPackage": {},
+  "newPackages": [
+    {
+      "name": "@semio-tech/raster-js",
+      "action": "move the package from the plugin package dir to the artifact package dir (name and exports subpaths unchanged, so the importer needs no edit)",
+      "fromWorkspace": "🔌️plugins/🖨️raster/📦️packages/🟦️typescript",
+      "toWorkspace": "🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🟦️typescript",
+      "moveGlue": "🔌️plugins/🖨️raster/📦️packages/🟦️typescript/🗿️artifacts/🖨️raster/🏅️standards/** -> 🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🟦️typescript/🏅️standards/** (re-base the ../ prefix of each re-export)",
+      "exports": {
+        "./artifacts/raster/standards/1/subsets/any/schema": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+        "./artifacts/raster/standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+        "./artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🟦️.ts"
+      },
+      "importers": [
+        "✏️s/🧪️tests/🏘️plugin-composition/🖨️raster-decoded-image/🟦️.ts"
+      ],
+      "clears": [
+        "plugin-no-extension-or-artifact-🖨️raster x3"
+      ]
+    },
+    {
+      "name": "@semio-tech/puzzle-5d",
+      "action": "new artifact-level package for the 5d artifact; drop the 5d glue and its export from @semio-tech/puzzle-js",
+      "toWorkspace": "🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript",
+      "moveGlue": "🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts -> 🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "exports": {
+        "./standards/1/subsets/any/schema/diff": "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+      },
+      "removeFrom": {
+        "package": "@semio-tech/puzzle-js",
+        "exportKey": "./artifacts/5d/standards/1/subsets/any/schema/diff"
+      },
+      "importers": [
+        "✏️s/🧑‍💻dev/🧩️puzzle/🧪️tests/🔺️diff-parsers/🟦️.ts (rewrite @semio-tech/puzzle-js/artifacts/5d/standards/1/subsets/any/schema/diff to @semio-tech/puzzle-5d/standards/1/subsets/any/schema/diff)"
+      ],
+      "clears": [
+        "plugin-no-extension-or-artifact-🧩️puzzle x1"
+      ]
+    }
+  ],
+  "removals": [
+    {
+      "package": "@semio-tech/energy-js",
+      "exportKey": "./extensions/epw/testing/unit",
+      "glueFile": "🔌️plugins/🔋️energy/📦️packages/🟦️typescript/🧩️extensions/🌦️epw/🧪️testing/🔬️unit/🟦️.ts",
+      "reason": "re-exports runWeatherChecks from the epw extension tests; no importer exists in the repository (git grep), and the plugin owner must not depend on its extension",
+      "clears": [
+        "plugin-no-extension-or-artifact-🔋️energy x1"
+      ]
+    }
+  ],
+  "coveredElsewhere": {
+    "file": "lw2-tools/exports-needed.json",
+    "note": "the 9 no-cross-package-relative edges from ✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/{2d-fixtures,3d-world,5d-timeline} to the example .dsl.semio assets need the puzzle-2d, puzzle-3d-ts/rs and puzzle-js (5d, becomes puzzle-5d after the package above) example subpaths recorded there. The 5d stories import 3 assets; after @semio-tech/puzzle-5d exists, the 5d example exports belong to that package instead of puzzle-js."
+  },
+  "manifestDependencyRemovals": {
+    "note": "package.json dependencies that no source file uses (git grep over ✏️s/🔌️plugins finds no import); they make every listed plugin package depend on the cad plugin extension packages",
+    "dependenciesToRemove": [
+      "@semio-tech/cad-js-module-spatial-shape",
+      "@semio-tech/cad-js-module-aec-building",
+      "@semio-tech/cad-js-module-aec-building-energy",
+      "@semio-tech/cad-js-module-aec-building-structure"
+    ],
+    "fromPackages": [
+      "@semio-tech/writer-js",
+      "@semio-tech/procedural-js",
+      "@semio-tech/gis-js",
+      "@semio-tech/vcs-js",
+      "@semio-tech/shooting-js",
+      "@semio-tech/demonstrator-js",
+      "@semio-tech/architect-js",
+      "@semio-tech/process-js",
+      "@semio-tech/reasoning-js",
+      "@semio-tech/forms-js",
+      "@semio-tech/layout-js",
+      "@semio-tech/norm-js",
+      "@semio-tech/playbook-js",
+      "@semio-tech/imperative-js",
+      "@semio-tech/trinity-js",
+      "@semio-tech/dag-js",
+      "@semio-tech/note-note-js",
+      "@semio-tech/puzzle-js",
+      "@semio-tech/space-js",
+      "@semio-tech/sourcing-js"
+    ],
+    "alsoUnused": [
+      {
+        "package": "@semio-tech/block-js",
+        "dependency": "@semio-tech/s-dev-block-ts"
+      },
+      {
+        "package": "@semio-tech/fem-js",
+        "dependency": "@semio-tech/s-fem-composition-tests"
+      }
+    ]
+  }
+}

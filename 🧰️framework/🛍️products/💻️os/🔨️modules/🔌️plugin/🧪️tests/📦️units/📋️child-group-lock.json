@@ -1,8 +1,5 @@
 {
-  "path": "🧰️framework/Cargo.lock",
-  "beforeSha256": "c5552be574168c18149704974c70eb13ec7bb47f0eae026746504f9a5620c4dd",
-  "afterSha256": "e2161c49585dec1f2bcedfbf089e06374d2adbac9cf5582d61895c71d7e082a4",
-  "thirdpartyPinsSha256": "cec33bada3d45ab1e279cd48fa43e2b814aadaad6ee076be0fe7b39cbb8fee23",
+  "path": "Cargo.lock",
   "name": "semio-framework-plugin-child-group-wire-laws",
   "dependencies": [
     "semio-framework-artifact-reference",
@@ -21,9 +18,5 @@
     "serde",
     "serde_json"
   ],
-  "missingDirectFirstparty": [
-    "semio-framework-os-kernel",
-    "semio-framework-plugin-decl-emission",
-    "semio-framework-test-fixtures"
-  ]
+  "missingDirectFirstparty": []
 }

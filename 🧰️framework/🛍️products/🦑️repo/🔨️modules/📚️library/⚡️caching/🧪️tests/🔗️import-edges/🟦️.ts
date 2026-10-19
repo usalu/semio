@@ -34,11 +34,11 @@ export async function testImportEdgeEquality(workspace: string, output: string):
         "fixture-a": [
           { file: "a/package.json", hash: hash("a/package.json") },
           { file: "a/index.js", hash: hash("a/index.js") },
-          { file: "a/deep/util.js", hash: hash("a/deep/util.js") },
+          { file: "a/deep/consumer.js", hash: hash("a/deep/consumer.js") },
         ],
         "fixture-b": [
           { file: "b/package.json", hash: hash("b/package.json") },
-          { file: "b/lib.js", hash: hash("b/lib.js") },
+          { file: "b/provider.js", hash: hash("b/provider.js") },
         ],
       },
       nonProjectFiles: [],
@@ -61,12 +61,12 @@ export async function testImportEdgeEquality(workspace: string, output: string):
     const utilOnly = {
       ...context,
       filesToProcess: {
-        projectFileMap: { "fixture-a": [{ file: "a/deep/util.js", hash: hash("a/deep/util.js") }] },
+        projectFileMap: { "fixture-a": [{ file: "a/deep/consumer.js", hash: hash("a/deep/consumer.js") }] },
         nonProjectFiles: [],
       },
     };
     const partial: readonly ImportEdge[] = edges(await testMethodV1(cacheInternals,"createDependenciesImplementation",{ analyzeLockfile: false }, utilOnly));
-    assert.ok(partial.some((edge) => edge.source === "fixture-a" && edge.target === "fixture-b" && edge.sourceFile === "a/deep/util.js"));
+    assert.ok(partial.some((edge) => edge.source === "fixture-a" && edge.target === "fixture-b" && edge.sourceFile === "a/deep/consumer.js"));
 
     const nodes = pg.nodes;
     assert.ok(nodes && fm.fileMap, "current Nx graph snapshots must declare nodes and fileMap");

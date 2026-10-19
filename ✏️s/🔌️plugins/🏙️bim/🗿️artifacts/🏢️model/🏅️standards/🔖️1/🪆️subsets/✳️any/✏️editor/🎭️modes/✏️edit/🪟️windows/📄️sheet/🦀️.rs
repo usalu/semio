@@ -5,13 +5,14 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::io::export::sheets::{self, ink::{sheet_marks, Mark, TitleLabels}};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;
@@ -58,7 +59,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Sheet
 /// 📄️ Every sheet of the model in print order: by number, then id.
 pub fn sheets_in_order(snapshot: &ModelSnapshot) -> Vec<String> {
-    sheets::ordered(snapshot)
+    semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::ordered(snapshot)
 }
 
 /// 📄️ The sheet a sheet window shows: its configured one while it still exists, else the first one in print order; none when the model has no sheet.
@@ -181,7 +182,7 @@ pub fn records(layout: Option<&SheetLayout>, inference: &ModelInference, selecti
     records.push(path_record("paper", "node", path(&rect_points(&paper), true), Paint { fill: Some(PAPER), stroke: Some((EDGE, 0.4)), dash: None }));
     for placed in &layout.viewports {
         let Some(drawing) = inference.view_linework.get(&placed.view) else { continue };
-        records.extend(placed_records(crate::render::plan::layers(&drawing.lines, &[]), placed));
+        records.extend(placed_records(semio_s_artifact_bim_model_plan_linework::render::plan::layers(&drawing.lines, &[]), placed));
         if placed.cropped {
             records.extend(masks(placed, drawing));
         }

@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/scene-host-contract` entry: explicit re-exports of the source module that owns each member. */
+export { WindowInstanceIdContext, parseJsonArray, parseSceneJsonField, parseSelectionDomainsFromSession, selectionGroupsFromDomains, useAppCatalogue, wireLabel } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";

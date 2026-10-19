@@ -3,7 +3,7 @@ import type { UiNodeRecord } from "@semio-tech/framework";
 import type { RetainedSurface } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies, type PluginRuntimeSource } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
 import { loadUiRefreshSectionFixture, loadPagedTextCarrierFixture } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
-import { loadValueResidentSchema } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadValueResidentSchema } from "@semio-tech/value-ts/testing/fixtures";
 
 /** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as
  * `dataAttributes` keyed `01`..`32` — the exact node shape `section_text_chunks`
@@ -192,7 +192,7 @@ export async function registerViewModelSurfacesTests(vitest: PluginRuntimeVitest
     });
 
     it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
-      const { rendererResidentLedger } = await import("../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json");
+      const { rendererResidentLedger } = await import("@semio-tech/framework-canvas-ts/renderer-resident"); const { default: fixture } = await import("../../💾️resident/🧪️tests/🧫️fixtures/🔣️.json");
       const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json"); const resident = await loadValueResidentSchema(); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
       expect(new Ajv({ strict: true }).addSchema(resident).addSchema(rendererModule).getSchema(`${rendererModule.$id}#/$defs/RendererResidentPolicyV1`)!(fixture.capacity)).toBe(true);
       const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);

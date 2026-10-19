@@ -78,7 +78,8 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         })
         .collect::<Vec<_>>();
     assert_eq!(document_rights, fixture["documentRights"].as_array().unwrap().iter().map(|right| right.as_str().unwrap()).collect::<Vec<_>>());
-    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).expect("registered Flow viewer factory must retain its typed member fleet");
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("registered Flow viewer factory must retain its typed member fleet");
     assert!(matches!(&app, FlowViewerTestApps::FlowViewer(_)));
     let items = fixture["grant"]["items"].as_u64().unwrap() as usize;
     let body = fixture["grant"]["bytes"].as_u64().unwrap() as usize;
@@ -86,7 +87,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
     for _ in 0..fixture["maximumSteps"].as_u64().unwrap() {
         let demand = app.close_retirement_demands(body).expect("actual viewer quotes its next close turn");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match app.close_step(grant).expect("actual viewer closes through its declared five-lane owners") {
+        match app.close_step(scope.cx(), grant).expect("actual viewer closes through its declared five-lane owners") {
             PluginLifecycleStep::Progress(progress) => assert!(progress.fits(grant)),
             PluginLifecycleStep::Blocked { .. } => panic!("fresh viewer has no outstanding reader that may block close"),
             PluginLifecycleStep::AwaitingInput { reason } => panic!("fixture has no active worker input to await: {reason}"),

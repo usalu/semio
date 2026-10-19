@@ -1,7 +1,6 @@
 /** 🧬️ Dag durable document with exact owned-child coordinates. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
-import { requireArtifactDialect, type ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import { requireArtifactDialect, type ArtifactDialect, parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 const CONTENT_DIALECT: ArtifactDialect = { artifactKind: "s.stdio.semio", standard: "v1", subset: "graph" };
 

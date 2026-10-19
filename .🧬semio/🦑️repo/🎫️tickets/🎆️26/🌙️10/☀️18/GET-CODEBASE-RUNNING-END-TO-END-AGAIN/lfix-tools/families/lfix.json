@@ -1,0 +1,8 @@
+{
+ "name": "lfix",
+ "crates": [
+  "semio-s-artifact-layout-layout-editor",
+  "semio-s-artifact-layout-layout-editor-commands-tests"
+ ],
+ "note": "LFIX: the layout editor lib (its own test closure) and the commands companion"
+}

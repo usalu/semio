@@ -1,7 +1,7 @@
 /** 📤️ Publication: module exporting `withRustUnitDescriptorPublishedSetV1`. */
 import{fileURLToPath}from"node:url";
 import{captureBoundedSourceRevisionV1}from"../../../../../../🏗️build/📥️inputs/🔏️revision/🟨️.mjs";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{captureRustUnitDescriptorFileContextV2,publishRustUnitDescriptorFilesV3,recoverRustUnitDescriptorCacheV2,retireRustUnitDescriptorCacheV3,retireRustUnitDescriptorStageV1,type RustUnitDescriptorFileContextV2}from"../📂️files/🟦️.ts";
 import{rustUnitDescriptorWorkingSetNodesV2,type RustUnitDescriptorWorkingSetV2}from"../🧺️set/🟦️.ts";
 import{withRustUnitDescriptorNamespaceV2,withRustUnitDescriptorMaintenanceV2}from"../../🔒️namespace/🟦️.ts";

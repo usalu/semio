@@ -148,14 +148,15 @@ async fn home_command_op_text_round_trips_every_variant() {
 async fn registered_home_admits_its_retained_routes_at_interactive_dispatch() {
     let definition = crate::editor::home::create_home_app().await;
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut home: VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>> = VcsArtifactApp::with_registry(EditorApp::<crate::editor::home::HomeApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let routes = [
         crate::editor::home::HomeCommand::CreateStudio(CreateStudio { name: "Test Studio".into(), kind: "catalog".into(), folder_path: None }),
         crate::editor::home::HomeCommand::ApplyDirectoryEventPage(crate::editor::home::commands::apply_directory_event_page::ApplyDirectoryEventPage { page_json: "{}".into() }),
     ];
     for command in routes {
         let id = command.command_id();
-        let fault = home.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect_err("a registry fixture owns no live instance");
+        let fault = home.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect_err("a registry fixture owns no live instance");
         assert_ne!(fault.code.0.as_str(), "interactive-job.not-ui-safe", "{id} must be past the classification gate");
         assert_eq!(fault.code.0.as_str(), "interactive-job.live-instance", "{id} must fail only for the fixture's missing live instance");
     }

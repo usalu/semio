@@ -1,6 +1,6 @@
 import{decodeBoundedArchiveV1,type BoundedArchiveEntryV1,type BoundedArchiveV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🗃️archive/🟦️.ts";
-import{type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policy from"./📋️policy.json"with{type:"json"};
 import schema from"./🧬️schema.json"with{type:"json"};
 if(validateJsonSchemaSubset(schema.definitions.Policy,policy).length)throw Error("Closed SDK package archive policy required");

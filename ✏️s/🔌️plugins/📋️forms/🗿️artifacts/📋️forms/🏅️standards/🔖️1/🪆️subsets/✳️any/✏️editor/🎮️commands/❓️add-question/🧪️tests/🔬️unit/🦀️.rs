@@ -14,13 +14,7 @@ async fn adding_a_question_recovers_after_removing_the_last_page() {
     for step in app.snapshot().unwrap().definition.steps {
         dispatch(&mut app, FormsCommand::RemoveStep(crate::editor::forms::commands::remove_step::RemoveStep { step_id: step.id })).await;
     }
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
-        FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
-        |app| { let snapshot = app.snapshot().unwrap(); (snapshot.definition.steps.len(), snapshot.definition.steps.iter().map(|step| step.blocks.len()).sum::<usize>()) },
-        (0, 0),
-        (1, 1),semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    ).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }), |app| { let snapshot = app.snapshot().unwrap(); (snapshot.definition.steps.len(), snapshot.definition.steps.iter().map(|step| step.blocks.len()).sum::<usize>()) }, (0, 0), (1, 1), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -34,13 +28,7 @@ async fn add_question_action_appends_question() {
 async fn add_question_undo_redo_round_trip() {
     let mut app = forms_app().await;
     let before = crate::schema::flatten_questions(&app.snapshot().expect("projection")).len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
-        FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }),
-        |app| crate::schema::flatten_questions(&app.snapshot().expect("projection")).len(),
-        before,
-        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    )
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, FormsCommand::AddQuestion(AddQuestion { kind: "text".into(), step_id: None }), |app| crate::schema::flatten_questions(&app.snapshot().expect("projection")).len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 

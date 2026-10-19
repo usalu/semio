@@ -1,16 +1,13 @@
 #!/usr/bin/env bun
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { repositoryCargoNetworkV1, buildRepositoryCargoArtifacts, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ⚙️ Builds/tests the `semio-framework-repo-mcp` protocol crate; the `repo` stdio server binary lives in `⌨️cli` because it carries the production repository. */
 import { join, resolve } from "node:path";
-import { buildRepositoryCargoArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildModeEnvironment, buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { devToolingEnv } from "../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runCmdStatus } from "../../../📚️library/🏃️process/🟦️.ts";
+import { devToolingEnv, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

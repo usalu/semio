@@ -1,10 +1,11 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
-import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
+import type { UiResidentComposition } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
+import { type OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
 import { NO_RESIDENT_FAULT, type ShardSlot, poolControllerEnvelope, poolRecordEnvelope, residentChild, residentGrant, residentStep, workerControllerEnvelope } from "../🔐️activation/🟦️.ts";
 
-/** 💾️ The phase fields of the UI resident pool admission and of the worker bootstrap admission; field names and order are the census the admission accounting prices. */
+/** 📋️ The phase fields of the UI resident pool admission and of the worker bootstrap admission; field names and order are the census the admission accounting prices. */
 export class ResidentAdmissionState {
   uiResidentControllerCell: OwnedResidentAdmission | null = null;
   uiResidentControllerRecord: OwnedResidentRecord | null = null;
@@ -30,7 +31,8 @@ export class ResidentAdmissionState {
 export class ShardResidentBootstrap {
   private readonly state: ShardClientState;
   private readonly resident = new ResidentAdmissionState();
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort<UiResidentComposition>;
+  constructor(hub: ShardClientHubPort<UiResidentComposition>) { this.hub = hub; this.state = hub.state; }
 
   /** 🏗️ Prepares only the original client's separately charged worker metadata. */
   prepareWorkerBootstrap(grant: ResidentGrant): ResidentStep {

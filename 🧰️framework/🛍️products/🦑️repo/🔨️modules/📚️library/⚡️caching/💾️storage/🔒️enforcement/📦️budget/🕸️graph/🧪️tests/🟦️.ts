@@ -5,7 +5,7 @@ import {createHash} from "node:crypto";
 import {Database} from "bun:sqlite";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryBuildGraphArtifactV1} from "../🟦️.ts";
-import {resourceLeasePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import {join} from "node:path";
 import type {BuildGraphV1} from "../../../../../../🏗️build/🕸️graph/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";

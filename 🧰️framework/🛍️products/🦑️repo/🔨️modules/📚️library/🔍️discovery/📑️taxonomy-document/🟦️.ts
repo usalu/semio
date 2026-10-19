@@ -453,8 +453,6 @@ export interface Taxonomy {
   readonly testObsoleteCategoryStems: readonly string[];
   readonly testObsoleteTestEmojiCategoryStems: readonly string[];
   readonly testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
-  /** 🐹️ Language conventions whose toolchain compiles a test only beside the package it tests; such a file is a canonical in-package test implementation. */
-  readonly testInPackageImplementations: readonly Readonly<{ id: string; implementation: string; fileKindId: string; filenameSuffix: string; rationale: string }>[];
   /** 🎚️ The case name that holds a package's test-runner configuration; it configures one delivery package, so it may sit under a delivery scope. */
   readonly testRunnerConfigurationCaseName: string;
   /** 🔬️ Owner collections whose members bound the search for a case's subject package. */
@@ -477,12 +475,18 @@ export interface Taxonomy {
   readonly osRequiredChildDirs: readonly string[];
   /** 🚫️ Emoji-stripped directory/file stems banned repo-wide (e.g. `core`, `shared`). */
   readonly bannedNameStems: readonly string[];
+  /** 🪆️ Banned stems that stay legal only as a direct child of a `subsetsDirName` owner (the standard's own subset vocabulary, e.g. `base`), and the exact vendored files whose fixed internal import identity forbids a rename. */
+  readonly bannedNameStemExemptions: { readonly subsetDirectories: readonly string[]; readonly vendoredFiles: readonly string[] };
   readonly rootDataDirNames: readonly string[];
   readonly rootDataContractIds: readonly string[];
   readonly rootDocumentContractIds: readonly string[];
   readonly repoWideContractIds: readonly string[];
   readonly dependencyDirections: {
+    /** 🏺️ Vendored third-party source trees: byte-identical upstream output that the dependency graph neither lints nor follows. */
+    readonly vendoredPaths: readonly string[];
     readonly roles: Readonly<Record<string, { readonly ownerPaths: readonly string[]; readonly externalPackages: readonly string[] }>>;
+    /** 🖱️ The ui boundary: which declared roles the ui subject may use at runtime (foundation) and from tests only (test support). */
+    readonly uiBoundary: { readonly version: 1; readonly subjectRole: string; readonly foundationRoles: readonly string[]; readonly testSupportRoles: readonly string[] };
     readonly rules: Readonly<Record<string, { readonly fromRoles: readonly string[]; readonly toRoles: readonly string[] }>>;
   };
   readonly cargoDependencyDirections: {

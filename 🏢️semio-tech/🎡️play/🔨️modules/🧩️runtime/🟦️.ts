@@ -1,9 +1,9 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import catalog from "./🔣️.json";
-import { runtimeComponentClosure } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
-import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
+import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
 
 export const PLAY_HOST = catalog.host;
 /** 🏠️ The OS shell variant — it hosts apps rather than being one, so play never lists it. */

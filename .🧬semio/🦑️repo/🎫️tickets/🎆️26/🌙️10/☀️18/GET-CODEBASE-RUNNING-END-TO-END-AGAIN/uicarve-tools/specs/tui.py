@@ -24,7 +24,9 @@ crates = {
               el('🔚️Footer', 'footer'), el('🔝️Navbar', 'navbar'), el('🪟️Window', 'window')]},
  'engine': {'pkg': 'semio-framework-ui-tui-engine', 'id': 'ui-tui-engine', 'dir': T + '/⚙️engine', 'root': T + '/⚙️engine/🦀️.rs', 'desc': 'semio tui retained-mode engine'},
  'laws': {'pkg': 'semio-framework-ui-tui-laws', 'id': 'ui-tui-laws', 'dir': T + '/🧪️tests/🥣️companion', 'desc': 'semio tui cross-crate laws: engine behaviour, overlays, pointer routing, chrome anatomy, render equivalence and the legacy unit corpus', 'tests_only': True,
-   'mounts': [{'name': n, 'file': T + '/🧪️tests/' + d + '/🦀️.rs', 'cfg': '#[cfg(test)]', 'vis': ''} for n, d in (('tests', '🔬️unit'), ('text_elements', '🔬️text-elements'), ('render_equivalence', '🔬️render-equivalence'), ('engine_behaviour', '🔬️engine'), ('chrome_anatomy', '🔬️chrome'), ('overlays', '🔬️overlays'), ('pointer_routing', '🔬️pointer-routing'))]},
+   'mounts': [{'name': n, 'file': T + '/🧪️tests/' + d + '/🦀️.rs', 'cfg': '#[cfg(test)]', 'vis': ''} for n, d in (('text_elements', '🔬️text-elements'), ('render_equivalence', '🔬️render-equivalence'), ('engine_behaviour', '🔬️engine'), ('chrome_anatomy', '🔬️chrome'), ('overlays', '🔬️overlays'), ('pointer_routing', '🔬️pointer-routing'))]},
+ 'unit-laws': {'pkg': 'semio-framework-ui-tui-unit-laws', 'id': 'ui-tui-unit-laws', 'dir': T + '/🧪️tests/🔬️unit', 'root': T + '/🧪️tests/🔬️unit/🦀️.rs', 'desc': 'semio tui unit corpus: layout, window, table, parser, theme, geometry, text, cell, ANSI, vt and widget laws', 'tests_only': True},
+ 'vt-laws': {'pkg': 'semio-framework-ui-tui-vt-laws', 'id': 'ui-tui-vt-laws', 'dir': T + '/📟️vt/🧪️tests/🔬️unit', 'root': T + '/📟️vt/🧪️tests/🔬️unit/🦀️.rs', 'desc': 'semio tui virtual terminal laws: screen sequences, history reflow, pane input and pointer, encoders and the shared corpus', 'tests_only': True},
  'host': {'pkg': 'semio-framework-ui-tui-host', 'id': 'ui-tui-host', 'dir': T + '/🏃️host', 'root': T + '/🏃️host/🦀️.rs', 'desc': 'semio tui wasm host for browser terminals (feature bindgen)'},
 }
 def r(frm, crate, to): return {'from': frm, 'crate': crate, 'to': to}

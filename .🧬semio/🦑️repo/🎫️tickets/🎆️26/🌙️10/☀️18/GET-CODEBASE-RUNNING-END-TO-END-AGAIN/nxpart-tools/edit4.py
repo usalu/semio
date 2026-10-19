@@ -1,0 +1,18 @@
+N="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/"
+def load(p): return open(p,encoding='utf8').read()
+def save(p,s): open(p,'w',encoding='utf8').write(s)
+def rep(s,old,new,count=1):
+    c=s.count(old)
+    if c!=count: raise SystemExit(f"expected {count} got {c}: {old[:100]}")
+    return s.replace(old,new)
+p=N+"📥️store/🟦️.ts";s=load(p)
+s=rep(s,'try{await owner.prepareNxGraphCacheStorageV1(workspace,original,hostPhase,0);await withRepositoryCacheStoreV1(workspace,"graph",original,hostPhase,parent=>owner.withNxGraphCacheStoreV1(parent,async store=>{poolDirectory=join(parent.root,"nx/cache");await body(store,native);}));}catch(error)','try{await owner.prepareNxGraphCacheStorageV1(workspace,original,hostPhase,0);poolDirectory=budget.partitions.nx.directory;await owner.withNxGraphCacheStoreV1(workspace,original,hostPhase,async store=>{await body(store,native);});}catch(error)')
+s=rep(s,'if(!cleanup.length&&poolDirectory)try{await retireCharged({directory:poolDirectory,leaseDirectory:join(process.cwd(),".cache/b/l/m/data"),filesystemBytes:policy.maximumPoolBytes-policy.imageControlBytes,maximumPhysicalBytes:policy.maximumPoolBytes,control},["repository:nx-graph-pool"]);}catch(error){cleanup.push(error);}','if(!cleanup.length&&poolDirectory&&existsSync(poolDirectory))try{await retireCharged({...budget.partitions.nx,leaseDirectory:leases,maximumPhysicalBytes:budget.partitions.nx.capacityBytes,control},["repository:nx-store"]);}catch(error){cleanup.push(error);}')
+s=rep(s,'if(owners.includes("repository:nx-graph-pool"))await retirePoolChildren','if(owners.includes("repository:nx-store"))await retirePoolChildren')
+s=rep(s,'pool=join(repositoryCachePartitionRootV1(workspace,"graph"),"nx/cache"),policy=schema.definitions.Policy.const;if(existsSync(pool))await retireCharged({directory:pool,leaseDirectory:join(process.cwd(),".cache/b/l/m/data"),filesystemBytes:policy.maximumPoolBytes-policy.imageControlBytes,maximumPhysicalBytes:policy.maximumPoolBytes,control},["repository:nx-graph-pool"]);','pool=budget.partitions.nx;if(existsSync(pool.directory))await retireCharged({...pool,leaseDirectory:repositoryLeaseDirectoryV1(workspace),maximumPhysicalBytes:pool.capacityBytes,control},["repository:nx-store"]);')
+save(p,s)
+p=N+"📥️purpose/📜️script.ts";s=load(p)
+s=rep(s,'physicalWorkspace=resolve(store.parent.root,"../../../..");if(repositoryCachePartitionRootV1(physicalWorkspace,"graph")!==store.parent.root)throw Error("Exact physical graph fixture workspace required");','physicalWorkspace=resolve(store.root,"../../../..");if(repositoryCachePartitionRootV1(physicalWorkspace,"nx")!==store.root)throw Error("Exact physical nx fixture workspace required");',4)
+s=rep(s,'await statfs(store.parent.root)','await statfs(repositoryCachePartitionRootV1(physicalWorkspace,"graph"))')
+save(p,s)
+print("ok")

@@ -4,12 +4,13 @@
 //! "Line height", and the widget rows), so a hand-typed literal creeping back in fails here rather
 //! than in a screenshot diff.
 
-use super::{HitKind, HitTarget, InputState, WidgetInteractionMaps};
-use crate::wgpu::chrome::{ICON_TINY, ICON_TREE_ROW, SIZE_TINY};
-use crate::wgpu::component::ui::{UiPresence, UiProgressNode};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::theme::Theme;
-use crate::wgpu::Label;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
+use semio_framework_ui_wgpu_layout::chrome::{ICON_TINY, ICON_TREE_ROW, SIZE_TINY};
+use semio_framework_ui_declaration::ui::{UiPresence, UiProgressNode};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_locale::Label;
 use std::collections::HashMap;
 
 /// 📶️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
@@ -33,10 +34,10 @@ async fn icon_boxes_resolve_to_reacts_own_three_sizes() {
 #[semio_framework_async_macros::async_test]
 async fn tree_row_metrics_match_the_theme_tokens() {
     let theme = Theme::light();
-    assert!((crate::wgpu::widgets::TREE_ROW_HEIGHT - theme.tree_row_height).abs() < 0.001);
-    assert!((crate::wgpu::widgets::TREE_INDENT_PER_LEVEL - theme.tree_indent_per_level).abs() < 0.001);
-    assert!((crate::wgpu::widgets::TREE_TOGGLE_WIDTH - theme.tree_toggle_width).abs() < 0.001);
-    assert!((crate::wgpu::widgets::TREE_ICON_SIZE - ICON_TREE_ROW).abs() < 0.001);
+    assert!((crate::TREE_ROW_HEIGHT - theme.tree_row_height).abs() < 0.001);
+    assert!((crate::TREE_INDENT_PER_LEVEL - theme.tree_indent_per_level).abs() < 0.001);
+    assert!((crate::TREE_TOGGLE_WIDTH - theme.tree_toggle_width).abs() < 0.001);
+    assert!((crate::TREE_ICON_SIZE - ICON_TREE_ROW).abs() < 0.001);
 }
 
 /// 📶️ `Progress` is `h-tiny w-full` with the theme's own corner radius — not a one-spacing-unit
@@ -46,7 +47,7 @@ async fn progress_track_is_a_size_tiny_bar_across_the_full_width() {
     let theme = Theme::light();
     let node = progress(1.0, Some(4.0));
     let bounds = Rect::new(10.0, 20.0, 200.0, 40.0);
-    let (track, fill) = crate::wgpu::paint::progress_bar_rects(&node, bounds, &theme);
+    let (track, fill) = semio_framework_ui_wgpu_paint::progress_bar_rects(&node, bounds, &theme);
     assert!((track[3] - SIZE_TINY).abs() < 0.001, "track height is --size-tiny, got {}", track[3]);
     assert!((track[2] - bounds.w).abs() < f32::EPSILON, "the track spans the node's full width");
     assert!((track[1] - (bounds.y + (bounds.h - SIZE_TINY) * 0.5)).abs() < 0.001, "the track is vertically centred in its node");
@@ -61,7 +62,7 @@ async fn an_indeterminate_progress_bar_centres_a_fixed_share() {
     let theme = Theme::light();
     let node = progress(0.0, None);
     let bounds = Rect::new(0.0, 0.0, 300.0, 30.0);
-    let (track, fill) = crate::wgpu::paint::progress_bar_rects(&node, bounds, &theme);
+    let (track, fill) = semio_framework_ui_wgpu_paint::progress_bar_rects(&node, bounds, &theme);
     assert!(fill[2] > 0.0 && fill[2] < track[2], "an indeterminate sweep is a share of the track, not all of it");
     let left = fill[0] - track[0];
     let right = track[0] + track[2] - (fill[0] + fill[2]);
@@ -71,10 +72,13 @@ async fn an_indeterminate_progress_bar_centres_a_fixed_share() {
 /// 🧭️ Real gizmo paint stays bounded after translating a pane, and its circular heads match the neutral Three sprite corpus.
 #[semio_framework_async_macros::async_test]
 async fn orbit_gizmo_heads_keep_diameter_when_the_viewport_moves() {
-    use crate::wgpu::draw_types::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_tips};
-    use crate::wgpu::draw_types::{DrawList, KIND_ROUNDED};
-    use crate::wgpu::widgets::{gizmo::paint_orbit_view_gizmo, WidgetContext};
-    use crate::wgpu::{Camera3d, FontAtlas, InputState};
+    use semio_framework_ui_draw_contract::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_tips};
+    use semio_framework_ui_draw_contract::{DrawList, KIND_ROUNDED};
+    use semio_framework_ui_wgpu_widget_kit::gizmo::paint_orbit_view_gizmo;
+use semio_framework_ui_wgpu_widget_kit::WidgetContext;
+    use ui_scene::math::Camera3d;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::InputState;
     use std::collections::HashMap;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json")).unwrap();
@@ -147,7 +151,7 @@ fn select_wheel_scope_tracks_its_presented_registry_and_rejects_later_occlusion(
     for point in [(20.0, 33.0), (9.0, 9.0)] {
         assert!(accepted.scroll_select_popup_at(&input, &mut offsets, point.0, point.1, 34.0));
     }
-    let key = crate::wgpu::select::select_scroll_key("owner.item.with");
+    let key = semio_framework_ui_select_behavior::select_scroll_key("owner.item.with");
     assert_eq!(offsets.get(&key), Some(&68.0));
     assert!(!accepted.scroll_select_popup_at(&input, &mut offsets, 140.0, 33.0, 34.0));
     for delta in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {

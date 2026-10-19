@@ -3,8 +3,8 @@
 use semio_s_artifact_norm_iso16757_checks_common::{assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_5::{ExchangeProcess, PartNumberRule};
-use semio_s_artifact_norm_iso16757_checks_common::helpers::part_5::ScriptRuntime;
-use semio_s_artifact_norm_iso16757_checks_common::helpers::part_5 as helpers;
+use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5::ScriptRuntime;
+use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_5 as helpers;
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use std::collections::HashMap;

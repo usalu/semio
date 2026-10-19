@@ -5,7 +5,7 @@ import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {requireMaterializedPathV1} from "@semio-tech/process/leases";
 import type {ScriptInvocation} from "@semio-tech/process/routing/invocation";
-import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import { withRepositoryCacheStoreV1, type RepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🗂️ Owns coordinator output, warm compiler state and isolated live scratch in one fixed product filesystem. */

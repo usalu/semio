@@ -1,9 +1,9 @@
 import type {FlowWasmDeliveryV1} from "@semio-tech/ui-styling/builder/vite";
 import {join,isAbsolute,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import {type RepositoryArtifactRequestV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
+import { type RepositoryArtifactRequestV1 } from "@semio-tech/repo-lib/artifacts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import policy from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { artifactsStorageSchema as policy } from "@semio-tech/repo-lib/artifacts";
 /** 🌊️ Names Flow’s single fixed selected-mode browser product as DATA under the existing publisher/reader bounds. */
 export function flowBrowserPackageRequestV1(productsRoot:string,value:unknown):RepositoryArtifactRequestV1{if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed Flow browser intent required");const intent=value as{version:1;mode:"prototype"|"release"},path=join(productsRoot,"browser",intent.mode,schema.definitions.Protocol.const.namespace);if(!isAbsolute(productsRoot)||resolve(productsRoot)!==productsRoot||path.length>224)throw Error("Canonical bounded Flow products root required");return Object.freeze({version:1,path,owner:schema.definitions.Protocol.const.sourceOwner+"/Cargo.toml:flow-browser",maximumBytes:policy.definitions.Protocol.const.maximumOutputBytes+policy.definitions.Protocol.const.maximumManifestBytes,maximumFiles:policy.definitions.Protocol.const.maximumFiles});}
 

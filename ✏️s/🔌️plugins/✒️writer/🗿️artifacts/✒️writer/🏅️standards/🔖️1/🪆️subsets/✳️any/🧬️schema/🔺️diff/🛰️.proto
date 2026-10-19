@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.writer.writer.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
 message WriterDiff {
@@ -10,5 +10,5 @@ message WriterDiff {
   optional string language_id = 4;
   optional string uri = 5;
   optional string text = 6;
-  semio.os.store.ArtifactChild document = 7;
+  semio.framework.schema.artifact_child.ArtifactChild document = 7;
 }

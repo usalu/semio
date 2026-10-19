@@ -1,6 +1,8 @@
 import{nativeStorageSchemaV1 as schema,readNativeStorageDataV1 as admit,nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1,snapshotNativeStorageStateV1,createNativeStorageJournalProjectionV1,type NativeStoragePolicyV1,type NativeStorageAllocationV1,type NativeStorageNamespaceIdentityV1,type NativeStorageNamespaceReceiptV1,type NativeStorageChildRequestV1,type NativeStorageChildDeclarationV1,type NativeStorageStateV1,type NativeStorageEventV1,type NativeStorageRebudgetRequestV1,type NativeStorageBackingV1,type NativeStorageJournalProjectionV1}from"./📜️journal/🟦️.ts";
 export{nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1,snapshotNativeStorageStateV1,createNativeStorageJournalProjectionV1}from"./📜️journal/🟦️.ts";
 export type{NativeStoragePolicyV1,NativeStorageAllocationV1,NativeStorageNamespaceIdentityV1,NativeStorageNamespaceReceiptV1,NativeStorageChildRequestV1,NativeStorageChildDeclarationV1,NativeStorageStateV1,NativeStorageEventV1,NativeStorageRebudgetRequestV1,NativeStorageBackingV1,NativeStorageJournalProjectionV1}from"./📜️journal/🟦️.ts";
+export type{NativeStorageCleanupAccessV1,NativeStorageCleanupPortV1,NativeStoragePortV1,NativeStorageObservationPortV1,NativeStorageJournalObservationV1}from"./🔌️port/🟦️.ts";
+import type{NativeStorageCleanupAccessV1,NativeStorageCleanupPortV1,NativeStoragePortV1,NativeStorageObservationPortV1,NativeStorageJournalObservationV1}from"./🔌️port/🟦️.ts";
 import{requireNativeStorageMappingReadV1}from"./🔒️mapping/🟦️.ts";
 import{readNativeCreatorClaimRecordsV1}from"./🌱️birth/🧾️claim/🟦️.ts";
 import claimSchema from"./🌱️birth/🧾️claim/🧬️schema/🔣️.json" with{type:"json"};
@@ -40,19 +42,6 @@ const childDeclarationSchema=structuredClone(schema.definitions.ChildDeclaration
 /** 📋️ Refuses accessors and authority-shaped extras without invoking their getters. */
 export function readNativeStorageChildDeclarationV1(value:unknown):NativeStorageChildDeclarationV1{if(!value||typeof value!=="object"||Array.isArray(value)||types.isProxy(value)||Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)throw Error("Plain immutable child declaration required");const keys=Reflect.ownKeys(value),captured:Record<string,string|number>=Object.create(null);if(keys.length!==childDeclarationSchema.required.length)throw Error("Closed child declaration fields required");for(const key of keys){if(typeof key!=="string"||!childDeclarationSchema.required.includes(key))throw Error("Unknown child declaration field");const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!descriptor||!("value"in descriptor)||!descriptor.enumerable||typeof descriptor.value!=="string"&&typeof descriptor.value!=="number")throw Error("Primitive child declaration DATA required");captured[key]=descriptor.value;}if(validateJsonSchemaSubset(childDeclarationSchema,captured).length)throw Error("Finite child declaration DATA required");const result=captured as NativeStorageChildDeclarationV1;if(requireMaterializedPathV1(result.directory)!==result.directory)throw Error("Canonical child declaration path required");return Object.freeze(result);}
 /** 🧾️ Exposes only actual terminal backing checks and durable metadata, without ordinary compiler controls. */
-export type NativeStorageCleanupAccessV1=Readonly<{backing:NativeStorageBackingV1;recheck():void;syncMetadata(directory:string):Promise<void>}>;
-/** 🛟️ Exists only when privately captured from the original enforcing port before its body ends. */
-export interface NativeStorageCleanupPortV1{withOperation<T>(body:(access:NativeStorageCleanupAccessV1)=>Promise<T>):Promise<T>;close():Promise<void>;}
-/** 🔌️ Owns actual platform enforcement, identity revalidation and complete physical retirement. */
-export interface NativeStoragePortV1{
- withJournal<T>(control:ResourceLeaseControl,run:(actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
- captureCleanup?(enrollment:import("../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts").AcceptedPhysicalCleanupV1,bodyControl:ResourceLeaseControl):NativeStorageCleanupPortV1;
- withOperation<T>(control:ResourceLeaseControl,run:(actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>;
- observe(policy:NativeStoragePolicyV1,control:ResourceLeaseControl):Promise<NativeStorageBackingV1|null>;
- recheck(backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
- syncMetadata(backing:NativeStorageBackingV1,directory:string,control:ResourceLeaseControl):Promise<void>;
- retire(allocation:NativeStorageAllocationV1,backing:NativeStorageBackingV1,control:ResourceLeaseControl):Promise<void>;
-}
 function withNativeJournalDescriptorV1<T>(descriptor:number,body:()=>T):T{let failed=false;try{return body();}catch(error){failed=true;throw error;}finally{try{closeSync(descriptor);}catch(error){if(!failed)throw error;try{}catch{}}}}
 
 /** 🚫️ An ordinary directory has no portable aggregate physical quota. */
@@ -184,9 +173,6 @@ export function requireNativeStorageChildCleanupV1(owner:NativeStorageCleanupV1,
 export function settleSuccessfulNativeStorageChildV1(owner:NativeStorageCleanupV1,enrollment:AcceptedPhysicalCleanupV1,retirement:import("./🌐️platform/📋️contract/🟦️.ts").NativeImageMaintenanceCustodyV1):Promise<void>{const scope=allocationCleanups.get(owner),request=requireNativeStorageChildCleanupV1(owner,enrollment);if(!scope)throw Error("Actual successful child cleanup required");const authorize=()=>{checkAcceptedPhysicalCleanupV1(enrollment);requireArtifactDescriptorClosureV1();if(process.platform==="darwin")requirePersistentNativeSuccessfulChildRetirementV1(retirement,owner,enrollment,request);else requireFixedNativeSuccessfulChildRetirementV1(retirement,owner,enrollment,request);};authorize();if(!nativeSuccessfulChildRetirementDecisionV1({version:1,known:true,committed:true,parentRetained:true,childExclusive:true,readersClosed:true,requestBound:true,physicalRemoved:true,claimRemoved:true,metadataSynced:true,kernelClosed:true,phase:"cleanup"}))throw Error("Successful child terminal obligations required");const receipt=scope.source.allocation.namespace,namespace=receipt?{directory:receipt.directory,started:true,receipt,removed:false}:undefined;return retireNativeStorageChildChargeV1(owner,scope.source,enrollment,authorize,namespace);}
 
 /** 📖️ Requires actual read custody and synchronous physical checks without any mutation method. */
-export type NativeStorageObservationPortV1=Pick<NativeStoragePortV1,"withOperation"|"observe"|"recheck">&Readonly<{check(control:ResourceLeaseControl):void}>;
-/** 📚️ Returns detached current journal DATA, never an allocation or a writer continuation. */
-export type NativeStorageJournalObservationV1=Readonly<{version:1;backing:NativeStorageBackingV1;state:NativeStorageStateV1;journalSha256:string;journalBytes:number}>;
 /** 📸️ Snapshots only the closed primitive policy before protected observation can await. */
 export function readNativeStorageObservationPolicyV1(value:unknown):NativeStoragePolicyV1{if(!value||typeof value!=="object"||Array.isArray(value)||types.isProxy(value)||Object.getPrototypeOf(value)!==Object.prototype&&Object.getPrototypeOf(value)!==null)throw Error("Plain current observation policy required");const captured:Record<string,unknown>={};for(const key of Reflect.ownKeys(value)){const field=typeof key==="string"?Object.getOwnPropertyDescriptor(value,key):undefined;if(!field||!("value"in field)||!field.enumerable)throw Error("Primitive current observation policy required");captured[key as string]=field.value;}return Object.freeze(admit<NativeStoragePolicyV1>("Policy",captured));}
 /** 🔎️ Locks and replays only an actually present journal through the supplied enforcing read capability. */

@@ -11,6 +11,7 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestPopulateEventDataAgentStarting(t *testing.T) {
@@ -391,9 +392,7 @@ func TestCodeEditEndedRunsFormatter(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(prettierBin, "prettier"), []byte("#!/bin/sh\n"), 0o755)
 	_ = os.WriteFile(filepath.Join(tmpDir, ".prettierrc.json"), []byte("{}"), 0o644)
 
-	origRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = origRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	relPath := "src/example.ts"
 	payload := json.RawMessage(`{"sessionId":"sess-fmt","tool_input":{"filePath":"` + relPath + `","oldString":"old","newString":"new"}}`)

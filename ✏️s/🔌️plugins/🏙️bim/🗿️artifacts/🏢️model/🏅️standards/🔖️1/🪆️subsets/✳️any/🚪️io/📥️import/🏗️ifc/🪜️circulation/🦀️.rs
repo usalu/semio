@@ -4,13 +4,15 @@
 //! posts and the `Height` of its base quantities (else one metre). Whatever has no such flight or polyline is reported by the unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgelements/lexical/ifcstair.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::io::import::ifc::data::label;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{real, text, Doc, Section};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{real, text, Doc, Section};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of, quantity};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::schema::snapshot::{Infill, Point2, Profile, Railing, RiserKind, Stair, StairFlight, StairStringer, StringerKind, TopConstraint};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Infill, Point2, Profile, RiserKind, StairFlight, StairStringer, StringerKind, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Railing, Stair};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 

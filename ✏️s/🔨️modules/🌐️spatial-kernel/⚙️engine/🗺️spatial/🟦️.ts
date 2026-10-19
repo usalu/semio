@@ -343,9 +343,3 @@ export interface KernelQueryContext {
 
 // #endregion 📦️🗺️spatial
 
-// #region 🧪️Tests
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-model-commit-mesh/🟦️.ts");
-  await registerTests1(import.meta.vitest);
-}
-// #endregion 🧪️Tests

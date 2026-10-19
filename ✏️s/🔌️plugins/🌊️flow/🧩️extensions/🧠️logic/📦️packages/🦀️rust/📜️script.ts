@@ -4,22 +4,22 @@ import { join } from "node:path";
 import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
-import { runRepositoryCargoTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { packageAdmittedExtensionComponentV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-flow-logic"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-s-plugin-flow-logic"], this.repoRoot, this.invocation, rest);
   }
 }
 
 class PackageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("package writes the build-owned deliverable and accepts no output override");
-    await runExtensionComponentPackage({ invocation: this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
+    await packageAdmittedExtensionComponentV1({ invocation: this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
   }
 }
 

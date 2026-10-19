@@ -1,6 +1,6 @@
 //! 👥️ Presence binary representation implements the original semantic peer types.
-import type { ArtifactPresenceDomain, ArtifactPresenceHistoryEdit, ArtifactPresenceInteraction, ArtifactPresencePeer, ArtifactPresencePrincipalKind, ArtifactPresenceToolRun, ArtifactPresenceTyping, ArtifactPresenceUi, ArtifactPresenceViewKind, ArtifactPresenceWindowView } from "../../../🟦️.ts";
-import { PRESENCE_HISTORY_EDIT_STAGES, PRESENCE_PRINCIPAL_KINDS, PRESENCE_TOOL_RUN_STATES, PRESENCE_TYPING_EXCERPT_BYTES } from "../../../🟦️.ts";
+import type { ArtifactPresenceDomain, ArtifactPresenceHistoryEdit, ArtifactPresenceInteraction, ArtifactPresencePeer, ArtifactPresencePrincipalKind, ArtifactPresenceToolRun, ArtifactPresenceTyping, ArtifactPresenceUi, ArtifactPresenceViewKind, ArtifactPresenceWindowView } from "../../../🔖️sync-protocol/🟦️.ts";
+import { PRESENCE_HISTORY_EDIT_STAGES, PRESENCE_PRINCIPAL_KINDS, PRESENCE_TOOL_RUN_STATES, PRESENCE_TYPING_EXCERPT_BYTES } from "../../../🔖️sync-protocol/🟦️.ts";
 import { writeVarintU64, readVarintU64, writeStr, readStr, writeBytes, writeBool, writeF64 } from "../🟦️.ts";
 import { writeVecStr, readVecStr, writeOptStr } from "../🔗️causal/🟦️.ts";
 

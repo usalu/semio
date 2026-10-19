@@ -190,7 +190,7 @@ pub fn table_row_id(row: &Value, index: usize) -> String {
 /// (`interactionSelect`, with `targets` a JSON STRING of `[{granularity, id}]` — the wire shape the
 /// framework's interaction bus reads); a plugin-private table keeps its own `selectRow` verb.
 /// Ported from `TableHost`'s `onRowClick`.
-fn table_row_action(scene: &UiComponentSceneNode, table: &ui_wgpu::wgpu::TableScene, row: &Value, row_id: &str, modifiers: SceneModifiers) -> ActionDescriptor {
+fn table_row_action(scene: &UiComponentSceneNode, table: &semio_framework_ui_declaration::ui::TableScene, row: &Value, row_id: &str, modifiers: SceneModifiers) -> ActionDescriptor {
     match (table.domain_id.as_deref(), table.domain_granularity_id.as_deref()) {
         (Some(domain_id), Some(granularity)) => {
             scene_action(scene, "interactionSelect", semio_framework::dsl_value!({ "domainId": domain_id, "targets": json!([{ "granularity": granularity, "id": row_id }]).to_string(), "merge": modifiers.interaction_merge(), "method": "pick" }))
@@ -424,8 +424,8 @@ pub fn table_editable_text_commit(
     column_id: &str,
     base: &str,
     draft: &str,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Option<Result<TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Option<Result<TableEditableTextCommitOutcome, semio_framework_ui_action::BoundedActionFault>> {
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
     if !columns.iter().any(|column| column.id == column_id) {
@@ -450,8 +450,8 @@ pub fn table_editable_text_commit_owned(
     base: &str,
     draft: String,
     awaiting_echo: Option<&str>,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Option<Result<TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Option<Result<TableEditableTextCommitOutcome, semio_framework_ui_action::BoundedActionFault>> {
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
     if !columns.iter().any(|column| column.id == column_id) {
@@ -620,7 +620,7 @@ pub fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inner: Rec
     cells
 }
 
-pub fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<Result<(), semio_framework_ui_action::BoundedActionFault>> {
     let control = accepted_table_button_accessibility_cells(&scene.host_id).into_iter().find(|control| control.key == key)?;
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
@@ -642,9 +642,9 @@ pub fn table_stepper_apply_key(
     scene: &UiComponentSceneNode,
     row_id: &str,
     column_id: &str,
-    key: &ui_wgpu::wgpu::KeyAction,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Option<Result<TableStepperKeyOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    key: &semio_framework_ui_wgpu_input::KeyAction,
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Option<Result<TableStepperKeyOutcome, semio_framework_ui_action::BoundedActionFault>> {
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
     if !columns.iter().any(|column| column.id == column_id) {
@@ -656,12 +656,12 @@ pub fn table_stepper_apply_key(
         return None;
     };
     let requested = match key {
-        ui_wgpu::wgpu::KeyAction::ArrowUp | ui_wgpu::wgpu::KeyAction::ArrowRight => step,
-        ui_wgpu::wgpu::KeyAction::ArrowDown | ui_wgpu::wgpu::KeyAction::ArrowLeft => -step,
-        ui_wgpu::wgpu::KeyAction::PageUp => step * 10.0,
-        ui_wgpu::wgpu::KeyAction::PageDown => -step * 10.0,
-        ui_wgpu::wgpu::KeyAction::Home => min - value,
-        ui_wgpu::wgpu::KeyAction::End => max - value,
+        semio_framework_ui_wgpu_input::KeyAction::ArrowUp | semio_framework_ui_wgpu_input::KeyAction::ArrowRight => step,
+        semio_framework_ui_wgpu_input::KeyAction::ArrowDown | semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => -step,
+        semio_framework_ui_wgpu_input::KeyAction::PageUp => step * 10.0,
+        semio_framework_ui_wgpu_input::KeyAction::PageDown => -step * 10.0,
+        semio_framework_ui_wgpu_input::KeyAction::Home => min - value,
+        semio_framework_ui_wgpu_input::KeyAction::End => max - value,
         _ => return Some(Ok(TableStepperKeyOutcome::Unhandled)),
     };
     if requested == 0.0 {

@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { scaleLinear, scaleLog } from "d3-scale";
-import type { UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
+import type { UiNumberLimits, UiNumberScale } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { dialAngle, dialPosition, SLIDER_PAGE_STEPS, sliderAdjacentSnap, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, UI_NUMBER_PRECISION_MAX, uiNumberCrossedBound, uiNumberDisplay, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧩️component/🟦️.ts";
 import { numberRangeIsValid, snapsAreValid } from "../../🛡️limits/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../🖼️presentation/🔢️number-format/🟦️.ts";

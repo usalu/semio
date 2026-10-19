@@ -268,7 +268,8 @@ async fn nakagin_app() -> Puzzle3dApp {
     let mut app = app().await;
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample is a declared puzzle3d command");
     let action_meta = app.meta("local");
-    app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample mints its retained whole-document operation");
+    let (raw, cx) = app.parts();
+    raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("setActiveExample mints its retained whole-document operation");
     settle(&mut app).await;
     app
 }

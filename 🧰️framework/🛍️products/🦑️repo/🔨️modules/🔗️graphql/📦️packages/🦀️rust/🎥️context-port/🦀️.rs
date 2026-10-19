@@ -68,6 +68,8 @@ pub trait RepoContext {
     fn interactions(&self) -> Result<Vec<InteractionResource>, ContextError>;
     /// 🔬️ Runs the analyzer over an optional scope.
     fn analyze(&self, scope: Option<&str>) -> Result<AnalyzeResult, ContextError>;
+    /// 🩹️ Applies every autofix to the files of an optional scope and reports what is left.
+    fn fix(&self, scope: Option<&str>) -> Result<FixResult, ContextError>;
     /// 📩️ Creates a goal.
     fn goal_create(&self, input: GoalCreateInput) -> Result<Goal, ContextError>;
     /// 📐️ Changes a goal.

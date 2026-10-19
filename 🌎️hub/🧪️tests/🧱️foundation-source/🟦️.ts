@@ -7,7 +7,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "@semio-tech/repo-lib/inventory";
 import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
@@ -388,7 +388,7 @@ test("neutral Hub absent production ledger refuses bytes and actor Source select
 
 
 test("read-only current Dev actors use the actual owner and honor cancellation without acquisition",async()=>{
- const {withBuildTestInvocationV1}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts"),{createIssuedResourceControlV1}=await import("../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");await withBuildTestInvocationV1(async invocation=>{const phaseControl=createIssuedResourceControlV1(invocation,"test:actor-refusal",60000);
+ const {withBuildTestInvocationV1}=await import("@semio-tech/process/testing/invocation"),{createIssuedResourceControlV1}=await import("@semio-tech/process/routing");await withBuildTestInvocationV1(async invocation=>{const phaseControl=createIssuedResourceControlV1(invocation,"test:actor-refusal",60000);
  const {loadCurrentDevelopmentActorsV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts"),vectors=JSON.parse(readFileSync(join(hubRoot,"🧪️tests/🧫️fixtures/🧱️foundation-source/🎭️actors/🔣️.json"),"utf8")).developmentActorReads,previous=process.env.OS_HUB_DATA;
  expect(typeof loadCurrentDevelopmentActorsV1).toBe("function");
  for(const row of vectors){const directory=join(process.env.SEMIO_TEST_ARTIFACT_DIR!,`read-only-actors-${crypto.randomUUID()}`);mkdirSync(join(directory,"trusted-catalog"),{recursive:true});process.env.OS_HUB_DATA=directory;let checked=0;const started=Date.now();try{await expect(loadCurrentDevelopmentActorsV1(process.cwd(),{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>{checked++;if(row.cancelled)throw Error(row.expected);return false;},remainingMs:()=>60_000-(Date.now()-started),onProgress:()=>{}},invocation,phaseControl)).rejects.toThrow(row.expected);expect(checked).toBeGreaterThan(0);expect(readdirSync(directory)).toEqual(["trusted-catalog"]);expect(readdirSync(join(directory,"trusted-catalog"))).toEqual([]);}finally{if(previous===undefined)delete process.env.OS_HUB_DATA;else process.env.OS_HUB_DATA=previous;}}

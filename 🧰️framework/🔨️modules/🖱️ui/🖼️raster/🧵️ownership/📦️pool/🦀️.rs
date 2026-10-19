@@ -277,7 +277,7 @@ pub struct SceneRasterLease {
     inner: Option<Arc<SceneRasterPoolInner>>,
     token: Option<LeaseToken>,
     identity: SceneRasterIdentity,
-    retirement:Option<semio_framework_value::retirement::shared::SharedControlledRetirement<SceneRasterPoolInner>>,
+    retirement:Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<SceneRasterPoolInner>>,
 }
 
 pub struct SceneRasterReleaseWitness {
@@ -388,7 +388,7 @@ impl SceneRasterLease {
             self.token=None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))
         }
-        if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(inner));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
+        if let Some(inner)=self.inner.take(){self.retirement=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(inner));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
         let owner=self.retirement.as_mut().unwrap();
         let step=owner.step(grant)?;
         if !step.progress().fits(grant){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster close receipt exceeded its grant"))}

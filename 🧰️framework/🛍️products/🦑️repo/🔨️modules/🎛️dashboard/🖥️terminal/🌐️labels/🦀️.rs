@@ -6,7 +6,7 @@
 
 use dashboard_launch::TaskLabel;
 use ui_locale::{AppLabels, Locale, Terminology};
-use ui_tui::tui::text::{elide_end, elide_middle};
+use semio_framework_ui_tui_core::text::{elide_end, elide_middle};
 
 macro_rules! dashboard_labels {
     ($($field:ident: $en:expr, $de:expr;)+) => {
@@ -242,7 +242,7 @@ pub fn verb_text(verb: &str, locale: Locale) -> &str {
     }
 }
 
-fn cells(text: &str) -> usize { usize::from(ui_tui::tui::text::display_width(text)) }
+fn cells(text: &str) -> usize { usize::from(semio_framework_ui_tui_core::text::display_width(text)) }
 
 /// 📏️ A cell budget as the shared text helpers take it.
 fn cap(budget: usize) -> u16 { u16::try_from(budget).unwrap_or(u16::MAX) }

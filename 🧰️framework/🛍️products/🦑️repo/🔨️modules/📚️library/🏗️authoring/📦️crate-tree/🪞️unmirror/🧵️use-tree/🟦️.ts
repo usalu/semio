@@ -1,5 +1,5 @@
 /** 🧵️ Use trees of Rust `use` statements: scanning every statement of a source (module level and function local), flattening it to leaves and rendering leaves back. */
-import { rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokenPairs, rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 
 /** 🍃️ One leaf of a use tree: the full path, the optional alias and whether it imports a glob. */
 export type UseLeaf = { path: string[]; alias: string | null; glob: boolean };

@@ -2,22 +2,22 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { withRepositoryDevelopmentStateV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { withRepositoryDevelopmentStateV1 } from "@semio-tech/repo-lib/storage";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
-import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { buildBudgetMs } from "@semio-tech/process/budget";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1 } from "@semio-tech/framework-os/modules/directory/local-session/broker/schema";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { packageNativeRelease, signExecutableForDistribution } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { OS_HUB_PORT, OS_HUB_PORT_ENV } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
+import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
+import { packageNativeRelease, signExecutableForDistribution } from "@semio-tech/process/native-build";
+import { OS_HUB_PORT, OS_HUB_PORT_ENV } from "@semio-tech/repo-lib/dev";
+import { runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { deliverNativeCredentialEnvelope } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
@@ -128,7 +128,7 @@ export class LocalBootstrapLaunchCheckScript extends BundleScript {
 export class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build through the build tool without additional arguments");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
     signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
   }
 }
@@ -156,7 +156,7 @@ export class PublishScript extends BundleScript {
 export class BuildDevScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev through the build tool without additional arguments");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
@@ -217,7 +217,7 @@ export class DevScript extends BundleScript {
       ...LOCAL_HUB_DEVELOPMENT_PROFILES,
       ...(secureAdmin ? [LOCAL_HUB_ADMINISTRATOR_PROFILE] : []),
     ];
-    await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),["--bin","os-hub"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
+    await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["--bin","os-hub"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,consume:verifyCapturedCargoArtifactsV1});
     return withRepositoryDevelopmentStateV1(this.invocation,phaseControl,(state,statePhase)=>withPublishedDevelopmentLocalHubHostV1(this.invocation,statePhase,state,async(host,context)=>{
     const {dataRoot}=context;
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);

@@ -7,9 +7,9 @@
 //! ends inside a column, wall or beam rests on it and does not clash with it.
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
-use crate::standards::v1::subsets::any::schema::inferences::bodies::{ceiling_bodies, storey_bodies, Body, BodyKind};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::{ceiling_bodies, storey_bodies, Body, BodyKind};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_geometry::bulge::{intersect, Extent};
@@ -22,7 +22,7 @@ pub const HEIGHT_EPS: f64 = 1e-6;
 
 /// 🏷️ The code of a pair of kinds, or `None` when the pair may legitimately meet.
 pub fn code_of(a: BodyKind, b: BodyKind) -> Option<DiagnosticCode> {
-    use BodyKind::*;
+    use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::BodyKind::*;
     use DiagnosticCode::*;
     let (low, high) = if a <= b { (a, b) } else { (b, a) };
     match (low, high) {
@@ -71,7 +71,7 @@ fn inside(regions: &[Region], p: Point) -> bool {
 
 fn ends_of(snapshot: &ModelSnapshot, id: &str) -> Option<[Point; 2]> {
     snapshot.beams.get(id).map(|beam| {
-        let (crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. }) = &beam.axis;
+        let (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start, end } | semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { start, end, .. }) = &beam.axis;
         [Point::new(start.x, start.y), Point::new(end.x, end.y)]
     })
 }
@@ -90,7 +90,7 @@ fn rests(snapshot: &ModelSnapshot, a: &Body, b: &Body) -> bool {
 fn crossing(snapshot: &ModelSnapshot, a: &Body, b: &Body) -> bool {
     let (Some(first), Some(second)) = (snapshot.walls.get(&a.id), snapshot.walls.get(&b.id)) else { return false };
     let interior = |t: f64| t > 1e-9 && t < 1.0 - 1e-9;
-    intersect(&seg(&first.axis), &seg(&second.axis), Extent::Bounded).iter().any(|hit| interior(hit.ta) && interior(hit.tb))
+    intersect(&segment_of(&first.axis), &segment_of(&second.axis), Extent::Bounded).iter().any(|hit| interior(hit.ta) && interior(hit.tb))
 }
 
 /// 💥️ The clashes among `bodies`, one finding per clashing pair.

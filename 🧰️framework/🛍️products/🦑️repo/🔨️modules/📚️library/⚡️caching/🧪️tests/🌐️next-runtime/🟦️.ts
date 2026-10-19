@@ -1,5 +1,5 @@
 import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withNextStorageV1} from "../../../../🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts";
+import {withNextStorageV1} from "@semio-tech/repo-coordinator/builder/storage";
 import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";

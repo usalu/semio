@@ -1,16 +1,15 @@
-import { canonicalWasmBuildVitePlugin } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
-import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
-import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildPlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { playgroundStaticSiteBuildOptions, semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioHostTitleText, type SemioHostHtmlSpec } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
-import { semioReferencedAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
-import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
+import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildPlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
+import { playgroundStaticSiteBuildOptions, semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioHostTitleText, type SemioHostHtmlSpec } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { semioReferencedAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import catalog from "../../🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
 // #endregion 🔌️Adapters
@@ -129,7 +128,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
     uiReactBuildPlugin(),
     quizReleaseDocumentVitePlugin(proctorOrigin),
   ],
-  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, readBuildMode(mode)), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
+  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
   define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_PROCTOR_URL": JSON.stringify(proctorOrigin) } : {}) },
   server: {
     fs: { allow: [repoRoot] },

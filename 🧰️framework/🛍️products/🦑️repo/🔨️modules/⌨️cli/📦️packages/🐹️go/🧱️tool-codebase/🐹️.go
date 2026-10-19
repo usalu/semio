@@ -151,7 +151,7 @@ func ToolTechnologyTree() workspace.ToolResult {
 // 🔖️ToolFolderList MUST complete the operation successfully.
 func ToolFolderList(path string) workspace.ToolResult {
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, strings.TrimSuffix(path, "/"))
+	absPath := filepath.Join(workspace.GetRootDir(), strings.TrimSuffix(path, "/"))
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
@@ -181,7 +181,7 @@ func ToolFolderList(path string) workspace.ToolResult {
 // 🔖️ToolFolderTree MUST complete the operation successfully.
 func ToolFolderTree(path string) workspace.ToolResult {
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, strings.TrimSuffix(path, "/"))
+	absPath := filepath.Join(workspace.GetRootDir(), strings.TrimSuffix(path, "/"))
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
@@ -213,7 +213,7 @@ func ToolFileList(scopeRaw string) workspace.ToolResult {
 // 🔖️ToolFileTree MUST complete the operation successfully.
 func ToolFileTree(path string) workspace.ToolResult {
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, strings.TrimSuffix(path, "/"))
+	absPath := filepath.Join(workspace.GetRootDir(), strings.TrimSuffix(path, "/"))
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Path not found: %s", path))
 	}
@@ -225,7 +225,7 @@ func ToolFileTree(path string) workspace.ToolResult {
 // 🔖️ToolSectionTree MUST complete the operation successfully.
 func ToolSectionTree(filePath string) workspace.ToolResult {
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, strings.Split(filePath, "#")[0])
+	absPath := filepath.Join(workspace.GetRootDir(), strings.Split(filePath, "#")[0])
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}

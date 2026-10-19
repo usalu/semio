@@ -14,7 +14,7 @@ import {readCargoTestPolicyV1} from "@semio-tech/process/cargo-test";
 import {configuredExactCargoLawPolicyV1} from "@semio-tech/process/cargo-laws";
 import {readNativeOwnerCapabilities} from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import preparationPolicy from "../../🛠️preparation/📋️policy/🔣️.json";
-import {withBuildTestInvocationV1} from "../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {testCargoExecutionPhaseV1} from "./🎟️phase/🟦️.ts";
 import {cargoExecutionSchemaV1 as schema} from "@semio-tech/process/cargo-execution";
 import fixture from "./🧫️fixtures/🔣️.json";

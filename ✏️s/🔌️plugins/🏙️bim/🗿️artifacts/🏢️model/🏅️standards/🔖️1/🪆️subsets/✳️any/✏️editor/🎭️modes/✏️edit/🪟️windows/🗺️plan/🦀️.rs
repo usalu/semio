@@ -5,12 +5,14 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
-use crate::editor::bim::terminology::BimLabels;
-use crate::render::plan::{canvas_point, plan_point};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, ViewKind}};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_plan_linework::render::plan::{canvas_point, plan_point};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 use semio_framework_plugin::DslValue;
@@ -25,7 +27,7 @@ pub const BODY_KEY: &str = "bim.edit.plan";
 const SURFACE_ID: &str = "bim.edit.plan2d/plan";
 const HOVERED: Rgba = [0.36, 0.65, 0.98, 1.0];
 /// 📏️ The chord tolerance, in metres, arcs are flattened to for the hover overlay and the pick.
-const FLATTEN_TOLERANCE: f64 = crate::render::plan::FLATTEN_TOLERANCE;
+const FLATTEN_TOLERANCE: f64 = semio_s_artifact_bim_model_plan_linework::render::plan::FLATTEN_TOLERANCE;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -109,7 +111,7 @@ fn hovered(element: &str, selection: &[String], hover: &[String]) -> bool {
 /// 🎨️ The records of one plan in paint order: the shared layers (selection in the accent colour), the hover outlines, the utility meta record.
 pub fn records(plan: &PlanLinework, selection: &[String], hover: &[String], utility: &str) -> Vec<DslValue> {
     let mut records = vec![meta_record(utility)];
-    records.extend(crate::render::plan::layers(plan, selection));
+    records.extend(semio_s_artifact_bim_model_plan_linework::render::plan::layers(plan, selection));
     for region in plan.regions.iter().filter(|region| hovered(&region.element, selection, hover)) {
         let mut segments = path(&flatten(&region.outer, true), true);
         for hole in &region.holes {
@@ -143,10 +145,10 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
     let plan = filtered.as_ref();
     let mut records = plan.map_or_else(|| vec![meta_record(utility)], |plan| records(plan, selection, hover, utility));
     if view.is_none() {
-        records.push(text_record("empty", (0.0, 0.0), labels.empty_plan.as_str(), crate::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0]));
+        records.push(text_record("empty", (0.0, 0.0), labels.empty_plan.as_str(), semio_s_artifact_bim_model_plan_linework::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0]));
     }
     records.extend(overlay.iter().cloned());
-    let framing = plan.filter(|_| !config.framed).and_then(|plan| crate::render::plan::canvas_bounds(plan).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 }));
+    let framing = plan.filter(|_| !config.framed).and_then(|plan| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(plan).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 }));
     canvas_surface(SURFACE_ID, config.viewport, framing, &records)
 }
 //#endregion 🔖️Render

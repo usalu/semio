@@ -7,7 +7,7 @@
 //! Snapshot representation implementations live under IO; this schema owns the native artifact fields.
 
 use crate::WiresContentChild;
-use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, arc_custody::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use framework_schema::ArtifactSchema;

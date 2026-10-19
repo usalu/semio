@@ -11,12 +11,12 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::set_lod_mode::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, render, settle, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, render, settle, FlowAppFixture};
 use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 
-async fn lod(app: &mut FlowApp) -> serde_json::Value {
+async fn lod(app: &mut FlowAppFixture) -> serde_json::Value {
     let rendered = render(app, FLOW_PLAY_BODY_MAIN).await;
-    let scene: ui_wgpu::wgpu::NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&rendered).expect("rendered nodeGraph scene");
+    let scene: semio_framework_ui_declaration::ui::NodeGraphScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&rendered).expect("rendered nodeGraph scene");
     serde_json::from_str(scene.lod_json.as_deref().expect("nodeGraph LOD payload")).expect("nodeGraph LOD JSON")
 }
 

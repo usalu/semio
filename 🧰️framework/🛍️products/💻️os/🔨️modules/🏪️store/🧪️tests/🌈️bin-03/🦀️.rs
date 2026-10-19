@@ -17,6 +17,7 @@ use semio_framework_os_store_testing_fixtures::severity::{SetErrorN, SetFatalN, 
 use semio_framework_os_store_testing_fixtures::timestamped::{SetN as TimestampedSetN, TimestampedMutation};
 use semio_framework_os_store_testing_fixtures::validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
+use semio_framework_os_store_one_item::LaneItemReceipt;
 use semio_framework_os_store_snapshot_clone::RetainedCloneEdit;
 use semio_framework_os_store_snapshot_clone::RetainedCloneEditCursor;
 use semio_framework_os_store_snapshot_clone::RetainedCloneEditStep;

@@ -3,12 +3,12 @@
 //! has no boundary to read back). The ceiling type is an `IfcCoveringType` (`CEILING`) with the same layer set, and the base quantities are the `Qto_CoveringBaseQuantities` of the take-off.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccovering.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::snapshot::Ceiling;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored record of a sloped ceiling.
 pub const RECORD_ROW: &str = "Ceiling";

@@ -1,11 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
-import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts";
-import { resolveWorkspaceTaxonomyAuthority } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts";
-import { type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { canonicalJson } from "@semio-tech/repo-lib/authoring";
+import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, resolveWorkspaceTaxonomyAuthority, type RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
 
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
 export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly entryIds?: readonly string[] } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[]; readonly entryInputs: readonly { readonly id: string; readonly outputPath: string; readonly inputs: readonly string[] }[] }> {

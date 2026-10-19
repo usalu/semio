@@ -6,8 +6,8 @@ use super::*;
 
 //#region ActionPanelAndUtilities
 /// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::wgpu::SemioCursor}.
-pub fn semio_cursor_from_name(name: &str) -> ui_wgpu::wgpu::SemioCursor {
-    use ui_wgpu::wgpu::SemioCursor;
+pub fn semio_cursor_from_name(name: &str) -> semio_framework_ui_wgpu_hosting::cursor::SemioCursor {
+    use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
     match name.trim().to_ascii_lowercase().as_str() {
         "pointer" => SemioCursor::Pointer,
         "text" => SemioCursor::Text,

@@ -2,7 +2,7 @@
 import {withJavascriptDependencyStorageV1,prepareJavascriptDependencies} from "./💾️storage/🟦️.ts";
 import {join} from "node:path";
 import {Script,ScriptRouter,checkScriptInvocation,receiveScriptProcessInvocation,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withRepositoryTestArtifactsV1,repositoryTestArtifactEnvironmentV1}from"../../../../🧪️test/💾️storage/🟦️.ts";
+import{withRepositoryTestArtifactsV1,repositoryTestArtifactEnvironmentV1}from"../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{runRepositoryCommand}from"../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 

@@ -2,7 +2,7 @@
 import { readUiPreferences } from "../../🧱️elements/🎚️UiPreferences/🟦️.ts";
 import explicitLocaleFixture from "../../🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/⏳️compute-locale.json";
 import { gizmoTipBoundsFixture, sceneListTransferFixture, treeDragHandleFixture, vfsDescriptorFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
+import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "@semio-tech/ui-react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, TreeContext, TreeItem, UiDriverProvider, closestCenter, deriveTreeDragRoles, uiI18n } from "@semio-tech/ui-react";
@@ -11,7 +11,7 @@ import replayRefusalVocabulary from "../../🧱️elements/🏛️ShellHost/📣
 import { REPLAY_REFUSAL_LABELS_V1, replayRefusalCodeV1, replayRefusalNoticeTextV1, type ReplayRefusalReasonV1 } from "../../🧱️elements/🏛️ShellHost/📣️replay-refusal/🟦️.ts";
 import * as THREE from "three";
 import { worldSceneLightingFixture as world3dLightingFixture, worldSceneShadowsFixture as world3dShadowFixture, sceneShadowParityFixture as world3dShadowParityFixture } from "../../../../♾️infinite/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
@@ -44,7 +44,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("a graph surface publishes the selection it paints, in the same shape the 3D pane does", async () => {
-    const { nodeGraphSurfaceSelectionDomV1 } = await import("../../🧱️elements/🕸️NodeGraph/🟦️.tsx");
+    const { nodeGraphSurfaceSelectionDomV1 } = await import("@semio-tech/framework-os-node-graph-rs/index");
     expect(nodeGraphSurfaceSelectionDomV1(undefined)).toEqual({ selectedIds: [], highlightedIds: [], hoverTarget: null, editable: true });
     const picked = nodeGraphSurfaceSelectionDomV1({
       nodes: [],

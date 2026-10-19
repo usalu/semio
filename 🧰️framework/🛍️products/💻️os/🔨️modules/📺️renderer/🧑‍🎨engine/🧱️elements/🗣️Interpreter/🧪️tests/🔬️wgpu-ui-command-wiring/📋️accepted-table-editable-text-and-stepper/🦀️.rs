@@ -25,7 +25,7 @@ fn table_editable_text_scene_node_with_value(value: &str) -> UiNode {
 }
 
 /// 📤️ Every action an input published: the inline queue AND the retained (paged) publication an editable value takes.
-fn collect_published_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+fn collect_published_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input);
     for _ in 0..4096 {
         if !input.retained_action_pending() {
@@ -49,14 +49,14 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let theme = semio_framework_ui_theme::Theme::default();
     let y = theme.control_height * 1.33 + theme.control_height * 0.5;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let focus = |input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>| {
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let focus = |input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>| {
         apply_scene_ui_command(
             window_id,
             node,
             semio_framework_ui_declaration::ui::SurfaceKind::Table,
             rect,
-            &ui_wgpu::wgpu::UiEvent::PointerDown { x: 100.0, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 100.0, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
             Some(ui_render::PointerId(18)),
             input,
         );
@@ -70,7 +70,7 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
     while input.drive_text_step().expect("text projection") {}
     sync_focused_table_editable_text_draft(&input);
     assert_eq!(focused_table_editable_text_draft(window_id, node, &retained_scene_host_id(window_id, node), "row-2", "value").as_deref(), Some("mehrzeilig\nΩ🙂"));
-    assert!(apply_focused_table_editable_text_key(&ui_wgpu::wgpu::KeyAction::Enter, &Default::default(), &mut input));
+    assert!(apply_focused_table_editable_text_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &Default::default(), &mut input));
     assert!(input.retained_action_pending());
     let action = loop {
         if let Some(action) = input.drive_retained_action_step().expect("retained cell page") {
@@ -93,7 +93,7 @@ fn accepted_table_editable_text_commits_enter_and_discards_escape() {
     let control_id = input.focused_id.clone().expect("refocused cell input");
     input.focus_input_owned(control_id, "discard me".into());
     while input.drive_text_step().expect("text projection") {}
-    assert!(apply_focused_table_editable_text_key(&ui_wgpu::wgpu::KeyAction::Escape, &Default::default(), &mut input));
+    assert!(apply_focused_table_editable_text_key(&semio_framework_ui_wgpu_input::KeyAction::Escape, &Default::default(), &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     assert!(input.focused_id.is_none());
 }
@@ -112,13 +112,13 @@ fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_dra
     accept_table_editable_text_cells(pending_window, pending_node, 931);
     let pending_host = retained_scene_host_id(pending_window, pending_node);
     let pending_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(pending_window)).unwrap();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     begin_accessibility_visible_documents();
     note_accessibility_visible_document(pending_window);
     publish_accessibility_visible_documents();
     let textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.role == "textbox").expect("editable table textbox");
-    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
-    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Value(draft.into()), &mut input).is_some());
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus, &mut input).is_some());
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Value(draft.into()), &mut input).is_some());
     let actions = collect_published_actions(&mut input);
     let publication_count_before_echo = acceptance["publicationCountBeforeEcho"].as_u64().unwrap();
     assert_eq!(actions.len() as u64, publication_count_before_echo, "the accepted accessibility value publishes once");
@@ -128,7 +128,7 @@ fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_dra
     let pending_textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.key == textbox.key).expect("pending editable table textbox");
     assert_eq!(pending_textbox.busy, acceptance["busyBeforeEcho"].as_bool().unwrap());
     assert_eq!(pending_textbox.value_text.as_deref(), Some(draft));
-    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Blur, &mut input).is_some());
     let blur_actions = collect_published_actions(&mut input);
     assert_eq!(publication_count_before_echo + blur_actions.len() as u64, acceptance["publicationCountAfterBlur"].as_u64().unwrap(), "blur before the scene echo cannot republish the accepted accessibility value");
     assert_eq!(focused_table_editable_text_draft(pending_window, pending_node, &pending_host, "row-2", "value").as_deref(), Some(draft));
@@ -141,7 +141,7 @@ fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_dra
     note_accessibility_visible_document(pending_window);
     publish_accessibility_visible_documents();
     let echoed_textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.role == "textbox").expect("echoed editable table textbox");
-    assert!(dispatch_accessibility_event(pending_window, echoed_generation, echoed_textbox.node_id, &echoed_textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    assert!(dispatch_accessibility_event(pending_window, echoed_generation, echoed_textbox.node_id, &echoed_textbox.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Blur, &mut input).is_some());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "the authoritative scene echo cannot publish the accepted value again");
     assert!(FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().is_none()), "the authoritative scene echo rebases the accessibility draft and releases focus");
     assert!(!input.retained_action_pending());
@@ -172,13 +172,13 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let theme = semio_framework_ui_theme::Theme::default();
     let y = theme.control_height * 1.33 + theme.control_height * 0.5;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Table,
         rect,
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 100.0, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 100.0, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(17)),
         &mut input,
     );
@@ -189,7 +189,7 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
         let UiNode::ComponentScene(scene) = &engine.tree(window_id).unwrap().node(node).unwrap().spec.0 else { unreachable!() };
         scene.clone()
     });
-    semio_framework_os_renderer_wgpu_scene_feeds::stage_table_stepper_accessibility_cells(&scene.host_id, semio_framework_os_renderer_wgpu_scene_tables::table_stepper_accessibility_cells(&scene, rect, ui_wgpu::wgpu::UiDriverDrag::Handle));
+    semio_framework_os_renderer_wgpu_scene_feeds::stage_table_stepper_accessibility_cells(&scene.host_id, semio_framework_os_renderer_wgpu_scene_tables::table_stepper_accessibility_cells(&scene, rect, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle));
     semio_framework_os_renderer_wgpu_scene_feeds::seal_table_stepper_accessibility_candidates(800);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_stepper_accessibility_candidates(800);
     begin_accessibility_visible_documents();
@@ -200,20 +200,20 @@ fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_
     assert_eq!((spinbutton.value_min, spinbutton.value_now, spinbutton.value_max, spinbutton.value_text.as_deref()), (Some(0.0), Some(2.0), Some(5.0), Some("2")));
     assert!(spinbutton.focusable && spinbutton.actionable && spinbutton.focused && spinbutton.rect.is_some());
     let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
-    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Blur, &mut input).is_some());
     assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().is_none()));
-    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus, &mut input).is_some());
 
-    assert!(apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::PageUp, &mut input));
+    assert!(apply_focused_table_stepper_key(&semio_framework_ui_wgpu_input::KeyAction::PageUp, &mut input));
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     let args = actions[0].args.as_ref().expect("stepper args");
     assert_eq!(args.get("objectId").and_then(semio_framework::DslValue::as_str), Some("beam-glulam-gl24h"));
     assert_eq!(args.get("delta").and_then(semio_framework::DslValue::as_f64), Some(3.0));
-    assert!(!apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input), "an unrelated key remains available to the generic shell route");
+    assert!(!apply_focused_table_stepper_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &mut input), "an unrelated key remains available to the generic shell route");
 
     FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow_mut().as_mut().expect("focused Table stepper").row_id = "retired-row".into());
-    assert!(!apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::ArrowUp, &mut input));
+    assert!(!apply_focused_table_stepper_key(&semio_framework_ui_wgpu_input::KeyAction::ArrowUp, &mut input));
     assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().is_none()));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }

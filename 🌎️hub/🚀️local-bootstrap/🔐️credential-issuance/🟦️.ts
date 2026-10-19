@@ -5,7 +5,7 @@ import { LOCAL_SESSION_BROKER_REQUEST_MAX_BYTES, isLocalSessionTokenV1, LOCAL_SE
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { protectOwnerOnly } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
+import { protectOwnerOnly } from "@semio-tech/repo-lib/process";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, writeLocalFrame } from "../📡️framing/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import {requireLocalHubRunV1,withLocalHubRunTaskV1,type LocalHubRun } from "../🏃️execution/🟦️.ts";

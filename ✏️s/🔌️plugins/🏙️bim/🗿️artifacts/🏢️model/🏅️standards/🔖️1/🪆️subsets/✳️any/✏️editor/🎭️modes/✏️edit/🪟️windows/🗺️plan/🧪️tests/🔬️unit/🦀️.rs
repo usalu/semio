@@ -1,15 +1,16 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
 #[allow(unused_imports)]
-use crate::render::plan::{canvas_point, plan_point};
+use semio_s_artifact_bim_model_plan_linework::render::plan::{canvas_point, plan_point};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -24,12 +25,12 @@ use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
 use semio_framework_plugin::WindowOptions;
-use crate::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig;
-use crate::editor::bim::modes::edit::windows::plan::*;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::{active_storey, active_view, records, render, pick, pixel_to_model};
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 

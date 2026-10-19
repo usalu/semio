@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyTimeTravel, timeTravelFinalizeRefusal, timeTravelSession, type TimeTravelEvent, type TimeTravelSession } from "../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type Step = Readonly<Record<string, unknown>>;
 type Scenario = Readonly<{ id: string; steps: readonly Step[]; status: Readonly<{ stage: string; blocking: boolean; acceptedCount: number; nextProblem?: number }> | null; finalizeRefusal?: string | null }>;

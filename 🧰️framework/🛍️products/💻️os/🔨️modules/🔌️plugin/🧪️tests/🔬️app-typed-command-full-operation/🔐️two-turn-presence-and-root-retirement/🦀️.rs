@@ -135,9 +135,9 @@
     struct PublicationPresenceLocalRootRetirementFactory;
 
     impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
-        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<PublicationPresence>() }
+        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<PublicationPresence>() }
         fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<PublicationPresence>)> {
-            semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
+            semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
         }
     }
 

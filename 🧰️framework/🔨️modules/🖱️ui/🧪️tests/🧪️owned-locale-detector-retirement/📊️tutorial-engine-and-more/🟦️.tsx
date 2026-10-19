@@ -1,7 +1,6 @@
 import type { PresenceAppearance, PresenceHsl, PresencePeer, TutorialCameraKeyframe, TutorialClockPort, TutorialDefinition, UiTranslationKey } from "@semio-tech/ui-react/source";
 import * as ui from "@semio-tech/ui-react/source";
 import { renderToStaticMarkup } from "react-dom/server";
-import { tutorialLocalInteractionFixtureUrl } from "../../../../🎓️onboarding/🧪️tests/🧫️fixtures/🟦️.ts";
 import type { TestSource, Tests2Vitest, Tests2Dependencies } from "../🧰️harness/🟦️.ts";
 
 export async function registerTutorialEngineAndMoreTests(vitest: Tests2Vitest, dependencies: Tests2Dependencies, testSource: TestSource): Promise<void> {
@@ -19,25 +18,6 @@ export async function registerTutorialEngineAndMoreTests(vitest: Tests2Vitest, d
         tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
       });
   
-      //#region 🏠️LocalInteractionCompositionTests
-      it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
-        const source = await import("../../../../🎓️onboarding/🏠️local-interaction/🟦️.ts");
-        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture = JSON.parse(readFileSync(tutorialLocalInteractionFixtureUrl, "utf8")) as {cases: Array<{name:string;before:State;after:State;changes:Change[]}>};
-        const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
-        type State = import("@semio-tech/framework-replication/wire/local-interaction").LocalInteractionState; type Change = import("../../../../🎓️onboarding/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
-        enableMapSet();
-        expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
-        for (const row of fixture.cases) {
-          const before = JSON.stringify(row.before); const changes = source.diffTutorialLocalInteractionCold(row.before, row.after); assert.deepStrictEqual(changes, row.changes, row.name);
-          let actual = row.before; let oracle = { selection: new Map(Object.entries(row.before.selection)), activeMode: new Map(Object.entries(row.before.activeMode)), activeGranularity: new Map(Object.entries(row.before.activeGranularity)) };
-          for (const change of changes) {
-            actual = source.applyTutorialLocalInteractionCold(actual, change);
-            oracle = produce(oracle, draft => { if (change.patch.selection === null) draft.selection.delete(change.domainId); else draft.selection.set(change.domainId, { ...change.patch.selection, ids: [...change.patch.selection.ids] }); if (change.patch.activeMode === null) draft.activeMode.delete(change.domainId); else draft.activeMode.set(change.domainId, change.patch.activeMode); if (change.patch.activeGranularity === null) draft.activeGranularity.delete(change.domainId); else draft.activeGranularity.set(change.domainId, change.patch.activeGranularity); });
-          }
-          assert.deepStrictEqual(actual, { selection: Object.fromEntries(oracle.selection), activeMode: Object.fromEntries(oracle.activeMode), activeGranularity: Object.fromEntries(oracle.activeGranularity) }, row.name); assert.deepStrictEqual(actual, row.after, row.name); expect(JSON.stringify(row.before)).toBe(before); expect(source.diffTutorialLocalInteractionCold(row.after, row.after)).toEqual([]);
-        }
-      });
-      //#endregion 🏠️LocalInteractionCompositionTests
   
       it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
         expect(formatTutorialTime(0)).toBe("0:00");

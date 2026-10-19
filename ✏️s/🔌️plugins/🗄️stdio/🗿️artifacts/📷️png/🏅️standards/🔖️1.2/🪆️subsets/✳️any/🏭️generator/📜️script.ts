@@ -35,7 +35,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract

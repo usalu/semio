@@ -3,9 +3,10 @@
 //! up from the sill) and centred on the thickness of the host, then placed with that frame. Invalid placements and missing types produce no solid; a filler is built for exactly
 //! the frames the host cuts (`OpeningFrame::valid`).
 
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily};
-use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, WindowType};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, OpeningKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{DoorType, ModelSnapshot, Opening, WindowType};
 use semio_framework_geometry::mesh::{extrude, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};
 use semio_framework_geometry::Point;
@@ -40,10 +41,10 @@ pub fn window_parts(window: &WindowType, width: f64, height: f64, centre: f64) -
             out.push((part, glazing, boxed(x, y, z)));
         }
     };
-    add(parts::FRAME, false, (-half, half), lateral, (0.0, frame));
-    add(parts::FRAME, false, (-half, half), lateral, (height - frame, height));
-    add(parts::FRAME, false, (-half, -half + frame), lateral, (frame, height - frame));
-    add(parts::FRAME, false, (half - frame, half), lateral, (frame, height - frame));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, false, (-half, half), lateral, (0.0, frame));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, false, (-half, half), lateral, (height - frame, height));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, false, (-half, -half + frame), lateral, (frame, height - frame));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, false, (half - frame, half), lateral, (frame, height - frame));
     let (inner, rise) = (width - 2.0 * frame, (frame, height - frame));
     if window.panes > 0 && inner > EPS && !empty(rise) {
         let panes = window.panes as f64;
@@ -52,9 +53,9 @@ pub fn window_parts(window: &WindowType, width: f64, height: f64, centre: f64) -
         let glass = GLASS_THICKNESS.min(depth);
         for k in 0..window.panes {
             let start = -half + frame + k as f64 * (pane + muntin);
-            add(parts::GLASS, true, (start, start + pane), (centre - glass / 2.0, centre + glass / 2.0), rise);
+            add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS, true, (start, start + pane), (centre - glass / 2.0, centre + glass / 2.0), rise);
             if k + 1 < window.panes {
-                add(parts::MUNTIN, false, (start + pane, start + pane + muntin), lateral, rise);
+                add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::MUNTIN, false, (start + pane, start + pane + muntin), lateral, rise);
             }
         }
     }
@@ -72,15 +73,15 @@ pub fn door_parts(door: &DoorType, width: f64, height: f64, centre: f64) -> Vec<
             out.push((part, boxed(x, y, z)));
         }
     };
-    add(parts::FRAME, (-half, half), lateral, (height - frame, height));
-    add(parts::FRAME, (-half, -half + frame), lateral, (0.0, height - frame));
-    add(parts::FRAME, (half - frame, half), lateral, (0.0, height - frame));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, (-half, half), lateral, (height - frame, height));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, (-half, -half + frame), lateral, (0.0, height - frame));
+    add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, (half - frame, half), lateral, (0.0, height - frame));
     let leaf = LEAF_THICKNESS.min(depth);
     let (inner, rise) = (width - 2.0 * frame, (0.0, height - frame));
     let count = if door.leaves == DoorLeaves::Double { 2 } else { 1 };
     for k in 0..count {
         let start = -half + frame + k as f64 * inner / count as f64;
-        add(parts::LEAF, (start, start + inner / count as f64), (centre - leaf / 2.0, centre + leaf / 2.0), rise);
+        add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LEAF, (start, start + inner / count as f64), (centre - leaf / 2.0, centre + leaf / 2.0), rise);
     }
     out
 }

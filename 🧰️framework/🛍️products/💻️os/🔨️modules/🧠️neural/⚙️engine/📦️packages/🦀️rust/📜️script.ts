@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import {configuredExactCargoLawPolicyV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -8,7 +8,7 @@ import { readCargoTestPolicyV1 } from "../../../../../../../🔨️modules/🏃�
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧠️ Neural engine native and language-neutral lifecycle validation. */
-import { runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runCargo } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -18,7 +18,7 @@ class TestScript extends BundleScript {
     if(segments[0]==="original-registry-admission-source"||segments[0]==="original-registry-admission-native"){
       if(segments.length!==1)throw Error("Original registry admission requires exact one cohort");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original registry admission requires finite original deadline");
       await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../📔️registry/🏗️admission/🧪️tests/🟦️.ts")],this.repoRoot,"neural:original-registry-admission-source",remaining,{env:process.env});
-      if(segments[0]==="original-registry-admission-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original registry admission deadline expired");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-os-kernel-neural-engine":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-os-kernel-neural-engine",target:{kind:"test",name:"registry_admission"},laws:["original_registry_issuer_reserves_two_shells_before_same_source_donation","original_registry_issuer_cancellation_returns_same_payload_after_born_shell_close"]}]});}return;
+      if(segments[0]==="original-registry-admission-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original registry admission deadline expired");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-os-kernel-neural-engine":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-os-kernel-neural-engine",target:{kind:"test",name:"registry_admission"},laws:["original_registry_issuer_reserves_two_shells_before_same_source_donation","original_registry_issuer_cancellation_returns_same_payload_after_born_shell_close"]}]});}return;
     }
     const { rest } = resolveTestLevel(segments);
     for (const crate of ["model", "registry", "budgeted", ""]) await runCargo(["test", "-p", `semio-framework-os-kernel-neural-engine${crate === "" ? "" : `-${crate}`}`, ...rest], this.repoRoot);

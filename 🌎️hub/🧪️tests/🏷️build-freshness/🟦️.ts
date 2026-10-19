@@ -14,7 +14,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readlinkSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "@semio-tech/process/native-build";
 import { HUB_BINARY_SOURCES_FILE, listeningProcessId } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 
 /** 📊️ What the check found. */

@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import fixture from "../🧫️fixtures/🎯️stack-drop-destination/🔣️.json";
-import { applyModeDrop, modeDockOutLayout } from "../../🟦️";
+import { applyModeDrop, modeDockOutLayout } from "../../🎯️drop/🟦️.ts";
 
 type Layout = Parameters<typeof applyModeDrop>[0];
 type StackProjection = { path: number[]; windows: string[] };

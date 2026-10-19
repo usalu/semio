@@ -1,12 +1,14 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Slab, SlabType};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Slab, SlabType};
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::{self, Vertex};
 #[allow(unused_imports)]
@@ -15,13 +17,14 @@ use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::slabs::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs::slab_layers;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 

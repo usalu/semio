@@ -1,0 +1,53 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-os-flow-host-core"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Flow host core: the retained FlowHost, graph editing, evaluation steps, history and close ladder with host errors"
+
+[package.metadata.semio]
+role = "product"
+id = "os-flow-host-core"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow-host-source = { path = "../../../📥️evaluation-source/📦️packages/🦀️rust" }
+semio-framework-os-flow-operators = { path = "../../../../🗃️operators/📦️packages/🦀️rust" }
+semio-framework-os-flow-extensions = { path = "../../../../🧩️extensions/🕸️wasm/📦️packages/🦀️rust" }
+semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
+semio-framework-os-flow-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-os-infinite-directed-presentation = { path = "../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-framework-canvas = { path = "../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
+semio-framework-job = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-replication = { workspace = true }
+neural_engine = { path = "../../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+semio-framework-graph-manifest = { path = "../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+semio-framework-graph-dsl = { path = "../../../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
+semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
+semio-framework-replication = { workspace = true }
+
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }

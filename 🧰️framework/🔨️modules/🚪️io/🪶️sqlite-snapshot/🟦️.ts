@@ -34,7 +34,9 @@ export function composeSqliteSchema(segments: readonly string[]): string { retur
 export class SqliteAllocationControl {
   private admitted = 0;
   private readonly maximum: number;
-  constructor(private readonly options: Pick<SqliteDatabaseOptions, "maxAllocationBytes" | "signal"> = {}) {
+  private readonly options: Pick<SqliteDatabaseOptions, "maxAllocationBytes" | "signal">;
+  constructor(options: Pick<SqliteDatabaseOptions, "maxAllocationBytes" | "signal"> = {}) {
+    this.options = options;
     this.maximum = options.maxAllocationBytes ?? 512 * 1024 * 1024;
     if (!Number.isSafeInteger(this.maximum) || this.maximum < 0) throw new ValueError("invalidValue", "Invalid SQLite allocation limit");
   }
@@ -572,8 +574,10 @@ class Reader {
   dataBytes = 0;
   schemaBytes = 0;
   rowCount = 0;
-  constructor(readonly bytes: Uint8Array, readonly options: SqliteOperation) {
-    cancelled(options);
+  readonly bytes: Uint8Array;
+  readonly options: SqliteOperation;
+  constructor(bytes: Uint8Array, options: SqliteOperation) {
+    this.bytes = bytes; this.options = options; cancelled(options);
     this.limit = limits(options);
     if (bytes.length > this.limit.file) refuse("ownershipLimit", "file limit");
     if (bytes.length < 100 || !magic.every((byte, i) => bytes[i] === byte)) invalid("file header");

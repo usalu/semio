@@ -31,6 +31,11 @@ pub mod delete_selection {
     pub mod tests;
 }
 #[path = "."]
+pub mod export_pdf {
+    #[path = "../../📕️export-pdf/🧪️tests/🔬️unit/🦀️.rs"]
+    pub mod tests;
+}
+#[path = "."]
 pub mod gumball {
     #[path = "../../🧭️gumball/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;

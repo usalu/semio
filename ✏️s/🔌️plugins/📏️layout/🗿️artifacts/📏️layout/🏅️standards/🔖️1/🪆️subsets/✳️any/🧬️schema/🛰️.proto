@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.s.layout.layout.artifact;
 import "🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🛰️.proto";
 
 message GridSettings { double baseline_grid = 1; double baseline_offset = 2; bool snap_to_baseline = 3; }
@@ -25,7 +25,7 @@ message PageOverride { string object_id = 1; optional LayoutBounds bounds = 2; o
 message ParentPage { string id = 1; string name = 2; double width = 3; double height = 4; repeated string layer_ids = 5; repeated Layer layers = 6; repeated Frame frames = 7; }
 message Page { string id = 1; string name = 2; string spread_id = 3; optional string parent_page_id = 4; double width = 5; double height = 6; PageMargins margins = 7; PageColumns columns = 8; repeated LayoutRect guides = 9; repeated string layer_ids = 10; repeated Layer layers = 11; repeated Frame frames = 12; repeated PageOverride overrides = 13; }
 message Spread { string id = 1; string name = 2; repeated string page_ids = 3; }
-message LayoutDrawingChild { semio.os.store.ArtifactChild handle = 1; semio.s_stdio_semio_drawing.snapshot.SemioDrawingSnapshot content = 2; }
+message LayoutDrawingChild { semio.framework.schema.artifact_child.ArtifactChild handle = 1; semio.s_stdio_semio_drawing.snapshot.SemioDrawingSnapshot content = 2; }
 message LayoutArtifact {
   string schema = 1;
   string name = 2;
@@ -40,5 +40,5 @@ message LayoutArtifact {
   optional string print_target = 11;
   optional semio.framework.value.dictionary.QuestionDictionary data_fields = 12;
   LayoutDrawingChild background_drawing = 13;
-  semio.os.store.ArtifactLink referenced_model = 14;
+  semio.framework.schema.artifact_link.ArtifactLink referenced_model = 14;
 }

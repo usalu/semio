@@ -3,8 +3,8 @@ import {createHash} from "node:crypto";
 import {lstat,open} from "node:fs/promises";
 import {constants} from "node:fs";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{withArtifactDescriptorV1}from"../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import{types}from"node:util";
 import{captureSelectedTaskDataV1}from"./📋️data/🟦️.ts";
@@ -12,7 +12,7 @@ import {validateSelectedGraphValueV1,type SelectedGraphScopeV1} from "../🟦️
 
 
 import selectionSchema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {compileJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const privateSchema=structuredClone(selectionSchema),readPolicy=Object.freeze({...privateSchema.$defs.SourceClosureReadPolicyV1.const}),closurePlan=compileJsonSchemaSubset(privateSchema.$defs.SourceClosureV1,privateSchema);
 function check(control:ResourceLeaseControl):void{requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);}
 async function readScopeMetadataV1(root:string,path:string,maximum:number,control:ResourceLeaseControl):Promise<Buffer>{

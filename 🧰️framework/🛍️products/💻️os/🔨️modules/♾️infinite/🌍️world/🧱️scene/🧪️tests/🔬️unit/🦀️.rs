@@ -8,12 +8,14 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_os_infinite_world_scene::{build_terrain_tile_mesh_oracle, placeholder_mesh, TerrainMeshOracleData};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_framework_os_infinite_world_scene::{environment_scene_shadow, world3d_shadow_role, World3dShadowGeometry, World3dShadowProfile, WORLD_REFERENCE_TEXTURE_BYTES};
-use ui_wgpu::wgpu::{Camera3d, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, PreparedRenderEviction, Rect, Rgba, SceneColorSource3d, SceneDraw3d, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode, Theme, Vec3};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{ICON_SHADOW_MAP_SIZE, SceneInstanceMaterial3d, WORLD_SHADOW_MAP_SIZE};
+use ui_scene::math::{Camera3d, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneColorSource3d, SceneDraw3d, Vec3};
+use semio_framework_ui_prepared::PreparedRenderEviction;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{ICON_SHADOW_MAP_SIZE, SceneInstanceMaterial3d, WORLD_SHADOW_MAP_SIZE};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(test)]
-use ui_wgpu::wgpu::SceneRasterMeshSeal;
+#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
 use ui_styling::metrics::tool_run;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -46,7 +48,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=ui_wgpu::wgpu::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -96,7 +98,7 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         colors: (data.colors.len() / 4) as u32,
     surface_uvs:[0;4],tangents:0,};
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
     let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
     assert!(progress.fits(grant));
     allocate_oracle_mesh(token);
@@ -122,10 +124,10 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
     }
     for value in data.uvs.as_chunks::<2>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
     }
     for value in data.colors.as_chunks::<4>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
     }
     mesh3d_seal(token).expect("oracle mesh publication")
 }
@@ -245,7 +247,7 @@ fn terrain_writer_matches_the_vertex_coloured_tile_oracle_and_closes_interrupted
 
 fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
     loop {
-        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
         let step=mesh3d_allocate_step(token,grant).unwrap();
         assert!(step.progress.fits(grant));
         if step.complete{break}
@@ -254,7 +256,7 @@ fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
 
 fn close_oracle_mesh(lease:Mesh3dLease) {
     loop {
-        let demand=ui_wgpu::wgpu::mesh3d_close_demands(lease,4096).unwrap();
+        let demand=ui_scene::math::mesh3d_close_demands(lease,4096).unwrap();
         let grant=world_mesh_ownership_grant(4096,demand.capacity_bytes,demand.release_bytes,demand.depth);
         let step=mesh3d_close_step(lease,grant).unwrap();
         assert!(step.progress.fits(grant));
@@ -281,8 +283,8 @@ fn world_mesh_registry_enforces_fixed_capacity_id_topology_and_aba() {
     let mut oversized = WorldInteractionMeshRegistry::default();
     assert!(oversized.admit(&"x".repeat(WORLD_INTERACTION_ID_BYTE_CAPACITY + 1), 1, mesh).is_none());
     assert!(oversized.faulted);
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
-    assert_eq!(mesh3d_begin(99,0,Mesh3dSchema::triangle_mesh(0,0),grant),Err(ui_wgpu::wgpu::Mesh3dFault::Schema));
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
+    assert_eq!(mesh3d_begin(99,0,Mesh3dSchema::triangle_mesh(0,0),grant),Err(ui_scene::math::Mesh3dFault::Schema));
 }
 
 #[test]
@@ -295,7 +297,7 @@ fn prepared_world_resources_are_send_and_deduplicate_uploads() {
     resources.ensure_world_plane_texture("image", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1));
     resources.ensure_world_plane_texture("image", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 9));
     resources.evict_mesh("stale");
-    let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
+    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
@@ -531,7 +533,7 @@ fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
     assert!(half <= camera.far * 0.25 + 1e-3, "the whole grid sits inside the camera's far plane");
     assert!(half < 12_000.0 * 0.5, "and is nowhere near the fixed square it used to draw");
 
-    let step = ui_wgpu::wgpu::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
+    let step = ui_scene::math::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
     let mut offsets: Vec<f32> = lines.iter().map(|vertex| vertex.position[1]).collect();
     offsets.sort_by(|left, right| left.partial_cmp(right).expect("finite grid coordinates"));
     offsets.dedup_by(|left, right| (*left - *right).abs() < 1e-4);
@@ -541,7 +543,7 @@ fn lod_grid_lines_keep_reacts_band_spacing_and_fade_inside_the_far_plane() {
     }
     assert!(lines.iter().any(|vertex| vertex.color[3] == 0.0), "the rim fades out instead of ending on a hard edge");
 
-    let parallel = ui_wgpu::wgpu::Camera3d { projection: ui_wgpu::wgpu::CameraProjection3d::Orthographic, zoom: 12.0, position: Vec3::new(0.0, 0.0, 9.45), up: Vec3::new(0.0, 1.0, 0.0), ..camera.clone() };
+    let parallel = ui_scene::math::Camera3d { projection: ui_scene::math::CameraProjection3d::Orthographic, zoom: 12.0, position: Vec3::new(0.0, 0.0, 9.45), up: Vec3::new(0.0, 1.0, 0.0), ..camera.clone() };
     let mut parallel_lines = Vec::new();
     append_lod_grid_lines(&mut parallel_lines, 2.0, 10.0, Vec3::ZERO, &parallel, viewport, [0.5, 0.5, 0.5, 1.0]);
     assert!(!parallel_lines.is_empty(), "a plan pane draws a grid too");
@@ -608,9 +610,9 @@ fn neutral_shadow_fixture_maps_to_world_draw_roles_and_exact_profiles() {
 
 #[test]
 fn svg_icon_profile_is_flat_lit_while_world_and_png_remain_raster_pbr() {
-    assert_eq!(World3dShadowProfile::IconSvg.render_profile(), ui_wgpu::wgpu::SceneRenderProfile3d::SvgFlatLit);
+    assert_eq!(World3dShadowProfile::IconSvg.render_profile(), ui_scene::math::SceneRenderProfile3d::SvgFlatLit);
     for profile in [World3dShadowProfile::World, World3dShadowProfile::IconPng, World3dShadowProfile::Unshadowed] {
-        assert_eq!(profile.render_profile(), ui_wgpu::wgpu::SceneRenderProfile3d::RasterPbr);
+        assert_eq!(profile.render_profile(), ui_scene::math::SceneRenderProfile3d::RasterPbr);
     }
 }
 
@@ -713,8 +715,8 @@ fn the_gumball_plane_is_pinned_against_pool_eviction() {
 /// (`📓️w8b-orthographic-camera-and-3d-parity.md` §7.4).
 #[test]
 fn the_mesh_style_table_is_reacts_whole_paint_table() {
-    let theme = ui_wgpu::wgpu::Theme::light();
-    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let theme = semio_framework_ui_theme::Theme::light();
+    let rgba = |color: semio_framework_ui_theme::Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
 
     let neutral = mesh_style_paint(&theme, MeshStyleKind::Neutral);
@@ -760,27 +762,27 @@ fn the_mesh_style_table_is_reacts_whole_paint_table() {
 /// are carried through the packed instance material instead of inferred from interaction flags.
 #[test]
 fn retained_color_provenance_and_static_material_policy_match_react() {
-    let light = ui_wgpu::wgpu::Theme::light();
-    let dark = ui_wgpu::wgpu::Theme::dark();
+    let light = semio_framework_ui_theme::Theme::light();
+    let dark = semio_framework_ui_theme::Theme::dark();
     let instance = |source| Instance3d { component_source: None,
         id: "fixture".into(),
         model: Mat4::identity(),
         color: [0.25, 0.5, 0.75, 0.8],
         selected: false,
         hovered: false,
-        material: ui_wgpu::wgpu::SceneInstanceMaterial3d { color_source: source, ..Default::default() },
+        material: ui_scene::math::SceneInstanceMaterial3d { color_source: source, ..Default::default() },
     };
-    let semantic = |theme: &ui_wgpu::wgpu::Theme| world3d_style_paint(theme, MeshStyleState::default(), false, instance(ui_wgpu::wgpu::SceneColorSource3d::SemanticNeutral));
+    let semantic = |theme: &semio_framework_ui_theme::Theme| world3d_style_paint(theme, MeshStyleState::default(), false, instance(ui_scene::math::SceneColorSource3d::SemanticNeutral));
     assert_eq!(semantic(&light).color, [light.panel.r, light.panel.g, light.panel.b, light.panel.a * 0.8]);
     assert_eq!(semantic(&dark).color, [dark.panel.r, dark.panel.g, dark.panel.b, dark.panel.a * 0.8]);
-    for source in [ui_wgpu::wgpu::SceneColorSource3d::Authored, ui_wgpu::wgpu::SceneColorSource3d::Environment] {
+    for source in [ui_scene::math::SceneColorSource3d::Authored, ui_scene::math::SceneColorSource3d::Environment] {
         assert_eq!(world3d_style_paint(&dark, MeshStyleState::default(), false, instance(source)).color, [0.25, 0.5, 0.75, 0.8]);
     }
 
-    let neutral_vertex = world3d_style_paint(&light, MeshStyleState::default(), true, instance(ui_wgpu::wgpu::SceneColorSource3d::Authored));
+    let neutral_vertex = world3d_style_paint(&light, MeshStyleState::default(), true, instance(ui_scene::math::SceneColorSource3d::Authored));
     assert_eq!(neutral_vertex.color, [1.0, 1.0, 1.0, 0.8]);
     assert!(neutral_vertex.material.preserve_vertex_color);
-    let disabled_vertex = world3d_style_paint(&light, MeshStyleState { disabled: true, ..Default::default() }, true, instance(ui_wgpu::wgpu::SceneColorSource3d::Authored));
+    let disabled_vertex = world3d_style_paint(&light, MeshStyleState { disabled: true, ..Default::default() }, true, instance(ui_scene::math::SceneColorSource3d::Authored));
     assert_eq!(&disabled_vertex.color[..3], &[1.0, 1.0, 1.0]);
     assert!((disabled_vertex.color[3] - 0.36).abs() <= f32::EPSILON);
     assert!(disabled_vertex.material.preserve_vertex_color);
@@ -790,7 +792,7 @@ fn retained_color_provenance_and_static_material_policy_match_react() {
         (MeshStyleState { highlighted: true, ..Default::default() }, 0.2),
         (MeshStyleState { provisional: true, ..Default::default() }, 0.2),
     ] {
-        let painted = world3d_style_paint(&light, style, true, instance(ui_wgpu::wgpu::SceneColorSource3d::SemanticNeutral));
+        let painted = world3d_style_paint(&light, style, true, instance(ui_scene::math::SceneColorSource3d::SemanticNeutral));
         assert!(!painted.material.preserve_vertex_color);
         assert_eq!(painted.material.emissive_intensity, expected);
     }
@@ -813,9 +815,9 @@ fn retained_color_provenance_and_static_material_policy_match_react() {
 fn the_grid_never_ends_on_a_hard_edge_however_far_the_camera_is() {
     let viewport = Rect { x: 0.0, y: 0.0, w: 956.0, h: 814.0 };
     let base = OrbitController::default().to_camera();
-    let step = ui_wgpu::wgpu::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
+    let step = ui_scene::math::lod_grid_step_world(2.0, 10.0).expect("React's helper answers a step") as f32;
     for distance in [12.0_f32, 400.0, 20_000.0, 500_000.0] {
-        let camera = ui_wgpu::wgpu::Camera3d { position: Vec3::new(0.0, 0.0, distance), target: Vec3::ZERO, ..base.clone() };
+        let camera = ui_scene::math::Camera3d { position: Vec3::new(0.0, 0.0, distance), target: Vec3::ZERO, ..base.clone() };
         let mut lines = Vec::new();
         append_lod_grid_lines(&mut lines, 2.0, 10.0, Vec3::ZERO, &camera, viewport, [0.5, 0.5, 0.5, 1.0]);
         assert!(!lines.is_empty(), "🌐️ every camera gets a grid at {distance}");
@@ -868,7 +870,7 @@ fn distance(left: [u8; 4], right: [u8; 4]) -> i32 {
 
 #[test]
 fn terrain_mesh_fault_preserves_busy_and_semantic_owner_refusals() {
-    for fault in [ui_wgpu::wgpu::Mesh3dFault::Busy, ui_wgpu::wgpu::Mesh3dFault::Closing, ui_wgpu::wgpu::Mesh3dFault::Schema, ui_wgpu::wgpu::Mesh3dFault::Stale] {
+    for fault in [ui_scene::math::Mesh3dFault::Busy, ui_scene::math::Mesh3dFault::Closing, ui_scene::math::Mesh3dFault::Schema, ui_scene::math::Mesh3dFault::Stale] {
         assert_eq!(WorldTerrainMeshCursor::mesh_fault(fault), WorldDynamicFault::Mesh(fault));
     }
 }
@@ -909,7 +911,7 @@ fn terrain_test_step(cursor:&mut WorldTerrainMeshCursor,revision:u64,terrain_rev
 fn terrain_test_close(cursor:&mut WorldTerrainMeshCursor)->bool {
     match cursor.close_step(terrain_test_grant()) {
         Ok(step)=>{assert!(step.progress.fits(terrain_test_grant()));step.complete}
-        Err(WorldDynamicFault::Mesh(ui_wgpu::wgpu::Mesh3dFault::Busy))=>false,
+        Err(WorldDynamicFault::Mesh(ui_scene::math::Mesh3dFault::Busy))=>false,
         Err(fault)=>panic!("semantic terrain owner refusal: {fault:?}"),
     }
 }

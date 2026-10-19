@@ -1,4 +1,4 @@
-import { requirePlaygroundVariant } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
 /** 🎬️ The hub's own two invariants: a host variant's session really is the WHOLE catalog, and the
  * declared `on-artifact-kind:` rows really do name one owner per artifact kind — the data every
  * "open an artifact whose plugin is not loaded yet" path reads before any wasm module exists. */
@@ -12,11 +12,11 @@ import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
 const catalog = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog;
 import { hostProjection, installedScope } from "../🧩️scope/🟦️.ts";
 import { resolvePluginHostConfig } from "@semio-tech/framework";
-import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
-import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "@semio-tech/plugin-registry/catalog";
 const catalogAdmissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
-import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { buildPlaygroundSession } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
+import { readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
+import { buildPlaygroundSession } from "@semio-tech/plugin-registry/playground/session";
 
 const projection = readGeneratedCatalogProjection(resolve(import.meta.dirname, "../../🤖️generated"));
 

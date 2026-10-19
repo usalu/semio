@@ -35,7 +35,7 @@
       "source": "🧰️framework/🔨️modules/🖼️canvas/🌉️icon-name-value-bridge.rs",
       "owner": "🧰️framework/🔨️modules/🖼️canvas/🌉️icon-name-value/🦀️.rs",
       "kind": "rust",
-      "anchor": "impl dsl::ToValue for IconName",
+      "anchor": "impl semio_framework_value::ToValue for MetabolismIconName",
       "consumers": [
         "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs"
       ],
@@ -205,7 +205,7 @@
     },
     {
       "source": "🧰️framework/🛍️products/💻️os/🖥️host/🧫️fixtures/🛡️hostile-batch-edge.rs",
-      "owner": "🧰️framework/🛍️products/💻️os/🖥️host/🧫️fixtures/🛡️hostile-batch-edge/🦀️.rs",
+      "owner": "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🧫️fixtures/🛡️hostile-batch-edge/🦀️.rs",
       "kind": "rust",
       "anchor": "hostile_inject_batch_edge",
       "consumers": [
@@ -246,7 +246,7 @@
     },
     {
       "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧬️session.d.ts",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.d.ts",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌿️virtual/🟦️.d.ts",
       "kind": "typescript-declaration",
       "anchor": "virtual:semio-playground-session",
       "consumers": [

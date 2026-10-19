@@ -17,7 +17,7 @@ fn MANIFEST_SOURCE() -> &'static str {
 }
 #[allow(non_snake_case)]
 fn WINT_APP_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs")
+    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn OS_HOST_SOURCE() -> &'static str {
@@ -25,15 +25,15 @@ fn OS_HOST_SOURCE() -> &'static str {
 }
 #[allow(non_snake_case)]
 fn GPU_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs")
+    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn DRAW_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_texts(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"])
+    semio_framework_os_renderer_wgpu_test_support::repo_module_trees(&["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🕸️mesh/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs", "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"])
 }
 #[allow(non_snake_case)]
 fn PREPARED_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")
+    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn ENGINE_CANVAS_SOURCE() -> &'static str {

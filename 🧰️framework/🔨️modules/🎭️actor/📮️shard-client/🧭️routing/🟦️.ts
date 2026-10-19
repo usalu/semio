@@ -1,11 +1,12 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import type { ShardSlot } from "../🔐️activation/🟦️.ts";
 
 /** 🧭️ Pins actors onto shards, leases the exclusive shards and terminates, rebuilds or disposes whole shards. */
 export class ShardRouting {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   assignShard(actorId: string): ShardSlot {
     const existing = this.state.actorShard.get(actorId);

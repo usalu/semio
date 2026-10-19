@@ -1,4 +1,4 @@
-import { loadActorCodecFixture, loadTurnBootstrapCompositionFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadActorCodecFixture, loadTurnBootstrapCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
 type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🧬️ LAW: one codec call reaches a component's `codec` interface through every browser hop with the
@@ -14,7 +14,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
   const fixture = await loadActorCodecFixture();
   const { actorCodecAnswer } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts");
   const { OriginalOperationSource } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts");
-  const { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts");
+  const { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } = await import("@semio-tech/framework-actor/retained-turn/bootstrap");
   const stockFixture = await loadTurnBootstrapCompositionFixture();
   type CodecRequest = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecRequest;
   type CodecExports = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecExports;
@@ -60,7 +60,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const { pathToFileURL } = await import("node:url");
       const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
       const { hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts");
-      const { APP_CHANNEL_VERSION } = await import("../../../../🟦️.ts");
+      const { APP_CHANNEL_VERSION } = await import("@semio-tech/framework-os");
       const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
       if (!artifactBase) throw Error("SEMIO_TEST_ARTIFACT_DIR is required for generated bridge evidence");
       mkdirSync(artifactBase, { recursive: true });

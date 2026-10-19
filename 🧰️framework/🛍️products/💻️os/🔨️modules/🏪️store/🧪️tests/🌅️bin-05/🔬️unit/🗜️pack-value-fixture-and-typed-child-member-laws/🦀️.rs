@@ -301,9 +301,9 @@ async fn member_factory_wrapper_cannot_bypass_exact_create_or_open_owner_catalog
     type Wrapped = ArtifactStore<DemoSnapshot, DemoMutation>;
     let dialect = demo_child_dialect();
     let mut created = <Wrapped as MemberFactory>::create("wrapped-member", &dialect, &DemoSnapshot { n: Some(3) }.encode_pack(), ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("wrapper create");
-    assert!(created.snapshot_retirement_factory.is_some());
-    assert!(created.initial_snapshot_retirement_factory.is_some());
-    assert!(created.mutation_retirement_factory.is_some());
+    assert!(created.owners.snapshot_retirement_factory.is_some());
+    assert!(created.owners.initial_snapshot_retirement_factory.is_some());
+    assert!(created.owners.mutation_retirement_factory.is_some());
     assert!(created.owned_disposer_installed());
     let files = print_document_pack(created.envelope()).await.expect("print wrapped member");
     let persisted = encode_document_pack_bytes(&files.pack, &files.spr).await;

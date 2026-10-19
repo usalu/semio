@@ -1,15 +1,18 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::bim_window_action;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::bim_window_action;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Phase, Schedule, ScheduleField, ScheduleKey, ScheduleOp};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleField, ScheduleKey, ScheduleOp};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Schedule;
 #[allow(unused_imports)]
 use semio_framework_plugin::TableCell;
 #[allow(unused_imports)]
@@ -22,11 +25,11 @@ use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 #[allow(unused_imports)]
 use semio_framework_ui_locale::Label;
-use crate::editor::bim::modes::edit::windows::schedule::{text, row};
-use crate::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig;
-use crate::editor::bim::modes::edit::windows::schedule::*;
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::{preset, PRESETS};
-use crate::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::{text, row};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::{list_rows, preset_label, table_parts, render, definition, editor_rows, row_kind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::{preset, PRESETS};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 

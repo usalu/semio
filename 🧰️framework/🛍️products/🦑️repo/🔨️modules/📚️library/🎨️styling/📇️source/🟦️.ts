@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { discoverCatalogPackages } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
 import { loadCatalogTaxonomy, registryCatalogInputView } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { admitStylingScanScopeV1, type StylingSourceV1 } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts";
+import { admitStylingScanScopeV1, type StylingSourceV1 } from "@semio-tech/ui-styling/verification";
 
 /** 📇️Supplies explicit current source owners and read-only indexed source candidates. */
 export function loadWorkspaceStylingSourceV1(repoRoot: string): StylingSourceV1 {

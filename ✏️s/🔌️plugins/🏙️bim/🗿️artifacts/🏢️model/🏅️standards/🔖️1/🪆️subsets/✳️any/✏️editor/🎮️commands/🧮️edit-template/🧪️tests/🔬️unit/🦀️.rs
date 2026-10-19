@@ -1,20 +1,24 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::PropertyDef, snapshot::PropertyKind};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, PropertyKind};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::property_value;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::property_value;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate;
+use semio_s_artifact_bim_model_mut_any_40::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::patches::PropertyTemplatePatch};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::PropertyTemplatePatch;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::edit_template::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::{PropertyTemplate, PropertyValue, TemplateTarget};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::edit_template::{EditTemplate, apply, handle};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::PropertyTemplate;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyValue, TemplateTarget};
 
 fn edit(op: &str, index: &str, field: &str, value: &str) -> EditTemplate {
     EditTemplate { id: "pt-wall".into(), op: op.into(), index: index.into(), field: field.into(), value: value.into() }

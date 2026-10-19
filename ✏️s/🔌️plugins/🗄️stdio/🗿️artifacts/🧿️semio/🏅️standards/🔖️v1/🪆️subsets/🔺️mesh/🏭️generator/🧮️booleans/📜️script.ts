@@ -18,7 +18,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import type { Recipe } from "../📜️script.ts";
+import type { Recipe } from "../📇️recipe-contract/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Recipes

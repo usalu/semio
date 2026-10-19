@@ -1,7 +1,7 @@
 //! 🔢️ Grid window option — how curated counts appear in the 3D grid.
 
 use crate::editor::sourcing::modes::edit::windows::grid::config::{GridWindowConfig, GRID_INSTANCE_DISPLAY_LINE_BEHIND, GRID_INSTANCE_DISPLAY_REPRESENTATIVE, GRID_INSTANCE_DISPLAY_REPRESENTATIVE_WITH_COUNT};
-use crate::editor::sourcing::base::sourcing_window_action;
+use crate::editor::sourcing::editor_vocabulary::sourcing_window_action;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 

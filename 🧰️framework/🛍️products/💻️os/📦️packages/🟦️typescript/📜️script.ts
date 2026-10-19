@@ -1,20 +1,19 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckAdmittedProjectV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { runBunx } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runVitest } from "../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runVitest } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {advanceScriptInvocation,scriptInvocationBudget} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
+import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📦️publication/🟦️.ts";
 import { readModuleTreeSource } from "../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
@@ -95,19 +94,19 @@ class TestScript extends BundleScript {
 /** 🏗️ Routes the package generator through the shared workspace implementation. */
 class GenerateWgpuScript extends BundleScript {
   async run(): Promise<void> {
-    await runWgpuPackageGenerator(getWorkspaceRoot(), "generate");
+    await runWgpuPackageGenerator(findWorkspaceRoot(), "generate");
   }
 }
 /** 🔎️ Checks the exact package artifacts without writing outputs. */
 class CheckWgpuScript extends BundleScript {
   async run(): Promise<void> {
-    await runWgpuPackageGenerator(getWorkspaceRoot(), "check");
+    await runWgpuPackageGenerator(findWorkspaceRoot(), "check");
   }
 }
 /** 🔮️ Streams the canonical read-only package preview. */
 class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
-    await runWgpuPackageGenerator(getWorkspaceRoot(), "preview");
+    await runWgpuPackageGenerator(findWorkspaceRoot(), "preview");
   }
 }
 
@@ -229,7 +228,7 @@ class MutationVerbVocabularyCheckScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckAdmittedProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

@@ -278,9 +278,9 @@ fn line_domain_against(origin: &Pnt3, dir: &Vec3, other: &Curve3, tol: f64) -> R
 }
 
 /// ➰ Re-extracts Bézier spans for a NURBS already computed via [`curve_as_nurbs`] (kept local
-/// rather than routed through `shared::curve_to_bezier_segments`, which starts from a [`Curve3`]
+/// rather than routed through `intersection_numerics::curve_to_bezier_segments`, which starts from a [`Curve3`]
 /// + domain rather than an already-converted [`NurbsCurve3`] — this file needs the latter because
-///   `curve_as_nurbs`'s domain resolution against the *other* curve has no `shared` equivalent).
+///   `curve_as_nurbs`'s domain resolution against the *other* curve has no `intersection_numerics` equivalent).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3, f64, f64)>, IntersectError> {
     let mut knots = nurbs.knots.clone();

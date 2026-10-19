@@ -58,16 +58,16 @@ fn dock_window_order_pairs_each_window_with_its_own_stack_path() {
 fn ui_event_from_key_action_maps_plain_char_to_text_input() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let modifiers = PointerModifiers::default();
-    let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &modifiers, false);
-    assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::TextInput { text: "a".into() }));
+    let event = ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Char("a".into()), &modifiers, false);
+    assert_eq!(event, Some(semio_framework_ui_wgpu_events::UiEvent::TextInput { text: "a".into() }));
 }
 
 #[test]
 fn ui_event_from_key_action_routes_ctrl_char_as_key_down_for_clipboard_chords() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let modifiers = PointerModifiers { ctrl: true, ..Default::default() };
-    let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Char("c".into()), &modifiers, false);
-    assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: "c".into(), modifiers: ui_wgpu::wgpu::EventModifiers { shift: false, ctrl: true, alt: false, meta: false } }));
+    let event = ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Char("c".into()), &modifiers, false);
+    assert_eq!(event, Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "c".into(), modifiers: semio_framework_ui_wgpu_events::EventModifiers { shift: false, ctrl: true, alt: false, meta: false } }));
 }
 
 #[test]
@@ -75,30 +75,30 @@ fn ui_event_from_key_action_maps_editing_and_tab_keys_to_matching_key_down_strin
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let modifiers = PointerModifiers::default();
     let cases = [
-        (ui_wgpu::wgpu::KeyAction::Backspace, "Backspace"),
-        (ui_wgpu::wgpu::KeyAction::Delete, "Delete"),
-        (ui_wgpu::wgpu::KeyAction::Enter, "Enter"),
-        (ui_wgpu::wgpu::KeyAction::Escape, "Escape"),
-        (ui_wgpu::wgpu::KeyAction::ArrowLeft, "ArrowLeft"),
-        (ui_wgpu::wgpu::KeyAction::ArrowRight, "ArrowRight"),
-        (ui_wgpu::wgpu::KeyAction::ArrowUp, "ArrowUp"),
-        (ui_wgpu::wgpu::KeyAction::ArrowDown, "ArrowDown"),
-        (ui_wgpu::wgpu::KeyAction::Home, "Home"),
-        (ui_wgpu::wgpu::KeyAction::End, "End"),
-        (ui_wgpu::wgpu::KeyAction::PageUp, "PageUp"),
-        (ui_wgpu::wgpu::KeyAction::PageDown, "PageDown"),
-        (ui_wgpu::wgpu::KeyAction::Tab, "Tab"),
+        (semio_framework_ui_wgpu_input::KeyAction::Backspace, "Backspace"),
+        (semio_framework_ui_wgpu_input::KeyAction::Delete, "Delete"),
+        (semio_framework_ui_wgpu_input::KeyAction::Enter, "Enter"),
+        (semio_framework_ui_wgpu_input::KeyAction::Escape, "Escape"),
+        (semio_framework_ui_wgpu_input::KeyAction::ArrowLeft, "ArrowLeft"),
+        (semio_framework_ui_wgpu_input::KeyAction::ArrowRight, "ArrowRight"),
+        (semio_framework_ui_wgpu_input::KeyAction::ArrowUp, "ArrowUp"),
+        (semio_framework_ui_wgpu_input::KeyAction::ArrowDown, "ArrowDown"),
+        (semio_framework_ui_wgpu_input::KeyAction::Home, "Home"),
+        (semio_framework_ui_wgpu_input::KeyAction::End, "End"),
+        (semio_framework_ui_wgpu_input::KeyAction::PageUp, "PageUp"),
+        (semio_framework_ui_wgpu_input::KeyAction::PageDown, "PageDown"),
+        (semio_framework_ui_wgpu_input::KeyAction::Tab, "Tab"),
     ];
     for (action, key) in cases {
         let event = ui_event_from_key_action(&action, &modifiers, false);
-        assert_eq!(event, Some(ui_wgpu::wgpu::UiEvent::KeyDown { key: key.into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }), "KeyAction {action:?} should map to KeyDown{{{key}}}");
+        assert_eq!(event, Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: key.into(), modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() }), "KeyAction {action:?} should map to KeyDown{{{key}}}");
     }
 }
 
 #[test]
 fn ui_event_from_key_action_has_no_mapping_for_space() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
-    let event = ui_event_from_key_action(&ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), false);
+    let event = ui_event_from_key_action(&semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), false);
     assert_eq!(event, None);
 }
 
@@ -113,7 +113,7 @@ fn content_focus_tracker_defaults_unfocused_and_clears_a_typed_focus_record() {
     chrome.content_focus.insert(window_id.into(), Some(RetainedContentFocus { node: node_id, key: semio_framework_ui_retained_tree::tree::NodeKey::Explicit("typed-focus".into()), kind: RetainedNodeFocusKind::Input }));
     chrome.focused_retained_surface = Some(window_id.into());
     assert!(chrome.content_has_focus(window_id));
-    chrome.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::FocusChanged { window_id: window_id.to_string(), node: None }]);
+    chrome.note_content_focus_commands(&[semio_framework_ui_wgpu_events::UiCommand::FocusChanged { window_id: window_id.to_string(), node: None }]);
     assert!(!chrome.content_has_focus(window_id));
 }
 
@@ -135,7 +135,7 @@ fn content_focus_tracker_ignores_non_focus_commands() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut chrome = ShellChromeBuildState::default();
     let window_id = "w2-input-wiring-test-window-d";
-    chrome.note_content_focus_commands(&[ui_wgpu::wgpu::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
+    chrome.note_content_focus_commands(&[semio_framework_ui_wgpu_events::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
     assert!(!chrome.content_has_focus(window_id));
 }
 

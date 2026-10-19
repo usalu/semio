@@ -206,7 +206,7 @@ fn permanent_window_body_refusal_retires_the_journal_at_the_fixture_ceiling() {
 fn topology_journal_credit_refusal_is_returned_to_the_transfer_caller() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let mut shell = host_test_shell();
-    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
         shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: None }).expect("the occupied fixture journal publishes");
     }
     let error = shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "test".into(), action: "noteShellCommand".into(), args: None }).expect_err("a full action queue returns its exact refusal");

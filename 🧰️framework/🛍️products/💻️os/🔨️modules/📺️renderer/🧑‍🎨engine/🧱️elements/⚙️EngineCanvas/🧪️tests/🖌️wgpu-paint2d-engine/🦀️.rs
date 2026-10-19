@@ -15,7 +15,7 @@ use semio_framework_ui_declaration::ui::SurfaceKind;
 use semio_framework_ui_layout::layout::UiPresence;
 use semio_framework_ui_scene_plane::Paint2dScene;
 use semio_framework_ui_scene_views::TextEditorScene;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 include!("🧰️scene-fixtures-and-drains/🦀️.rs");
 

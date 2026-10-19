@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test";
-import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import glob from "fast-glob";
+import { createTestScratchRootV1, disposeTestScratchRootV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import layoutVectors from "../🧫️fixtures/📐️test-layout/🔣️.json";
 import discoveryFixtureSchema from "../🧫️fixtures/🚷️discovery-boundaries/🔣️schema.json";
 
@@ -28,7 +29,7 @@ test("portable no-follow discovery fixtures satisfy their schema", () => {
 test("Nx test discovery rejects loop, case and feature links and skips generated/opaque trees", () => {
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
-  const root = mkdtempSync(join(output, "case-discovery-"));
+  const root = createTestScratchRootV1(output,"case-discovery-");
   try {
     mkdirSync(dirname(join(root, taxonomyPath)), { recursive: true });
     writeFileSync(join(root, taxonomyPath), JSON.stringify(vocabulary));
@@ -50,11 +51,11 @@ test("Nx test discovery rejects loop, case and feature links and skips generated
     const oracle = glob.sync(`**/${vocabulary.testsDirName}/*/${feature}`, { cwd: root, dot: true, followSymbolicLinks: false, ignore: ignored }).filter((path) => !lstatSync(join(root, path)).isSymbolicLink()).map((path) => dirname(path).replaceAll("\\", "/")).sort();
     expect(oracle).toEqual([...fixture.expected]);
     expect(plugin.discoverCaseDirs(root)).toEqual(oracle);
-  } finally { rmSync(root, { recursive: true, force: true }); }
+  } finally { disposeTestScratchRootV1(root); }
 });
 
 test("Nx uses the current supplied candidate inventory with independent no-follow glob membership",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"case-candidates-"));
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"case-candidates-");
  const put=(path:string,content:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
  try{
   put(taxonomyPath,JSON.stringify(vocabulary));put(`${dirname(taxonomyPath)}/⚡️caching/🔣️policy.json`,readFileSync(join(repo,dirname(taxonomyPath),"⚡️caching/🔣️policy.json"),"utf8"));put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
@@ -71,11 +72,11 @@ test("Nx uses the current supplied candidate inventory with independent no-follo
    expect(projects.map(project=>project.root).sort(),row.id).toEqual([...new Set(oracle.map(path=>dirname(dirname(path))))].sort());
    expect(projects.flatMap(project=>project.metadata.semio.testCases).sort(),row.id).toEqual(oracle.map(path=>basename(dirname(path))).sort());
   }
- }finally{rmSync(root,{recursive:true,force:true});}
+ }finally{disposeTestScratchRootV1(root);}
 },30000);
 
 test("fresh authority links and resident Node and Bun source mutations fail closed",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"candidate-authority-"));const put=(path:string,content:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"candidate-authority-");const put=(path:string,content:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),content);};
  const library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`,policyPath=`${library}/⚡️caching/🔣️policy.json`;
  try{
   put(taxonomyPath,JSON.stringify(vocabulary));put(policyPath,readFileSync(join(repo,policyPath),"utf8"));put(featurePath,"Feature: Authority\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
@@ -94,7 +95,7 @@ test("fresh authority links and resident Node and Bun source mutations fail clos
   put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",`export {cacheInternals,libraryBootstrap,loadCurrentImplementationV1,currentImplementationRevisionV1} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};\n`);put("📚️library/🏗️build/👁️observation/🟨️.mjs",`export {observeDependencies,observedFs,observeInference} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/👁️observation/🟨️.mjs")).href)};\n`);put("📚️library/🏗️build/🎚️mode/🟨️.mjs",`export * from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/🎚️mode/🟨️.mjs")).href)};\n`);put("📚️library/🏗️build/📥️inputs/🟨️.mjs",`export {compactSourceInputs} from ${JSON.stringify(pathToFileURL(join(repo,library,"🏗️build/📥️inputs/🟨️.mjs")).href)};\n`);
   const code=`import assert from "node:assert/strict";import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import{pathToFileURL}from"node:url";const root=${JSON.stringify(root)},feature=${JSON.stringify(featurePath)},path=join(root,"plugin/🕸️dependencies/🟨️.mjs"),source=readFileSync(path,"utf8"),resident=(await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href)).default;assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);writeFileSync(path,source+"\\nexport const invalid = ;\\n");await assert.rejects(()=>resident.createNodesV2[1]([feature],{}, {workspaceRoot:root}),/Unexpected|Expected|Parse|Syntax|stale ESM/i);writeFileSync(path,source);assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);console.log("fresh resident source accepted/refused/accepted");`;
   for(const runtime of ["node",process.execPath]){const child=spawnSync(runtime,[...(runtime==="node"?["--input-type=module"]:[]),"--eval",code],{encoding:"utf8",timeout:10000});expect(child.status,child.stdout+child.stderr).toBe(0);expect(child.stdout.trim()).toBe("fresh resident source accepted/refused/accepted");}
- }finally{rmSync(root,{recursive:true,force:true});}
+ }finally{disposeTestScratchRootV1(root);}
 },30000);
 
 test("Nx discovers the same canonical names and semantic owners as the layout vectors", async () => {
@@ -108,7 +109,7 @@ test("Nx discovers the same canonical names and semantic owners as the layout ve
     }
     const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
     mkdirSync(output, { recursive: true });
-    const root = mkdtempSync(join(output, "layout-nx-candidates-"));
+    const root = createTestScratchRootV1(output,"layout-nx-candidates-");
     const put = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
     try {
@@ -120,11 +121,11 @@ test("Nx discovers the same canonical names and semantic owners as the layout ve
         const discovered = await current.createNodesV2[1]([path], {}, { workspaceRoot: root });
         expect(discovered.map(entry => entry[0]), path).toEqual(accepted ? [path] : []);
       }
-    } finally { rmSync(root, { recursive: true, force: true }); }
+    } finally { disposeTestScratchRootV1(root); }
   });
 
 test("test inference awaits the exact library bootstrap before command helpers",async()=>{
- const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"bootstrap-order-")),put=(path:string,bytes:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),bytes);},library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`;
+ const output=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR||tmpdir());mkdirSync(output,{recursive:true});const root=createTestScratchRootV1(output,"bootstrap-order-"),put=(path:string,bytes:string)=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),bytes);},library=dirname(taxonomyPath),featurePath=`${fixture.expected[0]}/${feature}`;
  try{
   put(taxonomyPath,JSON.stringify(vocabulary));put(`${library}/⚡️caching/🔣️policy.json`,readFileSync(join(repo,library,"⚡️caching/🔣️policy.json"),"utf8"));put(featurePath,"Feature: Bootstrap ordering\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
   put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8"));
@@ -137,5 +138,5 @@ test("test inference awaits the exact library bootstrap before command helpers",
   const revision=new Bun.CryptoHasher("sha256").update(wrapper).digest("hex"),received=await import(pathToFileURL(join(root,"📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href+"?revision="+revision);
   expect(received.events).toEqual(fixture.bootstrapOrder.expected);
   const oracle=spawnSync("node",["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
- }finally{rmSync(root,{recursive:true,force:true});}
+ }finally{disposeTestScratchRootV1(root);}
 },30000);

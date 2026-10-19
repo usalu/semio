@@ -1,7 +1,7 @@
 /** 🧭️ Hub Rust source readers shared by the hub gates: the `os-hub` binary closure, the test package list, the directory backend and trusted-catalog source trees.
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
-import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { type ExactCargoLawGroup } from "@semio-tech/process/cargo-laws";
 import { listModuleTree, readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";

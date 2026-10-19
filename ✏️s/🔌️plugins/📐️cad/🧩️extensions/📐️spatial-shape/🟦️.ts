@@ -61,17 +61,3 @@ export function register(): void {
 }
 // #endregion 📦️Register
 
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts`. */
-export type SpatialShapeTestDependencies = {
-  readonly SPATIAL_SHAPE_GEOMETRY_STAT_ID: typeof SPATIAL_SHAPE_GEOMETRY_STAT_ID;
-  readonly SPATIAL_SHAPE_VOLUME_PROPERTY_ID: typeof SPATIAL_SHAPE_VOLUME_PROPERTY_ID;
-  readonly core: typeof core;
-  readonly solidRef: typeof solidRef;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts");
-  await registerTests1(import.meta.vitest, { SPATIAL_SHAPE_GEOMETRY_STAT_ID, SPATIAL_SHAPE_VOLUME_PROPERTY_ID, core, solidRef }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

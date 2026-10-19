@@ -8,10 +8,10 @@ import {readdir,lstat,unlink} from "node:fs/promises";
 import {withRepositoryCacheStoreV1,withRequiredRepositoryCacheStoreConsumerV1,requireCurrentRepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {checkScriptInvocation,requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {openBuildGraphOptionalLedgerV1} from "./📒️ledger/🟨️.mjs";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 const graphConsumerURLsV1=[new URL(import.meta.url),new URL("./🧬️schema/🔣️.json",import.meta.url),new URL("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",import.meta.url)],graphConsumerCapturesV1=graphConsumerURLsV1.map((url,index)=>index===0?captureBoundedSourceRevisionV1(fileURLToPath(url),8388608):captureBoundedSourceRevisionV1(fileURLToPath(url),65536,true)),graphConsumerRevisionsV1=graphConsumerCapturesV1.map(row=>row.sha256),schema=JSON.parse(graphConsumerCapturesV1[1].text??""),policy=JSON.parse(graphConsumerCapturesV1[2].text??"");
 /** 🧷️ Refuses stale Graph mapping, privately captured policies or its defining Store owner. */
 export function requireCurrentRepositoryBuildGraphConsumerV1(){requireCurrentRepositoryCacheStoreV1();if(graphConsumerURLsV1.some((url,index)=>captureBoundedSourceRevisionV1(fileURLToPath(url),index===0?8388608:65536).sha256!==graphConsumerRevisionsV1[index]))throw Error("Stale loaded Graph consumer implementation; restart required");}

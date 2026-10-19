@@ -11,8 +11,8 @@ import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { createRepositoryFilesystemJournalV1, repositoryFilesystemJournalPolicyV1 } from "../🟦️.ts";
 import { loadedFilesystemJournalToolingIdentityV1, readFilesystemJournalRpcRequestV1, filesystemJournalRpcRemainingMillisecondsV1 } from "../🌐️rpc/🟦️.ts";
 import { isGlobalGraphIdentityPathV1 } from "../../../🎯️selection/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
+import type { FilesystemJournalChangeV1, FilesystemJournalControlV1 } from "@semio-tech/framework/filesystem/observation/journal";
 
 /** 👷️ The immutable journal thread receives only its actual daemon-owned deployment. */
 export type FilesystemJournalWorkerOptionsV1 = NxDaemonJournalDeploymentV1;

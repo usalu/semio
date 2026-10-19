@@ -2,20 +2,20 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { directoryCommandRequestJson, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
-import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { type ExactCargoLawGroup } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { directoryCommandErrorFromStatus, directoryCommandErrorIsTransient } from "@semio-tech/framework/directory/schema";
 import type { DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runCmd } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
@@ -387,7 +387,7 @@ export class DirectoryCommandReceiptCheckScript extends BundleScript {
           : []),
         ...(["authority", "invites"].includes(phase) ? [] : hubLawGroups(laws.slice(8), ["--all-features"])),
       ] satisfies ExactCargoLawGroup[]).sort((left, right) => Number(left.target.kind === "bin") - Number(right.target.kind === "bin"))) {
-        const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [group],progress(event) {
+        const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [group],progress(event) {
             console.log(`directory-command-receipt-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
           }});
         for (const receipt of receipts) console.log(`directory-command-receipt-${phase}-receipt: ${JSON.stringify(receipt)}`);

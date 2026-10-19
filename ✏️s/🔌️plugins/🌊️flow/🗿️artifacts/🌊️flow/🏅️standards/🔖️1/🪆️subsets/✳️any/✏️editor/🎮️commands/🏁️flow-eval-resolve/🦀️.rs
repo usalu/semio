@@ -1,7 +1,7 @@
 //! 🧮️ 🧵️ Flow play app commands command — `flow-eval-resolve`.
 
 use crate::editor::flow::commands::flow_eval_tick::eval_tick_effect;
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;

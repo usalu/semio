@@ -1,6 +1,6 @@
 /** 📚️ Navbar example audits of the catalog verification: the playground owners that ship without an example picker, the picker coverage audit of a published manifest and the example artifact payload audit. */
-import { dialectCoordinate } from "../../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
-import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts";
+import { dialectCoordinate } from "@semio-tech/framework-io-schema-ts";
+import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework";
 
 /** 🎛️ Playground owners that legitimately ship without a navbar example picker (library shells, aggregators, flow hosts). */
 export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "stdio"]);

@@ -4,10 +4,11 @@
 //! annotation layer and the text of the overlay toggle. The overlay instances carry no interaction id: they are looked at, never picked.
 
 use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
-use crate::editor::bim::terminology::BimLabels;
-use crate::render::envelope::{self, Mode, Part};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_modify::render::envelope::{Mode, Part};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{DslValue, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dText, WORLD3D_ANNOTATIONS_MAX};
 
 /// 🏷️ The id of the mesh and the instance of the overlay group `index`.
@@ -75,9 +76,9 @@ pub fn legend_text(labels: &BimLabels, german: bool, mode: Mode) -> String {
         Mode::UValue => labels
             .env_legend_u
             .as_str()
-            .replace("{low}", &measure(envelope::U_MIN, german))
-            .replace("{mid}", &measure((envelope::U_MIN + envelope::U_MAX) / 2.0, german))
-            .replace("{high}", &measure(envelope::U_MAX, german)),
+            .replace("{low}", &measure(semio_s_artifact_bim_model_modify::render::envelope::U_MIN, german))
+            .replace("{mid}", &measure((semio_s_artifact_bim_model_modify::render::envelope::U_MIN + semio_s_artifact_bim_model_modify::render::envelope::U_MAX) / 2.0, german))
+            .replace("{high}", &measure(semio_s_artifact_bim_model_modify::render::envelope::U_MAX, german)),
         Mode::Boundary => labels.env_legend_boundary.as_str().to_string(),
     }
 }
@@ -106,7 +107,7 @@ fn array(values: &[f64]) -> DslValue {
     DslValue::Array(values.iter().map(|value| DslValue::float(*value)).collect())
 }
 
-pub fn instance(id: &str, placement: crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement, mode: Mode) -> DslValue {
+pub fn instance(id: &str, placement: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement, mode: Mode) -> DslValue {
     let (sin, cos) = (placement.rotation * 0.5).sin_cos();
     let label = both(|labels, german| legend_text(labels, german, mode));
     DslValue::object([
@@ -123,7 +124,7 @@ pub fn instance(id: &str, placement: crate::standards::v1::subsets::any::schema:
 
 pub fn marker(part: &Part<'_>) -> World3dAnnotation {
     let text = both(|labels, german| surface_text(labels, german, part.surface));
-    World3dAnnotation::marker(part.surface.id.clone(), envelope::to_world(part.placement, envelope::centre(part.surface)), text)
+    World3dAnnotation::marker(part.surface.id.clone(), semio_s_artifact_bim_model_modify::render::envelope::to_world(part.placement, semio_s_artifact_bim_model_modify::render::envelope::centre(part.surface)), text)
 }
 
 /// 🌡️ The overlay of the window, `None` while the setting is off or no conditioned space on a shown storey has surfaces.
@@ -132,17 +133,17 @@ pub fn overlay(snapshot: &ModelSnapshot, inference: &ModelInference, config: &Bi
         return None;
     }
     let mode = mode(config);
-    let parts = envelope::parts(snapshot, inference, &|storey| shown(config, storey));
+    let parts = semio_s_artifact_bim_model_modify::render::envelope::parts(snapshot, inference, &|storey| shown(config, storey));
     if parts.is_empty() {
         return None;
     }
-    let groups = envelope::by_placement(&parts);
+    let groups = semio_s_artifact_bim_model_modify::render::envelope::by_placement(&parts);
     let mut overlay = Overlay::default();
     for (index, (placement, members)) in groups.iter().enumerate() {
         let id = mesh_id(index);
-        let mesh = envelope::mesh_of(members, mode);
+        let mesh = semio_s_artifact_bim_model_modify::render::envelope::mesh_of(members, mode);
         if groups.len() == 1 && mode == Mode::UValue && !mesh.face_ids.is_empty() {
-            let field = World3dScalarField::new(id.clone(), World3dScalarDomain::Face, envelope::u_values(members, &mesh), World3dColorRamp::Coolwarm, World3dScalarRange { min: envelope::U_MIN, max: envelope::U_MAX }, legend(mode)).with_unit("W/(m²·K)").with_ticks(envelope::TICKS as u8);
+            let field = World3dScalarField::new(id.clone(), World3dScalarDomain::Face, semio_s_artifact_bim_model_modify::render::envelope::u_values(members, &mesh), World3dColorRamp::Coolwarm, World3dScalarRange { min: semio_s_artifact_bim_model_modify::render::envelope::U_MIN, max: semio_s_artifact_bim_model_modify::render::envelope::U_MAX }, legend(mode)).with_unit("W/(m²·K)").with_ticks(semio_s_artifact_bim_model_modify::render::envelope::TICKS as u8);
             overlay.scalar_field = Some(field);
         }
         overlay.meshes.push(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("data".to_string(), semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::Value::from(mesh)))]));

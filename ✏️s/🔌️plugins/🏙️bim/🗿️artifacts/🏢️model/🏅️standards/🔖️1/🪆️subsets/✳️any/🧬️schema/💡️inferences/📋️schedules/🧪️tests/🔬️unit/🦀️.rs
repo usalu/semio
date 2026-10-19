@@ -1,21 +1,23 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ScheduleKey};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleKey;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Schedule;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Schedule;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::schedules::table::{natural, order, passes};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::*;
-use crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{Phase, ScheduleOp}};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::table::{natural, order, passes};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{ScheduleRow, ScheduleCell, rows, table, RowKind, dependency, READS};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleOp};
 use protocol::Inference;
 use std::cmp::Ordering;
 
 fn demo() -> ModelSnapshot {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     snapshot.schedules.insert("sch-walls".into(), preset("wall", "Walls").expect("the wall preset"));
     snapshot
 }
@@ -98,7 +100,7 @@ async fn the_table_and_its_oracle_json_are_deterministic_and_follow_the_authored
     assert_eq!(first, ModelInference::infer(&snapshot).expect("infers"));
     assert_eq!(table_json(&first.schedules), table_json(&ModelInference::infer(&snapshot).expect("infers").schedules));
     let schedule = snapshot.schedules.get_mut("sch-walls").expect("the schedule");
-    schedule.filter.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleFilter { key: ScheduleKey::field(crate::standards::v1::subsets::any::schema::snapshot::ScheduleField::Name), op: ScheduleOp::Equals, value: "no wall is called this".into() });
+    schedule.filter.push(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleFilter { key: ScheduleKey::field(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleField::Name), op: ScheduleOp::Equals, value: "no wall is called this".into() });
     let filtered = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(filtered.schedules["sch-walls"].items, 0);
     assert!(filtered.schedules["sch-walls"].rows.is_empty());

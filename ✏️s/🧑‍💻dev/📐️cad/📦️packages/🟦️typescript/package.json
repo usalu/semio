@@ -33,6 +33,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "^5.1.2",
+    "ajv": "8.20.0",
     "brepjs": "^18.20.3",
     "brepjs-opencascade": "^0.15.6",
     "typescript": "^5.9.3",

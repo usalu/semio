@@ -1,20 +1,19 @@
 #!/usr/bin/env bun
 import {writeOwnedCommandOutputV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import {frameworkOsViteArtifactInputsV1} from "../🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import {repositoryCachePartitionRootV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { repositoryCachePartitionRootV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { repositoryCargoNetworkV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../🧩️contribution/📥️loading/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { frameworkOsLockedPrefsEnv, buildViteArtifact } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { checkScriptInvocation, Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { buildViteArtifact } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { productionBrowserInputHash } from "./⚙️inputs/🟦️.ts";
-import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts";
 
 /** 🔏️ Supplies the build tool with output-affecting environment and ignored configuration bytes. */
 class InputsScript extends Script {
@@ -39,7 +38,7 @@ class BuildScript extends Script {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, profile] = args;
     if (args.length !== 3 || !variant || renderer !== "react" || (profile !== "prototype" && profile !== "release") || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("build <variant> react <prototype|release>");
-    const workspace = getWorkspaceRoot(), root = resolve(import.meta.dir, "..");
+    const workspace = findWorkspaceRoot(), root = resolve(import.meta.dir, "..");
     const catalog = JSON.parse(readFileSync(join(process.env.SEMIO_PLUGIN_CATALOG ?? (()=>{throw Error("Distribution requires a supplied catalog root");})(), "🎠️playgrounds.json"), "utf8")) as { variant: string; distDir?: string; brand?: string; devContribution?: string }[];
     const playground = catalog.find((row) => row.variant === variant);
     const contribution = playground ? loadDevContribution(workspace, playground) : undefined;
@@ -62,7 +61,7 @@ class BuildScript extends Script {
 class CompileScript extends Script {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("compile accepts no free path or configuration arguments");
-  const{compileDistributionProductV1}=await import("./🏗️compiler/🟦️.ts"),receipt=await compileDistributionProductV1(this.repoRoot,this.invocation),text=JSON.stringify(receipt),{readNativeCallerAuthorityV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts");
+  const{compileDistributionProductV1}=await import("./🏗️compiler/🟦️.ts"),receipt=await compileDistributionProductV1(this.repoRoot,this.invocation),text=JSON.stringify(receipt),{readNativeCallerAuthorityV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts");
   if(Buffer.byteLength(text)>readNativeCallerAuthorityV1(this.invocation.capabilities).transport.maximumBytes)throw Error("Original distribution receipt transport exceeded");await writeOwnedCommandOutputV1(process.stdout,text,scriptCompilerAdmissionControlV1(this.invocation,"vite:distribution-receipt",0));
  }
 }

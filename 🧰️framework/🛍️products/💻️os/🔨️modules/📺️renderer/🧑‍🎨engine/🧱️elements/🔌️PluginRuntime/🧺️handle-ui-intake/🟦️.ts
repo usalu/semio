@@ -7,8 +7,8 @@ import { type PluginUiRefreshRequest, type PluginUiRefreshResponse, type PluginU
 import { type BuiltNode } from "@semio-tech/framework";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { OwnedUiPatchIntake } from "../../📃️UiDocumentStore/📥️intake/🟦️.ts";
-import { type OwnedUiPatchAcknowledgementEntry } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts";
-import { type ShardInstanceLifecycleLease } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts";
+import { type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework-actor/shard-client/ui-patch";
+import { type ShardInstanceLifecycleLease } from "@semio-tech/framework-actor/shard-client/activation";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { RetainedUiNodeRecord } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";

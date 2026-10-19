@@ -815,20 +815,6 @@ export const defaultConstructRunner: ConstructRunner = (text, ctx) => runConstru
 const __spatialQueryTestRuntime = import.meta.vitest ? await import("../../../✏️editor/⚙️engine/🏃️runtime/🟦️.ts") : null;
 const __spatialQueryTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
 
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts`. */
-export type InferencesTestDependencies = {
-  readonly Model: typeof Model;
-  readonly __spatialQueryTestKernel: typeof __spatialQueryTestKernel;
-  readonly __spatialQueryTestRuntime: typeof __spatialQueryTestRuntime;
-  readonly applyModelDiff: typeof applyModelDiff;
-  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
-  readonly modelDefinitionActionRegistry: typeof modelDefinitionActionRegistry;
-  readonly parseConstruct: typeof parseConstruct;
-  readonly runConstruct: typeof runConstruct;
-  readonly runConstructAst: typeof runConstructAst;
-  readonly solidRef: typeof solidRef;
-};
-
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts");
   await registerTests1(import.meta.vitest, { Model, __spatialQueryTestKernel, __spatialQueryTestRuntime, applyModelDiff, emptyMeshTransfer, modelDefinitionActionRegistry, parseConstruct, runConstruct, runConstructAst, solidRef }, { url: import.meta.url });

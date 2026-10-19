@@ -1,9 +1,5 @@
-//! 🪝️ White-box hooks of the gateway for its companion crate: aliases of the sibling-private types and forwarders of the sibling-private functions the unit laws drive. Compiled only with the `testkit` feature.
+//! 🪝️ White-box hooks of the gateway for its companion crate: forwarders of the sibling-private functions the unit laws drive. Compiled only with the `testkit` feature.
 use super::{CommandEnvelope, PolicyRequest};
-
-pub type Member = super::presence::Member;
-pub type Room = super::presence::Room;
-pub type Outflow = super::presence::Outflow;
 
 pub fn admission_request(envelope: &CommandEnvelope) -> PolicyRequest {
     super::server::admission_request(envelope)

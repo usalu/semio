@@ -2,10 +2,10 @@
   "version": 1,
   "generalOwner": "🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts",
   "generalLaw": "shared pixel lock vectors match the independent hierarchy oracle",
-  "generalLawSha256": "45204a2a9de00199d55736a082c1908a2ad5a954c229085dcedd79b2df8b11d9",
+  "generalLawSha256": "47c728d7da48312159d6737d2b02d9c68900176cf0707be193c062527b55baf0",
   "generalInputs": [
     {
-      "path": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json",
+      "path": "🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/🔒️protection/🔣️.json",
       "sha256": "b5b42b3694a9a58d4d957a994d594db7e85b9c2cb5beb602b65a662d75e727b0"
     }
   ],
@@ -24,11 +24,11 @@
       "script": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
       "project": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json",
       "command": "test-directory-lease-fixture",
-      "sha256": "d953369f67a64f52822a6fbb726a4d7ee5c2982928b59da8896fcf63367b816d",
+      "sha256": "dbbe23fb0a8122a350415543bedf748d4dccf7a397977c006a0a8cf1121aadf7",
       "inputs": [
         {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
-          "sha256": "0e6d9d1c6a6108d8093f3efcd7f01a1eb803bc17e163758732270408be10735a"
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json",
+          "sha256": "ab44b16bd793038336791eda04a7567211c20311ba03bfe62f99b9aa1eb65b72"
         }
       ]
     },
@@ -54,14 +54,14 @@
       "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
       "project": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/📋️project.json",
       "command": "verify slider-labels-fixture",
-      "sha256": "0e375411dde9f1d14e2e603ef7a4399f4bae069ecb78cfea074c94f4293ab21b",
+      "sha256": "9e5641c04dac0caa73d5a5545f77584d239cf3f347a5d3f714b42a1c226b85d7",
       "inputs": [
         {
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/🔣️.json",
-          "sha256": "a1aced2f8d4697e9015ae2e5cd84bbb9ce5d93cbc5188a2b55a0dc8ecfab0edb"
+          "sha256": "99b70d0bc45149f8424e62ee8734b37fe4d0bc8a1addc84eda5b796be393ef17"
         },
         {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧫️fixtures/🏷️slider-labels.json",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧪️tests/🧫️fixtures/📸️snapshot/🏷️slider-labels.json",
           "sha256": "eb17ebd4fdba85f4eb302c07590b7457853eda06b46b07e420c1f629c4ee5f1d"
         }
       ]

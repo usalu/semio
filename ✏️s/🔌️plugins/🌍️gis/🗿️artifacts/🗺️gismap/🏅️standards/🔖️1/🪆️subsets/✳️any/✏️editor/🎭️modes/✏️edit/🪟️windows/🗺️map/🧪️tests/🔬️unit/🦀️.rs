@@ -30,7 +30,7 @@ use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 use std::collections::HashMap;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::*;
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels;
-use crate::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dApp};
+use crate::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dTestApp};
 use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};
 use semio_s_artifact_gis_gismap_gis2d::GisMapSnapshot;
 use semio_framework_plugin::artifact_app_laws::meta;
@@ -39,9 +39,9 @@ use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION
 /// 🕹️ Dispatches one framework-injected interaction verb against the `"features"` domain with the
 /// exact wire payload `TiledMapHost` sends (`emitFeatureSelection`/the hover effect), then settles
 /// the reserved job it spawns so the next render reads the published interaction state.
-async fn interact(app: &mut Gis2dApp, action: &str, args: serde_json::Value) {
-    let admitted = app.handle_action(action, Some(&semio_framework_value::DslValue::from(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
+async fn interact(app: &mut Gis2dTestApp, action: &str, args: serde_json::Value) {
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::from(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
 }
 
 fn feature_targets(ids: &[&str]) -> String {

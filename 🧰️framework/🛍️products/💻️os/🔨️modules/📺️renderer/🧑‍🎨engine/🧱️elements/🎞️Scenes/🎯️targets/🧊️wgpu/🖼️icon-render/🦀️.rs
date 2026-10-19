@@ -200,10 +200,10 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
     draw_text(ctx, message, bounds.x + (bounds.w - width) * 0.5, bounds.y + bounds.h * 0.5, size, theme.text_muted);
 }
 
-fn icon_render_footer_layout(bounds: Rect, footer: Option<&str>, atlas: &mut ui_wgpu::wgpu::FontAtlas, size: f32) -> (f32, Vec<std::ops::Range<usize>>) {
+fn icon_render_footer_layout(bounds: Rect, footer: Option<&str>, atlas: &mut semio_framework_ui_text::FontAtlas, size: f32) -> (f32, Vec<std::ops::Range<usize>>) {
     let Some(footer) = footer.filter(|footer| !footer.is_empty()) else { return (0.0, Vec::new()) };
     let lines = atlas.wrap_lines(footer, (bounds.w - 24.0).max(0.0), size);
-    (lines.len() as f32 * ui_wgpu::wgpu::text::line_height(size) + 8.0, lines)
+    (lines.len() as f32 * semio_framework_ui_text::line_height(size) + 8.0, lines)
 }
 
 fn icon_render_frame(bounds: Rect, width: f64, height: f64, footer_height: f32) -> Rect {
@@ -218,7 +218,7 @@ fn icon_render_content_frame(frame: Rect) -> Rect {
     Rect::new(frame.x + 2.0, frame.y + 2.0, (frame.w - 4.0).max(0.0), (frame.h - 4.0).max(0.0))
 }
 
-fn icon_render_badge_layout(frame: Rect, text: &str, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> Rect {
+fn icon_render_badge_layout(frame: Rect, text: &str, atlas: &mut semio_framework_ui_text::FontAtlas) -> Rect {
     let preferred = atlas.measure_text_face(TextFace::Mono, text, 10.0).0 + 8.0;
     let minimum = text.split_whitespace().map(|word| atlas.measure_text_face(TextFace::Mono, word, 10.0).0).fold(0.0_f32, f32::max) + 8.0;
     let width = (frame.w - 8.0).max(minimum).min(preferred);
@@ -248,7 +248,7 @@ fn with_icon_render_mask(ctx: &mut FrameworkWidgetContext<'_>, frame: Rect, shap
 /// fetched, and forever if the fetch never landed. The residency of the one subject mesh is the
 /// same predicate: no lease yet is "rendering", a recorded snapshot fault is the error arm.
 /// 🎬️ Shared preview and export scene construction at the requested camera scale.
-fn icon_render_world_scene(request: &IconRenderRequestFields, asset_url: &str, mesh_id: &str, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> ui_wgpu::wgpu::World3dScene {
+fn icon_render_world_scene(request: &IconRenderRequestFields, asset_url: &str, mesh_id: &str, subject_bounds: Option<([f32; 3], [f32; 3])>, preview_scale: f64) -> semio_framework_ui_declaration::ui::World3dScene {
     let instances_json = json!([{
         "id": "icon-render-subject",
         "meshId": mesh_id,
@@ -428,7 +428,7 @@ fn paint_icon_render_chrome(ctx: &mut FrameworkWidgetContext<'_>, bounds: Rect, 
     if let Some(footer) = footer {
         let footer_size = theme.font_size_small;
         let (height, lines) = icon_render_footer_layout(bounds, Some(footer), ctx.atlas, footer_size);
-        let line_height = ui_wgpu::wgpu::text::line_height(footer_size);
+        let line_height = semio_framework_ui_text::line_height(footer_size);
         for (index, range) in lines.into_iter().enumerate() {
             let text = &footer[range];
             let width = ctx.atlas.measure_text(text, footer_size).0;

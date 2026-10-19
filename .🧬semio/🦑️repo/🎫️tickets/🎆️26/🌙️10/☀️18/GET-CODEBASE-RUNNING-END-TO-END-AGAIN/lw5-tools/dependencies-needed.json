@@ -1,0 +1,10 @@
+{
+ "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json": [
+  "@semio-tech/framework-compiler-ts"
+ ],
+ "✏️s/package.json": [
+  "@semio-tech/ui-react",
+  "@semio-tech/plugin-registry",
+  "@semio-tech/framework-renderer-react"
+ ]
+}

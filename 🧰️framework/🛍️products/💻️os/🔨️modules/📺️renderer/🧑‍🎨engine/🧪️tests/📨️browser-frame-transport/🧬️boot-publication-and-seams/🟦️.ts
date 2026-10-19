@@ -3,14 +3,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform } from "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readFrameWorkerSource } from "../📖️frame-worker-source/🟦️.ts";
 
 describe("browser frame worker transport", () => {
   it("publishes the introspection hooks on the UI isolate only after the Worker reports booted", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = (readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     expect(bootSource).toContain("host.semioWgpuIntrospection = mountIntrospection(transport)");
     expect(bootSource).not.toContain("wasmBindings =");
     expect(bootSource.indexOf("detachIntrospection = attachIntrospectionBindings(transport)")).toBeGreaterThan(bootSource.indexOf("onReady: () => {"));
@@ -27,7 +28,7 @@ describe("browser frame worker transport", () => {
   it("carries the page realm's platform read across the boot seam", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = (readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     const descriptorSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), "utf8");
     // ⌨️ The renderer answers `mod` with `cfg!(target_os = "macos")`, which is FALSE in every wasm
     // build, so a macOS browser painted `Ctrl+Alt+E` where React painted `⌘️⌥️E`. `userAgentData`
@@ -74,7 +75,7 @@ describe("browser frame worker transport", () => {
   it("keeps product discovery and native UI capability out of the UI/Worker seams", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = (readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     const rustSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"), "utf8");
     expect(bootSource).not.toContain("PLUGIN_CATALOG");
     expect(bootSource).not.toContain("resolvePlaygroundBoot");

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "providers": {
+    "cargo-admission": "../🦀️cargo/🔌️provider/🟦️.ts",
+    "wasm-build": "../🕸️wasm/🔌️provider/🟦️.ts",
+    "typescript-check": "../../🏗️build/🟦️typescript/🔌️provider/🟦️.ts",
+    "artifact-staging": "../../⚡️caching/📦️artifacts/🔌️provider/🟦️.ts",
+    "extension-package": "../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🔌️provider/🟦️.ts",
+    "styling-python": "../../🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+    "repository-tooling": "../🛠️repository-tooling/🔌️provider/🟦️.ts",
+    "artifact-package": "../🧩️artifact-package/🔌️provider/🟦️.ts",
+    "cargo-workspace": "../🦀️cargo-workspace/🔌️provider/🟦️.ts"
+  }
+}

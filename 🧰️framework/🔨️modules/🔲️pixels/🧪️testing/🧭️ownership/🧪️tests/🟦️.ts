@@ -23,7 +23,7 @@ for (const row of fixture.cases) test(row.name, () => {
 test("default task preserves exact neutral compiler and runtime argv", async () => {
   const execution = join(repoRoot, "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
   const entrypoint = join(repoRoot, "🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts");
-  const source = `import {mock} from "bun:test"; const calls=[]; const execution=await import(${JSON.stringify(execution)}); mock.module(${JSON.stringify(execution)},()=>({...execution,runOwnedCommand:async(executable,argv,cwd,policy,budget)=>{calls.push({executable,argv,cwd,policy,budget});}})); mock.module(${JSON.stringify(entrypoint)},()=>({runScriptMain:async(router)=>router.run(["test","typescript"])})); await import(${JSON.stringify(join(pixelRoot, "📜️script.ts"))}); console.log(JSON.stringify(calls));`;
+  const source = `import {mock} from "bun:test"; const calls=[]; const execution=await import(${JSON.stringify(execution)}); mock.module(${JSON.stringify(execution)},()=>({...execution,runOwnedCommand:async(executable,argv,cwd,policy,budget)=>{calls.push({executable,argv,cwd,policy,budget});}})); mock.module(${JSON.stringify(entrypoint)},()=>({runScriptMain:async(router,options)=>router.run(["test","typescript"],options.invocation)})); await import(${JSON.stringify(join(pixelRoot, "📜️script.ts"))}); console.log(JSON.stringify(calls));`;
   const child = Bun.spawn([process.execPath, "-e", source], { cwd: repoRoot, stdout: "pipe", stderr: "pipe", env: { ...process.env, SEMIO_CMD_BUDGET_MS: "137" } });
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   expect(code, stderr).toBe(0);

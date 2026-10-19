@@ -1,4 +1,4 @@
-import { runtimeFixturePathV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
+import { runtimeFixturePathV1 } from "@semio-tech/repo-lib/inventory";
 /** 🧩️ Semantic distribution source owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -42,7 +42,7 @@ function distributionRealAncestors(destination: string, path: string): void {
 
 /** 🕸️ Resolves authored static imports with the installed compiler and records external package boundaries. */
 async function distributionStaticSourcePaths(workspace: string, entries: readonly string[]): Promise<string[]> {
-  const { registryStaticImports } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts"), { builtinModules } = await import("node:module");
+  const { registryStaticImports } = await import("@semio-tech/repo-lib/inventory"), { builtinModules } = await import("node:module");
   const root = realpathSync(workspace), paths = new Set<string>(), visited = new Set<string>();
   const coordinate = (absolute: string) => {
     const path = relative(root, absolute).replaceAll("\\", "/");

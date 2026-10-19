@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "@semio-tech/repo-lib/inventory";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
 import { directorySocketGrantDecision, type DirectorySocketGrantVector } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧭️decision/🟦️.ts";
 import { assertSocketGrantNativeLawSources, socketGrantNativeLawPlan } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/📋️native-law-plan/🟦️.ts";

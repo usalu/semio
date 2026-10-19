@@ -1,10 +1,12 @@
 //! 🧾️ The context of an IFC export: the records the families write into (`Export`, `Staged`, `Links`), the references of the storeys and buildings written so far and the base quantities. Every family node reads it; none of them reaches back into the exporter root.
 
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{self, opt_text, rf, unset, Ifc, Schema, V};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Phase}};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, Schema, V};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use std::collections::BTreeMap;
 
 //#region 🔖️Context
@@ -147,7 +149,7 @@ impl<'a> Export<'a> {
 
     /// 🕰️ Records the construction phase of the written product of element `id` as the `Phase` row of its authoring data; new work (the default, and an element that carries no phase) writes no row, an opening carries the phase of its host.
     pub fn phase(&mut self, id: &str, product: u64) {
-        let phase = phase_visibility::phase_of(self.model, id).filter(|phase| *phase != Phase::New);
+        let phase = semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::phase_of(self.model, id).filter(|phase| *phase != Phase::New);
         if let Some(phase) = phase {
             self.links.authoring.push((product, vec![("Phase", writer::label(&format!("{phase:?}")))]));
         }

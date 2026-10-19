@@ -32,6 +32,7 @@
         "dependencies",
         "products",
         "diagnostics",
+        "nx",
         "leases"
       ],
       "properties": {
@@ -53,6 +54,9 @@
         "diagnostics": {
           "$ref": "#/$defs/partition"
         },
+        "nx": {
+          "$ref": "#/$defs/partition"
+        },
         "leases": {
           "$ref": "#/$defs/partition"
         }
@@ -60,6 +64,13 @@
     }
   },
   "$defs": {
+    "ordinaryMaintenance": {
+      "const": {
+        "version": 1,
+        "mode": "queued",
+        "maximumWaitMilliseconds": 1800000
+      }
+    },
     "partition": {
       "type": "object",
       "additionalProperties": false,
@@ -75,6 +86,11 @@
           "maxLength": 100
         },
         "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumArtifactBytes": {
           "type": "integer",
           "minimum": 33554432,
           "maximum": 68719476736

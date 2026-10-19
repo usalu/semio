@@ -4,7 +4,7 @@ import { runOwnedCommand } from "../../../../../../../../🔨️modules/🏃️p
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { renderWgpuTextured } from "../🧊️wgpu-shading-renderers/🟦️.ts";
 
 declare const THREE: any;

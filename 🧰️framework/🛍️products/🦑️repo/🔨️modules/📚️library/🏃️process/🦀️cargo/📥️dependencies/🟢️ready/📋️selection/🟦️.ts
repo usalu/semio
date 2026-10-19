@@ -1,5 +1,5 @@
 import {isAbsolute,resolve} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schemaDocument from "./🧬️schema/🔣️.json";
 const schema=structuredClone(schemaDocument);
 /** 🧾️ Identifies exact declared full-resolution DATA; this key cannot issue a registry reader. */

@@ -1,6 +1,7 @@
 /** 📥️ Reuse: 5 tests covering neutral inference rechecks Source after awaited ; neutral inference inventory cohort budget agrees with schema and SQLite; neutral inference cached reference predicate controls ; and more. */
 import{test,expect}from"bun:test";
 import{Database}from"bun:sqlite";
+import{brotliCompressSync,brotliDecompressSync}from"node:zlib";
 import{mkdtempSync,mkdirSync,readFileSync,rmSync,writeFileSync,realpathSync,statSync}from"node:fs";
 import{join,relative}from"node:path";
 import{createHash}from"node:crypto";
@@ -8,15 +9,15 @@ import{fileURLToPath}from"node:url";
 import Ajv from"ajv";
 import ts from"typescript";
 import{observeInference,observeProjectInferenceV1,observedFs}from"../../🟨️.mjs";
-import{registerBuildTestLawV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{readInferenceGraphSourceV1}from"../../../🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
 import{captureInferenceInventoryReferencesV1,inferenceInventoryRecordHoldsV1,admitInferenceInventoryCohortV1}from"../../📥️reuse/🟨️.mjs";
 import{withExactSourceReadBatchV1,readExactSourceJsonV1}from"../../../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
-import type{ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import*as reuse from"../../📥️reuse/🟨️.mjs";
 import{repositoryBuildGraphDataDirectoryV1}from"../../../📥️inputs/💾️storage/🟨️.mjs";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import schema from"../../📥️reuse/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 const hash=(value:string)=>createHash("sha256").update(value).digest("hex");
@@ -26,7 +27,7 @@ async function ordinaryInventoryReferencesHoldV1(root:string,value:unknown,contr
 
 for(const kind of["memory","disk"]as const)test("neutral inference rechecks Source after awaited "+kind+" predicate",async()=>{
  const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Ticket Source race sink required");const root=mkdtempSync(join(sink,"ir-")),path=join(root,"leaf.rs"),cachePath=join(root,"cache.json"),db=new Database(":memory:");let calls=0,mutated=false;
- try{writeFileSync(path,corpus.sourceRace.before);const compute=()=>{calls++;return kind==="disk"&&calls===1?readFileSync(path,"utf8"):observedFs.readFileSync(path,"utf8");},base={cachePath,key:kind,owner:root},run=(options:typeof base&{reusable?:(value:unknown)=>Promise<boolean>})=>kind==="memory"?observeProjectInferenceV1(options,compute):observeInference(options,compute);expect(await run(base)).toBe(corpus.sourceRace.before);if(kind==="disk"){const bytes=readFileSync(cachePath,"utf8"),split=bytes.indexOf("\n"),header=JSON.parse(bytes.slice(0,split)),row=statSync(path);header.observations=[{kind:"file",path,fact:{size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs,ino:row.ino,sha256:hash(corpus.sourceRace.before)}}];writeFileSync(cachePath,JSON.stringify(header)+bytes.slice(split));}const actual=await run({...base,reusable:async()=>{await Promise.resolve();if(!mutated){mutated=true;writeFileSync(path,corpus.sourceRace.after);}return true;}});expect(actual).toBe(corpus.sourceRace.after);expect(calls).toBe(corpus.sourceRace.calls);expect(db.query<{same:number},[string,string]>("select ?1=?2 same").get(actual,readFileSync(path,"utf8"))?.same).toBe(1);}finally{db.close();rmSync(root,{recursive:true,force:true});}
+ try{writeFileSync(path,corpus.sourceRace.before);const compute=()=>{calls++;return kind==="disk"&&calls===1?readFileSync(path,"utf8"):observedFs.readFileSync(path,"utf8");},base={cachePath,key:kind,owner:root},run=(options:typeof base&{reusable?:(value:unknown)=>Promise<boolean>})=>kind==="memory"?observeProjectInferenceV1(options,compute):observeInference(options,compute);expect(await run(base)).toBe(corpus.sourceRace.before);if(kind==="disk"){const bytes=brotliDecompressSync(readFileSync(cachePath)).toString("utf8"),split=bytes.indexOf("\n"),header=JSON.parse(bytes.slice(0,split)),row=statSync(path);header.observations=[{kind:"file",path,fact:{size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs,ino:row.ino,sha256:hash(corpus.sourceRace.before)}}];writeFileSync(cachePath,brotliCompressSync(Buffer.from(JSON.stringify(header)+bytes.slice(split))));}const actual=await run({...base,reusable:async()=>{await Promise.resolve();if(!mutated){mutated=true;writeFileSync(path,corpus.sourceRace.after);}return true;}});expect(actual).toBe(corpus.sourceRace.after);expect(calls).toBe(corpus.sourceRace.calls);expect(db.query<{same:number},[string,string]>("select ?1=?2 same").get(actual,readFileSync(path,"utf8"))?.same).toBe(1);}finally{db.close();rmSync(root,{recursive:true,force:true});}
 });
 
 test("neutral inference inventory cohort budget agrees with schema and SQLite",()=>{
@@ -35,7 +36,7 @@ test("neutral inference inventory cohort budget agrees with schema and SQLite",(
 
 for(const kind of["memory","disk"]as const)test("neutral inference cached reference predicate controls "+kind+" reuse",async()=>{
  const sink=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!sink)throw Error("Ticket ordinary inference sink required");const root=mkdtempSync(join(sink,"ir-")),db=new Database(":memory:");let calls=0,permitted=true;
- try{const options={cachePath:join(root,"cache.json"),key:kind,owner:root,reusable:(_value:unknown)=>permitted},compute=()=>({generation:++calls}),run=()=>kind==="memory"?observeProjectInferenceV1(options,compute):observeInference(options,compute),counts:number[]=[];db.exec("create table events(kind text,computed integer)");for(const permit of[true,true,false,true]){permitted=permit;const value=await run();db.query("insert into events values(?,?)").run(permit?"admit":"miss",value.generation);counts.push(calls);}expect(counts).toEqual(corpus.warmCounts);expect(db.query<{computed:number},[]>("select computed from events").all().map(row=>row.computed)).toEqual(db.query<{computed:number},[]>("select sum(case when rowid=1 or kind='miss' then 1 else 0 end) over (rows unbounded preceding) computed from events").all().map(row=>row.computed));expect(readFileSync(options.cachePath,"utf8")).toContain('"generation":2');}finally{db.close();rmSync(root,{recursive:true,force:true});}
+ try{const options={cachePath:join(root,"cache.json"),key:kind,owner:root,reusable:(_value:unknown)=>permitted},compute=()=>({generation:++calls}),run=()=>kind==="memory"?observeProjectInferenceV1(options,compute):observeInference(options,compute),counts:number[]=[];db.exec("create table events(kind text,computed integer)");for(const permit of[true,true,false,true]){permitted=permit;const value=await run();db.query("insert into events values(?,?)").run(permit?"admit":"miss",value.generation);counts.push(calls);}expect(counts).toEqual(corpus.warmCounts);expect(db.query<{computed:number},[]>("select computed from events").all().map(row=>row.computed)).toEqual(db.query<{computed:number},[]>("select sum(case when rowid=1 or kind='miss' then 1 else 0 end) over (rows unbounded preceding) computed from events").all().map(row=>row.computed));expect(brotliDecompressSync(readFileSync(options.cachePath)).toString("utf8")).toContain('"generation":2');}finally{db.close();rmSync(root,{recursive:true,force:true});}
 });
 
 test("neutral inference inventory reference DATA agrees with Ajv and SQLite",()=>{

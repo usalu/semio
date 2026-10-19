@@ -3,16 +3,18 @@
 //! The tree is the typed SVG model of the `s.stdio.svg` artifact and the text is written by the XML writer of `s.stdio.xml`, both behind the SVG export's `codec`.
 //! 📎 https://www.w3.org/TR/SVG11/masking.html#ClippingPaths
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
-use crate::standards::v1::subsets::any::io::export::svg::codec::{attr, document_text, element, text, CommonAttrs, SvgElement, ViewBox};
-use crate::standards::v1::subsets::any::io::export::svg::drawing::{view_layers, xml_id};
-use crate::standards::v1::subsets::any::io::export::svg::path::{snap, Frame};
-use crate::standards::v1::subsets::any::io::export::svg::sheet::Slot;
-use crate::standards::v1::subsets::any::io::export::svg::style::{self, view_class};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::{attr, document_text, element, text};
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, SvgElement, ViewBox};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::{view_layers, xml_id};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::{snap, Frame};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::Slot;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::view_class;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 const NAMESPACE: &str = "http://www.w3.org/2000/svg";

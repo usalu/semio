@@ -25,7 +25,8 @@ use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::Deserialize;
 use serde_json::Value;
 use std::sync::atomic::Ordering;
-use ui_wgpu::wgpu::{ActionDescriptor, InputState};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::InputState;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;
 

@@ -24,8 +24,7 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_os_kernel::Viewport2d;
 #[allow(unused_imports)]
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-#[allow(unused_imports)]
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+#[allow(unused_imports)] use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use crate::viewer::flow::modes::view::windows::main::*;
 
 #[semio_framework_async_macros::async_test]

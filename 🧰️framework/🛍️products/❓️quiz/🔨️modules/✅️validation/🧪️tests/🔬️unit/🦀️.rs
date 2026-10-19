@@ -3,7 +3,7 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::sheet::tests::{quantity, quiz, text};
+use semio_framework_quiz_tests_support::sheet::{quantity, quiz, text};
 use quiz_schema::{BadgeRule, Challenge, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind, CHALLENGES};
 use unicode_normalization::{is_nfc, UnicodeNormalization};
 

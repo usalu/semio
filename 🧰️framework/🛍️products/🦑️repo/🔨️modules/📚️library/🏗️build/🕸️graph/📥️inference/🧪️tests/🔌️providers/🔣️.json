@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "designation": { "version": 1, "providers": { "probe-port": "./provider.ts" } },
+  "files": {
+    "provider.ts": "import { helper } from \"./helper.ts\";\nexport const provider = { value: helper };\n",
+    "helper.ts": "export const helper = 1;\n",
+    "extra.ts": "export const provider = { value: 0 };\n",
+    "unrelated.ts": "export const unrelated = 1;\n",
+    "loads/📜️script.ts": "import { loadScriptProviderV1 } from \"{loader}\";\nexport const run = () => loadScriptProviderV1;\n",
+    "plain/📜️script.ts": "import { unrelated } from \"../unrelated.ts\";\nexport const run = () => unrelated;\n"
+  },
+  "cases": [
+    { "id": "loads-providers", "directory": "loads", "loadsProviders": true, "includes": ["designation.json", "provider.ts", "helper.ts"], "excludes": ["extra.ts", "unrelated.ts"] },
+    { "id": "loads-no-providers", "directory": "plain", "loadsProviders": false, "includes": ["unrelated.ts"], "excludes": ["designation.json", "provider.ts", "helper.ts", "extra.ts"] }
+  ],
+  "edits": [
+    { "id": "designated-module", "file": "provider.ts", "content": "import { helper } from \"./helper.ts\";\nexport const provider = { value: helper, changed: true };\n", "changes": ["loads-providers"] },
+    { "id": "closure-of-designated-module", "file": "helper.ts", "content": "export const helper = 2;\n", "changes": ["loads-providers"] },
+    { "id": "undesignated-module", "file": "extra.ts", "content": "export const provider = { value: 1 };\n", "changes": [] },
+    { "id": "unrelated-module", "file": "unrelated.ts", "content": "export const unrelated = 2;\n", "changes": ["loads-no-providers"] },
+    { "id": "designate-module", "file": "designation.json", "designation": { "version": 1, "providers": { "probe-port": "./provider.ts", "extra-port": "./extra.ts" } }, "changes": ["loads-providers"], "gains": { "loads-providers": ["extra.ts"] } }
+  ]
+}

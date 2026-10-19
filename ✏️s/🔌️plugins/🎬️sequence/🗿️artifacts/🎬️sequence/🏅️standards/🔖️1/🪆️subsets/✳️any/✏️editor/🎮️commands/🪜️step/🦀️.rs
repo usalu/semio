@@ -3,7 +3,7 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::edit_rules;
-use crate::editor::sequence::base::{sequence_edit_emit, sequence_scene_edit};
+use crate::editor::sequence::editor_vocabulary::{sequence_edit_emit, sequence_scene_edit};
 use crate::mutations::SequenceMutation;
 use crate::{SequenceSnapshot, SlotRef, StepParams};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -122,7 +122,7 @@ pub mod delete_selection {
     }
 
     pub fn apply(_payload: &DeleteSelection, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, NoConfig>, interaction: &InteractionView<'_>) -> Result<Emit<SequenceMutation, NoConfigMutation>, Fault> {
-        delete_selected(doc, &interaction.selection(crate::editor::sequence::base::SEQUENCE_INTERACTION_STEPS).ids)
+        delete_selected(doc, &interaction.selection(crate::editor::sequence::editor_vocabulary::SEQUENCE_INTERACTION_STEPS).ids)
     }
 }
 //#endregion 🔖️RemoveStep

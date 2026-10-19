@@ -22,13 +22,13 @@
 use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 //#region ⌨️InertProbeChords
 
 /// 🧪️ The key event a probe chord arrives as. `mod` is the platform accelerator the probe presses
 /// (`Meta` on this host), which is exactly how `key_event_matches_chord` reads an accelerator.
-fn probe_chord(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
+fn probe_chord(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
     let mut key = "";
     for token in chord.split('+') {
@@ -40,8 +40,8 @@ fn probe_chord(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
         }
     }
     let action = match key {
-        "escape" => ui_wgpu::wgpu::KeyAction::Escape,
-        other => ui_wgpu::wgpu::KeyAction::Char(other.to_string()),
+        "escape" => semio_framework_ui_wgpu_input::KeyAction::Escape,
+        other => semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
     };
     (action, modifiers)
 }
@@ -99,7 +99,7 @@ fn binding(keys: &str, action: &str) -> Keybinding {
 #[test]
 fn escape_resolves_the_apps_own_engagement_abort_binding() {
     let shell = shell_with_keybindings(vec![binding("escape", "engagementAbort")]);
-    let resolved = shell.docs.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &shell.chrome);
+    let resolved = shell.docs.match_app_keybinding(&semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &shell.chrome);
     assert_eq!(resolved.map(|descriptor| descriptor.action), Some("engagementAbort".to_string()));
 }
 
@@ -112,7 +112,7 @@ fn escape_resolves_the_apps_own_engagement_abort_binding() {
 #[test]
 fn a_comma_separated_binding_matches_each_chord_it_declares() {
     let shell = shell_with_keybindings(vec![binding("delete,backspace", "deleteSelection")]);
-    for action in [ui_wgpu::wgpu::KeyAction::Delete, ui_wgpu::wgpu::KeyAction::Backspace] {
+    for action in [semio_framework_ui_wgpu_input::KeyAction::Delete, semio_framework_ui_wgpu_input::KeyAction::Backspace] {
         let resolved = shell.docs.match_app_keybinding(&action, &PointerModifiers::default(), &shell.chrome);
         assert_eq!(resolved.map(|descriptor| descriptor.action), Some("deleteSelection".to_string()), "{action:?} is one of the binding's own chords");
     }
@@ -240,7 +240,7 @@ fn escape_closes_the_open_example_dropdown() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     let mut input = InputState::<ActionDescriptor>::default();
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input);
     assert_eq!(shell.input.overlay_state, OverlayState::None, "the picker is dismissed");
     assert!(shell.settle.deferred_actions.is_empty(), "dismissing an overlay is chrome state, never a dispatch");
 }

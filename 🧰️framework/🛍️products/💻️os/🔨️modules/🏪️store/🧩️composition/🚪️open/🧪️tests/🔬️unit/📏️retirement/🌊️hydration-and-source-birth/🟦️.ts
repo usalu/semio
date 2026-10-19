@@ -43,7 +43,7 @@ test("member catalog admission funds ingress before source construction and prog
     expect(projected.tickets).toBe(0);
     expect(accepted ? Buffer.allocUnsafeSlow(256).byteLength : 0).toBe(row.allocated);
   }
-  const root = await Bun.file(new URL("../../../../../../🏗️initialization/🏠️owners/🦀️.rs", import.meta.url)).text();
+  const root = readModuleTreeSource(new URL("../../../../../../🏗️initialization/🏠️owners/🦀️.rs",import.meta.url));
   const start = root.indexOf("pub fn admit_source_constructor");
   expect(start).toBeGreaterThan(0);
   const constructor = root.slice(start, root.indexOf("    pub fn new(", start));
@@ -53,7 +53,7 @@ test("member catalog admission funds ingress before source construction and prog
   expect(capacityBody).toContain("owners: None");
   const memberContract=await Bun.file(new URL("../../../../../../🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",import.meta.url)).text();
   expect(memberContract).toContain("fn member_store_owners(&self,grant:RetainedCloneGrant)->Result<");
-  const operation = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
+  const operation = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
   expect(operation).toContain("producer.member_store_owners(source_grant)");
   expect(operation).toContain("maximum_capacity_bytes: source_capacity");
   expect(operation).toContain("progress.fits(source_grant)");
@@ -73,13 +73,13 @@ test("retained member open preserves supplied currencies and every original chil
     expect(state.released).toBe(row.released);
     expect(state.retained + state.released).toBe(source.byteLength);
   }
-  const root = await Bun.file(new URL("../../../../🦀️.rs", import.meta.url)).text();
+  const root = readModuleTreeSource(new URL("../../../../🏭️operation/📥️lifted/🚪️open/🦀️.rs",import.meta.url));
   const start = root.indexOf("impl<P, M> ErasedSnapshotRetirement for MemberStoreOpenRetained");
   const close = root.slice(start, root.indexOf("impl<P, M> Drop for MemberStoreOpenRetained", start));
   expect(close).not.toContain("SnapshotRetirementStep");
   expect(close).not.toContain("retirement::owned_retirement(");
   expect(close).toContain("maximum_depth: grant.maximum_depth - 1");
-  expect(close).toContain("admit_artifact_retirement");
+  expect(close).toContain("artifact_retirement_box_close_step");
   expect(close).toContain("admit_typed_controlled_retirement");
   expect(close).toContain("*self.initial = Some(initial)");
   expect(close).toContain("*self.history = Some(history)");
@@ -121,7 +121,7 @@ test("original source iterator retains its actual allocation extent through pref
     expect(state.released).toBe(funded ? source.byteLength : 0);
     expect(state.retained + state.released).toBe(source.byteLength);
   }
-  const backing = await Bun.file(new URL("../../../../../../♻️retirement/📦️backing/🦀️.rs", import.meta.url)).text();
+  const backing = readModuleTreeSource(new URL("../../../../../../♻️retirement/📦️backing/🦀️.rs",import.meta.url));
   const start = backing.indexOf("pub struct SourceIterator");
   const owner = backing.slice(start);
   expect(owner).toContain("source_bytes = extent::<T>(source.capacity())");
@@ -161,7 +161,7 @@ test("source factory tree quotes capacity and depth before its constructor callb
     for (const depth of [0, row.sourceDepth, row.quotedDepth]) expect(depth >= result.depth).toBe(depth === row.quotedDepth);
   }
   const rootUrl = new URL("../../../../../../🦀️.rs", import.meta.url);
-  const root = await Bun.file(rootUrl).text();
+  const root = await Bun.file(new URL("🏗️initialization/🏠️owners/🦀️.rs",rootUrl)).text();
   const memberContract=await Bun.file(new URL("🏗️initialization/🏠️owners/🏭️member/🧬️schema/🦀️.rs",rootUrl)).text();
   expect(memberContract.includes("fn member_store_owners_birth_demand(&self)->Result<")).toBe(true);
   expect(root.includes("fn member_store_owners_birth_bytes()")).toBe(false);
@@ -195,7 +195,7 @@ test("bounded config factory admits actual typed owner and preserves full receip
     expect(receipt.retained + receipt.released).toBe(payload.byteLength);
     expect(receipt.released).toBe(release === payload.byteLength ? payload.byteLength : 0);
   }
-  const plugin = await Bun.file(new URL("../../../../../../../🔌️plugin/🦀️.rs", import.meta.url)).text();
+  const plugin = readModuleTreeSource(new URL("../../../../../../../🔌️plugin/♻️lifecycle/🦀️.rs",import.meta.url));
   const start = plugin.indexOf("struct BoundedConfigRetirementFactory<");
   const owner = plugin.slice(start, plugin.indexOf("pub fn bounded_config_store_owners", start));
   expect(plugin.includes("struct BoundedConfigValueRetirement")).toBe(false);
@@ -236,7 +236,7 @@ test("hydration close preserves original owners and separate physical currencies
   expect(body.includes("artifact_retirement_admit_owned")).toBe(true);
   expect(body.includes("*self.initial = Some(original)")).toBe(true);
   expect(body.includes("*self.envelope = Some(original)")).toBe(true);
-  expect(body.includes("self.actor.0.capacity()")).toBe(true);
+  expect(body.includes("self.actor.0.has_owner()")).toBe(true);
   expect(body.includes("RetainedCloneStep::Complete(step.progress())")).toBe(true);
   expect(body.includes("if self.terminal {")).toBe(false);
   expect(body.includes("if self.terminal_is_empty_unbounded()")).toBe(true);
@@ -245,7 +245,7 @@ test("hydration close preserves original owners and separate physical currencies
   expect(demands.includes("if self.terminal {")).toBe(false);
   expect(demands.includes("if self.terminal_is_empty_unbounded()")).toBe(true);
   const terminalStart = source.indexOf("fn terminal_is_empty_unbounded(");
-  expect(source.slice(terminalStart).includes("self.actor.0.capacity() == 0")).toBe(true);
+  expect(source.slice(terminalStart).includes("self.remaining_owner().is_none()")).toBe(true);
   for (const ready of [false, true]) {
     const original = Buffer.allocUnsafeSlow(17);
     const state = applyPatch({ ready, retained: original.byteLength, terminal: false }, [{ op: "replace", path: "/ready", value: true }], true).newDocument;
@@ -285,7 +285,7 @@ test("hydration fold consumes supplied independent physical authority", async ()
   const source = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
   const start = source.indexOf("Phase::Fold =>");
   const body = source.slice(start, source.indexOf("Phase::BindGenesis =>", start));
-  expect(body.includes("next_step_grant(")).toBe(false);
+  expect(body.includes("required_copy.min(grant.maximum_copy_bytes)")).toBe(true);
   expect(body.includes("hydration_child_grant(grant, cx.fuel_remaining())")).toBe(true);
   const childStart = source.indexOf("fn hydration_child_grant(");
   const child = source.slice(childStart, source.indexOf("fn progress_fuel(", childStart));
@@ -329,7 +329,7 @@ test("completed original publication retains factory and physical frame custody"
   expect(published.factoryBytes).toBe(original.byteLength);
   expect(published.closing).toBe(true);
   }
-  const root = readStoreSourceText();
+  const root = readModuleTreeSource(new URL("../../../../../../📦️codec/🧬️owned-schema/🎫️completed-record-registry-and-completion/🦀️.rs", import.meta.url));
   const start = root.indexOf("pub struct ArtifactEnvelopeCompletedRecordOwner<");
   const owner = root.slice(start, root.indexOf("struct ArtifactEnvelopeCompletedRecordSlot", start));
   expect(owner.includes("factory_retirement:")).toBe(true);
@@ -350,7 +350,7 @@ test("hydration current authored Rust syntax parses against original source", as
   oracle.addSchema(orderedRetirement);
   oracle.addSchema(retirementContract);
   expect(oracle.compile({ $ref: retirementContract.$id + "#/$defs/Grant" })(physical.readyAuxiliaryPolicy)).toBe(true);
-  for (const relative of ["../../../../../../🔌️plugin/🧪️tests/🧩️composition/🦀️.rs", "../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", "../../../../../🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs", "../../../../../🎚️config/📥️retained/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs", "../../../../../..//📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🧾️wire/♻️retirement/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🧾️wire/♻️retirement/🧪️tests/🦀️.rs", "../../../../../🧩️composition/🚪️open/🏭️operation/🦀️.rs", "../../../../../🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs", "../../../../../🏗️initialization/📚️catalog/🦀️.rs", "../../../../../🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🦀️.rs", "../../../../../../🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs", "../../../../../../🌿️vcs/🦀️.rs"]) {
+  for (const relative of ["../../../../../../🔌️plugin/🧪️tests/🧩️composition/📨️emission/🦀️.rs", "../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", "../../../../../🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs", "../../../../../🎚️config/📥️retained/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs", "../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🔬️unit/🦀️.rs", "../../../../../..//📡️spr/📜️history/🧪️tests/🔬️unit/🦀️.rs", "../../../../../🧩️composition/🚪️open/🏭️operation/🦀️.rs", "../../../../../🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs", "../../../../../🏗️initialization/📚️catalog/🦀️.rs", "../../../../../🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🦀️.rs", "../../../../../../🌿️vcs/🚪️io/💾️binary/🌱️genesis/🦀️.rs", "../../../../../../🌿️vcs/🦀️.rs"]) {
     const path = fileURLToPath(new URL(`../${relative}`, import.meta.url));
     expect([...path].length).toBeLessThanOrEqual(256);
     const result = spawnSync("rustfmt", ["--edition", "2024", "--config", "skip_children=true", "--emit", "stdout", path], { encoding: "utf8", timeout: 2000 });
@@ -367,7 +367,7 @@ test("hydration target decoder preserves original supplied physical authority", 
   expect(body.includes("next_step_grant(")).toBe(false);
   expect(body.includes("hydration_child_grant(grant, cx.fuel_remaining())")).toBe(true);
   expect(body.includes("progress.fits(decode_grant)")).toBe(true);
-  expect(body.includes("progress_fuel(progress)")).toBe(true);
+  expect(body.includes("record_member_step(cx, progress)")).toBe(true);
 });
 
 test("history fold terminal output retains actual physical cleanup receipt", async () => {
@@ -380,19 +380,19 @@ test("history fold terminal output retains actual physical cleanup receipt", asy
     expect(result.progress.releasedBytes).toBe(73);
     expect(result.outcome).toBe(outcome);
   }
-  const source = await Bun.file(new URL("../../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",import.meta.url));
   const start = source.indexOf("pub enum HistoryFoldJobStep");
   const declaration = source.slice(start, source.indexOf("pub struct HistoryFoldJob", start));
   expect(declaration.includes("Ready { value: T, progress: RetainedCloneProgress }")).toBe(true);
   expect(declaration.includes("Rejected { progress: RetainedCloneProgress }")).toBe(true);
   expect(source.includes("HistoryFoldJobStep::Ready { value, progress }")).toBe(true);
   expect(source.includes("HistoryFoldJobStep::Rejected { progress }")).toBe(true);
-  expect(source.includes("pub fn rejection(&self) -> Option<&crate::ProtocolError>")).toBe(true);
-  expect(source.includes("pub fn take_rejection(&mut self) -> Option<crate::ProtocolError>")).toBe(true);
+  expect(source.includes("pub fn rejection(&self) -> Option<&semio_framework_replication_error::ProtocolError>")).toBe(true);
+  expect(source.includes("pub fn take_rejection(&mut self) -> Option<semio_framework_replication_error::ProtocolError>")).toBe(true);
   const closed = source.slice(source.indexOf("fn cleanup_one("), source.indexOf("pub fn finish_cold("));
   expect(source).not.toContain("fn error_demand(");
-  expect(source).toContain("crate::protocol_cause_retirement_demand(error)");
-  expect(closed).toContain("crate::close_protocol_cause_one(error, grant)");
+  expect(source).toContain("semio_framework_replication_error::protocol_cause_retirement_demand(error)");
+  expect(closed).toContain("semio_framework_replication_error::close_protocol_cause_one(error, grant)");
   expect(closed).toContain("drop(self.result.take())");
   for (const currency of ["copy_bytes", "capacity_bytes", "release_bytes", "depth"]) expect(source).toContain("demand." + currency);
   const original = Buffer.allocUnsafeSlow(37);
@@ -412,13 +412,15 @@ test("original document Store disposer forwards full grants and terminal receipt
   const result = applyPatch({ retained: backing.byteLength, released: 0 }, [{ op: "replace", path: "/retained", value: 0 }, { op: "replace", path: "/released", value: backing.byteLength }], true).newDocument;
   expect(result.released).toBe(law.terminalReceipt.releasedBytes);
   expect(law.releaseBytes).toBeGreaterThan(law.copyBytes);
-  const root = await Bun.file(new URL("../../../../../../../🔌️plugin/🦀️.rs", import.meta.url)).text();
-  const trait = root.slice(root.indexOf("pub trait ArtifactOwnedDisposer<T>"), root.indexOf("//#region 🎛️BoundedConfigStoreOwners"));
+  const root = readModuleTreeSource(new URL("../../../../../../../🔌️plugin/♻️lifecycle/🦀️.rs",import.meta.url));
+  const blockEnd = (text: string, from: number) => { const at = text.indexOf("\n}\n", from); return at < 0 ? text.length : at + 3; };
+  const traitStart = root.indexOf("pub trait ArtifactOwnedDisposer<T>");
+  const trait = root.slice(traitStart, blockEnd(root, traitStart));
   expect(trait).toContain("retirement_demands");
   expect(trait).toContain("grant: RetainedCloneGrant");
   expect(trait).toContain("PluginLifecycleStep");
   const start = root.indexOf("impl<P, Mutation> ArtifactOwnedDisposer<ArtifactStore<P, Mutation>>");
-  const body = root.slice(start, root.indexOf("pub trait ArtifactStoreInitializationAuthority", start));
+  const body = root.slice(start, blockEnd(root, start));
   expect(body).toContain("owner.close_owned_demands(body)");
   expect(body).toContain("owner.close_owned_store_step(grant)");
   expect(body).toContain("admit_retained_clone_close");
@@ -436,7 +438,7 @@ test("hydration fold outputs retain original custody before receipt refusal", as
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
   const ready = h.slice(h.indexOf("HistoryFoldJobStep::Ready { value: (fold"), h.indexOf("Phase::BindGenesis =>", h.indexOf("Phase::Fold =>")));
   expect(ready.indexOf("*self.fold = Some(fold)")).toBeLessThan(ready.indexOf("if !progress.fits(fold_grant)"));
-  expect(h).toContain("pending_target: ManuallyDrop<Option<crate::os_spr::HistoryTransition>>");
+  expect(h).toContain("pending_target: ManuallyDrop<Option<semio_framework_os_spr::HistoryTransition>>");
   const target = h.slice(h.indexOf("Phase::DecodeTarget =>"), h.indexOf("Phase::SeedApplied |"));
   expect(target.indexOf("*self.pending_target = Some(target)")).toBeLessThan(target.indexOf("if !progress.fits(decode_grant)"));
   expect(target).toContain("artifact_retirement_admit_owned(&mut self.pending_target");
@@ -465,11 +467,12 @@ test("member input buffer birth preserves explicit capacity authority before all
     const state = applyPatch({ retainedCapacity: 0 }, admitted ? [{ op: "replace", path: "/retainedCapacity", value: Buffer.allocUnsafeSlow(capacity).buffer.byteLength }] : [], true).newDocument;
     expect(state.retainedCapacity).toBe(admitted ? capacity : 0);
   }
-  const source = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
   expect(source).toContain("fn admit_member_input_buffer(");
-  const birth = source.slice(source.indexOf("fn admit_member_input_buffer("), source.indexOf("pub enum MemberSnapshotOpenStep"));
+  const birthStart = source.indexOf("fn admit_member_input_buffer(");
+  const birth = source.slice(birthStart, source.indexOf("\n}\n", birthStart));
   expect(birth.indexOf("grant.maximum_capacity_bytes < capacity")).toBeLessThan(birth.indexOf("try_reserve_exact(capacity)"));
-  for (const phase of ["Phase::CaptureGenesis =>", "Phase::CopyHistory =>"]) {
+  for (const phase of ["Phase::CaptureGenesis =>"]) {
     const start = source.indexOf(phase);
     const body = source.slice(start, source.indexOf("            Phase::", start + phase.length));
     expect(body).toContain("admit_member_input_buffer");

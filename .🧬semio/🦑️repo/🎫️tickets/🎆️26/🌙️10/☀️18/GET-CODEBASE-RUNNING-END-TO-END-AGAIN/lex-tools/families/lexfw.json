@@ -1,0 +1,13 @@
+{
+ "name": "lexfw",
+ "crates": [
+  "semio-s-artifact-layout-layout-engine-export",
+  "semio-s-artifact-layout-layout-engine-json",
+  "semio-s-artifact-layout-layout-engine-export-unit-tests",
+  "semio-framework-job",
+  "semio-framework-job-worker",
+  "semio-framework-job-worker-authority",
+  "semio-framework-job-publication"
+ ],
+ "note": "LEX with the job framework crates real"
+}

@@ -1,6 +1,7 @@
 //! 🗃️ `create-area-scheme` payload. Brings a new area scheme into the model: the authored rule that decides which spaces a gross, net or rentable area adds up, by usage and by zone.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{AreaScheme, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateAreaScheme {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateAreaScheme
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateAreaScheme> + From<crate::standards::v1::subsets::any::schema::mutations::delete_area_scheme::DeleteAreaScheme>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateAreaScheme> + From<semio_s_artifact_bim_model_mut_any_101::standards::v1::subsets::any::schema::mutations::delete_area_scheme::DeleteAreaScheme>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "area-scheme", kind: "create-area-scheme", record: "CreateAreaScheme" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

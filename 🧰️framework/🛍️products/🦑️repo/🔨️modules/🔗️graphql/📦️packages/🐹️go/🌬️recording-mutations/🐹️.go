@@ -458,6 +458,60 @@ func (recording *RecordingContext) Extract(sourceFile, sourceSection, targetFile
 	return recording.FileCreate(target)
 }
 
+/** 🩹️ The statute metadata one recorded breach reports, with its own overrides applied. */
+func (recording *RecordingContext) breachMeta(breach *model.Breach) model.StatuteMeta {
+	meta := statuteMetaOf(breach.Kind, recording.records.Statutes)
+	if breach.LintPriority != "" {
+		meta.Priority = breach.LintPriority
+	}
+	if breach.LintAutofixable != nil {
+		meta.Autofixable = *breach.LintAutofixable
+	}
+	return meta
+}
+
+/** 🩹️ Fixes every autofixable recorded breach inside the scope and keeps the rest. */
+func (recording *RecordingContext) Fix(scope *string) (*model.FixResult, error) {
+	recording.record("fix", recordedOptionals(scope))
+	result := recording.records.Analyze
+	if result == nil {
+		return &model.FixResult{Breachs: []*model.Breach{}}, nil
+	}
+	inScope := func(breach *model.Breach) bool { return scope == nil || strings.HasPrefix(breach.Scope, *scope) }
+	kept := make([]*model.Breach, 0, len(result.Breachs))
+	remaining := make([]*model.Breach, 0, len(result.Breachs))
+	fixed := 0
+	priorities := model.PriorityCount{}
+	autofixable := 0
+	for _, breach := range result.Breachs {
+		meta := recording.breachMeta(breach)
+		if inScope(breach) && meta.Autofixable {
+			fixed++
+			continue
+		}
+		kept = append(kept, breach)
+		if inScope(breach) {
+			remaining = append(remaining, breach)
+		}
+		switch meta.Priority {
+		case model.BreachPriorityHigh:
+			priorities.High++
+		case model.BreachPriorityMedium:
+			priorities.Medium++
+		default:
+			priorities.Low++
+		}
+		if meta.Autofixable {
+			autofixable++
+		}
+	}
+	result.Breachs = kept
+	if result.Metrics != nil {
+		result.Metrics.Total, result.Metrics.Autofixable, result.Metrics.ByPriority = len(kept), autofixable, &priorities
+	}
+	return &model.FixResult{Fixed: fixed, Remaining: len(remaining), Breachs: remaining}, nil
+}
+
 func (recording *RecordingContext) SyncManagement() (bool, error) {
 	recording.record("sync.management", nil)
 	return true, nil

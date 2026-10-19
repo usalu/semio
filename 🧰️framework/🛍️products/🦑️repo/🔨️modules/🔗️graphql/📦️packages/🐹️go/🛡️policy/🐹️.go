@@ -75,7 +75,7 @@ func (c *RepoContext) Analyze(scope *string) (*model.AnalyzeResult, error) {
 		scopeStr = *scope
 	}
 	s := workspace.ParseScope(scopeStr)
-	all, err := statutespkg.LoadBreachsFromCache(workspace.RootDir)
+	all, err := statutespkg.LoadBreachsFromCache(workspace.GetRootDir())
 	if err != nil {
 		return nil, err
 	}

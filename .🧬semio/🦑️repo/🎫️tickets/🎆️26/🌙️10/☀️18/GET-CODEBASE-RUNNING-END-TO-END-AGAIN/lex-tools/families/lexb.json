@@ -1,0 +1,10 @@
+{
+ "name": "lexb",
+ "crates": [
+  "semio-s-artifact-layout-layout-engine-export",
+  "semio-s-artifact-layout-layout-engine-json",
+  "semio-s-artifact-layout-layout-engine-export-unit-tests"
+ ],
+ "base": {"rev": "HEAD", "crates": ["semio-s-artifact-layout-layout-engine-export", "semio-s-artifact-layout-layout-engine-json"]},
+ "note": "LEX against HEAD"
+}

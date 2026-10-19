@@ -2,18 +2,16 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { spawn, type ChildProcess } from "node:child_process";
 import { decodeClientFrame, encodeServerFrame, type WireFrontierSummary } from "@semio-tech/framework-replication";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCargo, runCmd, orchestratorBudgetOpts, runProbe } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE, deliverCredentialEnvelopeToChild, deliverMcpCredentialEnvelope, deliverNativeCredentialEnvelope, sealedDirectChildEnvironment } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";

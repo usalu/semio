@@ -1,10 +1,11 @@
 //! 📋️ `editSchedule`: one edit of a schedule definition from the schedule window (name, category, a column, sort key, filter, grouping level, itemization, a storey or a phase of the scope). The edit is a pure
 //! function of the definition (see the window's `edit` node) and becomes one `set-schedule` mutation, which decides whether the result stands; the command never writes a row, a total or a cell.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::schedule::edit::{apply, Edit};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_ramp_runs::editor::bim::modes::edit::windows::schedule::edit::{apply, Edit};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

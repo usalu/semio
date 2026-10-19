@@ -21,7 +21,7 @@ import { createInstance as createTranslationOracle } from "i18next";
 import type { DialogDefinition } from "@semio-tech/framework";
 import { unresolvedActionArgs } from "@semio-tech/framework";
 import { argumentResolutionChoicesFixture as choiceFixture } from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧪️tests/🧫️fixtures/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { fireEvent, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type ActionArgDef } from "@semio-tech/framework";

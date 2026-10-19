@@ -3,8 +3,9 @@
 //! last was, and an empty line finishes the gesture. A line that names no point is refused and stays in the field; an accepted one empties it.
 
 use crate::editor::bim::gestures::{keep_entry, run_typed};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

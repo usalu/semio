@@ -13,7 +13,7 @@ fn captured_store_source_preserves_original_read_on_refusal_and_returns_root_to_
     assert!(source.terminal_is_empty());assert_eq!(released,born);assert!(registry.contains(index,generation));assert_eq!(registry.returned.load(Ordering::Acquire),law["afterSourceClose"]["returned"].as_u64().unwrap()as usize);assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(source)).1.released_bytes,0);
     let mut original=None;
     for _ in 0..crate::SNAPSHOT_READ_LEASE_CAPACITY {
-        let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.try_admit_one_returned::<String,_>(crate::presence_test_retirement::CLOSE_GRANT,|original,grant|{assert_eq!(Arc::as_ptr(&original),pointer);assert_eq!(original.as_str(),law["owner"].as_str().unwrap());semio_framework_value::retirement::shared::admit_shared_retirement(original,grant,false)}));
+        let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.try_admit_one_returned::<String,_>(crate::presence_test_retirement::CLOSE_GRANT,|original,grant|{assert_eq!(Arc::as_ptr(&original),pointer);assert_eq!(original.as_str(),law["owner"].as_str().unwrap());semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,grant,false)}));
         let (owner,receipt)=result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));original=owner;if original.is_some(){break;}
     }
     assert!(original.is_some());crate::presence_test_retirement::finish_box(&mut original);assert!(registry.terminal_is_empty());crate::presence_test_retirement::finish_registry(registry);

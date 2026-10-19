@@ -1,4 +1,4 @@
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { join } from "node:path";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";

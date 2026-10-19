@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/UtilityTree` entry: explicit re-exports of the source module that owns each member. */
+export { UTILITY_CATEGORIES, UTILITY_CATEGORY_ICON_ID, UtilityTree, buildUtilityRibbonSegments, dedupeUtilityNodesById, findPressedUtilityLeafId, findUtilityGroupPath, groupUtilityNodesByCategory, reconcileUtilityPath, sortUtilityNodes } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎛️UtilityTree/🟦️.tsx";
+export type { UtilityRibbonSegment } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎛️UtilityTree/🟦️.tsx";

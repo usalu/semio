@@ -448,8 +448,10 @@ impl ArtifactCommandWork<EditorApp<LowpolyPlayApp>> for LowpolyRetainedCommandWo
         self.closing = true;
     }
 
-    fn close_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if self.closing { InteractiveJobCloseStep::Complete { progress: Default::default() } } else { InteractiveJobCloseStep::Blocked }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|_grant|{
+            Ok(if self.closing { InteractiveJobCloseStep::Complete { progress: Default::default() } } else { InteractiveJobCloseStep::Blocked })
+        })
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {

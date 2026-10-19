@@ -174,19 +174,19 @@ export function toolJobPeerCommitAuthorityExact(store: string, retirement: strin
   const body = start < 0 ? "" : toolJobRustBlock(store, store.indexOf("{", start))?.body ?? "";
   const recordStart = store.indexOf("pub struct PresencePeersCommit<P>");
   const record = recordStart < 0 ? undefined : toolJobRustBlock(store, store.indexOf("{", recordStart));
-  const base = body.indexOf("!Arc::ptr_eq(&self.peers, &commit.base_root)");
+  const base = body.indexOf('!Arc::ptr_eq(self.peers.as_ref().expect("live peer presence owner"), &commit.base_root)');
   const factory = body.indexOf("!self.peer_retirement_factory.as_ref().is_some_and(|factory| Arc::ptr_eq(factory, &commit.factory))");
   const reject = body.indexOf("return Err(commit);");
-  const swap = body.indexOf("std::mem::replace(&mut *self.peers, commit.root)");
+  const swap = body.indexOf("self.peers.replace(root)");
   const retained = body.indexOf("*retirement.root = Some(previous);");
-  return !!record && !/\bpub\b/.test(record.body) && record.body.includes("base_root: Arc<PresencePeersRoot<P>>")
-    && record.body.includes("factory: Arc<dyn SnapshotRetirementFactory<P>>")
-    && base >= 0 && factory >= 0 && reject > base && reject > factory && swap > reject && retained > swap && body.indexOf("drop(commit.base_root);") > retained
-    && store.includes("PresencePeersPublication::new(&self.peers, factory.clone())")
-    && store.includes('base_root: self.base_root.take().expect("peer candidate retains its exact immutable base")')
+  return !!record && !/\bpub\b(?!\(super\))/.test(record.body) && record.body.includes("base_root: std::mem::ManuallyDrop<Arc<PresencePeersRoot<P>>>")
+    && record.body.includes("factory: std::mem::ManuallyDrop<Arc<dyn SnapshotRetirementFactory<P>>>")
+    && base >= 0 && factory >= 0 && reject > base && reject > factory && swap > reject && retained > swap && body.indexOf("drop(base_root);") > retained
+    && store.includes('PresencePeersPublication::new(self.peers.as_ref().expect("live original peer owner"), factory, grant)')
+    && store.includes('base_root: std::mem::ManuallyDrop::new(self.base_root.take().expect("admitted original base root"))')
     && store.includes("self.base_root.is_none() && self.candidate.is_none()")
-    && retirement.includes("base_root: std::mem::ManuallyDrop::new(Some(self.base_root))")
-    && retirement.includes("if self.base_root.take().is_some()") && /self\.base_root\.is_none\(\)\s*&&\s*self\.local\.is_none\(\)/u.test(retirement);
+    && retirement.includes("base_root: std::mem::ManuallyDrop::new(Some(base_root))")
+    && retirement.includes("let custody = if self.base_root.is_some() { PresencePeerRootCustody::BaseAlias } else { PresencePeerRootCustody::Displaced };") && /self\.base_root\.is_none\(\)\s*&&\s*self\.local\.is_none\(\)/u.test(retirement);
 }
 
 export function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string, retirement = ""): boolean {
@@ -196,7 +196,7 @@ export function toolJobPeerInteractionRootsExact(plugin: string, store: string, 
     !!setup && toolJobMountedDispatchOneTurnExact(plugin) && toolJobPeerCommitAuthorityExact(store, retirement) &&
     plugin.includes("struct PeerPresenceRoot") &&
     plugin.includes("entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS]") &&
-    plugin.includes("peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>") &&
+    plugin.includes("peer_presence: ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>") &&
     plugin.includes("peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>") &&
     plugin.includes("PeerPresenceRootRetirement::terminal_is_empty") &&
     plugin.includes("struct PeerRosterPublication") &&
@@ -206,15 +206,15 @@ export function toolJobPeerInteractionRootsExact(plugin: string, store: string, 
     plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: FixedCommandPage, fault: Fault)") &&
     plugin.includes("PeerRosterPublication::<A>::rejected(admission, command, fault)") &&
     plugin.includes("peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS]") &&
-    plugin.includes("self.validate_peer_roster_publication(seq, generation, &cancel)") &&
+    plugin.includes("self.roster.validate_peer_roster_publication(&*self.stores, seq, generation, &cancel)") &&
     plugin.includes("resolve_ready(cancel.is_cancelled())") &&
-    plugin.includes("self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault })") &&
+    plugin.includes("self.roster.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault })") &&
     plugin.includes("pub async fn plugin_reserve_presence_ingress<PA: PluginApp>") &&
     plugin.includes("pub async fn plugin_admit_reserved_presence<PA: PluginApp>") &&
     plugin.includes("protocol::PresenceCommandCursor::admit_page(admission.sequence(), own_color, item_count, page)") &&
     plugin.includes("pub async fn plugin_push_reserved_presence_page<PA: PluginApp>") &&
     plugin.includes("Result<(), (Fault, semio_framework::kernel::FixedCommandPage)>") &&
-    plugin.includes("self.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault))") &&
+    plugin.includes("self.roster.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault))") &&
     plugin.includes('AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding")') &&
     !plugin.includes("async fn adopt_presence") &&
     !plugin.includes("PeerPresenceRoot::from_peers") &&
@@ -234,18 +234,18 @@ export function toolJobPeerInteractionRootsExact(plugin: string, store: string, 
     channel.includes("pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage)") &&
     channel.includes("pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage)") &&
     channel.includes("pub fn take_next(&mut self) -> Result<Option<FixedCommandPage>") &&
-    channel.includes("pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize)") &&
+    channel.includes("pub fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedCloneStep") &&
     !channel.includes("raw.truncate(raw.len() - released)") &&
     channel.includes('28 => return Err(malformed("channel presence command"') &&
     !channel.includes("async fn read_presence_roster") &&
     !channel.includes("#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire") &&
-    capture?.includes("peer_presence: std::sync::Arc::clone(&self.peer_presence)") &&
-    capture?.includes("draft_snapshot: self.draft_store.snapshot_root()") &&
-    capture?.includes("interaction_state: self.interaction_store.snapshot_root()") &&
-    setup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
-    capture?.includes("presence_peers: self.presence_store.peers_root()") &&
-    capture?.includes("transient: self.transient_store.current_root()") &&
-    !setup.includes("self.presence_store.peers().await") &&
+    capture?.includes("peer_presence: std::sync::Arc::clone(&self.roster.peer_presence)") &&
+    capture?.includes("draft_snapshot: self.stores.draft_store.snapshot_root()") &&
+    capture?.includes("interaction_state: self.stores.interaction_store.snapshot_root()") &&
+    setup.includes("presence_local: Some(self.stores.presence_store.local_read().map_err(Fault::from)?)") &&
+    capture?.includes("presence_peers: self.stores.presence_store.peers_root()") &&
+    capture?.includes("transient: self.stores.transient_store.current_root()") &&
+    !setup.includes("self.stores.presence_store.peers().await") &&
     !plugin.includes("let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len())")
   );
 }

@@ -22,11 +22,11 @@ async fn preview_eval_exact_window_transient_isolates_and_resets_in_the_register
     drain_flow_eval_ticks_with_view(&mut app, &right).await;
     assert!(app.window_transient_snapshot(&right).expect("right evaluated snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_some()));
     let document = app.document_pack().await.expect("Generation3d document before reload");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document).await.expect("same document reload resets preview window transient");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("same document reload resets preview window transient");
     for view in [&left, &right] {
         assert!(app.window_transient_snapshot(view).expect("reset preview snapshot").and_then(|snapshot| snapshot.get::<Generation3dPreviewWindowTransientOwner>().cloned()).is_some_and(|state| state.preview_eval_text.is_none()));
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut **app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#region 🔖️CommandSurface
 /// ⚖️ LAW: the brep kernel's mesh transfer unit fits the wire bound `flowTessellateResolve` actually
@@ -71,9 +71,9 @@ const GENERATION3D_MEASURED_CONTRIBUTIONS_PACK_CHARS: usize = 272_089;
 /// about an operation that had in fact finished. `settle_registered_typed_operation` grew that drain
 /// and its docstring names this exact trap; a second copy of a bounded protocol is how a fix lands in
 /// one of them only (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-async fn drive_preview_operation(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>) -> Result<(u64, u64, u64), String> {
+async fn drive_preview_operation(app: &mut context::Generation3dAppFixture) -> Result<(u64, u64, u64), String> {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("preview-owner").instance_id)
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("preview-owner").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .map_err(|error| format!("{error:?}"))?;
     let count = |lane: TypedOperationResultLane| receipt.lanes.iter().filter(|published| **published == lane).count() as u64;
@@ -85,7 +85,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
         let before_document = crate::SnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
-        app.dispatch_typed(Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner")).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         let published = drive_preview_operation(&mut app).await?;
         if published != (1, 1, 0) {
             return Err(format!("a generation command publishes its document edit and selection config exactly once and no app transient: artifact={} config={} transient={}", published.0, published.1, published.2));
@@ -103,8 +103,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
         let mut rendered = Vec::new();
         for window_id in ["preview-a", "preview-b"] {
             let context = view.for_window_instance(window_id).ok_or("missing generation preview window")?;
-            let tree = app.render(generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, None, &context).await.map_err(|error| format!("{error:?}"))?;
-            rendered.push(semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?);
+            rendered.push(semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &context, app.1.cx()).await.map_err(|error| format!("{error:?}"))?);
         }
         if rendered[0] != rendered[1] {
             return Err("generation windows did not consume the same preview evaluation".into());
@@ -115,7 +114,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
         Ok(())
     }
     .await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     result.expect("Generation3d preview ownership runtime");
 }
 

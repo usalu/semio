@@ -3,10 +3,10 @@ import{readFileSync}from"node:fs";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{withBuildTestInvocationV1}from"../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
-import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"@semio-tech/process/routing";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";
 

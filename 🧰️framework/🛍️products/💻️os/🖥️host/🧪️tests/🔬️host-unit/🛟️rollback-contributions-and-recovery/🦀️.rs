@@ -20,7 +20,7 @@
                 body_key: "composite".into(),
                 surface_kind: SurfaceKind::Canvas2d,
                 icon_id: "pen-tool".into(),
-                options: ui_wgpu::wgpu::WindowOptions::default(),
+                options: semio_framework_ui_declaration::layout::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
                 interactions: Vec::new(),

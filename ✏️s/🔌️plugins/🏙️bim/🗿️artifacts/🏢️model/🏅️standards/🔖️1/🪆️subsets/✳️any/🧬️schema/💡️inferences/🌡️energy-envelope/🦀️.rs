@@ -19,12 +19,13 @@
 //!
 //! Related: ISO 6946 <https://www.iso.org/standard/65708.html>, gbXML <https://gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html>, GEG <https://www.gesetze-im-internet.de/geg/>.
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, Vec3};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, Vec3};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::{holds, inside, interior_point, obstacles_of, Obstacle, SpaceRoom, SpaceStatus, StoreyRooms};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, OpeningKind, SpaceConditions, Vertex};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, OpeningKind, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_2d::Vec2;
@@ -32,9 +33,9 @@ use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal;
 
 /// 🗺️ The snapshot collections the envelope and its aggregates read, directly or through the rooms and frames they stand on.
 pub const READS: &[&str] = &["spaces", "space_conditions", "zones", "walls", "wall_types", "curtain_walls", "curtain_wall_types", "openings", "window_types", "door_types", "slabs", "slab_types", "roofs", "roof_types", "columns", "column_types", "ceilings", "ceiling_types", "materials", "storeys", "buildings", "sites"];
@@ -311,7 +312,7 @@ fn stack(snapshot: &ModelSnapshot, layers: &[Layer]) -> Result<Vec<(f64, f64)>, 
 fn construction(snapshot: &ModelSnapshot, layers: Option<&[Layer]>, flow: HeatFlow, far: FarSide, label: &str) -> Result<f64, String> {
     let Some(layers) = layers else { return Err(label.to_string()) };
     let numbers = stack(snapshot, layers)?;
-    thermal::transmittance(&numbers, flow, far).ok_or_else(|| layers.iter().zip(&numbers).find(|(_, (thickness, conductivity))| !(*thickness > 0.0 && *conductivity > 0.0)).map_or_else(|| label.to_string(), |(layer, _)| layer.material.clone()))
+    semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::transmittance(&numbers, flow, far).ok_or_else(|| layers.iter().zip(&numbers).find(|(_, (thickness, conductivity))| !(*thickness > 0.0 && *conductivity > 0.0)).map_or_else(|| label.to_string(), |(layer, _)| layer.material.clone()))
 }
 
 fn far_side(boundary: Boundary) -> FarSide {

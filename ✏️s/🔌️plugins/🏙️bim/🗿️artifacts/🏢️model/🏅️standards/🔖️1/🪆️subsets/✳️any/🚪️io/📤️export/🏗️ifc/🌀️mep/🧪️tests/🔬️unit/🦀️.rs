@@ -1,25 +1,26 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{MepSystem, MepShape};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepSystem, MepShape};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::data::property_set;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::property_set;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::io::export::ifc::mep::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, rows, string, tags, target};
-use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
-use crate::standards::v1::subsets::any::schema::snapshot::Point3;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep::{predefined, system_name};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, rows, string, tags, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 
-fn duct(path: Vec<Point3>) -> crate::standards::v1::subsets::any::schema::snapshot::MepElement {
-    crate::standards::v1::subsets::any::schema::snapshot::MepElement { storey: "st-ground".into(), system: MepSystem::Supply, shape: MepShape::Duct { width: 0.4, height: 0.25 }, path, name: "Extra Duct".into() }
+fn duct(path: Vec<Point3>) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement {
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement { storey: "st-ground".into(), system: MepSystem::Supply, shape: MepShape::Duct { width: 0.4, height: 0.25 }, path, name: "Extra Duct".into() }
 }
 
 #[test]
@@ -74,7 +75,7 @@ fn a_run_on_a_missing_storey_is_noted_and_not_written() {
 
 #[test]
 fn the_names_of_the_systems_are_the_variants_and_the_predefined_types_cover_every_service() {
-    use crate::standards::v1::subsets::any::schema::inferences::mep::SYSTEMS;
+    use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::SYSTEMS;
     for system in SYSTEMS {
         assert_eq!(system_name(system), format!("{system:?}"));
         assert!(!predefined(system).is_empty());

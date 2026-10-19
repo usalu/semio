@@ -9,9 +9,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseEventPublishRequest } from "../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
-import { listEvents } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
-import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
-import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
+import { listEvents } from "../../📚️library/🗄️persistence/🟦️.ts";
+import { requireAuth, isAuthError } from "../../📚️library/🔐️authentication/🟦️.ts";
+import { publishEvent } from "../../📚️library/📡️event/🟦️.ts";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);

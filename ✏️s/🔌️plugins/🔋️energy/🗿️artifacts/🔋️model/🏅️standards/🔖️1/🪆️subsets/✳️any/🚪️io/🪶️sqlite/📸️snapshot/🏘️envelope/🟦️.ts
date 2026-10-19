@@ -1,6 +1,7 @@
 /** 🏘️ Handwritten thermal envelope and ordered ownership mappings. */
 import type {EnergyModel,EnergyOutsideBoundary} from "../../../../🧬️schema/📸️snapshot/⚡️model/🟦️.ts";
-import {columns,emit,vertices,ids,uint,bool,optionalId,literal,readVertices,readIds,type Reader,type Options} from "../🟦️.ts";
+import { columns, emit, vertices, ids, uint, bool, optionalId, literal, readVertices, readIds } from "../🧾️row-codec/🟦️.ts";
+import type { Reader, Options } from "../🧾️row-codec/🟦️.ts";
 import type {ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 const ZONE=columns([5]),SPACE=columns([6]),FENESTRATION=columns([6,7,8,9,10,11,12,13,14,15,16,17]),MATERIAL=columns([6,7,8,9,10,11,12]),GLAZING=columns([5,6,7,8,9,10,11,12,13,14,15]),GAS=columns([5]);
 const CLASSES=["ExteriorWall","InteriorWall","Roof","Ceiling","Floor","Interzone","Adiabatic","Ground"]as const,ROUGHNESS=["VeryRough","Rough","MediumRough","MediumSmooth","Smooth","VerySmooth"]as const,GASES=["Air","Argon","Krypton","Xenon"]as const;

@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const protocol=schema.definitions.Protocol.const;
 export type RepositoryCargoForwardingIntentV1=Readonly<{version:1;kind:"program";command:"run"|"test"|"bench"}>|Readonly<{version:1;kind:"compiler";command:"rustc"|"rustdoc"}>;
 /** 🎬️ Reads the actual Cargo subcommand without treating global selector values as commands. */

@@ -1,8 +1,9 @@
 /** 🔄️ Board2dHost session sync: the application of events, highlights and snapshots to the board session and the peer registry with its gesture ownership, live mirror pushes and drop preview pushes. */
 import { type Board2dScene } from "@semio-tech/framework";
-import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope } from "../../🪪️WasmSessionLoader/🟦️.tsx";
+import { type Board2dPeer, type BoardPeerScope } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
 import type { BoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
+import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 
 //#region 🔖️Board2dHost
 //#region Sync

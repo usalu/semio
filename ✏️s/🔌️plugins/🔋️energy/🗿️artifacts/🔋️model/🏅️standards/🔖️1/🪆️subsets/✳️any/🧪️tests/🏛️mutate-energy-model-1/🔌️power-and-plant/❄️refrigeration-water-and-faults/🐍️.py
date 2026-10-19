@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 
-from mutate_energy_model_1_base import applied, no_op, rejected, unchanged
+from mutate_energy_model_1_mutation_vocabulary import applied, no_op, rejected, unchanged
 
 
 # region 🔖️Fixtures

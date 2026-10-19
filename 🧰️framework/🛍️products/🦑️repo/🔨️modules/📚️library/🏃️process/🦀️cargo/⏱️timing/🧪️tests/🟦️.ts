@@ -5,8 +5,8 @@ import{parseProcessClockV1,readOwnedProcessSnapshotV1,compareOwnedProcessSnapsho
 import fixture from"./🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 test("bounded owned process clocks and CPU deltas agree with independent SQLite",async()=>{await receiveScriptProcessInvocation(process.env,async original=>{
  const control=createIssuedResourceControlV1(original,"actor:timing-oracle",120000),python=Bun.which("python3")??Bun.which("python");if(!python)throw Error("Independent SQLite oracle required");expect(validateJsonSchemaSubset(schema,fixture)).toEqual([]);for(const row of fixture.clocks)expect(parseProcessClockV1(row.text)).toBe(row.milliseconds);
  const before=readOwnedProcessSnapshotV1(fixture.snapshots[0]!,100),after=readOwnedProcessSnapshotV1(fixture.snapshots[1]!,100),actual=compareOwnedProcessSnapshotsV1(before,after).map(row=>({pid:row.pid,cpuDeltaMilliseconds:row.cpuDeltaMilliseconds,rssBytes:row.rssBytes}));expect(actual).toEqual(fixture.expected);

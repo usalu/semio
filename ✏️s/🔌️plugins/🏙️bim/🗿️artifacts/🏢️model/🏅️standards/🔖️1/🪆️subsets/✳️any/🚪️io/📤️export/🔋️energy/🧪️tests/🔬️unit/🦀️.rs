@@ -1,23 +1,24 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::io::export::energy::build::STAGES;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build::STAGES;
 use semio_framework::io_schema::IoPayload;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
-use crate::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::energy::build::Build;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build::Build;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use crate::standards::v1::subsets::any::io::export::energy::*;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::{target, document};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::energy::{model_to_energy, StagedEnergy, export_energy, export_energy_json, ModelIntoEnergy, ENERGY_DIALECT};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::{build, table};
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::house;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
-use target::{OutsideBoundary, SurfaceClass};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::{OutsideBoundary, SurfaceClass};
 
 static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏠️room/📸️snapshot/🔣️.json"));
 static PAIR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏘️pair/📸️snapshot/🔣️.json"));
@@ -155,7 +156,7 @@ fn an_unheated_space_gets_gains_and_no_thermostat() {
 
 #[test]
 fn a_model_without_a_thermal_envelope_is_refused() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let refusal = model_to_energy(&snapshot).expect_err("no space with conditions");
     assert!(refusal.contains("no space with a thermal envelope"), "{refusal}");
 }
@@ -164,7 +165,7 @@ fn a_model_without_a_thermal_envelope_is_refused() {
 fn the_staged_export_runs_one_stage_per_step_and_equals_the_one_shot() {
     let snapshot = decoded((*STACK));
     let direct = written(&snapshot);
-    let staged = inference::try_with_inference(None, &snapshot, |inferred| {
+    let staged = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &snapshot, |inferred| {
         let mut job = StagedEnergy::new();
         let mut seen = Vec::new();
         loop {
@@ -188,8 +189,8 @@ fn the_text_is_the_energy_artifacts_dsl_and_the_json_its_snapshot() {
     assert!(text.starts_with("semio energy.model.dsl v1"), "{}", &text[..text.len().min(80)]);
     assert!(text.contains("schema=energy.model") && text.contains("structure=") && text.contains("surfaces=["));
     let (json, _) = export_energy_json(&decoded((*ROOM))).expect("the json");
-    let root = crate::standards::v1::subsets::any::io::export::json::codec::read_value(&json).expect("RFC 8259");
-    let member = |name: &str| crate::standards::v1::subsets::any::io::export::json::codec::member(&root, name);
+    let root = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::json::codec::read_value(&json).expect("RFC 8259");
+    let member = |name: &str| semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::json::codec::member(&root, name);
     assert!(member("schema").is_some() && member("model").is_some() && member("structure").is_some() && member("zones").is_some());
     assert!(member("referencedModel").is_some() && member("weatherLink").is_some(), "the link slots are null, not absent");
     assert!(json.ends_with("}\n") && json.contains("\"childId\": \"energy-value\""));
@@ -213,8 +214,8 @@ fn futures_lite_block<T>(future: impl std::future::Future<Output = T>) -> T {
 #[test]
 fn the_table_of_the_export_adds_up_to_the_inferred_totals_of_the_project() {
     for (case, snapshot) in cases() {
-        inference::try_with_inference(None, &snapshot, |inferred| {
-            let table = table::table_of(&snapshot, inferred).expect("the table");
+        semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &snapshot, |inferred| {
+            let table = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::table::table_of(&snapshot, inferred).expect("the table");
             let (ours, theirs) = (&table.totals["project"], &inferred.energy_totals["project"]);
             assert_eq!(ours.spaces, theirs.spaces, "{case}");
             assert!((ours.envelope_area - theirs.envelope_area).abs() < 1e-9 && (ours.transmission - theirs.transmission).abs() < 1e-9 && (ours.solar_aperture - theirs.solar_aperture).abs() < 1e-9, "{case}: {ours:?} against {theirs:?}");
@@ -227,7 +228,7 @@ fn the_table_of_the_export_adds_up_to_the_inferred_totals_of_the_project() {
 fn the_committed_files_are_the_current_export() {
     for (case, snapshot) in cases() {
         let (model, _) = written(&snapshot);
-        let files = [("🔋️model.json", document::json_text(&model).expect("json")), ("🗣️.dsl.semio", document::dsl_text(&model).expect("dsl"))];
+        let files = [("🔋️model.json", semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document::json_text(&model).expect("json")), ("🗣️.dsl.semio", semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document::dsl_text(&model).expect("dsl"))];
         if std::env::var("BIM_BLESS").is_ok() {
             std::fs::create_dir_all(format!("{DIR}/{case}")).expect("the fixture directory");
             for (name, text) in &files {

@@ -61,6 +61,29 @@
         "forwardAllArgs": true
       }
     },
+    "typecheck": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "@semio-tech/writer-writer:build",
+        "@semio-tech/gis-gisterrain:build",
+        "@semio-tech/gis-gismap-js:build",
+        "@semio-tech/lowpoly-lowpoly:build",
+        "@semio-tech/reasoning-wires:build",
+        "@semio-tech/forms-js:build",
+        "@semio-tech/space-home:build",
+        "@semio-tech/space-space:build",
+        "@semio-tech/stdio-docx:build",
+        "@semio-tech/trinity-jack-lsp:wasm",
+        "@semio-tech/puzzle-plugin:wasm"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    },
     "generate-playground-session": {
       "executor": "repo:script",
       "cache": false,

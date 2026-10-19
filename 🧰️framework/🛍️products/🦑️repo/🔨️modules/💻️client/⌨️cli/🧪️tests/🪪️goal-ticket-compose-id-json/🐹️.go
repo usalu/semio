@@ -38,10 +38,13 @@ func TestGoalPathToComposeID(t *testing.T) {
 }
 
 func TestComposeIDToGoalPath(t *testing.T) {
-
+	withGoalPath(t, "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY")
 	goals, err := ListGoals()
-	if err != nil || len(goals) == 0 {
-		t.Skip("no goals available for round-trip test")
+	if err != nil {
+		t.Fatalf("ListGoals failed: %v", err)
+	}
+	if len(goals) < 4 {
+		t.Fatalf("the fixture repository must hold the seeded goal chain, got %d goals", len(goals))
 	}
 	for _, g := range goals {
 		composeID := goalPathToComposeID(g.ID)
@@ -106,6 +109,7 @@ func TestTicketMarshalJSONGoalToComposeID(t *testing.T) {
 }
 
 func TestTicketUnmarshalJSONComposeIDToGoalPath(t *testing.T) {
+	withGoalPath(t, "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI")
 	goalEmoji := emojiText(EmojiGoal)
 	raw := fmt.Sprintf(`{
 		"title": "Test",
@@ -161,6 +165,7 @@ func TestGoalMarshalJSONParentToComposeID(t *testing.T) {
 }
 
 func TestTicketGoalRoundTripThroughJSON(t *testing.T) {
+	withGoalPath(t, "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI")
 
 	ticket := Ticket{
 		Title:    "Roundtrip Test",

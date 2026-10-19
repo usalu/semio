@@ -46,10 +46,10 @@ impl<T: semio_framework_value::retirement::RetireOwned> store::ArtifactOwnedValu
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> store::SnapshotRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _: &std::sync::Arc<T>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>() }
+    fn retirement_birth_bytes(&self, _: &std::sync::Arc<T>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>() }
 
     fn retire(&self, snapshot: std::sync::Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<T>)> {
-        semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, false)
+        semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, false)
     }
 }
 
@@ -416,7 +416,7 @@ where
         }
         if self.cancel_arc_live {
             if std::sync::Arc::weak_count(&self.cancel_requested) != 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"initializer cancellation Arc retains an external weak owner")); }
-            let cancel_arc_release = if std::sync::Arc::strong_count(&self.cancel_requested) == 1 { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicBool>() } else { 0 };
+            let cancel_arc_release = if std::sync::Arc::strong_count(&self.cancel_requested) == 1 { semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicBool>() } else { 0 };
             return Ok(RetirementDemand { copy_bytes:size_of::<std::sync::Arc<std::sync::atomic::AtomicBool>>(), release_bytes:cancel_arc_release, depth:1, ..Default::default() });
         }
         Ok(Default::default())
@@ -452,6 +452,12 @@ where
 
     pub fn terminal_is_empty(&self) -> bool {
         self.authority.is_none() && !self.cancel_arc_live && self.terminal_handoff
+    }
+
+    /// ♻️ One grant-shaped close turn of the retained authority, quoted by [`Self::retirement_demands`], for owners that already hold the surrounding original caller.
+    pub fn close_granted(&mut self, grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<semio_framework_value::RetainedCloneStep, ValueError> {
+        if let Some(authority)=self.authority.as_mut(){if authority.terminal_is_empty(){drop(self.authority.take());return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=authority.close_step(child)?;return semio_framework_value::retained_clone::admit_retained_clone_close(child,step,authority.terminal_is_empty(),"original initializer authority")}
+        unsafe{ManuallyDrop::drop(&mut self.cancel_requested)}self.cancel_arc_live=false;self.terminal_handoff=true;Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
     }
 }
 
@@ -496,10 +502,7 @@ where
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
         self.begin_close();if self.terminal_is_empty(){return Ok(Step::Complete{progress:Default::default()})}let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-            if let Some(authority)=self.authority.as_mut(){if authority.terminal_is_empty(){drop(self.authority.take());return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=authority.close_step(child)?;return semio_framework_value::retained_clone::admit_retained_clone_close(child,step,authority.terminal_is_empty(),"original initializer authority")}
-            unsafe{ManuallyDrop::drop(&mut self.cancel_requested)}self.cancel_arc_live=false;self.terminal_handoff=true;Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
-        })?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_granted(grant,demand))?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
 

@@ -377,8 +377,8 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
         assert_eq!(members[index].snapshot().unwrap().n, Some(0));
         assert!(members[index].envelope().vcs.edits.is_empty());
         let reservation = members[index].reserve_edit_history_slot().expect("aborted group returns the exact ledger reservation");
-        assert!(members[index].envelope.vcs.edits.cancel_reservation(reservation.history).is_ok());
-        members[index].displaced_retirements.release_owner_slots(reservation.rejected_owner).unwrap();
+        assert!(members[index].log.envelope.vcs.edits.cancel_reservation(reservation.history).is_ok());
+        members[index].owners.displaced_retirements.release_owner_slots(reservation.rejected_owner).unwrap();
     }
     drop(roots);
     for member in &mut members {
@@ -465,9 +465,9 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 assert!(projection.unwrap().is_empty());
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 assert!(members[(lane+1)%3].child_restore_projection_for_read(&prepared.2).is_err());
-                let original=prepared.2.owner.replace(Arc::new(17u8));
+                let original=prepared.2.swap_owner(Some(Arc::new(17u8)));
                 assert!(members[lane].child_restore_projection_for_read(&prepared.2).is_err());
-                prepared.2.owner=original;
+                prepared.2.swap_owner(original);
                 assert_eq!(members[lane].one_item_publication_identity(), before[lane]);
                 prepared_reads.push(prepared);
             }

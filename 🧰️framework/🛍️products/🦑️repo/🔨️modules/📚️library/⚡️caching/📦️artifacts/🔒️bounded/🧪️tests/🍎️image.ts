@@ -8,10 +8,10 @@ const implementationIdentity=():string=>(createRequire(import.meta.url)("../../.
 import {randomUUID} from "node:crypto";
 import {receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import {nativeStorageRetirementPortV1,recoverNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {acquireQueuedResourceLease} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {nativeStorageRetirementPortV1,recoverNativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
+import {acquireQueuedResourceLease} from "@semio-tech/process/leases";
 import {withBoundedNxArtifactWriteV1} from "../🟦️.ts";
 import {withRepositoryNxStorageV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 

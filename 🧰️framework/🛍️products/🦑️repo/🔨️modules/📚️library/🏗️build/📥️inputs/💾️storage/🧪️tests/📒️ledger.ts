@@ -2,7 +2,7 @@ import{createIssuedResourceControlV1 as artifactEntryControlV1}from"../../../../
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import "./🚪️admission/🟦️.ts";
 import "./🎛️phase/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import {test,expect,spyOn} from "bun:test";
 import * as fs from "node:fs";
 import {Database} from "bun:sqlite";
@@ -15,11 +15,11 @@ import {mkdirSync,existsSync} from "node:fs";
 import {repositoryLeaseDirectoryV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "../../../../../🧪️test/💾️storage/🟦️.ts";
+import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
 import componentSchema from "../🧬️schema/🔣️.json" with {type:"json"};
 const schema=componentSchema.definitions.OptionalLedger;
 import fixture from "./📒️ledger.json" with {type:"json"};
@@ -102,7 +102,7 @@ test("distinct graph datasets advance concurrently while identical writers retai
  try{await withRepositoryCacheStoreV1(workspace,"graph",original,artifactPhase,async(_parent,phaseControl)=>{
   let enter!:()=>void,release!:()=>void,firstRoot="",secondRoot="";const entered=new Promise<void>(accept=>{enter=accept;}),released=new Promise<void>(accept=>{release=accept;}),first=api.withRepositoryBuildInferenceDatasetV1(workspace,original,phaseControl,dataset(identity),async current=>{firstRoot=current.root;expect(await infer(current.root,firstInput)).toEqual(row.firstInput);expect(()=>api.repositoryBuildGraphWriterDirectoryV1(workspace,"admission")).toThrow("isolated graph directory");expect(()=>api.withBuildGraphOptionalPublicationV1(join(current.root,"..",secondIdentity,"np","b".repeat(24)+".json"),{peakBytes:1,retainedDeltaBytes:1},()=>{throw Error("Foreign writer entered");})).toThrow("isolated graph optional namespace");const path=join(current.root,"np",identity.slice(0,24)+".json");mkdirSync(join(current.root,"np"),{recursive:true});expect(api.withBuildGraphOptionalPublicationV1(path,{peakBytes:row.publicationBytes,retainedDeltaBytes:row.publicationBytes},()=>writeFileSync(path,Buffer.alloc(row.publicationBytes,1)))).toBe(true);const originalBytes=readFileSync(path);enter();await released;expect(readFileSync(path)).toEqual(originalBytes);const retirement=current.retire();expect(current.retire()).toBe(retirement);});
   try{await Promise.race([entered,first.then(()=>{throw Error("Original first dataset settled before entry");})]);let distinct=false;await api.withRepositoryBuildInferenceDatasetV1(workspace,original,phaseControl,dataset(secondIdentity),async current=>{distinct=true;secondRoot=current.root;expect(await infer(current.root,secondInput)).toEqual(row.secondInput);const path=join(current.root,"np",secondIdentity.slice(0,24)+".json");mkdirSync(join(current.root,"np"),{recursive:true});expect(api.withBuildGraphOptionalPublicationV1(path,{peakBytes:row.publicationBytes,retainedDeltaBytes:row.publicationBytes},()=>writeFileSync(path,Buffer.alloc(row.publicationBytes,2)))).toBe(true);expect(lstatSync(path).size).toBe(row.publicationBytes);expect(api.withBuildGraphOptionalPublicationV1(path,{peakBytes:row.optionalMaximumBytes,retainedDeltaBytes:0},()=>{throw Error("Fixed1GiB optional peak exceeded");})).toBe(false);await current.retire();});expect(distinct).toBe(row.differentIdentityEnters);expect(secondRoot).not.toBe(firstRoot);
-   const {acquireResourceLease}=await import("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts"),leaseDirectory=repositoryLeaseDirectoryV1(workspace),control=scriptCompilerAdmissionControlV1(original,"graph:identical-writer-proof",1500);let same=false;await expect(acquireResourceLease({directory:leaseDirectory,resource:api.buildGraphWriterResourceV1(workspace,"dataset",identity),mode:"exclusive",signal:control.signal,control,timeoutMs:0}).then(held=>{same=true;held.release();})).rejects.toThrow("Resource lease timed out");expect(same).toBe(row.sameIdentityEnters);
+   const {acquireResourceLease}=await import("@semio-tech/process/leases"),leaseDirectory=repositoryLeaseDirectoryV1(workspace),control=scriptCompilerAdmissionControlV1(original,"graph:identical-writer-proof",1500);let same=false;await expect(acquireResourceLease({directory:leaseDirectory,resource:api.buildGraphWriterResourceV1(workspace,"dataset",identity),mode:"exclusive",signal:control.signal,control,timeoutMs:0}).then(held=>{same=true;held.release();})).rejects.toThrow("Resource lease timed out");expect(same).toBe(row.sameIdentityEnters);
   }finally{release();await first;expect(existsSync(firstRoot)).toBe(false);}
  });}finally{rmSync(source,{recursive:true});}
 })),60000);

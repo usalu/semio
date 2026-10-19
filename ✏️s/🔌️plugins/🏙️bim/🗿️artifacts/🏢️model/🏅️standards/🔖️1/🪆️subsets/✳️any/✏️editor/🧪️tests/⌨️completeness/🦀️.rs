@@ -1,18 +1,19 @@
 //! 🧪️ The completeness law of the editor UI: every mutation kind has a way in from the UI (a command, a field row or a tool), every visible text comes from the one `app_labels!` block
 //! in both languages, every window and panel has an accessible name, and the gesture in progress shows in the 3D window too.
 
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::editor::bim::terminology::{BimLabels, bim_labels};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::{BimLabels, bim_labels};
 use semio_framework_plugin::{ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel, WindowMeasure};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::editor::bim::commands::{create_entity, flip_walls, move_storey, place_elements, remove_classification, remove_property, rename_entity, select_findings, set_classification, set_field, set_property, set_view, split_wall};
-use crate::editor::bim::panels::{diagnostics as diagnostics_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::{create_entity, flip_walls, set_field};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{move_storey, place_elements, remove_classification, remove_property, set_classification, set_property, split_wall};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnostics as diagnostics_panel, outliner as outliner_panel};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, world};
 use semio_framework_plugin::PluginApp as _;
-use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, dispatch, history_verb, render_text, view, BimApp};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 use semio_framework_ui_locale::{LabelText, Locale};
 
 fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<String> {
@@ -21,13 +22,13 @@ fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<
 
 fn set(snapshot: &ModelSnapshot, ids: &[&str], field: &str, value: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let mut ctx = ctx(&[]);
-    run(snapshot, |doc, cfg| set_field::handle(&set_field::SetField { ids: ids.iter().map(|id| id.to_string()).collect(), field: field.into(), value: value.into() }, doc, cfg, &mut ctx))
+    run(snapshot, |doc, cfg| semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field::handle(&semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field::SetField { ids: ids.iter().map(|id| id.to_string()).collect(), field: field.into(), value: value.into() }, doc, cfg, &mut ctx))
 }
 
 fn with(snapshot: ModelSnapshot, kind: &str, id: &str, parent: &str) -> ModelSnapshot {
     let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn furnished() -> ModelSnapshot {
@@ -89,9 +90,9 @@ async fn every_refusal_code_the_new_paths_raise_has_a_notice() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_default_name_comes_from_the_label_block_in_the_viewers_language_and_never_from_a_literal() {
-    use crate::editor::bim::gestures::session::{Surface, ToolContext};
+    use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Surface, ToolContext};
     let snapshot = demo();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let mut context = ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     assert_eq!(context.name_of(|labels| labels.kind_column, 0), "Column 1", "without a viewer the first language's labels name it");
     context.labels = Some(&BimLabels::NATIVE_DE);
@@ -102,7 +103,7 @@ async fn a_default_name_comes_from_the_label_block_in_the_viewers_language_and_n
 async fn a_storey_is_renamed_through_rename_element_only() {
     let snapshot = demo();
     let mut context = ctx(&[]);
-    let by_command = run(&snapshot, |doc, cfg| rename_entity::handle(&rename_entity::RenameEntity { id: "st-first".into(), name: "Upper".into() }, doc, cfg, &mut context)).expect("renames");
+    let by_command = run(&snapshot, |doc, cfg| semio_s_artifact_bim_model_coordination::editor::bim::commands::rename_entity::handle(&semio_s_artifact_bim_model_coordination::editor::bim::commands::rename_entity::RenameEntity { id: "st-first".into(), name: "Upper".into() }, doc, cfg, &mut context)).expect("renames");
     let by_field = set(&snapshot, &["st-first"], "name", "Upper").expect("renames");
     for emit in [by_command, by_field] {
         assert!(matches!(emit.artifact_mutations.as_slice(), [ModelMutation::RenameElement(rename)] if rename.id == "st-first" && rename.name == "Upper"), "{:?}", emit.artifact_mutations);
@@ -132,7 +133,7 @@ async fn a_roof_footprint_and_shape_are_edited_as_text() {
     let snapshot = furnished();
     let footprint = applied(&snapshot, &set(&snapshot, &["roof-1"], "footprint", "0, 0; 8, 0; 8, 6; 0, 6").expect("sets the footprint"));
     assert_eq!(footprint.roofs["roof-1"].footprint.len(), 4);
-    for (text, expected) in [("flat", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Flat), ("shed 0.2 1.57", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Shed { pitch: 0.2, direction: 1.57 }), ("gable 0.52 0", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Gable { pitch: 0.52, ridge_direction: 0.0 }), ("hip 0.4", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Hip { pitch: 0.4 }), ("MANSARD 1.2 0.5 2", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Mansard { lower_pitch: 1.2, upper_pitch: 0.5, break_height: 2.0 })] {
+    for (text, expected) in [("flat", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape::Flat), ("shed 0.2 1.57", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape::Shed { pitch: 0.2, direction: 1.57 }), ("gable 0.52 0", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape::Gable { pitch: 0.52, ridge_direction: 0.0 }), ("hip 0.4", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape::Hip { pitch: 0.4 }), ("MANSARD 1.2 0.5 2", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape::Mansard { lower_pitch: 1.2, upper_pitch: 0.5, break_height: 2.0 })] {
         let emit = set(&snapshot, &["roof-1"], "shape", text).unwrap_or_else(|fault| panic!("{text}: {}", fault.message));
         assert_eq!(applied(&snapshot, &emit).roofs["roof-1"].shape, expected, "{text}");
     }
@@ -144,18 +145,18 @@ async fn a_roof_footprint_and_shape_are_edited_as_text() {
 async fn a_stair_flight_is_edited_as_text() {
     let snapshot = furnished();
     for (text, expected) in [
-        ("l-turn 1.5 left", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::LTurn { split: 1.5, turn: crate::standards::v1::subsets::any::schema::snapshot::Turn::Left }),
-        ("u-turn 0.2", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::UTurn { gap: 0.2 }),
-        ("spiral 1.5 6.28", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::Spiral { radius: 1.5, sweep: 6.28 }),
+        ("l-turn 1.5 left", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight::LTurn { split: 1.5, turn: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Turn::Left }),
+        ("u-turn 0.2", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight::UTurn { gap: 0.2 }),
+        ("spiral 1.5 6.28", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight::Spiral { radius: 1.5, sweep: 6.28 }),
     ] {
         let emit = set(&snapshot, &["stair-1"], "flight", text).unwrap_or_else(|fault| panic!("{text}: {}", fault.message));
         assert_eq!(applied(&snapshot, &emit).stairs["stair-1"].flight, expected, "{text}");
     }
     let bent = applied(&snapshot, &set(&snapshot, &["stair-1"], "flight", "u-turn 0.2").expect("bends"));
     let straightened = applied(&bent, &set(&bent, &["stair-1"], "flight", "straight").expect("straightens"));
-    assert_eq!(straightened.stairs["stair-1"].flight, crate::standards::v1::subsets::any::schema::snapshot::StairFlight::Straight);
+    assert_eq!(straightened.stairs["stair-1"].flight, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight::Straight);
     assert_eq!(code(set(&snapshot, &["stair-1"], "flight", "l-turn 1.5 up")), Some("bim.set.value-invalid".to_string()));
-    assert_eq!(crate::editor::bim::entities::flight_text(&crate::standards::v1::subsets::any::schema::snapshot::StairFlight::LTurn { split: 1.5, turn: crate::standards::v1::subsets::any::schema::snapshot::Turn::Right }), "l-turn 1.5 right", "the text reads back as it was written");
+    assert_eq!(semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::flight_text(&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight::LTurn { split: 1.5, turn: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Turn::Right }), "l-turn 1.5 right", "the text reads back as it was written");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -165,7 +166,7 @@ async fn the_project_record_is_edited_through_the_project_id() {
     assert_eq!(renamed.project.name, "Villa Rosa");
     let described = applied(&snapshot, &set(&snapshot, &["project"], "phase_names", "Design, Build ,, Handover").expect("sets the phases"));
     assert_eq!(described.project.phase_names, vec!["Design", "Build", "Handover"]);
-    let reads: [(&str, fn(&crate::standards::v1::subsets::any::schema::snapshot::Project) -> String); 3] = [("description", |p| p.description.clone()), ("author", |p| p.author.clone()), ("organization", |p| p.organization.clone())];
+    let reads: [(&str, fn(&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Project) -> String); 3] = [("description", |p| p.description.clone()), ("author", |p| p.author.clone()), ("organization", |p| p.organization.clone())];
     for (field, read) in reads {
         assert_eq!(read(&applied(&snapshot, &set(&snapshot, &["project"], field, "Text").expect(field)).project), "Text", "{field}");
     }
@@ -189,11 +190,11 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
     }
     assert_eq!(code(set(&snapshot, &["sw-1"], "side", "Up")), Some("bim.set.value-invalid".to_string()));
     let attached = applied(&snapshot, &set(&snapshot, &["w-south"], "top_attach", "roof-1").expect("attaches the top"));
-    assert!(matches!(attached.walls["w-south"].top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { .. }));
+    assert!(matches!(attached.walls["w-south"].top, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Roof { .. }));
     let based = applied(&attached, &set(&attached, &["w-south"], "base_slab", "slab-1").expect("follows the slab"));
     assert_eq!(based.walls["w-south"].base_slab.as_deref(), Some("slab-1"));
     let freed = applied(&based, &set(&based, &["w-south"], "top_attach", "").expect("frees the top"));
-    assert!(matches!(freed.walls["w-south"].top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { .. }));
+    assert!(matches!(freed.walls["w-south"].top, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { .. }));
     let revealed = applied(&snapshot, &set(&snapshot, &["op-1"], "reveal_depth", "0.1").expect("sets the reveal"));
     assert_eq!(revealed.openings["op-1"].reveal_depth, Some(0.1));
     let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
@@ -213,17 +214,17 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
 //#region 🔖️Panel
 fn panel(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone);
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone);
     let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
-    let node = properties_panel::render(snapshot, &inference, &own(elements), &own(library), bim_labels(&view)).expect("the properties panel renders");
+    let node = semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::render(snapshot, &inference, &own(elements), &own(library), bim_labels(&view)).expect("the properties panel renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_wall_offers_flip_split_place_classification_and_property_rows_in_both_languages() {
     let mut snapshot = demo();
-    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset".to_string(), std::collections::BTreeMap::from([("Load".to_string(), crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::Real { value: 2.5 })]))]));
-    snapshot.classification_systems.insert("cs-uni".into(), crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem { name: "Uniclass 2015".into(), edition: String::new(), source: None, entries: vec![crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem { code: "Ss_25".into(), title: "Walls".into(), parent: None }] });
+    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset".to_string(), std::collections::BTreeMap::from([("Load".to_string(), semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue::Real { value: 2.5 })]))]));
+    snapshot.classification_systems.insert("cs-uni".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem { name: "Uniclass 2015".into(), edition: String::new(), source: None, entries: vec![semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem { code: "Ss_25".into(), title: "Walls".into(), parent: None }] });
     let english = panel(&snapshot, &["w-south"], &[], Locale::En);
     for expected in ["Flip wall", "Split wall at", "Place at x, y", "bim-properties.action.split.input", "bim-properties.action.place.input", "Classification", "bim-properties.classification.cs-uni.input", "Property sets", "Pset · Load (real)", "bim-properties.property.Pset.Load.input", "Remove property Pset.Load", "Add property: Set.Property = value", "bim-properties.property.add.input"] {
         assert!(english.contains(expected), "the English wall panel shows '{expected}': {english}");
@@ -261,11 +262,11 @@ async fn with_nothing_selected_the_panel_edits_the_project() {
 //#region 🔖️Accessibility
 async fn accessible(app: &mut BimApp, body: &str, view: &ViewModel) -> (Option<String>, Option<String>) {
     use semio_framework_plugin::PluginApp;
-    let tree = app.render(body, None, view).await.expect("render");
-    let name = tree.root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
-    let description = tree.root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire");
-    (name, description)
+    semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body, view, app.1.cx(), |root| {
+        let name = root.accessibility.label.as_ref().map(|label| label.0.as_str().to_string());
+        let description = root.accessibility.description.as_ref().map(|label| label.0.as_str().to_string());
+        (name, description)
+    }).await.expect("render")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -273,7 +274,7 @@ async fn every_window_and_panel_body_has_an_accessible_name_in_the_viewers_langu
     let mut app = bim_app().await;
     for (locale, names) in [(Locale::En, ["Plan", "3D", "Section", "Schedule", "Outliner", "Properties", "Library", "Diagnostics"]), (Locale::De, ["Grundriss", "3D", "Schnitt", "Mengen", "Struktur", "Eigenschaften", "Bibliothek", "Diagnose"])] {
         let view = view(locale, &[], None);
-        for (body, name) in [plan::BODY_KEY, world::BODY_KEY, section::BODY_KEY, schedule::BODY_KEY, outliner_panel::BODY_KEY, properties_panel::BODY_KEY, library_panel::BODY_KEY, diagnostics_panel::BODY_KEY].into_iter().zip(names) {
+        for (body, name) in [semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::BODY_KEY, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::BODY_KEY, semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::BODY_KEY, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::library::BODY_KEY, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::BODY_KEY].into_iter().zip(names) {
             assert_eq!(accessible(&mut app, body, &view).await.0.as_deref(), Some(name), "{body} in {locale:?}");
         }
     }
@@ -283,7 +284,7 @@ async fn every_window_and_panel_body_has_an_accessible_name_in_the_viewers_langu
 async fn the_drawing_surfaces_say_how_to_drive_them_without_a_pointer() {
     let mut app = bim_app().await;
     let view = view(Locale::En, &[], None);
-    for body in [plan::BODY_KEY, world::BODY_KEY, section::BODY_KEY, schedule::BODY_KEY] {
+    for body in [semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::BODY_KEY, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::BODY_KEY] {
         let description = accessible(&mut app, body, &view).await.1;
         assert!(description.is_some_and(|text| !text.is_empty()), "{body} has a description");
     }
@@ -302,12 +303,12 @@ async fn no_key_is_bound_twice_across_the_commands_the_utilities_and_the_gesture
             panic!("the key {keys} is bound to both {other} and {action}");
         }
     }
-    assert!(bindings.len() > crate::editor::bim::utilities::UTILITIES.len(), "the commands and the gesture keys are listed too");
+    assert!(bindings.len() > semio_s_artifact_bim_model_kit::editor::bim::utilities::UTILITIES.len(), "the commands and the gesture keys are listed too");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn every_modify_utility_is_armed_by_its_own_key_in_the_plan_and_the_3d_window() {
-    use crate::editor::bim::utilities::{UTILITIES, for_window};
+    use semio_s_artifact_bim_model_kit::editor::bim::utilities::{UTILITIES, for_window};
     let bindings = all_keybindings();
     let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
     for id in ["copy", "mirror", "array", "array-radial", "offset", "trim", "extend", "align", "split"] {
@@ -316,7 +317,7 @@ async fn every_modify_utility_is_armed_by_its_own_key_in_the_plan_and_the_3d_win
         assert!(bindings.contains(&(keys, arm)), "{id}: {keys} is registered");
         assert!(json.contains(arm), "{id}: the manifest offers {arm}");
         assert_eq!(row.group, Some("modify"), "{id} sits in the modify ribbon group");
-        for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID] {
+        for window in [semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID] {
             assert!(for_window(window).iter().any(|utility| utility.as_str() == id), "{id} is armed in {window}");
         }
         let command = BimModelApp::command_from_action(arm, None, None).unwrap_or_else(|error| panic!("{arm}: {}", error.message));
@@ -354,7 +355,7 @@ async fn moving_a_wall_between_storeys_by_menu_key_or_drop_is_one_undoable_row_a
     assert_eq!(host(&app, "w-south"), hosted, "the openings follow their host");
     history_verb(&mut app, "undo").await;
     assert_eq!(app.snapshot().expect("snapshot").walls["w-south"].storey, "st-ground");
-    let dropped = BimModelApp::command_from_action("setField", Some((semio_framework_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (outliner_panel::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_framework_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
+    let dropped = BimModelApp::command_from_action("setField", Some((semio_framework_plugin::DslValue::object([("field", "storey"), ("value", "st-first"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "w-east")].map(|(key, value)| (key.to_string(), semio_framework_plugin::DslValue::String(value.into()))))).clone()), None).expect("the drop decodes");
     assert!(dispatch(&mut app, dropped).await.edited_document());
     assert_eq!(app.snapshot().expect("snapshot").walls["w-east"].storey, "st-first", "the row dropped on a storey stands on it");
     history_verb(&mut app, "undo").await;
@@ -377,43 +378,43 @@ async fn properties_classifications_the_project_and_typed_placements_are_undoabl
     assert!(dispatch(&mut app, BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into()], system: system.clone(), code: "Ss_25".into() })).await.edited_document());
     assert!(app.snapshot().expect("snapshot").classifications.contains_key("w-south"));
     assert!(dispatch(&mut app, BimCommand::PlaceAt(place_elements::PlaceAt { ids: vec!["w-south".into()], at: "10, 5".into() })).await.edited_document());
-    let ends = crate::editor::bim::gestures::plane::axis_ends(&app.snapshot().expect("snapshot").walls["w-south"].axis);
+    let ends = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&app.snapshot().expect("snapshot").walls["w-south"].axis);
     assert_eq!(ends, ([10.0, 5.0], [18.0, 5.0]));
     history_verb(&mut app, "undo").await;
-    assert_eq!(crate::editor::bim::gestures::plane::axis_ends(&app.snapshot().expect("snapshot").walls["w-south"].axis), ([0.0, 0.0], [8.0, 0.0]), "place-elements restores the base placement exactly");
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&app.snapshot().expect("snapshot").walls["w-south"].axis), ([0.0, 0.0], [8.0, 0.0]), "place-elements restores the base placement exactly");
 }
 //#endregion 🔖️Mounted
 
 //#region 🔖️WorldPreview
 #[semio_framework_async_macros::async_test]
 async fn the_marks_of_a_gesture_become_segments_and_points_at_the_floor_of_the_storey_in_the_3d_window() {
-    use crate::editor::bim::fixture::{room, Rig};
+    use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
     let mut rig = Rig::plan("wall", room());
     rig.down(0.0, -2.0);
     rig.mv(3.0, -2.0);
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
-    let config = world::config::BimWorldWindowConfig::default();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
+    let config = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig::default();
     assert!(world::scene(&rig.snapshot, &inference, &config, &[], &[], 1).engagement_preview_json.is_none(), "a scene without a gesture has no preview");
-    let scene = world::scene_over(&rig.snapshot, &inference, &config, &[], &[], 1, &rig.preview);
+    let scene = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene_over(&rig.snapshot, &inference, &config, &[], &[], 1, &rig.preview);
     let items: Vec<serde_json::Value> = serde_json::from_str(&scene.engagement_preview_json.expect("the gesture shows")).expect("a JSON array");
     let segment = items.iter().find(|item| item["kind"] == "segment").expect("the rubber band is a segment");
     let numbers = |value: &serde_json::Value| value.as_array().map(|items| items.iter().filter_map(serde_json::Value::as_f64).collect::<Vec<_>>()).unwrap_or_default();
     let (from, to) = (numbers(&segment["from"]), numbers(&segment["to"]));
     assert!(from.iter().zip([0.0, -2.0, 0.02]).chain(to.iter().zip([3.0, -2.0, 0.02])).all(|(found, expected)| (found - expected).abs() < 1e-9), "{from:?} -> {to:?}");
     assert!(items.iter().any(|item| item["kind"] == "point"), "the snap marker is a point cross");
-    let isolated = world::config::BimWorldWindowConfig { isolated_storey: "st-first".into(), ..config };
-    let lifted = world::scene_over(&rig.snapshot, &inference, &isolated, &[], &[], 1, &rig.preview);
+    let isolated = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig { isolated_storey: "st-first".into(), ..config };
+    let lifted = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene_over(&rig.snapshot, &inference, &isolated, &[], &[], 1, &rig.preview);
     let items: Vec<serde_json::Value> = serde_json::from_str(&lifted.engagement_preview_json.expect("the gesture shows")).expect("a JSON array");
     assert!(items.iter().find(|item| item["kind"] == "segment").and_then(|item| item["from"][2].as_f64()).is_some_and(|z| (z - 3.02).abs() < 1e-9), "the marks float over the isolated storey");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_closed_path_gets_its_closing_segment_and_a_label_has_no_3d_form() {
-    use crate::editor::bim::marks::{Mark, Preview, Style};
+    use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
     let snapshot = demo();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let preview = Preview::of(vec![Mark::path(&[[0.0, 0.0], [2.0, 0.0], [2.0, 2.0]], true, Style::Ghost), Mark::label([1.0, 1.0], "2.00 m")]);
-    let items = world::preview_items(&snapshot, &inference, &world::config::BimWorldWindowConfig::default(), &preview);
+    let items = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::preview_items(&snapshot, &inference, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig::default(), &preview);
     assert_eq!(items.len(), 3, "two segments and the closing one; the label stays in the plan");
 }
 //#endregion 🔖️WorldPreview
@@ -421,17 +422,17 @@ async fn a_closed_path_gets_its_closing_segment_and_a_label_has_no_3d_form() {
 //#region 🔖️View
 #[semio_framework_async_macros::async_test]
 async fn the_projection_of_the_3d_window_must_be_one_of_its_five_kinds_and_the_chrome_offers_exactly_those() {
-    let view = view(Locale::En, &[("bim-world", world::WINDOW_KIND_ID)], Some("bim-world"));
+    let view = view(Locale::En, &[("bim-world", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID)], Some("bim-world"));
     for (value, accepted) in [("orthographic", true), ("threePoint", true), ("twoPoint", true), ("cabinet", false), ("", false)] {
         let mut context = BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&view), None, None);
-        let result = run(&demo(), |doc, cfg| set_view::handle(&set_view::SetView { field: "projection".into(), value: value.into(), pressed: None }, doc, cfg, &mut context));
+        let result = run(&demo(), |doc, cfg| semio_s_artifact_bim_model_coordination::editor::bim::commands::set_view::handle(&semio_s_artifact_bim_model_coordination::editor::bim::commands::set_view::SetView { field: "projection".into(), value: value.into(), pressed: None }, doc, cfg, &mut context));
         assert_eq!(result.is_ok(), accepted, "{value}");
         if !accepted {
             assert_eq!(code(result), Some("bim.view.value-invalid".to_string()));
         }
     }
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
-    let measures = crate::editor::bim::chrome::measures(&demo(), &cfg, &view).remove("bim-world").expect("the world measures");
+    let measures = semio_s_artifact_bim_model_dispatch_context::editor::bim::chrome::measures(&demo(), &cfg, &view).remove("bim-world").expect("the world measures");
     let Some(WindowMeasure::Select { items, .. }) = measures.iter().find(|measure| matches!(measure, WindowMeasure::Select { id, .. } if id == "bim.measure.world.projection")) else { panic!("the projection select") };
     assert_eq!(items.iter().map(|item| item.value.as_str()).collect::<Vec<_>>(), world::PROJECTION_KINDS);
 }
@@ -448,9 +449,9 @@ async fn the_diagnostics_panel_of_the_mounted_app_names_a_clean_model_in_both_la
 async fn activating_a_finding_selects_its_elements_in_the_shared_elements_domain_without_touching_the_document() {
     let mut app = bim_app().await;
     let before = app.document_pack().await.expect("pack");
-    let selected = dispatch(&mut app, BimCommand::SelectFindings(select_findings::SelectFindings { ids: vec!["w-south".into(), "w-east".into()] })).await;
+    let selected = dispatch(&mut app, BimCommand::SelectFindings(semio_s_artifact_bim_model_move_storey::editor::bim::commands::select_findings::SelectFindings { ids: vec!["w-south".into(), "w-east".into()] })).await;
     assert!(!selected.edited_document());
-    let selection = app.interaction_state().await.selection.get(crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
+    let selection = app.interaction_state().await.selection.get(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
     assert_eq!(selection, vec!["w-south".to_string(), "w-east".to_string()], "the plan, the 3D view and the outliner share this selection");
     let after = app.document_pack().await.expect("pack");
     assert!(before.pack == after.pack && before.spr == after.spr, "selecting a finding writes no document byte");
@@ -461,7 +462,7 @@ async fn classifying_and_unclassifying_through_the_typed_commands_are_undoable_r
     let mut app = bim_app().await;
     assert!(dispatch(&mut app, BimCommand::CreateEntity(create_entity::CreateEntity { kind: "classification-system".into(), parent: String::new(), name: "Uniclass".into() })).await.edited_document());
     let system = app.snapshot().expect("snapshot").classification_systems.keys().next().cloned().expect("the new system");
-    let classify = BimCommand::SetClassification(set_classification::SetClassification { ids: vec!["w-south".into(), "w-east".into()], system: system.clone(), code: "Ss_25".into() });
+    let classify = BimCommand::SetClassification(semio_s_artifact_bim_model_move_storey::editor::bim::commands::set_classification::SetClassification { ids: vec!["w-south".into(), "w-east".into()], system: system.clone(), code: "Ss_25".into() });
     assert!(dispatch(&mut app, classify).await.edited_document());
     assert_eq!(app.snapshot().expect("snapshot").classifications.len(), 2);
     assert!(dispatch(&mut app, BimCommand::RemoveClassification(remove_classification::RemoveClassification { ids: vec!["w-south".into()], system })).await.edited_document());

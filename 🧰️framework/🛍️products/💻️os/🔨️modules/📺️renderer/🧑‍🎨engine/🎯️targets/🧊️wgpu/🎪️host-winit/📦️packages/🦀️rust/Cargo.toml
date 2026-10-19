@@ -51,7 +51,11 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modul
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

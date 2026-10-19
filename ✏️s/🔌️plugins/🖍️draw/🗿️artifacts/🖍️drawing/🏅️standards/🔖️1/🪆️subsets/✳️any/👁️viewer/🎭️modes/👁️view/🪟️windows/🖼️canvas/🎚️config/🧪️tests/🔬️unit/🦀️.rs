@@ -3,9 +3,8 @@ use super::*;
 use crate::{create_drawing_viewer, DrawingViewCommand, DrawingViewer};
 use semio_framework_plugin::{artifact_app_laws,ActionMeta,App,PluginApp,VcsArtifactApp,ViewerApp,ViewModel,ViewWindowInstance,WindowConfigOwner};
 
-async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene,String> {
-    let tree = app.render(super::super::BODY_KEY,None,view).await.map_err(|error| format!("{error:?}"))?;
-    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::Canvas2dScene,String> {
+    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, super::super::BODY_KEY, view, cx).await.map_err(|error| format!("{error:?}"))?;
     artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
 }
 
@@ -13,6 +12,7 @@ async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewMod
 async fn drawing_viewer_camera_ownership_and_restore() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let manifest = || App { definition: create_drawing_viewer(),examples: Vec::new() };
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = Box::new(artifact_app_laws::new_app_with_registry::<ViewerApp<DrawingViewer>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
     app.bind_instance_id(91).await;
     let view = ViewModel { window_instances: ["left","right"].into_iter().map(|id| ViewWindowInstance { id: id.into(),window_kind_id: DrawingViewerCanvasWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(),..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -27,8 +27,8 @@ async fn drawing_viewer_camera_ownership_and_restore() {
             let decoded = <DrawingViewCommand as protocol::OpBinary>::decode_op(&bytes).map_err(|error| format!("{error:?}"))?;
             if decoded != command { return Err("viewer camera command binary roundtrip changed payload".into()); }
             let meta = ActionMeta { instance_id: 91,view_state: Some(context),..artifact_app_laws::meta("drawing-viewer-camera") };
-            app.dispatch_typed(command,&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app,91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if receipt.lanes != vec![semio_framework_plugin::app::TypedOperationResultLane::WindowConfig,semio_framework_plugin::app::TypedOperationResultLane::Ui,semio_framework_plugin::app::TypedOperationResultLane::Terminal] { return Err(format!("viewer camera published unexpected lanes: {:?}",receipt.lanes)); }
         }
         let after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -39,15 +39,15 @@ async fn drawing_viewer_camera_ownership_and_restore() {
             let context = view.for_window_instance(id).ok_or("expected camera window unknown")?;
             let expected: DrawingViewerCanvasWindowConfig = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
             for target in [&mut app,&mut reopened] {
-                let scene = scene(target,&context).await?;
+                let scene = scene(target,&context, scope.cx()).await?;
                 if scene.framing.is_some() { return Err(format!("stored viewer camera requested another fit: {id}")); }
                 if (scene.camera_x,scene.camera_y,scene.zoom) != (expected.viewport.x,expected.viewport.y,expected.viewport.zoom) { return Err(format!("viewer camera changed across windows or restoration: {id}")); }
             }
         }
         Ok(())
     }.await;
-    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     outcome.expect("Drawing viewer camera ownership and restoration");
 }
 

@@ -1,6 +1,7 @@
 //! 🌍️ `create-site` payload. Brings a new site into existence.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Site}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Site};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateSite {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateSite
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSite> + From<crate::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSite> + From<semio_s_artifact_bim_model_mut_any_58::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "site", kind: "create-site", record: "CreateSite" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

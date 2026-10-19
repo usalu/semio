@@ -5,8 +5,8 @@
     "implementationFilename": "🐹️.go",
     "packagesDirectory": "📦️packages",
     "languageDirectory": "🐹️go",
-    "opaqueDirectoryNames": ["🧫️fixtures", "📦️packages"],
-    "sourceDirectoryNames": ["🧮️addition", "🔠️uppercase", "🎯️offset"]
+    "opaqueDirectoryNames": ["🧫️fixtures", "🔮️oracles", "📦️packages"],
+    "sourceDirectoryNames": ["🧮️addition", "🔠️uppercase", "🎯️offset", "🏖️nested"]
   },
   "module": "example.com/semio/canonical-go-tests",
   "dependency": {
@@ -41,6 +41,12 @@
       "production": "func upper(value string) string { return strings.ToUpper(value) }",
       "productionImports": ["strings"],
       "test": "func TestPrivateUppercase(t *testing.T) { if upper(\"go\") != \"GO\" { t.Fatal(\"uppercase\") } }"
+    }
+  ],
+  "oraclePrograms": [
+    {
+      "directory": "🔮️oracles/🧭️standalone",
+      "production": "func main() { println(\"oracle\") }"
     }
   ],
   "opaqueCases": [
@@ -99,6 +105,20 @@
         "test": "func TestPackageModuleAdapterMustStayOutside(t *testing.T) { t.Fatal(\"adapter executed\") }"
       }
     ],
+    "nestedModule": {
+      "domain": "🏖️nested",
+      "module": "example.com/semio/canonical-go-area/nested",
+      "package": "nested",
+      "production": "func One() int { return 1 }",
+      "members": [
+        {
+          "domain": "🔠️uppercase",
+          "production": "func Two() int { return One() + 1 }"
+        }
+      ],
+      "expectedPackages": ["."],
+      "expectedSources": ["🔠️uppercase/🐹️.go"]
+    },
     "expectedPackages": ["."],
     "expectedSources": ["🧮️addition/🐹️.go"],
     "expectedTests": ["../../🧪️tests/🌗️external/🐹️.go", "../../🧪️tests/🔬️unit/🐹️.go"],

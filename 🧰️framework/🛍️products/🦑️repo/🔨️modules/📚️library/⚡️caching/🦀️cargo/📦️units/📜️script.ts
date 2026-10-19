@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import{withNativeImageTerminalCloseV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";
+import{withNativeImageTerminalCloseV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";
 import{withRustCompilerStateV1,type RustCompilerStateLoanV1,type RustCompilerStateFactsV1}from"./🏗️compiler/💾️state/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {openRepositoryCachePartitionV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
@@ -11,9 +11,9 @@ import {randomUUID} from "node:crypto";
 import {BundleScript,ScriptRouter,receiveScriptProcessInvocation,scriptInvocationEnvironment,requireIssuedScriptInvocationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {withResourceLeases} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {requireNativeStoragePathV1,nativeImageRootV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {measureOwnedArtifactTreeV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📏️measurement/🟦️.ts";
-import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1,nativeImageRootV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {measureOwnedArtifactTreeV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📏️measurement/🟦️.ts";
+import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {readRustUnitChargeV1} from "./📤️publication/🟦️.ts";
 import {repositoryStrictStorageV1} from "../../💾️storage/🔒️enforcement/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";

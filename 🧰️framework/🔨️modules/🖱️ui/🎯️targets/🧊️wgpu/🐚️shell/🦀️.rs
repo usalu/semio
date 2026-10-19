@@ -9,15 +9,15 @@
 //! drop-zone computation is stubbed this milestone (see `dispatch`'s doc comment): only hit-testing
 //! plus click-to-activate-tab is fully implemented.
 
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::layout::{ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use crate::wgpu::component::role_chrome::{role_title_chip_text, ChromeRole};
-use crate::wgpu::component::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
-use crate::wgpu::events::{hit_test, UiEvent};
-use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
-use crate::wgpu::IconName;
-use crate::wgpu::Label;
-use crate::wgpu::Locale;
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_declaration::role_chrome::{role_title_chip_text, ChromeRole};
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
+use semio_framework_ui_wgpu_events::{hit_test, UiEvent};
+use semio_framework_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use semio_framework_ui_declaration::IconName;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::Locale;
 
 const SHELL_AXIS: u32 = 200;
 const SHELL_STACK: u32 = 201;

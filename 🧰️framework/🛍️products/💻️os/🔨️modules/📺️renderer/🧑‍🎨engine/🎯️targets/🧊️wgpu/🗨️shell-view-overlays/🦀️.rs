@@ -29,7 +29,14 @@ use semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::rend
 use semio_framework_ui_locale::{Label, Locale, Terminology};
 use semio_framework_value::DslValue;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, Rgba, Theme, chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_framework_ui_theme::{Level, Rgba, Theme};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, paint_retained_glyph_step_flowed};
+use semio_framework_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🗨️view-overlays/⏪️time-travel/🦀️.rs"]
 mod staged_view_overlays__time_travel;

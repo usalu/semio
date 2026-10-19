@@ -141,7 +141,7 @@ function ecmaDataModule(source: string): boolean {
 function classifyEcmaPackageSource(content: string, grammar: PackageGlueGrammarSpec): PackageSourceDecision {
   const structural = packageStructuralSource(content, grammar.analyzer), source = structural.source.trim();
   if (/\b(?:class|namespace|enum)\b/u.test(source)) return { role: "implementation", evidence: "runtime type or namespace declaration" };
-  if (/\b(?:export\s+)?(?:declare\s+)?(?:interface|type)\s+[A-Za-z_$][\w$]*/u.test(source)) return { role: "implementation", evidence: "domain type declaration is owned inside the package" };
+  if (/\b(?:export\s+)?(?:declare\s+)?(?:interface|type)\s+[A-Za-z_$][\w$]*/u.test(source.replace(/\b(?:export|import)\s*(?:type\s*)?\{[^}]*\}/gu, ""))) return { role: "implementation", evidence: "domain type declaration is owned inside the package" };
   if (!structural.balanced) return { role: "unresolved", evidence: "unbalanced lexical structure" };
   if (!source) return { role: "declaration", evidence: "trivia-only module" };
   const imports = ecmaImportedBindings(content);
@@ -149,9 +149,9 @@ function classifyEcmaPackageSource(content: string, grammar: PackageGlueGrammarS
   if (functions.some((row) => !ecmaDelegatedBody(row.body, imports, grammar.maxDelegationStatements))) return { role: "implementation", evidence: "function body performs non-delegating work" };
   let rest = packageWithoutRanges(source, functions);
   rest = rest
-    .replace(/\bimport\s+[\s\S]*?\s+from\s+["'][\s\S]*?["']\s*;?/gu, "")
+    .replace(/\bimport\s*[\s\S]*?\s*from\s*["'][\s\S]*?["']\s*;?/gu, "")
     .replace(/\bimport\s*["'][\s\S]*?["']\s*;?/gu, "")
-    .replace(/\bexport\s+(?:type\s+[^;]+|\*\s+(?:as\s+[A-Za-z_$][\w$]*\s+)?from\s+["'][\s\S]*?["']|\{[^}]*\}(?:\s+from\s+["'][\s\S]*?["'])?)\s*;?/gu, "")
+    .replace(/\bexport\s*(?:type(?:\s+|(?=\{))[^;]+|\*\s*(?:as\s+[A-Za-z_$][\w$]*\s+)?from\s*["'][\s\S]*?["']|\{[^}]*\}(?:\s*from\s*["'][\s\S]*?["'])?)\s*;?/gu, "")
     .replace(/\b(?:export\s+)?(?:declare\s+)?type\s+[A-Za-z_$][\w$]*[\s\S]*?;/gu, "")
     .replace(/\b(?:export\s+)?(?:declare\s+)?interface\s+[A-Za-z_$][\w$]*[^{}]*\{[^{}]*\}\s*;?/gu, "")
     .trim();

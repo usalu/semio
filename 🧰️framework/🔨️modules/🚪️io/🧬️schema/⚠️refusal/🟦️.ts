@@ -5,7 +5,9 @@ import type {TextError} from "@semio-tech/framework-diagnostic-ts/text-error";
 import {encodeDiagnosticControlled,decodeDiagnosticControlled,ownDiagnosticText,type Diagnostic} from "@semio-tech/framework-diagnostic-ts/controlled";
 /** 🚪️ One canonical owned refusal retains every attached source diagnostic. */
 export class IoError {
- constructor(public readonly cause:ValueError,public readonly diagnostics:Diagnostic[]){}
+ public readonly cause: ValueError;
+ public readonly diagnostics: Diagnostic[];
+ constructor(cause: ValueError, diagnostics: Diagnostic[]) { this.cause = cause; this.diagnostics = diagnostics; }
  /** 🚨️ Moves the complete owned cause without allocation or prose projection. */
  static fromValueError(cause:ValueError):IoError {return new IoError(cause,[]);}
  /** 📍️ Preserves exact authored text source data under explicit cumulative admission. */

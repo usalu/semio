@@ -11,12 +11,13 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::editor::bim::commands::export_model::{Advance, ExportJob};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::projection::{projection_in, report};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::{codec, export_ifc4, Schema};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::import::ifc::import_ifc4;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{Advance, ExportJob};
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::{projection_in, report};
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc4;
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+    use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::import_ifc4;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
     fn snapshot(ctx: &Context) -> Result<ModelSnapshot, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
@@ -40,7 +41,7 @@ mod subject {
         let (first, _) = export_ifc4(&model)?;
         let (back, _) = import_ifc4(&first)?;
         let (second, _) = export_ifc4(&back)?;
-        outcome(report(&back, &codec::decode_ifc4(&second)?).to_json())
+        outcome(report(&back, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(&second)?).to_json())
     }
 
     /// ⏳️ The house report of the file the stepped IFC4 export job writes: a first job is cancelled half-way, a second one runs to its end on the same session and its file is read back.
@@ -57,7 +58,7 @@ mod subject {
                 break output;
             }
         };
-        outcome(report(&model, &codec::decode_ifc4(output.data.as_bytes())?).to_json())
+        outcome(report(&model, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(output.data.as_bytes())?).to_json())
     }
 }
 //#endregion 🔖️Subject

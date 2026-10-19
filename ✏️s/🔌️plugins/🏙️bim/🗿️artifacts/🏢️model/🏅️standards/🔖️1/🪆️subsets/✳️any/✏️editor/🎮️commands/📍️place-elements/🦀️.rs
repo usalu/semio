@@ -2,11 +2,13 @@
 //! typed `x, y` and every other element moves by the same vector, so the group keeps its shape. It writes one `place-elements` mutation, whose absolute placements are the exact
 //! inverse of any later move, in one history row. Openings are not placed: they follow their host.
 
-use crate::editor::bim::gestures::typed::point_of;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::elements::{placement, Placement};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::point_of;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::{placement, Placement};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};
@@ -40,7 +42,7 @@ pub fn handle(payload: &PlaceAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
         return Ok(Emit::default());
     }
     let moved: BTreeMap<String, Placement> = placements.into_iter().map(|(id, placed)| (id.clone(), placed.translated(vector))).collect();
-    Ok(Emit::mutations(vec![ModelMutation::PlaceElements(crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements { placements: moved })]))
+    Ok(Emit::mutations(vec![ModelMutation::PlaceElements(semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements { placements: moved })]))
 }
 
 

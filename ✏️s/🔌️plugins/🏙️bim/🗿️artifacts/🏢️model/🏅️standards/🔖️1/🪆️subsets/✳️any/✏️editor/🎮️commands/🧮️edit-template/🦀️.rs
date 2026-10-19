@@ -2,11 +2,14 @@
 //! description, required, default, minimum, maximum, allowed values). The edit is a pure function of the definition list ([`apply`]) and becomes one `set-property-template` mutation that decides whether the result stands;
 //! changing the kind of a definition clears its default, allowed values and range, which belong to the old kind.
 
-use crate::editor::bim::entities::property_value;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, PropertyDef, PropertyKind}, diff::patches::PropertyTemplatePatch};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::property_value;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_40::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, PropertyKind};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::PropertyTemplatePatch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

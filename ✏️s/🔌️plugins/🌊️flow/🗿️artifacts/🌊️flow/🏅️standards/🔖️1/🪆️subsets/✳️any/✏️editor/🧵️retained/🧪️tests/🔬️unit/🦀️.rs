@@ -19,7 +19,7 @@ fn drain(work: &mut crate::editor::flow::FlowDirectStoreWork, body: usize) {
             return;
         }
         let grant = quoted_grant(work, body);
-        match work.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
             Step::Pending { progress } => assert!(progress.fits(grant)),
             Step::Complete { progress } => {
                 assert!(progress.fits(grant));

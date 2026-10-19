@@ -17,17 +17,17 @@ use semio_framework_os_renderer_wgpu_scene_state::{
     RASTER_UPLOAD_KEY_BYTE_CAPACITY,
 };
 use serde::Deserialize;
-use ui_wgpu::wgpu::draw_text;
-use ui_wgpu::wgpu::input::DragAxis;
-use ui_wgpu::wgpu::HitKind;
-use ui_wgpu::wgpu::HitTarget;
-use ui_wgpu::wgpu::PreparedRasterRejected;
-use ui_wgpu::wgpu::PreparedRasterReservation;
-use ui_wgpu::wgpu::Rect;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::SurfaceKind;
-use ui_wgpu::wgpu::Theme;
-use ui_wgpu::wgpu::UiComponentSceneNode;
+use semio_framework_ui_wgpu_widget_kit::draw_text;
+use semio_framework_ui_wgpu_input::DragAxis;
+use semio_framework_ui_wgpu_input::HitKind;
+use semio_framework_ui_wgpu_input::HitTarget;
+use semio_framework_ui_prepared::PreparedRasterRejected;
+use semio_framework_ui_prepared::PreparedRasterReservation;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
 
 #[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs"]
 mod canvas2d;

@@ -171,7 +171,7 @@ fn actual_display_release_refuses_item_and_byte_credit_before_dock_mutation() {
 
     let mut item = display_transfer_host_fixture();
     let item_root = item.shell.dock.dock.root.clone();
-    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY {
         item.shell.windows.reserve_window_topology_action(ActionDescriptor { controller_id: "fixture".into(), action: "occupied".into(), args: None }).expect("item-credit fixture admission");
     }
     let item_error = perform_display_transfer(&mut item, (800.0, 500.0)).expect_err("the physical release observes item refusal");

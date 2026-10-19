@@ -2,8 +2,8 @@
 //! records and the text of their formulas only (`semio_framework_expression::dependencies` on the parsed text), never from an inference. A leaf prefixes the field of the [`Fault`] with the record name
 //! on create (`["solid", "height"]`) and uses it as is on set (`["height"]`).
 
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::snapshot::{Family, FamilyParameter, FamilySolid, ModelSnapshot, ParametricProfile, Profile, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Family, FamilyParameter, FamilySolid, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ParametricProfile, Profile, SolidShape};
 use protocol::OutcomeCode;
 
 /// 🚫️ A rule broken: the outcome code, the message and the field of the record that breaks it.
@@ -37,26 +37,26 @@ pub fn family_record_fault(record: &Family) -> Option<Fault> {
 
 /// 📝️ Why `text` is not a formula the expression language reads, none when it parses.
 pub fn formula_fault(text: &str, field: &str) -> Option<Fault> {
-    formula::parse_formula(text).err().map(|error| Fault::invalid(format!("The formula \"{text}\" of {field} does not parse: {}.", error.message()), field))
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parse_formula(text).err().map(|error| Fault::invalid(format!("The formula \"{text}\" of {field} does not parse: {}.", error.message()), field))
 }
 
 /// 🔎️ Why a formula refers to a name that is no parameter of the family, none when every name it uses exists. Authored references always resolve: a parameter is created before the formulas that use it.
 pub fn reference_fault(base: &ModelSnapshot, family: &str, text: &str, field: &str) -> Option<Fault> {
-    let unknown: Vec<String> = formula::references(text).into_iter().filter(|name| !base.family_parameters.contains_key(&formula::parameter_id(family, name))).collect();
+    let unknown: Vec<String> = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(text).into_iter().filter(|name| !base.family_parameters.contains_key(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, name))).collect();
     (!unknown.is_empty()).then(|| Fault::missing("Parameter", &unknown.join("\", \""), field))
 }
 
 /// ♻️ Why giving parameter `name` the formula `text` would make parameters depend on each other in a circle, none when the dependencies stay acyclic.
 pub fn cycle_fault(base: &ModelSnapshot, family: &str, name: &str, text: &str) -> Option<Fault> {
-    let mut graph: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = base.family_parameters.values().filter(|row| row.family == family).map(|row| (row.name.clone(), formula::references(&row.value))).collect();
-    graph.insert(name.to_string(), formula::references(text));
+    let mut graph: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = base.family_parameters.values().filter(|row| row.family == family).map(|row| (row.name.clone(), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(&row.value))).collect();
+    graph.insert(name.to_string(), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(text));
     let plan = semio_framework_expression::plan(&graph);
     plan.cycles.iter().find(|members| members.iter().any(|member| member == name)).map(|members| Fault::invalid(format!("The formula would make {} depend on each other in a circle.", members.join(", ")), "value"))
 }
 
 /// 🔤️ Why a parameter name is not usable.
 pub fn name_fault(name: &str) -> Option<Fault> {
-    (!formula::is_name(name)).then(|| Fault::invalid(format!("\"{name}\" is not a parameter name: use letters, digits and underscores, not starting with a digit."), "name"))
+    (!semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::is_name(name)).then(|| Fault::invalid(format!("\"{name}\" is not a parameter name: use letters, digits and underscores, not starting with a digit."), "name"))
 }
 
 /// 🧊️ Why a family solid is not valid in `base`: its family is missing, its name is blank, a formula slot does not parse or names an unknown parameter, or its shape has too few points.
@@ -67,7 +67,7 @@ pub fn solid_fault(base: &ModelSnapshot, solid: &FamilySolid) -> Option<Fault> {
     if solid.name.trim().is_empty() {
         return Some(Fault::invalid("A family solid needs a name.", "name"));
     }
-    if let Some(fault) = formula::solid_slots(solid).into_iter().find_map(|(field, text)| formula_fault(text, &field).or_else(|| reference_fault(base, &solid.family, text, &field))) {
+    if let Some(fault) = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::solid_slots(solid).into_iter().find_map(|(field, text)| formula_fault(text, &field).or_else(|| reference_fault(base, &solid.family, text, &field))) {
         return Some(fault);
     }
     shape_fault(&solid.shape)
@@ -104,29 +104,29 @@ pub fn component_user(base: &ModelSnapshot, family: &str) -> Option<&'static str
 
 /// 🔑️ The key of the parameter or override `name` of the owner `owner` (a family or a component) in `family_parameters` or `component_overrides`.
 pub fn parameter_key(owner: &str, name: &str) -> String {
-    formula::parameter_id(owner, name)
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(owner, name)
 }
 
 /// 🔗️ The names a formula text refers to, empty when it does not parse.
 pub fn references(text: &str) -> std::collections::BTreeSet<String> {
-    formula::references(text)
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(text)
 }
 
 /// 🔗️ Who refers to parameter `name` of `family` in a formula, none when nobody does: another parameter of the family or one of its solids.
 pub fn parameter_user(base: &ModelSnapshot, family: &str, name: &str) -> Option<String> {
-    let refers = |text: &str| formula::references(text).contains(name);
+    let refers = |text: &str| semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(text).contains(name);
     let other = base.family_parameters.values().find(|row| row.family == family && row.name != name && refers(&row.value));
     if let Some(row) = other {
         return Some(format!("the formula of parameter \"{}\"", row.name));
     }
-    base.family_solids.iter().filter(|(_, row)| row.family == family).find_map(|(id, row)| formula::solid_slots(row).into_iter().find(|(_, text)| refers(text)).map(|(field, _)| format!("the {field} of solid \"{id}\"")))
+    base.family_solids.iter().filter(|(_, row)| row.family == family).find_map(|(id, row)| semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).into_iter().find(|(_, text)| refers(text)).map(|(field, _)| format!("the {field} of solid \"{id}\"")))
 }
 
 /// 🧭️ The parameters of `family` with the ones other formulas use first, so that creating them one after the other never meets a name that does not exist yet; parameters in a circle (only an import can bring
 /// one) come last, by name.
 pub fn parameters_in_order<'a>(base: &'a ModelSnapshot, family: &str) -> Vec<&'a FamilyParameter> {
     let rows: std::collections::BTreeMap<&str, &FamilyParameter> = base.family_parameters.values().filter(|row| row.family == family).map(|row| (row.name.as_str(), row)).collect();
-    let graph: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = rows.iter().map(|(name, row)| ((*name).to_string(), formula::references(&row.value))).collect();
+    let graph: std::collections::BTreeMap<String, std::collections::BTreeSet<String>> = rows.iter().map(|(name, row)| ((*name).to_string(), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(&row.value))).collect();
     let mut names = semio_framework_expression::plan(&graph).order;
     let rest: Vec<String> = rows.keys().map(|name| (*name).to_string()).filter(|name| !names.contains(name)).collect();
     names.extend(rest);

@@ -1,7 +1,6 @@
-import { canonicalWasmBuildVitePlugin } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
-import { readBuildMode } from "../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
-import { viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 // This file has been automatically migrated to valid ESM format by Storybook.
 // #region 🧲️Header
 // 💻️ .storybook/main.ts
@@ -16,17 +15,17 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 import { createWorkspaceViteResolveConfig, findWorkspacePackages } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
 import { hostBuildPlugins, uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
-import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { flowBrowserDeliveryV1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
-import { builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
-import { RUNTIME_ASSET_CHANNELS } from "../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import { builtPluginModulesRootIn } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
+import { RUNTIME_ASSET_CHANNELS } from "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
@@ -199,7 +198,7 @@ const config: StorybookConfig = {
       loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
     const currentRollup = config.build?.rollupOptions;
-    config.build = { ...config.build, ...semioViteBuild(undefined, buildMode) };
+    config.build = { ...config.build, ...semioViteBuild(undefined, buildModePolicy(buildMode)) };
     config.build.target = "es2022";
     config.build.rollupOptions = { ...currentRollup, ...config.build.rollupOptions };
     const existingExternal = config.build.rollupOptions.external;

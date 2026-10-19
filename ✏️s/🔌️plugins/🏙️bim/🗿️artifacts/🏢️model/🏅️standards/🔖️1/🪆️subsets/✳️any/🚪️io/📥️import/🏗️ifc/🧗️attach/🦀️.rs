@@ -3,14 +3,14 @@
 //! it was written with and is reported by a note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcrelconnectselements.htm>
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
-use crate::standards::v1::subsets::any::io::import::ifc::reader::text;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::text;
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::set_of;
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::io::export::ifc::walls::ATTACH_SET;
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::ATTACH_SET;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 
 fn top_of(i: &Import<'_>, kind: &str, target: &str, offset: f64, height: f64) -> Option<TopConstraint> {
     let own = || target.to_string();

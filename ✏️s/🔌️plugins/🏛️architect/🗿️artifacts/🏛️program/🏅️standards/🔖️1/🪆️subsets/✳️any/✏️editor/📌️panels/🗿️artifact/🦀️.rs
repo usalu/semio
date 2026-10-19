@@ -7,9 +7,9 @@
 //! "Registers 1–32"/"33–64"/"65–66"-sections idiom this panel used to carry is gone with it, and so is
 //! the hard `ui.fixed-capacity` fault a program with more than 32 elements used to hit.
 
-use crate::editor::architect::base::ui_label;
-use crate::editor::architect::base::ARCHITECT_INTERACTION_PROGRAM;
-use crate::editor::architect::base::{architect_action, ui_node, ui_text, ui_value_map, ui_value_text, ARCHITECT_APP_ID, ARCHITECT_INTERACTION_GRANULARITY_ENTITY};
+use crate::editor::architect::editor_vocabulary::ui_label;
+use crate::editor::architect::editor_vocabulary::ARCHITECT_INTERACTION_PROGRAM;
+use crate::editor::architect::editor_vocabulary::{architect_action, ui_node, ui_text, ui_value_map, ui_value_text, ARCHITECT_APP_ID, ARCHITECT_INTERACTION_GRANULARITY_ENTITY};
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;

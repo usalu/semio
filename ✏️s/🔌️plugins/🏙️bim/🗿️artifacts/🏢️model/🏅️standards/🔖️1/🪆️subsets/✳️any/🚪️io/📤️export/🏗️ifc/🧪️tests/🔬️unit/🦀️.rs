@@ -1,15 +1,16 @@
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::Phase};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use semio_framework_os_kernel::io::io_mechanism::ArchiveChildren;
 use semio_framework::io_schema::IoPayload;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io::io_mechanism::Serializer;
 #[allow(unused_imports)]
@@ -21,11 +22,15 @@ use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document, house, quantity, rows, string, tags};
-use crate::standards::v1::subsets::any::io::export::ifc::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{document, house, quantity, rows, string, tags};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21, ModelIntoIfc2x3, inferred_to_part21};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls;
+use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::{spaces, curtain};
 use protocol::Inference;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeSet;
@@ -49,7 +54,7 @@ fn the_house_exports_without_skipping_anything() {
 fn the_exported_bytes_are_an_ifc2x3_file_that_the_stdio_reader_decodes_back_to_the_same_graph() {
     let model = house();
     let (bytes, _) = export_ifc2x3(&model).expect("the house exports");
-    let decoded = codec::decode_document(&bytes).expect("the stdio reader decodes it");
+    let decoded = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_document(&bytes).expect("the stdio reader decodes it");
     assert_eq!(decoded.instances, document(&model).instances);
     assert!(decoded.header.file_schema.iter().any(|value| value.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some("IFC2X3")))));
 }
@@ -109,7 +114,7 @@ fn global_ids_do_not_change_when_unrelated_elements_are_added() {
     let mut extra = larger.walls["w-free"].clone();
     extra.name = "Extra".into();
     larger.walls.insert("w-extra".into(), extra);
-    let guids = |model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot| -> std::collections::BTreeMap<String, String> {
+    let guids = |model: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot| -> std::collections::BTreeMap<String, String> {
         let document = document(model);
         let mut map = std::collections::BTreeMap::new();
         for entity in ["IFCWALL", "IFCWALLSTANDARDCASE", "IFCCOLUMN", "IFCSLAB", "IFCOPENINGELEMENT", "IFCBUILDINGSTOREY"] {
@@ -156,7 +161,7 @@ fn a_model_without_any_element_exports_the_project_skeleton_only() {
 fn a_wall_with_a_missing_type_is_skipped_with_a_note_instead_of_failing() {
     let mut model = house();
     model.walls.get_mut("w-free").expect("the free wall").wall_type = "missing".into();
-    let (document, notes) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the model exports");
+    let (document, notes) = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(notes.iter().any(|note| note.starts_with("wall w-free")), "{notes:?}");
     assert!(!tags(&document, "IFCWALLSTANDARDCASE").contains(&"w-free".to_string()));
 }
@@ -176,17 +181,17 @@ async fn the_serializer_returns_the_file_as_a_binary_payload_with_a_diagnostic_p
 fn the_document_of_the_export_is_the_document_of_the_inference_it_is_built_from() {
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (from_inference, notes) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
-    let (from_model, again) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the house exports");
+    let (from_inference, notes) = inferred_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model, &inferred);
+    let (from_model, again) = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the house exports");
     assert_eq!((from_inference, notes), (from_model, again), "the export reads only the inference it is given");
 }
 
 #[test]
 fn every_written_base_quantity_is_a_value_of_the_inferred_take_off() {
-    use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
+    let (document, _) = inferred_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model, &inferred);
     let sets: [(QuantityKind, &str, fn(&ElementQuantity) -> Vec<(&'static str, f64)>); 10] = [
         (QuantityKind::Wall, "Qto_WallBaseQuantities", |q| vec![("Length", q.length), ("Width", q.width), ("Height", q.height), ("GrossFootprintArea", q.gross_area), ("GrossSideArea", q.gross_side_area), ("NetSideArea", q.net_side_area), ("GrossVolume", q.gross_volume), ("NetVolume", q.net_volume)]),
         (QuantityKind::CurtainWall, "Qto_CurtainWallQuantities", |q| vec![("Length", q.length), ("Height", q.height), ("GrossSideArea", q.gross_side_area)]),
@@ -218,7 +223,7 @@ fn a_wall_net_side_area_discounts_only_the_openings_the_take_off_clips_to_the_wa
     let before = ModelInference::infer(&model).expect("infers");
     model.openings.get_mut(&id).expect("the opening").offset = 1.0e3;
     let after = ModelInference::infer(&model).expect("infers");
-    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &after);
+    let (document, _) = inferred_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model, &after);
     let written = quantity(&document, &host, "Qto_WallBaseQuantities", "NetSideArea").expect("the wall net side area");
     assert!((written - after.quantities.elements[&host].net_side_area).abs() < 1e-9);
     assert!(written > before.quantities.elements[&host].net_side_area, "an opening that left the wall no longer discounts it: {written}");
@@ -228,13 +233,13 @@ fn a_wall_net_side_area_discounts_only_the_openings_the_take_off_clips_to_the_wa
 fn the_layers_of_a_roof_carry_the_volumes_of_the_take_off_and_of_their_solid() {
     let model = house();
     let inferred = ModelInference::infer(&model).expect("the house infers");
-    let (document, _) = inferred_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model, &inferred);
+    let (document, _) = inferred_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model, &inferred);
     for (id, roof) in &model.roofs {
         let solid = &inferred.element_solids[id];
         let storey = &inferred.storey_levels[&roof.storey];
         for (index, group) in solid.groups.iter().enumerate() {
             let written = quantity(&document, &format!("{id}:layer{index}"), "Qto_SlabBaseQuantities", "GrossVolume").expect("the layer volume");
-            let brep = crate::standards::v1::subsets::any::io::export::ifc::brep::mesh_where(solid, storey.elevation, |candidate, _| candidate == group).volume();
+            let brep = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::mesh_where(solid, storey.elevation, |candidate, _| candidate == group).volume();
             assert!((written - brep).abs() < 1e-6, "{id} layer {index}: take-off {written} against the written brep {brep}");
         }
     }
@@ -243,14 +248,14 @@ fn the_layers_of_a_roof_carry_the_volumes_of_the_take_off_and_of_their_solid() {
 
 #[test]
 fn every_phase_that_is_not_new_work_is_written_once_per_product_and_an_opening_carries_the_phase_of_its_host() {
-    use crate::standards::v1::subsets::any::schema::snapshot::Phase;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
     let mut model = house();
     macro_rules! cycle {
         ($($collection:ident),+) => { $( for (index, row) in model.$collection.values_mut().enumerate() { row.phase = Phase::ALL[(index + 1) % 4]; } )+ };
     }
     cycle!(walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces);
     let hosted = |host: &str| model.walls.get(host).map(|wall| wall.phase).or_else(|| model.curtain_walls.get(host).map(|curtain| curtain.phase)).expect("a host");
-    let fillers = model.openings.values().filter(|opening| !matches!(opening.kind, crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Void { .. })).filter(|opening| hosted(&opening.host) != Phase::New).count();
+    let fillers = model.openings.values().filter(|opening| !matches!(opening.kind, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Void { .. })).filter(|opening| hosted(&opening.host) != Phase::New).count();
     let own = model.walls.values().map(|row| row.phase).chain(model.curtain_walls.values().map(|row| row.phase)).chain(model.columns.values().map(|row| row.phase)).chain(model.beams.values().map(|row| row.phase)).chain(model.slabs.values().map(|row| row.phase)).chain(model.roofs.values().map(|row| row.phase)).chain(model.stairs.values().map(|row| row.phase)).chain(model.railings.values().map(|row| row.phase)).chain(model.spaces.values().map(|row| row.phase)).filter(|phase| *phase != Phase::New).count();
     let document = document(&model);
     let written: Vec<String> = rows(&document, "IFCPROPERTYSINGLEVALUE").into_iter().filter(|(_, args)| string(args, 0).as_deref() == Some("Phase")).filter_map(|(_, args)| args.get(2).and_then(|value| value.as_typed()).and_then(|(_, items)| items.first()).and_then(|value| value.as_str()).map(str::to_string)).collect();

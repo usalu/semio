@@ -1,11 +1,12 @@
 //! ↔️ `canvasPointerMove`: the pointer moved over a plan, section or world window. The armed utility's gesture advances (a rubber band follows, a ghost slides, a marquee grows); nothing is written
 //! until the gesture commits, and the marks it shows travel in the window transient, never in the document.
 
-use crate::editor::bim::gestures::session::ToolEvent;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolEvent;
 use crate::editor::bim::commands::canvas_pointer_down::canvas_pointer;
-use crate::editor::bim::gestures::run;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_gestures::editor::bim::gestures::run;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 canvas_pointer! {

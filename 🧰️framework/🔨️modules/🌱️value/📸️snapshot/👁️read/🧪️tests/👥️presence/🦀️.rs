@@ -111,7 +111,7 @@ fn retained_presence_read_transfer_contention_preserves_unreturned_capability() 
     assert!(!registry.has_returned());
     let original = owner.expect("exact transfer retries after bounded lock contention");
     assert_eq!(original.as_str(), "aä🧵");
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::retirement::shared::admit_shared_retirement(original, CLOSE_GRANT, false));
+    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::retirement::arc_custody::admit_shared_retirement(original, CLOSE_GRANT, false));
     let (owner, receipt) = result.unwrap_or_else(|_| panic!("original transferred String"));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
     finish_box(&mut Some(owner));

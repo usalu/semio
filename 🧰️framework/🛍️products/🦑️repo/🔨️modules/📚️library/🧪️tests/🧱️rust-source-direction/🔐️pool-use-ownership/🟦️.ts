@@ -42,11 +42,11 @@ test("neutral pool and mounted database have separate closed authority and origi
   const owner = tree.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "WorkerPoolUseCheckScript")!.getText(tree);
   expect(owner).not.toContain("🛍️products");
   expect(owner).not.toContain("mountedCases");
-  expect(nativeRosters(path, "WorkerPoolUseCheckScript")).toEqual([[...fixture.neutralLaws]]);
+  expect(nativeRosters(path, "WorkerPoolUseCheckScript").flat()).toEqual([...fixture.neutralLaws]);
   expect(nativeRosters(fixture.mountedRouter, "DocumentMountSingleFlightCheckScript")[0]).toEqual(expect.arrayContaining([...fixture.mountedLaws]));
   const higherTree = ts.createSourceFile(fixture.mountedRouter, source(fixture.mountedRouter), ts.ScriptTarget.Latest, true);
   const higher = higherTree.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "DocumentMountSingleFlightCheckScript")!.getText(higherTree);
-  expect(higher).toContain('"🧫️fixtures/🔐️pool-use/🔣️.json"');
+  expect(higher).toContain('"🧪️tests/🧫️fixtures/🔐️pool-use/🔣️.json"');
   expect(higher).toContain("mountedPoolUse.cases");
   for (const marker of ["missing mounted pool-use marker", "missing authority pool-use marker", "missing sync-hello pool-use marker", "missing mounted pool-use law"]) expect(higher).toContain(marker);
 });

@@ -83,7 +83,13 @@ use std::sync::{Arc, Mutex};
 use store_sync::PresencePeer;
 use store_sync::sync::{ArtifactSyncStatus, DocumentLinkStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitTarget, InputState, Rect, Theme, UiNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitTarget, InputState};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::UiNode;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-identity-directory-presence/🦀️.rs"]

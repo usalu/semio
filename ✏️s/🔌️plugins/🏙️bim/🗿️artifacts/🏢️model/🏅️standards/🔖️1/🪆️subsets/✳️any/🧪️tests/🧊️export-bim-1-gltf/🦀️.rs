@@ -17,8 +17,9 @@ const COMPONENTS_SNAPSHOT: &str = "shared://🏗️ifc/🪑️components/📸️
 mod subject {
     use super::SNAPSHOT;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::gltf::{model_to_gltf, projection::project};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::export::gltf::model_to_gltf;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection::project;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 
     /// 🪑️ The same report for the components model: the `component` and `mep` element nodes, their volumes and the world bounds.
     pub fn export_gltf_components(ctx: &Context) -> Result<Outcome, String> {

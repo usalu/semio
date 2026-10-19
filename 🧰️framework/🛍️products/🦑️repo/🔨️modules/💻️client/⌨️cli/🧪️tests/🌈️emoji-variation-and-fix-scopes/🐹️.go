@@ -9,18 +9,13 @@
 package client
 
 import (
-	"os"
 	"testing"
 )
 
 func TestFixNonAutofixableNotFixed(t *testing.T) {
-	cwd, _ := os.Getwd()
-	oldRoot := rootDir
-	rootDir = findTestRepoRoot(cwd)
-	defer func() { rootDir = oldRoot }()
-
+	withStatuteFixtures(t)
 	bundles := LoadBundles()
-	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
+	path := statuteFixtureRoot + "/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)

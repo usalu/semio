@@ -7,7 +7,7 @@ import { reactHostPort, type ReactNode } from "@semio-tech/framework/ui/targets/
 import { ephemeralMap } from "@semio-tech/framework";
 import { type MeshTransfer, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
-import { type DisplayItem, type DisplayModel } from "../../🎬️actions/🟦️.ts";
+import type { DisplayItem, DisplayModel } from "../../🎬️actions/🖼️display-model/🟦️.ts";
 import { Line, scenePreview, Text, THREE } from "../🔌️ports/🟦️.ts";
 import { spatialSceneColors } from "../🎨️style/🟦️.ts";
 import { TessellatedCommitMesh } from "../🧲️geometry-targets/🟦️.tsx";

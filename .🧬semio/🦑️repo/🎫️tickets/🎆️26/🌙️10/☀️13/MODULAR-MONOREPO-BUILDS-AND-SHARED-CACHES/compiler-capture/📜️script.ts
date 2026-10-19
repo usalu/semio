@@ -3,7 +3,7 @@ import ts from"typescript";
 import{writeFile}from"node:fs/promises";
 import{join,resolve,dirname,relative}from"node:path";
 import{captureNxAuthorizerSourcesV1,nxAuthorizerCapturedBytesV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
-import{registerBuildTestLawV1}from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 const entry="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/📥️entry/📜️script.ts";
 registerBuildTestLawV1("default actual compiler Source capture and literal resource census","sdk-fence",original=>withIssuedResourceControlV1(original,"compiler:source-capture-audit",0,async control=>{

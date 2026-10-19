@@ -1,7 +1,8 @@
 /** 🧱️ Generations, faults and hooks: the pointer slot authority, stale generations, close, protocol faults, overruns, the external UI hooks and the structured clone budget. */
-import { fixtureOriginalWorkStock } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { describe, expect, it } from "vitest";
-import { BrowserFrameTransport, FRAME_WORKER_POINTER_CAPACITY } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { FRAME_WORKER_POINTER_CAPACITY } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
 import { FakeWorker, TEST_HOST_APPEARANCE, TEST_HOST_PLATFORM, TEST_HOST_STORAGE, testBootDescriptor, transport } from "../🧰️transport-test-support/🟦️.ts";
 
 describe("browser frame worker transport", () => {

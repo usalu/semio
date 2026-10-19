@@ -3883,7 +3883,7 @@
     },
     {
       "id": "actual-flow-core-build-.",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
       "name": "@semio-tech/flow-core-build",
       "subpath": ".",
       "target": "./🟦️.ts",

@@ -4,11 +4,15 @@ import * as fs from "node:fs";
 import { readFile as readFileAsync, stat as statAsync } from "node:fs/promises";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { createHash } from "node:crypto";
+import { brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
+
+/** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
+const packInferenceRecordV1=bytes=>brotliCompressSync(bytes,{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:5,[zlibConstants.BROTLI_PARAM_LGWIN]:22,[zlibConstants.BROTLI_PARAM_SIZE_HINT]:bytes.length}});
 import { createRequire } from "node:module";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { openRecordStore, recordKey } from "../../⚡️caching/🗃️records/🟦️.ts";
-import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const observationSchemaURLV1=new URL("./🧬️schema/🔣️.json",import.meta.url),observationSchemaCaptureV1=captureBoundedSourceRevisionV1(fileURLToPath(observationSchemaURLV1),65536,true),sourceAnalysisSchemaV1=JSON.parse(observationSchemaCaptureV1.text??""),observationSchemaRevisionV1=observationSchemaCaptureV1.sha256;
 import{requireExactSourceReadBatchV1,readExactSourceFileV1}from"../📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
@@ -57,12 +61,16 @@ export function registerSourceAnalysisV1({id,revision,analyze}){
 function sourceAnalysisProviderV1(provider){const registered=sourceAnalyses.get(provider?.id);if(!registered||registered.provider!==provider)throw Error("Current registered source analysis provider required");return registered;}
 
 /** 🧷️ Shares a physical validation only within the same original parent inference whose final receipt still rechecks every fact. */
+/** 📁️ Directories one inference round already proved real; the round's final receipt still rechecks every recorded fact. */
+const roundDirectories=new WeakMap();
+const rowChecks=new WeakMap();
 function projectObservationHoldsV1(row,parent){
  parent=inferenceValidationScopes.getStore()??parent;
- let checks=parent&&projectChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}
- const key=observationIdentityV1(row),fact=JSON.stringify(row.fact),previous=checks?.get(key);if(previous?.fact===fact)return previous.holds;
+ let checks=parent&&projectChecks.get(parent),rows=parent&&rowChecks.get(parent);if(parent&&!checks){checks=new Map();projectChecks.set(parent,checks);}if(parent&&!rows){rows=new Map();rowChecks.set(parent,rows);}
+ const shared=rows?.get(row);if(shared!==undefined)return shared;
+ const key=observationIdentityV1(row),fact=JSON.stringify(row.fact),previous=checks?.get(key);if(previous?.fact===fact){rows?.set(row,previous.holds);return previous.holds;}
  const holds=row.kind==="file"?fileFactHolds(row.path,row.fact)&&JSON.stringify(facts.file(row.path)?.sha256??null)===JSON.stringify(row.fact.sha256??null):current([row]);
- checks?.set(key,{fact,holds});return holds;
+ checks?.set(key,{fact,holds});rows?.set(row,holds);return holds;
 }
 
 /** 🪪️ Seals module-load authority and names it by the meaning of its facts, so project records inherit implementation identity by digest instead of by rows. */
@@ -92,7 +100,38 @@ export async function observeProjectInferenceV1({cachePath,key,owner,reusable},c
 function retainSourceFactsV1(rows){retainObservationsV1(sourceCaptures.getStore(),rows);}
 
 /** 🧾️ Preserves distinct consumed results for a path, including contradictory reads. */
-function retainObservationsV1(target,rows){if(target)for(const row of rows)target.set(JSON.stringify([row.kind,row.path,row.fact]),row);}
+function retainObservationsV1(target,rows){if(target)for(const row of rows)target.set(observationKeyV1(row),row);}
+
+/** 🔑️ The exact content key of one observation row, computed once per row object; flat facts avoid JSON serialisation. */
+const observationKeys=new WeakMap();
+function factKeyV1(fact){
+ if(fact===null||typeof fact!=="object")return typeof fact+String(fact);
+ if(typeof fact.sha256==="string"&&fact.provider===undefined&&typeof fact.size==="number")return "f"+fact.size+","+fact.mtimeMs+","+fact.ctimeMs+","+fact.ino+","+fact.sha256;
+ return JSON.stringify(fact);
+}
+function observationKeyV1(row){let key=observationKeys.get(row);if(key===undefined){key=row.kind+"\0"+row.path+"\0"+factKeyV1(row.fact);observationKeys.set(row,key);}return key;}
+
+/** 🪢️ Shares one row object between every project that observed identical bytes, so persisted headers cost memory by distinct fact, not by project. */
+const internedObservations=new Map(),INTERNED_OBSERVATIONS=4194304;
+function internObservationsV1(rows){return rows.map(row=>{if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();const key=observationKeyV1(row),known=internedObservations.get(key);if(known)return known;internedObservations.set(key,row);return row;});}
+function canonicalObservationV1(kind,path,fact){
+ if(internedObservations.size>INTERNED_OBSERVATIONS)internedObservations.clear();
+ const key=kind+"\0"+path+"\0"+factKeyV1(fact),known=internedObservations.get(key);if(known)return known;
+ const row={kind,path,fact};observationKeys.set(row,key);internedObservations.set(key,row);return row;
+}
+function recordRowV1(row){
+ const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
+ if(!target&&!capture)return;
+ retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
+}
+
+/** 🤝️ Validates a persisted project's facts through the original inference's shared physical checks, so a fact that many projects consumed is probed once per inference while the final receipt still rechecks all of them. */
+const sharedChecks=new WeakMap();
+function sharedObservationsHoldV1(rows,parent){
+ parent=inferenceValidationScopes.getStore()??parent;if(!parent)return current(rows);
+ let checks=sharedChecks.get(parent);if(!checks){checks=new Map();sharedChecks.set(parent,checks);}
+ return consistentObservationsV1(rows)&&rows.every(row=>{const key=observationKeyV1(row),previous=checks.get(key);if(previous!==undefined)return previous;const holds=current([row]);checks.set(key,holds);return holds;});
+}
 
 /** 🧵️ Shares validated invocation work while replaying every consumed fact into each receiving project. */
 export function memoizedObservedComputationV1(cache,key,compute) {
@@ -125,10 +164,11 @@ export async function memoizedObservedAsyncComputationV1(cache,key,compute,check
 }
 
 /** ⚖️ Refuses mixed source images while allowing identical bytes with different file stamps. */
-function observationIdentityV1(row){return row.kind+"\0"+row.path+(row.kind==="analysis"?"\0"+row.fact?.provider:"");}
+const observationIdentities=new WeakMap(),observationMeanings=new WeakMap();
+function observationIdentityV1(row){let value=observationIdentities.get(row);if(value===undefined){value=row.kind+"\0"+row.path+(row.kind==="analysis"?"\0"+row.fact?.provider:"");observationIdentities.set(row,value);}return value;}
 
 /** 🧠️ Distinguishes semantic results independently of their original source byte hints. */
-function observationMeaningV1(row){return JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.fact);}
+function observationMeaningV1(row){let value=observationMeanings.get(row);if(value===undefined){value=JSON.stringify(row.kind==="file"&&row.fact?.sha256?{sha256:row.fact.sha256}:row.kind==="analysis"?{provider:row.fact?.provider,revision:row.fact?.revision,resultSha256:row.fact?.resultSha256}:row.fact);observationMeanings.set(row,value);}return value;}
 
 /** 🧨️ Names the first contradictory source read and whether it contradicts sealed module-load authority, which no re-inference in this process can repair. */
 function conflictingInferenceErrorV1(rows){
@@ -214,12 +254,20 @@ export async function observedSourceAnalysisAsyncV1(provider,path){
  const source=sourceFactV1(stamp,bytes);try{return observeSourceBytesV1(registered,key,bytes,source);}catch(error){record("file",key,source);throw error;}
 }
 
+/** 🤝️ Validates the facts one analysis consumed through the round's shared checks, so a fact that thousands of analyses consumed is probed once per inference round. */
+const nestedChecks=new WeakMap();
+function nestedObservationsHoldV1(rows){
+ const round=inferenceValidationScopes.getStore();if(!round)return current(rows);
+ let checks=nestedChecks.get(round);if(!checks){checks=new Map();nestedChecks.set(round,checks);}
+ return consistentObservationsV1(rows)&&rows.every(row=>{const key=observationKeyV1(row),known=checks.get(key);if(known!==undefined)return known;const holds=current([row]);checks.set(key,holds);return holds;});
+}
+
 /** 🔁️ Replays current registered parsers after byte changes and retains every nested dependency. */
 function sourceAnalysisFactHoldsV1(path,fact){
  if(sourceAnalysisContractV1.validate(fact).length)return false;
  const registered=sourceAnalyses.get(fact?.provider);
  if(!registered||registered.provider.revision!==fact.revision||!Array.isArray(fact.nestedObservations)||!fact.source||!/^[a-f0-9]{64}$/u.test(fact.source.sha256??"")||!/^[a-f0-9]{64}$/u.test(fact.resultSha256??""))return false;
- if(!current(fact.nestedObservations))return false;
+ if(!nestedObservationsHoldV1(fact.nestedObservations))return false;
  try{
   const bytes=fs.readFileSync(path),sha256=createHash("sha256").update(bytes).digest("hex");if(sha256===fact.source.sha256)return true;
   const replay=sourceCaptures.run(undefined,()=>recordScopes.run(undefined,()=>scopes.run(undefined,()=>sourceAnalysisImageV1(registered,path,bytes,sha256))));
@@ -261,7 +309,7 @@ const facts = {
 function record(kind, path, fact) {
   const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
   if(!target&&!capture)return;
-  const row={kind,path,fact:fact===undefined?facts[kind](path):fact};
+  const row=canonicalObservationV1(kind,path,fact===undefined?facts[kind](path):fact);
   retainObservationsV1(target,[row]);retainSourceFactsV1([row]);
 }
 
@@ -282,8 +330,29 @@ function encodingOf(options) {
 function readObserved(path, stamp, bytes, options) {
   const fact = sourceFactV1(stamp,bytes);
   record("file", absolute(path), fact);
+  settleRead(absolute(path), stamp, bytes, fact);
   const encoding = encodingOf(options);
   return encoding ? bytes.toString(encoding) : bytes;
+}
+
+/** 🧊️ Source bytes whose stamp was already settled when read, so an unchanged file is read and hashed once while its stamp still matches. */
+const settledReads = new Map(), SETTLED_READ_BYTES = 128 * 1024 * 1024;
+let settledReadBytes = 0;
+function settleRead(key, stamp, bytes, fact) {
+  if (stamp instanceof Error || !Buffer.isBuffer(bytes) || bytes.length > 4 * 1024 * 1024) return;
+  const taken = Date.now();
+  if (!(stamp.mtimeMs < taken - RACY_MS && stamp.ctimeMs < taken - RACY_MS)) { const previous = settledReads.get(key); if (previous) { settledReadBytes -= previous.bytes.length; settledReads.delete(key); } return; }
+  const previous = settledReads.get(key); if (previous) settledReadBytes -= previous.bytes.length;
+  if (settledReadBytes + bytes.length > SETTLED_READ_BYTES) { settledReads.clear(); settledReadBytes = 0; }
+  settledReads.set(key, { size: stamp.size, mtimeMs: stamp.mtimeMs, ctimeMs: stamp.ctimeMs, ino: stamp.ino, bytes: Buffer.from(bytes), row: canonicalObservationV1("file", key, fact) }); settledReadBytes += bytes.length;
+}
+function settledRead(path, stamp, options) {
+  if (stamp instanceof Error) return undefined;
+  const key = absolute(path), hit = settledReads.get(key);
+  if (!hit || hit.size !== stamp.size || hit.mtimeMs !== stamp.mtimeMs || hit.ctimeMs !== stamp.ctimeMs || hit.ino !== stamp.ino) return undefined;
+  recordRowV1(hit.row);
+  const encoding = encodingOf(options);
+  return { value: encoding ? hit.bytes.toString(encoding) : Buffer.from(hit.bytes) };
 }
 
 /** 👁️ The `node:fs` reads graph inference may perform, each recording what it observed so a persisted result can later be proven current. Writes stay on `node:fs`. */
@@ -291,6 +360,7 @@ export const observedFs = Object.freeze({
   readFileSync(path, options) {
     let stamp;
     try { stamp = fs.statSync(path); } catch (error) { stamp = error; }
+    const settled = settledRead(path, stamp, options); if (settled) return settled.value;
     let bytes;
     try { bytes = fs.readFileSync(path); } catch (error) { record("file", absolute(path), { error: error.code ?? "EUNKNOWN" }); throw error; }
     return readObserved(path, stamp, bytes, options);
@@ -302,12 +372,22 @@ export const observedFs = Object.freeze({
     return value;
   },
   statSync(path, options) { return probe("stat", path, () => fs.statSync(path, options), (value) => value ? nodeType(value) : "!ENOENT"); },
-  lstatSync(path, options) { return probe("lstat", path, () => fs.lstatSync(path, options), (value) => value ? nodeType(value) : "!ENOENT"); },
+  lstatSync(path, options) {
+    const round = options === undefined ? inferenceValidationScopes.getStore() : undefined;
+    if (!round) return probe("lstat", path, () => fs.lstatSync(path, options), (value) => value ? nodeType(value) : "!ENOENT");
+    let directories = roundDirectories.get(round); if (!directories) { directories = new Map(); roundDirectories.set(round, directories); }
+    const key = absolute(path), known = directories.get(key);
+    if (known) { recordRowV1(known.row); return known.value; }
+    const value = probe("lstat", path, () => fs.lstatSync(path), (value) => value ? nodeType(value) : "!ENOENT");
+    if (value.isDirectory()) directories.set(key, { value, row: canonicalObservationV1("lstat", key, "directory") });
+    return value;
+  },
   readdirSync(path, options) {const typed=options?.withFileTypes===true;return probe(typed?"readdir":"readdirNames",path,()=>fs.readdirSync(path,options),value=>directoryFactV1(value,typed));},
   realpathSync: Object.assign((path, options) => probe("realpath", path, () => fs.realpathSync(path, options), (value) => String(value)), { native: (path, options) => probe("realpathNative", path, () => fs.realpathSync.native(path, options), (value) => String(value)) }),
   async readFile(path, options) {
     let stamp;
     try { stamp = await statAsync(path); } catch (error) { stamp = error; }
+    const settled = settledRead(path, stamp, options); if (settled) return settled.value;
     let bytes;
     try { bytes = await readFileAsync(path); } catch (error) { record("file", absolute(path), { error: error.code ?? "EUNKNOWN" }); throw error; }
     return readObserved(path, stamp, bytes, options);
@@ -503,13 +583,13 @@ async function observeInferenceComputationV1({cachePath,key,reusable},compute,ne
   const digest = createHash("sha256").update(JSON.stringify([OBSERVATION_REVISION, nestedProject?inferenceAuthorityDigestV1():null, key])).digest("hex"), hints = new Map(), authority=nestedProject?[]:[...loadObservations.values()];
   let candidate;
   try {
-    const text = fs.readFileSync(cachePath, "utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));
-    if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && current(header.observations)) {
+    const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), split = text.indexOf("\n"), header = JSON.parse(text.slice(0, split));if(Array.isArray(header.observations))header.observations=internObservationsV1(header.observations);
+    if (header.digest === digest && header.resultSha256 === createHash("sha256").update(text.slice(split + 1)).digest("hex") && Array.isArray(header.observations) && (nestedProject?sharedObservationsHoldV1(header.observations,parent):current(header.observations))) {
       candidate={value:JSON.parse(text.slice(split+1)),header,headerDigest:createHash("sha256").update(text.slice(0,split)).digest("hex")};
     }
     for (const { kind, path, fact } of Array.isArray(header.observations) ? header.observations : []) if (kind === "file" && typeof fact?.sha256 === "string") hints.set(path, fact);
   } catch {}
-  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&current(candidate.header.observations)){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return value;}
+  if(candidate&&await inferenceReusableV1(reusable,candidate.value)&&(nestedProject?sharedObservationsHoldV1(candidate.header.observations,parent):current(candidate.header.observations))){const{header,value,headerDigest}=candidate;retainSourceFactsV1(header.observations);retainObservationsV1(parent,header.observations);usedInference.set(cachePath,headerDigest);originalInferencePublications.set(cachePath,{path:cachePath,digest,authorityObservations:header.authorityObservations,observations:header.observations});return value;}
   const observations = new Map(), started = Date.now();
   const records=observedRecordStoreV1(`${cachePath}.records`);
   const result = await inferenceValidationScopes.run(inferenceValidationScopes.getStore()??observations,()=>recordScopes.run({ records, hints }, () => scopes.run(observations, compute)));
@@ -526,8 +606,8 @@ async function observeInferenceComputationV1({cachePath,key,reusable},compute,ne
   if (consistent && !racy && jsonExact(result) && (nestedProject?rows.every(row=>projectObservationHoldsV1(row,parent)):current(rows))) {
     fs.mkdirSync(dirname(cachePath), { recursive: true });
     const image=JSON.stringify(result),temporary = `${cachePath}.${process.pid}.${started}.tmp`, header = JSON.stringify({ digest, resultSha256:createHash("sha256").update(image).digest("hex"), authorityObservations: authority, observations: rows });
-    const bytes=Buffer.byteLength(header)+1+Buffer.byteLength(image);let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
-    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, `${header}\n${image}`,{flag:"wx"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,createHash("sha256").update(header).digest("hex"));
+    const packed=packInferenceRecordV1(Buffer.from(`${header}\n${image}`)),bytes=packed.byteLength;let previous=0;try{previous=fs.lstatSync(cachePath).size;}catch(error){if(error.code!=="ENOENT")throw error;}
+    if(withBuildGraphOptionalPublicationV1(cachePath,{peakBytes:bytes,retainedDeltaBytes:bytes-previous},()=>{fs.writeFileSync(temporary, packed,{flag:"wx"});fs.renameSync(temporary,cachePath);}))usedInference.set(cachePath,createHash("sha256").update(header).digest("hex"));
   }
   return result;
 }
@@ -585,17 +665,8 @@ export async function receiveSourcePreparationV1(original,control){
 
 /** 📜️ The header line of a persisted inference record (its digest and observations), read without the result that follows it. */
 export function inferenceHeaderLine(cachePath) {
-  const fd = fs.openSync(cachePath, "r"), chunks = [], chunk = Buffer.allocUnsafe(1 << 20);
-  try {
-    for (let position = 0; ;) {
-      const count = fs.readSync(fd, chunk, 0, chunk.byteLength, position);
-      if (count === 0) return null;
-      const newline = chunk.subarray(0, count).indexOf(10);
-      chunks.push(Buffer.from(chunk.subarray(0, newline < 0 ? count : newline)));
-      if (newline >= 0) return Buffer.concat(chunks).toString("utf8");
-      position += count;
-    }
-  } finally { fs.closeSync(fd); }
+  const text = brotliDecompressSync(fs.readFileSync(cachePath)).toString("utf8"), newline = text.indexOf("\n");
+  return newline < 0 ? null : text.slice(0, newline);
 }
 
 /**
@@ -604,7 +675,11 @@ export function inferenceHeaderLine(cachePath) {
  * unchanged, e.g. by unchanged directory stamps) hold without a probe: an entry can only appear, vanish or change type by changing its parent.
  * Existence follows symbolic links, so it is probed for every entry in `symlinks`.
  */
-export async function observationsHold(observations, limit = 64, stableDirectories = new Set(), symlinks = new Set(),signal,onStale) {
+export function observationsHold(observations, limit = 64, stableDirectories = new Set(), symlinks = new Set(),signal,onStale) {
+  return inferenceValidationScopes.run(inferenceValidationScopes.getStore() ?? new Map(), () => observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale));
+}
+
+async function observationsHoldInRoundV1(observations, limit, stableDirectories, symlinks, signal, onStale) {
   signal?.throwIfAborted();if(!consistentObservationsV1(observations)){const seen=new Map();for(const row of observations){const key=observationIdentityV1(row),fact=observationMeaningV1(row);if(seen.has(key)&&seen.get(key)!==fact){onStale?.(row);break;}seen.set(key,fact);}return false;}
   let next = 0, stale = false;
   const check = async ({ kind, path, fact }) => {

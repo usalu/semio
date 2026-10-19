@@ -1,7 +1,7 @@
 //! 🫧️ Ephemeral local interaction state of one exact BIM window: the line an author is typing into its entry field (`engagement_input`), how many pointer gestures the window has seen and the marks of the gesture in progress (`preview`, the JSON of a tool `Preview`, empty when no gesture shows anything). One record serves the plan, world and
 //! section windows; each window instance holds its own copy, and nothing of it is shared or persisted.
 
-use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]

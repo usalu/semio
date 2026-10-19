@@ -1,10 +1,10 @@
 import{withCompilerWorkspaceWriteV1}from"../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import type{RepositoryCompilerStoreV1}from"../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import type{ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type{NativeStoragePortV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type{NativeStoragePolicyV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
-import type{RustUnitPlanV1}from"../../🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
+import type{NativeStoragePortV1}from"@semio-tech/process/artifacts/native-build/storage";
+import type{NativeStoragePolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
+import { type RustUnitPlanV1 } from "../../📋️plan/🟦️.ts";
 import{compileRustUnitV1}from"../../🏗️compiler/🟦️.ts";
 import{rustLibraryCompilerPortV1,type RustUnitDependencyArtifactV1}from"../../🏗️compiler/🦀️rustc/🟦️.ts";
 import{withRustCompilerStateV1}from"../../🏗️compiler/💾️state/🟦️.ts";

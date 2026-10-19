@@ -3,7 +3,7 @@
 //! Analytic fast paths cover [`Curve3::Line`] against [`Surface::Plane`], [`Surface::Sphere`],
 //! [`Surface::Cylinder`], [`Surface::Cone`] (all reduce to a quadratic), and [`Curve3::Circle`]
 //! against [`Surface::Plane`]/[`Surface::Sphere`] (both reduce to `A cos t + B sin t + C = 0`).
-//! Every other combination subdivides the curve into Bézier spans (`shared::curve_to_bezier_segments`)
+//! Every other combination subdivides the curve into Bézier spans (`intersection_numerics::curve_to_bezier_segments`)
 //! and, at each span whose control hull can't be rejected against the surface, seeds a coupled
 //! `C(t) − S(u, v) = 0` Newton solve via [`closest_uv`] — replacing the old fixed 32-sample scan.
 //!
@@ -272,8 +272,8 @@ fn solve_trig_hits(a: f64, b: f64, c: f64, tol: f64, build: impl Fn(f64) -> Curv
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<CurveSurfaceHit>, IntersectError> {
     let domain_t = curve_sample_domain(curve, surface, tol)?;
-    let surf_domain = super::shared::finite_surface_domain(surface);
-    let segs = super::shared::curve_to_bezier_segments(curve, domain_t)?;
+    let surf_domain = super::intersection_numerics::finite_surface_domain(surface);
+    let segs = super::intersection_numerics::curve_to_bezier_segments(curve, domain_t)?;
     let mut hits = Vec::new();
     for (bez, t0, t1) in &segs {
         subdivide_seed(bez, *t0, *t1, curve, surface, domain_t, surf_domain, tol, 0, &mut hits);
@@ -324,7 +324,7 @@ fn subdivide_seed(
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn curve_sample_domain(curve: &Curve3, surface: &Surface, tol: f64) -> Result<(f64, f64), IntersectError> {
     match curve {
-        Curve3::Line { origin, dir } => super::shared::line_domain_against_surface(origin, dir, surface, tol),
+        Curve3::Line { origin, dir } => super::intersection_numerics::line_domain_against_surface(origin, dir, surface, tol),
         Curve3::Circle { .. } | Curve3::Ellipse { .. } => Ok(curve.domain()),
         Curve3::Nurbs { knots, .. } => {
             let d = knots.domain();

@@ -12,22 +12,11 @@ import { createHash } from "node:crypto";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import type { PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type { PluginBuildTargetV1 } from "@semio-tech/plugin-registry/discovery";
 
 import {
   ensurePreview2ShimVendorAt,
@@ -60,9 +49,9 @@ import {
   transpilePluginComponentAsync,
 } from "../../🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
 
 

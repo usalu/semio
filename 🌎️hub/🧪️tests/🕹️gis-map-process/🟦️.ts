@@ -3,29 +3,27 @@
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
-import { repositoryCargoNetworkV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
-import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { withRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, scriptInvocationEnvironment, type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { withRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, scriptInvocationEnvironment, type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { withExactCargoLawOutputV1 } from "@semio-tech/process/testing/cargo/exact";
 import { withCheckInProcessFixtureV1 } from "../../🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/📥️reading/🟦️.ts";
 import type { CheckInProcessFixtureDataV1 } from "../../🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { createHash, randomBytes } from "node:crypto";
 import { chmodSync, mkdtempSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "@semio-tech/repo-lib/cargo";
+import { buildAdmittedCargoArtifactsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type ArtifactFrontier } from "@semio-tech/framework/directory/schema";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1 } from "@semio-tech/framework/directory/schema";
 import type { TestBrowserHostRootsV1 } from "@semio-tech/s-dev-catalog-ts/browser-host";
 import { withTestBrowserHostV1 } from "@semio-tech/s-dev-catalog-ts/browser-host/staging";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript } from "@semio-tech/process/routing";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { type LocalProfile } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
@@ -863,14 +861,14 @@ export class GisMapProposalCheckScript extends BundleScript {
       const routeLaws: [string, string][] = [["semio-hub-boot-laws", "gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write"], ["semio-hub-boot-laws", "gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair"], ["semio-hub-boot-laws", "gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding"], ["semio-hub-boot-laws", "gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation"], ["semio-hub-boot-laws", "inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded"], ["semio-hub-boot-laws", "gis_map_inference_runtime_close_signals_and_joins_actual_codec_work"], ["semio-hub-boot-laws", "gis_map_inference_revocation_after_compute_refuses_late_publication"], ["semio-hub-boot-laws", "gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller"], ["semio-hub-boot-laws", "gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift"], ["semio-hub-boot-laws", "gis_map_approval_is_idempotent_across_duplicate_requests_and_restart"]];
       if (mode === "--process") routeLaws.push(["semio-hub-boot-laws", "check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]);
       const laws = [...libraryLaws, ...routeLaws];
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           ...hubLawGroups(libraryLaws),
           ...hubLawGroups(routeLaws, ["--features", "integration-fixtures"]),
         ],consume:async outputs=>{
          if(mode!=="--process")return;
-         await withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:outputs.receipts.findIndex(row=>row.package==="semio-hub-boot-laws"&&row.laws.some(law=>law.endsWith("check_in_process_fixture_emits_verified_gis_ledger_and_catalog")))},output=>buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),["--bin","os-hub","--features","integration-fixtures"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:output.control,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:capture=>withCapturedLocalHubHostV1(this.invocation,output.control,capture,(host,context)=>withCheckInProcessFixtureV1(host,context.control,outputs,{version:1,purpose:"runtime"},async(payload,actual)=>{
+         await withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:outputs.receipts.findIndex(row=>row.package==="semio-hub-boot-laws"&&row.laws.some(law=>law.endsWith("check_in_process_fixture_emits_verified_gis_ledger_and_catalog")))},output=>buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["--bin","os-hub","--features","integration-fixtures"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:output.control,consume:capture=>withCapturedLocalHubHostV1(this.invocation,output.control,capture,(host,context)=>withCheckInProcessFixtureV1(host,context.control,outputs,{version:1,purpose:"runtime"},async(payload,actual)=>{
           const manifest=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml");
-          await buildRepositoryCargoArtifacts(manifest,["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:actual,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
+          await buildAdmittedCargoArtifactsV1(manifest,["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:actual,consume:verifyCapturedCargoArtifactsV1});
           await withRepositoryPublishedCargoExecutableV1(manifest,process.platform==="win32"?"semio-os-mcp.exe":"semio-os-mcp",this.repoRoot,readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,this.invocation,actual,(mcp,mcpPhase)=>proveGisMapProposalProcess(host,mcpPhase,payload,mcp.path));
          }))}));
         },progress(event) {

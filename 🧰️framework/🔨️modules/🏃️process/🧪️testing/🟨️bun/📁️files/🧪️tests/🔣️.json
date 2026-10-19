@@ -8,7 +8,7 @@
     "maximumTotalOutputBytes": 1048576
   },
   "files": [
-    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🎟️phase/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/📁️files/🧪️tests/🧫️fixture/🟦️.ts",
     "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/🎛️control/🟦️.ts"
   ],
   "expectedFiles": 2,

@@ -3,8 +3,12 @@
 //! the base. The resolved height is inferred, never written.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn;
-use crate::standards::v1::subsets::any::schema::mutations::placement::rise;
-use crate::standards::v1::subsets::any::schema::{diff::{patches::ColumnPatch, Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::rise;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::ColumnPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changed<T: Clone + PartialEq>(value: &Option<T>, current: &T) -> Option<T> {

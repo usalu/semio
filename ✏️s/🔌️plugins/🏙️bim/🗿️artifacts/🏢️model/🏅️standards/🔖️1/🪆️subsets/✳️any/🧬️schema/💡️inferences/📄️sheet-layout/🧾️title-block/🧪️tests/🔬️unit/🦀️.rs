@@ -1,11 +1,11 @@
 //! 🧪️ The title block and the revision table: cells tile the block without gaps, empty fields fall back to what the sheet shows, the revision table grows upward from the block.
 
-use crate::standards::v1::subsets::any::schema::snapshot::Sheet;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, TitleBlock, TitleField};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Sheet;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, TitleBlock, TitleField};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{RevisionRow, RevisionTable, TitleCell};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::*;
-use crate::standards::v1::subsets::any::schema::snapshot::SheetRevision;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{RevisionRow, RevisionTable, TitleCell};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::{title_block, TITLE_BLOCK_WIDTH, ROW_HEIGHT, scale_text, revision_table, REVISION_ROW_HEIGHT, column_edges};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::SheetRevision;
 
 fn frame() -> PaperRect {
     PaperRect { x: 20.0, y: 10.0, width: 390.0, height: 277.0 }

@@ -1,4 +1,5 @@
-use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::next_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::previous_step, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::reset_try, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::set_try_value, editor::forms::commands::set_try_value_step, editor::forms::commands::set_try_values, editor::forms::commands::submit, editor::forms::commands::update_form};
+use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::update_form};
+use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, previous_step, reset_try, set_try_value, set_try_value_step, set_try_values, submit};
 use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
 use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
 use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
@@ -21,7 +22,8 @@ use semio_framework_plugin::MediaPayload;
 use semio_framework_plugin::MediaType;
 pub mod context {
     use crate::editor::forms::*;
-use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::next_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::previous_step, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::reset_try, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::set_try_value, editor::forms::commands::set_try_value_step, editor::forms::commands::set_try_values, editor::forms::commands::submit, editor::forms::commands::update_form};
+use crate::{editor::forms::commands::add_question, editor::forms::commands::add_question_option, editor::forms::commands::add_step, editor::forms::commands::add_vector_field, editor::forms::commands::drop_question_kind, editor::forms::commands::export_snapshot, editor::forms::commands::move_question, editor::forms::commands::move_step, editor::forms::commands::patch_question_options, editor::forms::commands::patch_questions, editor::forms::commands::patch_step, editor::forms::commands::patch_vector_field, editor::forms::commands::remove_question, editor::forms::commands::remove_question_option, editor::forms::commands::remove_step, editor::forms::commands::remove_vector_field, editor::forms::commands::set_active_example, editor::forms::commands::set_contributions, editor::forms::commands::set_spec_json, editor::forms::commands::update_form};
+use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, previous_step, reset_try, set_try_value, set_try_value_step, set_try_values, submit};
 use crate::{editor::forms::config::FormsConfig, editor::forms::config::FormsConfigMutation};
 use crate::{editor::forms::modes::blueprint, editor::forms::modes::fill, editor::forms::modes::responses};
 use crate::{editor::forms::commands::export_responses, editor::forms::commands::discard_response};
@@ -51,9 +53,10 @@ use semio_framework_plugin::MediaType;
     /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
     /// instance").
     pub async fn forms_app() -> OwnedFormsApp {
-        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(forms_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        OwnedFormsApp(app)
+        OwnedFormsApp(app, scope)
     }
 
     /// 🔚 A mounted forms app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
@@ -62,12 +65,13 @@ use semio_framework_plugin::MediaType;
     /// asking every law to remember a trailing `close(&mut app)` — is what makes a law that fails an
     /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
-    pub struct OwnedFormsApp(FormsApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct OwnedFormsApp(pub FormsApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedFormsApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            close(&mut self.0);
+            close(self);
         }
     }
 
@@ -111,14 +115,14 @@ use semio_framework_plugin::MediaType;
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
     /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
     /// reading `app.snapshot()` straight afterwards observes the pre-dispatch document.
-    pub async fn settle(app: &mut FormsApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation")
+    pub async fn settle(app: &mut OwnedFormsApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
     }
 
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
     /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
-    pub fn close(app: &mut FormsApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    pub fn close(app: &mut OwnedFormsApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
@@ -130,13 +134,13 @@ use semio_framework_plugin::MediaType;
         semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture JSON"))
     }
     
-    pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+    pub async fn dispatch(app: &mut OwnedFormsApp, command: FormsCommand) -> InvocationResult {
+        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
     
-    pub async fn render(app: &mut FormsApp, body_key: &str) -> String {
+    pub async fn render(app: &mut OwnedFormsApp, body_key: &str) -> String {
         let view = if body_key == FORMS_PLAY_BODY_TRY {
             ViewModel {
                 window_id: Some("forms-try-test".into()),
@@ -146,7 +150,7 @@ use semio_framework_plugin::MediaType;
         } else {
             ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &view).await.expect("render")).expect("rendered component JSON")
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await.expect("rendered component JSON")
     }
     
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered

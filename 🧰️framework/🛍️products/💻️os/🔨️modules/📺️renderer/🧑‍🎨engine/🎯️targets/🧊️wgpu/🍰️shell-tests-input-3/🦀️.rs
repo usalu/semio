@@ -47,7 +47,8 @@ use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_value::DslValue;
 use serde::Deserialize;
 use serde_json::Value;
-use ui_wgpu::wgpu::{HitKind, HitTarget, InputState, KeyAction, Level, PointerModifiers};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::Level;
 use winit::window::Window;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-context-menu-keyboard/🦀️.rs"]

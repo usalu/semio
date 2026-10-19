@@ -1,10 +1,10 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
 #[allow(unused_imports)]
@@ -15,11 +15,11 @@ use semio_framework_geometry::vector::cross;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::*;
-use crate::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json;
-use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{run_of, strip_of};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{TopConstraint, Vertex};
 use semio_framework_geometry::loops;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_ramp_runs;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_ramp_runs;
 use semio_framework_test_fixtures::fixture_text;
 
 const EPS: f64 = 1e-9;
@@ -29,7 +29,7 @@ fn level() -> StoreyLevel {
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
-    Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge }
+    Vertex { point: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x, y }, bulge }
 }
 
 fn ramp(path: Vec<Vertex>, rise: f64) -> Ramp {
@@ -189,7 +189,7 @@ fn a_curved_strip_keeps_arcs_and_the_exact_area() {
 #[test]
 fn the_run_table_is_canonical_json_of_every_ramp() {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.storeys.insert("st-ground".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.storeys.insert("st-ground".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
     snapshot.ramps.insert("rp".into(), straight(10.0, 0.5));
     let runs = compute_ramp_runs(&snapshot);
     assert_eq!(runs.len(), 1);
@@ -221,14 +221,14 @@ fn with_hosted_railings() -> ModelSnapshot {
 fn the_subject_reproduces_the_third_party_oracle_table() {
     let runs = compute_ramp_runs(&ramps());
     assert!(!runs.contains_key("r-orphan"), "a ramp on a missing storey has no run");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*RAMPS_TABLE), &table_json(&runs));
+    let problems = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*RAMPS_TABLE), &table_json(&runs));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 
 #[test]
 fn a_ramp_depends_on_its_storey_and_the_storey_its_top_targets() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-    let steps = plan::build(&ramps(), kinds::closure(kinds::RAMP_RUNS));
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&ramps(), semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::RAMP_RUNS));
     let parents = |id: &str| steps.iter().find(|step| step.key == ModelNode::RampRun(id.into())).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents("r-straight"), vec![ModelNode::Storey("st-ground".into())]);
     assert_eq!(parents("r-to-first"), vec![ModelNode::Storey("st-ground".into()), ModelNode::Storey("st-first".into())]);
@@ -239,8 +239,13 @@ fn a_ramp_depends_on_its_storey_and_the_storey_its_top_targets() {
 
 #[test]
 fn the_ramps_are_gated_a_storey_edit_re_infers_the_ramps_it_reaches_and_a_material_edit_none() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, RampPatch, StoreyPatch}, ModelDiff}, inferences::ModelInference};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+    use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RampPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let snapshot = ramps();
     let mut session = ModelInferenceSession::new();
@@ -276,8 +281,8 @@ fn the_ramps_are_gated_a_storey_edit_re_infers_the_ramps_it_reaches_and_a_materi
 
 #[test]
 fn every_projection_of_a_model_with_ramps_is_cache_transparent_warm_equals_cold_equals_uncached() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     for snapshot in [ramps(), with_hosted_railings()] {
         let uncached = ModelInference::infer(&snapshot).expect("infers");
@@ -306,8 +311,11 @@ fn every_projection_of_a_model_with_ramps_is_cache_transparent_warm_equals_cold_
 
 #[test]
 fn the_hosted_railing_of_a_ramp_follows_the_ramp_when_it_moves() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RampPatch}, inferences::ModelInference};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RampPatch;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let snapshot = with_hosted_railings();
     let mut session = ModelInferenceSession::new();

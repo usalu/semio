@@ -1,9 +1,9 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use crate::wgpu::component::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::theme::Theme;
+use semio_framework_ui_declaration::ui::{UiControlNode, UiTreeActionPlacement, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 use ui_contract::SpaceToken;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -156,7 +156,7 @@ impl TreeRowMetrics {
             control_height: theme.control_height,
             control_height_small: theme.control_height_small,
             gap: theme.gap_standard,
-            drag_handle_extent: crate::wgpu::chrome::ICON_TREE_ROW,
+            drag_handle_extent: crate::chrome::ICON_TREE_ROW,
             action_gap: theme.padding_standard,
             inline: ui_contract::FlowInline::Ltr,
             standard_row_height: theme.tree_row_height,
@@ -170,7 +170,7 @@ impl TreeRowMetrics {
     pub fn with_presentation(mut self, presentation: ui_contract::TreePresentation) -> Self {
         self.row_height = match presentation {
             ui_contract::TreePresentation::Standard => self.standard_row_height,
-            ui_contract::TreePresentation::Compact => crate::wgpu::chrome::SIZE_TINY * 1.5,
+            ui_contract::TreePresentation::Compact => crate::chrome::SIZE_TINY * 1.5,
         };
         self.header_height = self.row_height;
         self.control_width = match presentation {
@@ -314,7 +314,7 @@ pub fn tree_row_control_rect_with_height(row_width: f32, control_height: f32, me
 /// ☑️ React's compact tree checkbox wrapper is one `size-tiny` column at the inline edge of the
 /// value column, while retaining the whole row height as its vertical pointer band.
 pub fn tree_checkbox_hit_rect(bounds: Rect, inline: ui_contract::FlowInline) -> Rect {
-    let width = crate::wgpu::chrome::SIZE_TINY.min(bounds.w.max(0.0));
+    let width = crate::chrome::SIZE_TINY.min(bounds.w.max(0.0));
     let x = if inline.is_rtl() { bounds.x + bounds.w - width } else { bounds.x };
     Rect::new(x, bounds.y, width, bounds.h)
 }
@@ -376,7 +376,7 @@ pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns
 pub fn tree_window_row_extent_px(extent: UiTreeWindowRowExtent) -> f32 {
     match extent {
         UiTreeWindowRowExtent::Standard => semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT,
-        UiTreeWindowRowExtent::CompactText => crate::wgpu::chrome::SIZE_TINY * 1.5,
+        UiTreeWindowRowExtent::CompactText => crate::chrome::SIZE_TINY * 1.5,
         UiTreeWindowRowExtent::CompactSmallControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING) as f32,
         UiTreeWindowRowExtent::CompactControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING) as f32,
     }
@@ -476,11 +476,7 @@ pub fn ring_t_at(bounds: Rect, x: f32, y: f32) -> f64 {
 #[path = "../../../🧪️tests/🔬️targets-wgpu-layout-unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🌳️tree-row-rects/🦀️.rs"]
-mod tree_row_rect_tests;
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/📊️table-row-grid/🦀️.rs"]
-mod table_row_grid_tests;
+
+
 // #endregion layout

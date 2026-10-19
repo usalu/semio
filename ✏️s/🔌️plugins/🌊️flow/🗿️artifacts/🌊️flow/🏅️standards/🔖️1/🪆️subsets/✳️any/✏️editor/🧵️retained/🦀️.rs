@@ -27,34 +27,34 @@ impl Retirement {
         self.pending.is_empty() && self.owner.is_none()
     }
 
-    pub fn step(&mut self, grant: RetainedCloneGrant) -> Step {
+    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<Step, semio_framework_value::ValueError> {
         if let Some(owner) = self.owner.as_mut() {
             let step = owner.step(grant);
             if owner.terminal_is_empty() {
                 self.owner = None;
             }
-            return match step {
+            return Ok(match step {
                 Ok(RetainedCloneStep::Complete(progress)) => Step::Complete { progress },
                 Ok(RetainedCloneStep::Progress(progress)) => Step::Pending { progress },
-                Err(error) => Step::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
+                Err(error) => return Err(error),
+            });
         }
         if self.pending.is_empty() {
-            return Step::Complete { progress: RetainedCloneProgress::default() };
+            return Ok(Step::Complete { progress: RetainedCloneProgress::default() });
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return Step::Pending { progress: RetainedCloneProgress::default() };
+            return Ok(Step::Pending { progress: RetainedCloneProgress::default() });
         }
-        match ControlledRetirement::new(std::mem::take(&mut self.pending)) {
+        Ok(match ControlledRetirement::new(std::mem::take(&mut self.pending)) {
             Ok(owner) => {
                 self.owner = Some(owner);
                 Step::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
             }
             Err((error, pending)) => {
                 self.pending = pending;
-                Step::Refused { kind: error.kind, progress: error.retained_progress() }
+                return Err(error)
             }
-        }
+        })
     }
 
     pub fn copy_byte_demand(&self) -> Result<usize, ValueError> {

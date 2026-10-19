@@ -22,7 +22,7 @@ test("actual finite parent admission refuses null before effect and preserves ex
     expect(admits(envelope), row.id).toBe(row.accepted);
     let effects = 0;
     const receive = () => withScriptProcessEnvelope(envelope, async original => {
-      effects++; expect(original.policy).toBe(policy); expect(original.capabilities).toBe(capabilities);
+      effects++; expect(original.policy).toEqual(policy); expect(original.capabilities).toEqual(capabilities); expect(Object.isFrozen(original.policy)).toBe(true); expect(Object.isFrozen(original.capabilities)).toBe(true);
       expect(original.control.signal.aborted).toBe(false);
       const remaining = original.control.remainingMilliseconds();
       if (row.maximumElapsedMilliseconds > 0) { expect(remaining).not.toBeNull(); expect(remaining).toBeGreaterThan(0); expect(remaining!).toBeLessThanOrEqual(row.deadlineOffsetMilliseconds!); }

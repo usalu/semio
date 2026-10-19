@@ -77,7 +77,7 @@ async fn layer_baking_at_asset_capacity_publishes_and_restores_retained_history(
         let mut source=document(&fixture["cases"][0]["layers"],&fixture);fill_assets(&mut source,fixture["cases"][0]["assetCapacity"].as_u64().unwrap() as usize);
         let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(semio_s_artifact_raster_raster_model::RASTER_DOCUMENT_SCHEMA,"bake-capacity",source,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files=store::os_store::text_format::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         let before=app.snapshot().unwrap();assert_eq!(before.assets.len(),64);
         let command=if merge {RasterCommand::MergeDown(MergeDown {layer_id:"upper".into()})} else {RasterCommand::FlattenLayers(semio_s_artifact_raster_raster_editor::commands::flatten_layers::FlattenLayers {name:"Image".into()})};
         context::dispatch(&mut app,command).await;

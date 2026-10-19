@@ -854,17 +854,19 @@
         "🛰️protobuf": "🛰️.proto"
       },
       "exports": {
+        "CameraJson": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "FlowPresence": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
-      "dependsOn": [
-        "s.flow.flow"
-      ],
+      "dependsOn": [],
       "hashes": {
         "🔗️.graphql": "66842af938239e980ee325849be50e7b9e01ac16bf7f5c98a23ba518343ac941",
-        "🔣️.json": "88e9a2181167423ede4a022eaf37da95a623467d9c1886bf08d4dbffc2789704",
+        "🔣️.json": "7ab167a91f4e91c66726a9e46888b3d1b2ea16c707ebbbeda30f0eb54dea7a79",
         "🛰️.proto": "2c7185e91d4e6407c63c1ac29f9707efd9f2546d8a4449e5990f8f3f2b990f63",
         "🟦️.ts": "658574edeb6282e0d0bd0f52357c645973bc0a7b9b3159b9e9d9f97a1ca74de0",
         "🦀️.rs": "4e21c862a0dc91c3c7f1cb6a2d427335fe76084b007949648e55c4c29d6d7584"
@@ -5978,7 +5980,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "df8867fba9373c359b1ac42fea0516cfd4117e157ed3122220a7dc6ff9575e4b"
+        "🔣️.json": "17d5ea4ad42c3049cfe82ad05ae398fc7241e43a8a3b50c86002ff9d063d3ede"
       }
     },
     "framework.abi": {
@@ -6264,7 +6266,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "a55a21846eb0dbb3bdfebc6d39ffb3838002149fb8533914058a4a4c40483969"
+        "🔣️.json": "e488d850279904c7b1e67ae177544698ab156906c3a5f7bbb8d1b1bad0cf1838"
       }
     },
     "framework.actor.return.response.framing": {
@@ -6413,7 +6415,7 @@
       "exports": {},
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "4fc1d093f53d78bc90500dacdb87ec22443d12b41cfb4c7a6f77efced57de8d4"
+        "🔣️.json": "e046baf3851db96227db662d54ab985dc7075550863504ce5281da8590ecb5f8"
       }
     },
     "framework.graph.layout-run": {
@@ -6766,7 +6768,7 @@
         "framework.actor.page"
       ],
       "hashes": {
-        "🔣️.json": "cbb1c30f819886bb55956b65ecb7bde8ea1495a29327f4bb466d0ceb752ab930"
+        "🔣️.json": "0c0a9f8b866d1b5f3ba2b511b084033eb81318fbb215a19d9e0487bc62b3b166"
       }
     },
     "framework.manifest": {
@@ -8827,6 +8829,32 @@
         "🔣️.json": "ee60fcf726f129755f74c8798c13be92041a1055efe68f870759a2879f06c892"
       }
     },
+    "framework.replication.mutation.canonical.authority": {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "Authority": {
+          "file": "🔣️.json",
+          "facet": "fixture"
+        },
+        "Clock": {
+          "file": "🔣️.json",
+          "facet": "fixture"
+        },
+        "Edit": {
+          "file": "🔣️.json",
+          "facet": "fixture"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "f329f2ec7003aa642e296fbeed135eb269bb2058a3b0c1bd0ae392d6096358d4"
+      }
+    },
     "framework.replication.mutation.foreign": {
       "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧬️schema",
       "level": "framework-module",
@@ -9053,6 +9081,92 @@
         "🔣️.json": "0885c1457f1b55cb61e59b643054d37599bce52c783b330f4c4bb6cebc3a7fba",
         "🟦️.ts": "fe41fb42ed7a05ca0180ebd1effa51d0c7b65ec18d9c18058d9b72ab60cc4273",
         "🦀️.rs": "5b94809433e44fb24be97058d43b87863a0c6441bc25da60cbb6020aea19a3f5"
+      }
+    },
+    "framework.schema.artifact-reference.blob": {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "BlobRef": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "f03d7cac2060b8338414ef511065ef2410a8264574aeb01840cb2e0c7784cf25",
+        "🔣️.json": "cefb500ca7af0b89bef3d7f592c99b21b34e38708ea224c94297afcab508b5a0",
+        "🛰️.proto": "095868a94e5b9e449ca0e91ac6be18e89cf1a9142249a39900d4abff4ad4f918",
+        "🟦️.ts": "276cbbbeab1db3edae99541a8b6b62c28b960c38d425957874c2f6c9948ac7c1",
+        "🦀️.rs": "6c9a087924eba009f96306fac11b0fe3951978a9309b76520788e3acb945fdfe"
+      }
+    },
+    "framework.schema.artifact-reference.child": {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "ArtifactChild": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ContentId": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔗️.graphql": "075016e150b8dcf08ca0504c4ebc2a704a5faaad7c468cebd3cdc0af61a7130b",
+        "🔣️.json": "c911bc2ea1150de8488e647b14530ff6042d4ac6b48990fd89e51c53dc8b27bd",
+        "🛰️.proto": "715b2101790b4e71b481488d2659679298a0d52625fd834ebfa265685adcd64e",
+        "🟦️.ts": "06fc9d0255978e3616a8c6ec87764b1483febdea5393e3c3f7936ca8489bc529"
+      }
+    },
+    "framework.schema.artifact-reference.link": {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema",
+      "level": "framework-module",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔗️graphql": "🔗️.graphql",
+        "🔣️jsonschema": "🔣️.json",
+        "🛰️protobuf": "🛰️.proto"
+      },
+      "exports": {
+        "ArtifactLink": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LinkPin": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "framework.schema.artifact-reference.blob"
+      ],
+      "hashes": {
+        "🔗️.graphql": "a0109897313f0cfcbe05affe798982d62b04a6e58c6e74fdf34fb264a54aec2e",
+        "🔣️.json": "c3f275bd05698f723cfe3ec46bf93e91100bb4e9413e868c5687d060d2bfdd8a",
+        "🛰️.proto": "2be0d9ac2f06a68edf68532ce085bbabc263bf9cf059ac538517a21de39cb1c8",
+        "🟦️.ts": "1c09e0c534e48ea01d97a56bb07d6c102a95ff40ff8e3953c9833d5e6c729978",
+        "🦀️.rs": "28c5f3cad7290788167d2642b23c508d529ff0115a53509e1db74308ba977d32"
       }
     },
     "framework.surface.node-graph.scene": {
@@ -11927,7 +12041,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "9a353127bf13393cf25a5b337f06e0b5eb7dff3c0cf6b51d283a104c0e98c2a2"
+        "🔣️.json": "c6424c7e45f5061a5bd32f6b195c6fa0a5a68d91baebdd149ea03a071431b0bf"
       }
     },
     "os": {
@@ -12503,7 +12617,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "e62a3452e7162fa19a287e0f6fa2fe2462ea63f585b0ec5f4258020356593c2d"
+        "🔣️.json": "9d70b6a7b44f63534c18b2845819bb81c6f46f98bb4381547937d282b99b1bbc"
       }
     },
     "os.dev.activation": {
@@ -12642,7 +12756,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "93811333c424d9221936d169125778ccd8d46f30de3659aecaaaf7b64e3abb37",
+        "🔣️.json": "f6f05018c200f5963c41035e1d055b34f35011e7baf03829946e7680f71716f2",
         "🟦️.ts": "bf76e72be80507c54f51e794da8bfb70cfdde3451b08a5ff2da2eb95f54c5d81"
       }
     },
@@ -13407,7 +13521,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "📸️snapshot/🦀️.rs": "29213687447a41cd8d21d40d1f0fc41dc7d5f31750e84bdf3cb2580abaf65a5a",
+        "📸️snapshot/🦀️.rs": "9ef9cf3fa15d92637303a0042e48a68867b27b8f548c9f5719e3d7a33f20300a",
         "🔣️.json": "99b70d0bc45149f8424e62ee8734b37fe4d0bc8a1addc84eda5b796be393ef17"
       }
     },
@@ -15076,7 +15190,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "3eb0572b1083e9412b33916b680abb56d77e10abc1519392f50d9ce278983ecc",
-        "🟦️.ts": "6a68a9241cfda96adbd8a820445df882540d987480478167f48e1e485b51d656",
+        "🟦️.ts": "bc3bf7f27979f9562295e2bb8202efc49bc2796f20245d071f79b279fa34587a",
         "🦀️.rs": "5a17f8575e158e04773abbdaea402858e7019aaa31230042bfd096b221de0417"
       }
     },
@@ -15403,7 +15517,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "edcf06474117d95c454d4a7f11c00e431760071b42f90be12cc0263b75af2eb6",
-        "🟦️.ts": "17fb49f8374d6c4c0b406bfd343e45d4c4f28d32633e29747347584e829bf6f1"
+        "🟦️.ts": "6aa9411a4b1e16c574c07fdd9b5926f32706431eb9a04ef6be708677386148df"
       }
     },
     "os.plugin.registry.deployment": {
@@ -16265,32 +16379,6 @@
         "🧬️mutations/🦀️.rs": "72fc8e063ab81ad32f6093143b0f7d74b1f79288baec4cba2a5ed45246cf0cd3"
       }
     },
-    "os.store.blob": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema",
-      "level": "product-module",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🦀️rust": "🦀️.rs",
-        "🟦️typescript": "🟦️.ts",
-        "🔗️graphql": "🔗️.graphql",
-        "🔣️jsonschema": "🔣️.json",
-        "🛰️protobuf": "🛰️.proto"
-      },
-      "exports": {
-        "BlobRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔗️.graphql": "f03d7cac2060b8338414ef511065ef2410a8264574aeb01840cb2e0c7784cf25",
-        "🔣️.json": "82f57c47c2a85ccfa4888834d4a30ed22169261db012b0e8baac246dc4c371b2",
-        "🛰️.proto": "3025b88d7046f117a9dcbf59f43c0cd0fe19572c741623364d9b1e6346b112b3",
-        "🟦️.ts": "276cbbbeab1db3edae99541a8b6b62c28b960c38d425957874c2f6c9948ac7c1",
-        "🦀️.rs": "6c9a087924eba009f96306fac11b0fe3951978a9309b76520788e3acb945fdfe"
-      }
-    },
     "os.store.canonical-edit": {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧬️schema",
       "level": "product-module",
@@ -16335,34 +16423,6 @@
         "🔣️.json": "0332d851a302972886580ae24ad5e8e1d72f5d05cc50d6075a6ab31bec3b425a"
       }
     },
-    "os.store.child": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema",
-      "level": "product-module",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🟦️typescript": "🟦️.ts",
-        "🔗️graphql": "🔗️.graphql",
-        "🔣️jsonschema": "🔣️.json",
-        "🛰️protobuf": "🛰️.proto"
-      },
-      "exports": {
-        "ArtifactChild": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "ContentId": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔗️.graphql": "075016e150b8dcf08ca0504c4ebc2a704a5faaad7c468cebd3cdc0af61a7130b",
-        "🔣️.json": "ea8601da66e683c680998aa5370f53670e795e5d0b81fb9f974917250a51b03b",
-        "🛰️.proto": "6d060ed62e59f844675b307e6674f8dfda3942c02d5ca5870e4993ce0e2800a6",
-        "🟦️.ts": "f24e7ee07af8dcac4c217f07a1a3f183b17a6adebd85b7466ef482518dc2463f"
-      }
-    },
     "os.store.child.owner": {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🏠️owner/🧬️schema",
       "level": "product-module",
@@ -16386,7 +16446,7 @@
         "🔣️.json": "dbc3b9de3a964ddf83ecf4d14ea3ec5f22fe1703fbf7ead41b90fe69b29759c2",
         "🛰️.proto": "722c708f7fcc3a452b672397f3a1a56cfcaade9475b6cd40853151079c1fb5db",
         "🟦️.ts": "7e306697fc4bb43c6dee8099ee26f30af3115bf52ac820d95f03d7dec4692f06",
-        "🦀️.rs": "9218a53decfec23defad51fb4fd229e9870e0be49db4ab060df0aad3229ef766"
+        "🦀️.rs": "320d139962ee23d2e3b05e057fcfda808b0e7db041cfbb5d69ae2f25d72804ba"
       }
     },
     "os.store.composition.durable-group": {
@@ -16499,38 +16559,6 @@
         "🔣️.json": "5be3225987d3110d7435d3ac146d0702124ebc320c8a2ed01d8fb74f7b5efb2e"
       }
     },
-    "os.store.link": {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema",
-      "level": "product-module",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🦀️rust": "🦀️.rs",
-        "🟦️typescript": "🟦️.ts",
-        "🔗️graphql": "🔗️.graphql",
-        "🔣️jsonschema": "🔣️.json",
-        "🛰️protobuf": "🛰️.proto"
-      },
-      "exports": {
-        "ArtifactLink": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "LinkPin": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [
-        "os.store.blob"
-      ],
-      "hashes": {
-        "🔗️.graphql": "beeec7bd8aa21b34e310ca15b5f4a8a8ddf9b043f3cfe645f0886ef66f0ee3cf",
-        "🔣️.json": "eeb54dcbbaa18b62413af99c03352f44b84a11e8b1cd09a00f72ba80bb153840",
-        "🛰️.proto": "65a9a3cb6a70e0509282a33f0f623224eb416d5d4c0874ad6d5dc6782aeaa263",
-        "🟦️.ts": "8032c708eaa79bb268841fb4e08ed9ea47a7a45d28f6ae9578296edd3042853e",
-        "🦀️.rs": "28c5f3cad7290788167d2642b23c508d529ff0115a53509e1db74308ba977d32"
-      }
-    },
     "os.store.member-producer.source": {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧬️schema",
       "level": "product-module",
@@ -16562,7 +16590,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "c6ea5f1dbc19fed471b5ee44926e11ac4dd11b7ea3cc009f3327d04c07c0147b"
+        "🔣️.json": "dbde2519f895e6f52260f9b93542c59134c8de7be17458f8032976a8ad5d3f6e"
       }
     },
     "os.store.mutation.commit-space-checkpoint": {
@@ -17860,7 +17888,7 @@
         "📸️snapshot/🔣️.json": "b09c75402f60338c05e784c38a6d323e483f555c3f179975745221037f175361",
         "📸️snapshot/🟦️.ts": "a0c2cc63cd835ebeb3f9575f09f80a40527ad552027dae4e465fc44a38434000",
         "📸️snapshot/🦀️.rs": "79f00e2c087efc8b0fce28ab55aaeb313a4a9a3108f8caee836b8a593a4de01d",
-        "🔣️.json": "f96007bc6b46ed33850707a2eb0c7223365870d5b4f98069cc291dfd8f14515b",
+        "🔣️.json": "b7a2acf201a2d81c3bf475f034768e85ab26ae95359c87ca5689f90245b6dfb7",
         "🟦️.ts": "6d78cd065b190168bf5fe0e93b517481e1d2627a984618de222feb6ff3a7ffb7",
         "🧬️mutations/🔣️.json": "e45a28c298c67c13abafe6ca5ac4e09b4e6ee30345d2d43018cae3eac4bc3358",
         "🧬️mutations/🟦️.ts": "de2393d41ce275ea21aed1f6b2eff312ea5ba6ed54d3d25a29bfee4b76425565",
@@ -18598,7 +18626,7 @@
       ],
       "hashes": {
         "🔣️.json": "c6ab1cc9d1eb425bc73d5b56cf4a72f242cd46431931f51a5ae6b9d550573d04",
-        "🟦️.ts": "8d59c81acaa8058e1734c120693d734eae61b7127e01d9a3e208c1e70c1f3543"
+        "🟦️.ts": "05eefab94b0ca961761dd2b1eb201461154ce1e896f924667d7c738743ef4594"
       }
     },
     "repo.discovery.schema-reads": {
@@ -20484,7 +20512,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.animate.presentation.mutation.create-tile",
         "s.animate.presentation.mutation.delete-tile",
         "s.animate.presentation.mutation.delete-tiles",
@@ -20500,20 +20528,20 @@
         "💡️inferences/🛰️.proto": "ae86976b8ac11278a9ffbf48a2643a331c2a156973e88cbb950b6ca6a135da9c",
         "💡️inferences/🟦️.ts": "bb31f46182b20de5d229e32936c8f56634d11943650021dcd577e53db06a7bd2",
         "💡️inferences/🦀️.rs": "5bd32ab5ee6528a852f4ebea4a8144488c50a31baedcf109ab3d14c836ce8570",
-        "📸️snapshot/🔗️.graphql": "92a36b0378319fc2073d1968ce5c20f04447fe27bd70c25c921c469b5d8f6faa",
-        "📸️snapshot/🔣️.json": "c83dd5132bea0ac37e653c707ec5110b794a63c09b4969980e5ff93e0522ae5e",
-        "📸️snapshot/🛰️.proto": "1c6083929b3f1f3462e1783245673b2b3822325a906a52ccd940d0e6ccef3f56",
+        "📸️snapshot/🔗️.graphql": "5319cb10d8de69676a8d64db0ab485bfde64ab28814715cd4590606ddfb7f511",
+        "📸️snapshot/🔣️.json": "5aa7e8464bf90ab07b423790f741b3282fbf8a9e9f718feb664ba8477701059a",
+        "📸️snapshot/🛰️.proto": "46c2f52993f6a5911af133a72f0212007b97f14f76b6ddf9aeeacd36991f3369",
         "📸️snapshot/🟦️.ts": "dab8c784fae31ff4b9ab678950fe849f8e540b98dde8f0b21c8479cc9b4a0a20",
         "📸️snapshot/🦀️.rs": "5bc5841b5699bbb1c1bf5eca2dc968f0658bc491bbc56362352f9a7c08baa88e",
-        "🔗️.graphql": "73e2649db3938227c77e7ac6ff44c1bd3814060396c6ea3ec1335b5e3b655485",
-        "🔣️.json": "170075c61f2bb6736e3a08f1bf2719297d8ec3c3c516f0792fe484ad6d45e058",
-        "🔺️diff/🔗️.graphql": "b82879d19e937abe4a47e8e7a58adab75eed07051f9e9648685b1f378b433514",
+        "🔗️.graphql": "37becf92b06f972c3987acd0c31a5174b739f27b3cf94ec26da73456cb2c92ec",
+        "🔣️.json": "4122c7b090aa0ab86f3a6e455695770f2585edeb5cf2fe7279d3df266cff0392",
+        "🔺️diff/🔗️.graphql": "a358202268f3a18b5ef176311052d84c3293d10619f00b8c04d82b93f7ae3cf9",
         "🔺️diff/🔣️.json": "533b291605ad968c1840f516416a459d100022dcb8673f098558268c19a5b6b5",
-        "🔺️diff/🛰️.proto": "34a96197523260d8a2c2b6d395f4c46d823fe027f3e77df947d7adc9e35bf909",
+        "🔺️diff/🛰️.proto": "4a367e3b7e857714b05f87e137e579aedbd35d6dc7df85bb087830078c90840a",
         "🔺️diff/🟦️.ts": "17df36fcd107dd646512c1303f1483a21c4e74cf26620ca38f70747f5171f5c7",
         "🔺️diff/🦀️.rs": "df88045a69c76a5c80815fb8b88bc88c1b4a3e0a1de3c544598e5b62dee92f00",
-        "🛰️.proto": "546919916a45750106c24495e78c9fc8885878df6f4916a5ec7a88ecde48db65",
-        "🟦️.ts": "0610a2370e9678a7f858e19b944c1a4754d3dde19bf0ae750562e5a95f44a3cd",
+        "🛰️.proto": "d57a352fcc1d5a6f70646fd4b7d2af28e278ae7aac51b087fb57a4a8d4280d9f",
+        "🟦️.ts": "13170280c25c5fffdf36ac7820a05fb16c643e4a70c229130097f064af58fde1",
         "🦀️.rs": "4d24d72b8964e2fb25009574432d2153948786d93f5909b301af9c3eed10a135",
         "🧬️mutations/🔗️.graphql": "d5e498623301d8d2aa92bc76577d55d5003b6ca3d8400ae4af2e73f50179e968",
         "🧬️mutations/🔣️.json": "f1cacd5a3ee8430c5da668c415bfa8c950d6141d1c5f4c0376a04a7a9b7e270e",
@@ -22752,7 +22780,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.architect.program.mutation.connect-adjacency",
         "s.architect.program.mutation.connect-trace",
         "s.architect.program.mutation.create-register-row",
@@ -22774,20 +22802,20 @@
         "💡️inferences/🛰️.proto": "ecbeb7231dc20405441877e745533e0b1bf02b54289389d99bc60e879ff13051",
         "💡️inferences/🟦️.ts": "0bc045c3a0a970bb03bbc9d903f818e83d6d2c358616cf169e62ec00e7ca1225",
         "💡️inferences/🦀️.rs": "6a23ac508464b1d98d2692d22c9d193a6a3d2e951bf13577f28f9767fbb30e2c",
-        "📸️snapshot/🔗️.graphql": "64ff18c11017bd5d5e30f505b4e23ffc4bc243709d9bc2d2ee852f688bb0d177",
-        "📸️snapshot/🔣️.json": "06766f5bb42bf2160db16c8bcdfa0ede29c5ce5ab65bbfb0f6540917690d5042",
-        "📸️snapshot/🛰️.proto": "15bbd87bfbf00a707bb64c64c83192caf8d32005f58485a8dfdd6ada78503059",
+        "📸️snapshot/🔗️.graphql": "a2173af0fee71640aa4bbb59517febfa0db92002467093e8899250254ffdb48d",
+        "📸️snapshot/🔣️.json": "506a0ea4bcc21d7a334fa948dea3b992f49496a0fde6fbcc874aa103baf180cf",
+        "📸️snapshot/🛰️.proto": "f9054b7cf3b536a05aac85ceb7e81b930ea3e6261e7d2586f0ca09a93611b355",
         "📸️snapshot/🟦️.ts": "432e42966ad8e79c763104d026e079baaf805f8c8116c490080b3e5a447ab32d",
         "📸️snapshot/🦀️.rs": "1a35043f0e5da0097a74f4acf5dbce25eb69c16fd5f97c6b998e3ff89d93fa60",
-        "🔗️.graphql": "5169d17b8434d0865365210810b33dbc01df8c19a41b6c6253511add9f823b7f",
-        "🔣️.json": "ea7591702efa4a5c52d91d2b78d0198780fd1997af422964f640f78fd60649e9",
+        "🔗️.graphql": "6c60459fe8db9d015a263730e2ecb71ef778d4cf3e5a76ec70288f1d7d92b6cd",
+        "🔣️.json": "29b8b702c17d77d438a5975436a7902a38e2d3317a9d442bb2ae1aee2aa4f5ef",
         "🔺️diff/🔗️.graphql": "d2a6f0a1713dd2b186ddf6b338bc2f71041421d0a1559145c5da3c380c54d793",
         "🔺️diff/🔣️.json": "3edd8f875fbb21bedcb7c0e7960a3ab0d321dfebe1264a86f8302a36f6149bf3",
         "🔺️diff/🛰️.proto": "e31130ed819f8547361366eadda686df692e04b0fa4df98ecff5e279f639746b",
-        "🔺️diff/🟦️.ts": "84d9163cd7694a8d8f9c6533dee1f87c3c4b724e5ac5a4667efde0617349517d",
+        "🔺️diff/🟦️.ts": "1208f18e7f396b1f59af5d93b8b36310623da99f7c538aef7d93acce311ebcb2",
         "🔺️diff/🦀️.rs": "5b746d8667c50890fc43b7ca578f336e8fd0030395117dbb99e80f3750e1c2a7",
-        "🛰️.proto": "d9b13cc856e83f876771d1c8b82b5293d334da608e908a76c405a14b414fb15a",
-        "🟦️.ts": "aeb844091dab0592996fc135c7c30b8d596df3590a0ed01e17436e9a504b9c73",
+        "🛰️.proto": "e0eefa072be93729534f4d49b872002a8948198f9eaeb8db7ed1de0b3a0f6fbd",
+        "🟦️.ts": "df5b3f011137cce4448c19224076fa4275a3cc83e00af294d789a29551ef2821",
         "🦀️.rs": "707f1c8459c264808520c36f6ac97670b08e468ffe1eac3311cf8559122ecc49",
         "🧬️mutations/🔗️.graphql": "fc195105abc8a3b77afe33aeb338bd39a46ce35a7749a37284fd97de8fc7afa6",
         "🧬️mutations/🔣️.json": "4102711aa9cea2b1e3ede9a2d49db1e37d80b6f90d6fa869b5faf6207fd5d41f",
@@ -24693,27 +24721,27 @@
         "💡️inferences/🔣️.json": "5e84f675af80374b870e6559ce4c90f35abbea81fdb01bf16631a304df55c3f2",
         "💡️inferences/🛰️.proto": "b6a5adc3d2d33395e0b2401c4f46730dd1c011d25f8d932fe166137613519769",
         "💡️inferences/🟦️.ts": "30e09b2de7c919b52ec30140ba409d986ef79e5f28a3c4706401e2adb222fb1b",
-        "💡️inferences/🦀️.rs": "cbb5102fb3e49c1503b59f6746b4eabc9769bd63a0556534c57b52b7db1e8b2d",
+        "💡️inferences/🦀️.rs": "e3636ac42655a8a22bdc4861e3599bc768f4a161e98093a897c4f942f7c024e9",
         "📸️snapshot/🔗️.graphql": "7930ad21701cb96fb7770db5fcbc1b2046d7478b0bbcfb88bf3bd23e30bd3490",
         "📸️snapshot/🔣️.json": "39be7aa832ecd0c2794aa92c0b4e2ed0f8229dc74424a3917076eb85daab64e9",
         "📸️snapshot/🛰️.proto": "ad7b436d684ba3d4594fdcb9cb8ef49fb4841c23d457b08ccb7d1a0bb7265887",
         "📸️snapshot/🟦️.ts": "363714763a33e0e175bc9b70783e04ed232c63facf1d5df4bfdf5bf6508add24",
-        "📸️snapshot/🦀️.rs": "eec622155ce15bd91899fbc487390a8d6105ad44a22119325aa1547449c9bd1a",
+        "📸️snapshot/🦀️.rs": "504486e246418f933575d7acb069f93ebec66389ad3f8251b7a5ce442b2b8a37",
         "🔗️.graphql": "670a73b39c59344762459af8be99d83ad1c23c38475d9cc4b2e27b4b9bd2de13",
         "🔣️.json": "617f5f3922cb0381ae82aa6fe9c1864176350131ac9361b93489c8b63656b2f2",
         "🔺️diff/🔗️.graphql": "2a0ac4383282de3d7fcaef136aa096559dcf892174a60c11c1559a928b9e5254",
         "🔺️diff/🔣️.json": "c4718442b1d741e1c3f781352d974d6f2cacc128d8da992ce76bcb672adc1ec6",
         "🔺️diff/🛰️.proto": "486c1e9df76da7edf3ed525693a9694f27d737dd6d498ac9c630a8ef9abeaf59",
         "🔺️diff/🟦️.ts": "3d710c27d92358d4d1d14619c74fb0e3190ff9d24f28d1abe0245c39512f44f0",
-        "🔺️diff/🦀️.rs": "e66385f17950aee1295ace9408057b296587af6fed66fc89e4d391c42bdfc854",
+        "🔺️diff/🦀️.rs": "a96a7ecf3b16eeba32e9f4313a222b6a6fad070a1e3932d64f5cde92648be577",
         "🛰️.proto": "da7d4b37f18b7c9bf34ab2490a5118bde0f46fe5704dddf8d565b283dca3ca8f",
         "🟦️.ts": "88c810261bffa2d003ba4ba7e64d773545cef0d75cbc2ffdedccce79bef2e815",
-        "🦀️.rs": "f2f6080559f840242346c6edc315152e5763373d80d19e5f9e344b37e9e3f956",
+        "🦀️.rs": "e72121c93dec6b9799dda12de2ebcb1662051204a3582b6cf5f8c86da8fcedb2",
         "🧬️mutations/🔗️.graphql": "51b1ce08f4fceef94bf7c1d5e8d2e194521d8524bee73e71a9e01d418d4553ec",
         "🧬️mutations/🔣️.json": "a66549f959e896c9009bfcf9ce64885f131b3b01c65953305abcbc8ccd6a55e2",
         "🧬️mutations/🛰️.proto": "5db59414f903fef463bf2a91748466204fb6c93dd25706708973df7c12490fe1",
         "🧬️mutations/🟦️.ts": "58515bcba6e8844cc82616a5ec7b9ee4d97bf61ea7b20eb63de9fac500565b7a",
-        "🧬️mutations/🦀️.rs": "6fd53ef61a09c3b98257237cad14044f6898f39def918be665c8ee76e9028b72"
+        "🧬️mutations/🦀️.rs": "fa22b6d610026d0023f3a050e346991550cfa44d4d25126cd65155cd7d0429f2"
       }
     },
     "s.bim.model.mutation.align-elements": {
@@ -28935,7 +28963,7 @@
         "🔺️diff/🦀️.rs": "72b2d50beb82671cf3bff5763b778b0940a9d76ed566f7a1afd7e23276290a45",
         "🛰️.proto": "75fe2424d37d26449bf1154401af558f4fda281634b56ca869b55a01e7b259f6",
         "🟦️.ts": "7e74aa4722e56a8a1fb50528f59f5484ee5c8b35830a444f10f6033924551478",
-        "🦀️.rs": "f88d817d0c58833aba313a48e590e3f61f6ea372b26f27586ad99913bb2e59ea",
+        "🦀️.rs": "0a69b7643cc934bd927b2823514effa82a0632724b12e3c0078bf9e0800b7a05",
         "🧬️mutations/🔗️.graphql": "1faf854259d366311885abfd579de01767f4f26d0f5d05dc65ea669ae3d9731c",
         "🧬️mutations/🔣️.json": "30201ae21cef2ba16c014f540bebaa4ec7cf8944acc44137f9bf24a58ea52145",
         "🧬️mutations/🛰️.proto": "62afe1b83c237e1cf906e3f447e7786b0d3ccc4159b7dc178075674bcc2a5b43",
@@ -29673,7 +29701,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.block.block3d.mutation.add-attribute",
         "s.block.block3d.mutation.add-author",
         "s.block.block3d.mutation.add-compatibility-rule",
@@ -29719,25 +29747,25 @@
         "💡️inferences/🟦️.ts": "724ffa1dabb50b50a727afd4067985751aca7691865f053ac45b53124be1685a",
         "💡️inferences/🦀️.rs": "24d1d89ac55e90fea4a1759904d41ea26f208c1c80d62e3cfc44e413ec77b80a",
         "📸️snapshot/🔗️.graphql": "2c1aeb4933ba871919ebb8d5c3e40ede5f4f4a6642137f0fefd72fff6679b585",
-        "📸️snapshot/🔣️.json": "0a57e07768a29c420ef83631ee08f241c1d25778f3e2150a6ea18e66d83673e7",
-        "📸️snapshot/🛰️.proto": "ffb0c4cedf95e307f21d5c859cd874332c26002d5e41ed5993f15ad313e345f9",
-        "📸️snapshot/🟦️.ts": "cb2736edf9a2e9ac8800f28e9bc02c9c2695524973b26ac947dd5f7cd67a90a0",
+        "📸️snapshot/🔣️.json": "85f5de3f40456a94216f2e7ad7dfb6e2687ac7590ae0f212067a765cd518c903",
+        "📸️snapshot/🛰️.proto": "1ace967086ae19b93fbd4d59d36540b3d505920f841764d0d09d5611bdbb0c0d",
+        "📸️snapshot/🟦️.ts": "dfc14d42019108b91a868b1ccd9fdb398bcc3508921edbd7cfadbfc0b230c647",
         "📸️snapshot/🦀️.rs": "9aad50dd8ff63f8e7e7c4009c36a9c78bc5794d67ff503e836a40d7bcecd5fc4",
         "🔗️.graphql": "815bd2a559b66b9abc0b17fcadeebce205e4edffae45976391b503ee5baccb87",
-        "🔣️.json": "c2f2c2444e3e2ba4b8d43ba04246e2ae8d1df7f9c7e2c9848b9a67cae18a2a96",
+        "🔣️.json": "50f9115beadf79b3550c347fa68d9b2cf39b8560a5d679c72bf46c1439d01c93",
         "🔺️diff/🔗️.graphql": "29c55ff9f447bb8b6f6151eb050839a597580a0da4518af3e68d9543bb171cbf",
         "🔺️diff/🔣️.json": "c1e2e3eca71f77631a4e46099506aa3df459dd413067b7c77d766b48271dc4cb",
         "🔺️diff/🛰️.proto": "5f9b5f7f342a8ad4114d4ed78d2cb43bb7795f79ddabd48eead8901c2caa012e",
         "🔺️diff/🟦️.ts": "5d8c48fbb6957ec07d9383197277e7aa698dd6c4d48e2151181b46bf104d30c4",
         "🔺️diff/🦀️.rs": "c1983650262c09b43833c9b24a3f000826d0806af9f0125c42595bd0882311c6",
-        "🛰️.proto": "22bbde10ed286330c93ad36b09d934f53ab27b7b2fa713ceeeaf865869d8f61d",
+        "🛰️.proto": "1f8702b908b41b1d11f11bb302b93a5f797e33db9547234066dc42d701029032",
         "🟦️.ts": "aae83ec7523d720784342c05207057bb5b07a8aa81a9bcec00836c536bec9f38",
-        "🦀️.rs": "63985fc947995d8de7804f3a777f66a89c128b5a6a6daafa9edf728b19fc53f2",
+        "🦀️.rs": "cd93f5022bf1fca2e23a15a18ab5e7235a1c00cf8680c2d2ac6a0e679675dfe7",
         "🧬️mutations/🔗️.graphql": "ff1d5edf14dc0a7066794feb754bfd045543a554397bb821513ab2104fb6eaf1",
         "🧬️mutations/🔣️.json": "7f714b4eb9a30b28884f43df936ba1024dbee4780fecb56582148572199dd4f8",
         "🧬️mutations/🛰️.proto": "c67122f3f8035c245e28c72e003818a0bd4e68c677df24d8a6c207cb363f03da",
         "🧬️mutations/🟦️.ts": "67eb1f24145a4524ea77d75d64b3b5c0ac49cdec45a5e280b92831cb6121f282",
-        "🧬️mutations/🦀️.rs": "9576cd6d57f722c18b39afcb58a6302ecf76de2fa6222b03ad55315f9281d804"
+        "🧬️mutations/🦀️.rs": "2a982d840bca96ecafe1ff7445256fbbd1157eed07a9bdf36c8dba16d06b71aa"
       }
     },
     "s.block.block3d.mutation.add-attribute": {
@@ -30754,12 +30782,12 @@
         "🔺️diff/🦀️.rs": "cca956a593670f7c58c4cd0d445e3b79ca92f2cff1076883e237ea71f5020458",
         "🛰️.proto": "1e5134e2eddda59f648dab666e992c0bf163e21dd10bad6087570aa58014ede5",
         "🟦️.ts": "b92db8d7e3b72dd76ad84e165bde05da668f0a870ad26a960a8bd5c12237eba1",
-        "🦀️.rs": "602b577719a9695221dedff5f1b24c9688a910108a786d4b0667cc15d4df15ec",
+        "🦀️.rs": "a40e04f935c66ab8c8924be7c934537082f69ff6fb40dc1d64c1966a2b0df5c1",
         "🧬️mutations/🔗️.graphql": "9844742f5f9139cb31e37a774e0bf2a2cfd89f6c909478b0681a49802fa9d144",
         "🧬️mutations/🔣️.json": "1a3777332ba0cf95a4324365e5e08d4e55e502d583784f4a8dd39b9245764101",
         "🧬️mutations/🛰️.proto": "e2a16b0d9aac56940bc09f32c6290e47553eb113c51c95f31b911d0757b70b84",
         "🧬️mutations/🟦️.ts": "4191e91007aca46590466c979c0d4ab46bf54401e0ba89bf7b77f7950fa067e9",
-        "🧬️mutations/🦀️.rs": "b913958995fbd9b1bfc2d5bab41a2f1402f3679dec2a9c8c119964b0e661c2ec"
+        "🧬️mutations/🦀️.rs": "55f1b61a9b83bd0cf62a4ff4c2e150f0c856f2cf58589b4195f352b38aae6aee"
       }
     },
     "s.block.block5d.mutation.add-attribute": {
@@ -31687,7 +31715,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.cad.cad.mutation.change-reference-hidden",
         "s.cad.cad.mutation.change-reference-locked",
         "s.cad.cad.mutation.change-reference-width",
@@ -31716,20 +31744,20 @@
         "💡️inferences/🛰️.proto": "33a51c49e2700964aa5963eac816286c8908e9a4d15a534e27d8e71ae6a23483",
         "💡️inferences/🟦️.ts": "05ade22835c8472177b923462f50e99350918d5d88278ffcbd833e45bab4828d",
         "💡️inferences/🦀️.rs": "098ed381dc73aa901747eebbdbef31578ab3e3d3ff8b0f45a60aa783fbdcff99",
-        "📸️snapshot/🔗️.graphql": "8d43303b3689e3c0ee5a1deef549a73b49e8bd835a54d76f53091082a1d5f371",
-        "📸️snapshot/🔣️.json": "200427fe75bc84295cfd67ded19f815b3754d9d96b5465ccb2a17f253c9c1a03",
-        "📸️snapshot/🛰️.proto": "6bfdb5623426eb981b515bce8659c2b3834c9200caa72033729697bada90b95c",
+        "📸️snapshot/🔗️.graphql": "d5e509364f4906df31b950770787f3296a6cf9e8e92648f56af152e3ae6aded8",
+        "📸️snapshot/🔣️.json": "e124e801271aaf64f4ff68a285937f0e356a89e483d20efde39f41da2ceedddb",
+        "📸️snapshot/🛰️.proto": "14f73975a44bb9699d52caac6469fda46925771fc95565d256bcf1627ba3a191",
         "📸️snapshot/🟦️.ts": "15ae49119c1a2486f7e6a06a5f6f5a83b42842a10135654c8f703986c00dc07d",
         "📸️snapshot/🦀️.rs": "cb296d8dd80678932e4f9a5d602395ddb5f5c9e75aaf65ac9685357dd23506d9",
-        "🔗️.graphql": "c2fead0f0c7d7a5eb614b97158cdb63f3e7dc5709e253385f0d7fc77d82e03aa",
-        "🔣️.json": "12822d4587ec85dabba2b4383c7dc15b99bbf28d6d0dafc2ec432d7f1f2de800",
-        "🔺️diff/🔗️.graphql": "2e7a92148b9b5c94accb6c6623ef155bee4723d50a57f09f4e05df72ce50d997",
-        "🔺️diff/🔣️.json": "db45f06fe0a2eecc033b3aa55e5a3ad671c5a720ef234ed835bcd419bf0a6130",
-        "🔺️diff/🛰️.proto": "a6e1aa2568cd89344cc3940dc6a391eeb7314db26f60e143de31799fee9ba87f",
+        "🔗️.graphql": "8da1f81371c08d2860a9abe516b92edf0b1ef97310987d17f3cba192ad9f479e",
+        "🔣️.json": "321ce01575279634bed60cec6952cadb040387ee9a31501174a3daa6c9fabd33",
+        "🔺️diff/🔗️.graphql": "2907a56708c580e4443229784aeb2e9f35c137b6e28290f0f21f9deceddba8ff",
+        "🔺️diff/🔣️.json": "988b2a95bbf05b1d5ccbb63b10bfe5c53ea38f5e9ab464cf1bcd94e0e6ce593c",
+        "🔺️diff/🛰️.proto": "6c9e38d8942555527a8f6de9b0199d8c6181b3a27f57bca5bca5696f03b20f69",
         "🔺️diff/🟦️.ts": "f8228ff73de006fff3ae53bcca5d4aa8c75daba7840f7b3f4931c8fa64520130",
         "🔺️diff/🦀️.rs": "8f18b0cc5dbd307ccfbd8b0ba84eb7fbe0c8923090b9cb1d1f5027ed1fcec896",
-        "🛰️.proto": "79cf066a9b629f2162da7f455fd1c6c28241677229627fb7559874a1fe6e945f",
-        "🟦️.ts": "f9048ac83c9f1e374e7eda4f83e9416a54dd2f8d12a5d3139f482def3130568c",
+        "🛰️.proto": "2d763a24226280a535677833b45f1d67665ff32ca859ea3b1289ae301a0c5c3e",
+        "🟦️.ts": "5116d36d39307a17b542ebc55fc29c9547e6c68369b244f0486b013360451b33",
         "🦀️.rs": "bb1bebb6640085876c6dbd2a9fdaa37f0daa42ccffa8bf58cbf0f693ef20bad7",
         "🧬️mutations/🔗️.graphql": "c94da7ec09f06b28be62aadce48747846db440379fe5b3cc27b1189e0197fc1c",
         "🧬️mutations/🔣️.json": "ee84c6713e0090ad6a5327b5813bec8d9a92d9b2a0fe683cbd2ef8217581e056",
@@ -32156,21 +32184,21 @@
         "💡️inferences/🛰️.proto": "e6b5f55a1df64b90ee22e6ded07e869df848e98f15c9093c9e1c7e9929c1708d",
         "💡️inferences/🟦️.ts": "341dd895c65eda9ad6ee80122da845eded8936d72d4592a72b2cc7288fc5ebaa",
         "💡️inferences/🦀️.rs": "1f26e8b485fb79aba9e92748ab286d133e5f4f0b19e249a04234fd471b855e9b",
-        "📸️snapshot/🔗️.graphql": "b9c4043b1b8a270f97339dcee7b15a1da988778ea803bc1e3ad46cbcc9ae7d48",
+        "📸️snapshot/🔗️.graphql": "2521d0f00c0cf68b682731ee4a985d53a9a6ea4050ff6d622d9f16c3266e4b4d",
         "📸️snapshot/🔣️.json": "fb3d9e085f857e3155310456dc15bc00eded6b0069b58365f1f0bcc85f94d70c",
-        "📸️snapshot/🛰️.proto": "905bf3a728a4969167437b2f8bd0d642643e7fa9bf7842c699df04936f1e3bfa",
+        "📸️snapshot/🛰️.proto": "c76bafe69514f27f056d73c80615d1de648e387f06105cb2cd38d9842c95bf55",
         "📸️snapshot/🟦️.ts": "5b44505290a9b496ca6261d93c88eadd410a286a67c2e7626143cae56cf48790",
         "📸️snapshot/🦀️.rs": "70bd292dc067dbcfefa59dd9a7026eb7f235a2d02778dc3ff0b06d9701c0be09",
-        "🔗️.graphql": "4626d44d7b56265312e18d42a294ca0585b1a14edb4999f0f3f4369b2b8a789e",
+        "🔗️.graphql": "574f3d238bbe9a2c4f34528311d482df3da7dd5cfa23eefa86f1243225ba28f5",
         "🔣️.json": "0dafdd5020eb6ba561a830b32c5e2c904b68269ebbd22a83bf8b90a6c51b280d",
-        "🔺️diff/🔗️.graphql": "1e9186f4611326208ec508192c15ff35a72781754e01ccdb6e0012e4a1ba9a9e",
+        "🔺️diff/🔗️.graphql": "70096bfc81c5bb1659f38b56521b19efd337e47cfa10b7d93703acedcb1e6bc4",
         "🔺️diff/🔣️.json": "2a97ab352702e808e3dda489fac413b05fb450adf8c558a4509a84b8921c86d4",
-        "🔺️diff/🛰️.proto": "5831febcf602619581a7a9bc1d403b2144a9c2fb8bc7815f7c276fd71ab8c6a1",
-        "🔺️diff/🟦️.ts": "e260b9b10bdf607d89328433c2cd1753a2a35df1175da680b11798fe2e91252b",
+        "🔺️diff/🛰️.proto": "563f6a479279808fccaee0ea8163a1b3efe00b3b7d43e4bf4ab13182ef882b15",
+        "🔺️diff/🟦️.ts": "e2d38745b8606fd36cc4e28d07ed36198f60a249a3d4fd753b9c4a8f551f137c",
         "🔺️diff/🦀️.rs": "49d522a7d31d29fced4e76e19549ddcf4da32fe944e0da5d106b96b44e1920c6",
-        "🛰️.proto": "e13b8f3488ebe7d75392e5335063c7e8dac84e346210dc027704df692089b9e8",
-        "🟦️.ts": "91e70e6ca6abb509a32e58223641c864e5c5243d7467d8066846013102d64ece",
-        "🦀️.rs": "ff7cc50545ecfc4c15a7dff14b6109c8e0f1681d26927d13df60b2cde8414067",
+        "🛰️.proto": "47e4cb643cd317a9e171c80dc7b2ff3dafcee4df96cc30ea401474e792548df4",
+        "🟦️.ts": "9f05c299ebffb416ad09eaf6aa30dff5649856818b344b9d505b48f1d445c716",
+        "🦀️.rs": "334757a0188c26e3c51845b570d5d53b7c3851334d053a55ce8b471d74e7f13b",
         "🧬️mutations/🔗️.graphql": "00ce55a5f5788439c5dd76414a788efd96bb222648e73ae3369329660357b984",
         "🧬️mutations/🔣️.json": "aab768aa6426e8ec3ee4e2ecbdfa7be0001a866ad2af05ffebd92315f339a851",
         "🧬️mutations/🛰️.proto": "15e89a451fde587df2ed251484e13cdc5b288ab2caa5bce70232e05d3ffcac90",
@@ -32985,7 +33013,7 @@
         "🔺️diff/🦀️.rs": "fe83d3054601f13dc43ab8d55dcb44a92056390af494140943a2a1c683e0d480",
         "🛰️.proto": "24e7b2592892b413a2b1aad0b6ac2d4d1ca112ef6470128d191ec15c9611fb70",
         "🟦️.ts": "d05d5cfc366c7ddb8993f997f5b4441ea50e538aba09953a2565b31680b1b188",
-        "🦀️.rs": "9b7ac15e70691721dc313352889ee0dcacec56b02138d833cd1c91d1d0e4a52d",
+        "🦀️.rs": "1d358a5239af2897cbf1a2a0e21f3898c5ec62fc8683786998c3eb4750f9ff8e",
         "🧬️mutations/🔗️.graphql": "ed296cb480745e6e8a665921385736ea01b352121f559ecaa550e926da5b87ed",
         "🧬️mutations/🔣️.json": "7a8c66f2a9fc96fb2a23825754798a31bab32e15e07dc26eec0bcf856a33ac0c",
         "🧬️mutations/🛰️.proto": "65ac78e019b7c933c6da6375d25a8cf3fd59fc248c3b037e66ec371ed6555057",
@@ -33882,7 +33910,7 @@
         "📸️snapshot/🔗️.graphql": "39f424d45dec5ead8bd1a1453ebd2355637d54780e739d3114bade287435a4a9",
         "📸️snapshot/🔣️.json": "f3b471c9f5cb87869ca3eac6e0bd118bbed0504207fd42fce9d2e6df07dab65f",
         "📸️snapshot/🛰️.proto": "bf82313a58d83f45a32d8d64b9b764b090486db00755d7d8b621f85c789025ce",
-        "📸️snapshot/🟦️.ts": "6ecedfe566e27e72b3bd6c79a01b2bc150561b2422fae20e41bcfbeae13bde2c",
+        "📸️snapshot/🟦️.ts": "ebb9dec6be5548c4a23f396ddb1f73610de8aab12fa0c6e75ac5a04a2e5d796e",
         "📸️snapshot/🦀️.rs": "c7ccd8be3341fda49bd18ff0a58cdc7a4670c23af3befa52a216b9d85d3a4e2c",
         "🔗️.graphql": "a413264d6861b6734050f9943ab7b27c9f7844d4287e6b55a10f65dde1db846a",
         "🔣️.json": "d379e8676182212f834b53f94ca3649d446f0a62c0a4edb898c7585de6054945",
@@ -39349,8 +39377,8 @@
         }
       },
       "dependsOn": [
+        "framework.schema.artifact-reference.child",
         "framework.value",
-        "os.store.child",
         "s.mathematical.equation.1.equation.mutation.change-coefficient",
         "s.mathematical.equation.1.geometry.mutation.insert-point",
         "s.mathematical.equation.1.geometry.mutation.move-points",
@@ -39374,20 +39402,20 @@
         "💡️inferences/🛰️.proto": "a81bfc5795f3948a19ad8f603af3cd1bb8c877715b488a59f92aa8fac5d43c9b",
         "💡️inferences/🟦️.ts": "a2caaac7b346836be4dc42b8dc9def7e2b095d1456fbae320f348c6556b3adce",
         "💡️inferences/🦀️.rs": "f7ba945111e6c87a9f60b1841d2493f1bfd0be8b47c04dbcdc8b1b8a12f15d2b",
-        "📸️snapshot/🔗️.graphql": "38d69a5ce0cd4602858ffd0adce710fbf7074a7ace876b83a33583a1f94a8006",
-        "📸️snapshot/🔣️.json": "3bb09907a464acc80dedfae4c3de7e7b926d34fcec726ca36ef2821a722dbbc0",
-        "📸️snapshot/🛰️.proto": "f265319f3954b751339da1ae7ba2e4b08640c5f7627834a9422e66656a0dae62",
+        "📸️snapshot/🔗️.graphql": "0b77d8be17535dcfe1cb2b1a0498af76347d6aae878d94b8360190bb2a7320f1",
+        "📸️snapshot/🔣️.json": "cd7b700f733cdaf05ce6994370414a1e3508c0bac33bf68d91efd65453ead2ad",
+        "📸️snapshot/🛰️.proto": "5ab446199946d7d754e730ee38ab651a325821b7e9879e298b5b6c05d460c0b1",
         "📸️snapshot/🟦️.ts": "6ae48bda2ee4257af73249e812d2762ac5c37f37559589305522b3753adf23fd",
         "📸️snapshot/🦀️.rs": "fb3f52f9e845cb9f3c9d4bd5c85f1f4996e32767f7d11c60760e1acb9b39c511",
-        "🔗️.graphql": "04cf57139c2a57d979c0be075df07b827a83628a1a373ac27e69faf463c8bed2",
-        "🔣️.json": "25d3043674f8f12f0c9abd581d2eca7924ae16c9e73cbcaee767f139677c7200",
-        "🔺️diff/🔗️.graphql": "1267233e99060abeab6e622394e568d595039bb90019aaad234f60d7efb4344b",
+        "🔗️.graphql": "18b378e89a4e885aa67c93b2e84df017a2cd18d7aafd3a3cfc580c8d1c9209bf",
+        "🔣️.json": "5da0294e1acb0dc25ec9a39673629ab6b13ab0796761fa904dbfbb3c05f5d609",
+        "🔺️diff/🔗️.graphql": "fe18ba090133f0f448a0ca2207cc83255ad84c2cdc0ed96b39a797b46c1b8ba6",
         "🔺️diff/🔣️.json": "f0493f0eb9d87ffe47de13eac29509ccc85626e299dda6502582d7fe072bb71b",
-        "🔺️diff/🛰️.proto": "0b93c274fa9a15629f21d23fa378733a16b56fc4357f7d082ba81d8166a69c9e",
+        "🔺️diff/🛰️.proto": "be62733c631de3413821d5c7134c8f272101182a3e525099d5c5d6e50fd870ba",
         "🔺️diff/🟦️.ts": "ff14782beda928468166df570383b52f98221777a3d4850dd3812b89416a7435",
         "🔺️diff/🦀️.rs": "e1c7e53a721e2d5d1339740d74c27d7d3156574789f869d9c14617682ad06855",
-        "🛰️.proto": "a9f3532c9f9b9067e46ecfedbc0ae3457927699c970b174357e296b0153ae3d9",
-        "🟦️.ts": "28aa6e107111b50ccb52f26ffb2639d37ebf7041c8d6e6514f2f1952d3be2519",
+        "🛰️.proto": "79c4dc7d789928581882a03959290a7f421a253c132a5aa05d30e2b3435a0ea4",
+        "🟦️.ts": "f74222283c7bcff1adaf634f3fd814b8193185ff8171ff97bed202f8e867a574",
         "🦀️.rs": "036aebace3877a4a10d6bdb2aa6652c4c2e518fa99338eb83818a6ddaccee96d",
         "🧬️mutations/🔗️.graphql": "61353845b1ca026d9c815caea6ad2bc55424af05b8f085ecf57320f6b772e3d2",
         "🧬️mutations/🔣️.json": "56ca80cb3ed1845a2869ad31ff9840bb0ace2b020e379be7c06feea5a0e17c9d",
@@ -41342,7 +41370,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child"
+        "framework.schema.artifact-reference.child"
       ],
       "hashes": {
         "💡️inferences/🔗️.graphql": "a831a211b5363269c636594dc3cda981438976797255453c0b72e6bd629245a7",
@@ -41350,20 +41378,20 @@
         "💡️inferences/🛰️.proto": "8eec01af8306c679e3c783be7c07ab591d2d10246f524e7a14e4d825aeae687d",
         "💡️inferences/🟦️.ts": "2b68b6202189b3f52d91523a7dc616894103069348e7d3166ac5a7e89b3563a4",
         "💡️inferences/🦀️.rs": "f510ec893adbf35517671d26f610b7359d0d2e370735af6cc2bef0ffb7e07bb3",
-        "📸️snapshot/🔗️.graphql": "dcd82d4d9b0e4bf3800e3d5a8fffcfd8e9c3a3ef65e362120a09edba9dfd51d9",
-        "📸️snapshot/🔣️.json": "26605940ff122e1d56a9b661a93e84ba151d8da18bdab14ce0d9aeabfc1aed63",
-        "📸️snapshot/🛰️.proto": "283ad80a21f9ae7acebc7f7da5348c7d1635c23c7b187cd7d69c937220d0febc",
-        "📸️snapshot/🟦️.ts": "1c2b46c8b4502fd42e4651934fdaa4233071073b8e3b72556cbccbcc702aa52d",
+        "📸️snapshot/🔗️.graphql": "8de0173a96d2f93230ee837e86257f1ed24d192c82dda10d9f2a810e1fcec8b0",
+        "📸️snapshot/🔣️.json": "774147046da066bc4aa8c98c0255680520895aab76eac46e9e1361054623f6ea",
+        "📸️snapshot/🛰️.proto": "9bc2b89ce60c965413b3210f3448f4c410da1ae9a7b9788bb48671c6b1346380",
+        "📸️snapshot/🟦️.ts": "24d695bc5b7e0fde42c72cc211a1cec838db142799e8be74764b6a0bf70f5b75",
         "📸️snapshot/🦀️.rs": "0829c328fe298c2ce000ad6ab9e5add092799c6d1cff2f7e6bf4eae7fd0ad3e3",
-        "🔗️.graphql": "51d0e22876d7f8ac31ac619f4b633db1866dc735742b3faaf36a1d20dd99c719",
-        "🔣️.json": "8f206438b98942c3f54c226f956cf99f83467d9f1d6fa5e9c6e2c69bb970011c",
-        "🔺️diff/🔗️.graphql": "98840712cef8444a8efd83b241f871d568cd36b9132b9c4bd4862f78f2be06fc",
-        "🔺️diff/🔣️.json": "4446a15e65d3f79a109559f9c9efab5735c336f1fd11f29e914bbe57d8346527",
-        "🔺️diff/🛰️.proto": "cf050f1779ba71c6a764861ef426ba8d7c59dcba14bf76830fcb22280a024cb6",
-        "🔺️diff/🟦️.ts": "2e600f0b127892301b10d759a27b12dd4a0814dd2fc2dfdc30bb4311da4a5693",
+        "🔗️.graphql": "2a0e9b42bcee843ae77598705130364f32db152392db5becf6d89b14b8b93ad2",
+        "🔣️.json": "877dc1bc3dfb34be00a9a89ba1df823f29170aa9e606d1f959627af87b0f3ddf",
+        "🔺️diff/🔗️.graphql": "9bd7e8cafa39eece8bb89a309256a48269ef33d0a640d63ea3dbf907407a1724",
+        "🔺️diff/🔣️.json": "eda0717c646f15bf01eeaa335852647f9dee15895d02fc5c44ec7182e5dc26f0",
+        "🔺️diff/🛰️.proto": "a3ed488e9cfdec50a4bca5fc0729207aad4218452ea1e1305834ff66ca3ec58d",
+        "🔺️diff/🟦️.ts": "acceddef9c19c238478e640ee354c4d1a8cf82d318344c5f468afd2c89533978",
         "🔺️diff/🦀️.rs": "af856adf224114438db08193237dc24b184eba9b40074255795b9a0f4ad78f24",
-        "🛰️.proto": "6eb758088c8607e9d86bf883712a0fb9ea9a9a5f67fbcd8c7ed9b385ebdcc505",
-        "🟦️.ts": "b7c32f725c8b8e3c1d4734a6b220c0a83e76284212f1cfd5a9e97e3f9b00e870",
+        "🛰️.proto": "863b2d80e9c4923e13a8d13fa4bad2a396c7ffe079682911a66bd21fab6882b4",
+        "🟦️.ts": "afb3ff952ae26f448983eeaa8c4cedc6f4fb9490a79bb5ed3b3fb31a57455465",
         "🦀️.rs": "73891a57d90fbea7daa780317d0384224bbef55a9dda90680167f4c93c7aca0a",
         "🧬️mutations/🔗️.graphql": "291e7008df7fc765043b4b739748752fc872a911156f50786bdabca276a9c03e",
         "🧬️mutations/🔣️.json": "ee86267291900d678aea97e5d73f32ea9b2ec6fc954720a5f289af543ed9ef4f",
@@ -41498,25 +41526,25 @@
         "💡️inferences/🛰️.proto": "0f350317caf46cafd51a14e47ce70182aed617fcd141a40d8881d0c858a79e52",
         "💡️inferences/🟦️.ts": "0b344dba9f76642b9ab9f4dfd883f2352ad6a6c9169dfe4090d518a7813732e6",
         "💡️inferences/🦀️.rs": "0acec758cfe87fe221698c0475f533d040b4904bb2e3f66fb97025444b143efc",
-        "📸️snapshot/🔗️.graphql": "f6c43eba738551fbd820136d21e200599f28bc47b43aa61808091da9450ed753",
+        "📸️snapshot/🔗️.graphql": "e4f56c0881a970c140a8ad9a24856620aa7ec0104bd977c152feafc256ea3aea",
         "📸️snapshot/🔣️.json": "f2a781f33681c5251bb7babb0873eac2a2228f0dd6ab50d8b5265bd09d9f4ce7",
-        "📸️snapshot/🛰️.proto": "896e350e2b18a697a465899f51a682bbde59c17ec5b93d53d53e54fcda47d3ba",
+        "📸️snapshot/🛰️.proto": "ca424f72afbdc865289e932ed84898dc582cde6b56be89de82b8ed34d69e46a8",
         "📸️snapshot/🟦️.ts": "c37ab34048d37be87c06bc47f18e345f4b7fdce3cb92432033587df0990b369a",
         "📸️snapshot/🦀️.rs": "96a6982dba737811574eded762036bf86ae4095e4fcf1b300f1edcb55b3de3fc",
-        "🔗️.graphql": "eede57e6be2ec3971258abb327b80f1ea572ef810a48be9ce7a8a44b944a5bc9",
+        "🔗️.graphql": "dc39b29f4e995f9f0e753fae0f1f6b633a7ae64f992b12f8fddfcc8712d34b50",
         "🔣️.json": "5aca98546d2c4da9c37f0844626083fe5309bccfab45350d94c7db19abbfe6a1",
-        "🔺️diff/🔗️.graphql": "16239faad6ccf229d1f565bb5b5fa15464241cb39b1df89f06dc4fd91053334c",
+        "🔺️diff/🔗️.graphql": "2a918f76a2d6218ca7ab4110043bf872e8711b4326241e74bb251ffef3991a73",
         "🔺️diff/🔣️.json": "5854d5a958dd7f8008d733731983dd59f1e48e36971d330b335f6bdcb7d631e9",
-        "🔺️diff/🛰️.proto": "521af390b86acfdd74b139101725ce3b5c75e770f0fb64c2745fc6b6fa67435f",
-        "🔺️diff/🟦️.ts": "2ebe11e02a17d8f6f1cd3a0c4cc08c1a2c5adb915f264b30dfb95d5e19ab4e9d",
+        "🔺️diff/🛰️.proto": "391ee3b7bb92018ed43ef2b2cbec814edf81df7df2a4656d1bb0be6e41014219",
+        "🔺️diff/🟦️.ts": "4e24edf0e04294a9d8a589940c02cfee751db7a7a3d9b0d670c82c5bd9165975",
         "🔺️diff/🦀️.rs": "546da19bb93157844841010132999e7f16d55c1868b3298c482668de256b59b8",
-        "🛰️.proto": "92270379a17b5e7cd465fd855ef65fd29326bbe0044f5d29b57d878a5e1e8d24",
-        "🟦️.ts": "cf050f3653156448d1e5d5d078f955cc3316d5b080366ba316d1aaede121de20",
+        "🛰️.proto": "56fccf7ba186b9c47b456d9cd92ea095d8d66fb6fd3c87d37c4a24c16133da03",
+        "🟦️.ts": "3586b93737f1d46e82f95eb9f6cd1fe824659ceb03c51471c05578f9d7b9edfd",
         "🦀️.rs": "e802327fcc97588a6f61aacb023236ae310d7073aecab0316326e71afb93a8e2",
         "🧬️mutations/🔗️.graphql": "e709e1fabc446a53def87e271abc9c94d3b4327c62f4ebb23a6360609adb3556",
         "🧬️mutations/🔣️.json": "444898feb2204d0535997308a188c4f25927fcd32a3c0a420f197b3b5a81369e",
         "🧬️mutations/🛰️.proto": "2db5282f1be897c6361b962a3d48c4f05492d33a1f44a4ac9fa4d761de55e492",
-        "🧬️mutations/🟦️.ts": "fc3127e90424919c65a954c03d4b3685efe51f45bd3d694408efc8017aeed3ef",
+        "🧬️mutations/🟦️.ts": "bc07f4b126a7f8341c661e462af136de8c3d086a36f6d758108276e94b02fedf",
         "🧬️mutations/🦀️.rs": "901f3eeac640238684d37e08ed7d04ee930076e318509607eb43b4266bcda4f3"
       }
     },
@@ -41808,7 +41836,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.gis.gismap.mutation.create-position",
         "s.gis.gismap.mutation.create-region",
         "s.gis.gismap.mutation.create-route",
@@ -41834,20 +41862,20 @@
         "💡️inferences/🛰️.proto": "7a9c10e970c5b8dc8355f34a5e4c52cdce1827818c24922d35edce71b5a2b5bb",
         "💡️inferences/🟦️.ts": "35b777cf9334876be3d777bf73679e7035e0b1bce83cd19f60af2bec0d62cd4a",
         "💡️inferences/🦀️.rs": "0b957a6b9c7313fc5dd3aa97dfef065b1601a84b8cc97d2ab783b2fd273181c4",
-        "📸️snapshot/🔗️.graphql": "8ce095061376d5fbaa681b0195a389e97d87a848c47ac4c875b92dd55c1555b1",
-        "📸️snapshot/🔣️.json": "0a85406a33d93454b34fe9a432f811b4e6db84eca40fab6e4310e0936d0ec5d1",
-        "📸️snapshot/🛰️.proto": "8da891dc927de68d6263265ce824a11022daf5018043df177b32bf49cc13cc6b",
+        "📸️snapshot/🔗️.graphql": "0387676dd55f84cf6ac04d73818f7527fb53a72be847455da241d75137767ded",
+        "📸️snapshot/🔣️.json": "fd2e3f83cd2475a7dd938ace4258f7cab7e0098dcd54a7b4960fa8eb44aeb22c",
+        "📸️snapshot/🛰️.proto": "01fee2b360cb090a29d02a0fc56dc0c3240b917b602c6a4e719421c0b863750a",
         "📸️snapshot/🟦️.ts": "31bbd7f5da5c747fe98332b9bc47a5688d7ff495c5b11afbca39b1ef8dc30053",
         "📸️snapshot/🦀️.rs": "9f5ba690a5bee02813ecd0982a5663d9659aeb99c434eb49dd78e2bc1c2c9720",
-        "🔗️.graphql": "68edfa6ecb36398aac38d09c4d6a96f87ea03109f91029b302da2a635f89060f",
-        "🔣️.json": "d7e770deaf9f81037ee9da899942b77da2f893728fe79e89ada326cc5c74fcb5",
+        "🔗️.graphql": "ef955fc1c82877992b4d95ea788d78be84d6ce6989d994aba2c100bf50476511",
+        "🔣️.json": "8e23b6284aeece3965b7b4a90ec6ab98c968fcdf755b668de221c0f05fcfd7cd",
         "🔺️diff/🔗️.graphql": "f3e3a6d1cd59d14fa319de636f5913ffca0ff09f9943af42707e0175f710d62b",
         "🔺️diff/🔣️.json": "3427c879985ba2f4f01bb1c6e39a1cd403ad8315313bccaa5769a6d37aaca361",
         "🔺️diff/🛰️.proto": "8ce8c880c298523a57b1814eb906e7f84de653a1a24aeacd38b29bd56c348915",
         "🔺️diff/🟦️.ts": "6332bc4d0f0ea6f9f4763a98afaf2a520b2d8fc46188ad587ee49d9f7d8def84",
         "🔺️diff/🦀️.rs": "c6b2f780b5c3b3813350a7530d38d39e13949633d30079ce5ddcac6b65192992",
-        "🛰️.proto": "ebb17d69ebaa90e77f0493ac27c96f6ce6c7fb3e867ea5c7eeac9b7e023ee62f",
-        "🟦️.ts": "927d005351f7928cbe1ac7af4a421ba24f8c564dd284e5e472130591676f6e5c",
+        "🛰️.proto": "3bd38e605d34e898db1dfb09b3849c09a83f6f642e8f919e54c4fb178ae7917b",
+        "🟦️.ts": "28e149c0db187d1fd6cee5dc0c5d90efbeab62e0d713c5acfd76e7703bd8eed4",
         "🦀️.rs": "462d582dbf9db0b08c32dbdd40453f5d7e1f20bce2813fc40cccdbc069b01212",
         "🧬️mutations/🔗️.graphql": "7e789af8cf056513295b44c7056e9ab43bc45a90778dae29e7e11c1372dc7670",
         "🧬️mutations/🔣️.json": "6d05fc348f4a03d682422acb40ed71da89b1450caaf05d8a3dc5bfaf9e58e59e",
@@ -42214,7 +42242,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.gis.gisterrain.mutation.change-exaggeration",
         "s.gis.gisterrain.mutation.change-imported-features"
       ],
@@ -42224,20 +42252,20 @@
         "💡️inferences/🛰️.proto": "880a6965fc89d0bcc99f5ad118cd8f94c3532bb8f62e3ea61880c584015d6cb8",
         "💡️inferences/🟦️.ts": "8fbeaf4bdfd661990536caf0075c4374cc185bfb88313b4069b2f6378c3881c7",
         "💡️inferences/🦀️.rs": "59fbd5e2df47ae004241fd0e258e4004d837133d9d1d81462d262f8ea42c908a",
-        "📸️snapshot/🔗️.graphql": "83c5f61f8b13e8042e69888aa79004144ad55e358f40c152227252928a2c3c18",
-        "📸️snapshot/🔣️.json": "683837de90f760b1e0f1aa2ea84c42ef9627af650874cf9292c45d77936b6481",
-        "📸️snapshot/🛰️.proto": "1bb423bc56a324d4c205e7cef4f2f9d15a396b96d0c7c04eaa5a8f63fcc4ca82",
+        "📸️snapshot/🔗️.graphql": "e8a0ea09f7f1fa75cf86a71fabe2ff11855572f4091c64ad79a8978596b6c7a9",
+        "📸️snapshot/🔣️.json": "7282b63a0b878e62e05f9a325486ca4ef6340640ea49432499443cef28432e27",
+        "📸️snapshot/🛰️.proto": "113f51379947596e413fd80d7eed145beb0c9dc5e747e91176bd380cc2798fa5",
         "📸️snapshot/🟦️.ts": "2b28c372b787be9e9c9e5acf5c152b7f179fcf4c44ee66700afc963f26e28cb5",
         "📸️snapshot/🦀️.rs": "c7aba1efc0679c605c27101a34b3e51286342e01c69b2140aa737e8089be4ffd",
-        "🔗️.graphql": "e5e97570661166d4016de06fdd85ae528861b843980f12c07f53cf6cc06c59e8",
-        "🔣️.json": "9bb19ca75ca681758983089fc09b82649d1c1ee7a13f65bc9626db7d7fa4dbd8",
+        "🔗️.graphql": "2fe071817cf0d0eb5138aed0f680e3df58c3b1ec3feb105426299d0e776dc131",
+        "🔣️.json": "667e9a1b42db832d9091b15264d748854d2cc39faa67ac1380c07bc8a69f53fe",
         "🔺️diff/🔗️.graphql": "1f83c8e1de7099ffd23c94b257ecbd1aa81bbac505390236f62575e8a169f015",
         "🔺️diff/🔣️.json": "e461a02b5dd0ba82de74a830dff59402c3ffd779025cd7fd3be76ea26f13df2a",
         "🔺️diff/🛰️.proto": "31a7120df1e7ec6122afc2dd526ad9ec5206411e40866062e8d7a55685f0fd88",
         "🔺️diff/🟦️.ts": "dda6ed68b3a42a19b1c34ce0e518799a03e0b6de8de9e875f5406ef696ed44e7",
         "🔺️diff/🦀️.rs": "d2ed00b3c250f7d0efbc4754c43de327ccd13d5c8a27826bfc0ae1802376f6a4",
-        "🛰️.proto": "d8f2ce97fbce3959f5a8f06b5529bdd9af206d798720ad7cefdf5e4c24597467",
-        "🟦️.ts": "6084a476c203de4927d52a5bffeceb0a5c3725cc6b47e8f1a5e5674d89af1839",
+        "🛰️.proto": "a9c61c6d8e823d6fff159b147c9c1f32491f3bc851641a81bcc912ace52ef35d",
+        "🟦️.ts": "b860d3229fa64096db9903cf7dbc86cfd28ddadcf7c32d2fa3ebe1e1bfbc22e9",
         "🦀️.rs": "0f46475fe7a1ad0a93f6b80a16a3d10af8b2d15a2ac3a137f2fbc51130d0eabb",
         "🧬️mutations/🔗️.graphql": "b4c3d4db77ae04c192c15a1162d2a03279d5fe9cc8c74e22640ca7b616ded684",
         "🧬️mutations/🔣️.json": "8923b4465e832ace592a00dabf2085f08cb902f63cd4cd9b74e8fa3cce04a687",
@@ -42316,7 +42344,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child"
+        "framework.schema.artifact-reference.child"
       ],
       "hashes": {
         "💡️inferences/🔗️.graphql": "98f90ffe7da718ede6437ff4ad4b4ce6062f54d1e067a4499bbe25741fe89179",
@@ -42324,20 +42352,20 @@
         "💡️inferences/🛰️.proto": "2882b079a19943ed7dc50b9f40aaa5d935477cf189a1664f78605c0381484e88",
         "💡️inferences/🟦️.ts": "1741dc5256799bf0643f8cff8c8ced34322684dd970bec7c9d8c7c5fb13bd51f",
         "💡️inferences/🦀️.rs": "e27dbc503badef9157bbac9a39dc99c8cd7919c684deec355fd6bb3087feec3d",
-        "📸️snapshot/🔗️.graphql": "616b3fe2ed931e46132b0be8b510235bf1234bc16cf4f5b551c852177a99ab1c",
-        "📸️snapshot/🔣️.json": "79b4a10b5584dc3bbf99b270cb330614490959ecc29c2b2c17c8dbaa1324a250",
-        "📸️snapshot/🛰️.proto": "23271cad666ffc371be2a09dfe6c8117e1d267e087763d0f85d39ef9310ca407",
+        "📸️snapshot/🔗️.graphql": "7b2984244e17fe4aaffb0db52aad6002a816647df637a8795bd3e6f1d9685d22",
+        "📸️snapshot/🔣️.json": "1e8e5515508399d79db290c24574eb05fffec9639d9d814effda48678c7a0446",
+        "📸️snapshot/🛰️.proto": "295c88b522fc81c731b89220df0ee961ee21c8b6cecaefbe5f5e53745ac5c463",
         "📸️snapshot/🟦️.ts": "d773f0cc658be6b4a3a394dcbc0d790e6bd24d761a583b916317dd62230ca121",
         "📸️snapshot/🦀️.rs": "a8f0cda82ad8883a1abd7435cc6f84e01aba55398bf440173fbfddaa27ce5822",
-        "🔗️.graphql": "ca9d3a91e80cf563a50367ee66d0ed0a43d4c58f2e09ca3cbfb0024efc8ffa1a",
-        "🔣️.json": "6b19b59f03b2673b2e7602815367b2468243887d712865e1f6a4719f094ce494",
-        "🔺️diff/🔗️.graphql": "a9373ce85abf189fc67f6b8e844e52c639074392f6f5a87ddc7406510892f07c",
-        "🔺️diff/🔣️.json": "0157b13740e86013654387a945693f88b1f3bb8251506fa2dea2508de0644b0d",
-        "🔺️diff/🛰️.proto": "f6533942ba4dd8d586d209476f88c728adac393bae9e8812ab47aa6449c22737",
-        "🔺️diff/🟦️.ts": "969c35d206b0eb74e47e889391e3231017a809309e383750f3264f53fff319ae",
+        "🔗️.graphql": "69a97754ef6439f3464ae5c8b0c08e008812c28f756ecafa4340053c6031a1dd",
+        "🔣️.json": "7a1d95c3daf9684e5fe7550d768c594da5a0ae8abde78ddee1dee7b2bc99adbb",
+        "🔺️diff/🔗️.graphql": "92724f17a903e2f344276a0197ae694f48ab33511470481ab97c4b349e7810a0",
+        "🔺️diff/🔣️.json": "b3260efefe0f9f04f9f1998a49314b86460113d039b4c48cbe05e843540ea30c",
+        "🔺️diff/🛰️.proto": "e8ecd529a774c9ccd98bfdd11749c3e7be66c416c9c951060970826b3957bb0a",
+        "🔺️diff/🟦️.ts": "96529a4165b46655155d5a815b24e2116107da894690ee14a39d393234d1d884",
         "🔺️diff/🦀️.rs": "2e1e2fe3a8b3935f6d5b88e2824159520fd50c67ac6db2c8b08f0039b088e06f",
-        "🛰️.proto": "0a4c7548c539ca4e6d99ee47bf5e8ba7209f081ae51b730393a206ca4f7f172f",
-        "🟦️.ts": "cc5a8d9c3b4d059410540a422d89935c13cd380cedf84cc1e99d685d774b5a14",
+        "🛰️.proto": "b51fcceea8110ad97f06b7324f0059712db676ff1992672d8a9e20e55943ad45",
+        "🟦️.ts": "6a552575efed15ce18ad5fd21e0c140a23fad632b0f98a11c93a25e5b6cf601d",
         "🦀️.rs": "56d10a9f514e425f7f89baa4365ae852bdc3bfd595a2e22f3925fa6610d656c8",
         "🧬️mutations/🔗️.graphql": "9985fba09eac9e3f22eda0ea0b60214fc23b2f96c4d5a12ce7b64fb6866f7164",
         "🧬️mutations/🔣️.json": "a5c7d29b6e0795bb5df598f0d14150730ec0f9d38dc752506b6abc08ae6e509a",
@@ -42732,8 +42760,8 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
-        "os.store.link",
+        "framework.schema.artifact-reference.child",
+        "framework.schema.artifact-reference.link",
         "s.layout.layout.mutation.change-data-fields",
         "s.layout.layout.mutation.change-frame-columns",
         "s.layout.layout.mutation.change-frame-fill",
@@ -42791,19 +42819,19 @@
         "💡️inferences/🟦️.ts": "a1dd7103f00b7657a30b49f16ea6aa2d0bbeec7a26810a70161ad654adafe2d1",
         "💡️inferences/🦀️.rs": "b4b6c0d6deef63c5a777231746d7f9bf99e2191687656a57944335b4cb01092c",
         "📸️snapshot/🔗️.graphql": "33c8d0252dbdd9568f6ca7f743ffc98b990ee884bf35fc99bfe2c3c855ef7170",
-        "📸️snapshot/🔣️.json": "9018fb5ea2032d5b21bcebd50db34f20745ace55b828166816a427a8fd20efc6",
-        "📸️snapshot/🛰️.proto": "71bd24e0300f00aa8e63d60ef230154e67ab36ab657a8e53e6947a8ba5ad35a1",
+        "📸️snapshot/🔣️.json": "2e24a005bd72e617f1b240099a7c1d40b3c98faa6a83ed5696f05518c50d85cb",
+        "📸️snapshot/🛰️.proto": "416dcc8d727ca3fbc8d7360ac3e6208e52c3bcc1b481d2c79c0638515013583d",
         "📸️snapshot/🟦️.ts": "2c77ed62fc3578018f09cedb1e74b7408b08dca1398af895242ba9a25764212d",
         "📸️snapshot/🦀️.rs": "050b4413101add17b3bb57b719a9422f0085a24f6e2a72b6a96f04ab98605cad",
         "🔗️.graphql": "035b3f8477d740916d2ac29952d5eba81006bf29f2a06fb51ca850b80268663b",
-        "🔣️.json": "16e87a3cee9588fd9e4d6df33e7ef599aca1a01c20483fabd9a71514bb3faa55",
+        "🔣️.json": "7c226ba57b9138f2463fbea044f6c530f91942fcd1f056ab1b47dec64200a330",
         "🔺️diff/🔗️.graphql": "41dc73b38028f80fcc5f7d57c4456f620e4b11d4e8c3f8a4442214b3b0fdd9d1",
-        "🔺️diff/🔣️.json": "6f53f39acccf3b899abe155863016109da2099fc71024f6a1a1eb7724e8147d3",
-        "🔺️diff/🛰️.proto": "c6c7bb0caa12b7b4e2dc97307e16dea03a1cb8483adbc6a8028a07275bcfcf83",
-        "🔺️diff/🟦️.ts": "da59588f853d067a62c668cc49d07b406a723740e7766043f10b7d4718b83966",
+        "🔺️diff/🔣️.json": "ca0f69d6479b0f3e1943630f052e2707638f1614cf2ff37fa474862f483527a1",
+        "🔺️diff/🛰️.proto": "e640c2339e0f4017ca7ece912ba13b1eb6672965fd58816968ac63eb60025a97",
+        "🔺️diff/🟦️.ts": "334d27328141d920738bce6f3823c2a0a529911cdc40165182db30bc04866eb2",
         "🔺️diff/🦀️.rs": "e2311516fd7e6d83d6e96e5026950a2f470cc80d0f406af665a771747afb49fa",
-        "🛰️.proto": "4d07a9dce3b6c44638f58de2b8744e885641caff3adcb96624c8426a59392abd",
-        "🟦️.ts": "50937fa4b2167eb6820793a8693af1b01302e168b2d65ee9c119ec48c85844e2",
+        "🛰️.proto": "a3ca1a53bd894ee069f0c0c0227d52bb72c4f077c739b75538000874f4a53275",
+        "🟦️.ts": "6989964f254a2540fcef2035da59296eefd2cb7108430aa0dddf4e496dacc0e9",
         "🦀️.rs": "1321ae393c5b3b840f7798a7c20eaf0fa22ce0928633734659f85a9cd80257a1",
         "🧬️mutations/🔗️.graphql": "ba7d7221e0be616089b4d095b6d73587d655661fb7b3911afd1c0d00b53fd054",
         "🧬️mutations/🔣️.json": "2f43931554b7dd74065e4238386226e20deb7cad3facb4b4db7770f75e126b25",
@@ -43824,7 +43852,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.lowpoly.lowpoly.mutation.apply-paint-stroke",
         "s.lowpoly.lowpoly.mutation.change-object-smooth-shading",
         "s.lowpoly.lowpoly.mutation.change-paint-layer-blend-mode",
@@ -43859,15 +43887,15 @@
         "📸️snapshot/🛰️.proto": "246cfaa9eccd052e3cfdf23b77e4754b96c3e64fbfcde37a7aab599f442fdfde",
         "📸️snapshot/🟦️.ts": "befdfad772490f74533ee7722f2c7c04ce014c085d62271bb38a827efedaa243",
         "📸️snapshot/🦀️.rs": "774089277077666c3f11a2e9d19d9fedf022760d86fc6f8c49d20f346029661a",
-        "🔗️.graphql": "6ae66f9adf559b40ff0bee41dd5d4b24ba44ccb735ec6fa858c9ca891c5e5ffe",
-        "🔣️.json": "318112f522fd07a3e00bd924099398627a2c45465fb65800dbbbac89e63c66c2",
-        "🔺️diff/🔗️.graphql": "ea47f275bb480c26d667763cf150585f77398e492cd23702f008932148036005",
-        "🔺️diff/🔣️.json": "215b3b5e3b69c4bdc0836b8ad61e15367a78b5dcfe84d6e6d6218d555bd878c8",
-        "🔺️diff/🛰️.proto": "0b3df0b3ac2b8f9529df4df66c88a6cae88f5b1c4199cd19b4f76965ac820d92",
-        "🔺️diff/🟦️.ts": "b9275bc0ae27062ea96a2fbeaebaedf12b0c60f36199dd1994a920b5b77ab54e",
+        "🔗️.graphql": "5e67d6bb900ce03da926d017b4496a72d4d6f6f6bd94d0f30a0564a81bc324fa",
+        "🔣️.json": "10e99cd84b1ba9bbd737950abb7ec06be5df6f34747153d6e56d9cfe941cdcfe",
+        "🔺️diff/🔗️.graphql": "985ce896b964f7ce07a64bc56bd376a6b7b01a64a9b8e99b5795ec6658977e95",
+        "🔺️diff/🔣️.json": "92b1bd6bb72e52bf2c98bfa667c1715936d42291e14946897724848c4fba8cda",
+        "🔺️diff/🛰️.proto": "2a0c76c4d1f9a042f741ed41e19cde017bd5fbb9c0b8b6f2251bbe7ae1cc0087",
+        "🔺️diff/🟦️.ts": "ea945f781af94840e0b73461e6f2161c453d998a5c410bdbfc382512f966c86e",
         "🔺️diff/🦀️.rs": "0fdf7ee62a144d6ded0480fbb823e45e42008b05dc23964e1b3444ead169736c",
-        "🛰️.proto": "1f00760135c610bd15bdf82ac646380ab2d4f14b7ba5f51e31a066faf3dd8929",
-        "🟦️.ts": "d7cb0c2b84e429ab96a166df871246e548f570d791414d0241551c78f28af3c3",
+        "🛰️.proto": "a36b6a38d7fb6041388eb477d954e819aed60dba8d95eec46248b06c3bf38749",
+        "🟦️.ts": "5caff6378d9af26c156d23f8a78c962d85c776a6634338ac3a5f972b8173cab2",
         "🦀️.rs": "b5c0e0b69706e17a697bed4401a9ae2a578b3cc1ef5d2d0545ef304cd0ae387b",
         "🧬️mutations/🔗️.graphql": "4eff80038d9047c0e6c9f73a8938606f0bf33b10770b95e8b83f5659f19e147e",
         "🧬️mutations/🔣️.json": "09fee80ffd23f15a0f4ba407055197a2e065770711aedf2296c1ccc11fcecaa6",
@@ -44843,7 +44871,7 @@
         "📸️snapshot/🔣️.json": "03cfc2ce03e5f23e1627e8bb28f80ea70d5c1420660a597466869e8eccfa8b31",
         "📸️snapshot/🛰️.proto": "111af37ab2eee6d002a360abbad43d355d2a00c6669f9a67ede1d7641c9f9ee7",
         "📸️snapshot/🟦️.ts": "077f19f89fd8e0679162f70bdbc27f3afb8bcc039263de6d642013795fd09562",
-        "📸️snapshot/🦀️.rs": "03b8e2c4269c7d21928350e489f396bf56e63bf373f1f3fb8abf028e642769a0",
+        "📸️snapshot/🦀️.rs": "7d9d05bfafb5e18829015520de46973bd031cc2f8dbf377ae3699dff1c4e9fd6",
         "🔗️.graphql": "5ca2190e7394c8131d710b839a94b47f065a29d9bad833dab98bfbcb2a00fcee",
         "🔣️.json": "634ec40af5f4a9237b684a1d7826dc6c24cf40b8f7cf571f745aadf0ceab93c7",
         "🔺️diff/🔗️.graphql": "936b2092223ff475a45cc552092769065c05c839e5e8d3edf3abf4b0668a6988",
@@ -45901,9 +45929,9 @@
         "💡️inferences/🦀️.rs": "be9a1becab2596f78e5e4b981236ed3a859dfa36a0963539ae48b17d959df434",
         "📸️snapshot/🔗️.graphql": "48c5241448bf5df63b355c50b07e7f48f63b640e4244df7b83fca0ed0ab55f74",
         "📸️snapshot/🔣️.json": "637b309408415512cb120c193ae37eb3d7f8875a9f3e8491e2ee33c6e76aafba",
-        "📸️snapshot/🛰️.proto": "974c6c87c7ef99b7e29f7568917e0956c22a461f255ee951c59ceee40e935d58",
+        "📸️snapshot/🛰️.proto": "41d60e49bf35f95f65d41715c15d488389e8a9a92e0324ee8459d58fb1744b95",
         "📸️snapshot/🟦️.ts": "41852841586683adf85e0fc6e39d0a4fbdc970e1c865b18fe3d410f482c52462",
-        "📸️snapshot/🦀️.rs": "aafddd9072d5c0cd35430795dba079e72b4446ef328b3db1d33dbfd5c989df07",
+        "📸️snapshot/🦀️.rs": "92fbadf92f31f77e62e245365250d6e1479b1d308fe812d0231dc4f621c6dd27",
         "🔗️.graphql": "67f2ad05b716de95aa93f80cc669bf97fe3e51820a4ce34b97b11bce5995f0d4",
         "🔣️.json": "2b18ee278b260b5fb8998bfa13c30ae5240f4194a9e238cf9dcd6ca7f4a84beb",
         "🔺️diff/🔗️.graphql": "63d4fb5fa1292b34c9a01eba8ea445b088fc838bb007ef52774abc5a1eb5d8b1",
@@ -45911,7 +45939,7 @@
         "🔺️diff/🛰️.proto": "e0f14377423af2555ba715492cbc5b2cbed7d1d6e42751a5741933b6e27a68d6",
         "🔺️diff/🟦️.ts": "c15992282ea7df19915a80f6269b745f9abbd12c09d9142ce0a3652a2543e3e7",
         "🔺️diff/🦀️.rs": "2bf63eb0901662d5073dc8be0f1a2b5b70347438df6dc9f69c690455ebeb725d",
-        "🛰️.proto": "21ab21792b4dc2dc37e7bb862813453a9426585c8deb60c92b8a726c25318683",
+        "🛰️.proto": "61169b8678990f9f57c20f1c18ddd7b5f80836238ec04f185af0baa09d5de2a1",
         "🟦️.ts": "d0ebd4acaf210fcb1850bd2010be589a2038d2e381afdfc130c77d21147bba60",
         "🦀️.rs": "22cc42c843911ae056f2ae207dc977e0109da41294763af2d02cf4066df5d408",
         "🧬️mutations/🔗️.graphql": "30338dee23252f8d33a7492806d2dea8d582d57d2770723114b930ee19d13390",
@@ -46565,7 +46593,7 @@
         "📸️snapshot/🔣️.json": "e9955ca0a3ed153285a1876eac5ab4345f14e2463cd94e0935086e589f2da11d",
         "📸️snapshot/🛰️.proto": "7ee6cd1d2b209ad40da030432cc72f2ee0cf9461762e57ee4b366d09fe486675",
         "📸️snapshot/🟦️.ts": "594d5c38a8e0756911975fb30d63b11a1e3355084c90fc41e3b40fd99390dde6",
-        "📸️snapshot/🦀️.rs": "e58e737c76fa1b096b19226535ef4eabbc87bb0fe78152a75695bbe6035ad00a",
+        "📸️snapshot/🦀️.rs": "69322a4d20f6642b3558f934dad82519200ae9d617e6793b3f4fc2dfec757cb0",
         "🔗️.graphql": "9f60790186d51dc862550523b895df7096afe27a77743000e84e4dbce4e2b0f8",
         "🔣️.json": "e88a23bf47d18a8307e797255ae8111c2caf720877e32bed1dbcbc78191dc01a",
         "🔺️diff/🔗️.graphql": "0ee91716642f454a5f2efaef09f7ff646ae82bea14be79db6db88f4d0fdfd326",
@@ -47718,7 +47746,7 @@
         "📸️snapshot/🔣️.json": "9d0d4a1dab7a62810536195ff242dfe9ed6489a6ad22a797b24cb46fe80e9e42",
         "📸️snapshot/🛰️.proto": "e66d68f19ad36550342e88c89b1c5710a4c46bb997e0967e706b46a8597f0185",
         "📸️snapshot/🟦️.ts": "fe3ad800205356903f4e6aca9619caf510855783dfd70a13e68bde675a95b04c",
-        "📸️snapshot/🦀️.rs": "0267ebcb37f80cbf829f01610dacc90e5eb9cc0dfe7042337e2c5be0d91725f8",
+        "📸️snapshot/🦀️.rs": "5395a8e514b7191d2a774be8bb45fc6f4aed39fefcad5d3219d9690b46fbe317",
         "🔗️.graphql": "2e0935efe28a2c41fd6be8cd495b77eb594650041c3b9d941ee274757d7dbfad",
         "🔣️.json": "89f0b7e777242a8ad8bd8c45447f8cfc401d5a95ff428cae6b67b69c1ad07f76",
         "🔺️diff/🔗️.graphql": "7eba24bea927a7cd7c92d37161d6e09c8ac0b2b9fbf0ea83ac09ca30a15f00f5",
@@ -48653,7 +48681,7 @@
         "📸️snapshot/🔣️.json": "c5f3cfa4967528e958e8f5d5ef0e8c0bf3828079214f6f0453c0fb3857404e02",
         "📸️snapshot/🛰️.proto": "72aece07b6e3ab0d2c747a5656de9bbdf718977ab85c8549a56d437cd8b4c6fa",
         "📸️snapshot/🟦️.ts": "798382f121aad56b8d9af5d4dba96d02a823282f853bc19e31af39726b674175",
-        "📸️snapshot/🦀️.rs": "f4fb5b9bd733c322d9de6e168b684c30d5289825ff1145c19ff8a15977181bb0",
+        "📸️snapshot/🦀️.rs": "71136f8e4919aed2b6a86c47e3ab6c3a89b5d4f83c63dae966bc45d41f163d17",
         "🔗️.graphql": "ea6bef34f299bd3b0bb01cca5da8de726807b64e342f8e8c1840cb9d6d47237b",
         "🔣️.json": "899e019613040d78a79fd8b22cfa9b640d7b3b6fe12dc3e20dc34e024d7c44bd",
         "🔺️diff/🔗️.graphql": "5fede40746fa2d239666a95d7c2fff07c0679b26354763527afff7b1b64dbb34",
@@ -50598,7 +50626,7 @@
         "📸️snapshot/🔣️.json": "d75cc5a6d261fd3b0944a6d47558bbfe07a01796f5a84c7a395e7de4129f79d6",
         "📸️snapshot/🛰️.proto": "896377b7cf7f87eb9915cf04380324d9a1f1882c571c55821d8928296ef97702",
         "📸️snapshot/🟦️.ts": "ee7fe5e4e934e1f8fee3c144111bc020b5553f8ca759fefd29f85a5b7b4f964e",
-        "📸️snapshot/🦀️.rs": "731a674fd7faaee46b5c9d562a32ea408f818d4d781e7eed12a035a0ee67e1b2",
+        "📸️snapshot/🦀️.rs": "fcec29c37582548f0befa0a5457f0c2a480e7b59c471e3bb753a25cbc9a694d2",
         "🔗️.graphql": "bef06f20c2628c745426919f281be37f7ca5657aae4374c39139bc4d6c1b8bcf",
         "🔣️.json": "6728e0dc99b91bdcba52c648db95c8b5739fc96484e86573e69d007193c44ba8",
         "🔺️diff/🔗️.graphql": "11df6a2f16384804574fe48b5046855a12a0efe2ed85bf1645188bc80845be99",
@@ -53090,7 +53118,7 @@
         "📸️snapshot/🔣️.json": "82c4f48a57e20510417a4a6a635967f2b662ffb230df3fa51f0503b1fd6bc981",
         "📸️snapshot/🛰️.proto": "330b48b13231c3e4fe86abc80dbb9efc5c2cee2c167d984341222d55e5bb8727",
         "📸️snapshot/🟦️.ts": "7003bbdf348eed71a726438161b4c293c0468972f6aedf467b7f4b73d5fc7f76",
-        "📸️snapshot/🦀️.rs": "45ec70007a8723cb5c4f4fd68201b1f3a69c49f3f20dde9cf1649d2b3c8c8977",
+        "📸️snapshot/🦀️.rs": "7b0a52609b8ffa1a8bbe023c48cf39a0f13b5c969028ee338389e21475835219",
         "🔗️.graphql": "81cee1553aa991b08a8c0bf0bfbdc7df747cd8e8b6cade9ed349869c95dcb5b3",
         "🔣️.json": "473abe027ac00925ee66fe8aae2502599846df1d2082a7cfc3c31661997e3338",
         "🔺️diff/🔗️.graphql": "13a3ac145e79bf4ef30e261b389c2ac01650c51dce5a9f5086fb4af167ed75fd",
@@ -53851,7 +53879,7 @@
         "📸️snapshot/🔣️.json": "e95ae0894b63723a6ca5cb6bdded3004aeb58ff3e43d6ed1ae691f5ffe9c93c3",
         "📸️snapshot/🛰️.proto": "aa57aa3d3fbb12e02de40ac90f1ce4b8acdf562bbee68f99e9f3a8c4f7f9bc8d",
         "📸️snapshot/🟦️.ts": "fc4c80087ee08fc51eec9e1a994dcf91da85772a520f6e227c56c4aff66cd179",
-        "📸️snapshot/🦀️.rs": "8c08649fcb7017c14b50d6fb26be0c7acb405241ec0d6ed3a8dd20d872c23600",
+        "📸️snapshot/🦀️.rs": "baea7fd1ccdaa3bae674bfcfd2484d43b3ab402b709db8cdea8a73ec71afaf9a",
         "🔗️.graphql": "8876debc1ebeb450d021581231053444b5734c9bcf585fbf414de500d506773a",
         "🔣️.json": "9fce9d7b470993b210a1aeb520a37f3b8639ee83a0d4ae72390f433fd6ce2508",
         "🔺️diff/🔗️.graphql": "fe63acfe7d12fc127583b42eac687ec9f3faca9c44a38d94538c39cd8aeb24dd",
@@ -55450,7 +55478,7 @@
         "📸️snapshot/🔣️.json": "2e20f3e071b179579a4ab368a1c6939b628225787ce4a0729308519ff136e3f6",
         "📸️snapshot/🛰️.proto": "4a5f96bd75e4eb886e8589059514d77455866b38775c452ee8f12b68ac52cff0",
         "📸️snapshot/🟦️.ts": "8d33495aff47b958cfc9488566ab0d863a117d76c938525d4bdd2f4de39d56e8",
-        "📸️snapshot/🦀️.rs": "88ead62105a89028de8e49fbe07ad8f8a63ee380ce1dde9d9f08d36d92dcc3ed",
+        "📸️snapshot/🦀️.rs": "7158b1bd6a9e0c4f9af89fcc108db106a7917dac192504102fd830a15e72abc6",
         "🔗️.graphql": "dd68ff00c5e3ff921e43c93b69382d6d50de7af13f28114f967eb045f9e37f78",
         "🔣️.json": "7ba60dd74ceb623382d5761913d44412b7dd98e4590f9e574e9cfc70f3e81372",
         "🔺️diff/🔗️.graphql": "4b3871fbb2a87817fed4e89e7195ab934391bdee576171a9b278168e287e590d",
@@ -56899,7 +56927,7 @@
         "📸️snapshot/🔣️.json": "98a935e2acde22220a314695934cca357419bf8298f3ce685292ca97307ad147",
         "📸️snapshot/🛰️.proto": "6ee1203d5c36cad424b5037aae3ea64ee82cbe5c1cadb7d8cc4e5ff3bfb6a569",
         "📸️snapshot/🟦️.ts": "a25007cc54edd7ae90c42408647f30fec6da7c5a7d4c2749115a96366dd8684c",
-        "📸️snapshot/🦀️.rs": "1340044158de4ac19caefa12d80ea932f51aec65b3d457b4804aaf3dc509650d",
+        "📸️snapshot/🦀️.rs": "ba345e85dbd272f845f1dba63fe9df7e5c2dfcafdfeebfff14accc162fe80dc4",
         "🔗️.graphql": "016eb96c630c0301d49e20cbaa99512e058d8c1ec1aacddb0e69923786130b5e",
         "🔣️.json": "449c370e532fe60afc85db991a7416d6e553d5ebbe5712e9ffe971d6d08a2378",
         "🔺️diff/🔗️.graphql": "302aaa49318efa8e51e18db72ea886ff85ece58adc1ba0a7c76b1cade63067fb",
@@ -57723,7 +57751,7 @@
         "📸️snapshot/🔣️.json": "0bd46f2e8667fd103c5d50169fbbbe333ec6b0debf40916512233cc669fee28b",
         "📸️snapshot/🛰️.proto": "c96d080bb8b7a5c80fca97dc486cef98bbfe43d647fdb31664021e6b231a9f72",
         "📸️snapshot/🟦️.ts": "5e7d8001b86773556ebd0c27fe4a4eb805d5d20e4f169299912c139d88f8f7d3",
-        "📸️snapshot/🦀️.rs": "8e59e0f55b25b574cfad5a82e25b19db3a23de423f1259f9402200d2a7f18a27",
+        "📸️snapshot/🦀️.rs": "556341807cb1ed16f173f20fec86a746853fa71dc60ada77183afa7ab17a2d49",
         "🔗️.graphql": "f73ef1b6a3ac938cb1fe552636715a429b82e3be99d8a5070516d2b43e3c3c11",
         "🔣️.json": "742e664d3817be67f3f78ec787930fd781e7dc0c622bbdd301ca3556d24f2b74",
         "🔺️diff/🔗️.graphql": "e7b83556bb7c27b9454761769f7183b9aaa88ca3d7daf515fe245427b64e3ea5",
@@ -58698,7 +58726,7 @@
         "📸️snapshot/🔣️.json": "de164a1e186e6e72032ed6c900afd2fd00e8592f5d6c6db6eb42f754cd4832ef",
         "📸️snapshot/🛰️.proto": "25de5708a743f9b61ae8816cc8221a983c9a653b3931455dcca6c339203f15df",
         "📸️snapshot/🟦️.ts": "f29049e14a929eba330e5132edce6ac3b7ea8301a122eeedda77d3e3b5b2afae",
-        "📸️snapshot/🦀️.rs": "c915070b55152847844f301e3229512cc7b5b0d2970b67e8f7eb7dbb3dc8fa12",
+        "📸️snapshot/🦀️.rs": "f4571a351c9a03518f454079e9fab613ebbc4f258fdedf531c0b9a3d3dae4598",
         "🔗️.graphql": "367abd7bde832f1ec5a66ec277762096ad23cd94a2089fe340a00ec328b94534",
         "🔣️.json": "b33f7d7df69580cfa559a7f2d302012dd5a7ace50b92c4674fc3a1307bb07f11",
         "🔺️diff/🔗️.graphql": "5729e48c5f5c643b3cbd19c22fcda8083899b92c8915ce416828a53cb421db0c",
@@ -59598,7 +59626,7 @@
         "📸️snapshot/🔣️.json": "2b904323aea731bbd58704616b68eae5ed495aa118dbfed1778abe296d9f745f",
         "📸️snapshot/🛰️.proto": "a7cd1aafde6c23a13e09ba31d9ee6d9b5660d837f0866255ab5d34fb58022d2b",
         "📸️snapshot/🟦️.ts": "efd1366314f5962967e7e614d4d947a5ef22b3cc0c3d987dd0b41a6993bf7f94",
-        "📸️snapshot/🦀️.rs": "8cedfbbed4a3856f57aa5c078c7a85d12fad5b8341274a5496b9350887bd7bbd",
+        "📸️snapshot/🦀️.rs": "bfc07960388dbf9560d016cbc10eb4c02eaf818caf97a4bc16d8596e4418d00c",
         "🔗️.graphql": "90b9953fc0578a0e06191d945dd457462a73001f3b232b6d44763e2a62305994",
         "🔣️.json": "8c42785cdb4fc851fd54b2a126a26a8394460563feeead0ab233f9b7e392c424",
         "🔺️diff/🔗️.graphql": "80466a337ec3d5fafdbddc5f520c4426e379ff8ac27d29287b4978f5095ddaf7",
@@ -60487,12 +60515,12 @@
         "💡️inferences/🔣️.json": "aa43d5bab3173bdaf28df3d669ef541396fe8a465dc1defa017491d9f6873ad0",
         "💡️inferences/🛰️.proto": "a1325705a1904657e28943f8670d0ca54bfd83110def6fbac45138efe92eed15",
         "💡️inferences/🟦️.ts": "11599c4bb7c205299a6ef82a2526a7950d52ca1b804ca77b5c277f4ea6c1594f",
-        "💡️inferences/🦀️.rs": "1deca6046c0e5c19e38a9a7c6725e03b21e7611d71b7c0a4f3d5206aff99cc1a",
+        "💡️inferences/🦀️.rs": "71f61cf6fddb1891349d8a5f6986c7f60201a6340a3fe0c69bf463e01289deb9",
         "📸️snapshot/🔗️.graphql": "e51e5ec9e99eb23b084a408fcfb63f751a475c9631e81694c24ad1fe0933a449",
         "📸️snapshot/🔣️.json": "8ba38c93bfba39e2d71ea8a8071c4caf617854e0d8a4295edaedf90816df0c5a",
         "📸️snapshot/🛰️.proto": "e2e4171d9a02ec19143584e67b7ba1e93a6534a6944dd3119a760176a4088689",
         "📸️snapshot/🟦️.ts": "9bd190f538ff608849e35402ccadf73c927ff6ba5f245d3d1d426a0e76124356",
-        "📸️snapshot/🦀️.rs": "d2b56b9945b00b1948598c9c2440f7065b073e32e576b2d674d88be88101e347",
+        "📸️snapshot/🦀️.rs": "3ec0c44bd1f47b6a8ca8dc9ad3b53d087e402a9b6765523ae6b6c5e1016d96d6",
         "🔗️.graphql": "8fe17a4a8bb67cd976bcb55c6254c0d462f856cddd1609c23d6bff35b5c999a9",
         "🔣️.json": "2effd65738bbed47497a23666800f381c5d0144a7591ac8703f7a6d9cfc6617f",
         "🔺️diff/🔗️.graphql": "a4b349bf132a0d944fd1da083d106d07237c02f9cffd93810481410354473ffb",
@@ -60996,8 +61024,8 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
-        "os.store.link",
+        "framework.schema.artifact-reference.child",
+        "framework.schema.artifact-reference.link",
         "s.note.note.1.asset.mutation.create-asset",
         "s.note.note.1.asset.mutation.delete-asset",
         "s.note.note.1.asset.mutation.replace-asset-payload",
@@ -61038,20 +61066,20 @@
         "💡️inferences/🛰️.proto": "c8daea49e232c0f7e71477aee12fd8772288a42f54630c2b2a1bde0ad93d2b7d",
         "💡️inferences/🟦️.ts": "f1ccd6defbdff00fac07230e9629df2d0aaa4a71e4efdfa90591e6d07465f6b7",
         "💡️inferences/🦀️.rs": "a1b0d74d99f24f9f30712a6aeb611819d065b748f45290769bfd2bc3405a3813",
-        "📸️snapshot/🔗️.graphql": "1a24741c4a90dee8d95d64f3e7e44f8dd709023fd2f3869bbc3007a392b833bc",
+        "📸️snapshot/🔗️.graphql": "8ba7d4015d0d943e50aa2b41bc03156e717ad33d16134e827924ada31847747e",
         "📸️snapshot/🔣️.json": "82ffd8c986dcea908376e31de65c63bdbc1c32874164285ffde5a90e4d9cff42",
-        "📸️snapshot/🛰️.proto": "e6fa54b82fee6ac9d385491160f59a0e47e2fbd43ab75f529c121ae13428b3fc",
+        "📸️snapshot/🛰️.proto": "021e360d747467504220d59f9d26819ba488d269d1763f4304451895f57f1895",
         "📸️snapshot/🟦️.ts": "5048dc15b073265a25124983c8dc1a87b12df757e119c5f413900923bdb87ff7",
         "📸️snapshot/🦀️.rs": "1d45d919ca7a114d10032235c4bbf875ca39d8b8227779791169496b517d369d",
-        "🔗️.graphql": "c0b7e67f82f08a06211f800e97d76141206a39b60ff98329d809d84112905add",
-        "🔣️.json": "347e56e0b9fd4a95aa7a3922d5d9093888f6d6f93bc5f9db048cf3637a0b1902",
-        "🔺️diff/🔗️.graphql": "9e5cd650d2a37e12ba1123a164fdec826e65f43d8328df81fada634b6d78be7e",
+        "🔗️.graphql": "23a2c8cc398f9f5d550f68ebc67c1c90b747a1d88be47fdbf17a8b26cc3a3a75",
+        "🔣️.json": "1a862521f3de7e4cf0c0bfe46ef37f05e633c00214063f029465f92cc4cd4510",
+        "🔺️diff/🔗️.graphql": "5d547f487d7eb0c06d9b061711bdf8d539d75ceee232f5f37efde4c5d467819e",
         "🔺️diff/🔣️.json": "a919239e6695ed44e2fd0545c622548b235d119601ca249c5cda515ecee8141e",
-        "🔺️diff/🛰️.proto": "49ce492b956fa257798ce5462e759300bafb5a546661e75d3442cd5846027f09",
+        "🔺️diff/🛰️.proto": "d9d18ef846b19c1263d1f46250fb7af62b0f942e0f46d87cee6a3c6a376fb81b",
         "🔺️diff/🟦️.ts": "938d45246faadd7d6fc9b9a4ab0c8a6031b03a56232cf313dab9506886f4dc27",
         "🔺️diff/🦀️.rs": "8562b468031dd1aa48c5c0a8af3711cb41bd58164cd887f6051982a3de478b9b",
-        "🛰️.proto": "6c10111751249bac29b5eebcb64d49204ae7f7c0e12d218a425413cfff165e65",
-        "🟦️.ts": "dd18536e0b2f91f4f030f0f29695802fac303819f073e85fd74a8194080f333a",
+        "🛰️.proto": "0b8d26d34f323884c7e89b18e682bb2acfd8f11c54b19cbf4630168cd3938a01",
+        "🟦️.ts": "aca51360f3bb539849cd4c1e4c1a84d58d4dcdf5fb1ef70daab5ecd788082356",
         "🦀️.rs": "88ce8429065933f535789a9a4f989088b73c8f74f4349eb68caeef87f5658fe0",
         "🧬️mutations/🔗️.graphql": "5f7f77f26cf9c3983d3982e1df7474a418f0063088f39aad81d5e19f2221eee5",
         "🧬️mutations/🔣️.json": "7c0cfe8d983537d3748445cc19ec0afec87dbf13770042522a4ff4eafb311d4e",
@@ -61820,7 +61848,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.playbook.playbook.mutation.change-title"
       ],
       "hashes": {
@@ -61829,20 +61857,20 @@
         "💡️inferences/🛰️.proto": "556d348bff56a5330b774ac58f7c7c900e703bdb4580502789efe029b716de9c",
         "💡️inferences/🟦️.ts": "1cc49538c17c66db31fab93e1ec886a7139ca3407d3f47a45c9057d2b6dad4cd",
         "💡️inferences/🦀️.rs": "5220834311f8a010da5b56a7b25e65c2b8937be70a07c6032f232a1c5dbb6318",
-        "📸️snapshot/🔗️.graphql": "efe9bbcf4461116c94db4e1c3f0ff42a2e4d7cb2f274be86c02715b718d74b9a",
-        "📸️snapshot/🔣️.json": "209e8e252d425898600435d1d5c1809abea73edf73666eca6eccb1d5fb97f6fa",
-        "📸️snapshot/🛰️.proto": "f813e4b3090fb13b7f251ceb4d8986c13ca2ed72c6a19dfc28a9b8bd0709768c",
-        "📸️snapshot/🟦️.ts": "b28d9bdd16f78fff042bfdbc6ade3d28d3c31c29358ab69206f3d2453b19bd57",
+        "📸️snapshot/🔗️.graphql": "85202d44bbc8692fa4b99cdf165156c2c58dfbd557b628c3e314eab4fe9ac4b6",
+        "📸️snapshot/🔣️.json": "48ede12605e84565b536a5c99aea387555a0b6e90eb93e2c086248068d7abf8b",
+        "📸️snapshot/🛰️.proto": "53ab9232d3cf4261741cfd0d06c7b11c257d28bfc06441e7d0f4982c0bc7c477",
+        "📸️snapshot/🟦️.ts": "3604fb863490021d52d48f3f45bbd890c4ffa5f41246ca45aa8aafffac36df02",
         "📸️snapshot/🦀️.rs": "1d4cfc9db4bd84ebeda5b8e9698a4c59d9b9ea25a30850feabe24747a2c188d2",
-        "🔗️.graphql": "62db8de6b021c745141ec59e72b804079da6f6e06c0b3a42be2247e9ab5c1258",
-        "🔣️.json": "cfeb76e58416b68c8833c37fc9a46fe5e3895588dfe2be105f3bd42daeede02f",
-        "🔺️diff/🔗️.graphql": "07f8cb7844ed33365931cd76d73e6277be47e88bba096df5cbef25bba8c9cd86",
-        "🔺️diff/🔣️.json": "6ba44a92364115346314cda0b8006fe8dd2d8ceff3a82d6f1c77ba5c77daa3d1",
-        "🔺️diff/🛰️.proto": "fd8d7ff17dcce8c1afaadc7abaef94cbd3155b147f15aebe1ad5df7d65408c49",
-        "🔺️diff/🟦️.ts": "ad11a2d4b635b14bb3bda592cc1d5e2394ae85d58bba7b21ad33b7c09232d151",
+        "🔗️.graphql": "484396556816edf8bd25c97b6704287139bd5636d3d6ea882a2c9944513f32ff",
+        "🔣️.json": "67457ea591bdd29a24cca8f00be087cbce2528c81ec7200b9ad6a6546b8a5fb2",
+        "🔺️diff/🔗️.graphql": "d2a9d5ef1009884f7a5b6d089f6c33f69d686fed0d88dba87d4f8253fa3fbbdb",
+        "🔺️diff/🔣️.json": "a9f0b630e68ebc9467a9c17923b23efb6736a69b7bc66fba5dd4a53f4585c26f",
+        "🔺️diff/🛰️.proto": "1a1eb19c980a38ea0d482379ff0f17c3f52ac20482bfb8f7d043e46f2eeff9b2",
+        "🔺️diff/🟦️.ts": "45707a9d4763a538910a06f5f99a7d64503d39a66e718b562c78f390fc63d9e3",
         "🔺️diff/🦀️.rs": "f89b28ebe5590811fa60414208c1b5e775fa0a599aa8a04ccf94c8deb6f4a4bf",
-        "🛰️.proto": "a5d3110510e4517b4fdaa4f67f3965850e15b66089018b2d24273219f2f8f506",
-        "🟦️.ts": "47047a4abc12a64e167889f93088ddede59b77b5491b2d3cebb02f01202bf989",
+        "🛰️.proto": "f255d05ba142cf8a9853f12b743eef04471e59dc79f3fa06792ab1f7fb685c1f",
+        "🟦️.ts": "d34b00dbf9627cb0d45656f4bde93b2a2f3618842f845ce43a5def4aa35d5a4f",
         "🦀️.rs": "6978bf5d43b6af7f9b37be7cdd9ce2dd40448d1cae3451609b0be12f995c16db",
         "🧬️mutations/🔗️.graphql": "0914438e4aa38eea9c4ea933dbab487e749d34eb026b7fc4a8d858e68e8a93ae",
         "🧬️mutations/🔣️.json": "e67b7b30271a9f5d27a507f78de56a17791e307014ef8dd4673d21866dfb7337",
@@ -63386,7 +63414,7 @@
         "📸️snapshot/🔣️.json": "1a7f99be84c3a65595967cc021ede20dca6bf9e95cb2dcea972870c034c0f660",
         "📸️snapshot/🛰️.proto": "4521358ce0ed40731d4cbb5228a20f312337f584dd7675f937336e7571911031",
         "📸️snapshot/🟦️.ts": "8681763c7d6cb4ca201895eac79554b19693c46d02191d5c12dc7108d7c63a19",
-        "📸️snapshot/🦀️.rs": "2cd94a0c24a2f22f1797f4f2207a01809c05ce4c82bb2aa29a30c1ab4533f93a",
+        "📸️snapshot/🦀️.rs": "655f2dba7f2deb236f9ab60b1a7ae8cb269f0247e2a66c117436f7933a2c7c66",
         "🔗️.graphql": "e8aa1fb0fea50c47bc64345d309d03ae1a5b416bc1379e97bcb1922181a2f48d",
         "🔣️.json": "bb1d1d138eabc9870a1ef6e95c10d3591b0eafc53f07deef40106a22c0cfc2f9",
         "🔺️diff/🔗️.graphql": "846cd817c0ca06b8f78b0c75187f722cd0f0d00fab862124be480a958ec66044",
@@ -63998,7 +64026,7 @@
         "🧬️mutations/🔣️.json": "0602e3530d19fd23a36da8168c3c7f8d76aadc51b6e43551a4f72ab11b57e2ec",
         "🧬️mutations/🛰️.proto": "0c9ec41358857521991f5c88b66622314034c480f3151b1e3c6deab1b401ba03",
         "🧬️mutations/🟦️.ts": "cc2e9e82928b326f8c57b3bb113557cac2b30d11741686546c49032174f8f3c1",
-        "🧬️mutations/🦀️.rs": "eea0a62b287665b4f9a01592a33373a3ab4b6bf420b186cfe04e68a366068bcb"
+        "🧬️mutations/🦀️.rs": "bc28ae40249e1ad6127cec7f0f5715a3bb8f2920c49ece570bc53e8de7ff4371"
       }
     },
     "s.puzzle.puzzle2d.mutation.add-node-handle": {
@@ -66948,8 +66976,8 @@
         }
       },
       "dependsOn": [
+        "framework.schema.artifact-reference.child",
         "framework.value",
-        "os.store.child",
         "s.raster.raster.mutation.add-layer-asset",
         "s.raster.raster.mutation.apply-filter",
         "s.raster.raster.mutation.change-layer-adjustment-kind",
@@ -66982,19 +67010,19 @@
         "💡️inferences/🟦️.ts": "f4100c9cd8a6359ddf8c07009d39058eadc19d004367fdbf0796f060d039a481",
         "💡️inferences/🦀️.rs": "5936c2b6d85212e65a820720ed3d55ac4c6a012cf32600e0141ab34feb95ed24",
         "📸️snapshot/🔗️.graphql": "b37f7fac5fbd6dbcc94bab3a6b796847373dab4a4f452782ecc424dc051f4a62",
-        "📸️snapshot/🔣️.json": "b03b0a4712bfb36c0b27644d4afbaa7081f872ed956a81cf1983592f31f2c3bd",
-        "📸️snapshot/🛰️.proto": "76eea1118151abc0c11c2585debe9d188773cda68a7a7708f691e22e14660e64",
-        "📸️snapshot/🟦️.ts": "b6ddc68b581c1d35ae789900caa564ae0319d8df49d0b5ea2bb0fbe601ac4d23",
+        "📸️snapshot/🔣️.json": "60cfd5f8a1ec61639a64bbef4959b489eeaeedc3e04e55437d0399b1141808e9",
+        "📸️snapshot/🛰️.proto": "15f17310b5e97822f1430040bfb766b5f296d47e05bdc1f230aaf37afd4e6d40",
+        "📸️snapshot/🟦️.ts": "1710573b06c4d72d668c71d72ba1c23ae5dc9c07ee676053ab05e26cf8ea6e31",
         "📸️snapshot/🦀️.rs": "880abb01afedf018c5013ddcc4548500b6734ad9af2fb57e315ca2123ec97fc1",
-        "🔗️.graphql": "283faf15afd21491d9d5151effa58323ef9252f73554ad2daa6d27b00514b046",
-        "🔣️.json": "f1f2a9f6d83ed7a51180af6c3d4d2a1c32738a36c777e53fe418462eacff8800",
+        "🔗️.graphql": "f0e3cbd88e3e958777456aa46f3046aedfe3cea137f904abff6fa689eebd644f",
+        "🔣️.json": "58fa2c5e94d93c2a7f8b71084cd22220abfc3968d3491c978ff4812b1a642229",
         "🔺️diff/🔗️.graphql": "76ad3f01150fc89de3961796e3075fbd592b01e1cdee2bcd615aef7dc0a24db9",
         "🔺️diff/🔣️.json": "b5c785cca212141ee213753761f760bd7688a9b3892d10daf44f91c02b3e0a12",
         "🔺️diff/🛰️.proto": "bf17fa117305fcb774a5f320caaabd759d5faab08f16d562847f5b55e2b87780",
         "🔺️diff/🟦️.ts": "77ffcd7a7fd8cb06503a5cf3c14bba8f84ed8956bd1d83711cd7659b97ef2f0c",
         "🔺️diff/🦀️.rs": "5740fc76b9df61d4cf857110506f81c05921969ad6bf4f5034e6976383664942",
-        "🛰️.proto": "0344c8d032568c8cddae813af7b439620bfbf4e5b4be776c5284220332523d37",
-        "🟦️.ts": "b29bf1819257246ef5db80c37080d1ac04e330bc06a953395256bf60f44660b4",
+        "🛰️.proto": "74267aa786d9af3d49bbb5e689f8d6177a40e87ba117d9ebb5c1bc180120ebc4",
+        "🟦️.ts": "3e1e92ad5ff698251305ea82d80d298b01c64b321b4f845d3dfc5faa3b95501d",
         "🦀️.rs": "c9857c70fb3c070b73e125846c986c90dc6d94849076b9316c751564199d5dae",
         "🧬️mutations/🔗️.graphql": "b2b67c66980c72eadb6ef8e73b5e5b265fb4adf0c657d8faeadc3aadee99caf0",
         "🧬️mutations/🔣️.json": "319dc63f643174491cf99d18cbb18608e89bb4a2ea761cb522ba3b2de589ff5b",
@@ -67448,8 +67476,8 @@
         }
       },
       "dependsOn": [
-        "framework.value",
-        "os.store.child"
+        "framework.schema.artifact-reference.child",
+        "framework.value"
       ],
       "hashes": {
         "💡️inferences/🔗️.graphql": "dc6cff20536a919fff0042f9ee9ce7f27f3f2ffa1a88b7edb881e37a34f2476d",
@@ -67458,19 +67486,19 @@
         "💡️inferences/🟦️.ts": "d4a8b04a999a3538546c8bec0488d545a056bf7e7fb5133154ce665c74250004",
         "💡️inferences/🦀️.rs": "6b2f75df42cd2c23525f20a19eba6e20bc4dd2ed6b42678b331c9d383c9af9cd",
         "📸️snapshot/🔗️.graphql": "08ad9eb7e3f37e228b958d19c3bf8e2564f56694ada623b1efe35c7d14611e32",
-        "📸️snapshot/🔣️.json": "ed8148ebe558b10f44d989a8dca6a28cd09a89605e57ec2b858b1f4214ab8741",
-        "📸️snapshot/🛰️.proto": "aea08adc42d4769020d586c6dba6a8b435a164c67bc12b4a6a30d86dd39189e2",
-        "📸️snapshot/🟦️.ts": "0f205edae85a967d3cc1248e3f356a790099f08b6a5860dd89c9569add29fdc8",
+        "📸️snapshot/🔣️.json": "3fcc8e185ece551cdc8827946ca9ab2720ac24176e61a7b7c7f36d2c4e165b6b",
+        "📸️snapshot/🛰️.proto": "a0bc465d92c99a1e1318da3b9f30adc1ec064e5652646c5fe50dd04f18c6e57e",
+        "📸️snapshot/🟦️.ts": "6f15581b26934038c2c21b5967fcda966b2023b2667bc8ff56f8f1379bcb21d5",
         "📸️snapshot/🦀️.rs": "871d607f2db97a7d32826d2cd825446a6593b5ca0ba96a462dcfea03f1852f14",
         "🔗️.graphql": "104b0ab143761419e795f550b39e43d44d4c78629f5ab61583bc58f427c6f695",
-        "🔣️.json": "025c4065ced4ea352210515157c259bb638f9ee8809da3bb5a2db77cfbdcc406",
+        "🔣️.json": "c997f4287cacd9383b4f7a522497e64df56f1e0ca2c27c87fb72dcdc7505327c",
         "🔺️diff/🔗️.graphql": "606f4b54dde668d06336d127dd3ae58cce256488cda64ff3e154e210ed682cc1",
         "🔺️diff/🔣️.json": "9ecad76ec97c6fb9fec2cf5e3920dbf25cadf044bb885f204e39511c268a1532",
         "🔺️diff/🛰️.proto": "fa5102feeede7d2241e01e509cbc7d288630db3621d61ed60552734aee4e74db",
         "🔺️diff/🟦️.ts": "2d46bfe6506aea4aafa9a0474e6e0307f591b15a88d1a2f115a8c3a168f0242a",
         "🔺️diff/🦀️.rs": "f811eccad772bd6d9d19457728bebda279d9cd503e987b6f4d00837673142cb3",
-        "🛰️.proto": "ff8a734d986ad4c2a21c84dab39f8a3c54a64e41350aed1e5aafdab8c4144f23",
-        "🟦️.ts": "6253a984f4c60c25b91e6a709aba703a4c422735029c2711732e80b66cd4a903",
+        "🛰️.proto": "37f42610de2ee9d006aef6c68143c26ee4d18b44a2b8bf25b1681e3a810b3743",
+        "🟦️.ts": "ad6d778cd43ee31a00a804fa358f2e94dcdc62534de14ea58fb662176f4e65ad",
         "🦀️.rs": "5a2e3b4100fe98016aa4e458f4beaf2a5c22af6de9b605af91d40e04daababf9",
         "🧬️mutations/🔗️.graphql": "303e2f80e39a5a677eb4acd34ac5565a8fb7348016923ed840297395407e47bd",
         "🧬️mutations/🔣️.json": "c85ae179912f697e517ca08a5eccfc053f6af0b2f20b3d3901bec5d0def9702a",
@@ -67848,7 +67876,7 @@
         "📸️snapshot/🔣️.json": "6ff8e3139466c3f6e2f3573adb0993a95f85f91cd800287ca731d9c7f11d5387",
         "📸️snapshot/🛰️.proto": "6dc38a2f5ee46f49037feb5a320016ad8f7e966be7bbfe6dad3331ad980fda29",
         "📸️snapshot/🟦️.ts": "725287c996aa23db6eaf6c0215944badf97a5d967867dc3238bd67c03f9eaec3",
-        "📸️snapshot/🦀️.rs": "3ced409f0db181c06ae0df1a635640787855d494c5e3c899b7d332371a421322",
+        "📸️snapshot/🦀️.rs": "e62a2f44b478f207ec837bd0e35812441cb5a42073bef653148f077b3d02a825",
         "🔗️.graphql": "f3b48aa113b7a2bcf3950fd551543003b6e75854af6cab62eb695bca5ce07d1b",
         "🔣️.json": "5e56ebf01ec580c4acf6fd030c9f309845f5cdfba16f81eac84adbf5348b9b4b",
         "🔺️diff/🔗️.graphql": "f5c8fd7fa5b0240865eaff5c3e744ee8d17cb44d218968fad877a9ad94b8f28f",
@@ -67862,7 +67890,7 @@
         "🧬️mutations/🔗️.graphql": "48b2a140a4e9167939f23354fc9f6c896132fbfec478ec25b1eb0a03635e9163",
         "🧬️mutations/🔣️.json": "2f2abdefce51a152ea1b278e6cb3d5f6846357354bbfd77f74b2b09dce0faab8",
         "🧬️mutations/🛰️.proto": "a7ca7eafd2838f9703a699fae308f8089688ecd9a1d07d49fa9078eb9e22f739",
-        "🧬️mutations/🟦️.ts": "445bfb2da4888dd1c7ed6c66c7f51ddb244c83b42ff85529d54a47aa44711246",
+        "🧬️mutations/🟦️.ts": "77603858433643adde5971d571316924c612bb0e22d5bafc130b4065bf4e7362",
         "🧬️mutations/🦀️.rs": "162e576998377c8a1b798dbd4718a248561ca6b60d621b696463179f162c35a9"
       }
     },
@@ -68628,7 +68656,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child"
+        "framework.schema.artifact-reference.child"
       ],
       "hashes": {
         "💡️inferences/🔗️.graphql": "d3ba8537c6f7ed4abc9f5ec291e785103c46a0766d2dbac6a299ca3aeeb302ba",
@@ -68636,20 +68664,20 @@
         "💡️inferences/🛰️.proto": "8c210d22dc53097f4fafe66ca0935966eb6fee9dbb77d42cb9716d5f7b0bb77d",
         "💡️inferences/🟦️.ts": "2144d078622f7c76c936ad42c887f234d12a08baf1d09b9c9d784bdcea41d5ef",
         "💡️inferences/🦀️.rs": "dfa636f76c55447b2b01668840afca32879a1d38dfc749cca91b4424941bbe3f",
-        "📸️snapshot/🔗️.graphql": "3ded2849245b1c73ebe9c9542566150e57dfd8a9418db1b08cda28934a141eb5",
-        "📸️snapshot/🔣️.json": "a8da9cdd8df6be8a4c626a37861eb759e8633bf151aa1af120b717fde1900668",
-        "📸️snapshot/🛰️.proto": "dde728a2c4857ebd74db18cbaf713a186171756474be019abe58f0ac4856c45c",
-        "📸️snapshot/🟦️.ts": "67045495b3bf23806df9c43af5c7c983617d4f51270cbd298f52cc18f98092af",
+        "📸️snapshot/🔗️.graphql": "d3d36387d790b161e31f768245e87af1bd583ad7218677395ebe75e809b9787e",
+        "📸️snapshot/🔣️.json": "3dc7b107070ed6b01854f95eae05840aedaa986e5a49226f7eb8d03c0705ffe4",
+        "📸️snapshot/🛰️.proto": "91f429292cee7495ca212e70a3b01a87349394eca701d3c3d62fa72f57b7b6a2",
+        "📸️snapshot/🟦️.ts": "4f10e4055eb736309744f63bebb0e6f33d1e083f5a4569e99de75bd084276b3e",
         "📸️snapshot/🦀️.rs": "3913b70c50f941522be1689c5da7172c195f137ee3e7f68e81a0187640b75266",
-        "🔗️.graphql": "b4c71344e49d8eaaf4b431ff38a6226ac2f1bbcf4d55ae8c831f854f898d57b7",
-        "🔣️.json": "4140386fc1742e9ecbfdef0c57ae6e11dcc366788e096bf78bbf21f4b2034faa",
-        "🔺️diff/🔗️.graphql": "0f9a0553755a01513bbe53bb2fb7edff99a4565d91e7328977f6854bc0a93e3b",
-        "🔺️diff/🔣️.json": "128c9d1c89e6ca152f8741876257568fbe3e35b71f635cdebb5bfc90a39a5087",
-        "🔺️diff/🛰️.proto": "94a47531c722c5e1e89c7376b2138166cbc84cdcba3aceb6dcf327b061b255f3",
-        "🔺️diff/🟦️.ts": "eedd8ea27c93e3b1d65eefe36a1a9168d06eedc6dac9bd2190a7fa74cfd52a10",
+        "🔗️.graphql": "ffe9c90b989edfad0e01bdd6527af756004cc3daba34e2a19c04e1849f666cb6",
+        "🔣️.json": "b4441234c7200e2d3dceba81ea4b0d07f0c1ba77135f7ebd19b50940e7da4d0b",
+        "🔺️diff/🔗️.graphql": "28cb3dd2ec038b1e665467605959a34d213c4d91cb17f24d20eeb3fb75ae1122",
+        "🔺️diff/🔣️.json": "463f08fe54cbc7e31221596bd07d45db99733264bfd9741ffdb149a4b284f024",
+        "🔺️diff/🛰️.proto": "385fe5f19859c73835378d46f956cca957b4addb9c7aaf8573cd738c20b10e2b",
+        "🔺️diff/🟦️.ts": "69b518a19867b958ff2bf46458aa76f5e49f679dfefbfec7423193b92a0c8d68",
         "🔺️diff/🦀️.rs": "725377e0a04519681915db389957b8c71531ce3e4a163939670a895fda164783",
-        "🛰️.proto": "04e749f42ab5d1993b42e83f26c4293e59161abc458b24a184340d41ded63cbc",
-        "🟦️.ts": "550432f184ea532ab6c178598d292ca3e7f4f506e869f7edbc0ad6fa44943c33",
+        "🛰️.proto": "b7289d65682a83bad8df4990c7a954eb03bb5538369e531c1968a6c4273aeac6",
+        "🟦️.ts": "f388fc1028de66ed5ac67ad6d027c9850a872322990ce510b40eb4914701811a",
         "🦀️.rs": "e3c75fdab0676c6f4def3cca5a911d3f3a91ac0443f278609d9b2d89ca66f7a1",
         "🧬️mutations/🔗️.graphql": "fe72f098738947b16f38301f69c5993a18f7c31afc64b51ca89c4bd395a52eb9",
         "🧬️mutations/🔣️.json": "aa133f644cee9db1567aa4da695dbf1dfe6a216f1ebc1d237c00d654b01bd7da",
@@ -68788,7 +68816,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.shooting.shooting.mutation.change-asset-url",
         "s.shooting.shooting.mutation.change-scene-ambient-intensity",
         "s.shooting.shooting.mutation.change-scene-material-roughness",
@@ -68827,20 +68855,20 @@
         "💡️inferences/🛰️.proto": "95291bde5d177965167c28380bdae137ff9bee185491a47e9680cfae997d9875",
         "💡️inferences/🟦️.ts": "585f1ffa68729b3af627aa3587743e37d0454382790077421d0f7e7193f6384c",
         "💡️inferences/🦀️.rs": "4dff9f770db7676bda8b4bf1c5db5b9c6e56240037067ee3b7a857b52893a875",
-        "📸️snapshot/🔗️.graphql": "9a36f88138c2dd4249ad9951d70b5f3443007b3bbd39ef47ba9913f33288ffe7",
-        "📸️snapshot/🔣️.json": "52a78d9d57a87ab90ff4d9d451f65d46d64fbe2419c81b9f1c66b13dbe50041f",
-        "📸️snapshot/🛰️.proto": "2d7352d84b444dfc9f1f389f20fdb3fc69e30ef05e5211fa6fb315f857c27360",
-        "📸️snapshot/🟦️.ts": "1b31548eea53775c9ae15e654647d758452e265e0268e065a29925dd17b5b3f6",
+        "📸️snapshot/🔗️.graphql": "04aa975e94bc3cecfd439373b689a6bde738b7fbf136179d7e715931d4d7dcd7",
+        "📸️snapshot/🔣️.json": "ba524c1e94ecfe4ed43e22e9e139bb510fc70ea872dbf60abffa60642aeabbe9",
+        "📸️snapshot/🛰️.proto": "a4f976108f5933405c261614259123b9e392e6ca88552a26863991d7ec3feb22",
+        "📸️snapshot/🟦️.ts": "03f1162b8dbe32f46ef9e2fa994996b449356797541e7e49e8ddc8773671ddd2",
         "📸️snapshot/🦀️.rs": "2c453c949769f1cfae1669bc891db5627aa9009565eb98905f0ffc39b0bb450a",
-        "🔗️.graphql": "6850531bf42e8a090b74d378026f17c8dabca3672349076353e7f048b71e1b72",
-        "🔣️.json": "115d05ee2a8ceaa03f9b7803f2d9a21c9563f924ed46782c7a6e93680c31d6b1",
-        "🔺️diff/🔗️.graphql": "23f98bf2e82684cde335c1a7b7e67ef89ff030244e81aac5301bbe74e767649c",
-        "🔺️diff/🔣️.json": "de24d21df71e4a9a51ee3ba66aa67149029aa15e219b7c5d182644a8a3957296",
-        "🔺️diff/🛰️.proto": "ea9390cccbbf734eb300b1fe8a81f95420786a5a24470ce52ac0f5f2502abdbf",
-        "🔺️diff/🟦️.ts": "ca658c552bde18c0d9b251931311e666401593241530db23ae5c30b8619f624b",
+        "🔗️.graphql": "1ab1d120aaad005150cfcce4496537ed7b7b6bd7a8c511e97ff985285f3c71f2",
+        "🔣️.json": "ce1bbf73fe4b9c00416f81e597254991a9d951cab723b32387aab7bdabe97b2a",
+        "🔺️diff/🔗️.graphql": "56d4506e0f297c59f3d1865e540837c78bfe4e704f90f433ddc93808d8787c5f",
+        "🔺️diff/🔣️.json": "9946626e670db85a52292f3951e3f9a7569c5ea348c84b43eebcb959af2814a5",
+        "🔺️diff/🛰️.proto": "bd52ba08a9aebc93763939da177cde601dcd312adc74432795ce4eed98acb10e",
+        "🔺️diff/🟦️.ts": "0d6f4c191bf1d1a1e4534b88ef8a3179f32e2c10b04dfe42be3ed61b09558d91",
         "🔺️diff/🦀️.rs": "1eb460d25985f9c3b4eefc5e5470019a87c478954fc002d1cfe70ee28067b830",
-        "🛰️.proto": "b08b3a51d4b98f7ae94adbb8319902dac5f091728a0a54b474f2e1559c24aee4",
-        "🟦️.ts": "b0d6c41dae9a54989fd196d02695395d9cae446084673e75b8023c491aa3e3f4",
+        "🛰️.proto": "c8391f39d24ee7618290cbd115162cc3f3de8de9f9ede37c1de142799f23f0ee",
+        "🟦️.ts": "42511c2580b58d2e1058dcdc3cb81a7542cf26ac64934bf654e3704deb45aa8e",
         "🦀️.rs": "9f5a296419a0aa3f06abfeb52d791a51beac8df8765d353b928c9af0804fec55",
         "🧬️mutations/🔗️.graphql": "2468f959c32a4a129576b8766317273c239622394e169a01e41142b6f9456236",
         "🧬️mutations/🔣️.json": "e91ac6a04a85f785f3eaf9f14262fca2371d24b30deb622a2da91b820a13ec82",
@@ -69519,20 +69547,20 @@
         "💡️inferences/🛰️.proto": "b6b17abacbbdb5c4912bbafc0673c4a4521d45a09c774ba75274eb1cf986054b",
         "💡️inferences/🟦️.ts": "6cedb9d3863b17e097feed59f0b59bd8a4617df6568e1b6d5c2c04aa15aecddc",
         "💡️inferences/🦀️.rs": "eed4ba2c65e4bd5c322a389d359748d93ba69b4e0fdee1ca7de859e35097766b",
-        "📸️snapshot/🔗️.graphql": "31c061a31b717fba2c45b7fb5960cb5b17d76963ef911a65a68f2ce3ee54b83e",
+        "📸️snapshot/🔗️.graphql": "6d445795178c2ca4853754cd8ce96ec25e0557dee13ca9a3a4fb92213d28b373",
         "📸️snapshot/🔣️.json": "d8057a19c923a9df485b51280383241e0d6df9c4c49f8fc6fd5e12c2e0bf4c81",
-        "📸️snapshot/🛰️.proto": "b2dad557082317a3251befbbd3a88d25f26aae596aa30bd2a05389bb393c60bf",
+        "📸️snapshot/🛰️.proto": "9a5c78f2e2c1cdbc67c1d8f125ffb565b81022a0a88d74bb5f932420aa3cd11c",
         "📸️snapshot/🟦️.ts": "4a36ae5717f2f80fb2827b801dafc1a7878d5bfb6e710b195bc9363300364677",
         "📸️snapshot/🦀️.rs": "939bc35ea26f1e7b921fcbe764e516fb9215c8a8bc0dc25996eb7988301330e2",
-        "🔗️.graphql": "3e2c1ce63879f9e9ef107b7303ddbb85beef2a17002776b2e7999ff8eb608480",
+        "🔗️.graphql": "6e6f2853e8b6e34d07fe9e4dbd1623e8adf56a07a0c900eb784613fc557d586b",
         "🔣️.json": "0674592c96a31eb075400d11944335d2cb8ae3eaedb5210ad76c8cd5d8e837cc",
-        "🔺️diff/🔗️.graphql": "301bed40273750626947cccc04cffacd9e0ac9c53d6489bfbdf7f9a5ebd584d0",
+        "🔺️diff/🔗️.graphql": "3f3ff114dd6b31aa62717b563a63497127a9251c1649d35f68049ca4c3091c49",
         "🔺️diff/🔣️.json": "24a67f4e9024484dcd036b88c49cc5dc74bfbd80acc15bc397dbc658d5679a0f",
-        "🔺️diff/🛰️.proto": "8ac17c9474642b33e3e34181b6c8a36d52d9ef8e7e48561be0b726088865c0f2",
-        "🔺️diff/🟦️.ts": "72ee73ba18ae369892c8d22e3eb4aee7ad48cdd6662ac05238d46dd0e6b0d4c5",
+        "🔺️diff/🛰️.proto": "0a6b38097a91cc6a7bad2a1d79554eb47e2b0db46f9542b46bf6ffce4e4a7d3f",
+        "🔺️diff/🟦️.ts": "8a54b0e76484d9311ae23e872e2e803faeddb7230124cf7426bd748a8a262f27",
         "🔺️diff/🦀️.rs": "750a7b247501f7ca8f97bf15bd80d301b163b0bb7650575cf468e7f142df7e83",
-        "🛰️.proto": "b60c31f7440d362528bcf570e34456191b153a4f30526b69ec7ab13f45b9ec4f",
-        "🟦️.ts": "956e18493c35232f830d6a07c8d650e7af6e8d3b8ea70589f3b7e68fea5ff6ec",
+        "🛰️.proto": "3e3766c9728524d16d28ed5e31d96b449639f3fe8a5e34cdac9eb8b1721dfe05",
+        "🟦️.ts": "9f3c97c67c819904c26fbe224c8a913905aeaafbb07a6629511b77ca82085579",
         "🦀️.rs": "5ff11697669997cb8b52add8b0bc17a4aac2cc95dea1f5f7406a6318e05f9223",
         "🧬️mutations/🔗️.graphql": "8ff1858ab0640f1b7b75ce2f48f4eb988147a5f22c840f82671381b0dbdb7c98",
         "🧬️mutations/🔣️.json": "262ba96e9eee68acb1757d6791e939b9bc9e553246378c51d0c2c7cb650c13a3",
@@ -70293,7 +70321,7 @@
         "🔺️diff/🔗️.graphql": "31ce2cea60887d1be42fd210ff82e430733b3d3ccc914f4822788887252f50c7",
         "🔺️diff/🔣️.json": "4675a1a842ab0f89ff4747ae8d8b59c721428dc5afd89e1b9572feb57db14cd7",
         "🔺️diff/🛰️.proto": "24a5e5981744796eae1c15e4386cc5c953c7bf68a546f76ebf43a4956c0f9e00",
-        "🔺️diff/🟦️.ts": "7f52a4a06c712e5a7de9b3161337d39c3971ea4cf198c19906796bf0d28cab42",
+        "🔺️diff/🟦️.ts": "7ed51ca8204003b65eb4e19d9e25845ce290dd0421060ab2c941d7c3a716b93a",
         "🔺️diff/🦀️.rs": "a2bde09a2cdb1a8d2bf55ae85988392481fe2a9c5cce0bfea30fe9ec62004377",
         "🛰️.proto": "95ed291acb7b2a0e122cab6c06f274dc99102f054c8d21c7cff507abb450fba8",
         "🟦️.ts": "34c80d3b3719749f034a2ebb9683e72046e41132876e8e3ce2f3068ca6a89cd3",
@@ -74701,7 +74729,7 @@
         "📸️snapshot/🔣️.json": "8be2aff54dd16850357e14f0ac1641bcdd4d3f66b90930b8682705e365a02a2a",
         "📸️snapshot/🛰️.proto": "fca89d31b2226a543f4df356b5ba69828fe329930c70508568d390c2af076f9e",
         "📸️snapshot/🟦️.ts": "25da73b18dc9a4d96e9812d57eaabff98aeebed7e434bb2b4c6d9e603a018121",
-        "📸️snapshot/🦀️.rs": "c729c0a301792dc130285b47e262485e7201d957c090ff72c378664da1dc5369",
+        "📸️snapshot/🦀️.rs": "ddf2ee7f0853629a3d95fbc7752ef990cf7cd84335cfe65577ab85b513eb587c",
         "🔗️.graphql": "124d97e773985df55aa506cad6b35624a0b46dc28b33d92787681e8ff5acd744",
         "🔣️.json": "0e575edd4428595b10aaf8acd984589d12c0d33fd1c4f8ad98bc96afebb59447",
         "🔺️diff/🔗️.graphql": "c04219f586f68b67c9f2b23c8ceab0fbc31e4445b4a554670b12bb2313701159",
@@ -82210,11 +82238,11 @@
         "🔺️diff/🔗️.graphql": "c3fa3c6f909c4365cb4c9a80c0a58d3fc9f0bf6ced6b6f6c17ad56b1ab8929b2",
         "🔺️diff/🔣️.json": "643dfb12003e26ed6d09044ef8b26174f3eda77d9d573955bc711cc6e2fc9431",
         "🔺️diff/🛰️.proto": "122326e158ba53c33c0759579eeea51818dc1a87a38c1b5cc414f32592820b09",
-        "🔺️diff/🟦️.ts": "b3a514fb0076d5fa8897a70c72274113f2505d55c7536d5d41f9a9c08edba524",
+        "🔺️diff/🟦️.ts": "807576a57a8c6985ccc725ea7c0fb847a34da29556b1010b55e918ee901bdc6b",
         "🔺️diff/🦀️.rs": "447b0bfd19c2c5ea76477b19350efa7c7a9fae7ef8629cf0bfa40a7f0b90b831",
         "🛰️.proto": "b1a80879705ca69d8daf27c5fe062085faae6b28d7aac81bf3448eb8d9441fc3",
-        "🟦️.ts": "e1b279bcaab21c276cacaf4fa3f1867c0f577044fcc1e7d05be647fd9648b0aa",
-        "🦀️.rs": "05cb18d370f7e8489edbd1622d7425d21bb2937864f98a53a580168dd7511e21",
+        "🟦️.ts": "88f1454259cc7493404f15c87046a12460a9b31e9cd20b0fa040d3d81daab545",
+        "🦀️.rs": "77f749101722d382a1e69a8383e778ab3a0b8d563d7aecef4bdc47121cc9ce0d",
         "🧬️mutations/🔗️.graphql": "363616a145e2f77adf30f578e510b96a6910852ab3bab7926ebaf846226c854e",
         "🧬️mutations/🔣️.json": "9e1e886198c2e3863183f21445fdd990eceba9e21ff37609c12c4b89a2fe2213",
         "🧬️mutations/🛰️.proto": "b41347e9ee8b46394d8f0a42b6390d1c8ac472e55fdd371fe152f9d7fef9bd12",
@@ -85398,7 +85426,7 @@
         "📸️snapshot/🔣️.json": "e4fbc64372749af377e3606a7819d9f926c6da90926ce438adcdf75e7f636412",
         "📸️snapshot/🛰️.proto": "c2c61e3e7486bf11837f8cdbad1e99aa09ce227ae86978f5ce426bada6c23ab8",
         "📸️snapshot/🟦️.ts": "164c2812bc058a96dc59aeb5efacc2e152c2203847fe537d463271adfe11b8b8",
-        "📸️snapshot/🦀️.rs": "7cdbe2108b21adc8ecb2951180fc63cda0af895b53a2503248aab3bb4704b39a",
+        "📸️snapshot/🦀️.rs": "39e601343060dfc96ad13edac22d8f23c691b0bb90bf443f88570c2804949c78",
         "🔗️.graphql": "95e52da5172d4c253708a28a4b309a5ecd24c6610c16efcdcdfba5f32950fa75",
         "🔣️.json": "108376cc49decbf07811bd88617a227c8e242ce1f3db0e3b70fd7cb86e5ad97d",
         "🔺️diff/🔗️.graphql": "c00f60dbf7fc2182794949ff02c553d63a5dab10a6b2c03613bd7b0bff37af0e",
@@ -85408,7 +85436,7 @@
         "🔺️diff/🦀️.rs": "e52cb023207936e7117efe8d1edef0cd7981a3d59af7d5016e3818375b5cc880",
         "🛰️.proto": "5e2600df1903e9b892c61121fea44ad6aacc1e8213ab2ec9ded0aa7624a4c9d0",
         "🟦️.ts": "edc96bfeb3b264fc34c99218df40d46536a52f7684404101b32fa9cc94de09dc",
-        "🦀️.rs": "60da0e211ae0a1a7f74beddd1656b635bb23b52634acfb54fa292dbbe82ec8fd",
+        "🦀️.rs": "18cc602827827e3b790f6294100b49308b8cdf138aa9d97c6693ee7ed2b788ac",
         "🧬️mutations/🔗️.graphql": "cbfe2dbc5122b05ad032343f63b0b26958f66afb6be4d9e5824f6a36df206be9",
         "🧬️mutations/🔣️.json": "741e20364eb90b2e3b0b667d7dc4f67738102f3ca59e154d26fae89236f519a9",
         "🧬️mutations/🛰️.proto": "0b9f0d320ab2840bb54a03c124cb7aedd5abdde18cf5dbf2923645a5ffb071c3",
@@ -86369,7 +86397,7 @@
         "🧬️mutations/🔣️.json": "a83d9a67d475f008bd893faaa42f8e8fa16a570f90dfef45fbea0b485b95c0b0",
         "🧬️mutations/🛰️.proto": "d9558f9c5f89bc6e82d0871fa647ee5b6cd2801215d78f1d8e67b7c4d9f7a65b",
         "🧬️mutations/🟦️.ts": "63c5f2fe023243a5be786030fc75aa7c8fbb6e3b6de18b76ff03d3c1ff8c3436",
-        "🧬️mutations/🦀️.rs": "663e84d548e97aca07d9fab2d440614af5cedb66f6cbbd5d5b292c95a362fe5e"
+        "🧬️mutations/🦀️.rs": "5ca00b1e3de59bda8fea06baa2a42c580037ae4695f773c2cedd66b03ea01808"
       }
     },
     "s.stdio.semio.v1.audio.mutation.insert-channel": {
@@ -86629,7 +86657,7 @@
         "🧬️mutations/🔣️.json": "09341b1ed718575a4fec0d57ffb68f7b482618ebb685ece3bed0498b22a0b7af",
         "🧬️mutations/🛰️.proto": "221746dca0770fbc9fd17fa0f62d40c268601d37ac4f7d651b1effabf08ac0db",
         "🧬️mutations/🟦️.ts": "771f37921daec0422851d166970036c95f1ce2761b75f0f5ed0cfbbf35a798a2",
-        "🧬️mutations/🦀️.rs": "608c2f746ab98d0e84176fa637f9e3ddcba245352c0f83e60fbcb7401e3ae45d"
+        "🧬️mutations/🦀️.rs": "9bbe2e3d593e887ff2d777cfc7b4ae28e9de5247f5122b0a8dd05509da5e9db6"
       }
     },
     "s.stdio.semio.v1.base.mutation.apply-animation": {
@@ -87885,7 +87913,7 @@
         "🔺️diff/🔣️.json": "ed9f6a05adf40236729721e172b88b7c3b61cc898cacd4c7c11d780ec479656d",
         "🔺️diff/🛰️.proto": "4a1c6c1d880e978e79aea9cd83fbfac41d8d8dd728b2278e6518f7b5adc9d864",
         "🔺️diff/🟦️.ts": "b6356a6fe9a07ae816e318113fea1897de2c7374b8937a2d916711dd0546071d",
-        "🔺️diff/🦀️.rs": "a072afe1754b7e5b306e0dc411d7dfae6fd0530739147bc518873bfff944d8b5",
+        "🔺️diff/🦀️.rs": "923214504111755f4f30b396c6df07e99d108a04f7ed02525b1a07972317acf2",
         "🛰️.proto": "6a211f99d59d75ad068e46151103a843bedd8429c3a6c56ec4758371c68cacbf",
         "🟦️.ts": "1dd43627f4ee4c4dae9c27eaa638886b2a3812defbf07c480b9fdc914326685e",
         "🦀️.rs": "d945253315cb734c67361a70897714a2a8b5d78b98e2b42b2c70d8f2c24625a7",
@@ -90088,7 +90116,7 @@
         }
       },
       "dependsOn": [
-        "os.store.link",
+        "framework.schema.artifact-reference.link",
         "s.stdio.semio.v1.kit.mutation.add-design",
         "s.stdio.semio.v1.kit.mutation.add-type",
         "s.stdio.semio.v1.kit.mutation.bind-representation",
@@ -90111,25 +90139,25 @@
         "💡️inferences/🛰️.proto": "602d8662a40141fd2a7c2d68d03758eed0bee7683694c578cb5b768651ef2159",
         "💡️inferences/🟦️.ts": "a87cdba2beb861bd119458e8ed994cf199154aaf7aa7d9e08a28098278865ca0",
         "💡️inferences/🦀️.rs": "3a76c35a5a716afa5defe3fc71a18359e07e464224cf79a896648144cc77f814",
-        "📸️snapshot/🔗️.graphql": "6bb4dd1fc4d05c8fb49e034528493e7acde035f3663aa51d855d54e77ec2bf70",
-        "📸️snapshot/🔣️.json": "9e92834027704ca72f3edafaeed37f55fbfbce8404518869b78b3c7ffce9b8c7",
-        "📸️snapshot/🛰️.proto": "9ae2ec1b220258a491b6052074e3b7a365a3230a36ba0800f861f5ffae6f1c59",
-        "📸️snapshot/🟦️.ts": "d1e2b096fae72da60d5657564640e0b6e0267871d8f9c4001fd844d1a2b2e12a",
+        "📸️snapshot/🔗️.graphql": "1a09fd2ce169e319f199a43dcbee99f5841194d08a119900577dfac59b0586a4",
+        "📸️snapshot/🔣️.json": "2144092f9643c5360afbb24b8b0b6f1982dfa0d2ccd25da63da2d71cb13056a9",
+        "📸️snapshot/🛰️.proto": "b84eb46c672c981d920feaf568c29e3197377af7655d4ae84a6002e203ec56ea",
+        "📸️snapshot/🟦️.ts": "1597daf53ba6375a76e4ee63bacaf8d3ff92617f924a9bef63d4f46fad9f5993",
         "📸️snapshot/🦀️.rs": "83770bc8b3b709f5334194fdba431525a383d684e2b5dfae7d354de4e868810e",
-        "🔗️.graphql": "46cee087a5ac3d0144e0f3f1f8eeca33b33e7f5965b581d6da2ad14e61a03a4f",
-        "🔣️.json": "cd611bab2dfc46ed8a0c3849dc16aa4852ba2e9ea9757605869d6bfb6c9f49ab",
+        "🔗️.graphql": "2430121c661326056a7e002968900fc554a5dc23b5cc955e4015b8a0e07738a1",
+        "🔣️.json": "936ce2540a54c4312670ba52ee37623f10099fa0752451192c56443361320a85",
         "🔺️diff/🔗️.graphql": "18101e686f9b5005fc0774787648530bdccaeba2b4c63fa94fa88a3d13c5a576",
         "🔺️diff/🔣️.json": "541e93f5f52a033ece2b22ccd3a03b8b85e4dc39171c16b0b56d2c7aec6c807a",
         "🔺️diff/🛰️.proto": "512b1d9341257b8827b858d6636ddcd4e6555f73b686caeae79d02e9d91785aa",
-        "🔺️diff/🟦️.ts": "27c192e29bf0bb1b0b5e0739351b02788816e7b9e0170aaed17d0ab0370134ef",
+        "🔺️diff/🟦️.ts": "b65c13b47a6252bcdb4620585614f7784069a498f293ab335209697db2c2f449",
         "🔺️diff/🦀️.rs": "9b7453294bd0d4e64ffb556d4930ee5f6533d76b64810ad6ea91e1d0da1ee4ec",
-        "🛰️.proto": "6dbfa75e63550cf9c00a7d6dcf6a7b31bacd755d2ea486064a54b7dc454c55a1",
+        "🛰️.proto": "be0a41b6862e88916e484390f178f2ab435933323d0020e36396fa4e2b4f043c",
         "🟦️.ts": "ae615a7613f07bc97b414ed60413461752f38170b30157a1a7630870b8e13004",
         "🦀️.rs": "7eb7f6d1eb4867808a20c58007d6e675ae6294269378a7ce5eccfa8466c07e00",
-        "🧬️mutations/🔗️.graphql": "e8cec6f8a6a14d4175653a3e0697e7fd9065a12f7a5f7fae30ba9083a03c1554",
+        "🧬️mutations/🔗️.graphql": "3cd540acdfa01d5348181a9d98bfeee004bc72366b47cb410301792e34402663",
         "🧬️mutations/🔣️.json": "c2848b0edc128d2f52948bb59b5d9083c5c3cba0a0eb2b0e3c964e46cf8ca80b",
-        "🧬️mutations/🛰️.proto": "504270b6633237ba29efda73cd7a589565fbe159100a2ad8fffdede2a7a9a590",
-        "🧬️mutations/🟦️.ts": "4c29791ee82fa6c4729262bbfad97bdb21554f241529e966f5c26513085da318",
+        "🧬️mutations/🛰️.proto": "6d18d91f66cb29e173e51afb0c487b5bc5eb018b1a7cb9c268e3cd6813a4e14c",
+        "🧬️mutations/🟦️.ts": "99653314f5416bf9559f1c6a82960c844254f4ee59df7af3ee56cff3993c7334",
         "🧬️mutations/🦀️.rs": "95b025a937f940e0c3b30b0794b359eac9d06bb473ef092c5c2eed1f5efa5cb8"
       }
     },
@@ -90183,10 +90211,10 @@
         }
       },
       "dependsOn": [
-        "os.store.link"
+        "framework.schema.artifact-reference.link"
       ],
       "hashes": {
-        "🔣️.json": "6cc94753ff245e9e59402cd58ab345dbfd8a35a01e6ea85919de6b06fb4ad8c7"
+        "🔣️.json": "7d3c89a7bca43439a853c6575367723843888332fba781134ff6d3963bee358b"
       }
     },
     "s.stdio.semio.v1.kit.mutation.change-representation-pin": {
@@ -90203,10 +90231,10 @@
         }
       },
       "dependsOn": [
-        "os.store.link"
+        "framework.schema.artifact-reference.link"
       ],
       "hashes": {
-        "🔣️.json": "df2da7398b50b200b2e8d25bf8ac0465304382f8ae9e634f8c3196628f4cac95"
+        "🔣️.json": "9f81de3dbd28bf07a52560ade88632cc761ebff4bfd8e95cd8fae63624f7bbae"
       }
     },
     "s.stdio.semio.v1.kit.mutation.create-model": {
@@ -90473,7 +90501,7 @@
         "🔺️diff/🔗️.graphql": "a826c97db665176a2cc6f722600b6475ac4bc3d037f461a58566cb7314e05a27",
         "🔺️diff/🔣️.json": "73634490d7c47d09e94bb1246fa9f62773aa9041c38ca253d806c13466675174",
         "🔺️diff/🛰️.proto": "b6ba94afad02f4f1b4767648168ca8740123dfe265144cb73a951ec70507770d",
-        "🔺️diff/🟦️.ts": "eab6550ecd6bd438fb71b18980bd0eacbcb016e7c1d5076fa24886a57c6f5566",
+        "🔺️diff/🟦️.ts": "3e7c54bbf20baecc04eb3f419c62425dc6a15ed594e95bc3131959abbc5f3a21",
         "🔺️diff/🦀️.rs": "059d7421ae268638693e261babcb1a1104260a1a46414e833eb8cd366ace0c97",
         "🛰️.proto": "e5896b6863c4f80c7d98971999f5be37f264c47e8783fecdf86f0cd59bcbb245",
         "🟦️.ts": "7a2e54194846606f0234ace54c4f3009e3290830406f2a586e0061db5a47a4c2",
@@ -91332,19 +91360,19 @@
         "💡️inferences/🛰️.proto": "f956d90081ff0da7e72e8c79e584bd3fccee610a6580181bd569b6bcd023fa3f",
         "💡️inferences/🟦️.ts": "3403cdcecba65589b28d2fdb3146bec77525b6b512d720cd430d24eeddb18160",
         "💡️inferences/🦀️.rs": "5fd3a19f19ac55980df09c1886e2c9748c12d2d88c41acc5c24779b73a90283c",
-        "📸️snapshot/🔗️.graphql": "eff2f3206125cd2fcf94a644fd6608b794678ebe00163e3fba133f1f393a4ef2",
+        "📸️snapshot/🔗️.graphql": "e0864572ed2ce32f3e30073aadbd53b3fe5e0525e279ce91f7026cfca555e1d4",
         "📸️snapshot/🔣️.json": "18994de46e1efebc0cf71a899829d7f8af26e214f9aaa1ae5374eb0bf2f2d5b1",
-        "📸️snapshot/🛰️.proto": "dd5010904c1ab37bc32ac05e8f88fe619e6738c800d3d1e940e40e82d8e13d14",
+        "📸️snapshot/🛰️.proto": "d7e8601970c7fae0ca925b2b08325e6acbe05a40e19662150cd39475c6115604",
         "📸️snapshot/🟦️.ts": "c2c54ac0ffa65853b1bf3d39aeb72583bbb56cf484c43d6a64277a8508c08124",
         "📸️snapshot/🦀️.rs": "588f8634214baeb60c3f323dfd1f811e46307faa4a52de29e5bc936d06a0055e",
-        "🔗️.graphql": "75f89584f099eb0b919a013fab71cbfe25b3872149de253f236a59dd90cc58bf",
+        "🔗️.graphql": "401fdbdae1e8a5e7ada4f2c5d967f4cd66ac0907bbb6756962f071e77caae86b",
         "🔣️.json": "d6e8be698f2981a81ed846c0d6832b0545d35c6ac8c02bb5be6d07dfacf90ea6",
-        "🔺️diff/🔗️.graphql": "9a68d4fdbfe715a693398d5e8f146f57003cb66bb9cb611a2af32f00dfbe33b3",
+        "🔺️diff/🔗️.graphql": "3d6b8656ebaee84f9200158a5a43d7d6aab6b30d1277286dde23aeedd6745d33",
         "🔺️diff/🔣️.json": "b5f80ee6c7d769554a0fea0d98ba3f3b55dba1701b4f19e10e188497a666c4d6",
-        "🔺️diff/🛰️.proto": "85ebde0de6b0d513ba0be691f3074142795361616e45ab97f2243b8c19f6de71",
+        "🔺️diff/🛰️.proto": "6b9850e901c80934cebb8ae3980b6f2ccbef451f74e5fc17069423e1b9ac3203",
         "🔺️diff/🟦️.ts": "475deeb02b042123a7b4b70559031afea9beb306fd7b4b5c5d011e7be1198f3b",
         "🔺️diff/🦀️.rs": "b78915f864a2042451393f41bb3640ddbf9b8d162cc7b293f0d82329d1a64a83",
-        "🛰️.proto": "879ccd8cb69901dc6488aedbd858faf5f56d745eacd76ab74e9c555e7fe986e8",
+        "🛰️.proto": "5087b397829c71bd3b0898514414e2febb223469311306ced5843d691dda49c7",
         "🟦️.ts": "039a08e28f82bdcc5653f91f3e9c56b3ce0d05fbcbc0af0d0bd0df22054f2bc5",
         "🦀️.rs": "efd167e6ffc81b1a3710d54cb84c6359a97629c03a88e9d693a60f444940b4dc",
         "🧬️mutations/🔗️.graphql": "e9818a9e4a015625d33716b624dfbebe6367a29855f2fec25d5e53ae918cc4f8",
@@ -91940,7 +91968,7 @@
         "🧬️mutations/🔣️.json": "3939c25a9e18c07ca71de0c4d7aab912e3bf4ae20df27098571d13ad61f1385a",
         "🧬️mutations/🛰️.proto": "32da2b19489afa614012b311873a1df8001f54b0824cb92f49482986a442e699",
         "🧬️mutations/🟦️.ts": "6bbdeaaeef0f36c2d77aaed3566143a38d2647d777c436a00254880b82eb46ac",
-        "🧬️mutations/🦀️.rs": "26ab8fbf9787ec4a64eb9e5c936e3e9d37e4a1bef913a6d4abefe4ce10275c64"
+        "🧬️mutations/🦀️.rs": "6b741211bd0936d600a2084092f9eebdd1f65f0a7b8b677d257befd84fa3ab64"
       }
     },
     "s.stdio.semio.v1.table.mutation.create-column": {
@@ -95890,7 +95918,7 @@
         "📸️snapshot/🔣️.json": "323ac1a8d37fed25345fb65d140486b915a32d02307be3caf24a44e600d0709b",
         "📸️snapshot/🛰️.proto": "8869dfd3a96132bceb6f75882f99555a975c8d8039701a2e45057ac3b78380cc",
         "📸️snapshot/🟦️.ts": "66787035f11a4d4b0fdde7bfcf257899131f698cae654e7ded8ede083a2e5a75",
-        "📸️snapshot/🦀️.rs": "873793f024a0ec71230bdb066955c7134ef6c3aabca4b6e815e1da5093718656",
+        "📸️snapshot/🦀️.rs": "6d335299baabc23b72cb69ab2235c700d0c1202e2bad662e0f97bbd26c410fec",
         "🔗️.graphql": "79d70705d522fc79e2ee668b754ffefd0426439265747a0b184e17ee8354b10b",
         "🔣️.json": "5797e23db9300aece82e1ffa1bfe639054ef94b48f25633de593d58d33dfd6db",
         "🔺️diff/🔗️.graphql": "2b6eac79f016b09aa443859b78aa0d05dce4fee7f2003e86c0159b122a96c5bd",
@@ -96828,7 +96856,7 @@
       ],
       "hashes": {
         "🔣️.json": "019ba57add791376e170211243096707004cc9fe1bbe7a2a990057746a95e773",
-        "🟦️.ts": "2d3530848d97658f78e9329065b565bf72ae13a5012076efddb73218305fb82c",
+        "🟦️.ts": "ef274eae60537c03f244ad4a40360af4795c26e60fa44ba238c9a3f3790bd95b",
         "🦀️.rs": "12b071d34f8ed0676a880adbfff7c0346b9ff251526f34d75132ffecd4b2e3c1",
         "🧬️mutations/🔣️.json": "dea63448fa571f6bfebe272ec91af093040139c495a69bd8411b64109b4c82f8",
         "🧬️mutations/🦀️.rs": "784996d550a440adbc1169ebb639beef74b6c56eed1e5fe89aacf94cf8bdbfff"
@@ -97382,9 +97410,9 @@
         }
       },
       "dependsOn": [
+        "framework.schema.artifact-reference.child",
         "framework.value",
         "framework.value.type",
-        "os.store.child",
         "s.trinity.jack.mutation.set-query"
       ],
       "hashes": {
@@ -97393,20 +97421,20 @@
         "💡️inferences/🛰️.proto": "dc515807424cfa98ba55df703d9e836bf9bda4fd3199893ca900317d3564ceda",
         "💡️inferences/🟦️.ts": "380c1424e219891896bfbc6f915e594ee58c541b900c0fc9885d968e46e259f2",
         "💡️inferences/🦀️.rs": "e8c8dc74a9952bcf630dc0f0ae2b25b7b43d88a80a5bdf742f73eb800cebd05b",
-        "📸️snapshot/🔗️.graphql": "d5d5c8c342890d9170d4e21379fcfeb70f8890a567612842434f04233418bfe9",
-        "📸️snapshot/🔣️.json": "07c5aa0102b7071a55130a8198197207cfe3be15419494841f61ec6ff5882ddc",
-        "📸️snapshot/🛰️.proto": "7a44a02bd0dd9b28bee93491bccfa6ccb703bdf1200286652819056d70a3b1eb",
+        "📸️snapshot/🔗️.graphql": "192671d244d3acf5b332e7a49cd8ffdd7a080d8977d35ed33481dbebafc2029c",
+        "📸️snapshot/🔣️.json": "4893170abd172125a72b45259bac8698cf5969d4f9e7ce1bed9c543854cf9aff",
+        "📸️snapshot/🛰️.proto": "a87579fca3c69d7d93a8946e9eed983872adfb5de245b3922794af797d381c51",
         "📸️snapshot/🟦️.ts": "a5c5d69c982dd9f1f4f6747cdd83d0e96506f2a2f0601bb12d17a78ebc983c8a",
         "📸️snapshot/🦀️.rs": "600f1d3c8ce4d9e994fd5b6187c521f1b4ab52935840b7d7292c75b474a74e3c",
-        "🔗️.graphql": "bac906c097efaf08e5f9259e418833142279e96aab10ed8ac0d38238e4212fd1",
-        "🔣️.json": "44810d075936fe10d0947b99aad072479b987857d897ec8c8b1bb8bd3623d7a3",
-        "🔺️diff/🔗️.graphql": "f648889de44e83fd25c9c2a2b2619faf76919e8894f6aff4885201e189345989",
-        "🔺️diff/🔣️.json": "666ba14e677eb306d4192a77f80528f1efea39538366453a03cb01652a1b5dd2",
-        "🔺️diff/🛰️.proto": "47afeff1ec258dbf18b4e30966fb6adb63a20525615ec97685507c9f258ac65c",
-        "🔺️diff/🟦️.ts": "a256d4b7da213fe9c5df4f849920102cfab03c9f61e005aff459e950c0f23ac7",
+        "🔗️.graphql": "622a8dc70f3cfaaa724e51535086cc4a1a9d9ca4e85b47cc98b50f6b3bfbb150",
+        "🔣️.json": "6c75238b6e88b4dfe0b614325de7b30f01cf982329cdcff1ac010993d6def552",
+        "🔺️diff/🔗️.graphql": "655e1c83533d2fa858f1333e7a4fbb2638beb0bf3bab2b235af35d0a54ab781a",
+        "🔺️diff/🔣️.json": "5df4868be313e4f47994b6db70d1fe9c30401848c463579125c19fd1f30f3daf",
+        "🔺️diff/🛰️.proto": "6310f2af110882f6baa38dd556c5d2b619d865d77a1cb6582ae322b899f9de63",
+        "🔺️diff/🟦️.ts": "11ccc165066a62471bd4daa5a70aa9a4e47be2e66efa048d9438f58948994b8e",
         "🔺️diff/🦀️.rs": "58116ec81c9d3df6fbd4693499a1c16bda1cfa8ae6d25395004cafdcc3965b94",
-        "🛰️.proto": "148c6ab4b610425cb3d1bc63dda31ead08212a96199c677c46c11867d6358991",
-        "🟦️.ts": "820cad74006e169c517e3a07d73586d8ace6b8778bb7920d63b33412109c2b0e",
+        "🛰️.proto": "dcefef2d822fb1372756468654fc3cf3f07953892332ba730f5d312a3502d1ff",
+        "🟦️.ts": "6332e9009d265c29e63b00daa16f6ac768f826fee15145619dde0703ee6d2764",
         "🦀️.rs": "d3bb3ed275dadba7e20e0658a50a9175643530fbc01e4a702d69c187956279b9",
         "🧬️mutations/🔗️.graphql": "baf674e4b944cea8d414c6448c946979067827529ae519ac143023ae9f4e3504",
         "🧬️mutations/🔣️.json": "961e62f8794613dccb3eda831e33b724cf30a61acd46338d3ea04148666ced2b",
@@ -97465,6 +97493,10 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "RewritingArtifact": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
         "RewritingBoundingBox": {
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
@@ -97512,7 +97544,7 @@
         "📸️snapshot/🟦️.ts": "3198f523db3e47e55cbdf96fc0f185f3867af02f277ea51e6a5180dc3c33500e",
         "📸️snapshot/🦀️.rs": "8905ba354be74abf5d40d27d1fecb614a3c8c63ba6b9c3d13ec8a75b9dc31068",
         "🔗️.graphql": "a0fe73545c63132caa36ec017109859d20ed5df13da08e83174302221c1a62f9",
-        "🔣️.json": "391e667c48a6830ca80a8b43a1a0f3260a9c7b64f68ebb06b2a632c9f3deb9eb",
+        "🔣️.json": "bdeb92ae584e260f5b196002cfbecdd833d4d1c02fd8625968e49b38f28f74fa",
         "🔺️diff/🔗️.graphql": "72005646554780db59bedb2d3fd647690eb9c6abaea5eb3baf8d42c5e460925b",
         "🔺️diff/🔣️.json": "baf59ce9e3a843c21ec1a6ecf6e8b18350037652443943cdd17d42917a712f50",
         "🔺️diff/🛰️.proto": "ca75234c648dac0cef2479e02abeee41a5d6d9682e729c474f1a126671e02aa1",
@@ -98212,7 +98244,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.wfc.grid2d.1.any.mutation.change-cell-size",
         "s.wfc.grid2d.1.any.mutation.change-periodicity",
         "s.wfc.grid2d.1.any.mutation.change-seed",
@@ -98235,7 +98267,7 @@
         "💡️inferences/🟦️.ts": "2bf1325e639b27c0ef5c583459e048ef48e57d699d561776c90268cf525b426b",
         "💡️inferences/🦀️.rs": "5319427f12fd24e909208d070a316eadc538c17a86d20b34f4cfb822bebb8cd5",
         "📸️snapshot/🔗️.graphql": "6a566d0234bc95fcfebc7beaef9eaaf833e0b97fde695f84660c28f014bc4646",
-        "📸️snapshot/🔣️.json": "7d147f6de17fe05206a1fe229bb11b4442c28d019cd5c6a17ff4bf9fa3bc07d8",
+        "📸️snapshot/🔣️.json": "5f73503926bfbe91e2441096abe1380fb7ce37cf443037a2de21d9db9d64c1e2",
         "📸️snapshot/🛰️.proto": "e431312ff488fa61e4dec8b51e671780067f0350abad67bc32ae0d209a6f7873",
         "📸️snapshot/🟦️.ts": "85ca6e8b2125b9bbb7df673b95cfc56780f6a94afdca7ffccf7ab38943e6679f",
         "📸️snapshot/🦀️.rs": "d50c1656c6626fa5799a86cc955055e3d271a179a1649db4e214ec78e5fc6463",
@@ -98324,10 +98356,10 @@
         }
       },
       "dependsOn": [
-        "os.store.child"
+        "framework.schema.artifact-reference.child"
       ],
       "hashes": {
-        "🔣️.json": "bda98b5d47f317bd796a0884287f969abb9b1a9babf207698280c124bfe9ca63"
+        "🔣️.json": "1c8438d54eff7dbf927ef287b79f9ca96b381cb1f5c7f7c4a306d0a66a4e4fa1"
       }
     },
     "s.wfc.grid2d.1.any.mutation.change-tile-weight": {
@@ -98380,10 +98412,10 @@
         }
       },
       "dependsOn": [
-        "os.store.child"
+        "framework.schema.artifact-reference.child"
       ],
       "hashes": {
-        "🔣️.json": "bcafad04e2663082ed0446a576317509fcdedbd6aaa7f0b0c4e0dfb7ccd2b759"
+        "🔣️.json": "4bedebb4fde6292ac5fa3544fc4a2aaada5aa40e7b755e4b59aa7b71a13ff286"
       }
     },
     "s.wfc.grid2d.1.any.mutation.delete-rule": {
@@ -98546,7 +98578,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.wfc.grid3d.1.any.mutation.change-cell-sizes",
         "s.wfc.grid3d.1.any.mutation.change-periodicity",
         "s.wfc.grid3d.1.any.mutation.change-seed",
@@ -98569,7 +98601,7 @@
         "💡️inferences/🟦️.ts": "06d73c1481244f48fc0108ae6448573ba2a9e2a77eae9ee3c5d2681c60b21963",
         "💡️inferences/🦀️.rs": "a4e860094b6093e34c676f1b3154a1c7006ebbad3018cf35cb58caba7a9ff53d",
         "📸️snapshot/🔗️.graphql": "6416cb9dac1e78f29e9013ad1149268ee8003ea8d0f473e089006b0dfd1bdf22",
-        "📸️snapshot/🔣️.json": "05a23ebd0477f0ed46f71d08582c6bcf59de315dd6cdb19bc903c1dba25ad570",
+        "📸️snapshot/🔣️.json": "a0dc95efb5427b7d6954201fad45d93d677fdb77c520f3fca60b149a2cc8572d",
         "📸️snapshot/🛰️.proto": "0b1ce6d5b6e2651324de37be1b473462eba8f85445d50bbced8134d1ada971bd",
         "📸️snapshot/🟦️.ts": "cbd0fb40da2859b5e43df149eae0aec8362525b24040450a837d32f775d69471",
         "📸️snapshot/🦀️.rs": "3313fb3fbfe5d84c32c6852dc2afb3429dae1295213343985d901ff35f765b67",
@@ -99784,7 +99816,7 @@
         }
       },
       "dependsOn": [
-        "os.store.child",
+        "framework.schema.artifact-reference.child",
         "s.writer.writer.mutation.change-language",
         "s.writer.writer.mutation.change-uri",
         "s.writer.writer.mutation.edit-text",
@@ -99798,19 +99830,19 @@
         "💡️inferences/🟦️.ts": "29c9442fd62a0847609e7dec1af482f1dc319ca913f649dcbfc1d7ddeff6579c",
         "💡️inferences/🦀️.rs": "40c0a8700feaceea6e4a46e9c45efe243289f2563ab0eecb9444d7d3871e0d42",
         "📸️snapshot/🔗️.graphql": "61d42f4a5ba1d55b7aa2d7c923348f7adb7c4448f4a6ca54ee0ac5cce9126f86",
-        "📸️snapshot/🔣️.json": "119d5519761d1ba280d914688324393e71cb0fbadb3426334064ac454e0f1ea7",
-        "📸️snapshot/🛰️.proto": "80431dec40d444c83ac3c83ce6973b565cf988cbc186162e2d4ce27994c3a8d2",
+        "📸️snapshot/🔣️.json": "f036c96e0a03ec878c91da5ddc1ef025ca7867169b5f66f1bdee057b9b502742",
+        "📸️snapshot/🛰️.proto": "6f57da944f744df5116d2fedb344c6d47c140b00b8a07104af5a2e5678f2e783",
         "📸️snapshot/🟦️.ts": "2ae677218860a8921c8fc708ce494030a702108c811901fc28602ae88468ff0b",
         "📸️snapshot/🦀️.rs": "a080ed326c2466b7aab36ba9f6b1d4577dbed19625379329af22c39f5143e730",
         "🔗️.graphql": "cf800efc762fbf8e1ba187f9b0f987f691fea687d080762a54d8e4312e98a251",
-        "🔣️.json": "34c22a2ea1a76d6907d6d3201dd36d5d2a4f31f688c3b2e569a5694c5848042c",
+        "🔣️.json": "650077fbe26928b979e15f79b51c7cd023390d8d34a2450f0c18e414605d089f",
         "🔺️diff/🔗️.graphql": "cffb031ff94c5361c30d82405ab421755108ef458644ae46b1fa3be6037dc010",
-        "🔺️diff/🔣️.json": "709e057899764708bd1f0ca5a979babce131f74fa2a028742588e6c8cfbce3b4",
-        "🔺️diff/🛰️.proto": "970f9f9a0c7720952858eaadc358c20bc9d783a575b5bb3fcc5cf1ce4f6197e7",
-        "🔺️diff/🟦️.ts": "c9e75141f8cd5695231c78fc8c888cbbb190a0882cacbda93208e239fc038425",
+        "🔺️diff/🔣️.json": "6155e6c1031679259cf874b529c65b408206df7bbc577fef8bc10803538ac549",
+        "🔺️diff/🛰️.proto": "9208ffddce8a83f2283c46f22d2f2c0234a8894628558b7144dfaf6ef3fd88a8",
+        "🔺️diff/🟦️.ts": "c7f91c21f43d1f4cd7c1bc631a06bbe49b24d0b0b93e4f74a8ebbeca6e323089",
         "🔺️diff/🦀️.rs": "088d73d120f0c773e302c89680f12bd691c5d7bdc2bcec3683b736693129c284",
-        "🛰️.proto": "34aec05e413f0fc41c6dff1f20af648b0e9cbb8962a008ae5ffa2a7f1d4ac2fc",
-        "🟦️.ts": "48220935cdb3d6e9b36714f56eccd54084675473c6d8d308cc89fe2070e92993",
+        "🛰️.proto": "94305d52034f362c6004ab586b6c8f504e398cc285293dd3e8fa6fcc0d558b5c",
+        "🟦️.ts": "162eb195d00fa2553942b847bfb84e71105b239ca3e765677190ee50018aa4d5",
         "🦀️.rs": "ec881348d89bd6f5c4bb3edd8e25746a744629bee2fa07d8620bccceaf2ea9e3",
         "🧬️mutations/🔣️.json": "103b2cd0dcfae23298a491c291ff58fe70b9cb1c2acb8d330232e110b88fe3ec",
         "🧬️mutations/🛰️.proto": "4a0ee94c3b63cd73df18f618aac7a4a485e96d85a5e475719e7e922844489a90",

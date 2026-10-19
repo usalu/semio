@@ -20,7 +20,7 @@ fn a_reference_underlay_is_offered_every_render_and_a_refused_admission_is_not_a
     assert!(reference_underlay_upload(&state.scene, "/missing.jpg").is_none());
 
     let pool = world_scene_raster_pool();
-    let over_budget = (ui_wgpu::wgpu::SCENE_RASTER_ITEM_BYTES / 4 + 1) as u32;
+    let over_budget = (semio_framework_ui_raster_owner::SCENE_RASTER_ITEM_BYTES / 4 + 1) as u32;
     let descriptor = SceneRasterDescriptor { width: over_budget, height: 1, source_digest: [91, 92], source_revision: 91, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
     assert!(matches!(pool.begin(descriptor, 91, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }), SceneRasterBegin::Refused(_)), "🧯️ the full-quality pool refuses item +1 before it owns an allocation");
 }
@@ -41,7 +41,7 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         panic!("reference CPU slot did not progress after one bounded retirement");
     }
 
-    let limits = ui_wgpu::wgpu::SceneRasterPoolLimits { item_bytes: 16, pool_bytes: 32, slot_capacity: 2, lease_capacity_per_slot: 4, transfer_bytes: 8, retire_bytes: 8, gpu_resident_bytes: 48 };
+    let limits = semio_framework_ui_raster_owner::SceneRasterPoolLimits { item_bytes: 16, pool_bytes: 32, slot_capacity: 2, lease_capacity_per_slot: 4, transfer_bytes: 8, retire_bytes: 8, gpu_resident_bytes: 48 };
     let pool = SceneRasterPool::try_new(limits).expect("reference pool");
     let mut state = World3dState::new("surface".into(), "controller".into());
     let mut gpu = Vec::new();
@@ -56,7 +56,7 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         let upload = world_raster_upload_in_pool(&state.scene, &url, &url, false, &pool).expect("pending CPU upload");
         let mut producer = World3dBuildContext::new(WorldCursorWakeAuthority::new());
         producer.ensure_world_plane_texture(&url, upload);
-        let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(revision, revision, ui_wgpu::wgpu::DrawList::default(), None, 0.0).unwrap_or_else(|mut rejected| {
+        let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(revision, revision, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).unwrap_or_else(|mut rejected| {
             let fault=rejected.fault();while !rejected.close_step() {}
             panic!("prepared reference input admission: {fault}");
         });
@@ -71,7 +71,7 @@ fn six_reference_gpu_residents_progress_through_two_cpu_slots_and_a_lost_texture
         drop(input);
         let mut retired = false;
         for _ in 0..64 {
-            if matches!(ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step(world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
+            if matches!(semio_framework_ui_prepared::PreparedRenderInput::close_abandoned_step(world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
                 retired = true;
                 break;
             }
@@ -344,7 +344,7 @@ fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispa
     let modifiers = PointerModifiers::default();
     enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(200.0, 200.0, true, 0, &modifiers)).expect("press admitted");
     enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(200.0, 200.0, false, 0, &modifiers)).expect("release admitted");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut published: Vec<ActionDescriptor> = Vec::new();
     let mut turns = 0;
     while let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) {
@@ -403,9 +403,9 @@ fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows
 #[test]
 fn the_scene_bridge_retains_semantic_authored_and_environment_color_provenance() {
     for (id, authored, environment, expected_source) in [
-        ("semantic", None, None, ui_wgpu::wgpu::SceneColorSource3d::SemanticNeutral),
-        ("authored", Some("#3f80bf"), None, ui_wgpu::wgpu::SceneColorSource3d::Authored),
-        ("environment", None, Some("#b82e0f"), ui_wgpu::wgpu::SceneColorSource3d::Environment),
+        ("semantic", None, None, ui_scene::math::SceneColorSource3d::SemanticNeutral),
+        ("authored", Some("#3f80bf"), None, ui_scene::math::SceneColorSource3d::Authored),
+        ("environment", None, Some("#b82e0f"), ui_scene::math::SceneColorSource3d::Environment),
     ] {
         let mut scene = scene_with_selection("{}");
         let world = scene.world_3d.as_mut().expect("world scene");
@@ -423,7 +423,7 @@ fn the_scene_bridge_retains_semantic_authored_and_environment_color_provenance()
         drive_scene_bridge(&mut state, &scene, Rect::new(0.0, 0.0, 320.0, 240.0));
         let retained = state.scene.draws.iter().flat_map(|draw| draw.instances.iter()).find(|instance| instance.id == id).expect("bridged instance retained");
         assert_eq!(retained.material.color_source, expected_source);
-        if expected_source == ui_wgpu::wgpu::SceneColorSource3d::SemanticNeutral {
+        if expected_source == ui_scene::math::SceneColorSource3d::SemanticNeutral {
             assert_eq!(retained.color, [1.0; 4], "semantic authority is not materialized as a baked gray");
         }
         retire_bridged_surface(&mut state);
@@ -619,7 +619,7 @@ fn append_component_vertex_spheres_render_base_vertices() {
     assert_eq!(instances.len(), 0);
 
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &ui_wgpu::wgpu::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert_eq!(lines.len(), 28);
 }
 
@@ -639,7 +639,7 @@ fn append_component_overlays_highlights_only_hovered_edge() {
     state.scene.meshes.insert("mesh-1".into(), mesh);
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &ui_wgpu::wgpu::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -654,7 +654,7 @@ fn append_component_overlays_highlights_selected_edge() {
     state.scene.meshes.insert("mesh-1".into(), mesh);
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &ui_wgpu::wgpu::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -692,7 +692,7 @@ fn pick_select_emits_original_vertex_interaction_target() {
     state.session.bounds = inner;
     state.session.pick_bounds = inner;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::ZERO, inner.w, inner.h).expect("vertex projects");
     let action = pick_select_action(&state.session, &state.camera, &state.selection, &state.interaction, &state.scene, screen[0], screen[1], inner, false, false).expect("pick action");
     assert_eq!(action.action, "interactionSelect");
     let args = action.args.expect("args");

@@ -277,7 +277,7 @@ fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str 
 /// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
 /// bounds once per document, never again while that document is on screen.
 pub fn preview_fit_json(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, meshes_json: &str) -> String {
-    semio_framework_ui::wgpu::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
+    semio_framework_ui_declaration::ui::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
 }
 
 /// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].

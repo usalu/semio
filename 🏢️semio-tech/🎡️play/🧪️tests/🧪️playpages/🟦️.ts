@@ -21,7 +21,7 @@ export async function registerTests1(
 ): Promise<void> {
   const { assignPlayPages, playPageOrigins, publishPlayPages, PLAY_PAGE_BUDGET_BYTES } = dependencies;
   const { describe, expect, it } = vitest;
-  const { shardWorkerUrl } = await import("../../../../🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
+  const { shardWorkerUrl } = await import("@semio-tech/framework-actor/shard-runtime");
   const { publishedPageUrl, relocatePublishedRequestUrl } = await import("../../../../🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts");
 
   describe("play CDN pages", () => {
@@ -97,7 +97,7 @@ export async function registerTests1(
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
     it("publishes every literal import in the actual generated shard worker and preserves activation expressions", async () => {
-      const { shardWorkerSource } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
+      const { shardWorkerSource } = await import("@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source");
       await init;
       const source = shardWorkerSource();
       const importsOf = (text: string) => parse(text)[0].map(row => ({ kind: row.d === -1 ? "static" : row.d === -2 ? "import.meta" : "dynamic", specifier: row.n ?? null, expression: text.slice(row.s, row.e) }));

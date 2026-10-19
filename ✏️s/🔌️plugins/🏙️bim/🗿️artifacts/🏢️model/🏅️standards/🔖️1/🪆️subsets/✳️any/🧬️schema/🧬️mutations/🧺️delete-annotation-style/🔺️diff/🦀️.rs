@@ -1,7 +1,9 @@
 //! 🔺️ Diff constructor for `DeleteAnnotationStyle`: one deleted style entry; refused while a dimension, tag, text note or leader still uses it.
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::DeleteAnnotationStyle;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteAnnotationStyle, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

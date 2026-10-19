@@ -1,6 +1,6 @@
 /** 🧵️ The run-time source text of the instance family: the module trees of the composer crate and of every use-case and component crate below it (tier 1, extension, render, dispatch, typed operations, commands), the ladder crate and the two turn crates. Source-text laws read it instead of the files the cut left. */
 import { resolve } from "node:path";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const plugin = resolve(import.meta.dir, "../../..");
 const INSTANCE_ROOTS = ["🧵️instance/🦀️.rs", ...["🏪️stores", "📜️history", "🪆️children", "👷️jobs", "📄️docs", "🧩️extensions", "🖼️render", "📨️dispatch", "🧾️typed-operations", "🧷️command-routes"].map(name => `🧵️instance/${name}/🦀️.rs`)].map(path => resolve(plugin, path));

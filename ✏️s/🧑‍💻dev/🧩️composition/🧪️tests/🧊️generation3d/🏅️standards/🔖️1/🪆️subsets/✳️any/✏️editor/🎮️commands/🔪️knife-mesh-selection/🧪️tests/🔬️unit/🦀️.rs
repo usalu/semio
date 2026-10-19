@@ -71,12 +71,12 @@ async fn knife_selection_undo_redo_restores_the_graph_and_analysis_connection() 
     context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
     context::drain_flow_eval_ticks(&mut app).await;
     context::select_domain(&mut app, DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
-    let probe = |app: &context::Generation3dApp| {
+    let probe = |app: &context::Generation3dAppFixture| {
         let snapshot = context::snapshot(app);
         (snapshot.host_snapshot.widgets.len(), snapshot.host_snapshot.synapses.iter().find(|wire| wire.to == "analysis" && wire.to_port == "mesh").unwrap().from.clone())
     };
     let before = probe(&app);
     let after = (before.0 + 1, "extrude__knifeCut".into());
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, Generation3dCommand::KnifeMeshSelection(payload()), probe, before, after).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::KnifeMeshSelection(payload()), probe, before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

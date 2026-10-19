@@ -1,5 +1,5 @@
 /** 🧮️ The hub stdio package identities, the component manifest, wasm and descriptor names and the shipped artifact, io, deadline and function bounds. */
-import { SHIPPED_COMPONENT_MAX_BYTES } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES } from "@semio-tech/framework-plugin/describe/component-receipt";
 
 export const PACKAGE_NAME = "semio-hub-stdio";
 export const PLUGIN_ID = "stdio";

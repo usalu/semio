@@ -35,11 +35,15 @@ semio-framework-pixels = { path = "../../../../../../../../🔨️modules/🔲�
 semio-framework-os-infinite-world-model = { path = "../../../🗃️model/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

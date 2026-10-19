@@ -1,30 +1,31 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::ordered_storeys;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{select_effect, IdMint};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{select_effect, IdMint};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::{plan, section};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section};
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, ViewCamera, ViewPlane};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, ViewCamera, ViewPlane};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::create_view::*;
-use crate::editor::bim::fixture::context::view as window_view;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, german, run};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_view::{handle, CreateView, extents};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view as window_view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, german, run};
 use semio_framework_ui_locale::Locale;
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
@@ -52,7 +53,7 @@ fn close(left: f64, right: f64) -> bool {
 async fn the_extents_of_the_demo_are_its_walls_grown_by_half_their_thickness() {
     let [x0, y0, x1, y1] = extents(&demo(), "bldg-1").expect("walls give extents");
     assert!(close(x0, -0.15) && close(y0, -0.15) && close(x1, 8.15) && close(y1, 6.15), "{x0} {y0} {x1} {y1}");
-    assert_eq!(extents(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), "bldg-1"), None);
+    assert_eq!(extents(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), "bldg-1"), None);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -77,7 +78,7 @@ async fn the_four_elevations_are_the_committed_ones_and_look_at_the_four_sides()
         assert_eq!((view.plane, view.depth), (committed.plane, committed.depth), "the {side} elevation of the demo is what the command makes");
     }
     let south = views[0].plane.expect("a plane");
-    let frame = crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame::of(&south).expect("a frame");
+    let frame = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame::of(&south).expect("a frame");
     assert!(close(frame.look[0], 0.0) && close(frame.look[1], 1.0), "the south elevation looks north");
     let after = applied(&snapshot, &emit);
     assert_eq!(after.views.len(), snapshot.views.len() + 4, "the names clash with the demo's elevations and are made unique");
@@ -105,12 +106,12 @@ async fn the_names_speak_the_addressed_locale() {
 #[semio_framework_async_macros::async_test]
 async fn the_new_view_is_selected_and_bound_to_the_addressed_window() {
     let snapshot = demo();
-    let addressed = window_view(Locale::En, &[("window", crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID)], Some("window"));
-    let mut ctx = crate::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
+    let addressed = window_view(Locale::En, &[("window", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID)], Some("window"));
+    let mut ctx = semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
     let emit = run(&snapshot, |doc, cfg| handle(&CreateView { kind: "section".into(), parent: String::new(), name: "Cross".into() }, doc, cfg, &mut ctx)).expect("creates");
     assert_eq!(emit.window_config_mutations.len(), 1, "a section window now shows the new section");
     assert_eq!(emit.effects.len(), 1, "the new view is selected");
-    let mut plan_ctx = crate::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
+    let mut plan_ctx = semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&addressed), None, None);
     let plan = run(&snapshot, |doc, cfg| handle(&CreateView { kind: "plan".into(), parent: String::new(), name: "Another".into() }, doc, cfg, &mut plan_ctx)).expect("creates");
     assert!(plan.window_config_mutations.is_empty(), "a plan does not rebind a section window");
 }
@@ -118,7 +119,7 @@ async fn the_new_view_is_selected_and_bound_to_the_addressed_window() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_kind_and_a_missing_building_are_refused_with_a_stable_code() {
     assert_eq!(create("teapot", "", "", &[], false).err().map(|fault| fault.code.0), Some("bim.view.kind-unknown".to_string()));
-    let empty = crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default();
+    let empty = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default();
     let mut ctx = ctx(&[]);
     let refused = run(&empty, |doc, cfg| handle(&CreateView { kind: "section".into(), parent: String::new(), name: String::new() }, doc, cfg, &mut ctx));
     assert_eq!(refused.err().map(|fault| fault.code.0), Some("bim.view.building-missing".to_string()));

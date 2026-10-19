@@ -51,8 +51,8 @@
     },
     {
       "package": "semio-framework-value-shared-issuance",
-      "manifest": "../../🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
-      "entry": "../../🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🦀️.rs",
+      "manifest": "../../🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../../🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs",
       "maximumActiveLines": 4000,
       "forbiddenDependencies": [
         "semio-framework-os-kernel",
@@ -1037,8 +1037,8 @@
     },
     {
       "package": "semio-framework-os-store-engine-core",
-      "manifest": "🔨️modules/🏪️store/⚙️engine/🧱️core/📦️packages/🦀️rust/Cargo.toml",
-      "entry": "🔨️modules/🏪️store/⚙️engine/🧱️core/🦀️.rs",
+      "manifest": "🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔨️modules/🏪️store/⚙️engine/🧱️store-components/🦀️.rs",
       "maximumActiveLines": 3500,
       "forbiddenDependencies": [
         "semio-framework-os-kernel",

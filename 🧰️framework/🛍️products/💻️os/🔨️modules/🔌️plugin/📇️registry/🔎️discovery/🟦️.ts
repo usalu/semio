@@ -1,15 +1,10 @@
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { AreaState } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
-import type { DiscoveredPackage } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
-import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
-import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
-import { discoverCatalogPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
-import { declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView, declaredComponentKind, discoverCatalogPackages, declaredComponentDeploymentDirectoryV1 } from "@semio-tech/repo-lib/inventory";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";
-import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 
 
 
@@ -334,7 +329,7 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
 
 
 /** 🚀️ Reads authored component identities and deployment names without compiled admission. */
-export function generateComponentSourceRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): ComponentSourceOwnerV1[] {
+export function generateComponentSourceRegistry(repoRoot = findWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): ComponentSourceOwnerV1[] {
   const paths = findPluginCargoFiles(repoRoot, options.packages, options.view);
   return paths.map(path => parseComponentSourceOwnerV1(path, repoRoot, options.view)).sort((a,b) => a.pluginId.localeCompare(b.pluginId));
 }
@@ -342,20 +337,20 @@ export function generateComponentSourceRegistry(repoRoot = getWorkspaceRoot(), o
 /** 🔨️ Every discovered plugin crate that declares a deployment directory, whatever the state of its descriptor.
  * Builds take their targets from here, never from the deployed rows: a stale-channel or stale-dependency descriptor
  * is exactly what a build must refresh, while deployment keeps refusing it through [[generatePluginRegistryReport]]. */
-export function discoverPluginBuildTargets(repoRoot = getWorkspaceRoot(), options: Pick<GeneratePluginRegistryOptions, "packages" | "view"> = {}): PluginBuildTargetV1[] {
+export function discoverPluginBuildTargets(repoRoot = findWorkspaceRoot(), options: Pick<GeneratePluginRegistryOptions, "packages" | "view"> = {}): PluginBuildTargetV1[] {
   const paths = findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined), options.view);
   return paths.map((path) => parsePluginBuildTargetV1(parseComponentSourceOwnerV1(path, repoRoot, options.view))).sort((a, b) => a.pluginId.localeCompare(b.pluginId));
 }
 
 
 /** 📇️ The deployed catalog rows; refuses every stale-channel descriptor unless `staleChannel: "exclude"` withholds it. */
-export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
+export function generatePluginRegistry(repoRoot = findWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): DeployedRegistryEntryV1[] {
   return generatePluginRegistryReport(repoRoot, options).entries;
 }
 
 
 /** 🩺️ The deployed catalog rows plus every plugin withheld because its descriptor, or a runtime dependency's, speaks another app channel. */
-export function generatePluginRegistryReport(repoRoot = getWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryReportV1 {
+export function generatePluginRegistryReport(repoRoot = findWorkspaceRoot(), options: GeneratePluginRegistryOptions = {}): PluginRegistryReportV1 {
   const filterPlaygroundPlugin = options.filterPlaygroundPlugin;
   const filterIds = filterPlaygroundPlugin && !isHostPluginFilter(filterPlaygroundPlugin) ? resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin) : undefined;
   const manifestPaths = filterIds ? findPluginCargoPathsForIds(repoRoot, filterIds) : findPluginCargoFiles(repoRoot, options.packages ?? (options.view ? discoverCatalogPackages(repoRoot, TAXONOMY, options.view) : undefined), options.view);
@@ -484,7 +479,7 @@ export const REGISTRY_DIAGNOSTICS_FILE = "🩺️diagnostics.json";
 /** 🎮️ The owning plugin id and the app scope of the playground row a variant/alias names, or
  * `undefined` for a filter that names no playground row. A row carrying `app` boots that ONE artifact
  * app; a row without one boots its crate's default session (the OS shell, for the host crate). */
-export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getWorkspaceRoot()): { readonly pluginId: string; readonly app?: string } | undefined {
+export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = findWorkspaceRoot()): { readonly pluginId: string; readonly app?: string } | undefined {
   for (const manifestPath of findPluginCargoFiles(repoRoot)) {
     const text = readFileSync(manifestPath, "utf8");
     const componentPackage = parseComponentPackageId(text, manifestPath).slice("semio:".length);
@@ -502,7 +497,7 @@ export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getW
 
 
 /** 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
-export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
+export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = findWorkspaceRoot()): string {
   return resolvePlaygroundFilterRow(pluginFilter, repoRoot)?.pluginId ?? pluginFilter;
 }
 
@@ -521,7 +516,7 @@ export function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean 
 /** 🏠️ True when the filter boots the host SESSION: a playground row of the crate that declares
  * `[package.metadata.semio].host` AND names no `app`. The host crate also ships ordinary artifact apps
  * (`🪐️space`'s Home and Space); a row naming one of them is a single-app playground like any other. */
-export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {
+export function isHostPluginFilter(pluginFilter?: string, repoRoot = findWorkspaceRoot()): boolean {
   if (!pluginFilter) return true;
   const row = resolvePlaygroundFilterRow(pluginFilter, repoRoot);
   if (row?.app !== undefined) return false;
@@ -531,7 +526,7 @@ export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspac
 
 
 /** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
-export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generateComponentSourceRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly ComponentSourceOwnerV1[] = generateComponentSourceRegistry(findWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
   const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin)) ?? (playgrounds === undefined ? resolvePlaygroundFilterRow(filterPlaygroundPlugin) : undefined);
   const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
   return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [{ id: targetPluginId, appScoped: variantRow?.app !== undefined }]) : [];

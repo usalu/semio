@@ -3,13 +3,13 @@ import { existsSync, readFileSync,mkdtempSync,rmSync,writeFileSync } from "node:
 import { join, relative,dirname,resolve,posix,win32 } from "node:path";
 import {pathToFileURL} from "node:url";
 import ts from "typescript";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "@semio-tech/stdio-inventory-ts";
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
 import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata,readStdioArtifactBuildGraphPin } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 import Ajv from "ajv";
-import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import pinSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json";
+import type {ScriptInvocation} from "@semio-tech/process/routing";
+import { buildPinSchema as pinSchema } from "@semio-tech/repo-lib/build";
 import {verifyStdioCargoPhaseV1} from "./🎟️phase/🟦️.ts";
 
 type CommandOwnership = Readonly<{
@@ -85,7 +85,7 @@ export function verifyStdioBuildGraphPinFixtures(repoRoot:string):void{
 }
 
 /** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, build inputs and package scripts to the command-ownership contract. */
-export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
+export async function verifyStdioCommandOwnership(repoRoot = findWorkspaceRoot()): Promise<void> {
   await verifyStdioCargoPhaseV1(repoRoot);
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");

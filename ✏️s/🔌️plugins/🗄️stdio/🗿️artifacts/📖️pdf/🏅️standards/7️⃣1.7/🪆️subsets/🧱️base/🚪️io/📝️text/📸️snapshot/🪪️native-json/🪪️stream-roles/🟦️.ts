@@ -1,5 +1,5 @@
 /** 🪪️ Native transport admission constructs explicit semantic roles. */
-import { record, array } from "../🟦️.ts";
+import { record, array } from "../🧰️scalars/🟦️.ts";
 import { pdfOperationFromNativeJson } from "../🖋️content/🟦️.ts";
 import { pdfUnicodeFromNativeJson, pdfCMapFromNativeJson, pdfProgramFromNativeJson } from "../🔤️font/🟦️.ts";
 import { pdfImageFromNativeJson } from "../🖼️resource/🟦️.ts";

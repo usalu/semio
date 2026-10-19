@@ -1,6 +1,17 @@
 import type { Node, Edge } from "@xyflow/react";
-import { type DiagramLayoutMerge, diagramLayoutPageSize } from "../📊️job-types/🟦️.ts";
-import { DIAGRAM_UNIT, type DiagramLayoutOptions } from "../📜️wire/🟦️.ts";
+import { DIAGRAM_UNIT, type DiagramLayoutOptions, diagramLayoutPageSize } from "../📜️wire/🟦️.ts";
+
+/** 🔀️ One bottom-up merge pass over a paged source into a paged target. */
+export interface DiagramLayoutMerge<Value> {
+  left: number;
+  leftCursor: number;
+  middle: number;
+  right: number;
+  rightCursor: number;
+  source: DiagramPagedStore<Value>;
+  target: DiagramPagedStore<Value>;
+  width: number;
+}
 
 export class DiagramPagedStore<Value> {
   private readonly directories = new Array<Array<Array<Value | undefined> | undefined> | undefined>(16);

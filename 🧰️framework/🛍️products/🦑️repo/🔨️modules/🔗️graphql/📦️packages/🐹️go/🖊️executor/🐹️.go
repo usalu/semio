@@ -2,7 +2,7 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// 🧱️executor carries the executor, the resolver, the lazy executor singleton and the CLI entry points.
+// 🧱️executor carries the executor, the resolver, the root-bound executor and the CLI entry points.
 
 // #endregion 🧲️Header
 
@@ -12,7 +12,7 @@ import (
 	context "context"
 	json "encoding/json"
 	fmt "fmt"
-	os "os"
+	sync "sync"
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
@@ -20,20 +20,30 @@ import (
 
 // #region 📦️Utils
 
-var executor *Executor
+var (
+	executorMutex  sync.Mutex
+	activeExecutor *Executor
+	executorRoot   string
+)
 
-// 🕸️ensureExecutor lazily initializes the GraphQL executor on first use.
-// This avoids the expensive initialization (LoadBundles, buildSchema) for
-// 🕸️commands that don't need GraphQL (e.g. hook calls).
-func ensureExecutor() {
-	workspace.ExecutorOnce.Do(func() {
-		var e error
-		executor, e = NewExecutorWithContext(workspace.RootDir, NewRepoContext(workspace.RootDir))
-		if e != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
-			executor = nil
+// 🔗️boundExecutor returns the executor of the explicitly bound repository root and rebuilds it whenever the root changed.
+// 🔗️It refuses to answer while no root is bound, so no query can fall back to the repository the process happens to run in.
+func boundExecutor() (*Executor, error) {
+	root, bound := workspace.LookupRootDir()
+	if !bound {
+		return nil, fmt.Errorf("repository root is not bound: call workspace.BindWorkingDirectory or workspace.SetRootDir first")
+	}
+	executorMutex.Lock()
+	defer executorMutex.Unlock()
+	if activeExecutor == nil || executorRoot != root {
+		built, err := NewExecutorWithContext(root, NewRepoContext(root))
+		if err != nil {
+			activeExecutor, executorRoot = nil, ""
+			return nil, fmt.Errorf("failed to initialize GraphQL executor: %w", err)
 		}
-	})
+		activeExecutor, executorRoot = built, root
+	}
+	return activeExecutor, nil
 }
 
 // #endregion 📦️Utils
@@ -135,11 +145,11 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 
 // 💿️gql holds the data fields for a gql record.
 func Gql(query string, variables map[string]interface{}) (string, error) {
-	ensureExecutor()
-	if executor == nil {
-		return "", fmt.Errorf("GraphQL executor not initialized")
+	bound, err := boundExecutor()
+	if err != nil {
+		return "", err
 	}
-	return executor.ExecuteJSON(context.Background(), query, variables)
+	return bound.ExecuteJSON(context.Background(), query, variables)
 }
 
 // #endregion 🎙️GraphQL

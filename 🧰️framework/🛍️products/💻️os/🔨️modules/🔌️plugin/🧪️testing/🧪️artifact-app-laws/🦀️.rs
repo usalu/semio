@@ -18,12 +18,13 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_instance_app::VcsArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
+pub use super::{OriginalFixtureCaller, OriginalFixtureScope};
 
 #[path = "🎟️fixture-dispatch-steps-and-document-loading/🦀️.rs"]
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    dispatch_fixture_action, dispatch_fixture_response_action, drain_maintenance_pressure,
+    dispatch_fixture_action, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
     fixture_step_context_for, load_document, load_document_text, plugin_load_document,
@@ -70,7 +71,7 @@ mod declared_verb_probing;
 pub use declared_verb_probing::{
     agent_preview, assert_declared_verbs_honour_their_declarations,
     dispatch_addressed_fixture_on_original, probe_agent_lane, probe_declared_verbs,
-    render_registered_fixture_app, DeclaredVerbBoot,
+    observe_registered_fixture_app, render_registered_fixture_app, render_registered_fixture_app_over, DeclaredVerbBoot,
 };
 
 #[path = "🔭️bounded-viewer-fixture-and-viewer-laws/🦀️.rs"]

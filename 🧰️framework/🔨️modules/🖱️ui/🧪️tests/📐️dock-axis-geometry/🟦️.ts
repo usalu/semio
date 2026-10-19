@@ -2,7 +2,7 @@
 import { describe, expect, test } from "bun:test";
 
 import fixture from "../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
-import { applyAxisResizeDelta } from "../../🧱️elements/🎨️Canvas/🟦️";
+import { applyAxisResizeDelta } from "../../🧱️elements/🎨️Canvas/🔗️join-corners/🟦️.ts";
 
 type Rect = { x: number; y: number; width: number; height: number };
 type Node = { kind: "stack"; id: string } | { kind: "row" | "column"; children: Array<{ weight: number; node: Node }> };

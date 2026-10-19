@@ -11,7 +11,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "tui-terminal,wgpu"
+            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
           ],
           "level": "fundamental",
           "coverage": false
@@ -34,7 +34,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "tui-terminal,wgpu",
+            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native",
             "--exact",
             "owned_law"
           ],
@@ -57,7 +57,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "tui-terminal,wgpu"
+            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
           ],
           "level": "long",
           "coverage": false
@@ -78,7 +78,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "tui-terminal,wgpu"
+            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
           ],
           "level": "exhaustive",
           "coverage": true
@@ -99,7 +99,7 @@
           "kind": "test",
           "args": [
             "--features",
-            "tui-terminal,wgpu"
+            "semio-framework-ui-tui-terminal/native,semio-framework-ui-tui-unit-laws/native"
           ],
           "level": "long",
           "coverage": false
@@ -119,8 +119,6 @@
         {
           "kind": "test",
           "args": [
-            "--features",
-            "wgpu-engine",
             "--lib"
           ],
           "level": "fundamental",
@@ -144,8 +142,6 @@
         {
           "kind": "test",
           "args": [
-            "--features",
-            "wgpu-engine",
             "--lib",
             "--exact",
             "retained_law"
@@ -184,11 +180,17 @@
           "kind": "check",
           "args": [
             "--target",
-            "wasm32-unknown-unknown",
-            "--features",
-            "tui"
+            "wasm32-unknown-unknown"
           ],
-          "budgetMs": 4242
+          "budgetMs": 4242,
+          "packages": [
+            "semio-framework-ui-tui-core",
+            "semio-framework-ui-tui-vt",
+            "semio-framework-ui-tui-terminal",
+            "semio-framework-ui-tui-widgets",
+            "semio-framework-ui-tui-frame",
+            "semio-framework-ui-tui-engine"
+          ]
         },
         {
           "kind": "check",
@@ -196,19 +198,24 @@
             "--target",
             "wasm32-unknown-unknown",
             "--features",
-            "tui-bindgen"
+            "semio-framework-ui-tui-host/bindgen"
           ],
-          "budgetMs": 4242
+          "budgetMs": 4242,
+          "packages": [
+            "semio-framework-ui-tui-host"
+          ]
         },
         {
           "kind": "check",
           "args": [
             "--target",
-            "wasm32-wasip2",
-            "--features",
-            "wgpu"
+            "wasm32-wasip2"
           ],
-          "budgetMs": 4242
+          "budgetMs": 4242,
+          "packages": [
+            "semio-framework-ui-wgpu-light",
+            "semio-framework-ui-wgpu-input"
+          ]
         }
       ],
       "rejected": false,
@@ -227,11 +234,12 @@
           "kind": "check",
           "args": [
             "--target",
-            "wasm32-unknown-unknown",
-            "--features",
-            "wgpu-engine"
+            "wasm32-unknown-unknown"
           ],
-          "budgetMs": 4242
+          "budgetMs": 4242,
+          "packages": [
+            "semio-framework-ui-wgpu-engine"
+          ]
         }
       ],
       "rejected": false,

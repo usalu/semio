@@ -15,7 +15,7 @@
 //!
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #3 of `📓️audit-wgpu-parity-2026-09-13.md`.
 
-use crate::wgpu::tree::{NodeFlags, UiTree};
+use semio_framework_ui_retained_tree::tree::{NodeFlags, UiTree};
 use ui_contract::{accessibility_projection_node, AccessibilityProjectionNode, UiNodeId, UI_DOCUMENT_NODES};
 
 //#region ♿️Projection
@@ -63,16 +63,16 @@ fn record_is_row(record: &ui_contract::UiNodeRecord) -> bool {
 const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
 const SELECT_OPTION_KEY_INFIX: &str = "::option::";
 const SLIDER_EDITOR_KEY_SUFFIX: &str = "::editor";
-pub(crate) const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
+pub const ROW_ACTION_KEY_INFIX: &str = "::row-action::";
 
-pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
+pub fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
     let ui_contract::Component::Select(select) = &record.component else { return None };
     let prefix = format!("{}{SELECT_OPTION_KEY_INFIX}", record.key.as_str());
     let value = key.strip_prefix(&prefix)?;
     select.items.iter().find(|item| item.value.as_str() == value).map(|item| item.value.as_str().to_string())
 }
 
-pub(crate) fn is_slider_accessibility_editor(record: &ui_contract::UiNodeRecord, key: &str) -> bool {
+pub fn is_slider_accessibility_editor(record: &ui_contract::UiNodeRecord, key: &str) -> bool {
     matches!(record.component, ui_contract::Component::Slider(_)) && key == format!("{}{SLIDER_EDITOR_KEY_SUFFIX}", record.key.as_str())
 }
 
@@ -87,7 +87,7 @@ fn record_row_actions(record: &ui_contract::UiNodeRecord) -> Option<(&str, &ui_c
 }
 
 /// ♿️ Which of a row's actions the virtual `<rowKey>::row-action::<i>` button of [`accessibility_projection`] activates.
-pub(crate) fn row_accessibility_action(record: &ui_contract::UiNodeRecord, key: &str) -> Option<usize> {
+pub fn row_accessibility_action(record: &ui_contract::UiNodeRecord, key: &str) -> Option<usize> {
     let (_, actions) = record_row_actions(record)?;
     let index = key.strip_prefix(record.key.as_str())?.strip_prefix(ROW_ACTION_KEY_INFIX)?.parse::<usize>().ok()?;
     actions.get(index).map(|_| index)
@@ -291,7 +291,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                     node.selected = node.selected.or(Some(arena_node.spec.0.presence().selected));
                 }
                 match &arena_node.spec.0 {
-                    crate::wgpu::UiNode::ExternalSlot(slot) if slot.body_key == crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => {
+                    semio_framework_ui_declaration::ui::UiNode::ExternalSlot(slot) if slot.body_key == semio_framework_ui_retained_tree::reconcile::MEDIA_TRANSPORT_EXTENSION_ID => {
                         node.role = "status".to_string();
                         node.label = slot.host_status.clone();
                         node.focusable = false;
@@ -300,7 +300,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                         node.editable = false;
                         node.focused = false;
                     }
-                    crate::wgpu::UiNode::Input(input) => {
+                    semio_framework_ui_declaration::ui::UiNode::Input(input) => {
                         node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone()));
                         if input.input_kind == "number" {
                             node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or(node.value_now);
@@ -310,11 +310,11 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                             node.editable = !node.disabled;
                         }
                     }
-                    crate::wgpu::UiNode::Slider(slider) => {
+                    semio_framework_ui_declaration::ui::UiNode::Slider(slider) => {
                         let value = arena_node.state.slider_draft_value.unwrap_or(slider.value);
                         let shown = ui_contract::ui_number_display(value, slider.display_factor);
                         node.value_now = Some(if slider.display_factor.is_some() { ui_contract::format_ui_number(shown).parse().unwrap_or(shown) } else { value });
-                        node.value_text = Some(crate::wgpu::layout::slider_unit_label(&slider.readout(value), slider.shown_unit()).unwrap_or_else(|| slider.readout(value)));
+                        node.value_text = Some(semio_framework_ui_wgpu_layout::layout::slider_unit_label(&slider.readout(value), slider.shown_unit()).unwrap_or_else(|| slider.readout(value)));
                         let draft = arena_node.state.edit.as_ref().map(|edit| edit.text.clone());
                         if draft.is_some() {
                             node.focused = false;
@@ -328,12 +328,12 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                             slider_readout = Some(SliderReadoutProjection { editing: draft.is_some(), text: draft.unwrap_or_else(|| slider.readout(value)), min, max });
                         }
                     }
-                    crate::wgpu::UiNode::NumberStepper(stepper) => {
+                    semio_framework_ui_declaration::ui::UiNode::NumberStepper(stepper) => {
                         node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| if stepper.uniform { stepper.value_text(stepper.value) } else { String::new() }));
                         node.value_now = arena_node.state.edit.as_ref().and_then(|edit| edit.text.parse().ok()).or_else(|| stepper.uniform.then(|| ui_contract::ui_number_display(stepper.value, stepper.display_factor)));
                     }
-                    crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
-                    crate::wgpu::UiNode::Toggle(toggle) => match toggle.appearance {
+                    semio_framework_ui_declaration::ui::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
+                    semio_framework_ui_declaration::ui::UiNode::Toggle(toggle) => match toggle.appearance {
                         ui_contract::ToggleAppearance::Button => node.pressed = Some(toggle.presence.selected),
                         ui_contract::ToggleAppearance::Checkbox => node.checked = Some(toggle.presence.selected),
                     },
@@ -353,7 +353,7 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                 node.rect = Some([origin.0, origin.1, width, height]);
             }
         }
-        let select_open = tree.document_node(pending.id).and_then(|mounted| tree.node(mounted)).is_some_and(|arena_node| matches!(&arena_node.spec.0, crate::wgpu::UiNode::Select(_)) && arena_node.state.open);
+        let select_open = tree.document_node(pending.id).and_then(|mounted| tree.node(mounted)).is_some_and(|arena_node| matches!(&arena_node.spec.0, semio_framework_ui_declaration::ui::UiNode::Select(_)) && arena_node.state.open);
         let segmented = matches!(&record.component, ui_contract::Component::Select(select) if select.appearance == ui_contract::SelectAppearance::Segmented);
         if segmented {
             node.focusable = false;

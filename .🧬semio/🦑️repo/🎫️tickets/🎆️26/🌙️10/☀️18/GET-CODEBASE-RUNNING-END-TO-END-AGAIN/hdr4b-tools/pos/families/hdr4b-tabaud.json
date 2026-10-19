@@ -1,0 +1,33 @@
+{
+ "name": "hdr4b-tabaud",
+ "crates": [
+  "semio-s-artifact-stdio-semio-table-model",
+  "semio-s-artifact-stdio-semio-base",
+  "semio-s-artifact-stdio-semio-value-model",
+  "semio-s-artifact-stdio-semio-table-mutations",
+  "semio-s-artifact-stdio-semio-audio-model",
+  "semio-s-artifact-stdio-semio-audio-mutations",
+  "semio-s-artifact-stdio-semio-editor",
+  "semio-s-artifact-stdio-semio-schema",
+  "semio-s-artifact-stdio-semio-audio",
+  "semio-s-artifact-stdio-semio-table",
+  "semio-s-artifact-stdio-semio-table-mut-family",
+  "semio-s-artifact-stdio-semio-audio-mut-family"
+ ],
+ "base": {
+  "rev": "4dab415ed90",
+  "crates": [
+   "semio-s-artifact-stdio-semio-table-model",
+   "semio-s-artifact-stdio-semio-base",
+   "semio-s-artifact-stdio-semio-value-model",
+   "semio-s-artifact-stdio-semio-table-mutations",
+   "semio-s-artifact-stdio-semio-audio-model",
+   "semio-s-artifact-stdio-semio-audio-mutations",
+   "semio-s-artifact-stdio-semio-editor",
+   "semio-s-artifact-stdio-semio-schema",
+   "semio-s-artifact-stdio-semio-audio",
+   "semio-s-artifact-stdio-semio-table"
+  ]
+ },
+ "note": "HDR-4b: table/audio leaf consumers repointed"
+}

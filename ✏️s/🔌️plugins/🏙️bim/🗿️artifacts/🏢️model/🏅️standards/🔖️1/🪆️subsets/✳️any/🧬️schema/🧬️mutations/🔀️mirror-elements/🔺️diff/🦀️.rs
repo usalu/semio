@@ -6,9 +6,10 @@
 //! length, an empty selection, unknown ids, elements without a placement and a stair with a fixed hand; a selection that is already
 //! symmetric is `mutation.no-op`.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::Map;
 use crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 /// 🪞️ The reflection a payload names.
@@ -26,11 +27,11 @@ pub fn diff(payload: &MirrorElements, base: &ModelSnapshot) -> MutationOutcome<M
     }
     let carried_note = |outcome: MutationOutcome<ModelDiff>, carried: usize| if carried == 0 { outcome } else { outcome.info(OutcomeCode::Cascade, format!("{carried} opening(s) were mirrored with their hosts.")) };
     match &payload.prefix {
-        Some(prefix) => match modify::duplicate(base, &payload.ids, prefix, &[map]) {
+        Some(prefix) => match semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::duplicate(base, &payload.ids, prefix, &[map]) {
             Err(refusal) => refusal.outcome(),
             Ok(built) => carried_note(MutationOutcome::new(built.diff), built.carried),
         },
-        None => match modify::in_place(base, &payload.ids, &map) {
+        None => match semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::in_place(base, &payload.ids, &map) {
             Err(refusal) => refusal.outcome(),
             Ok(placed) if placed.is_empty() => MutationOutcome::refuse(OutcomeCode::NoOp, "Every element already is symmetric about this line.", ["ids"]),
             Ok(placed) => carried_note(MutationOutcome::new(placed.diff), placed.carried),

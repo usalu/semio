@@ -6,7 +6,7 @@ import {BooleanJob} from "@semio-tech/framework/2d/booleans";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 import type {PathGeometrySegment} from "../../🟦️.ts";
 import type {PaintedPathStroke} from "../../🧮️geometry/🎯️picking/🎨️paint/🟦️.ts";
-import type {DocumentSceneNode} from "../📋️prepare/🟦️.ts";
+import type { DocumentSceneNode } from "../🗺️plan-model/🟦️.ts";
 import {sceneIdentityMatches,type SceneIdentity} from "../🪪️identity/🟦️.ts";
 type Point=readonly[number,number];
 type BorrowedSegment<T>={readonly[K in keyof T]:T[K]extends[number,number]?Readonly<T[K]>:T[K]};

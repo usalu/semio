@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 /** 📦️ architect program Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
@@ -53,7 +53,7 @@ if (segments[0] === "architect-window-ownership") {
         { cwd: this.repoRoot },
       );
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "architect_window_ownership_", "--", "--nocapture"], this.repoRoot);
       }
       return;
@@ -64,7 +64,7 @@ if (segments[0] === "program-document-contract") {
       const schemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "program_document_contract", "--", "--nocapture"], this.repoRoot);
       }
       return;
@@ -77,7 +77,7 @@ if (segments[0] === "program-document-contract") {
 class RegisterCatalogScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length > 1 || (args.length === 1 && args[0] !== "--check")) throw Error("generate-register-catalog [--check]");
-    const { generateCollectionCatalogV1 } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts");
+    const { generateCollectionCatalogV1 } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
     const stale = generateCollectionCatalogV1(join(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"), args[0] === "--check" ? "check" : "write");
     if (args[0] === "--check" && stale.length) throw Error(`register catalog is stale: ${stale.join(", ")}`);
     console.log(`[register-catalog] ${stale.length ? `wrote ${stale.length}` : "current"}`);
@@ -88,7 +88,7 @@ class RegisterCatalogScript extends BundleScript {
 class SnapshotSourceProfileScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if(args.length)throw Error("test-snapshot-sqlite-source-profile accepts no arguments");
-    const {runRepositoryTestCommand}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts");
+    const {runRepositoryTestCommand}=await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts");
     await runRepositoryTestCommand(process.execPath,["test",join(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),"--test-name-pattern","Architect complete sixty-five typed bodies"],{cwd:this.repoRoot});
   }
 }

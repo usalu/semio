@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-wgpu-paint"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu retained paint: node walk, overlays, select popups, images, skeletons and tooltips"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-paint"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-pixels = { path = "../../../../../../🔲️pixels/📦️packages/🦀️rust" }
+semio-framework-ui-arena = { path = "../../../../../🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-retained-tree = { path = "../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-framework-ui-select-behavior = { path = "../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-controls = { path = "../../../🔘️controls/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-events = { path = "../../../⚡️events/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-mounted-layout = { path = "../../../📌️mounted_layout/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

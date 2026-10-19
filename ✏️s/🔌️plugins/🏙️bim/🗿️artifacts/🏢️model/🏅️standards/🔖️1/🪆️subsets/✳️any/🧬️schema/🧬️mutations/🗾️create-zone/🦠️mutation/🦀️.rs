@@ -1,6 +1,7 @@
 //! 🗾️ `create-zone` payload. Brings a new zone into the model: a named group of spaces with a purpose and an occupancy density; the spaces join it through `set-space`.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Zone}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Zone};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateZone {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateZone
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateZone> + From<crate::standards::v1::subsets::any::schema::mutations::delete_zone::DeleteZone>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateZone> + From<semio_s_artifact_bim_model_mut_any_99::standards::v1::subsets::any::schema::mutations::delete_zone::DeleteZone>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "zone", kind: "create-zone", record: "CreateZone" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

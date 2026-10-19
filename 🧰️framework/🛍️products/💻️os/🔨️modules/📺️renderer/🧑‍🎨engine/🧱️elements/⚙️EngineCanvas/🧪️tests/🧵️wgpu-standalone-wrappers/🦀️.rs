@@ -1,28 +1,28 @@
 /// 🧵️ Fixture wrappers of the engine canvas standalone laws: the node graph, map and board pointer helpers that collect the actions an engine entry point queued, shared by the EngineCanvas and the Scenes standalone laws (each mounts this file in its own `engine_canvas` module).
 #[cfg(test)]
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl: bool, alt: bool, space_pressed: bool) -> Vec<ActionDescriptor> {
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     let _ = node_graph_pointer_down_into(surface_id, controller_id, inner, x, y, button, shift, ctrl, alt, space_pressed, &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     let _ = node_graph_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
 
 #[cfg(test)]
 pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     let _ = node_graph_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }
@@ -39,7 +39,7 @@ pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &Map
 
 #[cfg(test)]
 pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     let _ = tiled_map_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input)
 }

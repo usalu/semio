@@ -9,9 +9,6 @@
 package client
 
 import (
-	"context"
-	"encoding/json"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,74 +28,6 @@ func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
 	}
 }
 
-func TestExhaustiveMigrateAuthorFieldsToString(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping slow migration test in short mode")
-	}
-	ctx := context.Background()
-
-	ticketCh := make(chan Ticket)
-	var ticketErr error
-	go func() {
-		ticketErr = StreamTickets(ctx, nil, nil, nil, ticketCh)
-	}()
-	ticketCount := 0
-	for ticket := range ticketCh {
-		if err := SaveTicket(&ticket); err != nil {
-			t.Errorf("failed to save ticket %s: %v", ticket.Slug, err)
-		}
-		ticketCount++
-	}
-	if ticketErr != nil {
-		t.Fatalf("stream tickets failed: %v", ticketErr)
-	}
-	t.Logf("migrated %d tickets via stream", ticketCount)
-
-	ticketsDir := GetTicketsDir()
-	remainingCount := 0
-	filepath.WalkDir(ticketsDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || d.Name() != "🎫️ticket.json" {
-			return nil
-		}
-		raw, err := ReadTextFile(path)
-		if err != nil {
-			return nil
-		}
-		if !strings.Contains(raw, `"author": {`) {
-			return nil
-		}
-		var ticket Ticket
-		if err := json.Unmarshal([]byte(raw), &ticket); err != nil {
-			t.Logf("failed to parse %s: %v", path, err)
-			return nil
-		}
-		ticket.JsonPath = path
-		if err := SaveTicket(&ticket); err != nil {
-			t.Errorf("failed to save remaining ticket %s: %v", path, err)
-		}
-		remainingCount++
-		return nil
-	})
-	t.Logf("migrated %d remaining tickets", remainingCount)
-
-	goalCh := make(chan *Goal)
-	var goalErr error
-	go func() {
-		goalErr = StreamGoals(ctx, goalCh)
-	}()
-	goalCount := 0
-	for goal := range goalCh {
-		if err := SaveGoal(*goal); err != nil {
-			t.Errorf("failed to save goal %s: %v", goal.ID, err)
-		}
-		goalCount++
-	}
-	if goalErr != nil {
-		t.Fatalf("stream goals failed: %v", goalErr)
-	}
-	t.Logf("migrated %d goals", goalCount)
-}
-
 func TestSetRootDirResetsGitignoreCache(t *testing.T) {
 	tmpDirA := t.TempDir()
 	tmpDirB := t.TempDir()
@@ -114,25 +43,29 @@ func TestSetRootDirResetsGitignoreCache(t *testing.T) {
 	}
 }
 
+// 🙈️TestBuildBinaryArtifactsGitIgnored proves GetGitIgnoredSet answers from the ignore rules of the bound root, using a fixture ignore file. The checked-in root ignore rules are held by the checked-in asset contracts law.
 func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
-	cwd, _ := os.Getwd()
-	oldRoot := rootDir
-	rootDir = findTestRepoRoot(cwd)
-	defer func() { rootDir = oldRoot }()
+	root := withTempRepo(t)
+	rules := "*.exe\n.🧬semio/🦑️repo/⚡️cache/\nserver\n"
+	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte(rules), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	SetRootDir(root)
 	artifacts := []string{
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo",
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo.exe",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
-		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming.exe",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
+		"coda/example/.coda/validators/programming.exe",
 	}
-	ignored := GetGitIgnoredSet(artifacts)
+	ignored := GetGitIgnoredSet(append(artifacts, "src/kept.go"))
 	for _, path := range artifacts {
 		if !ignored[path] {
 			t.Errorf("expected build artifact %q to be gitignored", path)
 		}
+	}
+	if ignored["src/kept.go"] {
+		t.Error("src/kept.go must not be gitignored")
 	}
 }
 
@@ -175,14 +108,7 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 	oldRoot := rootDir
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(repoRoot)
-	oldWD, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("getwd: %v", err)
-	}
-	defer func() { _ = os.Chdir(oldWD) }()
-	if err := os.Chdir(otherDir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
+	t.Chdir(otherDir)
 	out, err := renderPromptTemplate("enhance", map[string]string{"prompt": "hello"})
 	if err != nil {
 		t.Fatalf("renderPromptTemplate failed: %v", err)

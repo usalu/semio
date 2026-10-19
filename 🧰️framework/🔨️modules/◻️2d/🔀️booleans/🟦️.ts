@@ -1,5 +1,5 @@
 /** 🔀️ Filled planar arrangements with spatial queries, bounded grants and private outputs. */
-import type {PathSegment,Vec2} from "../🟦️.ts";
+import type {PathSegment,Vec2} from "../📐️drawing-contract/🟦️.ts";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../🧹️retire/🟦️.ts";
 export type BooleanRetirement=WorkRetirement;
 export type BooleanRetirementProgress=WorkRetirementProgress;

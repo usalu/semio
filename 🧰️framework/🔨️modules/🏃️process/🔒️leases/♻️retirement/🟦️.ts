@@ -1,6 +1,6 @@
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{withArtifactReadDirectoryV1}from"../../../📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
-import type{ResourceLeaseControl}from"../🟦️.ts";
+import{withArtifactReadDirectoryV1}from"../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import type{ResourceLeaseControl}from"../🎛️control/🟦️.ts";
 import {lstatSync,type Stats} from "node:fs";
 import {createHash} from "node:crypto";
 import {dirname,join,resolve} from "node:path";

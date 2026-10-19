@@ -1,5 +1,5 @@
 //#region 🧬️SnapshotHashContract
-import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import type { OwnedUiNode, UiNodeRetirement, UiSurfaceByteView } from "../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
@@ -8,7 +8,7 @@ export type OwnedUiSnapshotHashStep = RetainedUiWireStep & { readonly chunk?: Ui
 export type OwnedUiSnapshotHash = { readonly hash: string; readonly byteLength: number };
 type Metadata = { readonly surface: string; readonly revision: number; readonly root: number | null };
 type Program = Generator<OwnedUiSnapshotHashStep, void, void>;
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const state = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): OwnedUiSnapshotHashStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 //#endregion 🧬️SnapshotHashContract
 
@@ -89,7 +89,7 @@ class JsonBytes {
     return { cost: 128, bytes: [] };
   }
 
-  advance(grant: NumericIndexGrant): { done: boolean; cost: number; chunk: Uint8Array; failure: string | null } {
+  advance(grant: UiIndexGrant): { done: boolean; cost: number; chunk: Uint8Array; failure: string | null } {
     const output = new Uint8Array(256); let written = 0; let cost = 256;
     let failure: string | null = null;
     while (this.#stack && cost + 2200 <= grant.maxBytes && written + 16 <= output.length) {
@@ -112,7 +112,7 @@ export class OwnedUiSnapshotHashCursor {
   #nodeRetirement: UiNodeRetirement | null = null;
   #encoder: JsonBytes | null = null;
   #program: Program | null = null;
-  #grant: NumericIndexGrant = { maxItems: 0, maxBytes: 0 };
+  #grant: UiIndexGrant = { maxItems: 0, maxBytes: 0 };
   #hash = 0x811c9dc5;
   #bytes = 0;
   #metadata: Metadata | null;
@@ -166,7 +166,7 @@ export class OwnedUiSnapshotHashCursor {
     yield* this.#encode('],"layoutEpoch":"0"}', true);
   }
 
-  advance(grant: NumericIndexGrant): OwnedUiSnapshotHashStep {
+  advance(grant: UiIndexGrant): OwnedUiSnapshotHashStep {
     if (this.#status !== "pending") { if (this.#status === "closing") throw new Error("Owned UI hash is closing"); return state(this.#status === "closed" ? "complete" : this.#status, "hash"); }
     if (!admitted(grant)) return state("blocked", "hash");
     this.#grant = grant; this.#program ??= this.#run();
@@ -175,7 +175,7 @@ export class OwnedUiSnapshotHashCursor {
   }
   takeResult(): OwnedUiSnapshotHash | null { if (this.#status !== "ready" || this.#taken) return null; this.#taken = true; return { hash: `${this.#hash.toString(16)}:${this.#metadata!.revision}`, byteLength: this.#bytes }; }
   beginClose(): void { if (this.#status === "closing" || this.#status === "closed") return; this.#program = null; this.#status = "closing"; }
-  closeStep(grant: NumericIndexGrant): OwnedUiSnapshotHashStep {
+  closeStep(grant: UiIndexGrant): OwnedUiSnapshotHashStep {
     if (this.#status === "closed") return state("complete", "hash-close");
     if (this.#status !== "closing") throw new Error("Owned UI hash close has not begun");
     if (!admitted(grant)) return state("blocked", "hash-close");

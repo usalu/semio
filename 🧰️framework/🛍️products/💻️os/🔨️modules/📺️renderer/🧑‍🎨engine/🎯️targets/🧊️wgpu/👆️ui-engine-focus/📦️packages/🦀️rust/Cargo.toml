@@ -41,7 +41,16 @@ semio-framework-job-worker-authority = { path = "../../../../../../../../../../�
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-arena = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-engine = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-engine-surface = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-events = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }

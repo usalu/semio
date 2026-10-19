@@ -1,0 +1,1672 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/process",
+   "newExportEntries": 86,
+   "extendedExistingEntries": 16,
+   "importerEdges": 406
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/process": {
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧬️schema/🔣️.json",
+    "proposedSubpath": "./owned-execution/capture/schema.json",
+    "proposedGlueFile": "🎛️owned-execution/📥️capture/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️consumer/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️consumer/🧪️tests/🔣️.json",
+    "proposedSubpath": "./owned-execution/consumer/testing.json",
+    "proposedGlueFile": "🎛️owned-execution/📥️consumer/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📥️consumer.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧬️schema/📥️consumer.json",
+    "proposedSubpath": "./owned-execution/schema/consumer.json",
+    "proposedGlueFile": "🎛️owned-execution/🧬️schema/📥️consumer.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🟦️.ts",
+    "proposedSubpath": "./build/mode/cargo",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🏗️build/🎚️mode/⚙️cargo/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "appendCargoProfileConfigurationArgumentsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🧬️schema/🔣️.json",
+    "proposedSubpath": "./build/mode/schema.json",
+    "proposedGlueFile": "🏗️build/🎚️mode/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎛️environment/🧬️schema/🔣️.json",
+    "proposedSubpath": "./build/environment/schema.json",
+    "proposedGlueFile": "🏗️build/🎛️environment/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🚀️launch-routes/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🚀️launch-routes/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+    "proposedSubpath": "./build/capacity/schema.json",
+    "proposedGlueFile": "🏗️build/🎟️capacity/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts",
+    "proposedSubpath": "./compiler-state",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🏗️build/🗃️state/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "compilerStateResourceV1",
+     "withCompilerState"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts",
+    "proposedSubpath": "./state/layout",
+    "proposedGlueFile": "📦️packages/🟦️typescript/💾️state/📋️layout/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "persistentStateArtifactBudgetV1",
+     "persistentStateLayoutV1",
+     "persistentStatePolicyV1",
+     "requireRecomputableStatePathV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🗄️persistent-state/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/💾️state/📥️recovery/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/💾️state/📥️recovery/🟦️.ts",
+    "proposedSubpath": "./state/recovery",
+    "proposedGlueFile": "📦️packages/🟦️typescript/💾️state/📥️recovery/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "persistentStateRecoveryV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/💾️state/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/💾️state/🧪️tests/🔣️.json",
+    "proposedSubpath": "./state/testing.json",
+    "proposedGlueFile": "💾️state/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🗄️persistent-state/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/💾️state/🧾️records/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/💾️state/🧾️records/🟦️.ts",
+    "proposedSubpath": "./state/records",
+    "proposedGlueFile": "📦️packages/🟦️typescript/💾️state/🧾️records/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "readPersistentStateRecordV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/💾️state/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/💾️state/🟦️.ts",
+    "proposedSubpath": "./state",
+    "proposedGlueFile": "📦️packages/🟦️typescript/💾️state/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativePersistentStateV1",
+     "withNativePersistentStateTaskV1",
+     "withNativePersistentStateV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/configuration/admission/testing.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/📥️runtime/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/configuration/admission",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "admitCargoCompilerFlagsV1",
+     "readCargoCompilerConfigurationV1",
+     "readCargoCompilerFlagTokensV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧪️tests/📥️runtime/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🌍️environment/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/admission",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "ADMISSION_POLICY_V1",
+     "buildSchedulerV1",
+     "readUnitHistoryV1",
+     "startAdmissionBrokerV1",
+     "unitHistoryPathV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/jobserver",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "createJobserverV1",
+     "defaultJobserverStyleV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/platform/contract/mount/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/platform/contract/mount",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/📂️mount/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/platform/contract",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/📒️ledger/🟨️.d.mts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/platform",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/birth",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativeStorageChildFundingV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/image",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "openNativeImageStorageV1",
+     "retireNativeImageStorageV1",
+     "withNativeImageStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🍎️image.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/📦️compact/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🧪️tests/💾️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📏️measurement/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📏️measurement/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/measurement",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📏️measurement/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "measureOwnedArtifactTreeV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/journal",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🗃️compiler-state/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/platform",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/witness/events",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🍎️events/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "observeNativeVolumeEventServiceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/witness/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/witness",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "readNativePublicationLogicalBudgetV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/testing.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🔎️receipt-conflict/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/publication/fixed",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "createNativeFixedPublicationReceiptV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/publication",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "nativeImagePublicationFailureV1",
+     "nativeImagePublicationStageV1",
+     "readNativeImagePublicationRequestV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/borrower",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🗃️compiler-state/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🧬️schema.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🧬️schema.json",
+    "proposedSubpath": "./artifacts/native-build/storage/fixed/system/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🧬️schema.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/fixed/system",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "nativeFixedWindowsSystemV1",
+     "readNativeFixedWindowsSystemV1",
+     "readNativeWindowsRootReadBindingV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/fixed/testing.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/fixed/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/fixed",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativeFixedPlatformOptionsV1",
+     "captureFixedNativeProtectedParentV1",
+     "nativeLinuxLoopMountV1",
+     "readNativeImageRetirementFileV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/cleanup/retirement/durability",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/💾️durability/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "syncNativeCleanupDirectoryV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/cleanup/retirement/contract",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/♻️retirement/📋️contract/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "nativeDisposableJournalV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/storage/cleanup/command/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/cleanup/state",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "withNativeImageTerminalCloseV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/cleanup/operation/lifetime",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🤲️lifetime/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "withNativeOpenLifetimeV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🧪️tests/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🧪️tests/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/metadata/testing",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🧪️tests/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage/metadata",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🧾️metadata/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "syncNativeDirectoryMetadataV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/telemetry",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "memoryCountersV1",
+     "startTelemetrySamplerV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/inputs/continuations/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/inputs",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoCompilerInputsPortV1",
+     "CargoCompilerInputsRequestV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/source/admission/read/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/source/admission/read",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "readPhysicalCargoSourceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/📥️source/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🦀️promotion/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📤️receipt/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/📥️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🔤️toml/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/source/admission",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoSourceAdmissionPortV1",
+     "CargoSourceBoundaryPolicyV1",
+     "actualCargoSourceAdmissionPortV1",
+     "admitCargoSelectionV1",
+     "admitCargoSourceBoundariesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/💾️storage/🧪️tests/📥️runtime/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/source",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "RustSourceInputV1",
+     "readRustSourceClosureV1",
+     "rustCfgMatchesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📥️source/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/📥️contracts/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🗺️plan/📏️measure/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/lease/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🔒️store/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/profile/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/📐️profile/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/units/profile",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoEffectiveProfileV1",
+     "projectCargoRlibProfileV1",
+     "readCargoEffectiveProfileV1",
+     "requireCargoRlibArgumentsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📋️plan/🧪️tests/🔗️binding/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🕸️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧬️definition/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/units/capture",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoCompilerPlanningPortV1",
+     "actualCargoCompilerPlanningPortV1",
+     "captureCargoCompilationGraphV1",
+     "cargoEffectiveRustFlagsV1",
+     "cargoPlanningOutputBytesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️tests/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/package/environment/references/testing.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/package/environment/references/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/units/package/environment/references",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/📖️references/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "rustCompileEnvironmentReferencesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/package/environment/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🌱️environment/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/units/package/environment",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🧫️fixtures/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🧫️fixtures/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/testing/fixtures.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🧫️fixtures/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/units/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🕸️units/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/units",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoCompilationGraphV1",
+     "CargoCompilationUnitV1",
+     "readCargoCompilationGraphV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🕸️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "proposedSubpath": "./native-release",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "nativeBuildPassArgsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🏗️native/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/receipt/retention/reference/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/receipt/retention/reference",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CompletedCargoPublicationReferenceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧪️tests/🧫️fixtures/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧪️tests/🧫️fixtures/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/receipt/consumption/testing/fixtures.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧪️tests/🧫️fixtures/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/receipt/consumption/schema.json",
+    "proposedGlueFile": "📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/receipt/consumption",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "RUST_COMPILER_CONSUMED_BYTES_PROTOCOL_V1",
+     "readRustCompilerConsumedBytesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧩️recipe/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+    "proposedSubpath": "./native-receipt",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🧪️tests/🕸️units/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/⚙️policy/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/policy",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/⚙️policy/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "readNativeArtifactCachePolicyV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/⚙️policy/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/descriptors",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/📂️descriptors/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "assertNativeCacheDescriptorCustodyV1",
+     "decodeLsofPathV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/📉️pressure/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/model/receiver",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/📋️model/📨️receiver/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativeArtifactCacheReceiverLedgerV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📋️model/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/model",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/📋️model/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativeArtifactCachePressureV1",
+     "nativeArtifactCacheModelV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📍️layout/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📍️layout/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/layout",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/📍️layout/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "nativeArtifactCacheLayoutV1",
+     "nativeArtifactCacheProducerLayoutV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/📍️layout/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📏️inventory/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/📏️inventory/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache/inventory",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/📏️inventory/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "measureNativeArtifactCacheV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🔣️.json",
+    "proposedSubpath": "./artifacts/cache/testing.json",
+    "proposedGlueFile": "📦️artifacts/💾️cache/🧪️tests/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/cache/schema.json",
+    "proposedGlueFile": "📦️artifacts/💾️cache/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🟦️.ts",
+    "proposedSubpath": "./artifacts/cache",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/💾️cache/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "NativeArtifactCachePolicyV1",
+     "NativeArtifactCacheRequestV1",
+     "NativeArtifactCacheVolumeFactsV1",
+     "NativeArtifactCacheVolumeV1",
+     "readNativeArtifactCacheParentPolicyV1",
+     "readNativeArtifactCachePolicyV1",
+     "withNativeArtifactCacheV1",
+     "withNativeArtifactCacheWorkspaceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts",
+    "proposedSubpath": "./artifacts/publication/sources",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/📤️publication/📥️sources/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "ArtifactSourceSetV1",
+     "artifactSourceEntriesV1",
+     "readArtifactSourceChunkV1",
+     "recheckArtifactSourceSetV1",
+     "withArtifactDescriptorSlotV1",
+     "withArtifactSourceSetV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🕸️wasm/👓️reading/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📥️inputs/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/🟦️.ts",
+    "proposedSubpath": "./artifact-publication",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/📤️publication/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "stageOwnedArtifactsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+    "proposedSubpath": "./wasm-build",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗃️archive/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗃️archive/🟦️.ts",
+    "proposedSubpath": "./artifacts/archive",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️artifacts/🗃️archive/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "BoundedArchiveEntryV1",
+     "BoundedArchiveV1",
+     "decodeBoundedArchiveV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts",
+    "proposedSubpath": "./packages/typescript/providers",
+    "proposedGlueFile": "📦️packages/🟦️typescript/📦️packages/🟦️typescript/🔌️providers/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "SCRIPT_PROVIDERS_ENV",
+     "ScriptProviderTokenV1",
+     "loadScriptProviderV1",
+     "readScriptProviderMapV1",
+     "writeScriptProviderMapV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts",
+    "proposedSubpath": "./leases/retirement",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🔒️leases/♻️retirement/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "finishResourceLeaseCleanupV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🔒️namespace/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🔒️leases/📁️physical/🟦️.ts",
+    "proposedSubpath": "./leases/physical",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🔒️leases/📁️physical/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "acquirePhysicalFileLocksV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts",
+    "proposedSubpath": "./leases/testing/resource-leases",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+    "proposedSubpath": "./leases",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🔒️leases/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️environment/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+    "proposedSubpath": "./testing/invocation",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "BuildTestFixtureV1",
+     "registerBuildTestFixtureV1",
+     "registerBuildTestLawV1",
+     "registerIsolatedBuildTestV1",
+     "withBuildTestInvocationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/⏳️phase/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️borrowing/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️queued/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📥️required/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/📦️child/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🍎️physical.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🏦️funded/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️purpose/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🔒️bounded/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🎛️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🧪️tests/🎟️funding/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/📚️dependencies/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🧾️invocation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📋️plan/🧪️tests/🔗️binding/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📋️plan/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📤️receipt/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/📦️batch/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/📥️configuration/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🧪️tests/🧫️fixture/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🗄️catalog/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📂️files/🚧️staging/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/📤️publication/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/💾️cache/🧺️set/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🧺️batch/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/📖️read/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/♻️composition/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🕸️nodes/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️inputs/🔏️snapshot/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/♻️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧪️tests/📐️profile/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🧭️context/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📐️phases/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/📥️purpose/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/📥️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🗃️archive/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🎟️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🎭️roles/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🦀️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/📐️context/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/⚙️arguments/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/🦀️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/📥️reuse/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🧪️tests/📥️birth/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🎛️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🚪️admission/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📋️data/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📏️windows/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📋️contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📤️arguments/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️control/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️environment/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️framing/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📦️snapshot/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🔏️implementation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🕸️dependencies/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/💾️storage/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/🧩️assembly/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🏭️producer/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🦀️framework/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️candidate/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/🎟️phase/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/👁️watch/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🔁️replan/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🎛️control/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️production-cache-input-boundary/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/⚡️exhaustive-cache-inputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔌️adapter-invocation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "proposedSubpath": "./testing/cargo/exact/policy/schema.json",
+    "proposedGlueFile": "🧪️testing/🦀️cargo/🎯️exact/📋️policy/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🧪️tests/📥️invocation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json",
+    "proposedSubpath": "./testing/cargo/exact/testing/fixtures.json",
+    "proposedGlueFile": "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts",
+    "proposedSubpath": "./cargo-test",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "CargoTestPolicyV1",
+     "CargoTestRequestV1",
+     "cargoLintPlanV1",
+     "cargoTestCompilerArgumentsV1",
+     "runCargoLintV1",
+     "runCargoTestsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🧫️fixtures/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🧫️fixtures/🔣️.json",
+    "proposedSubpath": "./routing/workspace/testing/fixtures.json",
+    "proposedGlueFile": "🧭️routing/🏠️workspace/🧪️tests/🧫️fixtures/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️tests/🌱️workspace-resolution/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧬️schema/🔣️.json",
+    "proposedSubpath": "./routing/workspace/schema.json",
+    "proposedGlueFile": "🧭️routing/🏠️workspace/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️tests/🌱️workspace-resolution/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",
+    "proposedSubpath": "./routing/invocation/process/schema/cleanup.json",
+    "proposedGlueFile": "🧭️routing/📥️invocation/🏃️process/🧬️schema/🧹️cleanup.json",
+    "kind": "json",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🧬️schema/🔣️.json": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🧬️schema/🔣️.json",
+    "proposedSubpath": "./routing/invocation/process/lifetime/schema.json",
+    "proposedGlueFile": "🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🧬️schema/🔣️.json",
+    "kind": "json",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🧪️tests/🪢️borrowing/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts": {
+    "action": "new-entry",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts",
+    "proposedSubpath": "./routing/invocation/process/lifetime",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts",
+    "kind": "ts",
+    "symbols": [
+     "RetainedOperationLifetimeV1",
+     "requireRetainedOperationFrameV1",
+     "requireRetainedOperationLifetimeV1",
+     "withRetainedOperationV1",
+     "withRetainedOperationsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/💾️state/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts": {
+    "action": "extend-existing-glue",
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "proposedSubpath": "./routing/invocation/process",
+    "proposedGlueFile": "📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts",
+    "kind": "ts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🧪️tests/📐️layout/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧪️tests/📥️canonical/🟦️.ts"
+    ]
+   }
+  }
+ }
+}

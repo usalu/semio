@@ -178,7 +178,7 @@ export class RecordingBackboneOverflowReporter implements BackboneOverflowReport
  * entry (`🧵️shard-client.ts`), not a `📬️mailbox` subpath, so this file imports it by relative path —
  * the SAME "sidestep a missing subpath export rather than edit a foreign-leased config file" pattern
  * `ShellHost/🟦️.tsx` already documents for its own `🏪️store/👷️worker/🟦️.ts` import. */
-import { createBoundedMailbox, type Backpressure, type BoundedMailbox, type CoalesceKey, type Lane } from "../../../../../🔨️modules/🎭️actor/📬️mailbox/🟦️.ts";
+import { createBoundedMailbox, type Backpressure, type BoundedMailbox, type CoalesceKey, type Lane } from "@semio-tech/framework-actor/mailbox";
 export type { Backpressure, Lane };
 
 /** 🌉️ TypeScript twin of Rust `BackboneTransport` (`⚡️effects/🦀️.rs`) — a seam, not a real
@@ -469,8 +469,8 @@ export function decodeBackboneGuestMessage(message: BackboneGuestMessage): Event
  * does NOT give you (no lossless queueing across a hub drop — matches Rust's own `send` having no
  * queueing either; no dedicated inbound "send" vs "delta" distinction — `bridgeBackboneWorkerInbound`
  * below can only feed {@link EffectBackbone.fanoutDelta}, not {@link EffectBackbone.deliverMessage}). */
-import type { ArtifactActorConfig, ArtifactActorMsg, BackboneWorkerResponse, BackboneWorkerWireMessage, PersistenceBinding } from "../../../🟦️.ts";
-import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "../../../🟦️.ts";
+import type { ArtifactActorConfig, ArtifactActorMsg, BackboneWorkerResponse, BackboneWorkerWireMessage, PersistenceBinding } from "@semio-tech/framework-os";
+import { decodeBackboneWorkerResponse, encodeBackboneWorkerRequest } from "@semio-tech/framework-os";
 
 /** 🌉️ The slice of `Worker` this bridge depends on — lets tests (and any non-browser host) inject a
  * fake without a real `Worker`/`MessagePort`. A real browser `Worker` satisfies this structurally

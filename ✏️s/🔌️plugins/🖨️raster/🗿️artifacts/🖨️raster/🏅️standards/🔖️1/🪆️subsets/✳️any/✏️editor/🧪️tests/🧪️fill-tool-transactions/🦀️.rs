@@ -21,7 +21,7 @@ pub fn retire(snapshot: RasterSnapshot) {
 async fn history_edit(app: &mut RasterAppFixture, verb: &str, args: serde_json::Value) {
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(raster_view_state());
-    let result = app.handle_action(verb, Some(&semio_framework_value::DslValue::from(&args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::DslValue::from(&args)), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -35,7 +35,7 @@ async fn pump(app: &mut RasterAppFixture, done: impl Fn(Option<HistoryTimeTravel
         if done(time_travel(app).await.map(|status| status.stage)) {
             return;
         }
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel(app).await);

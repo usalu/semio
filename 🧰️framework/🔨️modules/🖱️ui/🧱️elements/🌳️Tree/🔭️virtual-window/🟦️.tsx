@@ -1,4 +1,4 @@
-import type { TreeWindowRowExtent } from "@semio-tech/framework";
+import type { TreeWindowRowExtent } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { domSizePx, uiSpacingPx, STYLING_METRICS } from "@semio-tech/ui-styling";
 import * as React from "react";
 

@@ -1,0 +1,116 @@
+{
+ "krc": [
+  "semio-framework-os-renderer-wgpu-kernel-protocol"
+ ],
+ "pbridge": [
+  "semio-framework-os-renderer-wgpu-program-bridge"
+ ],
+ "fpres": [
+  "semio-framework-os-renderer-wgpu-frame-presentation"
+ ],
+ "ink": [
+  "semio-framework-os-renderer-wgpu-scene-ink"
+ ],
+ "retui": [
+  "semio-framework-os-renderer-wgpu-ui-engine"
+ ],
+ "kpool": [
+  "semio-framework-os-renderer-wgpu-kernel-pool"
+ ],
+ "canv2d": [
+  "semio-framework-os-renderer-wgpu-scene-canvas2d"
+ ],
+ "glb": [
+  "semio-framework-os-renderer-wgpu-asset-decode"
+ ],
+ "abridge": [
+  "semio-framework-os-renderer-wgpu-agent-elements"
+ ],
+ "winit": [
+  "semio-framework-os-renderer-wgpu-host-winit"
+ ],
+ "dock": [
+  "semio-framework-os-renderer-wgpu-dock"
+ ],
+ "ngraph": [
+  "semio-framework-os-renderer-wgpu-engine-graph"
+ ],
+ "mbox": [
+  "semio-framework-os-renderer-wgpu-runtime-mailbox"
+ ],
+ "kbd": [
+  "semio-framework-os-renderer-wgpu-shell-pointer"
+ ],
+ "ptr": [
+  "semio-framework-os-renderer-wgpu-shell-pointer"
+ ],
+ "ted": [
+  "semio-framework-os-renderer-wgpu-engine-text"
+ ],
+ "shact": [
+  "semio-framework-os-renderer-wgpu-shell-actions"
+ ],
+ "cdisp": [
+  "semio-framework-os-renderer-wgpu-shell-actions"
+ ],
+ "sstate": [
+  "semio-framework-os-renderer-wgpu-scene-state"
+ ],
+ "esr": [
+  "semio-framework-os-renderer-wgpu-engine-registry"
+ ],
+ "intro": [
+  "semio-framework-os-renderer-wgpu-ui-engine-dump"
+ ],
+ "esa": [
+  "semio-framework-os-renderer-wgpu-engine-attach"
+ ],
+ "mlay": [
+  "semio-framework-ui-wgpu-mounted-layout"
+ ],
+ "paint": [
+  "semio-framework-ui-wgpu-paint"
+ ],
+ "flex": [
+  "semio-framework-ui-wgpu-layout"
+ ],
+ "ev": [
+  "semio-framework-ui-wgpu-events"
+ ],
+ "pstage": [
+  "semio-framework-ui-prepared-staging"
+ ],
+ "prep": [
+  "semio-framework-ui-prepared"
+ ],
+ "raster": [
+  "semio-framework-ui-wgpu-raster"
+ ],
+ "fact": [
+  "semio-framework-ui-wgpu-pipelines"
+ ],
+ "dexec": [
+  "semio-framework-ui-wgpu-draw-execution"
+ ],
+ "shad": [
+  "semio-framework-ui-render-prepared-shaders"
+ ],
+ "dtypes": [
+  "semio-framework-ui-draw-contract"
+ ],
+ "dexe2": [
+  "semio-framework-ui-wgpu-render"
+ ],
+ "surf": [
+  "semio-framework-ui-wgpu-engine-surface"
+ ],
+ "eng": [
+  "semio-framework-ui-wgpu-engine"
+ ],
+ "bimlib": [
+  "semio-s-artifact-bim-model-tests-2"
+ ],
+ "bimvalues": [
+  "semio-s-artifact-bim-model-schema"
+ ]
+}

@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-os-flow-wasm-domain = { path = "../../../🧩️domain-adapter/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-core = { path = "../../../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-framework-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/🦀️rust" }
 semio-framework-os-flow-drawing = { path = "../../../../🖍️drawing/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

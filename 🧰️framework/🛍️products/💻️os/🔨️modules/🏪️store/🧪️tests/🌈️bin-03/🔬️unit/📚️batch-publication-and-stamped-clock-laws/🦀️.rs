@@ -90,7 +90,7 @@ async fn artifact_store_batch_publication_stages_two_hundred_mutations_into_one_
     let mut oracle = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "batched-oracle", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
     oracle.install_document_store_owners_exact(demo_closable_store_owners()).unwrap_or_else(|(error,_)|panic!("funded complete test catalog install refused: {error}"));
     test_support::dispatch_test_command(&mut oracle, ArtifactCommand::Apply { mutations, transaction: None }).await.expect("the batched command oracle applies the same list");
-    let expected = oracle.envelope.vcs.edits.last().expect("oracle edit");
+    let expected = oracle.log.envelope.vcs.edits.last().expect("oracle edit");
     assert_eq!(staged.forwards, expected.forwards, "a staged gesture records the same forwards ArtifactCommand::Apply does");
     assert_eq!(staged.inverse, expected.inverse, "a staged gesture records the same inverse ordering ArtifactCommand::Apply does");
     assert_eq!(oracle.snapshot_ref().n, store.snapshot_ref().n);
@@ -172,7 +172,7 @@ async fn artifact_store_batch_fold_refuses_a_one_work_item_declaration_and_accep
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 8, vec![DemoMutation::SetN(SetN { n: 9 })], DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same item");
     assert_eq!(exact.snapshot_ref().n, Some(9));
-    let staged = exact.envelope.vcs.edits.last().expect("staged edit");
+    let staged = exact.log.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 0 }), 0).work_items, "the exact declaration is the rows the item actually folds");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
@@ -206,7 +206,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     assert_eq!(under.generation_now(), generation, "a refused commit publishes nothing");
     assert_eq!(under.snapshot_ref().n, Some(0));
     assert!(under.applied_edit_ids().is_empty());
-    assert!(under.envelope.vcs.edits.is_empty(), "a refused gesture consumes no ledger slot");
+    assert!(under.log.envelope.vcs.edits.is_empty(), "a refused gesture consumes no ledger slot");
     publication.begin_close();
     close_durable_publication(&mut publication);
     close_demo_artifact_store(&mut under);
@@ -216,7 +216,7 @@ async fn artifact_store_batch_commit_refuses_an_under_declared_multi_item_gestur
     let (mut publication, receipt) = publish_demo_batch_with(&mut exact, 10, mutations(), DemoOneItemPreparationFactory::admissible()).await;
     receipt.expect("the invertible declaration carries the same gesture");
     assert_eq!(exact.snapshot_ref().n, Some(ITEMS as i32));
-    let staged = exact.envelope.vcs.edits.last().expect("staged gesture edit");
+    let staged = exact.log.envelope.vcs.edits.last().expect("staged gesture edit");
     assert_eq!(staged.forwards.len(), ITEMS);
     assert_eq!(staged.inverse.len(), ITEMS);
     assert_eq!(staged.forwards.len() + staged.inverse.len(), ArtifactStoreOneItemFootprint::for_leaf(&DemoMutation::SetN(SetN { n: 0 }), 0).work_items * ITEMS, "the merged invertible declaration is exactly the rows the gesture folds");

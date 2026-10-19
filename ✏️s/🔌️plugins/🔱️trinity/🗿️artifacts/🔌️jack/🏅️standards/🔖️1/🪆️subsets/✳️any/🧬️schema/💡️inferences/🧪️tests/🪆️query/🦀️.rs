@@ -25,7 +25,7 @@ impl JackGraphQuery for FixtureGraph {
     fn displacement(&self, id: &str) -> Result<(f64, f64), ValueError> { self.edges.iter().find(|edge| edge.0 == id).map(|edge| (edge.3, edge.4)).ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue, "absent fixture edge")) }
 }
 
-fn fixture() -> Value { serde_json::from_str(include_str!("../🧫️fixtures/🪆️query/🔣️.json")).unwrap() }
+fn fixture() -> Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🪆️query/🔣️.json")).unwrap() }
 fn graph(case: &Value) -> FixtureGraph {
     let fixture = fixture();
     let identity = &fixture["identity"];
@@ -86,7 +86,7 @@ fn graph_query_refuses_duplicate_ids_endpoints_and_unretained_root() {
 
 #[test]
 fn rich_read_preserves_literal_components_and_presented_geometry() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/👁️rich-read/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/👁️rich-read/🔣️.json")).unwrap();
     for value in fixture["nodes"].as_array().unwrap(){
         let node=semio_s_artifact_trinity_jack_graph_query::JackContentNodeView{id:value["id"].as_str().unwrap(),kind:value["kind"].as_str().unwrap(),label:value["label"].as_str().unwrap(),x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap(),width:value["width"].as_f64().unwrap(),height:value["height"].as_f64().unwrap(),port_count:value["ports"].as_array().unwrap().len()};
         assert_eq!(node.presented_label(),value["expectedLabel"].as_str().unwrap());

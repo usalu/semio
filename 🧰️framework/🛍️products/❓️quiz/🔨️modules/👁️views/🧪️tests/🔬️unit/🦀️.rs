@@ -4,10 +4,10 @@
 
 use super::*;
 use crate::challenge::{points, HINTS_PER_TASK};
-use crate::lifecycle::tests::{catalog, command_start_at, fold, id, perfect, play_perfect, play_perfect_at, quizzes, registered, step, ALICE, BOB, REVISION, RUN};
+use semio_framework_quiz_tests_support::lifecycle::{catalog, command_start_at, fold, id, perfect, play_perfect, play_perfect_at, quizzes, registered, step, ALICE, BOB, REVISION, RUN};
 use crate::lifecycle::{decide_learner, empty_learner_state, LearnerContext};
 use crate::randomness::run_seed;
-use crate::sheet::tests::{matching, quiz, text};
+use semio_framework_quiz_tests_support::sheet::{matching, quiz, text};
 use quiz_schema::{Answer, ClassificationAnswer, Command, CompareHint, Event, Identity, ProfileHint, RunResult, SheetTask, SortingAnswer, TaskKind, Verdict, CHALLENGES, DEFAULT_LIMITS, LEADERBOARD_PERIODS};
 
 fn submitted_at(state: &mut LearnerState, run: &str, quiz: &str, challenge: Challenge, score: f64, at: Timestamp) {
@@ -394,7 +394,7 @@ fn leaderboard_rows_never_carry_the_learner_id_and_ties_break_by_the_hidden_id()
 
 #[test]
 fn shared_learner_and_run_views_of_the_python_reference_hold() {
-    use crate::lifecycle::tests::replay;
+    use semio_framework_quiz_tests_support::lifecycle::replay;
     use quiz_schema::testkit::{assert_close, entries, fixture, json, typed};
     let vectors = fixture("learner-lifecycle");
     let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();

@@ -24,7 +24,7 @@ use semio_framework_ui_layout::layout::UiPresence;
 use semio_framework_ui_scene_plane::{Board2dScene, TiledMapScene};
 use semio_framework_ui_scene_world3d::World3dScene;
 use semio_framework_ui_text::FontAtlas;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 include!("🗃️fixtures-and-retained-map-records/🦀️.rs");
 

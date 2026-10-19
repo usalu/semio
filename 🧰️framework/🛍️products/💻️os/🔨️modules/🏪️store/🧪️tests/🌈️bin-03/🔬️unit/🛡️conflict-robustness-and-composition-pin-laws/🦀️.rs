@@ -81,9 +81,9 @@ async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capaci
     let (delete, modify) = modify_vs_delete_envelopes().await;
     store.ingest_remote(delete).await.expect("the delete alone raises no message and always applies");
 
-    let cap = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::OPEN_CONFLICT_CAP;
+    let cap = semio_framework_os_store_engine::lifted_store::StoreLog::<DemoSnapshot, DemoMutation>::OPEN_CONFLICT_CAP;
     for seed in 0..cap as u64 {
-        store.0.envelope.conflicts.push(synthetic_open_conflict(seed).await);
+        store.0.log.envelope.conflicts.push(synthetic_open_conflict(seed).await);
     }
     assert_eq!(store.open_conflicts().count(), cap, "fixture must actually be at capacity for this test to be meaningful");
 
@@ -105,15 +105,15 @@ async fn ingest_remote_refuses_a_new_open_conflict_once_the_backlog_is_at_capaci
 #[semio_framework_async_macros::async_test]
 async fn resolved_conflicts_are_pruned_oldest_first_once_the_ledger_exceeds_its_cap_while_open_ones_survive() {
     let mut store = fresh_demo_store().await;
-    let cap = semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
+    let cap = semio_framework_os_store_engine::lifted_store::StoreOwners::<DemoSnapshot, DemoMutation>::RESOLVED_CONFLICT_CAP;
     let open = synthetic_open_conflict(u64::MAX).await;
-    store.0.envelope.conflicts.push(open.clone());
+    store.0.log.envelope.conflicts.push(open.clone());
     let overflow: u64 = 20;
     let resolved_count = cap as u64 + overflow;
     for seed in 0..resolved_count {
         let mut resolved = synthetic_open_conflict(seed).await;
         resolved.status = semio_framework_os_spr::ConflictStatus::Accepted;
-        store.0.envelope.conflicts.push(resolved);
+        store.0.log.envelope.conflicts.push(resolved);
     }
     assert_eq!(store.conflicts().len(), resolved_count as usize + 1);
 

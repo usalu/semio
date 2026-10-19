@@ -88,9 +88,10 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
 
     let authored = deck(vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("before")], position: Default::default() }]);
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PptxEditor>, _>(async { semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&authored, STDIO_PPTX_DOCUMENT_SCHEMA) else { panic!("PPTX fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let original = app.snapshot().unwrap().clone();
     assert_eq!(original, authored, "the host opens the authored canonical package");
     let meta = artifact_app_laws::meta("local");
@@ -98,22 +99,22 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
         semio_framework_value::DslValue::object([("page".into(), semio_framework_value::DslValue::float(0.0)), ("item".into(), semio_framework_value::DslValue::float(0.0)), ("revision".into(), semio_framework_value::DslValue::String(revision)), ("text".into(), semio_framework_value::DslValue::String(text.into()))])
     };
 
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(DocumentWindowKit::text_revision("before"), "after")), &meta, &mut identity).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(DocumentWindowKit::text_revision("before"), "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
     let expected = app.snapshot().unwrap().clone();
     assert_eq!(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::xml_address::pptx_slides(&expected).unwrap()[0].shapes[0].text.as_deref(), Some("after"));
 
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(DocumentWindowKit::text_revision("after"), "after")), &meta, &mut identity).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).unwrap();
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(DocumentWindowKit::text_revision("after"), "after")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), original, "an identical Apply must not add a history entry");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().unwrap(), expected);
 
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-page", Some(&arguments(DocumentWindowKit::text_revision("before"), "refused draft")), &meta, &mut identity).await).unwrap();
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err());
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-page", Some(arguments(DocumentWindowKit::text_revision("before"), "refused draft")), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap();
+    assert!(semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err());
     assert_eq!(app.snapshot().unwrap(), expected);
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", PptxEditor, || semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() }, "../..");

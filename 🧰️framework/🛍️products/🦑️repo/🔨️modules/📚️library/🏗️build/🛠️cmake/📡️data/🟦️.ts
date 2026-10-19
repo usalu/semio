@@ -1,6 +1,6 @@
 /** 📡️ Data: module exporting `cmakeIntentV1`, `cmakeEnvironmentV1`, `readCmakeCacheFactsV1`. */
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 import schema from"../🧬️schema/🔣️.json";
 /** 🧭️ Closes the authored CMake host, mode and compiler-versus-test taxonomy. */
 export function cmakeIntentV1(value:unknown){if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed CMake intent required");const row=value as{mode:"prototype"|"release";host:"linux"|"macos"|"windows";operation:"setup"|"configure"|"build"|"test"},mode=readBuildMode(row.mode);return Object.freeze({...row,mode,preset:row.host+"-"+mode,configuration:schema.definitions.Policy.const.configuration[mode],compiler:row.operation==="configure"||row.operation==="build"});}

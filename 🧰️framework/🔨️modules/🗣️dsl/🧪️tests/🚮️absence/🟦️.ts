@@ -1,7 +1,7 @@
 /** 🚮️ Executes the complete neutral reference route without any specialization source tree. */
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 import contract from "../🧫️fixtures/🚮️absence/🔣️.json";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -17,7 +17,7 @@ test("the actual canonical reference package command executes with products, S a
     for (const owner of contract.neutralRoots) {
       const target = resolve(workspace, owner);
       mkdirSync(resolve(target, ".."), {recursive: true});
-      cpSync(resolve(root, owner), target, {recursive: true, dereference: false, filter: (path) => { if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; }});
+      cpSync(resolve(root, owner), target, {recursive: true, dereference: false, filter: (path) => { if (basename(path) === "node_modules") return false; if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; }});
     }
     for (const absent of contract.absentRoots) expect(existsSync(resolve(workspace, absent)), absent).toBe(false);
     expect(existsSync(resolve(workspace, ".🧬semio"))).toBe(false);

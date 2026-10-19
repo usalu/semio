@@ -1,0 +1,3 @@
+/** 🛠️ SDK entry `@semio-tech/framework/ui/targets/react/build-tooling`: explicit public surface of the framework module that plugins build on. */
+export { defineOwnedBuildConfig, defineOwnedBuildConfigFactory, defineOwnedTestConfig, uiReactBuildPlugin, uiTailwindBuildPlugins } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
+export type { OwnedBuildConfig, OwnedBuildMiddleware, OwnedBuildOptions, OwnedBuildPlugin, OwnedBuildServer, OwnedTestProjectConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";

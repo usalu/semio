@@ -6,7 +6,8 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{resolve, Reason, Reference, EPS};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{marks_of, print, text_width, AnchorLayout, DimensionLayout, DimensionSegment, Inputs, Line, TextAnchor};
-use crate::standards::v1::subsets::any::schema::snapshot::{Dimension, ModelSnapshot, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Dimension, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 
 fn dot(a: (f64, f64), b: (f64, f64)) -> f64 {
     a.0 * b.0 + a.1 * b.1

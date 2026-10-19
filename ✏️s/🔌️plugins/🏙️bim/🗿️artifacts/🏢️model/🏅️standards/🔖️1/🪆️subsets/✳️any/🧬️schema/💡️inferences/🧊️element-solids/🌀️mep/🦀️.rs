@@ -5,7 +5,8 @@
 //! it continues, so the rectangle does not turn on a riser. The prism between two mitre planes has exactly `section area x centre-line length`, which is the closed form of the value of the element; a pipe is tessellated within the
 //! chord tolerance of the element solids like the circle of a family profile.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind, MepValue};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::TriMesh;
@@ -112,7 +113,7 @@ pub fn mep_solid(value: &MepValue) -> ElementSolid {
     if !value.buildable() {
         return builder.build();
     }
-    let at = |point: &crate::standards::v1::subsets::any::schema::snapshot::Point3| [point.x, point.y, point.z];
+    let at = |point: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3| [point.x, point.y, point.z];
     let directions: Vec<Xyz> = value.segments.iter().map(|segment| normalize3(sub3(at(&segment.to), at(&segment.from)))).collect();
     let frames = frames(&directions);
     let normals: Vec<Xyz> = (0..=directions.len())

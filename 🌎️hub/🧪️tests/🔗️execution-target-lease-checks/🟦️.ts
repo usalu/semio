@@ -7,10 +7,8 @@ import { join } from "node:path";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1, sameLeaseFieldsV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCargo, runCmd, orchestratorBudgetOpts, runProbe } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { documentOpenNeutralBrowserActor } from "../🗺️open-plan-checks/🟦️.ts";
 import { readHubBinSource, readTrustedCatalogSource } from "../../🧪️testing/📖️source-readers/🟦️.ts";
@@ -391,7 +389,7 @@ export async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise
 function proveExecutionTargetLeaseSource(repoRoot: string): void {
   const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const workerRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker");
-  const region = ["🪪️execution-lease", "🧊️cold-pair", "📥️execution-target-read", "🧩️actor-wire-helpers", "🧷️actor-reservation", "🎭️actor-lifecycle"].map((child) => readFileSync(join(workerRoot, child, "🟦️.ts"), "utf8")).join("\n");
+  const region = ["🪪️execution-lease", "🧊️cold-pair", "📥️execution-target-read", "🧩️actor-wire-helpers", "🧷️actor-reservation", "🎭️actor-lifecycle"].map((child) => readModuleTreeSource(join(workerRoot, child, "🟦️.ts"))).join("\n");
   if (region.length === 0) throw new Error("browser execution-target lease region is absent");
   for (const forbidden of ["loadPluginModule", "ActivationRegistry", "load_wasm_plugins", "attach_backbone"]) {
     if (region.includes(forbidden)) throw new Error(`browser execution-target lease region reached ${forbidden}`);

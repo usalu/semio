@@ -1,4 +1,4 @@
-import { BROWSER_ACTOR_CHILD_LIMITS } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS } from "@semio-tech/framework/browser-bundle/child/schema";
 
 type DescriptorCodec<Value> = Readonly<{ encode(value: Value): Uint8Array; decode(bytes: Uint8Array): Value }>;
 

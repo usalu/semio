@@ -188,8 +188,8 @@ pub mod editor {
             #[path = "../../../../../../../✏️editor/🗣️terminology/🧪️tests/🔬️unit/🦀️.rs"]
             pub mod tests;
         }
-        #[path = "../../../../../../../✏️editor/🧱️base/🦀️.rs"]
-        pub mod base;
+        #[path = "../../../../../../../✏️editor/🧱️editor-vocabulary/🦀️.rs"]
+        pub mod editor_vocabulary;
         #[path = "../../../../../../../✏️editor/🖥️host/🦀️.rs"]
         pub mod host;
         #[cfg(target_arch = "wasm32")]

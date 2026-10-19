@@ -21,8 +21,9 @@ impl ReconstructionRevalidateJob {
     }
 }
 
-impl InteractiveJob for ReconstructionRevalidateJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+impl ReconstructionRevalidateJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.closing || cx.is_cancelled() {
             return JobOutcomeBorrow::admit_cancelled(cx);
         }
@@ -78,6 +79,10 @@ impl InteractiveJob for ReconstructionRevalidateJob {
         }
         Ok(None)
     }
+}
+
+impl InteractiveJob for ReconstructionRevalidateJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         borrow_remodel_outcome(&self.outbox, descriptor)
@@ -87,18 +92,20 @@ impl InteractiveJob for ReconstructionRevalidateJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.closing = true;
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        }
-        if let Some(step) = close_outbox_turn(&mut self.outbox, grant) {
-            return step;
-        }
-        if self.head.take().is_some() || self.owed.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.closing = true;
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            if let Some(step) = close_outbox_turn(&mut self.outbox, grant)? {
+                return Ok(step);
+            }
+            if self.head.take().is_some() || self.owed.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

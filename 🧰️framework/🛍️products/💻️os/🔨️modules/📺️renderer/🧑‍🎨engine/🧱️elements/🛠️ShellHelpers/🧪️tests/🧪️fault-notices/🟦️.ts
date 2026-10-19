@@ -14,7 +14,7 @@ import { appFaultNoticeV1, historyInputDraftDispositionV1 } from "../../🛣️r
 import { syncShellLabelLocale } from "../../🏷️labels/🟦️.tsx";
 import { manifestFaultNoticesFixture as corpus } from "../../../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { diagnosticControlledSchema as faultSchema } from "../../../../../../../../../🔨️modules/⚠️diagnostic/🧪️tests/🧫️fixtures/🟦️.ts";
-import { valueRefusalSchema as valueSchema } from "../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueRefusalSchema as valueSchema } from "@semio-tech/value-rs/testing/fixtures";
 // #endregion 🔌️Adapters
 
 //#region 🧪️Laws

@@ -1,10 +1,9 @@
 /** 📜️ The history panel: windowed rows, entries, row actions and the inventory. */
 import { renderer, page } from "../🧠️state/🟦️.ts";
-import { mirror, chromeHits, mirrorActivate, mirrorFind } from "../🧊️wgpu-mirror/🟦️.ts";
-import { evalSafe, sleep, waitUntil } from "../📄️page/🟦️.ts";
-import { openTab, HISTORY_TAB, presentKey, markToken, byId, resolveDomId } from "../🧱️chrome/🟦️.ts";
+import { mirror, chromeHits, mirrorActivate, mirrorFind, mirrorFocus } from "../🧊️wgpu-mirror/🟦️.ts";
+import { evalSafe, markToken, sleep, waitUntil } from "../🔬️probe/🟦️.ts";
+import { openTab, HISTORY_TAB, presentKey, byId, resolveDomId } from "../🧱️chrome/🟦️.ts";
 import { note, log } from "../🧾️report/🟦️.ts";
-import { revealHistory } from "../🖊️editor/🟦️.ts";
 
 //#region 🔖️History
 
@@ -512,3 +511,29 @@ const reactHistoryInventory = () =>
     [] as Record<string, unknown>[],
   );
 //#endregion 🔖️History
+
+/** 🪜️ Scrolls the history body so the section (or row) `authored` names sits at the top of the panel — what a user does to
+ * reach it; the body is windowed, so rows below the viewport are not in the document until they scroll in. */
+export const revealHistory = async (authored: string) => {
+  if (renderer === "wgpu") {
+    let node = mirrorFind(await mirror(), authored);
+    if (!node && (await scrollHistory("end"))) {
+      await sleep(700);
+      node = mirrorFind(await mirror(), authored);
+    }
+    if (node) await mirrorFocus(node.key);
+    await sleep(node ? 500 : 0);
+    return Boolean(node);
+  }
+  const found = await evalSafe(
+    (target) => {
+      const el = Array.from(document.querySelectorAll("[id]")).find((node) => node.id === target || node.id.endsWith(`/${target}`) || node.id.endsWith(`␟${target}`)) as HTMLElement | undefined;
+      el?.scrollIntoView({ block: "start" });
+      return Boolean(el);
+    },
+    false,
+    authored,
+  );
+  await sleep(found ? 500 : 0);
+  return found;
+};

@@ -1,7 +1,7 @@
 import {admitRepositoryCompilerEnvironmentV1} from "./🌍️environment/🟦️.ts";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
 /** 🔐️ Enables the selected compiler only after rechecking an actually issued live enforcing reservation. */

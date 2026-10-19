@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::config::*;
-use crate::editor::forms::commands::{next_step, reset_try, set_try_value};
+use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, reset_try, set_try_value};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
 use crate::{forms_snapshot_with_state, FormStep, FORMS_DOCUMENT_SCHEMA};
 use semio_framework::kernel::Effect;
@@ -25,17 +25,18 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
         .name("forms-try-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_forms_try_window(async {
-            use crate::editor::forms::commands::{next_step, reset_try, set_contributions};
+            use crate::editor::forms::commands::set_contributions;
+            use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{next_step, reset_try};
             use crate::editor::forms::{create_forms_app, FormsCommand, FormsPlayApp};
             use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
-            async fn dispatch_try_window(app: &mut FormsApp, command: FormsCommand, view: &ViewModel) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, String> {
+            async fn dispatch_try_window(app: &mut FormsApp, command: FormsCommand, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("forms-try-window-ownership") };
-                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
             }
 
             fn continuation(receipt: &semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) -> Result<set_try_value::SetTryValueStep, String> {
@@ -63,7 +64,8 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             };
             let left = all.for_window_instance("forms-try-left").expect("left Forms Try window");
             let right = all.for_window_instance("forms-try-right").expect("right Forms Try window");
-            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+            let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+            let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(91).await;
             let outcome: Result<(), String> = async {
                 dispatch_try_window(
@@ -71,14 +73,12 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                     FormsCommand::SetSpecJson(crate::editor::forms::commands::set_spec_json::SetSpecJson {
                         json: semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&document()))),
                     }),
-                    &left,
-                )
+                    &left, scope.cx())
                 .await?;
                 dispatch_try_window(
                     &mut app,
                     FormsCommand::SetContributions(set_contributions::SetContributions { json: "[{\"pluginId\":\"host\",\"topicContribution\":{}}]".into() }),
-                    &left,
-                )
+                    &left, scope.cx())
                 .await?;
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 let app_config_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -86,8 +86,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 let advanced = dispatch_try_window(
                     &mut app,
                     FormsCommand::NextStep(next_step::NextStep { window_id: "forms-try-left".into(), window_kind_id: FormsTryWindowConfigOwner::WINDOW_KIND_ID.into() }),
-                    &left,
-                )
+                    &left, scope.cx())
                 .await?;
                 if advanced.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count() != 1 {
                     return Err("Forms NextStep did not publish one exact window config lane".into());
@@ -105,14 +104,14 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 }
 
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FormsPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(92).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
                 let restored = artifact_app_laws::capture_fixture_window_config::<FormsTryWindowConfigOwner, _, _>(&mut *reopened, &left)
                     .await
                     .map_err(|error| format!("{error:?}"))?;
                 if restored.as_ref() != Some(&left_config) { return Err("Forms exact Try config changed during reload".into()); }
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 
                 let left_start = dispatch_try_window(
                     &mut app,
@@ -123,8 +122,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                         window_kind_id: FormsTryWindowConfigOwner::WINDOW_KIND_ID.into(),
                         ..Default::default()
                     }),
-                    &left,
-                )
+                    &left, scope.cx())
                 .await?;
                 let right_start = dispatch_try_window(
                     &mut app,
@@ -135,8 +133,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                         window_kind_id: FormsTryWindowConfigOwner::WINDOW_KIND_ID.into(),
                         ..Default::default()
                     }),
-                    &right,
-                )
+                    &right, scope.cx())
                 .await?;
                 let left_step = continuation(&left_start)?;
                 let right_step = continuation(&right_start)?;
@@ -149,7 +146,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 {
                     return Err("Forms continuation leases lost their exact-window identity".into());
                 }
-                let left_commit = dispatch_try_window(&mut app, FormsCommand::SetTryValueStep(left_step), &left).await?;
+                let left_commit = dispatch_try_window(&mut app, FormsCommand::SetTryValueStep(left_step), &left, scope.cx()).await?;
                 if left_commit.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count() != 1 {
                     return Err("Forms left Try continuation did not publish one transient lane".into());
                 }
@@ -160,15 +157,14 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
                 let reset = dispatch_try_window(
                     &mut app,
                     FormsCommand::ResetTry(reset_try::ResetTry { window_id: "forms-try-left".into(), window_kind_id: FormsTryWindowConfigOwner::WINDOW_KIND_ID.into() }),
-                    &left,
-                )
+                    &left, scope.cx())
                 .await?;
                 let reset_config_lanes = reset.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count();
                 let reset_transient_lanes = reset.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count();
                 if (reset_config_lanes, reset_transient_lanes) != (1, 1) || !transient(&mut *app, &left)?.try_values.is_empty() || !transient(&mut *app, &right)?.try_values.is_empty() {
                     return Err("Forms reset did not clear only the exact left Try window".into());
                 }
-                dispatch_try_window(&mut app, FormsCommand::SetTryValueStep(right_step), &right).await?;
+                dispatch_try_window(&mut app, FormsCommand::SetTryValueStep(right_step), &right, scope.cx()).await?;
                 if !transient(&mut *app, &left)?.try_values.is_empty() || transient(&mut *app, &right)?.try_values.is_empty() {
                     return Err("Forms left reset cancelled or contaminated the right continuation".into());
                 }
@@ -185,7 +181,7 @@ fn forms_try_window_ownership_runtime_isolates_reload_reset_and_continuations() 
             }
             .await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Forms Try exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
             outcome.expect("Forms Try exact-window ownership runtime law");
         }))
         .expect("spawn Forms Try window ownership law")

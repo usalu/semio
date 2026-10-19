@@ -78,6 +78,7 @@ Let me walk you through 🚶️
      - [🪟️ Windows](#-windows-)
      - [🍎️ macOS](#-macos-)
      - [🐧️ Linux](#-linux-)
+   - [🔨️ Build](#-build-)
    - [🤖️ AI](#-ai-)
      - [🛠️ Uses-Cases](#-uses-cases-)
        - [⚖️ Decision Making](#-decision-making-)
@@ -734,6 +735,26 @@ Every `bun repo` call first publishes the declared bootstrap sources
 clone lacks but that Bun or the repository scripts need before a build tool can run anything — the UI axis projections every script
 imports through `@semio-tech/framework`, and the `@semio-tech/flow-core` workspace manifest `bun install` requires.
 
+## 🔨️ Build [↑](#-development)
+
+Every build, test and run goes through one tool-neutral entry, `bun repo`. Nx is the default backend and Bazel is selectable with `--tool=bazel` (or `SEMIO_BUILD_TOOL=bazel`, inherited by nested tasks); do not call `nx`, `cargo` or `rustc` directly. The full reference, including the recovery steps, lives in the [repo docs](🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run).
+
+```bash
+bun repo run <project>:<target>                 # one task, e.g. bun repo run workspace:setup
+bun repo run-many --targets=test --projects=<projects>
+bun repo show projects                          # the neutral build graph
+bun repo tools setup all                        # pinned Nx and Bazel for this host (part of workspace:setup)
+bun repo dependencies lock --all                # after editing a package.json
+bun repo dependencies sync --all                # install; node_modules is a symlink into the dependencies partition
+bun repo cargo --store=shared --configuration=prototype -- check -p <crate> --lib
+```
+
+- **Cargo** is only reachable through `bun repo cargo`: raw `cargo` and `rustc` are refused at the compiler ingress gate in `.cargo/config.toml`, and private target directories are not allowed.
+- **Caches** are fixed-capacity partitions `.cache/b/<d,t,g,o,p,l,n>` (dependencies, tools, graph, observations, products, leases, Nx). On macOS each one is a case-sensitive APFS disk image `fixed.dmg` mounted at `m`. If every `bun repo` call refuses at startup (pending publication, ambiguous image association), follow the [recovery steps](🧰️framework/🛍️products/🦑️repo/README.md#-recovery) instead of deleting files by hand.
+- **Launch (F5).** `.vscode/🧩️launch.seed.jsonc` is the only authored launch file. Edit it, then `bun repo run workspace:generate-launch`; `.vscode/launch.json` is generated and must not be edited.
+- **Go** code lives in member directories with one `🐹️.go` leaf (`📦️packages/🐹️go/<member>/🐹️.go`, tests in `🧪️tests/<case>/🐹️.go`); run it through the package `📜️script.ts` or `bun repo run <project>:test`, not plain `go test`.
+- **Zero-touch.** The build CLI boots from a fresh clone without `node_modules`, so its import closure uses relative imports only; check it with `bun repo --help` after touching the build library. Bootstrap works unchanged in the devcontainer and on native Windows, macOS and Linux.
+
 ## 🪄️ [AI](AGENTS.md) [↑](#-development-)
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖️
@@ -880,7 +901,7 @@ The default model for agent work is the one native to the platform we use for th
 All automation, CI runs, and agent workflows are controlled through the canonical root commands, which are dashboard commands: `workspace:setup`, `workspace:lint`, `workspace:format`, `workspace:test`, `workspace:build` and `workspace:publish`. Devs pick them in the dashboard (`bun run dashboard`, `Ctrl+B n`); agents and CI run `bun run dashboard run workspace:<target>` (the bootstrap itself is `bun run setup`). Playgrounds and servers (`playground:<variant>`, `os-hub:dev`, `workspace:dev-storybook`, the `tool:workspace/*` servers) stay live for watch mode, while the root commands exit so CI and agents can finish reliably. The local development hub that `playground:s` signs in through is the dashboard command `os-hub:local-hub-owner`: the daemon supervises it, it declares its ready address, and no root verb starts it behind the daemon's back.
 The repository framework owns the build graph, task selection, configuration, inputs, outputs, progress, and cancellation. All entry points use `bun repo`: `bun repo run <project>:<task>`, `bun repo run-many --targets=test --projects=<projects>`, and `bun repo graph`. The root `📋️project.json` and package manifests use the owned project schema and `repo:script` executor.
 
-Nx remains the default build tool in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`. Select Bazel explicitly with `bun repo --tool=bazel run <project>:<task>` or `SEMIO_BUILD_TOOL=bazel`; nested tasks inherit the selection. `bun repo tools setup all` provisions the pinned tools for the native host, and workspace setup includes this step. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.
+Nx remains the default build tool (`defaultTool` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`); see [Build](#-build-) for Bazel, tool provisioning, dependencies, cargo and cache recovery. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.
 Git hooks are not installed by this repo; run `workspace:lint`, `workspace:format` and `workspace:test` (`bun run dashboard run workspace:lint`, …) explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘️ Examples [↑](#-overview)

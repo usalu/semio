@@ -19,7 +19,8 @@ test("original UI close keeps both causes and one actual initiating context",()=
 
 test("actual worker close and frame consumers parse with mandatory original context",async()=>{
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out/tree-sitter-rust.wasm")));const rows=[
-  ["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",["close_layout_worker_session","close_surface_one"]],
+  ["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/🦀️.rs",["close_layout_worker_session"]],
+  ["🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",["close_surface_one"]],
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",["close_ui_document_one"]],
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",["render_chrome_step"]],
   ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",["frame_before_input_step"]]
@@ -34,19 +35,19 @@ expect(testingSchemaExists(new URL("./🧬️schema/🫴️receiving.json",impor
 
 test("mounted receiving uses original loans and explicit paid acknowledgement",async()=>{
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",process.cwd())),"out/tree-sitter-rust.wasm")));
- const root=resolve(import.meta.dir,"../.."),source=readFileSync(resolve(root,law.source),"utf8"),engine=readFileSync(resolve(root,law.engine),"utf8");
+ const root=resolve(import.meta.dir,"../.."),source=readModuleTreeSource(resolve(root,law.source)),engine=readModuleTreeSource(resolve(root,law.engine));
  try{const ast=parser.parse(source)!;const syntax:Parser.SyntaxNode[]=[];const errors=(node:Parser.SyntaxNode):void=>{if(node.type==="ERROR"||node.isMissing())syntax.push(node);for(const child of node.namedChildren)errors(child);};errors(ast.rootNode);expect(syntax.filter(node=>!(node.type==="ERROR"&&/^[13]$/.test(node.text)&&node.parent?.type==="tuple_pattern"&&node.parent.text.startsWith("(UiNode::")&&node.parent.text.endsWith(", "+node.text+"..)")))).toHaveLength(0);const steps:Parser.SyntaxNode[]=[];const visit=(node:Parser.SyntaxNode):void=>{if(node.type==="function_item"&&node.childForFieldName("name")?.text==="step")steps.push(node);for(const child of node.namedChildren)visit(child);};visit(ast.rootNode);expect(steps).toHaveLength(1);expect(steps[0]!.text).toContain("JobOutcomeBorrow");expect(source).not.toContain("StepOutcome");expect(source).not.toContain("RetainedJobPayload::empty");expect(source).toContain("RetainedPayloadBuilder");expect(source).toContain("fn borrow_outcome");expect(engine).toContain("acknowledge_checked_out_outcome");expect(engine).not.toContain("take_checked_out_outcome");ast.delete();}finally{parser.delete();}
 });
 
 
 test("mounted session birth borrows original authority and retains pending admission custody", () => {
-expect(testingSchemaExists(new URL("./🧬️schema/🚪️admission.json",import.meta.url))).toBe(false); const root=resolve(import.meta.dir,"../.."),engine=readFileSync(resolve(root,law.engine),"utf8");
+expect(testingSchemaExists(new URL("./🧬️schema/🚪️admission.json",import.meta.url))).toBe(false); const root=resolve(import.meta.dir,"../.."),engine=[law.engine,law.engineSurfaces].map(path=>readModuleTreeSource(resolve(root,path))).join("\n");
  expect(engine).toContain("MountedWorkerJobSession::try_admit_owned");
  expect(engine).not.toContain("MountedWorkerJobSession::try_new");
  expect(engine).toContain("generation: cx.generation()");
  expect(engine).toContain("layout_session_generation");
  expect(engine).toContain("LayoutWorkerAdmission");
  expect(engine).toContain("original_cancel_token()");expect(engine).toContain("window.layout_admission.failure=Some(error)");expect(engine).toContain("failure_close");expect(engine).not.toContain("std::mem::size_of::<semio_framework_job::BatchJobParams>() + std::mem::size_of::<semio_framework_async::CancelTokenRetirement>()");
- const quote=engine.match(/fn parameter_retirement_demands\([^)]*\)[^{]*\{([\s\S]*?)\n    \}/)![1]!;expect(quote).toContain("copy_bytes: 0");expect(quote).not.toContain("size_of");const body=engine.match(/struct LayoutWorkerAdmission \{([^}]+)\}/)![1]!;expect([...body.matchAll(/^\s*(\w+):/gm)].map(field=>field[1])).toEqual(law.admission.pendingFields);const close=engine.slice(engine.indexOf("impl LayoutWorkerAdmission {"),engine.indexOf("impl Drop for LayoutWorkerAdmission"));expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_async::CancelTokenRetirement>>");expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_value::ValueError>>");
+ const quote=engine.match(/fn parameter_retirement_demands\([^)]*\)[^{]*\{([\s\S]*?)\n    \}/)![1]!;expect(quote).toContain("copy_bytes: 0");expect(quote).not.toContain("size_of");const body=engine.match(/struct LayoutWorkerAdmission \{([^}]+)\}/)![1]!;expect([...body.matchAll(/^\s*(?:pub\s+)?(\w+):/gm)].map(field=>field[1])).toEqual(law.admission.pendingFields);const close=engine.slice(engine.indexOf("impl LayoutWorkerAdmission {"),engine.indexOf("impl Drop for LayoutWorkerAdmission"));expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_async::CancelTokenRetirement>>");expect(close).not.toContain("std::mem::size_of::<Option<semio_framework_value::ValueError>>");
  for(const marker of ["pub fn close_surface_one","pub fn step_layouts"]){const at=engine.indexOf(marker),body=engine.slice(at,engine.indexOf("let next = match phase",at)>at?engine.indexOf("let next = match phase",at):engine.indexOf("let Some(root)",at));expect(body).toContain("layout_admission.close_step");expect(body).toContain("!window.layout_admission.terminal_is_empty()");expect(body.indexOf("layout_admission.close_step")).toBeLessThan(body.indexOf("layout_retirement_refusal = None"));}
 });

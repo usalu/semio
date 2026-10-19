@@ -1,10 +1,10 @@
 //! 🔗️ `delete-curtain-wall` / `follows-by-inference`: the deletion is one structural `curtain_walls/<id>` region and the `wall-layout`
 //! of every wall is untouched.
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
-use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::decode;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_mut_any_83::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::decode;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::{DiffRegions, Mutation};
 use semio_framework_test_fixtures::fixture_text;
 

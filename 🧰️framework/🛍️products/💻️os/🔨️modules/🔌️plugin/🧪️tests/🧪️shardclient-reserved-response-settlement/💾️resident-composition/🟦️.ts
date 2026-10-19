@@ -1,7 +1,7 @@
 /** 💾️ The shard resident composition registration tests. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
-import { loadActorCompositionFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
+import { loadActorCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { FakeShardWorker, flushAdmission, spyGetter } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { OwnedResidentAdmission, OwnedResidentLedger, OwnedResidentRecord, ResidentStep, ShardClient, ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 

@@ -40,9 +40,9 @@ fn close(publication: &mut Publication) {
             return;
         }
         let grant = self_funded(publication.retirement_demands().expect("a locally owned publication quotes its close demand"));
-        let step = publication.close_step(grant);
+        let step = publication.close_step(grant).expect("a locally owned publication close is never refused");
         assert!(step.progress().fits(grant), "a publication close receipt fits its own quoted grant");
-        assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }));
+        assert!(!matches!(step, InteractiveJobCloseStep::Blocked));
     }
     panic!("fixture publication retained an owner after bounded close");
 }
@@ -125,7 +125,7 @@ fn retained_publication_cancellation_closes_finished_and_partial_streams_increme
         let _ = poll_once(&mut publication, 1, &mut sequence);
     }
     assert!(!publication.terminal_is_empty(), "a started publication retains owners");
-    let zero = publication.close_step(RetainedCloneGrant::default());
+    let zero = publication.close_step(RetainedCloneGrant::default()).expect("a zero grant is a pending close");
     let mut within_budget = true;
     let source_capacity = publication.primary.capacity().max(publication.secondary.capacity());
     for _ in 0..POLL_BOUND {
@@ -133,7 +133,7 @@ fn retained_publication_cancellation_closes_finished_and_partial_streams_increme
             break;
         }
         let grant = self_funded(publication.retirement_demands().expect("a locally owned publication quotes its close demand"));
-        if let InteractiveJobCloseStep::Pending { progress } = publication.close_step(grant) {
+        if let Ok(InteractiveJobCloseStep::Pending { progress }) = publication.close_step(grant) {
             within_budget &= progress.copied_items <= 1 && progress.released_bytes <= JOB_PAYLOAD_PAGE_BYTES.max(source_capacity);
         }
     }

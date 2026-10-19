@@ -4,11 +4,12 @@
 #![cfg(test)]
 
 pub use semio_framework_os_directory::*;
+pub use semio_framework_os_directory_client as client;
 
 #[path = "../../🧬️schema/🧪️tests/🔬️unit"]
 pub mod schema {
     pub use semio_framework_os_directory::schema::*;
-    use semio_framework_value_derive::ToValue;
+    use semio_framework_value_derive::{FromValue, ToValue};
 
     #[path = "🦀️.rs"]
     mod tests;

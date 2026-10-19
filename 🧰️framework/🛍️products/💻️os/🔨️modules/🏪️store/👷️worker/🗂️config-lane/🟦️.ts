@@ -4,9 +4,7 @@ import type { DocumentServiceWorkerHostV1, DocumentServiceDriverContextV1 } from
 import type { InstalledServiceDriverV1 } from "@semio-tech/framework/inference/service";
 import { documentRuntimeKeyV1 } from "../../../../🟦️";
 import { documentServiceRequestV1, admitDocumentServiceResponseV1 } from "@semio-tech/framework/inference/service/io";
-import { type ArtifactState, artifactScope, artifactState, documentServices, post } from "../🧾️document-state/🟦️.ts";
-import type { DocumentBrowserActorReservation } from "../🧷️actor-reservation/🟦️.ts";
-import type { VerifiedColdDocumentPair } from "../🧊️cold-pair/🟦️.ts";
+import { artifactScope, artifactState, documentServices, post } from "../🧾️document-state/🟦️.ts";
 import { bytesHex, captureBrowserSessionOperationFence, directorySessionEpoch, hubSessionFetch, sameBrowserSessionOperationFence } from "../🔐️hub-session/🟦️.ts";
 import { SOCKET_GRANT_REQUEST_TIMEOUT_MS } from "../⚙️constants/🟦️.ts";
 
@@ -45,9 +43,6 @@ export function foldOpeningPreferencesEvent(base: OpeningPreferences, event: Art
 }
 
 //#endregion 🔖️ConfigLane
-
-/** 🪪 Narrow authority port available to installed owner service contributions. */
-export type DocumentServiceWorkerContextV1 = Readonly<{ state: ArtifactState; reservation?: DocumentBrowserActorReservation; pair?: VerifiedColdDocumentPair }>;
 
 /** 🔌 Deployment composition installs executable owners; verified document declarations grant routes. */
 function activateDocumentServiceWorkerV1(owner: string, serviceId: string, factory: (host: DocumentServiceWorkerHostV1) => InstalledServiceDriverV1<DocumentServiceDriverContextV1>): () => void {

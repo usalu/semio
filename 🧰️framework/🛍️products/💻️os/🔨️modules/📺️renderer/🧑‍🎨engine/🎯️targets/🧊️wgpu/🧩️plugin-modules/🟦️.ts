@@ -1,9 +1,9 @@
-import { fetchPackageDescriptor, type PluginPackageDescriptor } from "../../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
-import { resolvePluginLoadOrder } from "../../../../../../../../🔨️modules/🎠️kernel/🕸️plugin-graph/🟦️.ts";
-import { type PluginCatalog, type PluginCatalogTarget } from "../../../../../../../../🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts";
-import { type PluginDependency } from "../../../../../../../../🔨️modules/🎠️kernel/🗂️plugin-registry/🟦️.ts";
-import { type PlaygroundBoot } from "../../../../../../../../🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts";
-import { type PackageReceiptSource } from "../../../../../../../../🔨️modules/🎠️kernel/📇️descriptor/📦️package/🟦️.ts";
+import { fetchPackageDescriptor, type PluginPackageDescriptor } from "@semio-tech/framework-kernel/descriptor-admission";
+import { resolvePluginLoadOrder } from "@semio-tech/framework-kernel/plugin-graph";
+import { type PluginCatalog, type PluginCatalogTarget } from "@semio-tech/framework-kernel/plugin-catalog";
+import { type PluginDependency } from "@semio-tech/framework-kernel/plugin-registry";
+import { type PlaygroundBoot } from "@semio-tech/framework-kernel/playground-boot";
+import { type PackageReceiptSource } from "@semio-tech/framework-kernel/descriptor/package";
 import schema from "../../../🧬️schema/🧩️plugin-modules/🔣️.json";
 
 export { admitWgpuPluginModules, type WgpuPluginModule } from "./🛂️admission/🟦️.ts";

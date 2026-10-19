@@ -1,6 +1,6 @@
-//! 🥣️ Companion tests of the quiz product: sheet assembly, validation, scoring, badges, the learner lifecycle, the read models and the challenge rules.
+//! 🥣️ Companion tests of the quiz product: sheet assembly, validation, scoring, badges and the challenge rules.
 //!
-//! 🧭️ Each module's unit file is mounted below a wrapper module of the same name, so the laws that share fixtures through `crate::sheet::tests` and `crate::lifecycle::tests` keep their paths.
+//! 🧭️ Each module's unit file is mounted below a wrapper module of the same name; the fixtures shared with the run laws live in `semio-framework-quiz-tests-support`.
 #![cfg(test)]
 
 pub use quiz::*;
@@ -19,9 +19,3 @@ pub mod scoring;
 
 #[path = "🏅️badges/🦀️.rs"]
 pub mod badges;
-
-#[path = "🧾️lifecycle/🦀️.rs"]
-pub mod lifecycle;
-
-#[path = "👁️views/🦀️.rs"]
-pub mod views;

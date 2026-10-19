@@ -1,6 +1,7 @@
 //! 🏚️ `delete-building` payload. Removes a building together with its storeys, grid lines and everything on them (walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces, openings) and their properties and classifications; refuses while a surviving element still constrains its top to a removed storey.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,7 +13,7 @@ pub struct DeleteBuilding {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteBuilding
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteBuilding> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteBuilding> + semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "building", kind: "delete-building", record: "DeleteBuilding" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

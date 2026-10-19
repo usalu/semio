@@ -1,15 +1,16 @@
 //! 🧬️ The non-geometric data of an IFC file: materials with their physical properties, layered and profiled types, window and door styles, user property sets and classifications.
 //! Parameters IFC has no slot for are read from the `Semio_Authoring` set that the export writes.
 
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, refs, text, Doc};
-use crate::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
-use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, refs, text, Doc};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{number_of, single_values, string_of};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
-use crate::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
-use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
-use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyTemplate, BeamType, CeilingType, ClassificationSystem, ColumnType, DoorType, Material, RoofType, SlabType, WallType, WindowType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, PropertyKind, TemplateTarget, ClassificationItem, DoorLeaves, Layer, LayerFunction, MaterialCategory, Profile, PropertyValue, Rgb, Swing};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
@@ -254,7 +255,7 @@ pub fn read_attached(i: &mut Import<'_>) {
         for definition in i.doc.index.definitions.get(&ifc).into_iter().flatten() {
             let Some(set) = i.doc.args(*definition, "IFCPROPERTYSET") else { continue };
             let name = text(set, 2);
-            if name == "Semio_Authoring" || name == crate::standards::v1::subsets::any::io::import::ifc::zoning::COVERING_SET || name == PARENTS_SET || name == crate::standards::v1::subsets::any::io::import::ifc::components::OVERRIDES_SET || WALL_DEPTH_SETS.contains(&name.as_str()) {
+            if name == "Semio_Authoring" || name == crate::standards::v1::subsets::any::io::import::ifc::zoning::COVERING_SET || name == PARENTS_SET || name == semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components::OVERRIDES_SET || WALL_DEPTH_SETS.contains(&name.as_str()) {
                 continue;
             }
             let mut rows = user_rows(&i.doc, set);

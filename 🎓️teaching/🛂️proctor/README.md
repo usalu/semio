@@ -2,7 +2,7 @@
 
 The proctor is the server of the teaching quizzes. It records who learns, deals every run its randomized sheet, takes
 the answers, scores whole runs, awards badges and keeps the leaderboard. It is one native binary, `proctor` (crate
-`teaching-proctor`, nx `@teaching/proctor`). Its only state is one SQLite file.
+`teaching-proctor`, project `@teaching/proctor`). Its only state is one SQLite file.
 
 The proctor is **API only**. The quiz site is a static build on a CDN of its own origin
 (`https://quizze.architektur-und-technologie.de`) and calls the proctor cross-origin at

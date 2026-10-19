@@ -7,7 +7,8 @@
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{sources, AuthoredView, Reader};
 use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleRow, ScheduleTable};
-use crate::standards::v1::subsets::any::schema::snapshot::{Schedule, ScheduleKey, ScheduleOp};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Schedule;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ScheduleKey, ScheduleOp};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 

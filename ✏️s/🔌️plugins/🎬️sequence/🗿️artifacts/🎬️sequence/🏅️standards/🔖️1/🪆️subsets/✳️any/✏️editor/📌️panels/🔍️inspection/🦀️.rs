@@ -1,7 +1,7 @@
 //! 🔍️ Sequence play app panel — inspection: the selected step's kind and params.
 
 use crate::editor::sequence::terminology::SequenceLabels;
-use crate::editor::sequence::base::ui_label;
+use crate::editor::sequence::editor_vocabulary::ui_label;
 use crate::{SequenceHostSnapshot, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::BuiltNode;

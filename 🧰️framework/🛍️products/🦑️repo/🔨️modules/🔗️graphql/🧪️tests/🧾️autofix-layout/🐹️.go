@@ -12,13 +12,12 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestFixHeaderWithShebang(t *testing.T) {
 	tmpDir := t.TempDir()
-	originalRootDir := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(originalRootDir)
+	sandbox.BindRoot(t, tmpDir)
 
 	filePath := "script.py"
 	absPath := filepath.Join(tmpDir, filePath)
@@ -86,9 +85,7 @@ func TestFixHeaderWithShebang(t *testing.T) {
 
 func TestFolderPolicyEmptyFolderAutofix(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	emptyDir := filepath.Join(tmpDir, "remove", "me")
 	os.MkdirAll(emptyDir, 0755)
 	breachs := []model.Breach{{
@@ -111,9 +108,7 @@ func TestFolderPolicyEmptyFolderAutofix(t *testing.T) {
 func TestSectionNewlineAfterRegion(t *testing.T) {
 	t.Run("detect_blank_line_after_region_typescript", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -138,9 +133,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("detect_blank_line_after_region_go", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n// [💻️test.go](repo://file/test.go)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Package\n\n// [🔖️test.go#Package](repo://section/test.go/Package)\n// Package declaration.\n\npackage main\n\n// #endregion 🔖️Package\n"
 		testFile := "test.go"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -165,9 +158,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("detect_blank_line_after_region_python", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "# region Header\n# [💻️test.py](repo://file/test.py)\n# 2025 Test <t@t.com>\n# AGPL\n# endregion Header\n\n# region Functions\n\n# [🔖️test.py#Functions](repo://section/test.py/Functions)\n# Utility functions.\n\ndef add(a, b):\n    return a + b\n\n# endregion Functions\n"
 		testFile := "test.py"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -192,9 +183,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("detect_blank_line_after_region_csharp", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "#region 🔖️Header\n// [💻️test.cs](repo://file/test.cs)\n// 2025 Test <t@t.com>\n// AGPL\n#endregion 🔖️Header\n\n#region 🔖️Classes\n\n// [🔖️test.cs#Classes](repo://section/test.cs/Classes)\n// Domain classes.\n\npublic class Foo {}\n\n#endregion 🔖️Classes\n"
 		testFile := "test.cs"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -219,9 +208,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("detect_blank_line_after_region_rust", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\npub mod structs { // 🔖️Structs\n\n// Struct definitions.\n\nstruct Foo {}\n\n} // 🔖️Structs\n"
 		testFile := "test.rs"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -246,9 +233,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("no_false_positive_without_blank_line", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -271,9 +256,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("autofix_removes_blank_line_after_region", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		expected := "// #region 🔖️Header\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		testFile := "test.ts"
@@ -299,9 +282,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("autofix_removes_blank_line_after_header_region", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		expected := "// #region 🔖️Header\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// [🔖️test.ts#Functions](repo://section/test.ts/Functions)\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
 		testFile := "test.ts"
@@ -327,9 +308,7 @@ func TestSectionNewlineAfterRegion(t *testing.T) {
 
 	t.Run("detect_blank_line_after_header_region", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		content := "// #region 🔖️Header\n\n// [💻️test.ts](repo://file/test.ts)\n// 2025 Test <t@t.com>\n// AGPL\n// #endregion 🔖️Header\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)

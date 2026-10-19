@@ -2,9 +2,10 @@
 //! references), and the authored reveal of an opening. Pure reads of the authored snapshot: no inference runs inside a diff, so the check of a loop walks the references of the records, never an inferred surface.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{material_flaw, profile_flaw, Flaw, EPS};
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
-use crate::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, WallSweep};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::OutcomeCode;
 
 fn invariant(path: &[&str], message: &str) -> Option<Flaw> {

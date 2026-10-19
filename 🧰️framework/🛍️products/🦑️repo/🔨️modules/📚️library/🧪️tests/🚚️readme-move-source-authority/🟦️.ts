@@ -1,4 +1,5 @@
 import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
+import { requireTaxonomyValue } from "../../🧹️normalization/📜️plan-contracts/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -102,7 +103,7 @@ function implementation(compiler: typeof compilers[number], adapters: Record<str
   const siblings = (blocks[0]!.parent as ts.Block).statements, offset = siblings.indexOf(blocks[0]!);
   const guard = siblings.slice(offset, offset + 3).map((node) => node.getText(tree)).join("\n");
   if (!guard.includes("const mismatch") || !guard.includes("cannot be rederived exactly")) throw new Error("Preflight comparison source boundary drifted");
-  const environment = { createHash, posix, ...adapters };
+  const environment = { createHash, posix, requireTaxonomyValue, ...adapters };
   const code = constants.map((node) => node.getText(tree)).join("\n") + "\n" + selected.join("\n") + "\nfunction exactPreflight(plan, authorityPlan) {\n" + guard + "\n}\n";
   return new Function(...Object.keys(environment), compiler.compile(code) + "\nreturn { parse: parseTaxonomyPlan, canonical: canonicalJson, digest: taxonomyPlanDigest, preflight: exactPreflight, inputAuthority: resumeGeneratorInputAuthority, physicalPath: resumeGeneratorInputPhysicalPath, inputRecord: resumeGeneratorInputRecord, forwardInputs: typeof validateForwardMoveSourceInputs === 'function' ? validateForwardMoveSourceInputs : null, moveInputError: typeof TaxonomyMoveSourceInputDriftError === 'function' ? TaxonomyMoveSourceInputDriftError : null };")(...Object.values(environment));
 }

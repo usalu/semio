@@ -1,8 +1,8 @@
 //! 🏷️ The words of the family window in a locale: the name of a category, of a parameter kind, of a solid shape and of an axis, and the text of an evaluated parameter value.
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind, SolidAxis};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind, SolidAxis};
 
 /// 🏷️ The name of a family category.
 pub fn category_label(labels: &BimLabels, category: FamilyCategory) -> String {

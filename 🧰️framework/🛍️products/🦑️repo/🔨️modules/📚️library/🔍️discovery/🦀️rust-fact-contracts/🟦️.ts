@@ -1,4 +1,4 @@
-import { type RustStructuralVisibility } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { type RustStructuralVisibility } from "@semio-tech/compiler-syntax-rust-ts";
 
 export type RustStructuralFieldStyle = "unit" | "tuple" | "struct";
 

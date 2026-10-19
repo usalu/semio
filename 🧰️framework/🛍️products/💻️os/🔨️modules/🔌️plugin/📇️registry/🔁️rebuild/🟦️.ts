@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { BundleScript, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 import rebuildSchema from "./🧬️schema/🔣️.json";
 
 /** 🧱️ Dependency order shared by general and deployment-owned contributions. */

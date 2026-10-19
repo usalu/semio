@@ -2,16 +2,16 @@
 //! opening moves back onto the original wall at its base offset (`move-opening` re-hosts with the fit and overlap validation), and the
 //! created wall, which hosts nothing by then, is deleted last.
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall;
-use crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::split;
+use semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall;
+use semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
+use semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::split;
 use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SplitWall, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall> + From<crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening> + From<crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis>,
+    Op: From<semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall> + From<semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening> + From<semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis>,
 {
     let Some(wall) = base.walls.get(&payload.id) else {
         return Vec::new();

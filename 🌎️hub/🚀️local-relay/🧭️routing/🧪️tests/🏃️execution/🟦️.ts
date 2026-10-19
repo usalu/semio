@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { BundleScript } from "@semio-tech/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 
 /** 🧭️ Runs the local relay's admission set — the exact path space a browser may reach the Hub
  * through — via the shared owned-process boundary. */

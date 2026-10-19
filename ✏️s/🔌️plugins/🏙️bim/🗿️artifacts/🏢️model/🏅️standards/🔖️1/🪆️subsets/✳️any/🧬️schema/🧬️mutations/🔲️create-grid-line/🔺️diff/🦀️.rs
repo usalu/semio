@@ -1,14 +1,15 @@
 //! 🔺️ Diff constructor for `CreateGridLine`: one created grid line entry. The id must be free and the building must exist; the
 //! label is non-blank and unique within the building, the line has finite end points and a length.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_grid_line::CreateGridLine;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateGridLine, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let line = &payload.grid_line;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.buildings.contains_key(&line.building) {

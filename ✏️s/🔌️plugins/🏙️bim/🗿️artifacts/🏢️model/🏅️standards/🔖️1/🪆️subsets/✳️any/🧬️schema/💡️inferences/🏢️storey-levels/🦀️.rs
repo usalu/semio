@@ -6,8 +6,9 @@
 //! the absolute pair adds the site and building elevations. This module is the pure arithmetic (`resolve`, `top_of`, `vertical_of`);
 //! the `Storey` nodes of the model graph (`model-graph`) call it, and so does every consumer that needs a vertical extent.
 
-use crate::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

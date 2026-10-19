@@ -1,11 +1,10 @@
 import{types}from"node:util";
 import{createHash}from"node:crypto";
-import{compileJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{requireRustUnitPlanV1}from"../../../📋️plan/🟦️.ts";
+import{ requireRustUnitPlanV1, type RustUnitPlanV1 }from"../../../📋️plan/🟦️.ts";
 import{requireCapturedRustUnitReceiptV1,captureRustUnitReceiptV1,readRustUnitReceiptV1,type RustUnitReceiptV1}from"../../../📤️receipt/🟦️.ts";
-import type{RustUnitPlanV1}from"../../../🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const policy=Object.freeze({...structuredClone(schema).definitions.Policy.const}),contract=compileJsonSchemaSubset(schema.definitions.Artifact,schema);
 declare const dependencyBrand:unique symbol;

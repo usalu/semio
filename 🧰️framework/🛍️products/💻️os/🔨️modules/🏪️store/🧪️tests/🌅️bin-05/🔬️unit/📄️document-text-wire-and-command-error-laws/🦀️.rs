@@ -178,7 +178,7 @@ async fn document_codecs_share_complete_authoritative_history_validation() {
     let pack = print_document_pack(store.envelope()).await.expect("binary fixture");
     let mut history = semio_framework_os_spr::decode_history(&pack.spr, &semio_framework_os_spr::DecodeOptions::default()).await.expect("decode history");
     history.transitions.push(history.transitions.first().expect("one persisted commit transition").clone());
-    let malformed_spr = semio_framework_os_spr::encode_history(&history, &semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() }).await.expect("encode malformed history");
+    let malformed_spr = semio_framework_os_spr::encode_history(&history, &semio_framework_os_spr::EncodeOptions { write_backwards_section: true, ..semio_framework_os_spr::EncodeOptions::default() }).await.expect("encode malformed history");
     assert!(matches!(parse_document_spr::<DemoSnapshot, DemoMutation>(&pack.pack, &malformed_spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await, Err(error) if error.message.contains("repeats transition")));
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));

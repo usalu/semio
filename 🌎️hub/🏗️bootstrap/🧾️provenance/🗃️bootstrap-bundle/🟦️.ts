@@ -1,7 +1,7 @@
 /** 🧭️ Trusted bootstrap bundle types, codec capture, generation receipts, plugin module records and package selection.
  * @see ../../../📦️packages/🦀️rust/📜️script.ts
  */
-import { type CompilerAdmissionControl } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
 import { type FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
 import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { createHash } from "node:crypto";
@@ -12,19 +12,19 @@ import { blake3Hex } from "@semio-tech/framework/hash";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, type DocumentExecutionProtocolV1 } from "@semio-tech/framework/directory/schema";
-import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1, type ComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { ensureGuestSlimTypstFontsAt } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts";
-import { ensurePreview2ShimVendorAt } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
-import { hostShimSource } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
-import { PLUGIN_HOST_SHIM_FILE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
-import { PREVIEW2_VENDOR_RELATIVE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import { pluginComponentBridgeSource } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
-import { transpilePluginComponentAsync } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
-import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/source-epoch";
+import { COMPONENT_RECEIPT_FILE, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1, type ComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { ensureGuestSlimTypstFontsAt } from "@semio-tech/framework-plugin/browser-bundle/materialization/guestslim-fonts";
+import { ensurePreview2ShimVendorAt } from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
+import { hostShimSource } from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
+import { PLUGIN_HOST_SHIM_FILE } from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
+import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
+import { pluginComponentBridgeSource } from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
+import { transpilePluginComponentAsync } from "@semio-tech/framework-plugin/browser-bundle/materialization";
+import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
+import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA } from "@semio-tech/plugin-registry/deployment/schema";
 import { utf8OrderV1, type TrustedPluginModuleBundleV1 } from "@semio-tech/framework/plugin-module";
-import { readStableBuildFile } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
+import { readStableBuildFile } from "@semio-tech/repo-lib/build";
 import { type LocalHubHostV1, withLocalHubHostTaskV1 } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { documentOpenNeutralObject, trustedBootstrapBrowserActorV1, type TrustedBootstrapBrowserActorV1, type TrustedBootstrapCodec, trustedBootstrapCodecOrder, trustedBootstrapDependencies, trustedBootstrapDependencyEncoding, trustedBootstrapDescriptorClaims, trustedBootstrapExecutionProtocol, trustedBootstrapIdentity, type TrustedBootstrapIdentityV1, type TrustedBootstrapOpenTargetV1, trustedBootstrapPluginModuleBlobPath, trustedBootstrapPluginModuleManifestPath, trustedBootstrapPluginModuleRecordV1, type TrustedBootstrapPluginModuleRecordV1, trustedBootstrapResolveDependencies } from "../🧮️bootstrap-claims/🟦️.ts";
 import { trustedBootstrapReadRegular } from "../🧭️bootstrap-selection/🟦️.ts";

@@ -8,6 +8,7 @@ import { AmbientLight, BufferGeometry, DirectionalLight, Float32BufferAttribute,
 import { SVGRenderer } from "three/examples/jsm/renderers/SVGRenderer.js";
 import { describe, expect, it } from "vitest";
 import { iconSvgLightingFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -50,7 +51,7 @@ describe("🎨️ Icon SVG face lighting", () => {
 
   it("renders the actual production SVG profile through Chromium WebGPU", async () => {
     const shaderPath = resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
-    const shader = readFileSync(shaderPath, "utf8").match(/pub const WORLD3D_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
+    const shader = readModuleTreeSource(shaderPath).match(/pub const WORLD3D_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
     const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
     try {
       const page = await browser.newPage();

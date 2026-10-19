@@ -1,4 +1,4 @@
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW, FLOW_PLAY_WINDOW_GENERATIONS};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW, FLOW_PLAY_WINDOW_GENERATIONS};
 #[allow(unused_imports)]
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
 #[allow(unused_imports)]

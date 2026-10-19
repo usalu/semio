@@ -115,26 +115,42 @@ pub fn meta(actor: &str) -> ActionMeta {
 /// mounted live app instance"), which is what the host would do to a command for a dead window.
 /// Every caller must therefore settle each dispatch ([`settle`]) and [`close`] the app before it
 /// drops, exactly as the host's own close loop does.
-pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers> {
-    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+pub async fn new_app() -> CadFixtureApp {
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(TEST_INSTANCE).await;
-    app
+    CadFixtureApp(app, scope)
 }
 
 /// 🪪️ The one live instance id this crate's mounted fixtures run on.
 pub const TEST_INSTANCE: u32 = 1;
 
-pub type CadFixtureApp = VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// scope pays the caller's terminal retirement after the app's paid close.
+pub struct CadFixtureApp(pub VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+
+impl std::ops::Deref for CadFixtureApp {
+    type Target = VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for CadFixtureApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 /// 🔁️ Drives the host's bounded continuation + ACK protocol to quiescence after a dispatch.
 pub async fn settle(app: &mut CadFixtureApp) {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("cad fixture publication: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("cad fixture publication: {fault:?}"));
 }
 
 /// 🔚️ Runs the exact terminal-empty close loop; a fixture store that drops without it panics with
 /// `artifact store reached Drop without its exact terminal-empty shallow-shell witness`.
 pub fn close(app: &mut CadFixtureApp) {
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🪟️ The four cad pane windows as `ShellHost` mounts them. `window_engagements`/`window_measures`

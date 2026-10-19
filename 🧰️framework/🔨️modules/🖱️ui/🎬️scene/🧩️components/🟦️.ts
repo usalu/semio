@@ -1,7 +1,6 @@
 import type { BlockListScene } from "../🧬️schema/🧩️block-list/🟦️.ts";
 import type { ActionDescriptor } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
-import type { PluginContextMenuRequest } from "../../../🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts";
-import type { ContextMenuItemSpec, UiMenuRef } from "../📋️context-menu/🟦️.ts";
+import type { ContextMenuItemSpec, UiContextMenuRequest, UiMenuRef } from "../📋️context-menu/🟦️.ts";
 import type { Canvas2dScene } from "../🟦️.ts";
 import type { World3dScene } from "../🌐️world3d/🟦️.ts";
 import type { NodeGraphScene, TextEditorScene } from "../🕸️node-graph/🟦️.ts";
@@ -62,7 +61,7 @@ export type ComponentSceneHostProps = {
    * A host with nothing to await may still return `void`. The React shell resolves it with the input
    * ledger's typed outcome (`applied | refused | superseded`), which is why the value is `unknown`. */
   readonly onAction: (action: ActionDescriptor, lifecycle?: ActionDispatchLifecycleV1) => void | Promise<unknown>;
-  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+  readonly requestContextMenu?: (request: UiContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 
 /** ⏳️ One exact admitted typed operation exposed to the initiating control without widening its authority. */

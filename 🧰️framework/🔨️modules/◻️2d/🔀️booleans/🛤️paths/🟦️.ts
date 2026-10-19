@@ -1,5 +1,5 @@
 /** 🛤️ Curved transformed fill operands enter work-granted planar booleans. */
-import type {PathSegment,Vec2} from "../../🟦️.ts";
+import type {PathSegment,Vec2} from "../../📐️drawing-contract/🟦️.ts";
 import {BooleanJob,type BooleanInput,type BooleanOperand,type BooleanProgress} from "../🟦️.ts";
 import {PathFlattenJob,type FlatContour,type PathFlattenInput,type PathFlattenProgress} from "../../🛤️path/📏️flatten/🟦️.ts";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../🧹️retire/🟦️.ts";

@@ -6,7 +6,7 @@ import {readFileSync,mkdirSync,writeFileSync,mkdtempSync,readdirSync} from "node
 import {resolve,join,dirname} from "node:path";
 import {spawnSync} from "node:child_process";
 import {POLICY_SKIP_DIRS,policyReadFileSafe} from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import corpus from "./🧫️fixtures/🔣️.json";
 
 const root=resolve(import.meta.dir,"../../../../../../../../.."),read=(path:string)=>readFileSync(join(root,path),"utf8");

@@ -5,8 +5,7 @@
 
 //#region 🔌️Adapters
 import { basename } from "node:path";
-import { loadCatalogTaxonomy } from "../../📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../../📚️library/🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath } from "@semio-tech/repo-lib/inventory";
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { type MutationCatalogAuthority } from "../🗂️taxonomy/🟦️.ts";

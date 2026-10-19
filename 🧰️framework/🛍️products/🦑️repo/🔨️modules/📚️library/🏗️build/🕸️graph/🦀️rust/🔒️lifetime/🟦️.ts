@@ -1,7 +1,7 @@
 /** 🦀️ Lifetime: module exporting `selectedRustLifetimeRequestV1`, `withSelectedRustGraphConsumerV1`. */
-import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{readBuildMode,type BuildMode}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{readBuildMode,type BuildMode}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const requestSchema=structuredClone(schema.definitions.Request);

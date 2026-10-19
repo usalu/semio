@@ -1,17 +1,13 @@
-import {requireHostPlatformBuildArgumentsV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎯️host-platform/🟦️.ts";
+import { requireHostPlatformBuildArgumentsV1 } from "@semio-tech/repo-lib/cargo";
 import {buildDescriptorEmitterV1} from "../🛠️emitter/🟦️.ts";
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
-import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { devToolingEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { resolveWorkspaceBin, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { cargoTargetDirectory, devToolingEnv, resolveWorkspaceBin, runCmd } from "@semio-tech/process/execution";
+import { runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
@@ -30,7 +26,7 @@ export class DescriptorBuildScript extends BundleScript {
 export class DescriptorTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1([CRATE_NAME], this.repoRoot, this.invocation, rest);
   }
 }
 

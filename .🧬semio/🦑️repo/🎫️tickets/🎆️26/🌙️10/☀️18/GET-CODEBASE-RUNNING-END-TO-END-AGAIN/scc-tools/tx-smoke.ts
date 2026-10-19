@@ -1,0 +1,20 @@
+import * as fs from "node:fs";import * as fsp from "node:fs/promises";import * as path from "node:path";import * as url from "node:url";import * as moduleApi from "node:module";import ts from "typescript";
+const L=path.resolve(import.meta.dir,"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
+const sourceURL=url.pathToFileURL(path.join(L,"⚡️caching/🕸️graph/📤️publication/📦️transaction/🟦️.ts")),require=moduleApi.createRequire(sourceURL);
+const root=await fsp.mkdtemp(path.join(process.argv[2]!,"tx-")),directory=path.join(root,"p"),leaseDirectory=path.join(root,"l");await fsp.mkdir(directory);await fsp.mkdir(leaseDirectory);
+const control={signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:()=>{},yieldContinuation:async()=>{}};
+const source=fs.readFileSync(sourceURL,"utf8"),module={exports:{} as Record<string,Function>};
+const load=(name:string):unknown=>name.includes("🏁️startup/")?{graphResourceLeaseDirectoryV1:()=>leaseDirectory}:name.startsWith(".")?require(url.fileURLToPath(new URL(name,sourceURL))):require(name);
+new Function("require","module","exports",ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText)(load,module,module.exports);
+const api=module.exports,files=[{name:"project-graph.json",value:{nodes:{source:{type:"lib"}}}},{name:"source-maps.json",value:{source:{}}},{name:"file-map.json",value:{projectFileMap:{source:[{file:"src/a.ts",hash:"fixture"}]}}}];
+const leaf=await import(path.join(L,"⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📒️journal/🟦️.ts")) as {graphPublicationFileAllocationV1:Function};
+await api.withGraphPublicationLeaseV1!(directory,"a".repeat(64),control,async(lease:unknown)=>{
+ await api.publishGraphTransactionV1!(lease,files,()=>true);
+ const snap=api.readGraphPublicationSnapshotV1!(directory,files.map(f=>f.name),lease);
+ if(JSON.stringify(snap)!==JSON.stringify(Object.fromEntries(files.map(f=>[f.name,f.value]))))throw Error("snapshot mismatch");
+ await api.publishGraphTransactionV1!(lease,files,()=>true);
+ await api.recoverGraphPublicationV1!(lease);
+ const alloc=leaf.graphPublicationFileAllocationV1(path.join(directory,"project-graph.json"),control);
+ console.log("snapshot ok; recover ok; allocation",alloc, fs.readdirSync(directory).sort().join(","));
+});
+await fsp.rm(root,{recursive:true,force:true});

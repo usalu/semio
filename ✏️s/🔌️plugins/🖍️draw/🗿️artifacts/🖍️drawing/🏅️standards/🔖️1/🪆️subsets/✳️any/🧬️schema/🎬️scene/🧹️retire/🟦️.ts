@@ -1,7 +1,7 @@
 /** 🧹️ Transfers a scene plan through shallow owner and container-entry close units. */
-import type {DocumentScenePlan,DocumentSceneNode,DocumentSceneContent} from "../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode, DocumentSceneContent } from "../🗺️plan-model/🟦️.ts";
 import type {RasterSceneAsset,RasterSceneGroup} from "../📷️raster/🟦️.ts";
-import type {Fill} from "../../🎨️fill/🟦️.ts";
+import type { Fill } from "../../🎨️fill/🖌️paint-model/🟦️.ts";
 import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
 type Owner={kind:"plan";value:DocumentScenePlan}|{kind:"assets";value:RasterSceneAsset[]}|{kind:"asset";value:RasterSceneAsset}|{kind:"nodes";value:DocumentSceneNode[]}|{kind:"node";value:DocumentSceneNode}|{kind:"groups";value:RasterSceneGroup[]}|{kind:"group";value:RasterSceneGroup}|{kind:"strings";value:string[]}|{kind:"content";value:DocumentSceneContent}|{kind:"fill";value:Fill}|{kind:"stroke";value:PathRasterStroke}|{kind:"leaf";value:unknown};
 export type ScenePlanCloseProgress={phase:"closing"|"complete";owners:number;work:number;done:boolean};

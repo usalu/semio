@@ -12,7 +12,7 @@ import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { loadTaxonomy, canonicalPrimaryFilenameForKind, loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { createRustMutationCodecOwnershipInspector } from "../../../🔍️discovery/🛡️mutation-codec-ownership/🟦️.ts";
 import { inspectRustMutationMetadataFacts, inspectRustStructure } from "../../../🔍️discovery/🏛️rust-structure/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { taxonomyCliArtifactPath } from "../../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";

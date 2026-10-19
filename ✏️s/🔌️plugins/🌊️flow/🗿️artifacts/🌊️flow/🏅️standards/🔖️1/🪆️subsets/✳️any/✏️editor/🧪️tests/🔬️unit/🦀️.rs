@@ -4,8 +4,8 @@ use semio_framework_plugin::NoConfig;
 use crate::editor::flow::modes::edit::windows::compiled;
 use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::editor::flow::modes::{edit, generate};
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
 use crate::editor::flow::host::flow_removal_leaves;
 use crate::editor::flow::host::{host_from_snapshot, sync_host_selection_domains};
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
@@ -40,7 +40,7 @@ use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_APP_ID, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+use crate::editor::flow::editor_vocabulary::{flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_APP_ID, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 #[allow(unused_imports)]
 use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, focus_selection_camera, seed_host_catalogue, value_fault};
 #[allow(unused_imports)]
@@ -124,7 +124,7 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{FLOW_DIRECT_STORE_TOOL_IDS, FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory, FLOW_HOST_ONLY_TOOL_IDS, FLOW_GRAPH_OPERATION_TOOL_IDS, FLOW_CONTRIBUTIONS_TOOL_IDS, retained};
 
 use crate::editor::flow::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_app_with_registry, settle, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, flow_app_with_registry, settle, FlowAppFixture};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 
@@ -173,7 +173,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     )
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
-    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained addWidget publication and exact ACK").lanes;
+    let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained addWidget publication and exact ACK").lanes;
     assert_eq!(
         lanes,
         [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
@@ -199,7 +199,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     for _ in 0..100_000 {
         let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow app close quote");
         let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        if matches!(PluginApp::close_step(&mut *app, grant).expect("retained addWidget app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+        if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("retained addWidget app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }
@@ -285,7 +285,7 @@ fn action_cohort_fixtures_match_the_exact_route_census() {
     assert_eq!(classified, declared, "the Flow census names exactly FlowCommand's rows");
 }
 
-async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
+async fn context_menu_items(app: &mut FlowAppFixture, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
     serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await).unwrap_or(Value::Null)
 }
@@ -446,13 +446,13 @@ async fn undo_restores_fixture_after_add_widget() {
     let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
     let before = flow_child_node_count(&app, &child_id).await;
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
-    settle_registered_typed_operation(&mut *app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addWidget child publication");
+    settle_registered_typed_operation(&mut app.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addWidget child publication");
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
-    settle_history_verb(&mut *app, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before, "undo must retire the child-lane group");
-    settle_history_verb(&mut *app, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    settle_history_verb(&mut app.0, "redo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "redo must reapply the child-lane group");
-    close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🚚️ An absolute authored drop publishes one relative child edit and replays undo exactly.
@@ -471,19 +471,19 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     let node = before.nodes.first().expect("genesis content node");
     let (x, y) = (node.position.x + 37.0, node.position.y - 23.0);
     dispatch(&mut app, FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: node.id.clone(), x, y })).await;
-    let lanes = settle_registered_typed_operation(&mut *app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("moveMediaNode publication").lanes;
+    let lanes = settle_registered_typed_operation(&mut app.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("moveMediaNode publication").lanes;
     assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal]);
     let after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("moved child").document_pack_bytes().await.expect("moved pack")).expect("moved snapshot");
     let moved = after.nodes.iter().find(|candidate| candidate.id == node.id).expect("addressed node");
     assert_eq!((moved.position.x, moved.position.y), (x, y));
     assert_eq!(app.snapshot().expect("parent after move").content, parent.content);
-    settle_history_verb(&mut *app, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    settle_history_verb(&mut app.0, "undo", receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     let restored = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("restored child").document_pack_bytes().await.expect("restored pack")).expect("restored snapshot");
     assert_eq!(restored, before);
 }
 
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
-async fn flow_child_node_count(app: &FlowApp, child_id: &str) -> usize {
+async fn flow_child_node_count(app: &FlowAppFixture, child_id: &str) -> usize {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use store::{pack::snapshot::ArtifactPack, SpaceMember};
 
@@ -536,18 +536,18 @@ async fn two_instances_converge_on_disjoint_edits() {
     use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
     use store::{pack::snapshot::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember};
-    async fn probe(app: &FlowApp) -> Vec<(String, i64, i64)> {
+    async fn probe(app: &FlowAppFixture) -> Vec<(String, i64, i64)> {
         let child_id = app.snapshot().expect("Flow parent snapshot").content.child_id.clone();
         let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("decode Flow content child");
         let mut nodes: Vec<(String, i64, i64)> = child.nodes.iter().map(|node| (node.kind.to_string(), node.position.x as i64, node.position.y as i64)).collect();
         nodes.sort();
         nodes
     }
-    fn close(app: &mut FlowApp) {
+    fn close(app: &mut FlowAppFixture) {
         for _ in 0..100_000 {
             let demand = PluginApp::close_retirement_demands(&*app, 16_384).expect("Flow convergence app close quote");
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(16_384), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if matches!(PluginApp::close_step(app, grant).expect("Flow convergence app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+            if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), grant).expect("Flow convergence app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 return;
             }
         }
@@ -563,19 +563,19 @@ async fn two_instances_converge_on_disjoint_edits() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
-    instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its disjoint edit");
-    settle_registered_typed_operation(&mut *instance_b, metadata_b.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
-    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
+    instance_a.0.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    instance_b.0.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, x: Some(300.0), y: Some(301.0), label: None, action: None, format: None }), &metadata_b, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its disjoint edit");
+    settle_registered_typed_operation(&mut instance_b.0, metadata_b.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     let converged = probe(&instance_a).await;
     assert_eq!(converged, probe(&instance_b).await, "both instances must converge on the same content child");
     assert_eq!(converged.len(), genesis.len() + 2, "each instance holds both disjoint notes");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a.0, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");

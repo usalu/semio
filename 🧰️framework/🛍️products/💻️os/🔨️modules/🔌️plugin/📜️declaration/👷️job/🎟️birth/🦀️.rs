@@ -1,7 +1,7 @@
 /// 🎟️ Actual concrete and shared producer birth retain original inputs on refused grants.
 impl ArtifactReservedToolJob {
     /// 📏️ Quotes the exact inline gate and shared state allocation on the current target.
-    pub fn original_shared_frame_bytes()->usize{semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactReservedToolJobState>>()}
+    pub fn original_shared_frame_bytes()->usize{semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactReservedToolJobState>>()}
 
     /// 📐️ Quotes only the shared frame when its concrete body already has physical custody.
     pub fn original_boxed_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<ArtifactReservedToolJobState>()+size_of::<Self>(),capacity_bytes:Self::original_shared_frame_bytes(),depth:1,..Default::default()}}

@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema.json"with{type:"json"};
 import policy from"../📋️policy.json"with{type:"json"};
 import snapshotPolicy from"../../../🔏️authorizers/📦️snapshot/🔣️policy.json"with{type:"json"};

@@ -8,7 +8,7 @@ import{withCompiledPrintProbeV1}from"../../../🖨️tectonic-template-compilati
 import{withPrintScratchV1,withPrintStorageTaskV1,type PrintExecutionV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
 import{readPrintMaterialFileV1}from"../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
-import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{measurePrintPdfV1}from"./📥️pdf/🟦️.ts";

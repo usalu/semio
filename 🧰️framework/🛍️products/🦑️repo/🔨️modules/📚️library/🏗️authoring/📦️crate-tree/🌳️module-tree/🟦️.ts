@@ -1,4 +1,4 @@
-import { rustAttributes, rustFindTopLevel, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustAttributes, rustFindTopLevel, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 
 /** 🧪️ Whether one attribute text is a `cfg(...)` that only holds under `cfg(test)`: `test` itself, an `all(...)` with such an argument, or an `any(...)` whose every argument is such. */
 export function cfgImpliesTest(attribute: string): boolean {

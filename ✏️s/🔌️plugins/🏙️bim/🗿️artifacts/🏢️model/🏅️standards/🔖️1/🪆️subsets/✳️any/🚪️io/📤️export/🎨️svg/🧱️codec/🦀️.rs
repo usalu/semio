@@ -1,7 +1,7 @@
 //! 🧱️ The one place that names the typed SVG tree of the `s.stdio.svg` artifact and the text writer of the `s.stdio.xml` artifact: typed elements in, the XML 1.0 document text out.
 //! 📎 https://www.w3.org/TR/SVG11/
 
-pub use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox};
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::SvgElement;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;

@@ -38,6 +38,7 @@ semio-s-artifact-stdio-semio-audio-model = { workspace = true }
 semio-s-artifact-stdio-semio-audio-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-audio-mut-family = { workspace = true }
 semio-s-artifact-stdio-semio-audio-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-stdio-semio-audio-model = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

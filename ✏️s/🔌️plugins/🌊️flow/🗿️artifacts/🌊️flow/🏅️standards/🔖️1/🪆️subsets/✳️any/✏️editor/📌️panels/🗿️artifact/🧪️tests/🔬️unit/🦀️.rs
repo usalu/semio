@@ -1,11 +1,11 @@
-use crate::editor::flow::base::flow_graph_node_target_id;
+use crate::editor::flow::editor_vocabulary::flow_graph_node_target_id;
 use crate::FlowSnapshot;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::FlowPlayLabels;
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_edge_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
 #[allow(unused_imports)]
 use crate::editor::flow::host::with_live_host_snapshot;
 #[allow(unused_imports)]
@@ -135,7 +135,7 @@ async fn a_window_request_materialises_exactly_its_slice_keyed_by_the_canonical_
     let tree = render(&document, labels, &TreeWindows::for_body(&view, FLOW_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let widgets = window_law_node(&tree, WIDGETS_SECTION);
     assert_eq!(window_law_extent(widgets), (OVERSIZED as u32, 90));
-    let expected: Vec<String> = (90..97).map(|index| crate::editor::flow::base::flow_graph_node_target_id(&format!("note-{index:03}"))).collect();
+    let expected: Vec<String> = (90..97).map(|index| crate::editor::flow::editor_vocabulary::flow_graph_node_target_id(&format!("note-{index:03}"))).collect();
     assert_eq!(window_law_keys(widgets), expected);
 }
 

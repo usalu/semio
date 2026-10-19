@@ -57,7 +57,7 @@ pub fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionAr
 /// argument's domain.
 #[allow(clippy::too_many_arguments, reason = "one staged row: its two ids, the definition, the value, its stage verb and the live selection")]
 pub fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::ActionArgDef, value: Option<&Value>, stage: &ActionDescriptor, selection: &HashMap<String, semio_framework::DomainSelection>, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
-    use ui_wgpu::wgpu::component::ui::UiControlNode as Control;
+    use semio_framework_ui_declaration::ui::UiControlNode as Control;
     let label = arg.label.resolve(terminology, locale).to_string();
     let description = arg.description.as_ref().map(|description| description.resolve(terminology, locale).to_string());
     let with = |extra: Value| ActionDescriptor { controller_id: stage.controller_id.clone(), action: stage.action.clone(), args: staged_arg_args(stage.args.as_ref(), extra) };
@@ -258,7 +258,7 @@ pub fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::A
                 label: Label::data(use_label.clone()),
                 action: with(serde_json::json!({ "value": references(picked.clone()) })),
                 style: None,
-                presence: UiPresence { state: if picked.is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if picked.is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             };
             items.push(child(format!("{row_id}.useSelection"), use_label, Control::Button(use_selection)));
@@ -278,7 +278,7 @@ pub fn staged_arg_row(row_id: String, control_id: &str, arg: &semio_framework::A
             label: Label::data(format!("{clear_label} {label}")),
             action: with(serde_json::json!({ "value": Value::Null })),
             style: None,
-            presence: UiPresence { state: if cleared { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+            presence: UiPresence { state: if cleared { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
             menu: None,
         };
         items.get_or_insert_with(Vec::new).push(child(format!("{row_id}.clear"), clear_label.to_string(), Control::Button(clear)));

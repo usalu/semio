@@ -1,6 +1,6 @@
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::io::export::energy::target::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::{OutsideBoundary, SurfaceClass, SurfaceRoughness, EnergyModel, Site, Fenestration};
 use semio_framework_value::ToValue;
 
 fn json(value: &impl ToValue) -> String {

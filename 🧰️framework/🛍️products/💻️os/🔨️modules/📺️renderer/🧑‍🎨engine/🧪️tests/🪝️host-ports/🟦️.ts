@@ -3,8 +3,8 @@
 /** 🪝️ The product-side composition of the shell host's ports: each port answers from the product module it binds, so the renderer can stay free of them. */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setTheme } from "@semio-tech/framework/config/mutations";
-import { createFrameworkOsHostPortsV1 } from "../../../../🧑‍💻dev/🪝️host-ports/🟦️.ts";
-import { MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
+import { MODULE_EXTENSION_ROUTE } from "@semio-tech/plugin-registry/deployment";
 
 afterEach(() => vi.unstubAllGlobals());
 

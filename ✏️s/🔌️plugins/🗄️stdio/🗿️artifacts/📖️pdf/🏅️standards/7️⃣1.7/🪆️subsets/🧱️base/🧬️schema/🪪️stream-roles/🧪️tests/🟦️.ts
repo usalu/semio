@@ -85,7 +85,7 @@ test("PDF neutral multiobject replay law has current role-aware receiving syntax
     parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));
     for(const path of ["./🦀️.rs","../🦀️.rs","../../🧬️mutations/🦀️.rs","../../🔺️diff/🦀️.rs","../../../🔮️oracles/🦀️.rs"]){
       const source=await Bun.file(new URL(path,import.meta.url)).text();const tree=parser.parse(source);
-      try{expect(tree.rootNode.hasError()).toBe(false);if(path==="./🦀️.rs"){const law=tree.rootNode.namedChildren.find(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===replay.law);expect(law).toBeDefined();expect(law!.text).toContain("special_edit");expect(law!.text).toContain("admitted_stream_roles:Some");expect(law!.text).toContain("PdfDiff::between");}}finally{tree.delete();}
+      try{expect(tree.rootNode.hasError()).toBe(false);if(path==="./🦀️.rs"){const law=tree.rootNode.namedChildren.find(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===replay.law);expect(law).toBeDefined();expect(law!.text).toContain("special_edit");expect(law!.text).toContain("admitted_stream_roles:Some");expect(law!.text).toContain("PdfDiff {");expect(law!.text).toContain("protocol::apply_diff");}}finally{tree.delete();}
     }
   }finally{parser.delete();}
   expect(replay.nativeOperatorNames).toEqual(fixture.role.value.content.map(operator=>operator.op==="save"?"q":"Q"));

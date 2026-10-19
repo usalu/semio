@@ -94,14 +94,15 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
     assert!(!declared.is_empty() && declared.iter().all(|classification| *classification == InteractiveJobClassification::Migrated), "setActiveExample must be a live interactive job: {declared:?}");
     const INSTANCE: u32 = 7;
     for (archive_id, example_id) in [(91_u64, CAD_EXAMPLE_FOREST_LEFT), (92, semio_s_artifact_cad_cad_examples::ID), (93, "")] {
-        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(INSTANCE).await;
-        app.dispatch_typed(CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample is admitted");
+        app.dispatch_typed(CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("setActiveExample is admitted");
         let mut loaded = None;
         let mut terminal = false;
         for _ in 0..100_000 {
-            PluginApp::maintenance_step(&mut app, 1, 4_096).expect("maintenance step");
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("publication");
+            PluginApp::maintenance_step(&mut app, scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("publication");
             if let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                 terminal |= page.lane == TypedOperationResultLane::Terminal;
@@ -124,12 +125,12 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
         PluginApp::begin_document_archive_load(&mut app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
-            let polled = PluginApp::poll_document_archive_load(&mut app, archive_id, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+            let polled = PluginApp::poll_document_archive_load(&mut app, archive_id, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("archive status");
             if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
                 status = Some(polled);
                 break;
             }
-            PluginApp::maintenance_step(&mut app, 1, 4_096).expect("archive maintenance step");
+            PluginApp::maintenance_step(&mut app, scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
             std::thread::yield_now();
         }
         let status = status.expect("archive load reaches a terminal state");
@@ -145,7 +146,7 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
             assert_eq!(objects, semio_s_artifact_cad_cad_model::snapshot::cad_scene_pane_objects(&genesis, pane), "{example_id:?}: the loaded {pane:?} pane's child holds its genesis objects exactly");
             assert_eq!(objects.is_empty(), example_id.is_empty(), "{example_id:?}: only the empty document loads empty panes ({pane:?})");
         }
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
     }
 }
 
@@ -178,24 +179,35 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
     let fixture: Value = semio_framework_pack_json::parse(std::fs::read_to_string(fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).expect("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json").leak(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
-    let envelope = store::os_store::document_materialize::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut draft = store::DraftStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-    draft.install_document_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
+    let birth = <CadPlayApp as ArtifactEditor>::draft_store_owners_source_demands().expect("CAD draft owner source quote");
+    let owners = store::os_store::document_store_owners::fund_document_store_owners(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth.max(1) }, |grant| <CadPlayApp as ArtifactEditor>::build_draft_store_owners(grant).expect("CAD publishes a draft owner catalog")).expect("CAD draft owners are funded by their own quote");
+    draft.install_document_store_owners_exact(owners).unwrap_or_else(|(error, _)| panic!("CAD draft store refused its exact owner catalog: {error}"));
+    let quoted = |demand: semio_framework_value::RetirementDemand, items: usize| semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes.max(maximum_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
     let mut disposer = <CadPlayApp as ArtifactEditor>::build_draft_store_disposer().unwrap();
     for turn in 0..100_000 {
-        match disposer.close_step(&mut draft, maximum_items, maximum_bytes).unwrap() {
-            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= maximum_items && released_bytes <= maximum_bytes),
-            semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("empty CAD draft close blocked: {reason}"),
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh CAD fixture unexpectedly awaits external input: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Complete => break,
+        let grant = quoted(disposer.retirement_demands(&draft, maximum_bytes).expect("CAD draft store close quote"), maximum_items);
+        match disposer.close_step(&mut draft, grant).unwrap() {
+            semio_framework_plugin::PluginLifecycleStep::Progress(progress) => assert!(progress.copied_items <= maximum_items && progress.released_bytes <= grant.maximum_release_bytes),
+            semio_framework_plugin::PluginLifecycleStep::Blocked { reason } => panic!("empty CAD draft close blocked: {reason}"),
+            semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } => panic!("fresh CAD fixture unexpectedly awaits external input: {reason}"),
+            semio_framework_plugin::PluginLifecycleStep::Complete(_) => break,
         }
         assert!(turn < 99_999);
     }
     assert!(disposer.terminal_is_empty(&draft));
     let mut transient = store::TransientStore::new(semio_framework_plugin::NoTransient::default());
     let mut disposer = <CadPlayApp as ArtifactEditor>::build_transient_store_disposer().unwrap();
-    assert_eq!(disposer.close_step(&mut transient, 0, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-    assert_eq!(disposer.close_step(&mut transient, maximum_items, maximum_bytes).unwrap(), semio_framework_plugin::PluginCloseStep::Complete);
+    let demand = disposer.retirement_demands(&transient, maximum_bytes).expect("CAD transient store close quote");
+    assert_eq!(disposer.close_step(&mut transient, quoted(demand, 0)).unwrap(), semio_framework_plugin::PluginLifecycleStep::Progress(Default::default()));
+    for turn in 0..100_000 {
+        let grant = quoted(disposer.retirement_demands(&transient, maximum_bytes).expect("CAD transient store close quote"), maximum_items);
+        if matches!(disposer.close_step(&mut transient, grant).unwrap(), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+            break;
+        }
+        assert!(turn < 99_999);
+    }
     assert!(disposer.terminal_is_empty(&transient));
 }
 
@@ -211,7 +223,9 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
     let host_command = definition.commands.iter().find(|command| command.id == host_route["id"].as_str().unwrap()).expect("host command declaration");
     assert_eq!(host_command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     assert_eq!(app.app_id().await, controller);
     assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);
     let mut admitted = std::collections::BTreeSet::new();
@@ -222,23 +236,8 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
         assert!(admitted.insert(*tool_id));
     }
     assert!(admitted.contains(activation["injectedTool"].as_str().expect("injected tool")));
-    let maximum_items = activation["closeItems"].as_u64().expect("close items") as usize;
-    let maximum_bytes = activation["closeBytes"].as_u64().expect("close bytes") as usize;
-    let mut complete = false;
-    for _ in 0..100_000 {
-        match app.close_step(maximum_items, maximum_bytes).expect("bounded CAD close") {
-            semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= maximum_items && released_bytes <= maximum_bytes);
-            }
-            semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("CAD constructor close blocked: {reason}"),
-            semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh CAD fixture unexpectedly awaits external input: {reason}"),
-            semio_framework_plugin::PluginCloseStep::Complete => {
-                complete = true;
-                break;
-            }
-        }
-    }
-    assert!(complete && app.close_terminal_is_empty(), "the real mounted CAD owner must reach its empty terminal shell");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    assert!(app.close_terminal_is_empty(), "the real mounted CAD owner must reach its empty terminal shell");
 }
 
 #[test]

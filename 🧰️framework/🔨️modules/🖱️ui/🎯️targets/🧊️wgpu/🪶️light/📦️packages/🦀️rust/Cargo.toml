@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-wgpu-light"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu light tier: minimap geometry, tree window request rule, presence bar and tabs builders"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-light"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

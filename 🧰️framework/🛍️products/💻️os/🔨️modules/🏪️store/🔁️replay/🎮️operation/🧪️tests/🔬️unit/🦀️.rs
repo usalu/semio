@@ -1,7 +1,7 @@
 //! 🧪️ Neutral cooperative operation laws with UTF-8 work and exact cancellation ownership.
 
 use super::*;
-use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, shared::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 struct TextInput {

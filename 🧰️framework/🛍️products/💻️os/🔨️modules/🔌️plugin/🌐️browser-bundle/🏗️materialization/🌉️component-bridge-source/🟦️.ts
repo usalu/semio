@@ -2,9 +2,9 @@
 import { originalOperationWorkerSource } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
 import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import { COMMAND_INGRESS_KINDS } from "../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { COMMAND_INGRESS_KINDS } from "@semio-tech/framework/browser-bundle/child/schema";
 import { actorCodecRuntimeSourceV1 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
-import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../../../../🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts";
+import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "@semio-tech/framework/app-channel";
 import { PLUGIN_HOST_SHIM_FILE } from "../🧾️contract/🟦️.ts";
 
 /**

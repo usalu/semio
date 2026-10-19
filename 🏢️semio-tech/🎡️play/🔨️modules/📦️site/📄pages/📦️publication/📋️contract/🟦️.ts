@@ -1,5 +1,5 @@
-import {validateJsonSchemaSubset} from "../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import limits from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-rs/index";
+import { artifactsStorageSchema as limits } from "@semio-tech/repo-lib/artifacts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {createHash} from "node:crypto";
 export type PlayPagesModeV1="prototype"|"release";

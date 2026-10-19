@@ -1,11 +1,11 @@
 //! ✂️ The split tool: the pointer hovers a wall of the storey, the cut across it shows where the wall would part, and one click writes the `split-wall` that parts it there, the new
 //! half getting an id minted from the authoring seed. A cut at an end of the wall (or one the model would refuse) shows as a warning and writes nothing. Curtain walls do not split.
 
-use crate::editor::bim::gestures::opening::nearest_host;
-use crate::editor::bim::gestures::plane::{axis_point_at, axis_tangent_at, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::nearest_host;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_point_at, axis_tangent_at, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📏️ How far past the face of the wall the cut mark reaches, in metres.
 const CUT_REACH: f64 = 0.15;
@@ -31,7 +31,7 @@ impl Split {
         let (at, tangent) = (axis_point_at(&host.axis, host.offset), axis_tangent_at(&host.axis, host.offset));
         let reach = host.thickness / 2.0 + CUT_REACH;
         let mark = [[at[0] - tangent[1] * reach, at[1] + tangent[0] * reach], [at[0] + tangent[1] * reach, at[1] - tangent[0] * reach]];
-        let probe = ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: host.host.clone(), t, new_id: "probe".into() });
+        let probe = ModelMutation::SplitWall(semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: host.host.clone(), t, new_id: "probe".into() });
         Some(Cut { valid: ctx.accepts(&probe), wall: host.host, t, mark })
     }
 }
@@ -51,7 +51,7 @@ impl Tool for Split {
                     Some(cut) => {
                         let (id, t) = (cut.wall.clone(), cut.t);
                         let new_id = ctx.mint("wall");
-                        Step::write(ctx, ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id, t, new_id }))
+                        Step::write(ctx, ModelMutation::SplitWall(semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id, t, new_id }))
                     }
                 }
             }

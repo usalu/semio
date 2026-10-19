@@ -38,7 +38,7 @@ semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-cad-cad-picking = { workspace = true }
 semio-s-artifact-cad-cad-transient = { workspace = true }
 semio-s-artifact-cad-cad-typology = { workspace = true }
-ui_wgpu = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

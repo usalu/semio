@@ -31,6 +31,9 @@ semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-cursor = { path = "../../../../🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-doubles = { path = "../../../../🧪️testing/🎭️doubles/📦️packages/🦀️rust" }

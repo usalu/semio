@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
 
 #[derive(semio_framework_value::RetireOwned)]
 struct FlowHostEffectSources {

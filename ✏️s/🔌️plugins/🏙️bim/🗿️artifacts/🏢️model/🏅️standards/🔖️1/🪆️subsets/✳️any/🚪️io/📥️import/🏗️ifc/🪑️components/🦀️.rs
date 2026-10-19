@@ -3,16 +3,16 @@
 //! generic family named after its type: one cuboid solid of the bounding box of its body (swept, faceted, triangulated or mapped), placed by its inferred position, elevation and heading; its system is the group it is assigned to.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowterminal.htm>
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, type_authoring};
-use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, text, Doc, Section};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, text, Doc, Section};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, set_of, string_of};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-pub use crate::standards::v1::subsets::any::io::export::ifc::components::OVERRIDES_SET;
-use crate::standards::v1::subsets::any::io::export::ifc::components::{FAMILY_ROWS, RECORD_ROW};
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::snapshot::{Component, ComponentOverride, ExprPoint3, Family, FamilyCategory, FamilyParameter, FamilySolid, MepSystem, ParameterKind, Point2, SolidShape};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components::OVERRIDES_SET;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components::{FAMILY_ROWS, RECORD_ROW};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, ComponentOverride, Family, FamilyParameter, FamilySolid};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint3, FamilyCategory, MepSystem, ParameterKind, Point2, SolidShape};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
@@ -48,7 +48,7 @@ pub fn assignments(i: &Import<'_>) -> BTreeMap<u64, MepSystem> {
         let Some((class, args)) = group.primary().filter(|(class, _)| matches!(*class, "IFCSYSTEM" | "IFCDISTRIBUTIONSYSTEM")) else { continue };
         let predefined = if class == "IFCDISTRIBUTIONSYSTEM" { args.get(7).and_then(Part21Value::as_enum).unwrap_or_default().to_string() } else { String::new() };
         let Some(system) = [text(args, 2), text(args, 4), predefined].iter().find_map(|name| system_named(name)) else { continue };
-        for member in crate::standards::v1::subsets::any::io::import::ifc::reader::refs(relation, 4) {
+        for member in semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::refs(relation, 4) {
             found.insert(member, system);
         }
     }
@@ -162,7 +162,7 @@ fn read_types(i: &mut Import<'_>) {
             let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("fam-{}", Import::slug(&name)), |candidate| i.model.families.contains_key(candidate)));
             if !i.model.families.contains_key(&id) {
                 for (parameter, row) in parameters {
-                    i.model.family_parameters.insert(formula::parameter_id(&id, &parameter), FamilyParameter { family: id.clone(), ..row });
+                    i.model.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), FamilyParameter { family: id.clone(), ..row });
                 }
                 for (key, row) in solids {
                     i.model.family_solids.insert(key, FamilySolid { family: id.clone(), ..row });
@@ -177,7 +177,7 @@ fn read_types(i: &mut Import<'_>) {
 fn metres(value: f64) -> String {
     let rounded = (value * 1e6).round() / 1e6;
     let text = format!("{} m", if rounded == 0.0 { 0.0 } else { rounded });
-    formula::canonical(&text).unwrap_or_else(|_| "0 m".to_string())
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::canonical(&text).unwrap_or_else(|_| "0 m".to_string())
 }
 
 fn cuboid_family(i: &mut Import<'_>, known: &mut BTreeMap<String, String>, category: FamilyCategory, name: &str, low: [f64; 3], high: [f64; 3], material: &str) -> String {
@@ -189,7 +189,7 @@ fn cuboid_family(i: &mut Import<'_>, known: &mut BTreeMap<String, String>, categ
     let id = Import::unused(&format!("fam-{}", Import::slug(name)), |candidate| i.model.families.contains_key(candidate));
     i.model.families.insert(id.clone(), Family { name: name.to_string(), category });
     for (parameter, value) in [("width", size[0]), ("depth", size[1]), ("height", size[2])] {
-        i.model.family_parameters.insert(formula::parameter_id(&id, parameter), FamilyParameter { family: id.clone(), name: parameter.into(), kind: ParameterKind::Length, value: metres(value) });
+        i.model.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, parameter), FamilyParameter { family: id.clone(), name: parameter.into(), kind: ParameterKind::Length, value: metres(value) });
     }
     let solid = FamilySolid {
         family: id.clone(),
@@ -254,7 +254,7 @@ pub fn read(i: &mut Import<'_>) {
             };
             for (parameter, value) in set_of(&i.doc, instance.id, OVERRIDES_SET) {
                 if let Some(formula_text) = string_of(&value) {
-                    i.model.component_overrides.insert(formula::parameter_id(&id, &parameter), ComponentOverride { component: id.clone(), name: parameter, value: formula_text });
+                    i.model.component_overrides.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&id, &parameter), ComponentOverride { component: id.clone(), name: parameter, value: formula_text });
                 }
             }
             i.model.components.insert(id.clone(), component);

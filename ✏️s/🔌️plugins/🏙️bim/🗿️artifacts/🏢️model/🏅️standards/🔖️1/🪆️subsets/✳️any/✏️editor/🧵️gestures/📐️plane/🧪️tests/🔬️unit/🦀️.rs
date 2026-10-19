@@ -1,13 +1,13 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Axis;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Vertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, Vertex};
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
 use semio_framework_geometry::Point;
-use crate::editor::bim::gestures::plane::*;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{bulge_through, axis_of, axis_ends, axis_bulge, axis_length, project, signed_area, counter_clockwise, rectangle, rotate_about, translate, quantised, bounds};
 
 #[semio_framework_async_macros::async_test]
 async fn the_bulge_through_three_points_is_signed_by_the_turn_and_collinear_points_have_none() {

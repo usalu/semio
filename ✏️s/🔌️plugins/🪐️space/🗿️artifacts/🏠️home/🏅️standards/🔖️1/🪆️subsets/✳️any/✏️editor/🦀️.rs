@@ -250,7 +250,8 @@ impl HomeCreateStudioWork {
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<HomeApp>> for HomeCreateStudioWork {
     fn tool_id(&self) -> &'static str { "createStudio" }
     fn extent(&self, command: &HomeCommand, snapshot: &SHomeSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>) -> Option<usize> { matches!(command, HomeCommand::CreateStudio(_)).then(|| home_retained_extent(command, snapshot, interaction)).flatten() }
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.closing || cx.is_cancelled() { return Err(Fault::from("s.home.create-studio.effect-not-live")); }
         let HomeCommand::CreateStudio(payload) = input.command else { return Err(Fault::from("s.home.create-studio.effect-command-mismatch")) };
@@ -266,6 +267,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         let emit = completion.with_authoring_identity(|identity| create_studio::handle_with_identity(payload, &doc, &cfg, session, identity))?;
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn checkpoint_byte(&self, index: usize) -> Option<u8> { (index == 0).then_some(u8::from(self.validated)) }
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { apply_directory_event_page::home_work_step_demands::<EditorApp<HomeApp>>(size_of::<Self>()) }
@@ -277,17 +281,19 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        self.closing = true;
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return InteractiveJobCloseStep::Blocked; }
-        if let Some(completion) = self.completion.take() {
-            match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }; } }
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        let Some(owner) = self.retirement.as_mut() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
-        match owner.step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() } }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+            self.closing = true;
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(InteractiveJobCloseStep::Blocked); }
+            if let Some(completion) = self.completion.take() {
+                match semio_framework_value::retirement::controlled::ControlledRetirement::new(completion) { Ok(owner) => self.retirement = Some(owner), Err((error, original)) => { self.completion = Some(original); return Err(error); } }
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            let Some(owner) = self.retirement.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })};
+            Ok(match owner.step(grant) { Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress }, Ok(RetainedCloneStep::Complete(progress)) => { self.retirement = None; InteractiveJobCloseStep::Complete { progress } }, Err(error) => return Err(error) })
+        })
     }
 }
 
@@ -379,9 +385,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Hom
         home_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<HomeApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         require_session_identity(input.context.and_then(|context| context.view_state.as_ref()))?;
         self.advance(input.command, &ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone()))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<HomeApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {

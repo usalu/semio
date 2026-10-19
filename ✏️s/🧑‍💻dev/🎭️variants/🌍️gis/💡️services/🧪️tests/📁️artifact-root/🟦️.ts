@@ -1,10 +1,10 @@
 import { mkdirSync } from "node:fs";
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { repoTestArtifactEnvironment } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { repoTestArtifactEnvironment } from "@semio-tech/process/execution";
 
 /** 📁️ Places every service composition temporary input beneath its inherited test-output owner. */
 export function serviceMcpTestArtifactRoot(): string {
-  const root = repoTestArtifactEnvironment(findWorkspaceRoot(import.meta.dir), "services-mcp").SEMIO_TEST_ARTIFACT_DIR!;
+  const root = repoTestArtifactEnvironment(findWorkspaceRoot(import.meta.dirname), "services-mcp").SEMIO_TEST_ARTIFACT_DIR!;
   mkdirSync(root, { recursive: true });
   return root;
 }

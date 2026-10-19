@@ -21,7 +21,7 @@ use semio_framework_os_renderer_wgpu_fixtures::shell::test_app;
 use super::*;
 use semio_framework::manifest::Keybinding;
 use semio_framework::{ActionDefinition, ActionKind, AppDefinition, WindowKinds};
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 /// 🪟️ The journey's own two world panes and the window kind both instantiate — a Row of two
 /// single-tab stacks, which is what makes the caps read `dock.tab.0.…` and `dock.tab.1.…`.
@@ -298,7 +298,7 @@ fn escape_with_a_docked_owner_dispatches_the_apps_engagement_abort() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
     assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the same keydown dismisses the picker");
     assert!(shell.chrome.transient_notice().is_none(), "⎋️ a docked owner answers the verb — no unowned-chord banner");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⎋️ …and `engagementAbort` crossed the dispatch funnel");
@@ -313,7 +313,7 @@ fn escape_with_an_empty_dock_is_the_hinted_no_op_run_19_measured() {
     let mut shell = journey_shell(vec![Keybinding { keys: "escape".into(), action: ActionDescriptor { controller_id: "test".into(), action: "engagementAbort".into(), args: None } }]);
     assert!(shell.dock.dock.close_window(TOP) && shell.dock.dock.close_window(PERSPECTIVE));
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input));
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input));
     assert!(outcome.is_ok(), "⎋️ nothing is dispatched at all");
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ the verb resolved and found no window to address");
 }

@@ -1,8 +1,8 @@
-import {emptyNativeCatalogV1,readNativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import {emptyNativeCatalogV1,readNativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 import { admitPluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import { documentBootMetaReader, resolveWgpuBootDescriptor, stripBootBrokerProof, wgpuReadinessBeacon, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost } from "../🌐️browser-host/🟦️.ts";
-import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/🟦️.ts";
+import { Locale } from "@semio-tech/ui-locale-rs/index";
 
 export { WGPU_CANVAS_ID, WGPU_INTROSPECTION_GLOBAL, WGPU_HUB_PROJECTION_GLOBAL, WGPU_ACCESSIBILITY_MIRROR_ID } from "../🌐️browser-host/🟦️.ts";
 

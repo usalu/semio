@@ -1,4 +1,4 @@
 import schema from"../📐️context/🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 /** 🧭️ Chooses closed observer DATA before the genuine authored operation is born. */
 export function readCargoProfileOracleSelectionV1(environment:Readonly<Record<string,string|undefined>>):"all"|"local"|"roles"|"context"{const keys=["SEMIO_PROFILE_LOCAL_ONLY","SEMIO_PROFILE_ROLE_ONLY","SEMIO_PROFILE_CONTEXT_ONLY"],selected=Object.fromEntries(keys.flatMap(key=>environment[key]===undefined?[]:[[key,environment[key]]]));if(validateJsonSchemaSubset(schema.definitions.Selector,selected,schema).length)throw Error("Closed distinct compiler oracle selector required");return selected.SEMIO_PROFILE_CONTEXT_ONLY==="1"?"context":selected.SEMIO_PROFILE_ROLE_ONLY==="1"?"roles":selected.SEMIO_PROFILE_LOCAL_ONLY==="1"?"local":"all";}

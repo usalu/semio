@@ -52,7 +52,7 @@ async fn the_undo_reorder_returns_the_column_to_its_base_index() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
-        vec![SemioTableMutation::ReorderColumns(semio_s_artifact_stdio_semio_table_mutations::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
+        vec![SemioTableMutation::ReorderColumns(semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
         "the undo must send the column back to the index it originally occupied in base"
     );
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-columns applies");

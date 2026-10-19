@@ -24,10 +24,12 @@ import {
   ToggleGroup,
 } from "@semio-tech/ui-react";
 import { type ActionDescriptor, SET_ACTIVE_UTILITY_ACTION_ID, type UtilityCategory, type UtilityLeaf, type UtilityNode } from "@semio-tech/framework";
-import { SelectionUtilityOptions } from "../🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 //#region 🔖️utility-tree
+
+/** 🔢️ The pressed selection utility a host row renders its options for: its id, the owning window, and the register generation its press is stamped with. */
+export type UtilityTreeSelection = Readonly<{ activeUtilityId: string; windowId: string; generation: number | undefined }>;
 
 type UtilityTreeProps = {
   readonly utilities: readonly UtilityNode[];
@@ -41,6 +43,8 @@ type UtilityTreeProps = {
   readonly revealUtilityId?: string | null;
   /** 🎯️ Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the utilities. */
   readonly utilityOptions?: ReactNode;
+  /** 🧭️ Host-owned row for the pressed selection utility, rendered under the ribbon in the stacked directions; the tree itself stays free of shell rows. */
+  readonly renderSelectionOptions?: (selection: UtilityTreeSelection) => ReactNode;
 };
 
 function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
@@ -316,7 +320,7 @@ function utilityRibbonSegmentKey(segment: UtilityRibbonSegment, index: number): 
   return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `utilities-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
 }
 
-export function UtilityTree({ utilities, onAction, id = "ui.utilities", direction = "inline", revealUtilityId = null, utilityOptions }: UtilityTreeProps): ReactElement | null {
+export function UtilityTree({ utilities, onAction, id = "ui.utilities", direction = "inline", revealUtilityId = null, utilityOptions, renderSelectionOptions }: UtilityTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -429,13 +433,13 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
         </RibbonZone>
       ),
     });
-  } else if (hasActiveSelection && direction !== "inline") {
+  } else if (hasActiveSelection && renderSelectionOptions && direction !== "inline") {
     rows.push({
       key: "row-selection-options",
       content: (
         <RibbonZone variableHeight className="w-full max-w-full items-start">
           <RibbonItem className="h-auto w-full max-w-full items-start">
-            <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} generation={expectedGenerationOf(findSetActiveUtilityDescriptor(utilities))} />
+            {renderSelectionOptions({ activeUtilityId: activeSelectionUtility.id, windowId, generation: expectedGenerationOf(findSetActiveUtilityDescriptor(utilities)) })}
           </RibbonItem>
         </RibbonZone>
       ),

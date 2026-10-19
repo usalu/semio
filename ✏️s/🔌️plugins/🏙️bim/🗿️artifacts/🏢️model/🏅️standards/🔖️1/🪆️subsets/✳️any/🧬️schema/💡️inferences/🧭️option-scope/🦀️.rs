@@ -1,7 +1,7 @@
 //! 🧭️ Inferred option visibility and takeoff from authored membership and quantity parents.
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ElementMembership};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ElementMembership};
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals, totals_of};
-use crate::standards::v1::subsets::any::schema::authored::option_rules::{element_ids, host};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules::{element_ids, host};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const READS: &[&str] = &["option_groups", "design_options", "worksets", "element_options", "element_worksets", "walls", "curtain_walls", "columns", "beams", "slabs", "ceilings", "roofs", "openings", "stairs", "ramps", "railings", "spaces", "components", "mep_elements", "wall_sweeps"];
@@ -68,6 +68,6 @@ pub fn scope_of<'a>(base: &ModelSnapshot, quantities: impl IntoIterator<Item = (
 }
 /// 🔗️ Authored inputs of the visibility node; quantity changes arrive through graph parents.
 pub fn dependency(base: &ModelSnapshot) -> semio_framework_value::DslValue {
-    use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
     dep_object([("option_groups", dep_value(&base.option_groups)), ("design_options", dep_value(&base.design_options)), ("worksets", dep_value(&base.worksets)), ("element_options", dep_value(&base.element_options)), ("element_worksets", dep_value(&base.element_worksets)), ("elements", dep_value(&element_ids(base).into_iter().collect::<Vec<_>>())), ("hosts", dep_value(&element_ids(base).iter().filter_map(|id| host(base, id).map(|parent| (id.clone(), parent.to_owned()))).collect::<BTreeMap<_, _>>()))])
 }

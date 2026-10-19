@@ -9,8 +9,8 @@
 //! `p:grpSp` group, `p:graphicFrame` (charts/tables/SmartArt), `p:cxnSp` connectors, and anything
 //! unrecognized fall back to `PptxShape::Other{node}` as logical XML.
 
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::vocabulary::resolve_office_document_relationship;
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::resolve_office_document_relationship;
+use semio_s_artifact_stdio_pptx_base_vocabulary::refusal::PptxError;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxXmlPart;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;

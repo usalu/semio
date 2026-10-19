@@ -233,7 +233,7 @@ impl Cardinality {
 
 /// 🔮️ Test-only — `ChannelSpec.cardinality` was the only production caller and moved to `ToValue`/
 /// `FromValue` below (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Serialize for Cardinality {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -243,7 +243,7 @@ impl Serialize for Cardinality {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de> Deserialize<'de> for Cardinality {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -270,12 +270,12 @@ impl FromValue for Cardinality {
 
 /// ➕️ Variadic input or output slot specification. `serde` is TEST-ONLY — see `Dictionary`'s docstring.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct VariadicSpec {
     pub slot_key: String,
     pub min: usize,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub max: Option<usize>,
 }
 
@@ -299,24 +299,24 @@ impl FromValue for VariadicSpec {
 /// 🔌️ Declared operator channel with required/provided operator capabilities. `serde` is TEST-ONLY
 /// — see `Dictionary`'s docstring; `default: Option<Value>` fans in `Value` transitively.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct ChannelSpec {
     pub code: String,
     pub abbreviation: String,
     pub name: String,
     pub full_name: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub operators: Vec<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub value_types: Vec<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub item_types: Vec<String>,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub default: Option<Value>,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub label: Option<String>,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     pub cardinality: Cardinality,
 }
 
@@ -483,8 +483,8 @@ pub fn channel_output(name: &str, payload: Dictionary) -> Dictionary {
 /// 📇️ Catalogue metadata for an operator. `serde` is TEST-ONLY — see `Dictionary`'s docstring;
 /// `inputs`/`outputs: Vec<ChannelSpec>` fan in `Value` transitively.
 #[derive(Clone, Debug, Default, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct OperatorInfo {
     pub id: String,
     pub extension: String,
@@ -494,11 +494,11 @@ pub struct OperatorInfo {
     pub summary: String,
     pub inputs: Vec<ChannelSpec>,
     pub outputs: Vec<ChannelSpec>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     pub variadic_input: Option<VariadicSpec>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     pub variadic_output: Option<VariadicSpec>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Vec::is_empty"))]
     pub group: Vec<String>,
 }
 

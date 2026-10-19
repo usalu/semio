@@ -194,7 +194,7 @@ fn presence_rows_require_each_normalized_surface_and_preserve_hub_color() {
     let rows = presence_peer_rows_for_surface(&peers, Some(editor_surface), editor_surface);
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0].actor, "a");
-    assert_eq!(rows[0].role, Some(ui_wgpu::wgpu::PresenceRole::Author));
+    assert_eq!(rows[0].role, Some(semio_framework_ui_wgpu_light::presence_bar::PresenceRole::Author));
     assert_eq!(rows[0].color, Some(7));
     assert!(presence_peer_rows_for_surface(&peers, Some(editor_surface), viewer_surface).is_empty(), "a different attached surface sees no roster");
     let viewer_rows = presence_peer_rows_for_surface(&peers, Some(viewer_surface), viewer_surface);

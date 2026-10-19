@@ -35,7 +35,7 @@ semio-framework-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦�
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde = { workspace = true }
-ui_wgpu = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 base64 = "0.22.1"

@@ -8,7 +8,7 @@ import { cargoDirectionInventory, cargoDirectionMetadata, cargoDependencyDirecti
 
 const library = resolve(import.meta.dir, "../.."), repo = resolve(library, "../../../../..");
 const read = (path: string): any => JSON.parse(readFileSync(join(library, path), "utf8"));
-const fixture = read("🧫️fixtures/🧱️cargo-dependency-direction/🔣️.json") as { schemaVersion: number; policy: CargoDirectionPolicy; cases: readonly { id: string; packages: readonly CargoDirectionPackage[]; violations: readonly CargoDirectionViolation[]; problems: readonly CargoDirectionProblem[] }[]; corruptions: readonly string[]; policyCorruptions: readonly string[] };
+const fixture = read("🧪️tests/🧫️fixtures/🧱️cargo-dependency-direction/🔣️.json") as { schemaVersion: number; policy: CargoDirectionPolicy; cases: readonly { id: string; packages: readonly CargoDirectionPackage[]; violations: readonly CargoDirectionViolation[]; problems: readonly CargoDirectionProblem[] }[]; corruptions: readonly string[]; policyCorruptions: readonly string[] };
 const schema = read("🧬️schema/🧱️cargo-dependency-direction/🔣️.json");
 const write = (root: string, path: string, text: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
 

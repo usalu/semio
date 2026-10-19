@@ -471,9 +471,9 @@ impl ChromeDialogRequest {
     /// `🧫️number-controls` for every renderer): arrows walk the step ladder and never snap (`large` — a `Shift`
     /// chord — walks ten rungs), PageUp/PageDown jump to the adjacent detent (ten rungs without one), Home/End go
     /// to the ends. `false` for a key a slider does not take.
-    pub fn slide(&mut self, index: usize, action: &ui_wgpu::wgpu::KeyAction, large: bool) -> bool {
+    pub fn slide(&mut self, index: usize, action: &semio_framework_ui_wgpu_input::KeyAction, large: bool) -> bool {
         use ui_contract::SliderKey;
-        use ui_wgpu::wgpu::KeyAction;
+        use semio_framework_ui_wgpu_input::KeyAction;
         let (Some(ChromeDialogFieldKind::Slider { min, max, step, precision, snaps, .. }), Some(value)) = (self.fields.get(index).map(|field| field.kind.clone()), self.slider_value(index)) else { return false };
         let key = match action {
             KeyAction::ArrowLeft | KeyAction::ArrowDown => SliderKey::Decrement,

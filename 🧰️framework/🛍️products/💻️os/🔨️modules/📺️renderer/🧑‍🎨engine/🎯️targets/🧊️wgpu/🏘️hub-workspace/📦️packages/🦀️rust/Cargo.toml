@@ -28,7 +28,8 @@ semio-framework-async = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-framework-os-kernel" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-hub-contracts = { path = "../../../🔐️hub-contracts/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }

@@ -4,7 +4,7 @@ import{createHash}from"node:crypto";
 import{resolve,join,sep}from"node:path";
 import{readFileSync,writeFileSync,mkdirSync,lstatSync}from"node:fs";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{nativeCallerPhaseV1}from"../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{cargoPreparationControlV1,repositoryCargoPreparationStorageV1}from"../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import{withPreparedCargoDependencyPairV1}from"../../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";

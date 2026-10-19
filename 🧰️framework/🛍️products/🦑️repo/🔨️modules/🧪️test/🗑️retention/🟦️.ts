@@ -7,7 +7,7 @@
 import { type TestEvidence } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { repoCacheDirectory } from "../../📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/repo-lib/process";
 import { repositoryTestArtifactPathV1, requireRepositoryTestArtifactRetirementV1 } from "../💾️storage/🟦️.ts";
 import { testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { readOutputMarker, testCacheRoot } from "../⚡️output-cache/🟦️.ts";

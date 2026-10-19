@@ -110,7 +110,7 @@ fn proxy_png_rgb(data_url: &str) -> Option<PdfRaster> {
     Some(PdfRaster { width: snapshot.width, height: snapshot.height, rgb })
 }
 
-pub(super) fn pdf_image_matrix(x: f32, y: f32, width: f32, height: f32, rotation: f32, page_height: f32) -> String {
+pub fn pdf_image_matrix(x: f32, y: f32, width: f32, height: f32, rotation: f32, page_height: f32) -> String {
     if rotation.abs() < 1.0e-4 {
         return format!("{width:.3} 0 0 {height:.3} {x:.3} {:.3}", page_height - y - height);
     }

@@ -3,7 +3,7 @@
 
 use crate::editor::writer::modes::edit::windows::main::config::WriterMainWindowConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
-use crate::editor::writer::base::writer_action;
+use crate::editor::writer::editor_vocabulary::writer_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure

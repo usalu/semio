@@ -1,29 +1,27 @@
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{Effect, Emit, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::schedule;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_bim::editor::bim::{BimCommand, BimModelApp};
 #[allow(unused_imports)]
-use crate::editor::bim::{BimCommand, BimModelApp};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::csv::codec;
-#[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::csv::schedule_records;
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_records;
 #[allow(unused_imports)]
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Fault, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::export_schedule_csv::*;
-use crate::editor::bim::fixture::support::{ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
-use crate::standards::v1::subsets::any::io::export::csv::schedule_csv;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_schedule_csv::{CsvJob, Advance, file_name, resolve, handle, ExportScheduleCsv};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, run};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_csv;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 fn scheduled() -> ModelSnapshot {
@@ -105,7 +103,7 @@ async fn a_cancelled_job_leaves_the_session_correct_and_the_next_job_finishes() 
         cancelled.advance(&snapshot).expect("a step");
     }
     cancelled.cancel(&snapshot);
-    let report = inference::report(Some(&instance));
+    let report = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(report.cancelled && report.computed > 0);
     drop(cancelled);
     let mut job = CsvJob::with_steps("sch-doors".into(), Some(&instance), 64, 64);

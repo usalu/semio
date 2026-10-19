@@ -144,7 +144,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -160,6 +161,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let (emit, ephemeral) = puzzle5d_handle_action::<A>(&self.authoring_seed, command.action_id(), command.args(), Some(window_id), snapshot, &runtime, Some(view), selection, self.instance_owner.as_ref(), self.tool_run.as_ref());
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -167,8 +171,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dWindowWorkOwners { instance_owner: self.instance_owner.take(), tool_run: self.tool_run.take(), authoring_seed: std::mem::take(&mut self.authoring_seed) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -220,7 +226,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         if self.consumed {
@@ -235,6 +242,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             export_snapshot::Puzzle5dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
             export_snapshot::Puzzle5dExportPublication::Refused(_) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.export_too_large.as_str())),
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn terminal_frame_release_bytes(&self) -> Option<usize> {

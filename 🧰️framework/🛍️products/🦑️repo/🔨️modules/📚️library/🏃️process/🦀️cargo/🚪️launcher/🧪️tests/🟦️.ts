@@ -12,11 +12,11 @@ import {readRepositoryCargoLaunchV1,withRepositoryCargoIsolatedStoreV1,REPOSITOR
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
 
-import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "../../../../../🧪️test/💾️storage/🟦️.ts";
+import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
 
 const ajv=new Ajv({strict:true,allErrors:true}).addSchema(schema,"launch"),leases=new URL("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts",import.meta.url).href;
 

@@ -14,7 +14,7 @@ use super::node_graph_attach_tests::{entity_screen_rect, flow_window_scene};
 use semio_framework_os_renderer_wgpu_engine_attach::drop_engine_surface;
 use super::*;
 use semio_framework_ui_declaration::ui::SurfaceKind;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 #[allow(non_snake_case)]
 fn GESTURE_LAW() -> &'static str {

@@ -8,8 +8,6 @@ import { type DocumentExecutionTargetLease, installDocumentExecutionTargetLease 
 import { documentRuntimeKeyForConfig, hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { type BrowserDocumentSocketAuthorityV1, clearHubSessionCapability, documentSocketGrantTestIssue, hubSessionFetch, readDocumentOpenJson } from "../🔐️hub-session/🟦️.ts";
 import { type ExecutionTargetReadControl, assertExecutionTargetRead, dropDocumentExecutionTargetLease, emitExecutionTargetStatus, receiptFreeFields, retireMountedDocumentChild } from "../📥️execution-target-read/🟦️.ts";
-import type { DocumentBrowserActorReservation } from "../🧷️actor-reservation/🟦️.ts";
-import type { VerifiedColdDocumentPair } from "../🧊️cold-pair/🟦️.ts";
 import { SOCKET_GRANT_REQUEST_TIMEOUT_MS, documentExecutionTargetLeaseMintToken } from "../⚙️constants/🟦️.ts";
 
 /** 🔐️ Resolves authority only from the current document owner, never caller-supplied actor metadata. */
@@ -83,7 +81,7 @@ export function documentOpenPlanAuthority(
   return { schema: plan.artifact.schema, packSchemaHash, parentDialect: plan.parentDialect, surfaceId: plan.surface.surfaceId };
 }
 
-type SuspendedDocumentBrowserActorV1 = Readonly<{ reservation: DocumentBrowserActorReservation; lease: DocumentExecutionTargetLease; pair: VerifiedColdDocumentPair }>;
+type SuspendedDocumentBrowserActorV1 = Readonly<{ reservation: NonNullable<ArtifactState["browserActorReservation"]>; lease: DocumentExecutionTargetLease; pair: NonNullable<ArtifactState["verifiedColdPair"]> }>;
 
 /** 🔌️ The mounted child a short link loss suspended, with its live lease and applied pair — or `null`. */
 export function suspendedDocumentBrowserActor(state: ArtifactState): SuspendedDocumentBrowserActorV1 | null {

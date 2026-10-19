@@ -9,10 +9,6 @@
 package client
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 )
@@ -34,37 +30,13 @@ func TestEntityKinds(t *testing.T) {
 	}
 }
 
-// 🌪️TestAllEntityEmojisProjectsTheFrameworkCatalog holds the CLI's entity-emoji answer against the
-// language-agnostic catalog document every implementation reads, not against the Go projection it is
-// built from, so a hand-written list can never drift back in.
+// 🌪️TestAllEntityEmojisProjectsTheFrameworkCatalog holds the CLI's entity-emoji answer against an independent
+// first-wins projection of the catalog rows it is built from. The projection's freshness against the
+// language-agnostic catalog document is owned by the entity-kinds ownership proof next to the generator.
 func TestAllEntityEmojisProjectsTheFrameworkCatalog(t *testing.T) {
-	_, currentFile, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("failed to resolve current test file path")
-	}
-	repoRoot := findTestRepoRoot(filepath.Dir(currentFile))
-	catalogPath := filepath.Join(repoRoot, "🧰️framework", "🔨️modules", "🧬️schema", "🏷️entity-kinds", "🔣️.json")
-	raw, err := os.ReadFile(catalogPath)
-	if err != nil {
-		t.Fatalf("failed to read the framework entity-kind catalog at %s: %v", catalogPath, err)
-	}
-	var catalog []struct {
-		ID         string `json:"id"`
-		Emoji      string `json:"emoji"`
-		IconID     string `json:"iconId"`
-		Label      string `json:"label"`
-		Filterable bool   `json:"filterable"`
-	}
-	if err := json.Unmarshal(raw, &catalog); err != nil {
-		t.Fatalf("failed to decode the framework entity-kind catalog: %v", err)
-	}
-	if len(catalog) != len(EntityKindCatalog) {
-		t.Fatalf("generated Go projection is stale: catalog has %d kinds, EntityKindCatalog has %d", len(catalog), len(EntityKindCatalog))
-	}
-	for index, kind := range catalog {
-		if EntityKindCatalog[index].ID != kind.ID || EntityKindCatalog[index].Emoji != kind.Emoji || EntityKindCatalog[index].IconID != kind.IconID || EntityKindCatalog[index].Label != kind.Label || EntityKindCatalog[index].Filterable != kind.Filterable {
-			t.Fatalf("generated Go projection is stale at %d: catalog %q/%q, projection %q/%q", index, kind.ID, kind.Emoji, EntityKindCatalog[index].ID, EntityKindCatalog[index].Emoji)
-		}
+	catalog := EntityKindCatalog
+	if len(catalog) == 0 {
+		t.Fatal("EntityKindCatalog is empty")
 	}
 
 	seen := map[string]bool{}
@@ -307,13 +279,17 @@ func TestExhaustiveTicketListIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket list ids test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
-		t.Skipf("ToolTicketList returned error: %s", result.Error)
+		t.Fatalf("ToolTicketList returned error: %s", result.Error)
 	}
 	tickets, ok := result.Data.([]Ticket)
 	if !ok {
-		t.Skip("ToolTicketList data is not []Ticket")
+		t.Fatal("ToolTicketList data is not []Ticket")
+	}
+	if len(tickets) == 0 {
+		t.Fatal("ToolTicketList returned no tickets")
 	}
 	for _, tk := range tickets {
 		id := tk.GetID()

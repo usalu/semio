@@ -1,4 +1,4 @@
-import type { ClientFrame, ServerFrame, WireLane, ExactWireMutationEnvelope, WireArtifactBootstrap, WireBootstrap, WireApplyOutcome, WireAckStage, WireRebootstrapRequired } from "../../../🟦️.ts";
+import type { ClientFrame, ServerFrame, WireLane, ExactWireMutationEnvelope, WireArtifactBootstrap, WireBootstrap, WireApplyOutcome, WireAckStage, WireRebootstrapRequired } from "../../../🔖️sync-protocol/🟦️.ts";
 import { writeVarintU64, readVarintU64, writeStr, readStr, writeBytes, readBytes, writeHash32, readHash32, writeBool, readBool, writeVecBytes, readVecBytes } from "../🟦️.ts";
 import { writeOptStr, readOptStr, writeOptBytes, readOptBytes, writeOptFrontier, readOptFrontier, writeVecEnvelope, readVecEnvelope, encodeEnvelope, encodeExactEnvelope, decodeEnvelope, encodeFrontier, decodeFrontier } from "../🔗️causal/🟦️.ts";
 import { DocumentBackboneBatchError, readDocumentBackboneEnvelopeBatchExact } from "../🔗️causal/🧮️backbone/🟦️.ts";

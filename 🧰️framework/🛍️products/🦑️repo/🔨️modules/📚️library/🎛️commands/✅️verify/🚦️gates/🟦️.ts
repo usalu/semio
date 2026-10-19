@@ -10,8 +10,8 @@ import { resolve } from "node:path";
  * cross-check their scanner against `git grep`, print their table, and publish the acceptance record.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runSourceCensus` */
 export async function runSourceCensusGate(root: string, which: "placeholders" | "commands"): Promise<void> {
-  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
-  const { runSourceCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("@semio-tech/repo-test/acceptance/orchestration");
+  const { runSourceCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/placeholder-and-job-census");
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
@@ -72,8 +72,8 @@ export async function runSourceCensusGate(root: string, which: "placeholders" | 
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runDocstringCensus` */
 export async function runDocstringCensusGate(root: string, rule: string | undefined): Promise<void> {
   if (rule !== "at-emoji" && rule !== "emoji-first") throw new Error("usage: verify docstrings <at-emoji|emoji-first>");
-  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
-  const { runDocstringCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("@semio-tech/repo-test/acceptance/orchestration");
+  const { runDocstringCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/docstring-and-debug-census");
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
@@ -108,8 +108,8 @@ export async function runDocstringCensusGate(root: string, rule: string | undefi
 export async function runDocstringEmojiGate(root: string, args: readonly string[]): Promise<void> {
   const listAt = args.indexOf("--files-from");
   if ((listAt >= 0 && args[listAt + 1] === undefined) || args.length !== (listAt >= 0 ? 2 : 0)) throw new Error("usage: verify docstrings emoji-unique [--files-from <list>]");
-  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
-  const { runDocstringEmojiCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("@semio-tech/repo-test/acceptance/orchestration");
+  const { runDocstringEmojiCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/docstring-and-debug-census");
   const paths = listAt >= 0 ? readFileSync(resolve(root, args[listAt + 1]!), "utf8").split("\n").map((line) => line.trim()).filter(Boolean) : undefined;
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
@@ -149,7 +149,7 @@ export async function runDocstringEmojiGate(root: string, args: readonly string[
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runArtifactNameCensus`, `runUtilityMachineCensus` */
 export async function runAgnosticGate(root: string, args: readonly string[]): Promise<void> {
   if (args.length !== 1 || (args[0] !== "framework-names" && args[0] !== "utility-machines")) throw new Error("usage: verify agnostic <framework-names|utility-machines>");
-  const { runArtifactNameCensus, runUtilityMachineCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts");
+  const { runArtifactNameCensus, runUtilityMachineCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/artifact-neutrality");
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
@@ -178,7 +178,7 @@ export async function runAgnosticGate(root: string, args: readonly string[]): Pr
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts `mutationCapReport` */
 export async function runMutationCapGate(root: string, args: readonly string[]): Promise<void> {
   if (!(args.length === 0 || (args.length === 2 && args[0] === "--under" && args[1] !== ""))) throw new Error("usage: verify mutation-caps [--under <repository-relative path>]");
-  const { mutationCapReport } = await import("../../../../🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts");
+  const { mutationCapReport } = await import("@semio-tech/repo-test/schema/orchestration/mutation-caps");
   const report = mutationCapReport(root, args[1] ?? "");
   if (args.length === 2 && report.leaves.length === 0) throw new Error(`verify mutation-caps: --under ${JSON.stringify(args[1])} holds no bounded leaf`);
   const plugins = new Map<string, number>();
@@ -194,8 +194,8 @@ export async function runMutationCapGate(root: string, args: readonly string[]):
  * the findings and publishes the acceptance record.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runDebugTagCensus` */
 export async function runDebugTagCensusGate(root: string): Promise<void> {
-  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
-  const { runDebugTagCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("@semio-tech/repo-test/acceptance/orchestration");
+  const { runDebugTagCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/docstring-and-debug-census");
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
@@ -224,8 +224,8 @@ export async function runDebugTagCensusGate(root: string): Promise<void> {
  * the scanner against `git grep`, prints the findings and publishes the acceptance record.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runInterfaceImportCensus` */
 export async function runInterfaceImportGate(root: string): Promise<void> {
-  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
-  const { runInterfaceImportCensus } = await import("../../../../🧪️test/🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts");
+  const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("@semio-tech/repo-test/acceptance/orchestration");
+  const { runInterfaceImportCensus } = await import("@semio-tech/repo-test/acceptance/orchestration/interface-import-census");
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);

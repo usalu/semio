@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanVertex};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanVertex};
 use semio_framework_2d::PathSegment;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanText;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanText;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -11,14 +11,14 @@ use semio_framework_geometry::Point;
 use semio_framework_plugin::{Canvas2dFraming, Canvas2dScene};
 #[allow(unused_imports)]
 use semio_framework_value::ToValue;
-use crate::render::plan::{ACCENT, ring, record};
-use crate::render::plan::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanBounds;
+use semio_s_artifact_bim_model_plan_linework::render::plan::{ACCENT, ring, record};
+use semio_s_artifact_bim_model_plan_linework::render::plan::{canvas_point, plan_point, canvas_bounds, layers, framing_revision, scene};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanBounds;
 
 fn demo_plan(storey: &str) -> PlanLinework {
     let model = parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses");
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.plan_linework.clone()).get(storey).cloned().expect("the storey has a plan")
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.plan_linework.clone()).get(storey).cloned().expect("the storey has a plan")
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> PlanVertex {

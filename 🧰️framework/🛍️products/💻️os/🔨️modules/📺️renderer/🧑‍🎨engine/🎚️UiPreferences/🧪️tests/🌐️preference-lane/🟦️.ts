@@ -1,5 +1,5 @@
 import { validUserPreferenceRecordV1 } from "../../../../../../../../🔨️modules/📇️directory/🚪️io/📝️text/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { createMemoryStoragePort, createScopedStoragePort, type StoragePort } from "@semio-tech/framework";
 import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1 } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { type UiPreferencesConfigMutation } from "../../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";

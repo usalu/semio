@@ -9,11 +9,15 @@
 //! The attach references of walls point at leaf elements (roofs, slabs and ceilings have no attach of their own), so the chain of references cannot loop; [`find_cycle`] guards the graph all the same.
 
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
-use crate::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Wall};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, slabs};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, roofs, Anonymous};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::vector::{cross, lerp, perp};
@@ -75,18 +79,18 @@ pub fn surface_of(snapshot: &ModelSnapshot, id: &str, own: &StoreyLevel) -> Atta
     if let Some(slab) = snapshot.slabs.get(id) {
         let thickness = snapshot.slab_types.get(&slab.slab_type).map_or(0.0, |kind| layer_thicknesses(&kind.layers).iter().sum());
         let (outline, holes) = (bulged(&slab.boundary), slab.holes.iter().map(|hole| bulged(hole)).collect::<Vec<_>>());
-        let top = slabs::top_plane(slab, &outline, own.elevation + slab.offset);
+        let top = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs::top_plane(slab, &outline, own.elevation + slab.offset);
         return AttachSurface { found: true, pieces: piece(&outline, &holes, top.raised(-thickness)).into_iter().collect(), thickness, reference: own.elevation + slab.offset - thickness };
     }
     if let Some(ceiling) = snapshot.ceilings.get(id) {
-        let thickness = ceilings::thickness(snapshot, ceiling);
+        let thickness = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::thickness(snapshot, ceiling);
         let (outline, holes) = (bulged(&ceiling.boundary), ceiling.holes.iter().map(|hole| bulged(hole)).collect::<Vec<_>>());
-        let top = ceilings::top_plane(ceiling.slope, &outline, own.top_elevation - ceiling.offset);
+        let top = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::top_plane(ceiling.slope, &outline, own.top_elevation - ceiling.offset);
         return AttachSurface { found: true, pieces: piece(&outline, &holes, top.raised(-thickness)).into_iter().collect(), thickness, reference: own.top_elevation - ceiling.offset - thickness };
     }
     if let Some(roof) = snapshot.roofs.get(id) {
         let thicknesses = snapshot.roof_types.get(&roof.roof_type).map(|kind| layer_thicknesses(&kind.layers)).unwrap_or_default();
-        let (pieces, eave) = roofs::underside_pieces(roof, own);
+        let (pieces, eave) = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs::underside_pieces(roof, own);
         return AttachSurface { found: true, pieces: pieces.into_iter().map(|(outline, under)| Piece { outline, holes: Vec::new(), under }).collect(), thickness: thicknesses.iter().sum(), reference: eave };
     }
     AttachSurface::default()
@@ -95,13 +99,13 @@ pub fn surface_of(snapshot: &ModelSnapshot, id: &str, own: &StoreyLevel) -> Atta
 /// 🔑️ What `surface_of` reads of the snapshot besides the level of the storey: the element and its type.
 pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
     if let Some(slab) = snapshot.slabs.get(id) {
-        return dep_object([("slab", slabs::dependency(snapshot, &slab.anonymous()))]);
+        return dep_object([("slab", semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs::dependency(snapshot, &slab.anonymous()))]);
     }
     if let Some(ceiling) = snapshot.ceilings.get(id) {
-        return dep_object([("ceiling", ceilings::dependency(snapshot, &ceiling.anonymous()))]);
+        return dep_object([("ceiling", semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::dependency(snapshot, &ceiling.anonymous()))]);
     }
     if let Some(roof) = snapshot.roofs.get(id) {
-        return dep_object([("roof", roofs::dependency(snapshot, &roof.anonymous()))]);
+        return dep_object([("roof", semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs::dependency(snapshot, &roof.anonymous()))]);
     }
     dep_object([("missing", dep_value(&id.to_string()))])
 }
@@ -155,7 +159,7 @@ fn crossing(p: Point, q: Point, a: Point, b: Point) -> Option<f64> {
 }
 
 fn polyline(axis: &Axis, length: f64) -> Vec<(f64, Point)> {
-    let curve = seg(axis);
+    let curve = segment_of(axis);
     if curve.is_line() {
         return vec![(0.0, curve.start), (length, curve.end)];
     }
@@ -330,7 +334,7 @@ struct Station<'a> {
 
 impl Station<'_> {
     fn beyond(&self, s: f64) -> (Vec2, f64) {
-        let curve = seg(self.axis);
+        let curve = segment_of(self.axis);
         match (curve.center(), curve.start_angle()) {
             (Some(centre), Some(angle)) => {
                 let a = angle + curve.sweep() * s / self.length;
@@ -345,7 +349,7 @@ impl Station<'_> {
     }
 
     fn of(&self, p: Point) -> f64 {
-        let curve = seg(self.axis);
+        let curve = segment_of(self.axis);
         if curve.is_line() {
             let direction = (curve.end - curve.start) / curve.chord();
             (p - curve.start).dot(direction) * self.length / curve.chord()
@@ -392,7 +396,7 @@ pub fn apply(snapshot: &ModelSnapshot, id: &str, wall: &Wall, mut layout: WallLa
         grid.extend([lo, hi]);
     }
     grid.extend(top_points.iter().chain(base_points.iter()).map(|point| point.s));
-    let curve = seg(&wall.axis);
+    let curve = segment_of(&wall.axis);
     if !curve.is_line() && layout.length > 0.0 {
         let cells = (curve.sweep().abs() / std::f64::consts::FRAC_PI_2).ceil().max(1.0) as usize;
         grid.extend((1..cells).map(|k| layout.length * k as f64 / cells as f64));
@@ -473,7 +477,7 @@ fn strips_volume(axis: &Axis, layout: &WallLayout, grid: &[f64], heights: &[f64]
 /// 🧪️ The builders of the small models the wall depth tests share: one building with a ground storey of 3 m, a wall type of one 0.3 m layer, door, window, slab and roof types and the materials `m` and `paint`.
 #[cfg(any(test, feature = "testkit"))]
 pub mod testing {
-    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
     use serde_json::{json, Value};
 

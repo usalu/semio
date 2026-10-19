@@ -6,6 +6,15 @@ import { subsetIdForDirectoryName } from "../../🔍️discovery/🗂️file-kin
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
 import { assessMutationCrateBudget, newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
+import { parseCrateBudget, type CrateBudget } from "../📦️crate-tree/🗺️plan/💰️budget/🟦️.ts";
+
+/** 📐️ Reads the crate budgets of `new crates`: `--target=<files>/<bytes>/<lines>` is what every crate aims for, `--hard=<files>/<bytes>/<lines>` is the limit the planner refuses to pack beyond. */
+export function crateBudgetFlags(flags: ReadonlySet<string>): { target: CrateBudget | undefined; hard: CrateBudget | undefined } {
+  const value = (name: string): string | undefined => [...flags].find((flag) => flag.startsWith(`${name}=`))?.slice(name.length + 1);
+  const target = value("--target");
+  const hard = value("--hard");
+  return { target: target === undefined ? undefined : parseCrateBudget(target), hard: hard === undefined ? undefined : parseCrateBudget(hard) };
+}
 
 /** 🛂️ Resolves a scaffold destination from the caller's exact physical owner and canonical leaf. */
 export function newScaffoldDestinationV1(repoRoot: string, kind: "artifact" | "standard" | "subset", owner: string, newDirectory: string): string {
@@ -105,7 +114,8 @@ export class CleanMechanismNewScript extends Script {
   }
 
   private async crates(packageDir: string, flags: ReadonlySet<string>, dryRun: boolean): Promise<void> {
-    const { applyCarveWrites, carveWrites, parseCrateBudget, planArtifactCrates, registerBuildOwnerRows, resolveCarveBackupDir } = await import("../📦️crate-tree/🟦️.ts");
+    const { applyCarveWrites, carveWrites, planArtifactCrates, registerBuildOwnerRows, resolveCarveBackupDir } = await import("../📦️crate-tree/🟦️.ts");
+    const { registerCrateLaunchRoutes } = await import("../🚀️launch-catalog/🟦️.ts");
     if (flags.has("--check-applied")) {
       const sandbox = [...flags].find((flag) => flag.startsWith("--sandbox="))?.slice("--sandbox=".length);
       if (!sandbox) throw new Error("new crates --check-applied needs --sandbox=<dir> (a directory outside the repository)");
@@ -132,9 +142,7 @@ export class CleanMechanismNewScript extends Script {
     const mode = [...flags].find((flag) => flag.startsWith("--mutation-families="))?.slice("--mutation-families=".length) ?? "auto";
     if (mode !== "off" && mode !== "on" && mode !== "auto") throw new Error(`--mutation-families expects off, on or auto, got ${JSON.stringify(mode)}`);
     const lift = [...flags].find((flag) => flag.startsWith("--lift="))?.slice("--lift=".length).split(",").filter(Boolean);
-    const targetFlag = [...flags].find((flag) => flag.startsWith("--target="))?.slice("--target=".length);
-    const hardFlag = [...flags].find((flag) => flag.startsWith("--hard="))?.slice("--hard=".length);
-    const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, target: targetFlag === undefined ? undefined : parseCrateBudget(targetFlag), hard: hardFlag === undefined ? undefined : parseCrateBudget(hardFlag), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
+    const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, ...crateBudgetFlags(flags), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
     for (const crate of plan.crates) console.log(`crate ${crate.name}  ${crate.packageDir}  lib ${crate.lib?.files}/${crate.lib?.bytes}/${crate.lib?.lines}  test ${crate.test?.files}/${crate.test?.bytes}/${crate.test?.lines}  deps [${crate.dependsOn.map((id) => plan.crates.find((entry) => entry.id === id)?.name).join(", ")}]`);
     for (const note of plan.overlay.notes) console.log(`note: ${note}`);
     if (plan.problems.length) {
@@ -164,6 +172,8 @@ export class CleanMechanismNewScript extends Script {
     applyCarveWrites(this.root, writes, backup);
     const owners = registerBuildOwnerRows(this.root, plan, backup);
     console.log(`owner rows: ${owners.length ? owners.join(", ") : "none added"}`);
+    const routes = registerCrateLaunchRoutes(this.root, plan, backup);
+    console.log(`launch routes: ${routes.length ? `${routes.length} added` : "none added"}`);
     console.log(`new crates: ${plan.artifactCrate} — wrote ${writes.length} file(s) for ${plan.crates.length} crate(s).`);
     await this.unmirror(packageDir, true);
   }
@@ -173,8 +183,8 @@ export class CleanMechanismNewScript extends Script {
     const result = runUnmirror({ repoRoot: this.root, artifacts: [dirname(dirname(packageDir))], apply, log: (line) => console.log(`  ${line}`) });
     const report = result.report;
     console.log(`new crates --unmirror: ${report.edits.size} file(s), ${result.manifests.size} manifest(s), ${report.removedLeaves} mirror re-export(s) removed, ${report.repointedLeaves + report.repointedChains} path(s) re-pointed, ${report.addedImports} import(s) added, ${report.removedModules} module(s) removed${apply ? `, ${result.written} written` : " (dry-run)"}.`);
-    for (const line of [...report.unresolvedMirrors.map((entry) => `unresolved mirror re-export ${entry}`), ...report.multiMounted.map((entry) => `file mounted more than once, not edited ${entry}`), ...result.cycles.map((entry) => `dependency cycle ${entry}`), ...result.conflicts.map((entry) => `file changed while planning ${entry}`)]) console.error(`problem: ${line}`);
-    if (result.cycles.length || result.conflicts.length || report.unresolvedMirrors.length) process.exit(1);
+    for (const line of [...report.unresolvedMirrors.map((entry) => `unresolved mirror re-export ${entry}`), ...report.multiMounted.map((entry) => `file mounted more than once, not edited ${entry}`), ...result.cycles.map((entry) => `dependency cycle ${entry}`), ...result.regressions.map((entry) => `audit regression ${entry}`), ...result.conflicts.map((entry) => `file changed while planning ${entry}`)]) console.error(`problem: ${line}`);
+    if (result.cycles.length || result.regressions.length || result.conflicts.length || report.unresolvedMirrors.length) process.exit(1);
   }
 
   private report(rel: string, created: string[], skipped: string[], dryRun: boolean): void {

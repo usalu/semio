@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
-use crate::standards::v1::subsets::any::io::export::svg::style::*;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{kind_class, style_class, STYLE_CLASSES, paint_rank, STROKE_WIDTHS, sheet, view_class};
 
 const KINDS: [PlanKind; 32] = [
     PlanKind::WallCut,

@@ -1,6 +1,6 @@
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../🧹️retire/🟦️.ts";
 /** 📏️ Device-tolerance path preparation for https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes. */
-import type {PathSegment,Vec2} from "../../🟦️.ts";
+import type {PathSegment,Vec2} from "../../📐️drawing-contract/🟦️.ts";
 export type PathFlattenInput={segments:readonly PathSegment[];transform:readonly number[];tolerance:number};
 export type FlatContour={points:Vec2[];closed:boolean};
 export type PathFlattenProgress={phase:"preparing"|"subdividing"|"complete";completed:number;total:number;points:number;work:number;done:boolean};

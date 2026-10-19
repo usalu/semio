@@ -1,7 +1,7 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 66639101952,
-  "expectedHeadroomBytes": 2079326208,
+  "expectedPartitionBytes": 68249714688,
+  "expectedHeadroomBytes": 468713472,
   "cases": [
     {
       "id": "authored",
@@ -97,5 +97,16 @@
       "missing": true,
       "accepted": false
     }
-  ]
+  ],
+  "nxPartition": {
+    "declaration": {
+      "directory": ".cache/b/n",
+      "capacityBytes": 1610612736,
+      "maximumArtifactBytes": 536870912,
+      "maximumLogicalBytes": 1609564160
+    },
+    "childPhysicalBytes": 67108864,
+    "childMetadataBytes": 131072,
+    "minimumChildren": 14
+  }
 }

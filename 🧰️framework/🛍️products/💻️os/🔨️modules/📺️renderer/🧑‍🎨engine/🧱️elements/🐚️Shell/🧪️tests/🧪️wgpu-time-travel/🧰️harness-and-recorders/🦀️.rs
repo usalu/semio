@@ -32,19 +32,19 @@ fn refusal_key(label: TimeTravelLabel) -> String {
 
 const ALL_VERBS: [TimeTravelVerb; 8] = [TimeTravelVerb::NextProblem, TimeTravelVerb::Accept, TimeTravelVerb::Discard, TimeTravelVerb::CancelReplay, TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Back, TimeTravelVerb::Exit];
 
-fn chord(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
+fn chord(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
-    let mut key = ui_wgpu::wgpu::KeyAction::Escape;
+    let mut key = semio_framework_ui_wgpu_input::KeyAction::Escape;
     for token in chord.split('+') {
         match token {
             "alt" => modifiers.alt = true,
             "shift" => modifiers.shift = true,
             "ctrl" => modifiers.ctrl = true,
             "meta" | "mod" => modifiers.meta = true,
-            "enter" => key = ui_wgpu::wgpu::KeyAction::Enter,
-            "backspace" => key = ui_wgpu::wgpu::KeyAction::Backspace,
-            "escape" => key = ui_wgpu::wgpu::KeyAction::Escape,
-            other => key = ui_wgpu::wgpu::KeyAction::Char(other.to_string()),
+            "enter" => key = semio_framework_ui_wgpu_input::KeyAction::Enter,
+            "backspace" => key = semio_framework_ui_wgpu_input::KeyAction::Backspace,
+            "escape" => key = semio_framework_ui_wgpu_input::KeyAction::Escape,
+            other => key = semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
         }
     }
     (key, modifiers)
@@ -123,7 +123,7 @@ fn paint_retained_body(shell: &mut ShellState, surface: &str, document: &UiDocum
     let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx))
+        caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut ctx, surface, "test", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx))
     });
     assert!(painted, "{surface} painted within its opportunity ceiling");
     if surface == FRAMEWORK_PANEL_TAB_HISTORY_ID {

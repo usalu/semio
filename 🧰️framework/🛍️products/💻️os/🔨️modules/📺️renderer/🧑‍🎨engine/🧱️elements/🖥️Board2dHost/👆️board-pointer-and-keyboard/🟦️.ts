@@ -1,12 +1,12 @@
 /** 👆️ Board2dHost pointer and keyboard: the presence publishing, the canvas pointer effect and the keyboard effects. */
 import { useCallback, useEffect, useRef } from "react";
-import { type Board2dWasmSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { useLocalPresenceActorIdV1 } from "../../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, publishLocalPresenceWindowViewV1, clearLocalPresenceWindowViewV1, publishLocalActiveToolV1 } from "../../👕️canvas-presence/🟦️.ts";
 import { board2dCameraActionArgs, board2dFloat32Decimal, parseBoardCamera } from "../🔬️board-parsing/🟦️.ts";
 import { board2dPinchCamera, boardScreenToWorld } from "../📍️drop-and-camera/🟦️.ts";
 import { beginBoardPeerGesture, endBoardPeerGesture, notifyBoardPeersGestureEnded } from "../🔄️session-sync/🟦️.ts";
 import type { BoardCore3 } from "../🔁️board-lifecycle-and-sync/🟦️.ts";
+import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 
 // #region Board2dHost
 /** 👆️ Wires the canvas pointer gestures, presence and keyboard of the board. */

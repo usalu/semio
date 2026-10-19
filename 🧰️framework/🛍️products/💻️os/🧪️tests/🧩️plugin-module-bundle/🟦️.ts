@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { decodeTrustedPluginModuleBundleV1, validateTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, validateTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1 } from "@semio-tech/plugin-registry/deployment/schema";
 import { trustedPluginModuleBundleSha256V1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleSourceV1 } from "@semio-tech/framework/plugin-module";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 

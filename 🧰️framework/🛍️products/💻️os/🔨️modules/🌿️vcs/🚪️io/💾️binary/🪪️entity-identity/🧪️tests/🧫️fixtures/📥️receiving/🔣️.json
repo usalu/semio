@@ -14,7 +14,7 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs",
-    "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/🦀️.rs",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🚪️io/🛂️authority/🦀️.rs"
@@ -96,7 +96,7 @@
   },
   "draftHome": {
     "catalog": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🦀️.rs",
-    "core": "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "core": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/🦀️.rs",
     "editor": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
     "create": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
     "worker": "HomeCreateStudioWork",

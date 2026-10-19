@@ -1,14 +1,15 @@
 //! 🔺️ Diff constructor for `CreateStorey`: one created storey entry; the building must exist, the height must be positive,
 //! an authored plan cut height must be positive and the level index must be free within the building.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_storey::CreateStorey;
-use crate::standards::v1::subsets::any::schema::{snapshot::{cut_height_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{cut_height_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateStorey, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let storey = &payload.storey;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.buildings.contains_key(&storey.building) {

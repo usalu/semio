@@ -1,0 +1,18 @@
+{
+ "extends": "../../../../../../../../tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "types": [
+   "bun"
+  ]
+ },
+ "include": [],
+ "files": [
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🚀️launch-routes/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚀️launch-catalog/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🚀️launch-routes/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts"
+ ]
+}

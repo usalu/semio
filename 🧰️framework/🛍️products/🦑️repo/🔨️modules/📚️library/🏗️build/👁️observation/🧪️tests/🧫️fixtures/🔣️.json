@@ -108,6 +108,7 @@
       "projectInferenceCountsV1",
       "receiveSourcePreparationV1",
       "registerSourceAnalysisV1",
+      "requireCurrentObservationV1",
       "settleObservedComputationV1",
       "sourceObservationStatsV1"
     ],

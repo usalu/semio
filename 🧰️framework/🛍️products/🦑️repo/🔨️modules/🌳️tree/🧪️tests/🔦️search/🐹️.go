@@ -16,6 +16,7 @@ import (
 
 	search "github.com/usalu/semio/repo/search"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestSearchMonorepoTree(t *testing.T) {
@@ -105,9 +106,7 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo"), 0755); err != nil {
 		t.Fatalf("mkdir .🦑️repo: %v", err)
 	}
-	oldRoot := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(oldRoot)
+	sandbox.BindRoot(t, tmpDir)
 
 	makeTree := func(description string) *TreeNode {
 		return &TreeNode{
@@ -176,7 +175,7 @@ func TestGetCacheDirUsesMonorepoRoot(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(clientDir, "go.mod"), []byte("module example.com/client"), 0644); err != nil {
 		t.Fatalf("write go.mod: %v", err)
 	}
-	oldRoot := workspace.RootDir
+	oldRoot := workspace.GetRootDir()
 	defer func() { workspace.SetRootDir(oldRoot) }()
 	workspace.SetRootDir(clientDir)
 	cacheDir := getCacheDir()
@@ -316,7 +315,7 @@ type g1Fixture struct {
 
 func loadG1Fixture(t *testing.T) g1Fixture {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "1️⃣g1-contract", "🔣️.json"))
+	data, err := os.ReadFile(sandbox.OriginPath("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "1️⃣g1-contract", "🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -421,9 +420,7 @@ func prepareG1SearchCache(t *testing.T) (*TreeNode, string, []byte, []byte) {
 	if err := os.MkdirAll(workspace.RepoMetaDirForRoot(repoRoot), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	previousRoot := workspace.GetRootDir()
-	workspace.SetRootDir(repoRoot)
-	t.Cleanup(func() { workspace.SetRootDir(previousRoot) })
+	sandbox.BindRoot(t, repoRoot)
 	tree := g1SearchTree("last-valid", "stable")
 	steps := map[string]bool{}
 	indexValue, err := ensureCacheIndexed(context.Background(), tree, func(value search.Progress) { steps[value.Step] = true })
@@ -482,5 +479,37 @@ func assertFileBytes(t *testing.T, path string, expected []byte) {
 	}
 	if !bytes.Equal(actual, expected) {
 		t.Fatalf("%s changed", path)
+	}
+}
+
+func TestSearchIndexIsNotReusedAcrossSectionChoice(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo"), 0755); err != nil {
+		t.Fatalf("mkdir .🦑️repo: %v", err)
+	}
+	sandbox.BindRoot(t, tmpDir)
+
+	file := &TreeNode{Kind: TreeNodeFile, ID: "file:main", Label: "main"}
+	withoutSections := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{file}}
+	withSections := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{{Kind: TreeNodeFile, ID: "file:main", Label: "main", Children: []*TreeNode{
+		{Kind: TreeNodeSection, ID: "section:models", Label: "Models"},
+	}}}}
+
+	first, err := SearchMonorepoTreeWithCache(context.Background(), withoutSections, "Models")
+	if err != nil {
+		t.Fatalf("search without sections failed: %v", err)
+	}
+	if len(first.Children) != 0 {
+		t.Fatalf("a tree without sections must not match a section name, got %d children", len(first.Children))
+	}
+	second, err := SearchMonorepoTreeWithCache(context.Background(), withSections, "Models")
+	if err != nil {
+		t.Fatalf("search with sections failed: %v", err)
+	}
+	if len(second.Children) == 0 {
+		t.Fatal("the index built for a tree without sections must not answer a search over a tree with sections")
 	}
 }

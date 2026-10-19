@@ -1,5 +1,5 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import { OwnedResidentRecordDetachment, OwnedResidentRetirement, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
 import { decodeActorReturnResult, encodeActorReturnDrive, type ActorReturnDrive, type ActorReturnResult } from "../../📤️return/🟦️.ts";
 import { OwnedActorTurnOutput, OwnedActorTurnOutputs } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
@@ -10,7 +10,8 @@ import type { ShardBudget } from "../📜️wire/🟦️.ts";
 /** ↩️ Admits, drives and retires the fixed-response captured return of an instance. */
 export class ShardCapturedReturns {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   reserveInstanceReturn(instance: ShardInstanceOwner, maximumResponses: number, grant: ResidentGrant): ShardReturnAdmission {
     if (instance.returnPhase === "closing") return returnAdmission("rejected", "actor-return.closing");

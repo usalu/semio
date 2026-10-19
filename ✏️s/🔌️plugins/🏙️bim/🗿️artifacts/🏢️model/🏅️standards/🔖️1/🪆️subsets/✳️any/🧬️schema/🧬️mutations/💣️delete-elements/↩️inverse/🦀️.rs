@@ -2,13 +2,12 @@
 //! property or classification setter per removed data entry, in storage order so that the store, which replays the vector reversed,
 //! restores the base exactly. Empty when the selection is refused.
 
-use crate::standards::v1::subsets::any::schema::mutations::cascade;
 use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &DeleteElements, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
-    cascade::inverse(base, &payload.ids)
+    semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::inverse(base, &payload.ids)
 }

@@ -4,7 +4,7 @@ import { PdfProjection,PdfReader,pdfInteger,pdfNumber } from "../🧩️entity/�
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfAnnotationKind,readPdfAnnotationKind,pdfWideCells,readPdfWide } from "./🏷️kind/🟦️.ts";
 import { writePdfAppearance,readPdfAppearance,writePdfBorder,readPdfBorder } from "./🎭️appearance/🟦️.ts";
-import { writePdfDate,readPdfDate } from "../📇️metadata/📆️date/🟦️.ts";
+import { writePdfDate, readPdfDate } from "../🗓️date/🟦️.ts";
 import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 
 /** 📝️ Project every markup field with full unsigned 64-bit index coordinates. */

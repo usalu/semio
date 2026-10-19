@@ -5,11 +5,16 @@ use semio_framework_os_renderer_wgpu_scene_state::{SceneListHit, SceneListTransf
 use semio_framework_os_renderer_wgpu_scene_tables::{TableEditableTextCommitOutcome, TableStepperKeyOutcome, render_table, table_button_accessibility_activate, table_button_accessibility_cells, table_cell_hit, table_editable_text_commit, table_editable_text_commit_owned, table_editable_text_focus_target, table_hit, table_metrics, table_segment_rect, table_stepper_accessibility_cells, table_stepper_apply_key, table_stepper_focus_target, table_transfer_handle_rect, table_transfer_start, table_visible_rect};
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, HitTarget, Rect, SurfaceKind, Theme, UiComponentSceneNode, UiDriverDrag, UiPresence};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::HitTarget;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
 use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
 use semio_framework_ui_scene_views::TableScene;
 use semio_framework_ui_text::FontAtlas;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
     UiComponentSceneNode {
@@ -206,17 +211,17 @@ fn stepper_cell_segments_dispatch_the_merged_delta_and_the_centre_swallows_the_r
     assert!(press(&node, 200.0, y).expect("centre hit").action.is_none(), "a stepper's read-only centre must swallow the row click");
 }
 
-fn table_key_action(key: &str) -> ui_wgpu::wgpu::KeyAction {
+fn table_key_action(key: &str) -> semio_framework_ui_wgpu_input::KeyAction {
     match key {
-        "ArrowUp" => ui_wgpu::wgpu::KeyAction::ArrowUp,
-        "ArrowRight" => ui_wgpu::wgpu::KeyAction::ArrowRight,
-        "ArrowDown" => ui_wgpu::wgpu::KeyAction::ArrowDown,
-        "ArrowLeft" => ui_wgpu::wgpu::KeyAction::ArrowLeft,
-        "PageUp" => ui_wgpu::wgpu::KeyAction::PageUp,
-        "PageDown" => ui_wgpu::wgpu::KeyAction::PageDown,
-        "Home" => ui_wgpu::wgpu::KeyAction::Home,
-        "End" => ui_wgpu::wgpu::KeyAction::End,
-        "Enter" => ui_wgpu::wgpu::KeyAction::Enter,
+        "ArrowUp" => semio_framework_ui_wgpu_input::KeyAction::ArrowUp,
+        "ArrowRight" => semio_framework_ui_wgpu_input::KeyAction::ArrowRight,
+        "ArrowDown" => semio_framework_ui_wgpu_input::KeyAction::ArrowDown,
+        "ArrowLeft" => semio_framework_ui_wgpu_input::KeyAction::ArrowLeft,
+        "PageUp" => semio_framework_ui_wgpu_input::KeyAction::PageUp,
+        "PageDown" => semio_framework_ui_wgpu_input::KeyAction::PageDown,
+        "Home" => semio_framework_ui_wgpu_input::KeyAction::Home,
+        "End" => semio_framework_ui_wgpu_input::KeyAction::End,
+        "Enter" => semio_framework_ui_wgpu_input::KeyAction::Enter,
         other => panic!("fixture key {other}"),
     }
 }
@@ -277,7 +282,7 @@ fn table_stepper_keyboard_matches_the_shared_react_oracle_and_revalidates_the_li
     let changed_rows = Value::Array(vec![Value::Object(changed_row)]).to_string();
     let changed = table_scene("window:sourcing-pool", TableScene::base(columns_json(&[(cell["columnId"].as_str().unwrap(), cell["columnLabel"].as_str().unwrap(), false)]), changed_rows));
     let mut input = InputState::<ActionDescriptor>::default();
-    assert!(table_stepper_apply_key(&changed, cell["rowId"].as_str().unwrap(), cell["columnId"].as_str().unwrap(), &ui_wgpu::wgpu::KeyAction::ArrowUp, &mut input).is_none());
+    assert!(table_stepper_apply_key(&changed, cell["rowId"].as_str().unwrap(), cell["columnId"].as_str().unwrap(), &semio_framework_ui_wgpu_input::KeyAction::ArrowUp, &mut input).is_none());
     assert!(table_stepper_accessibility_cells(&changed, bounds, UiDriverDrag::Handle).is_empty());
     assert!(drain_actions(&mut input).is_empty());
 }

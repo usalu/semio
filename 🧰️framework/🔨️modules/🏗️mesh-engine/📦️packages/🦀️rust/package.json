@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  },
   "bundleKind": "library",
   "scripts": {
     "test-native": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-engine-rs:test-native"

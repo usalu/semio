@@ -1,9 +1,9 @@
 //! 🧭️ Authored options/worksets as IfcGroup and IfcRelAssignsToGroup in IFC2x3 and IFC4.
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{refs, rf, text, unset};
-use crate::standards::v1::subsets::any::io::export::ifc::Export;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{refs, rf, text, unset};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
 use std::collections::BTreeMap;
-fn group(x: &mut Export<'_>, id: &str, name: &str, kind: &str, rows: Vec<(&'static str, crate::standards::v1::subsets::any::io::export::ifc::writer::V)>) -> u64 {
+fn group(x: &mut Export<'_>, id: &str, name: &str, kind: &str, rows: Vec<(&'static str, semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V)>) -> u64 {
     let entity = x.ifc.rooted("IFCGROUP", id, name, "", vec![text(kind)]);
     x.links.elements.insert(id.to_owned(), entity);
     let mut authored = vec![("Id", label(id))];

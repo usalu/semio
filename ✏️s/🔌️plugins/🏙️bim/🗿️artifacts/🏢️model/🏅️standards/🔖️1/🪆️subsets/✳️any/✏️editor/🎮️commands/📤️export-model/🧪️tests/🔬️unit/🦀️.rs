@@ -1,30 +1,33 @@
-use crate::standards::v1::subsets::any::io::export::{csv, gltf, svg};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::export::gltf;
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::Effect;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::editor::bim::{BimCommand, BimModelApp};
+use semio_s_artifact_bim_model_bim::editor::bim::{BimCommand, BimModelApp};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::{Schema, StagedExport};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::StagedExport;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::export_model::*;
-use crate::editor::bim::fixture::support::{ctx, demo, run};
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{ExportJob, Output, Advance, stem, encode, FORMATS, handle, ExportModel};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, run};
 use protocol::Inference;
 
 fn finished(job: &mut ExportJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'static str>) {
@@ -53,7 +56,7 @@ async fn a_file_stem_is_the_project_name_with_dashes_for_everything_but_letters_
 async fn every_format_is_written_from_the_inference_exactly_like_its_serializer_does() {
     let snapshot = demo();
     let inferred = fresh(&snapshot);
-    let ifc_bytes = ifc::export_ifc2x3(&snapshot).expect("the ifc").0;
+    let ifc_bytes = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&snapshot).expect("the ifc").0;
     let ifc = encode("ifc2x3", &snapshot, &inferred).expect("ifc");
     assert_eq!((ifc.mime_type, ifc.encoding), ("application/x-step", None));
     assert_eq!(ifc.data.as_bytes(), ifc_bytes.as_slice());
@@ -61,7 +64,7 @@ async fn every_format_is_written_from_the_inference_exactly_like_its_serializer_
     assert_eq!(glb.encoding, Some(MEDIA_EXPORT_BASE64_ENCODING));
     assert_eq!(glb.data, semio_framework_io_base64::base64_standard_encode(&gltf::export_glb(&snapshot).expect("the glb").0));
     assert_eq!(encode("svg", &snapshot, &inferred).expect("svg").data, svg::export_svg(&snapshot).expect("the svg"));
-    assert_eq!(encode("csv", &snapshot, &inferred).expect("csv").data, csv::report_csv(&snapshot, &inferred));
+    assert_eq!(encode("csv", &snapshot, &inferred).expect("csv").data, semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::report_csv(&snapshot, &inferred));
     assert_eq!(ifc.filename, format!("{}.ifc", stem(&snapshot.project.name)));
 }
 
@@ -107,12 +110,12 @@ async fn a_cancelled_job_keeps_the_finished_nodes_and_the_next_job_finishes_the_
     cancelled.advance(&snapshot).expect("infers a little");
     assert!(cancelled.fraction() > 0.0 && cancelled.fraction() < 1.0);
     cancelled.cancel(&snapshot);
-    let report = inference::report(Some(&instance));
+    let report = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(report.cancelled && report.computed > 0, "{report:?}");
     let mut next = ExportJob::with_steps("ifc2x3", Some(&instance), 1_000);
     let (output, _) = finished(&mut next, &snapshot);
     assert_eq!(output, encode("ifc2x3", &snapshot, &fresh(&snapshot)).expect("the file"));
-    let rest = inference::report(Some(&instance));
+    let rest = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::report(Some(&instance));
     assert!(rest.reused >= report.computed, "the nodes the cancelled job finished were not computed again: {rest:?}");
 }
 

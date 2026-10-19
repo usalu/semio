@@ -1,7 +1,7 @@
 import type { Node, Edge } from "@xyflow/react";
-import { type DiagramLayoutCloseStage, type DiagramLayoutEdgeRuntime, type DiagramLayoutJobStatus, type DiagramLayoutLookup, type DiagramLayoutMerge, type DiagramLayoutNodeRuntime, type DiagramLayoutOwnedSource, type DiagramLayoutPendingEdge, type DiagramLayoutPosition, type DiagramLayoutPreview, type DiagramLayoutStage, type DiagramLayoutStepResult, type DiagramLayoutWork, asDiagramLayoutSource, diagramLayoutLimits } from "../📊️job-types/🟦️.ts";
-import { type DiagramLayoutOptions, diagramLayoutIdentityAdmitted } from "../📜️wire/🟦️.ts";
-import { DiagramPagedStore, compareLayoutText, createLayoutMerge, finiteLayoutValue, nodeLayoutDimension, projectLayoutEdge, projectLayoutNode, resolveLayoutOptions, stepLayoutMerge } from "../🗃️paged-store/🟦️.ts";
+import { type DiagramLayoutCloseStage, type DiagramLayoutEdgeRuntime, type DiagramLayoutJobStatus, type DiagramLayoutLookup, type DiagramLayoutNodeRuntime, type DiagramLayoutOwnedSource, type DiagramLayoutPendingEdge, type DiagramLayoutPreview, type DiagramLayoutStage, type DiagramLayoutStepResult, type DiagramLayoutWork, asDiagramLayoutSource, diagramLayoutLimits } from "../📊️job-types/🟦️.ts";
+import { type DiagramLayoutOptions, type DiagramLayoutPosition, diagramLayoutIdentityAdmitted } from "../📜️wire/🟦️.ts";
+import { DiagramPagedStore, type DiagramLayoutMerge, compareLayoutText, createLayoutMerge, finiteLayoutValue, nodeLayoutDimension, projectLayoutEdge, projectLayoutNode, resolveLayoutOptions, stepLayoutMerge } from "../🗃️paged-store/🟦️.ts";
 import { DiagramLayoutOwnedResult } from "../📢️publication/🟦️.ts";
 
 /** 🧭️ Persistent deterministic directed-layout authority used by both batch and React paths. */

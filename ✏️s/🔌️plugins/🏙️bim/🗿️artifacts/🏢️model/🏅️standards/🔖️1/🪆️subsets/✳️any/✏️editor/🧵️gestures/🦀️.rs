@@ -7,38 +7,22 @@
 //! `transform`, `split`), `typed` (the keyboard twin of the pointer: typed points and, through `run_cursor`, the arrow-key cursor), `overlay` (marks to canvas records). This node owns the registry of tools, the owner and `run` and `run_typed`, the entries the
 //! pointer and keyboard commands call.
 
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate;
-pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::frame;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay;
-pub use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::point;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::select;
-pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session;
-pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::split;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::sweep;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed;
-pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place;
 #[path = "🌀️route/🦀️.rs"]
 pub mod route;
-pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports;
 
-use crate::editor::bim::gestures::plane::P;
-use crate::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, Tool, ToolContext, ToolEvent};
-use crate::editor::bim::marks::Preview;
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
-use crate::editor::bim::transient::BimWindowTransient;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, Tool, ToolContext, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::BimWindowTransient;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
 use std::collections::BTreeMap;
 
@@ -51,58 +35,58 @@ pub const GESTURE_KEYBINDINGS: &[(&str, &str)] = &[("escape", "canvasEscape"), (
 
 /// 🛠️ Every utility that owns a gesture, with the tool it arms.
 pub fn build_tool(utility: &str, window_kind: &str) -> Box<dyn Tool> {
-    use opening::Kind as Opening;
+    use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::Kind as Opening;
     match utility {
-        "support" => Box::new(structure::Structure::new("support")),
-        "load-point" => Box::new(structure::Structure::new("load-point")),
-        "load-line" => Box::new(structure::Structure::new("load-line")),
-        "load-area" => Box::new(structure::Structure::new("load-area")),
-        "select" if window_kind == sheet::WINDOW_KIND_ID => Box::<viewports::Arrange>::default(),
-        "viewport" => Box::<viewports::Place>::default(),
-        "select" if window_kind != world::WINDOW_KIND_ID => Box::new(select::Select::default()),
-        "move" => Box::new(transform::Transform::new(transform::Kind::Move)),
-        "rotate" => Box::new(transform::Transform::new(transform::Kind::Rotate)),
-        "wall" => Box::new(chain::Chain::new(chain::Kind::Wall)),
-        "wall-arc" => Box::new(chain::Chain::new(chain::Kind::WallArc)),
-        "curtain-wall" => Box::new(chain::Chain::new(chain::Kind::CurtainWall)),
-        "beam" => Box::new(chain::Chain::new(chain::Kind::Beam)),
-        "beam-arc" => Box::new(chain::Chain::new(chain::Kind::BeamArc)),
-        "column-tilt" => Box::<frame::Tilt>::default(),
-        "curtain-grid" => Box::<frame::Lines>::default(),
-        "curtain-cell" => Box::<frame::Cell>::default(),
-        "railing" => Box::new(chain::Chain::new(chain::Kind::Railing)),
-        "ramp" => Box::new(chain::Chain::new(chain::Kind::Ramp)),
-        "grid" => Box::new(chain::Chain::new(chain::Kind::Grid)),
-        "measure" => Box::new(chain::Chain::new(chain::Kind::Measure)),
-        "slab" => Box::new(area::Area::new(area::Kind::Slab)),
-        "slab-walls" => Box::new(area::Area::new(area::Kind::SlabFromWalls)),
-        "ceiling" => Box::new(area::Area::new(area::Kind::Ceiling)),
-        "ceiling-space" => Box::new(area::Area::new(area::Kind::CeilingFromSpace)),
-        "split-wall" => Box::<split::Split>::default(),
-        "sweep" => Box::<sweep::Sweeping>::default(),
-        "copy" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Copy)),
-        "mirror" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Mirror)),
-        "array" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Array)),
-        "array-radial" => Box::new(duplicate::Duplicate::new(duplicate::Kind::Radial)),
-        "offset" => Box::new(reshape::Reshape::new(reshape::Kind::Offset)),
-        "trim" => Box::new(reshape::Reshape::new(reshape::Kind::Trim)),
-        "extend" => Box::new(reshape::Reshape::new(reshape::Kind::Extend)),
-        "align" => Box::new(reshape::Reshape::new(reshape::Kind::Align)),
-        "split" => Box::new(reshape::Reshape::new(reshape::Kind::Split)),
-        "dimension" => Box::new(annotate::Annotate::new(annotate::Kind::Dimension)),
-        "tag" => Box::new(annotate::Annotate::new(annotate::Kind::Tag)),
-        "text-note" => Box::new(annotate::Annotate::new(annotate::Kind::Note)),
-        "leader" => Box::new(annotate::Annotate::new(annotate::Kind::Leader)),
-        "roof" => Box::new(area::Area::new(area::Kind::Roof)),
-        "component" => Box::<place::Place>::default(),
+        "support" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure::Structure::new("support")),
+        "load-point" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure::Structure::new("load-point")),
+        "load-line" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure::Structure::new("load-line")),
+        "load-area" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure::Structure::new("load-area")),
+        "select" if window_kind == semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID => Box::<semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports::Arrange>::default(),
+        "viewport" => Box::<semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports::Place>::default(),
+        "select" if window_kind != semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::select::Select::default()),
+        "move" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::Transform::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::Kind::Move)),
+        "rotate" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::Transform::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::Kind::Rotate)),
+        "wall" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Wall)),
+        "wall-arc" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::WallArc)),
+        "curtain-wall" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::CurtainWall)),
+        "beam" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Beam)),
+        "beam-arc" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::BeamArc)),
+        "column-tilt" => Box::<semio_s_artifact_bim_model_move_storey::editor::bim::gestures::frame::Tilt>::default(),
+        "curtain-grid" => Box::<semio_s_artifact_bim_model_move_storey::editor::bim::gestures::frame::Lines>::default(),
+        "curtain-cell" => Box::<semio_s_artifact_bim_model_move_storey::editor::bim::gestures::frame::Cell>::default(),
+        "railing" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Railing)),
+        "ramp" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Ramp)),
+        "grid" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Grid)),
+        "measure" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Chain::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain::Kind::Measure)),
+        "slab" => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Area::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Kind::Slab)),
+        "slab-walls" => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Area::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Kind::SlabFromWalls)),
+        "ceiling" => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Area::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Kind::Ceiling)),
+        "ceiling-space" => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Area::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Kind::CeilingFromSpace)),
+        "split-wall" => Box::<semio_s_artifact_bim_model_move_storey::editor::bim::gestures::split::Split>::default(),
+        "sweep" => Box::<semio_s_artifact_bim_model_coordination::editor::bim::gestures::sweep::Sweeping>::default(),
+        "copy" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Duplicate::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Kind::Copy)),
+        "mirror" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Duplicate::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Kind::Mirror)),
+        "array" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Duplicate::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Kind::Array)),
+        "array-radial" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Duplicate::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate::Kind::Radial)),
+        "offset" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Reshape::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Kind::Offset)),
+        "trim" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Reshape::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Kind::Trim)),
+        "extend" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Reshape::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Kind::Extend)),
+        "align" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Reshape::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Kind::Align)),
+        "split" => Box::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Reshape::new(semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::Kind::Split)),
+        "dimension" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Annotate::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Kind::Dimension)),
+        "tag" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Annotate::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Kind::Tag)),
+        "text-note" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Annotate::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Kind::Note)),
+        "leader" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Annotate::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate::Kind::Leader)),
+        "roof" => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Area::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area::Kind::Roof)),
+        "component" => Box::<semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place::Place>::default(),
         "route" => Box::<route::Route>::default(),
-        "column" => Box::new(point::Point::new(point::Kind::Column)),
-        "space" => Box::new(point::Point::new(point::Kind::Space)),
-        "stair" => Box::new(point::Point::new(point::Kind::Stair)),
-        "window" => Box::new(opening::Placing::new(Opening::Window)),
-        "door" => Box::new(opening::Placing::new(Opening::Door)),
-        "opening" => Box::new(opening::Placing::new(Opening::Void)),
-        _ => Box::new(session::Idle),
+        "column" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Point::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Kind::Column)),
+        "space" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Point::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Kind::Space)),
+        "stair" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Point::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::point::Kind::Stair)),
+        "window" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::Placing::new(Opening::Window)),
+        "door" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::Placing::new(Opening::Door)),
+        "opening" => Box::new(semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::Placing::new(Opening::Void)),
+        _ => Box::new(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Idle),
     }
 }
 //#endregion 🔖️Registry
@@ -139,8 +123,8 @@ impl ToolSession {
         if let Some(step) = self.tool.line(ctx, line) {
             return (step, self.tool.preview(ctx));
         }
-        let Some(entry) = typed::parse(line) else { return (Step::refuse(typed::INVALID), self.tool.preview(ctx)) };
-        let Some(at) = typed::resolve(&entry, self.tool.anchor(), self.last) else { return self.advance(ctx, &ToolEvent::Finish) };
+        let Some(entry) = semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::parse(line) else { return (Step::refuse(semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID), self.tool.preview(ctx)) };
+        let Some(at) = semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::resolve(&entry, self.tool.anchor(), self.last) else { return self.advance(ctx, &ToolEvent::Finish) };
         self.click(ctx, at)
     }
 
@@ -151,7 +135,7 @@ impl ToolSession {
     }
 
     fn click(&mut self, ctx: &mut ToolContext<'_>, at: P) -> (Step, Preview) {
-        let pointer = Pointer { at, modifiers: Modifiers::default(), tolerance: typed::REACH };
+        let pointer = Pointer { at, modifiers: Modifiers::default(), tolerance: semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::REACH };
         let mut step = Step::default();
         for event in [ToolEvent::Down(pointer), ToolEvent::Up(pointer), ToolEvent::Move(pointer)] {
             step = step.then(self.advance(ctx, &event).0);
@@ -169,8 +153,8 @@ impl ToolSession {
 
     /// ⌨️ Moves the keyboard cursor by `delta` metres from where the pointer last was (else the point the gesture hangs on, else `start`) and shows the tool's marks there, as a pointer move to the exact point would.
     pub fn nudge(&mut self, ctx: &mut ToolContext<'_>, delta: P, start: P) -> (Step, Preview) {
-        let at = typed::resolve(&typed::Entry::Relative(delta), Some(self.cursor(start)), None).unwrap_or(start);
-        self.advance(ctx, &ToolEvent::Move(Pointer { at, modifiers: Modifiers::default(), tolerance: typed::REACH }))
+        let at = semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::resolve(&semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::Entry::Relative(delta), Some(self.cursor(start)), None).unwrap_or(start);
+        self.advance(ctx, &ToolEvent::Move(Pointer { at, modifiers: Modifiers::default(), tolerance: semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::REACH }))
     }
 
     /// ⌨️ Clicks at the keyboard cursor, as the typed point `x, y` would.
@@ -269,13 +253,13 @@ const WORLD_PIXEL_METRES: f64 = 0.02;
 /// 🪟️ The surface the addressed window shows and the pixels-to-metres reach there; none for a window without gestures.
 pub fn surface_of(ctx: &BimDispatchCtx, snapshot: &ModelSnapshot) -> Option<(Surface, f64)> {
     match ctx.window_kind.as_str() {
-        plan::WINDOW_KIND_ID => Some((Surface::Plan { storey: plan::active_storey(snapshot, &ctx.plan).unwrap_or_default() }, 1.0 / ctx.plan.viewport.zoom.max(0.01))),
-        section::WINDOW_KIND_ID => {
-            let (start, end) = section::plane_of(snapshot, &ctx.section).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID => Some((Surface::Plan { storey: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_storey(snapshot, &ctx.plan).unwrap_or_default() }, 1.0 / ctx.plan.viewport.zoom.max(0.01))),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID => {
+            let (start, end) = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::plane_of(snapshot, &ctx.section).map_or(([0.0, 0.0], [0.0, 0.0]), |plane| ([plane.start.x, plane.start.y], [plane.end.x, plane.end.y]));
             Some((Surface::Section { start, end }, 1.0 / ctx.section.viewport.zoom.max(0.01)))
         }
-        world::WINDOW_KIND_ID => Some((Surface::World { storey: world::world_storey(snapshot, &ctx.world.isolated_storey) }, WORLD_PIXEL_METRES)),
-        sheet::WINDOW_KIND_ID => Some((Surface::Sheet { sheet: sheet::active_sheet(snapshot, &ctx.sheet).unwrap_or_default() }, 1.0 / ctx.sheet.viewport.zoom.max(0.01))),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID => Some((Surface::World { storey: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::world_storey(snapshot, &ctx.world.isolated_storey) }, WORLD_PIXEL_METRES)),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID => Some((Surface::Sheet { sheet: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::active_sheet(snapshot, &ctx.sheet).unwrap_or_default() }, 1.0 / ctx.sheet.viewport.zoom.max(0.01))),
         _ => None,
     }
 }
@@ -284,7 +268,7 @@ pub fn surface_of(ctx: &BimDispatchCtx, snapshot: &ModelSnapshot) -> Option<(Sur
 pub fn pointer_of(ctx: &BimDispatchCtx, surface: &Surface, reach: f64, raw: &Raw) -> Pointer {
     let at = match surface {
         Surface::Plan { .. } => {
-            let (x, y) = plan::pixel_to_model(&ctx.plan.viewport, raw.x, raw.y, raw.width, raw.height);
+            let (x, y) = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pixel_to_model(&ctx.plan.viewport, raw.x, raw.y, raw.width, raw.height);
             [x, y]
         }
         Surface::Section { .. } => {
@@ -359,7 +343,7 @@ fn settle_taken(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>,
     let seed = operation.map_or("", |operation| operation.authoring_seed.as_str());
     let labels = ctx.labels();
     let instance = Some(&owner);
-    let (taken, step, preview) = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| {
+    let (taken, step, preview) = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| {
         let mut tool = ToolContext::new(snapshot, inference, surface, seed);
         tool.instance = instance;
         tool.selected = &ctx.selected;
@@ -398,9 +382,9 @@ pub fn run_key(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>, 
 /// ⌨️ The point a keyboard cursor starts from when the pointer never was in the window and the gesture hangs on nothing: the centre of the view (the plan and the section centre their camera, the world has no plan point).
 pub fn cursor_start(ctx: &BimDispatchCtx) -> P {
     match ctx.window_kind.as_str() {
-        plan::WINDOW_KIND_ID => [ctx.plan.viewport.x, -ctx.plan.viewport.y],
-        section::WINDOW_KIND_ID => [ctx.section.viewport.x, -ctx.section.viewport.y],
-        sheet::WINDOW_KIND_ID => [ctx.sheet.viewport.x, ctx.sheet.viewport.y],
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID => [ctx.plan.viewport.x, -ctx.plan.viewport.y],
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID => [ctx.section.viewport.x, -ctx.section.viewport.y],
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID => [ctx.sheet.viewport.x, ctx.sheet.viewport.y],
         _ => [0.0, 0.0],
     }
 }

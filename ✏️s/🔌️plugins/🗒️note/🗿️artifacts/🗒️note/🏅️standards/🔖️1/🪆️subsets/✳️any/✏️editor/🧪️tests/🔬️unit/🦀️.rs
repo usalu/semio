@@ -135,9 +135,10 @@ use semio_framework_plugin::UtilityCategory;
 
     /// 🪪️ A registry-backed app with an exact runtime identity for parallel ownership laws.
     pub async fn note_app_with_registry_id(instance_id: u32) -> OwnedNoteApp {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(instance_id).await;
-        OwnedNoteApp(app)
+        OwnedNoteApp(app, scope)
     }
 
     /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
@@ -146,12 +147,14 @@ use semio_framework_plugin::UtilityCategory;
     /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
     /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
-    pub struct OwnedNoteApp(NoteApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// scope pays the caller's terminal retirement after the paid app close.
+    pub struct OwnedNoteApp(pub NoteApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedNoteApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -194,16 +197,14 @@ use semio_framework_plugin::UtilityCategory;
 
     /// 📬️ Advances and consumes one host turn at a time, including the mandatory completion
     /// witness counted by `has_pending_typed_operations` between the event and UI scope channels.
-    async fn settle(app: &mut NoteApp, receiver: u32, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
+    async fn settle(app: &mut OwnedNoteApp, receiver: u32, result: Result<InvocationResult, Fault>) -> Result<InvocationResult, Fault> {
         let mut result = result?;
         for _ in 0..1_048_576 {
             if !app.has_pending_typed_operations() {
                 return Ok(result);
             }
-            let demand = PluginApp::maintenance_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.to_string()))?;
-            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            PluginApp::maintenance_step(app, grant)?;
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await?;
+            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|failure| Fault::from(format!("{failure:?}")))?;
+            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| Fault::from(format!("{failure:?}")))?;
             if let Some(page) = app.take_typed_operation_result_page(receiver) {
                 if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                     return Err(Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
@@ -220,25 +221,25 @@ use semio_framework_plugin::UtilityCategory;
         Err(Fault::from("Note test operation did not settle"))
     }
 
-    pub async fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut OwnedNoteApp, command: NoteCommand) -> InvocationResult {
         dispatch_with_view(app, command, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)).await
     }
 
-    pub async fn dispatch_with_view(app: &mut NoteApp, command: NoteCommand, view_state: ViewModel) -> InvocationResult {
+    pub async fn dispatch_with_view(app: &mut OwnedNoteApp, command: NoteCommand, view_state: ViewModel) -> InvocationResult {
         dispatch_with_view_for_instance(app, command, 1, view_state).await
     }
 
-    pub async fn dispatch_with_view_for_instance(app: &mut NoteApp, command: NoteCommand, instance_id: u32, view_state: ViewModel) -> InvocationResult {
-        let result = app.dispatch_typed(command, &action_meta("local", instance_id, view_state), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    pub async fn dispatch_with_view_for_instance(app: &mut OwnedNoteApp, command: NoteCommand, instance_id: u32, view_state: ViewModel) -> InvocationResult {
+        let result = app.0.dispatch_typed(command, &action_meta("local", instance_id, view_state), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         settle(app, instance_id, result).await.expect("dispatch")
     }
 
-    pub async fn render(app: &mut NoteApp, body_key: &str) -> String {
+    pub async fn render(app: &mut OwnedNoteApp, body_key: &str) -> String {
         render_with_view(app, body_key, &composite_view(NOTE_PLAY_WINDOW_COMPOSITE)).await
     }
 
-    pub async fn render_with_view(app: &mut NoteApp, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
+    pub async fn render_with_view(app: &mut OwnedNoteApp, body_key: &str, view_state: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -247,26 +248,16 @@ use semio_framework_plugin::UtilityCategory;
     /// select against). `ids` are raw block ids, converted to the row-id-prefixed `InteractionTarget`
     /// id the document panel tree/`interaction_topology` both use (see `note_blocks_topology`'s doc
     /// comment).
-    pub async fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
+    pub async fn select_blocks(app: &mut OwnedNoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
         let args = Some(semio_framework_plugin::dsl_value!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" }));
-        let result = app.handle_action("interactionSelect", args.as_ref(), &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", args, &action_meta("test", 1, composite_view(NOTE_PLAY_WINDOW_COMPOSITE)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(|failure| Fault::from(format!("{failure:?}")));
         settle(app, 1, result).await.expect("interactionSelect");
     }
 
-    pub async fn close_app(app: &mut NoteApp) {
-        for _ in 0..1_048_576 {
-            if app.close_terminal_is_empty() {
-                return;
-            }
-            let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Note registered app close quote");
-            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            if matches!(PluginApp::close_step(app, grant).expect("Note registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-                break;
-            }
-        }
-        assert!(app.close_terminal_is_empty(), "Note registered app close did not reach terminal-empty ownership");
+    pub async fn close_app(app: &mut OwnedNoteApp) {
+        app.close();
     }
 }
 
@@ -690,22 +681,19 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         drop((transient_a, transient_b));
 
         let document = app.document_pack().await.expect("document pack before reset");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("reload document and reset window transient");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("reload document and reset window transient");
         let reset_a = app.window_transient_snapshot(&view_a).expect("reset window a transient").expect("reset window a owner");
         assert_eq!(reset_a.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
         drop(reset_a);
 
-        let pending = app
-            .dispatch_typed(
-                NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }),
-                &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-            )
+        let pending = app.0
+            .dispatch_typed(NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }), &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .expect("start retained transient command");
         assert!(pending.mutations.is_empty());
         assert!(app.has_pending_typed_operations(), "retained transient command must remain owned before publication advances");
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("replacement cancels captured transient publication authority");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("replacement cancels captured transient publication authority");
         let cancelled = app.window_transient_snapshot(&view_a).expect("cancelled window a transient").expect("cancelled window a owner");
         assert_eq!(cancelled.get::<window::NoteCompositeWindowTransientOwner>().map(|value| value.engagement_input.as_str()), Some(""));
         drop(cancelled);
@@ -719,7 +707,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = note_app().await;
-    artifact_app_laws::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,

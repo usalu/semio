@@ -20,7 +20,6 @@ pub mod standards {
                     pub mod export {
                         #[path = "."]
                         pub mod gltf {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document;
                             #[path = "../../../../🚪️io/📤️export/🧊️gltf/📏️projection/🦀️.rs"]
                             pub mod projection;
                             #[cfg(any(test, feature = "testkit"))]
@@ -29,29 +28,22 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod energy {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target;
                             #[path = "../../../../🚪️io/📤️export/🔋️energy/🧱️library/🦀️.rs"]
                             pub mod library;
                         }
                         #[path = "."]
                         pub mod ifc {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer;
                             #[path = "../../../../🚪️io/📤️export/🏗️ifc/🧭️frames/🦀️.rs"]
                             pub mod frames;
                         }
-                        #[path = "."]
-                        pub mod gbxml {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec;
-                        }
+                        
                     }
                     #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod ifc {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames;
                             #[path = "."]
                             pub mod reader {
-                                pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::*;
                                 #[cfg(test)]
                                 #[path = "../../../../🚪️io/📥️import/🏗️ifc/📖️reader/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
@@ -71,11 +63,7 @@ pub mod standards {
                         #[path = "../../../🔺️diff/🧮️algebra/🦀️.rs"]
                         pub mod algebra;
                     }
-                    #[path = "."]
-                    pub mod snapshot {
-                        pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::*;
-                        pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
-                    }
+                    
                     #[path = "."]
                     pub mod authored {
                         #[path = "../../🦀️.rs"]
@@ -83,21 +71,18 @@ pub mod standards {
                         pub use component::*;
                         #[path = "."]
                         pub mod formula {
-                            pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::*;
                             #[cfg(test)]
                             #[path = "../../📝️formula/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
                         #[path = "."]
                         pub mod plan {
-                            pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::*;
                             #[cfg(test)]
                             #[path = "../../🧭️plan/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
                         #[path = "."]
                         pub mod profile {
-                            pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::*;
                             #[cfg(test)]
                             #[path = "../../▭️profile/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;

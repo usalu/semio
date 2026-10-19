@@ -2,7 +2,7 @@
 import{prepareSelectedRustUnitProjectsV3,withSelectedRustUnitDescriptorSetV1}from"../../🟦️.ts";
 import{withRustUnitDescriptorWorkingSetV2}from"../../../💾️cache/🧺️set/🟦️.ts";
 import{withIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 🎫️ Carries prepared fixture DATA only; namespace custody belongs to the retained callback. */
 export type PreparedFixtureRustProjectsV1=Extract<Awaited<ReturnType<typeof prepareSelectedRustUnitProjectsV3>>,{kind:"prepared"}>;
 /** 🧪️ Prepares each phase once and keeps actual fixture consumers and accepted children inside publication custody. */

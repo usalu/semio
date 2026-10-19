@@ -216,10 +216,10 @@ mod subject {
     use super::DSL_ASSET;
     use semio_repo_test_host::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, inverse_model_mutation, ModelMutation};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::mutations::decode_model_mutation_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_model_projection_json, parse_dsl, print_dsl};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, inverse_model_mutation, ModelMutation};
+    use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::text::mutations::decode_model_mutation_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_model_projection_json, parse_dsl, print_dsl};
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
     fn base(ctx: &Context, spec: &Json) -> Result<ModelSnapshot, String> {
         let bytes = ctx.input_bytes(&spec.str("before"))?;

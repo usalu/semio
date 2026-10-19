@@ -44,7 +44,7 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
 
 #[test]
 fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     assert_eq!(fixture["schema"].as_str(), Some("semio.ui.retained-select-overlay-raster.v1"));
     let select_fixture = &fixture["select"];
     let item_count = usize::try_from(select_fixture["itemCount"].as_u64().expect("item count")).expect("item count fits");
@@ -136,7 +136,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
 
     let before = popup.scroll;
     let down = popup.down.expect("a long popup has a down chevron");
-    assert_eq!(crate::wgpu::select::select_scroll_direction_at(popup, down.x + down.w * 0.5, down.y + down.h * 0.5), Some(select_fixture["downPress"]["direction"].as_f64().expect("down direction") as f32));
+    assert_eq!(semio_framework_ui_select_behavior::select_scroll_direction_at(popup, down.x + down.w * 0.5, down.y + down.h * 0.5), Some(select_fixture["downPress"]["direction"].as_f64().expect("down direction") as f32));
     assert!(arm_retained_select_scroll_at(&mut tree, root, down.x + down.w * 0.5, down.y + down.h * 0.5));
     let mut sync = RetainedInteractiveSyncCursor::default();
     for _ in 0..4_096 {
@@ -150,7 +150,7 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     assert_eq!(scrolled.last_row, down_expected["expectedLastRowExclusive"].as_u64().expect("scrolled last row") as usize);
     assert!(scrolled.scroll > before, "one down-chevron press advances the retained viewport");
     assert!((scrolled.scroll - down_expected["expectedScroll"].as_f64().expect("expected scroll") as f32).abs() < 0.001);
-    assert!((scrolled.scroll - select_scroll_step(crate::wgpu::select::select_popup_viewport_rect(scrolled).h)).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
+    assert!((scrolled.scroll - select_scroll_step(semio_framework_ui_select_behavior::select_popup_viewport_rect(scrolled).h)).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
 }
 
 /// 🔽️ A CLOSED `Select` materializes no option rows (`reconcile::children_of` gates on
@@ -161,7 +161,7 @@ fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_lay
     let (mut tree, root, theme, mut atlas) = setup(&fixture);
     tree.node_mut(root).unwrap().state.open = true;
     tree.apply_tree(&fixture);
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
+    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
     let mut draw = DrawList::default();
 

@@ -1,10 +1,9 @@
 use super::*;
-use crate::wgpu::component::ui::{
-    UiButtonNode, UiComponentSceneNode, UiInputNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-};
-use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
-use crate::wgpu::IconName;
-use crate::wgpu::Label;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_retained_tree::tree::{Node, NodeKey, WidgetSpec};
+use semio_framework_ui_declaration::IconName;
+use semio_framework_ui_locale::Label;
+use semio_framework_test_fixtures::fixture_text;
 
 include!("🎯️event-fixtures-hit-test-capture-and-focus-laws/🦀️.rs");
 include!("🪟️overlay-drag-drop-and-scroll-laws/🦀️.rs");

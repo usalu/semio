@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `SetCurtainWall`: a sparse curtain wall patch of exactly the named fields that differ from the base. Only the named fields are validated (axis, top,
 //! base offset); a payload that changes nothing is a no-op. The type is set by `set-curtain-wall-type-of` and the grid by `set-curtain-wall-grid`.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, top_flaw, Flaw};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, top_flaw, Flaw};
 use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall::SetCurtainWall;
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainWall, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn flaw_of(payload: &SetCurtainWall, base: &ModelSnapshot, wall: &CurtainWall) -> Option<Flaw> {

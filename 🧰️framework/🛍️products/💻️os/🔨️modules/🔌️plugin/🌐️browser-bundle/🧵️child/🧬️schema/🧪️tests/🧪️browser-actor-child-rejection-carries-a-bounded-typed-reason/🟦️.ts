@@ -1,4 +1,4 @@
-import * as ModuleUnderTest from "../../../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework/browser-bundle/child/schema";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 

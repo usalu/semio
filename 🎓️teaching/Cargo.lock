@@ -733,6 +733,7 @@ dependencies = [
 name = "semio-framework-diagnostic"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "serde",
  "serde_json",
@@ -754,6 +755,14 @@ version = "0.1.0"
 [[package]]
 name = "semio-framework-io-base64"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-mutation-diff"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-retirement",
+]
 
 [[package]]
 name = "semio-framework-native-build-compiler-resources"
@@ -778,7 +787,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pack-source"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-error",
+]
+
+[[package]]
+name = "semio-framework-process-routing-workspace"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-quiz"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-quiz-schema",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-quiz-schema"
 version = "0.1.0"
 dependencies = [
  "serde",
@@ -788,19 +817,229 @@ dependencies = [
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-mutation-diff",
+ "semio-framework-pack-error",
+ "semio-framework-replication-causal",
+ "semio-framework-replication-codec",
+ "semio-framework-replication-command-ingress",
+ "semio-framework-replication-conflict",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-edit",
+ "semio-framework-replication-error",
+ "semio-framework-replication-format",
+ "semio-framework-replication-frames",
+ "semio-framework-replication-history",
+ "semio-framework-replication-history-index",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-interaction",
+ "semio-framework-replication-local-interaction",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-mutation-messages",
+ "semio-framework-replication-presence",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-causal"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication-codec",
+ "semio-framework-replication-edit",
+ "semio-framework-replication-error",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-codec"
+version = "0.1.0"
+dependencies = [
  "semio-framework-diagnostic",
- "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-pack-error",
- "semio-framework-pack-json",
- "semio-framework-schema-registry",
- "semio-framework-schema-state",
+ "semio-framework-replication-error",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-command-ingress"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
- "serde_json",
- "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-replication-conflict"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-hash",
+ "semio-framework-replication-causal",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-crypto"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication-error",
+]
+
+[[package]]
+name = "semio-framework-replication-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-pack-json",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-error"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-pack-error",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-format"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-pack-error",
+ "semio-framework-pack-source",
+ "semio-framework-replication-codec",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-error",
+ "semio-framework-replication-wire-core",
+]
+
+[[package]]
+name = "semio-framework-replication-frames"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-hash",
+ "semio-framework-replication-causal",
+ "semio-framework-replication-error",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-wire-core",
+]
+
+[[package]]
+name = "semio-framework-replication-history"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication-causal",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-edit",
+ "semio-framework-replication-error",
+ "semio-framework-replication-history-index",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-history-index"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-ids"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-interaction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-replication-local-interaction"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication-interaction",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-mutation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-mutation-diff",
+ "semio-framework-pack-json",
+ "semio-framework-replication-ids",
+ "semio-framework-replication-wire-core",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-mutation-messages"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-mutation-diff",
+ "semio-framework-replication-conflict",
+ "semio-framework-replication-mutation",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-presence"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-replication-error",
+ "semio-framework-replication-interaction",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-wire-core"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-hash",
+ "semio-framework-pack-error",
+ "semio-framework-pack-json",
+ "semio-framework-replication-codec",
+ "semio-framework-replication-crypto",
+ "semio-framework-replication-error",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -823,9 +1062,64 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-dispatch-macros",
  "semio-framework-replication",
+ "semio-framework-server-authority",
+ "semio-framework-server-contract",
+ "semio-framework-server-policy",
+ "semio-framework-server-storage",
+ "semio-framework-server-throttle",
  "serde",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "semio-framework-server-authority"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-server-contract",
+ "semio-framework-server-policy",
+ "semio-framework-server-storage",
+ "tokio",
+]
+
+[[package]]
+name = "semio-framework-server-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-server-policy"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-server-contract",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-server-storage"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dispatch-macros",
+ "semio-framework-replication",
+ "semio-framework-server-contract",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-server-throttle"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-test-fixtures"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-process-routing-workspace",
 ]
 
 [[package]]
@@ -837,9 +1131,49 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
+ "semio-framework-value-allocation-return",
+ "semio-framework-value-clone-source",
+ "semio-framework-value-control-contract",
  "semio-framework-value-derive",
+ "semio-framework-value-factory",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-ordered",
+ "semio-framework-value-original-aliases",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-paged-text",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retained-map",
+ "semio-framework-value-retirement",
+ "semio-framework-value-retirement-queue",
+ "semio-framework-value-shared-issuance",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-allocation-return"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+]
+
+[[package]]
+name = "semio-framework-value-clone-source"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-control-contract"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -851,6 +1185,135 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-native-build-compiler-resources",
  "syn",
+]
+
+[[package]]
+name = "semio-framework-value-factory"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-intrinsic"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-io-base64",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-ordered",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retirement",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-native-decoding"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-encoding"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-ordered"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-retirement",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-value-original-aliases"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-paged-list"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-allocation-return",
+ "semio-framework-value-control-contract",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-value-paged-text"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-encoding",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-retained-clone"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-clone-source",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retirement",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-retained-map"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-intrinsic",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+ "serde",
+]
+
+[[package]]
+name = "semio-framework-value-retirement"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-allocation-return",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-paged-list",
+]
+
+[[package]]
+name = "semio-framework-value-retirement-queue"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-shared-issuance"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -1033,6 +1496,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-quiz",
  "semio-framework-server",
+ "semio-framework-test-fixtures",
  "serde_json",
  "teaching-proctor-base",
  "teaching-proctor-domain",
@@ -1051,6 +1515,7 @@ dependencies = [
  "semio-framework-quiz",
  "semio-framework-replication",
  "semio-framework-server",
+ "semio-framework-test-fixtures",
  "serde",
  "serde_json",
  "sha2",

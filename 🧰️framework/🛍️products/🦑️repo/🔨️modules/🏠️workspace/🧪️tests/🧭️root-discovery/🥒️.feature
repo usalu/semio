@@ -6,7 +6,8 @@
 Feature: A monorepo root is discovered, its layout is named, and its settings are read
   Discovery walks upwards three times: first for the legacy `repo/cli/main.go` entry point, then for
   a `.git` checkout, then for a `go.mod`; the first hit wins, and the starting directory itself is
-  the fallback. The layout under `.🧬semio/🦑️repo` is a fixed vocabulary — tickets, goals, devs, the
+  the fallback. No root is ever bound implicitly: only the start a caller names decides, never the
+  directory the process happens to stand in. The layout under `.🧬semio/🦑️repo` is a fixed vocabulary — tickets, goals, devs, the
   file index, the settings file — and `📋️config.toml` contributes only its `[logging]` section, with
   every recognised affirmative spelling. Nothing outside this repository knows any of these
   conventions, so there is no oracle; see the recorded decision `repo-workspace-root-discovery`.
@@ -19,6 +20,15 @@ Feature: A monorepo root is discovered, its layout is named, and its settings ar
     Given the shared tree descriptions shared://📡️root-discovery-trees.json
     When the host materialises every tree inside its work directory and runs discovery from the recorded start
     Then every implementation projects the same root per tree
+
+  @id-the-start-directory-alone-decides-the-root
+  @level-fundamental
+  @mode-conformance
+  @seed-1
+  Scenario: Discovery from a named start does not depend on the working directory
+    Given the shared tree descriptions shared://📡️root-discovery-trees.json
+    When the host materialises every tree and runs discovery from the recorded start while the process stands inside the tree, outside it and inside a decoy checkout
+    Then every implementation projects the same root per tree and working directory
 
   @id-the-layout-vocabulary-is-fixed
   @level-fundamental

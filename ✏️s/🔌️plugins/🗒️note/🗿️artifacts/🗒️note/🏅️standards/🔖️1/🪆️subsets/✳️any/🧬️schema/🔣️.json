@@ -138,7 +138,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/link/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json"
         }
       ],
       "x-semio-state": "artifact"
@@ -558,7 +558,7 @@
       ],
       "properties": {
         "handle": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json"
         },
         "paragraphs": {
           "type": "array",

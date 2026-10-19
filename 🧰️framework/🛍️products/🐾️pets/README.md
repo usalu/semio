@@ -52,7 +52,7 @@ frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 
 ## Commands
 
-Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry points as nx
+Everything runs through each package's `📜️script.ts`; `📋️project.json` registers the same entry points as build
 targets.
 
 ```bash
@@ -61,7 +61,7 @@ bun ./📜️script.ts test                        # the unit suites of the Type
 bun ./📜️script.ts test quick                  # every sweep and statistical session in full (`long` runs the same amount)
 bun ./📜️script.ts test exhaustive             # more seeds, finer grids, longer sessions, and coverage
 
-bun repo run @semio-tech/pets:test              # the same through nx
+bun repo run @semio-tech/pets:test              # the same through the build CLI
 bun repo run @semio-tech/pets:typecheck         # the core, its suites, adapters
 bun repo run @semio-tech/pets-rs:test           # the Rust core: the unit suites of all seven producer crates
 bun repo run @semio-tech/pets-react:test        # the React target

@@ -1,17 +1,18 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
 #[allow(unused_imports)]
 use std::f64::consts::FRAC_PI_4;
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::gestures::snap::*;
-use crate::editor::bim::fixture::room;
-use crate::standards::v1::subsets::any::schema::snapshot::{GridLine, Point2};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::{SnapRequest, snap, SnapKind};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::room;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::GridLine;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 
 fn request(tolerance: f64) -> SnapRequest<'static> {
     SnapRequest { storey: Some("st-ground"), tolerance, ..SnapRequest::default() }

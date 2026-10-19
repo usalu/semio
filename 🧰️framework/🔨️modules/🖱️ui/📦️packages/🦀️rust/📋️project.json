@@ -10,7 +10,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📥️source/🟦️.ts",
@@ -135,25 +135,6 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
-    },
-    "test-feature-ownership": {
-      "executor": "repo:script",
-      "cache": false,
-      "dependsOn": [],
-      "outputs": [],
-      "inputs": [
-        "sharedGlobals",
-        "default",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧊️feature-ownership/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🧊️feature-ownership/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧊️feature-ownership/**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test feature-ownership"
-      }
     },
     "test-control-commit": {
       "executor": "repo:script",

@@ -81,7 +81,7 @@ fn body(l: &ListState, rect: Rect) -> Rect {
     Rect::new(rect.x, rect.y, rect.width - u16::from(overflow), rect.height)
 }
 
-pub(crate) fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let count = l.items.len();
     if count == 0 {
         return None;
@@ -101,7 +101,7 @@ pub(crate) fn list_on_key(l: &mut ListState, ev: &KeyEvent) -> Option<WidgetSign
     }
 }
 
-pub(crate) fn list_on_mouse(l: &mut ListState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn list_on_mouse(l: &mut ListState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     let area = body(l, rect);
     let count = l.items.len();
     let row = row_under(area, event.pos, l.shown.get(), count);
@@ -129,7 +129,7 @@ pub(crate) fn list_on_mouse(l: &mut ListState, rect: Rect, event: &MouseEvent) -
 }
 
 /// ⏱️ Advances the spinner of rows that are running; true when a frame changed and the list must repaint.
-pub(crate) fn list_tick(l: &mut ListState, now_ms: u64) -> bool {
+pub fn list_tick(l: &mut ListState, now_ms: u64) -> bool {
     if !l.statuses.contains(&Some(Status::Running)) {
         return false;
     }
@@ -137,12 +137,12 @@ pub(crate) fn list_tick(l: &mut ListState, now_ms: u64) -> bool {
     std::mem::replace(&mut l.frame, frame) != frame
 }
 
-pub(crate) fn list_set_hover(l: &mut ListState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn list_set_hover(l: &mut ListState, rect: Rect, pos: Option<Pos>) -> bool {
     let row = pos.and_then(|pos| row_under(body(l, rect), pos, l.shown.get(), l.items.len()));
     std::mem::replace(&mut l.hover, row) != row
 }
 
-pub(crate) fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_list(l: &ListState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

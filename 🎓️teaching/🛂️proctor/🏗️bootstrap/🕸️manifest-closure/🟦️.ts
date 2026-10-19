@@ -15,8 +15,8 @@
  * @see https://doc.rust-lang.org/cargo/reference/workspaces.html#the-dependencies-table */
 import { readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import type { CargoControl } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts";
-import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts";
+import type { CargoControl } from "@semio-tech/repo-lib/cargo";
+import { CargoTomlWorkspace, parseCargoToml, type CargoTomlTable, type CargoTomlValue } from "@semio-tech/repo-lib/cargo";
 
 /** 📦️ One crate of this repository the closure reached. */
 export interface CargoCrate {
@@ -103,7 +103,11 @@ class Manifests {
 
 /** 🧭️ The dependency tables of a manifest, the platform tables included. */
 function dependencyTables(document: CargoTomlTable): [DependencyKind, CargoTomlTable][] {
-  const scopes = [document, ...Object.values(asTable(document.target) ?? {}).flatMap((scope) => asTable(scope) ?? [])];
+  const scopes: CargoTomlTable[] = [document];
+  for (const scope of Object.values(asTable(document.target) ?? {})) {
+    const table = asTable(scope);
+    if (table !== undefined) scopes.push(table);
+  }
   return scopes.flatMap((scope) => TABLES.flatMap(([name, kind]) => {
     const table = asTable(scope[name]);
     return table === undefined ? [] : [[kind, table] as [DependencyKind, CargoTomlTable]];

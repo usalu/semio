@@ -1,12 +1,12 @@
 /** 🏃️ Execution: module exporting `runRepositoryCmakeV1`. */
 import{withRepositoryToolingStoreV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{readNativeStorageReservationPolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{withCompilerState}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type{ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import{withCompilerState}from"@semio-tech/process/compiler-state";
+import{requireIssuedResourceControlInvocationV1}from"@semio-tech/process/routing";
+import type{ScriptInvocation}from"@semio-tech/process/routing";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import{readNativeCallerAuthorityV1}from"../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{jsonSchemaSubsetValueEquals,validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{join,resolve,relative,isAbsolute}from"node:path";

@@ -2,16 +2,16 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import { blake3Hex } from "@semio-tech/framework/hash";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runCmd } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { assertObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
@@ -432,7 +432,7 @@ export class CanonicalArchitectureScript extends BundleScript {
     await proveInferenceJobReconcileFixture(this.repoRoot);
     const { proveLocalSessionBrokerContract } = await import("@semio-tech/framework-os/modules/directory/local-session/broker/testing/contract");
     await proveLocalSessionBrokerContract(this.invocation,exactCargoCallerControlV1(this.invocation,"hub:session-contract",30000));
-    await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
+    await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
       package: "semio-hub-trusted-catalog-contract-laws",
       target: { kind: "lib" },
       laws: ["every_manifest_case_is_accepted_exactly_when_the_fixture_says_so", "only_the_canonical_manifest_bytes_decode_and_both_digests_agree_with_the_fixture", "every_listed_file_verifies_against_its_own_bytes_and_tampering_is_refused", "every_index_case_is_accepted_exactly_when_the_fixture_says_so", "every_file_is_served_with_the_fixture_media_type", "an_assembled_module_is_the_fixture_manifest_and_writes_content_addressed_files"],
@@ -884,7 +884,7 @@ export class GisInferenceLedgerCheckScript extends BundleScript {
   async run(): Promise<void> {
     runCmd("bun", ["./📜️script.ts", "gis-inference-ledger-oracle"], { cwd: this.root, budgetMs: 60_000 });
     const suffixes: [string, string][] = [["semio-hub-inference-ledger", "gis_inference_sqlite_ledger_executes_neutral_traces_with_private_first_terminal_wins"], ["semio-hub-inference-ledger", "gis_inference_sqlite_request_identity_capacity_expiry_and_progress_are_bounded"], ["semio-hub-inference-ledger", "gis_inference_sqlite_concurrent_connections_have_one_durable_request_winner"], ["semio-hub-inference-ledger", "gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_exactly_once"], ["semio-hub-inference-contract-laws", "inference_wal_proof_executes_literal_committed_transaction_scope_and_cancellation_traces"], ["semio-hub-inference-contract-laws", "inference_wal_proof_dropped_caller_cancels_and_finishes_retained_replay_before_release"], ["semio-hub-inference-contract-laws", "inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment_tip_mismatch"], ["semio-hub-inference-contract-laws", "inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof"], ["semio-hub-inference-catalog", "inference_catalog_projection_requires_exact_scope_package_and_declared_service"], ["semio-hub-inference-contract-laws", "inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_actor_vectors"], ["semio-hub-inference-contract-laws", "inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands"], ["semio-hub-trusted-catalog-laws", "loader_retains_exact_bytes_and_independent_identities_before_atomic_codec_activation"], ["semio-hub-trusted-catalog-laws", "verified_trusted_catalog_document_open_generation_and_resolution_are_exact"], ["semio-hub-inference-contract-laws", "inference_approval_request_accepts_only_job_digest_and_exact_body_bound"], ["semio-hub-inference-catalog", "inference_live_author_rechecks_real_sqlite_session_scope_role_revocation_and_cancellation"], ["semio-hub-trusted-catalog-laws", "gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication"]];
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,groups: [
         { package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn"] },
         {
           package: "semio-framework-os-kernel-db",

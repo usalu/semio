@@ -12,9 +12,10 @@
 //!
 //! Related: <https://www.iso.org/standard/72482.html>, <https://en.wikipedia.org/wiki/ISO_216>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of, ModelSnapshot, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

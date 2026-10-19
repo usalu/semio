@@ -10,9 +10,11 @@
 //!
 //! Related: IFC property set templates, <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifckernel/lexical/ifcpropertysettemplate.htm>.
 
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, PropertyTemplate, PropertyValue, TemplateTarget, Violation};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, PropertyValue, TemplateTarget};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values::Violation;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

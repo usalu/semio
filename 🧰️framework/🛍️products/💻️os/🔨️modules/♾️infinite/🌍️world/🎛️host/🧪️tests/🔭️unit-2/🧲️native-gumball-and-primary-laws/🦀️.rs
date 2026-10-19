@@ -144,7 +144,7 @@ fn world_native_component_gumball_uses_original_event_authority() {
         world.camera_json=serde_json::json!({"position":[0,0,4],"target":[0,0,0],"up":[0,1,0],"fov":50}).to_string();
         world.selection_json=serde_json::json!({"ids":[object],"granularity":row["mode"],"componentIds":[0],"activeObjectId":object,"gumballSelectionIds":targets,"gumballTarget":row["pivot"],"transformMode":"move","gumballLiveDispatch":case["live"]}).to_string();
         let mut state=World3dState::new("surface".into(),"controller".into());drive_scene_bridge(&mut state,&scene,Rect::new(0.0,0.0,400.0,400.0));set_world3d_declared_actions(&mut state.session,&[TRANSLATE_SELECTION_ACTION_ID.into()]);
-        let mut input=ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();let mut actions=Vec::new();
+        let mut input=semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();let mut actions=Vec::new();
         for event in 0..4 {
             let finish=case["finish"].as_str().unwrap();if event==3&&finish=="release" {continue;}
             let point=if event==0 {&row["pointer"]} else {&row["movedPointer"]};
@@ -209,7 +209,7 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     drive_scene_bridge(&mut state, &scene, bounds);
     set_world3d_declared_actions(&mut state.session, &[TRANSLATE_SELECTION_ACTION_ID.into()]);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut actions = Vec::new();
     for event in 0..refresh["pointers"].as_array().unwrap().len() {
         let point = &refresh["pointers"][event];
@@ -311,7 +311,7 @@ fn world_native_primary_geometry_object_pick_uses_original_domain() {
                 }
             }
             let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene,10).unwrap().expect("original primary plan");
-            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+            let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
             for turn in 0..256 {
                 if with_world_step_context(1,|context|publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene,&mut plan,10,&mut input,context)).unwrap()==WorldInteractionStep::Complete {break;}
                 assert!(turn<255);
@@ -349,7 +349,7 @@ fn world_native_overlapping_wires_pick_original_closest_depth() {
         let mut cursor = WorldRayPickCursor::new(&state.session, &state.camera, 10, purpose, law["pointer"][0].as_f64().unwrap() as f32, law["pointer"][1].as_f64().unwrap() as f32).unwrap();
         for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original overlapping pick {step:?}") } }
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
         let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
@@ -369,7 +369,7 @@ fn world_native_overlapping_wires_pick_original_closest_depth() {
         assert_eq!(state.interaction.interaction_objects.resolve(best.object).unwrap().id.as_str(), law["selectedObject"].as_str().unwrap());
         assert!((best.primary - 1.0).abs() < 1e-5);
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
         let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
@@ -409,7 +409,7 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
         for turn in 0..4096 { match with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped object pick {step:?}") } }
         assert!((cursor.best.unwrap().distance - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5);
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
         let actions = take_actions(&mut input); assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].action, if purpose == WorldRayPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
@@ -425,7 +425,7 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
         let best = cursor.best.unwrap(); assert_eq!(best.id, law["edgeId"].as_u64().unwrap() as u32);
         assert!((best.primary - law["closestDepth"].as_f64().unwrap() as f32).abs() < 1e-5);
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..256 { if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 255); }
         let actions = take_actions(&mut input); assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].action, if purpose == WorldComponentPickPurpose::Hover { "interactionHover" } else { "interactionSelect" });
@@ -443,7 +443,7 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
         for turn in 0..4096 { match with_world_step_context(1, |context| marquee.step(&state.session, &state.selection, &state.interaction, &state.scene, 12, context)) { WorldInteractionStep::Complete => break, WorldInteractionStep::Pending => assert!(turn < 4095), step => panic!("original clipped marquee {step:?}") } }
         assert_eq!(marquee.results.lens[0], 1, "{} includes the visible clipped segment", rectangle["name"]);
         let mut publish = WorldComponentMarqueePublishJob::new(12, marquee.gesture, marquee.results, WorldComponentKind::Edge, false, false);
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..1024 { if with_world_step_context(1, |context| publish.step(&state.session, &state.interaction, &state.scene, 12, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; } assert!(turn < 1023); }
         let actions = take_actions(&mut input); assert_eq!(actions.len(), 1); assert_eq!(actions[0].action, "interactionSelect");
         let targets: serde_json::Value = serde_json::from_str(actions[0].args.as_ref().unwrap().get("targets").unwrap().as_str().unwrap()).unwrap();
@@ -459,10 +459,10 @@ fn world_native_clipped_wire_pick_preserves_original_visible_depth() {
 fn world_native_primary_geometry_paint_uses_original_style_tokens() {
     let fixture: serde_json::Value = serde_json::from_str(read_static("../../../🧪️tests/🧫️fixtures/🎨️primary-geometry-style/🔣️.json")).unwrap();
     let geometry: serde_json::Value = serde_json::from_str(read_static("../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
-    let mut custom = ui_wgpu::wgpu::Theme::default();
-    custom.border_normal = ui_wgpu::wgpu::Rgba::new(0.13,0.21,0.34,1.0);
-    custom.border_emphasized = ui_wgpu::wgpu::Rgba::new(0.55,0.34,0.21,1.0);
-    custom.celebrate[0] = ui_wgpu::wgpu::Rgba::new(0.21,0.55,0.34,1.0);
+    let mut custom = semio_framework_ui_theme::Theme::default();
+    custom.border_normal = semio_framework_ui_theme::Rgba::new(0.13,0.21,0.34,1.0);
+    custom.border_emphasized = semio_framework_ui_theme::Rgba::new(0.55,0.34,0.21,1.0);
+    custom.celebrate[0] = semio_framework_ui_theme::Rgba::new(0.21,0.55,0.34,1.0);
     for kind in fixture["geometry"].as_array().unwrap() {
         let mesh = geometry["zeroIndex"]["accepted"].as_array().unwrap().iter().find(|row|row["kind"] == *kind).unwrap();
         for row in fixture["states"].as_array().unwrap() {
@@ -472,7 +472,7 @@ fn world_native_primary_geometry_paint_uses_original_style_tokens() {
             world.instances_json = serde_json::json!([{"id":object,"meshId":"primary"}]).to_string();
             world.selection_json = serde_json::json!({"granularity":"object","showEdges":false,"ids":if row["selected"].as_bool().unwrap() {vec![object.as_str()]} else {vec![]},"hoveredId":if row["hovered"].as_bool().unwrap() {Some(object.as_str())} else {None},"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
             let bounds = Rect::new(0.0,0.0,400.0,400.0);let mut state = World3dState::new("surface-style".into(),"controller".into());drive_scene_bridge(&mut state,&scene,bounds);
-            for theme in [ui_wgpu::wgpu::Theme::default(),custom.clone()] {
+            for theme in [semio_framework_ui_theme::Theme::default(),custom.clone()] {
                 let color = match row["line"].as_str().unwrap() {
                     "var(--border-normal-color)"=>theme.border_normal,
                     "var(--border-emphasized-color)"=>theme.border_emphasized,

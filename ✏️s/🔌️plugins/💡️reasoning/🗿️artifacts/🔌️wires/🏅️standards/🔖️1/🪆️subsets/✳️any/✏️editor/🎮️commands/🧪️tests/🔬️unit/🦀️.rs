@@ -53,8 +53,8 @@ async fn add_relationship_refuses_missing_unknown_and_identical_endpoints_by_nam
         (AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-9".into() }, "mutation.target-missing"),
         (AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-1".into() }, "wires.relationship.self"),
     ] {
-        app.dispatch_typed(WiresCommand::AddRelationship(payload), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("admitted");
-        let fault = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.err().expect("refused");
+        app.0.dispatch_typed(WiresCommand::AddRelationship(payload), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("admitted");
+        let fault = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("refused");
         assert!(fault.message.contains(code) || fault.code.0 == code, "expected {code}, got {fault:?}");
     }
     let board = crate::editor::wires::unit_tests::context::board(&app);
@@ -92,13 +92,13 @@ async fn pointer_drag_translates_node_by_screen_delta() {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 140.0, y: 130.0, samples: Vec::new() }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
     ] {
-        app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(&mut app).await;
     }
     let node = board_node(&crate::editor::wires::unit_tests::context::board(&app), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
     assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
-    artifact_app_laws::settle_history_verb(&mut *app, "undo", artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    artifact_app_laws::settle_history_verb(&mut app.0, "undo", artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     let node = board_node(&crate::editor::wires::unit_tests::context::board(&app), "node-1").expect("node-1").clone();
     assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(0.0));
 }
@@ -126,13 +126,13 @@ async fn pointer_down_selects_the_hit_node_inline() {
         let node = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral full graph node");
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![node], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let meta = ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("inline-pick") };
-        app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-        artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-        let admitted = app.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+        artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+        let admitted = app.0.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         if !admitted.mutations.is_empty() {
             return Err("a pointer down never mutates the document directly".into());
         }
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         if receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)) {
             return Err(format!("interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects));
         }
@@ -157,9 +157,9 @@ async fn pointer_down_on_empty_space_requests_no_select_effect() {
     let mut app = new_app().await;
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "left".into(), window_kind_id: WIRES_PLAY_WINDOW_CANVAS.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: view.for_window_instance("left"), ..artifact_app_laws::meta("local") };
-    app.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("viewport");
+    app.0.dispatch_typed(WiresCommand::NodeGraphViewport(NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("viewport");
     settle(&mut app).await;
-    app.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("pointer down");
+    app.0.dispatch_typed(WiresCommand::CanvasPointerDown(CanvasPointerDown { id: None, x: 0.0, y: 0.0 }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("pointer down");
     let receipt = settle(&mut app).await;
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "an empty-space press never publishes the document");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)));

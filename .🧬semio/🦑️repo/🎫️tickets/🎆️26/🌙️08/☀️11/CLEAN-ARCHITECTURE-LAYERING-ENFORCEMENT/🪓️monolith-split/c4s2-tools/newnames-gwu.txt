@@ -1,6 +1,0 @@
-👥️presence-fanout-and-kick
-🗂️static-cors-credential-and-blob
-🔁️event-stream-and-server
-🛰️presence-rooms-and-budget
-🧵️presence-sessions
-🛂️edge-and-throttle

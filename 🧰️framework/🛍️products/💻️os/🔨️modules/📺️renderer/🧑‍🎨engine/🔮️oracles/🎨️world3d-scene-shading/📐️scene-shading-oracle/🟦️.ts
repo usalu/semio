@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { paintedShaderFromProduction, renderSceneShading, renderSceneShadingS2 } from "../🎨️scene-shading-renderers/🟦️.ts";
 import { renderWgpuCelebration, renderWgpuShading, renderWgpuTextured } from "../🧊️wgpu-shading-renderers/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -85,7 +86,7 @@ export async function runSceneShadingOracle(
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
+      const shaderSource = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"));
       const shaderName = command === "shading-s2-celebration" ? "WORLD3D_CELEBRATION_SHADER" : "WORLD3D_SHADER";
       const shader = shaderSource.match(new RegExp(`pub const ${shaderName}: &str = r#"([\\s\\S]*?)"#;`))?.[1];
       if (!shader) throw new Error(`Production ${shaderName} constant not found`);

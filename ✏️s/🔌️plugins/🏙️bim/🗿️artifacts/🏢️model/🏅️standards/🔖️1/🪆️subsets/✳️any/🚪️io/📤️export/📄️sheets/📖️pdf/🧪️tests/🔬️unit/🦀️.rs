@@ -2,17 +2,17 @@
 
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfOp;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 #[allow(unused_imports)]
@@ -25,7 +25,7 @@ use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with
 use crate::standards::v1::subsets::any::io::export::sheets::pdf::*;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
-fn written() -> (Vec<u8>, crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {
+fn written() -> (Vec<u8>, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference) {
     let model = house_with_sheets();
     let inferred = inferred(&model);
     (crate::standards::v1::subsets::any::io::export::sheets::sheets_pdf(&model, &inferred, None, &labels()).expect("the set writes"), model, inferred)

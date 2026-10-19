@@ -1,4 +1,4 @@
-import type {NativeCatalogV1} from "../../🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import type {NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 // #region 🧲️Header
 // 💻️ 🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx
 // Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
@@ -11,7 +11,7 @@ import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "@sem
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 import { createBrowserStoragePort } from "@semio-tech/framework";
 
-import type { PluginBuildTarget } from "../../🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import type { PluginBuildTarget } from "@semio-tech/plugin-registry/catalog-view";
 import type {pluginCatalogV1} from "../../🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
 import type {PluginCatalogRowsV1} from "@semio-tech/framework/plugin-catalog";
 export type StoryCatalogV1={readonly nativeCatalog?:NativeCatalogV1;readonly targets:readonly PluginBuildTarget[];readonly moduleUrl:(id:string)=>string;readonly catalog:ReturnType<typeof pluginCatalogV1>;readonly rows:PluginCatalogRowsV1};

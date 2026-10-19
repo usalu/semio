@@ -23,9 +23,9 @@ import { LATEST_PROTOCOL_VERSION, McpError } from "@modelcontextprotocol/sdk/typ
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
 import { isValidJsonSchema2020_12 } from "../../🧬️schema-validation/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 const TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,64}$/;
 

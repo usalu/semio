@@ -1,6 +1,6 @@
 //! 🧰️ Shared helpers of the glTF export tests: the committed house model, its fixture directory and a third-party reader (the `gltf` crate) over exported bytes.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 🏠️ The committed export fixture: one site, one building, four storeys and every element family.

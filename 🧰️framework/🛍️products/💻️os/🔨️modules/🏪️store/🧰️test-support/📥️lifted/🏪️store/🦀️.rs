@@ -15,19 +15,19 @@ use semio_framework_os_store_ephemeral::*;
 //#region 🧪️Tests
 
 /// 🗂️ The store's own document-model schema documents, one scope per `🧬️schema` dir exactly as the catalogue owns them:
-/// a composed child (`os/store/child/schema.json`), its owner stamp (`os/store/child/owner/schema.json`), a link
-/// (`os/store/link/schema.json`) and a blob (`os/store/blob/schema.json`), each as its whole-document `schema` export.
+/// a composed child (`framework/schema/artifact-reference/child/schema.json`), its owner stamp (`os/store/child/owner/schema.json`), a link
+/// (`framework/schema/artifact-reference/link/schema.json`) and a blob (`framework/schema/artifact-reference/blob/schema.json`), each as its whole-document `schema` export.
 pub const STORE_SCHEMA_EXPORTS: [semio_framework_schema_registry::ScopeSchemaExports; 4] = [
     semio_framework_schema_registry::ScopeSchemaExports {
-        scope: "os.store.child",
+        scope: "framework.schema.artifact-reference.child",
         exports: &[semio_framework_schema_registry::SchemaExport {
             id: "schema",
             leaves: semio_framework_schema_registry::FacetLeaves {
                 rust: "",
-                typescript: include_str!("../../../🪆️child/🧬️schema/🟦️.ts"),
-                graphql: include_str!("../../../🪆️child/🧬️schema/🔗️.graphql"),
-                json_schema: include_str!("../../../🪆️child/🧬️schema/🔣️.json"),
-                proto: include_str!("../../../🪆️child/🧬️schema/🛰️.proto"),
+                typescript: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts"),
+                graphql: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"),
+                proto: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto"),
             },
         }],
     },
@@ -45,28 +45,28 @@ pub const STORE_SCHEMA_EXPORTS: [semio_framework_schema_registry::ScopeSchemaExp
         }],
     },
     semio_framework_schema_registry::ScopeSchemaExports {
-        scope: "os.store.link",
+        scope: "framework.schema.artifact-reference.link",
         exports: &[semio_framework_schema_registry::SchemaExport {
             id: "schema",
             leaves: semio_framework_schema_registry::FacetLeaves {
-                rust: include_str!("../../../🔗️link/🧬️schema/🦀️.rs"),
-                typescript: include_str!("../../../🔗️link/🧬️schema/🟦️.ts"),
-                graphql: include_str!("../../../🔗️link/🧬️schema/🔗️.graphql"),
-                json_schema: include_str!("../../../🔗️link/🧬️schema/🔣️.json"),
-                proto: include_str!("../../../🔗️link/🧬️schema/🛰️.proto"),
+                rust: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🦀️.rs"),
+                typescript: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🟦️.ts"),
+                graphql: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔣️.json"),
+                proto: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto"),
             },
         }],
     },
     semio_framework_schema_registry::ScopeSchemaExports {
-        scope: "os.store.blob",
+        scope: "framework.schema.artifact-reference.blob",
         exports: &[semio_framework_schema_registry::SchemaExport {
             id: "schema",
             leaves: semio_framework_schema_registry::FacetLeaves {
-                rust: include_str!("../../../📦️blob/🧬️schema/🦀️.rs"),
-                typescript: include_str!("../../../📦️blob/🧬️schema/🟦️.ts"),
-                graphql: include_str!("../../../📦️blob/🧬️schema/🔗️.graphql"),
-                json_schema: include_str!("../../../📦️blob/🧬️schema/🔣️.json"),
-                proto: include_str!("../../../📦️blob/🧬️schema/🛰️.proto"),
+                rust: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🦀️.rs"),
+                typescript: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🟦️.ts"),
+                graphql: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔗️.graphql"),
+                json_schema: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔣️.json"),
+                proto: include_str!("../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🛰️.proto"),
             },
         }],
     },

@@ -1,6 +1,6 @@
 import type { ArtifactActorConfig, PersistenceBinding } from "../../../../🟦️";
 import { documentRuntimeKeyV1, BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES, isPackInteger, decodePackValue, encodePackValue, decodeAppCommand, encodeAppCommand } from "../../../../🟦️";
-import { reserveBrowserActorChild, type BrowserActorChildValue } from "../../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import { reserveBrowserActorChild, type BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import type { DocumentOpenIntentV1, DocumentExecutionTargetLeaseFieldsV1 } from "@semio-tech/framework/directory/schema";
 import type { ActorUiPatchReceipt } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { parseColdDocumentPairLifetime, type ColdPairIngressStatus, type ColdDocumentPairCursor, coldDocumentPairCursorEquals, parseWitColdPairIngressStatus } from "@semio-tech/framework-actor/cold-pair";

@@ -1,14 +1,15 @@
 //! ⬜️ Slabs and roofs. A level slab is an `IfcSlab` (`FLOOR`) whose boundary, with its holes, is extruded by the sum of its layers downward from the storey elevation plus `offset`;
 //! a sloped slab is the faceted brep of its inferred solid. A roof is an `IfcRoof` aggregating one `IfcSlab` (`ROOF`) per layer, each a faceted brep of the roof solid.
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
-use crate::standards::v1::subsets::any::schema::snapshot::{RoofShape, Slab};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, real, rf, unset};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Slab;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored roof record: the shape, overhang and offsets IFC has no slot for.
 pub const RECORD_ROW: &str = "Roof";
@@ -86,7 +87,7 @@ pub fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     });
 }
 
-pub fn roof(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Roof) {
+pub fn roof(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Roof) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("roof", id, "its storey is missing");
         return;

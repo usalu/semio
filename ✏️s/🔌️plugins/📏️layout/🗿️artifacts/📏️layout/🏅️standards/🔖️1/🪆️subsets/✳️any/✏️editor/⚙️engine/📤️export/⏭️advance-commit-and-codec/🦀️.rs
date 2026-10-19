@@ -353,7 +353,7 @@ pub(super) fn decode_checkpoint(operation: &Operation, request: &LayoutExportReq
     Ok(checkpoint)
 }
 
-pub(super) fn crc32_update(mut crc: u32, bytes: &[u8]) -> u32 {
+pub fn crc32_update(mut crc: u32, bytes: &[u8]) -> u32 {
     crc = !crc;
     for byte in bytes {
         crc ^= u32::from(*byte);
@@ -389,7 +389,7 @@ pub fn output_name(request: &LayoutExportRequest) -> String {
     }
 }
 
-pub(super) fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
+pub fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
     let mut result = Vec::with_capacity(value.len() / 4 * 3);
     for quartet in value.as_bytes().chunks_exact(4) {
         let a = base64_value(quartet[0])?;

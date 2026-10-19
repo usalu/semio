@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use crate::standards::v1::subsets::any::io::export::gbxml::geometry::*;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{P3, round9, turned, area_vector, area, Frame, rect_in, offset_in};
 
 fn near(left: f64, right: f64) -> bool {
     (left - right).abs() < 1e-9

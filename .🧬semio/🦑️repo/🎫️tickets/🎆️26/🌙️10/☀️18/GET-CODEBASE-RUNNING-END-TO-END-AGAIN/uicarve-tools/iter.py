@@ -1,6 +1,9 @@
 """🔁 uicarve iter: run the oracle, widen what privacy errors demand, repeat. usage: iter.py <family.json> <tag> <cfgs> [max]"""
 import json, os, re, subprocess, sys
+sys.path.insert(0, 'lib')
+import widen as WD
 fam, tag, cfgs = sys.argv[1], sys.argv[2], sys.argv[3]
+WDIRS = [d for d in os.environ.get('WIDEN_DIRS', '').split(';') if d]
 mx = int(sys.argv[4]) if len(sys.argv) > 4 else 6
 G = '../🗑️generated'
 name = json.load(open(fam))['name']
@@ -16,6 +19,21 @@ for i in range(mx):
     p = subprocess.run(['python3', 'pos-tools/pos2widen.py', 'plan', fam, 'cur', label] + errs, env=env, capture_output=True, text=True)
     print(p.stdout.split('\n')[0])
     m = re.match(r'(\d+) planned', p.stdout)
-    if not m or int(m.group(1)) == 0: break
+    pairs = set()
+    for e in errs:
+        for l in open(e, encoding='utf-8'):
+            l = l.strip()
+            if not l.startswith('{'): continue
+            try: d = json.loads(l)
+            except Exception: continue
+            if (d.get('code') or {}).get('code') == 'E0603':
+                mm = re.match(r"(.+?) `([^`]+)` is private", d['message'])
+                if mm and mm.group(1) in WD.KIND: pairs.add((mm.group(2).split('::')[-1], WD.KIND[mm.group(1)]))
+    nw = 0
+    if pairs and WDIRS:
+        done = WD.widen(WD.list_files(WDIRS), pairs)
+        nw = len(done); print('name-widened', nw, sorted({n for _, n in done})[:12])
+    if (not m or int(m.group(1)) == 0) and nw == 0: break
+    if not m or int(m.group(1)) == 0: continue
     a = subprocess.run(['python3', 'pos-tools/pos2widen.py', 'apply', '%s/uic-%s-widen-plan.json' % (G, label)], env=env, capture_output=True, text=True)
     print(a.stdout.split('\n')[0])

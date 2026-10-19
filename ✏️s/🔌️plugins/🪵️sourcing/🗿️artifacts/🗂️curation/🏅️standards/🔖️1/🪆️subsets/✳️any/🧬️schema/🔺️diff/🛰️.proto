@@ -1,5 +1,5 @@
 syntax = "proto3";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 package semio.s.sourcing.curation.diff;
 import "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 
@@ -65,7 +65,7 @@ message CurationCuratedModification {
 
 message CurationDiff {
   // @state artifact @child kind=s.stdio.semio
-  optional semio.os.store.ArtifactChild catalog = 1;
+  optional semio.framework.schema.artifact_child.ArtifactChild catalog = 1;
   // @state artifact
   optional CurationStockExtraDelta stock_extra = 2;
   // @state artifact

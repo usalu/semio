@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PluginModuleUnavailableError, type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
 import { PLUGIN_MODULE_STORE_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
-import { validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "@semio-tech/plugin-registry/hub-source/schema";
 import {
   collectPluginModuleStoreGarbageV1,
   commitPluginModuleBundleV1,
@@ -19,8 +19,8 @@ import {
   storedPluginModuleUrlV1,
   storePluginModuleBlobV1,
   type PluginModuleCacheV1,
-} from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
-import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
+} from "@semio-tech/plugin-registry/hub-source/store";
+import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type PluginModuleLocksV1 } from "@semio-tech/plugin-registry/hub-source";
 import type { HubPluginSourceNoticeV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
 import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
 import { TrustedPluginModuleRefusalV1 } from "@semio-tech/framework/plugin-module";

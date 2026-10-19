@@ -2,18 +2,18 @@
  * @see ../../../../📦️packages/🦀️rust/📜️script.ts
  */
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
-import { type CompilerAdmissionControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash, randomBytes } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema/browser-actor";
-import { TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES } from "@semio-tech/plugin-registry/deployment/schema";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { trustedBootstrapBuildControl, type TrustedBootstrapBundleV1, trustedBootstrapFsyncDirectory, trustedBootstrapGenerationReceipt, type TrustedBootstrapGenerationReceiptV1, type TrustedBootstrapMaterializationV1, trustedBootstrapVerifyGeneration, trustedBootstrapWriteNew } from "../../🗃️bootstrap-bundle/🟦️.ts";
 import { trustedBootstrapPluginModuleBlobPath } from "../../🧮️bootstrap-claims/🟦️.ts";
 import { trustedBootstrapReadRegular } from "../../🧭️bootstrap-selection/🟦️.ts";
@@ -65,7 +65,7 @@ export async function proveTrustedGisColdMapComponentV1(invocation: ScriptInvoca
       }
     };
     verifyRetainedBytes();
-    const receipts = await runRepositoryExactCargoLaws({control:phaseControl,preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd: repoRoot,groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:phaseControl,cwd: repoRoot,groups: [
         {
           package: "semio-hub-gis",
           target: { kind: "test", name: "component_cold_map_patch" },

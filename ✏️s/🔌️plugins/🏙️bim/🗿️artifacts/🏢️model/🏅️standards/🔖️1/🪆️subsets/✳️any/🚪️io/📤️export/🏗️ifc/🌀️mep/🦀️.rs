@@ -4,13 +4,13 @@
 //! `IfcDistributionSystem` with its predefined type) that groups the segments and the terminals (components with a system) of that service with `IfcRelAssignsToGroup` and serves the buildings they stand in.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowsegment.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::data::{property_set};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
-use crate::standards::v1::subsets::any::schema::snapshot::{MepSystem, MepShape};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::property_set;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, rf, unset, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepSystem, MepShape};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored MEP element record.
@@ -66,7 +66,7 @@ fn segment_type(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, kind: Mep
     object
 }
 
-fn segment(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::MepElement) {
+fn segment(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("mep element", id, "its storey is missing");
         return;

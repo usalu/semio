@@ -220,3 +220,23 @@ export function sliceModuleTreeSource(root: string | URL, from: string, to?: str
   }
   throw Error("Module tree marker missing: " + from);
 }
+
+/** 👪️ Lists every authored `.rs` file below a directory in path order, canonical `🧪️tests` and `🧪️testing` folders excluded unless `tests` is set, for laws about a carved crate family whose members mount each other through Cargo rather than `#[path]`. */
+export function listSourceFamily(directory: string | URL, options: { readonly tests?: boolean } = {}): readonly string[] {
+  const out: string[] = [];
+  const visit = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+      const path = resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        if ((options.tests === true || (entry.name !== TESTS_DIRECTORY && entry.name !== "🧪️testing")) && entry.name !== "node_modules") visit(path);
+      } else if (entry.isFile() && extname(entry.name) === ".rs") out.push(path);
+    }
+  };
+  visit(typeof directory === "string" ? resolve(directory) : fileURLToPath(directory));
+  return out;
+}
+
+/** 👪️ Reads the authored sources of a carved crate family as one text, files in path order. */
+export function readSourceFamilySource(directory: string | URL, options: { readonly tests?: boolean } = {}): string {
+  return listSourceFamily(directory, options).map(file => { const text = readFileSync(file, "utf8"); return text.endsWith("\n") ? text : text + "\n"; }).join("");
+}

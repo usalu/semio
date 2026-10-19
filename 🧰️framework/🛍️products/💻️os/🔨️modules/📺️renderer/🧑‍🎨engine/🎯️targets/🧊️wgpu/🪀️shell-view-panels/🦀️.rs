@@ -32,7 +32,14 @@ use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
 use semio_framework_os_renderer_wgpu_ui_engine::retained_document_consumer::{UiDocumentFrameCursor, begin_ui_document_opportunity, render_ui_document_step};
 use store_sync::PresencePeer;
 use ui_contract::UiText;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, RetainedGlyphStep, RetainedTextFlow, Theme, TreeDropPosition, paint_retained_glyph_step_flowed, push_chrome_group_border};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, TreeDropPosition};
+use semio_framework_ui_theme::{Level, Theme};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_paint::{RetainedGlyphStep, RetainedTextFlow, paint_retained_glyph_step_flowed};
+use semio_framework_ui_wgpu_layout::chrome::push_chrome_group_border;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪀️view-panels/⌨️keyboard-and-palette/🦀️.rs"]
 mod staged_view_panels__keyboard_and_palette;

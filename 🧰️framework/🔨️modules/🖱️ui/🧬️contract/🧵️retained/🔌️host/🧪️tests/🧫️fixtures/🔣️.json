@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "contract": "The UI patch seam refuses every source and receipt until the host binds its brand checks, delegates to the bound checks afterwards, and binds exactly once. The kernel input host and the shard composition seams are unbound until their owners load, refuse use while unbound, and bind exactly once.",
+  "cases": [
+    {
+      "id": "unbound-refuses-source",
+      "bound": false,
+      "approves": true,
+      "check": "matches",
+      "expected": false
+    },
+    {
+      "id": "unbound-refuses-owner",
+      "bound": false,
+      "approves": true,
+      "check": "matchesOwner",
+      "expected": false
+    },
+    {
+      "id": "unbound-refuses-receipt",
+      "bound": false,
+      "approves": true,
+      "check": "matchesReceipt",
+      "expected": false
+    },
+    {
+      "id": "bound-approving-accepts-source",
+      "bound": true,
+      "approves": true,
+      "check": "matches",
+      "expected": true
+    },
+    {
+      "id": "bound-approving-accepts-owner",
+      "bound": true,
+      "approves": true,
+      "check": "matchesOwner",
+      "expected": true
+    },
+    {
+      "id": "bound-approving-accepts-receipt",
+      "bound": true,
+      "approves": true,
+      "check": "matchesReceipt",
+      "expected": true
+    },
+    {
+      "id": "bound-rejecting-refuses-source",
+      "bound": true,
+      "approves": false,
+      "check": "matches",
+      "expected": false
+    },
+    {
+      "id": "bound-rejecting-refuses-receipt",
+      "bound": true,
+      "approves": false,
+      "check": "matchesReceipt",
+      "expected": false
+    }
+  ],
+  "doubleBind": {
+    "secondRefusedWith": "UI patch authority is already bound"
+  },
+  "seams": [
+    {
+      "id": "input-host",
+      "bind": "bindUiInputHost",
+      "use": "uiInputHost",
+      "unboundRefusal": "UI input host is unbound",
+      "doubleBind": "UI input host is already bound"
+    },
+    {
+      "id": "resident-composition",
+      "bind": "bindUiResidentComposition",
+      "use": "uiResidentComposition",
+      "unboundRefusal": "UI resident composition is unbound",
+      "doubleBind": "UI resident composition is already bound"
+    }
+  ],
+  "returnContent": [
+    {
+      "id": "unbound-refuses",
+      "bound": false,
+      "approves": true,
+      "expected": false
+    },
+    {
+      "id": "bound-approving-accepts",
+      "bound": true,
+      "approves": true,
+      "expected": true
+    },
+    {
+      "id": "bound-rejecting-refuses",
+      "bound": true,
+      "approves": false,
+      "expected": false
+    }
+  ],
+  "returnContentDoubleBind": "Return content matcher is already bound"
+}

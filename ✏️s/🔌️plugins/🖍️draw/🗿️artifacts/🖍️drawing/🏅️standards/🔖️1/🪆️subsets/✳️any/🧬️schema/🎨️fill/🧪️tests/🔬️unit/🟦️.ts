@@ -3,7 +3,9 @@ import { expect, test, spyOn } from "bun:test";
 import Ajv from "ajv";
 import { produce } from "immer";
 import { Vector4 } from "three";
-import { editFill, type Fill, type FillEdit } from "../../🟦️.ts";
+import { editFill } from "../../🟦️.ts";
+import type { FillEdit } from "../../🟦️.ts";
+import type { Fill } from "../../🖌️paint-model/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import cases from "../../../../🧪️tests/🧫️fixtures/🎨️fill/🔣️.json";
 test("fill editing preserves stops, geometry, alpha and source on rejection", () => {

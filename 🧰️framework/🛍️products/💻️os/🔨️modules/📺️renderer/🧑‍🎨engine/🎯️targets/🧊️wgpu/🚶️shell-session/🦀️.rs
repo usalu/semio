@@ -40,7 +40,12 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::ArtifactActorMsg;
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::{ActionDescriptor, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, InputState, Rect, Theme, UiButtonNode, UiControlNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent, UtilityNode, WindowLayout};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, WindowLayout};
+use semio_framework_ui_wgpu_input::InputState;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_framework_ui_declaration::utilities::UtilityNode;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🚶️session/⌨️keyboard-and-palette/🦀️.rs"]
 mod staged_session__keyboard_and_palette;

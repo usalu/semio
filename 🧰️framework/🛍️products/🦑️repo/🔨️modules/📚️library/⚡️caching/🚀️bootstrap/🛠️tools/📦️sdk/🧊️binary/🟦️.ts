@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export interface NxSdkBinaryObjectV1{readonly path:string;readonly sha256:string;readonly bytes:number;}
 export interface NxSdkBinaryReceiptV1{readonly version:1;readonly digest:string;readonly objects:readonly NxSdkBinaryObjectV1[];}
 /** 🧊️ Distinguishes immutable binary publication from writable package/configuration Source. */

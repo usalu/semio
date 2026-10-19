@@ -28,9 +28,9 @@ use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
 #[allow(unused_imports)]
 use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, flow_removal_leaves, focus_selection_camera, seed_host_catalogue, value_fault};
 #[allow(unused_imports)]
@@ -171,13 +171,13 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
         }
         work.begin_close();
         let zero=semio_framework_value::RetainedCloneGrant{maximum_items:0,..quoted_close_grant(&work,4096)};
-        assert_eq!(work.close_step(zero),InteractiveJobCloseStep::Pending{progress:Default::default()});
+        assert_eq!(semio_framework_job::close_with_self_funded_context(zero, |cx| work.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert_eq!(work.output.as_ref().unwrap().child_preparations.front().unwrap().retained_operation_count(),1);
         let body=fixture["closeGrant"].as_u64().unwrap()as usize;
         let mut terminal=false;
         for _ in 0..fixture["closeSteps"].as_u64().unwrap(){
             let grant=quoted_close_grant(&work,body);
-            match work.close_step(grant){
+            match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn"){
                 InteractiveJobCloseStep::Pending{progress}=>assert!(progress.fits(grant)),
                 InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());terminal=true;break;},
                 other=>panic!("[DEBUG] actual child owner did not close: {other:?}"),

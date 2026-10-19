@@ -33,7 +33,7 @@ pub fn panel_resize_anchor(control_id: &str) -> Option<(PanelAnchor, bool)> {
 /// ⌨️ {@link is_reserved_shell_chord} against a RESOLVED table, so a REMAPPED shell chord is reserved
 /// at its new spelling and the default it replaced becomes an app's to claim — React's
 /// `reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides)`.
-pub fn is_reserved_shell_chord_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+pub fn is_reserved_shell_chord_in(table: &[(String, String)], action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> bool {
     shell_shortcut_for_in(table, action, modifiers).is_some()
 }
 
@@ -78,7 +78,7 @@ pub const WINDOW_UTILITY_RAIL_PARENT: &str = "framework.utility.";
 /// `ui.shell.mode.{next,previous}` — see `🧱️elements/🏛️ShellHost/🟦️.tsx` and
 /// `🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json`'s `keybindings` rows, which pin both spellings.
 #[cfg(any(test, feature = "testkit"))]
-pub fn is_reserved_shell_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+pub fn is_reserved_shell_chord(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> bool {
     is_reserved_shell_chord_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
 }
 //#endregion ActionPanelAndUtilities

@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-wgpu-input-laws-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

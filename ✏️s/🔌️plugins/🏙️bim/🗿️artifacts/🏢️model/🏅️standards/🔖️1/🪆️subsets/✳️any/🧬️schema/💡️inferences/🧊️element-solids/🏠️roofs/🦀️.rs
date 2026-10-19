@@ -12,9 +12,11 @@
 //! Related: <https://en.wikipedia.org/wiki/Hip_roof>, <https://en.wikipedia.org/wiki/Straight_skeleton>.
 
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, SolidEntry, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Roof, RoofShape};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, SolidEntry, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Roof};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape;
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;

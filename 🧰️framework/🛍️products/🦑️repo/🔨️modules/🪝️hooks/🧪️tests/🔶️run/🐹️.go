@@ -12,7 +12,7 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	providers "github.com/usalu/semio/repo/providers"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestRunHookAgentEvents(t *testing.T) {
@@ -308,9 +308,7 @@ func TestBuildDefinitionReadsFullFileReturnsFileID(t *testing.T) {
 	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
-	origRoot := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(origRoot)
+	sandbox.BindRoot(t, tmpDir)
 
 	lineSet := map[int]struct{}{1: {}, 2: {}, 3: {}, 4: {}, 5: {}}
 	filesToLines := map[string]map[int]struct{}{filePath: lineSet}
@@ -341,9 +339,7 @@ func TestBuildDefinitionReadsUsesRepoRelativePaths(t *testing.T) {
 	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatalf("failed to write file: %v", err)
 	}
-	origRoot := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(origRoot)
+	sandbox.BindRoot(t, tmpDir)
 	lineSet := map[int]struct{}{3: {}}
 	filesToLines := map[string]map[int]struct{}{filePath: lineSet}
 	definitions := buildDefinitionReads(filesToLines)

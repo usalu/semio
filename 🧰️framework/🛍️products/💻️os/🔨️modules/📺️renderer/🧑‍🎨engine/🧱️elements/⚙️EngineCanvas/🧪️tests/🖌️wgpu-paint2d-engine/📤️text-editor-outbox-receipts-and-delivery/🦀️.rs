@@ -8,7 +8,7 @@ fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressu
     let scene = text_editor_scene(id, "alpha");
     assert!(sync_engine_scene(&scene, "editor-credit-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
     let mut input = InputState::<ActionDescriptor>::default();
-    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+    for _ in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
         input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
     }
     assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &PointerModifiers::default(), &mut input), Ok(true));

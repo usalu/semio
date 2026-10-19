@@ -19,8 +19,8 @@ impl semio_framework_value::retirement::RetireOwned for Root {
     fn controlled_retirement_supported()->bool {true}
 }
 impl SnapshotRetirementFactory<Root> for RootFactory {
-    fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize {semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<Root>()}
-    fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)> {semio_framework_value::retirement::shared::admit_shared_retirement(root,grant,false)}
+    fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize {semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Root>()}
+    fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)> {semio_framework_value::retirement::arc_custody::admit_shared_retirement(root,grant,false)}
 }
 fn paid<R:RetireOwned+Send+Sync+'static,T:Copy>(cursor:&CopyCursor<R,T>,copy:usize)->RetainedCloneGrant {let d=cursor.next_close_demands(copy).unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 
@@ -233,8 +233,8 @@ impl semio_framework_value::FactoryRetirement for RefusedFactory{
  }
 }
 impl SnapshotRetirementFactory<Root> for RefusedFactory{
- fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize{semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<Root>()}
- fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)>{semio_framework_value::retirement::shared::admit_shared_retirement(root,grant,false)}
+ fn retirement_birth_bytes(&self,_:&Arc<Root>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Root>()}
+ fn retire(&self,root:Arc<Root>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Root>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(root,grant,false)}
 }
 impl semio_framework_value::FactoryRetirementTicket for RefusedTicket{
  fn preparation_demands(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:usize::from(!self.prepared),..Default::default()})}

@@ -31,7 +31,8 @@ type MutationDomainOperations = Vec<(String, String)>;
 pub(super) const MUTATION_SCHEMA_INDEX_SCHEMA: &str = "semio.dsl.mutation-schema-document-index/v1";
 
 #[derive(Debug)]
-struct MutationAuthorityCommon {
+#[doc(hidden)]
+pub struct MutationAuthorityCommon {
     pub(super) workspace_root: PathBuf,
     pub(super) source_path: PathBuf,
     pub(super) taxonomy_path: PathBuf,
@@ -44,7 +45,8 @@ struct MutationAuthorityCommon {
 }
 
 #[derive(Debug)]
-pub(super) struct MutationAggregateSourceAuthority {
+#[doc(hidden)]
+pub struct MutationAggregateSourceAuthority {
     #[doc(hidden)] pub workspace_root: PathBuf,
     #[doc(hidden)] pub mutation_root: PathBuf,
     #[cfg(any(test, feature = "testkit"))]

@@ -2,9 +2,13 @@
 //! an attach (`Roof`, `Slab`, `Ceiling`) must name an existing roof, slab or ceiling of the same building with a finite offset and no loop of references (authored reads only);
 //! the resolved height is inferred, never written.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::{ModelSnapshot, TopConstraint}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallTop, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

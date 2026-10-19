@@ -2,7 +2,8 @@
 //! it emits a mutation, a diff refuses text that does not parse) and reads the parameters it refers to, all pure and without any evaluation. It also owns the grammar of parameter names, the key
 //! of a parameter record, `family.name`, and the list of every formula slot of a solid.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::FamilySolid;
 use semio_framework_expression::{dependencies, parse, print, Expr, ParseError};
 use std::collections::BTreeSet;
 

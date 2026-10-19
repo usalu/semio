@@ -4,10 +4,12 @@
 //!
 //! Related: ISO 6946 <https://www.iso.org/standard/65708.html>, GEG <https://www.gesetze-im-internet.de/geg/>.
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::entities::{number, InferredRow};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, SpaceConditions}};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::number;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::InferredRow;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 
 //#region 🔖️Conditions
 /// 🌡️ The text of one condition of a space: empty while the space states no conditions or not this one; `None` for a space that does not exist.

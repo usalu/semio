@@ -276,7 +276,7 @@ pub(super) fn check_property_values(catalogue: &Catalogue, dictionary: &semio_s_
             }
 
             if let Some(dict_prop_id) = &def.dictionary_property_id {
-                if let Some(dict_prop) = semio_s_artifact_norm_iso16757_checks_common::helpers::part_4::resolve_property(dictionary, dict_prop_id) {
+                if let Some(dict_prop) = semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_4::resolve_property(dictionary, dict_prop_id) {
                     for constraint in &dict_prop.value_constraints {
                             if let Some(v) = value_as_f64(value) {
                                 if let Some(min) = constraint.min {

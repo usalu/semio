@@ -1,7 +1,7 @@
 //! 🧬️ Flow play app — the `generate` mode: explore parameter generations of the current fixture across
 //! three windows (generation list, input form, evaluated preview).
 
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW, FLOW_PLAY_WINDOW_GENERATIONS};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW, FLOW_PLAY_WINDOW_GENERATIONS};
 use crate::editor::flow::modes::generate::windows::{form, generations, preview};
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::create_named_layout;

@@ -5,14 +5,13 @@ import { ArtifactBootstrapAssembler } from "@semio-tech/framework-replication";
 import type { DocumentActorRecoveryMemoryV1 } from "../🚑️actor-recovery/🟦️.ts";
 import { documentRuntimeKeyV1, encodeBackboneWorkerResponse } from "../../../../🟦️";
 import { InstalledServiceRegistryV1 } from "@semio-tech/framework/inference/service";
-import type { DocumentExecutionTargetLease } from "../🪪️execution-lease/🟦️.ts";
-import type { DocumentBrowserActorReservation } from "../🧷️actor-reservation/🟦️.ts";
-import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "../🚀️artifact-bootstrap/🟦️.ts";
-import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🟦️.ts";
-import type { VerifiedColdDocumentPair } from "../🧊️cold-pair/🟦️.ts";
+import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "../🚀️artifact-bootstrap/🏷️owners/🟦️.ts";
+import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🏷️mirror-owner/🟦️.ts";
 import { workerScope } from "../⚙️constants/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
-import type { DocumentServiceWorkerContextV1 } from "../🗂️config-lane/🟦️.ts";
+
+/** 🔌️ The slots of {@link ArtifactState} whose values are classes owned by the modules that fill them. Each owner declares its own slot by augmenting this interface, so the state never imports its owners and no import cycle can form between the state and the owners that read and write it. */
+export interface ArtifactOwnerSlots {}
 
 export type ArtifactState = {
   runtimeKey: string;
@@ -31,8 +30,8 @@ export type ArtifactState = {
   /** 🪪️ The private verified execution-target owner for a non-`react` hub target, live only while
    * this document's plan/socket authority is. Never posted, cloned or encoded. */
   executionTargetOpen: symbol | null;
-  executionTargetLease: DocumentExecutionTargetLease | null;
-  browserActorReservation: DocumentBrowserActorReservation | null;
+  executionTargetLease: ArtifactOwnerSlots["executionTargetLease"] | null;
+  browserActorReservation: ArtifactOwnerSlots["browserActorReservation"] | null;
   /** 📥️ Remote backbone messages of an actor-bound document that arrived before its actor child was reserved — the hub's
    * `Welcome` tail comes before the `Session` that admits the child — handed to the child in arrival order the moment it is
    * reserved. Bounded like the child's own pre-binding retention. */
@@ -104,7 +103,7 @@ export type ArtifactState = {
   actorRecoveryRequested: boolean;
   artifactBootstrapProgress: ArtifactBootstrapProgress[];
   canonicalFolderMirror: FolderCanonicalBootstrapMirrorOwner | null;
-  verifiedColdPair: VerifiedColdDocumentPair | null;
+  verifiedColdPair: ArtifactOwnerSlots["verifiedColdPair"] | null;
   currentPack: Uint8Array | null;
   currentSpr: Uint8Array | null;
   hubFrameChain: Promise<void>;
@@ -174,4 +173,12 @@ export function emitEvent(state: ArtifactState, event: ArtifactEvent): void {
   }
   post({ kind: "event", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, event, ...(scope === undefined ? {} : { scope }) });
 }
+export function dropVerifiedColdDocumentPair(state: ArtifactState): void {
+  const owner = state.verifiedColdPair;
+  state.verifiedColdPair = null;
+  owner?.drop();
+}
+
+/** 🪪 Narrow authority port available to installed owner service contributions. */
+export type DocumentServiceWorkerContextV1 = Readonly<{ state: ArtifactState; reservation?: NonNullable<ArtifactState["browserActorReservation"]>; pair?: NonNullable<ArtifactState["verifiedColdPair"]> }>;
 export const documentServices = new InstalledServiceRegistryV1<DocumentServiceWorkerContextV1>();

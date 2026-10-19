@@ -219,7 +219,7 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut context = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
         let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the retained presentation document faulted in phase {}", cursor.phase_name());
         done
     });
@@ -477,8 +477,8 @@ fn pending_select_uses_the_presented_options_and_binding_for_keyboard_input() {
     semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_select_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending Select witness");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select opens");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select commits");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select opens");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Space(true), &PointerModifiers::default(), &mut input)).expect("presented Select commits");
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), [control.presented.binding.as_str()], "keyboard dispatch remains on the accepted Select revision");
     assert!(shell.input.discard_presented_input_candidate(pending));
@@ -505,7 +505,7 @@ fn pending_number_stepper_uses_the_presented_value_step_and_binding() {
     semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_number_stepper_record(&control.candidate), Rect::new(260.0, 0.0, 240.0, 32.0));
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending NumberStepper witness");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::ArrowUp, &PointerModifiers::default(), &mut input)).expect("presented NumberStepper increments");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::ArrowUp, &PointerModifiers::default(), &mut input)).expect("presented NumberStepper increments");
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), [control.presented.binding.as_str()], "NumberStepper dispatch retains the accepted value, step and binding");
     assert!(shell.input.discard_presented_input_candidate(pending));
@@ -532,8 +532,8 @@ fn pending_candidate_cannot_replace_presented_keyboard_focus_or_tab_authority() 
     semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut candidate = publish_retained_candidate(&mut shell, &mut input, surface, retained_input_record(&control.candidate), body);
     let pending = ChromeViewCtx::of(&mut shell).seal_presented_input_candidate(&theme).expect("pending keyboard witness");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Char("x".into()), &PointerModifiers::default(), &mut input)).expect("presented Input text");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("presented Input commit");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Char("x".into()), &PointerModifiers::default(), &mut input)).expect("presented Input text");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("presented Input commit");
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), [control.presented.binding.as_str()], "keyboard dispatch stays on the visible retained revision");
     assert!(shell.input.discard_presented_input_candidate(pending));

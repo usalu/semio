@@ -3,10 +3,11 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reason};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{marks_of, print, text_width, Inputs, LeaderLayout, NoteLayout, StyleMarks, TagLayout, TextAnchor};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
-use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::standards::v1::subsets::any::schema::snapshot::{Leader, ModelSnapshot, OpeningKind, Point2, Tag, TagCategory, TextNote};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Leader, ModelSnapshot, Tag, TextNote};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, Point2, TagCategory};
 
 fn name_of(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
     snapshot

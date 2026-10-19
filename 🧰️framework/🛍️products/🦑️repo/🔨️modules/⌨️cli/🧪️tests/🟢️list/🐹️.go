@@ -248,6 +248,7 @@ func TestBundleListIDs(t *testing.T) {
 }
 
 func TestContributorListIDs(t *testing.T) {
+	withExhaustiveRepo(t)
 	result := ToolContributorList()
 	if result.Error != "" {
 		t.Fatalf("ToolContributorList returned error: %s", result.Error)
@@ -285,6 +286,7 @@ func TestContributorListIDs(t *testing.T) {
 }
 
 func TestGoalListIDs(t *testing.T) {
+	withExhaustiveRepo(t)
 	result := ToolGoalList()
 	if result.Error != "" {
 		t.Fatalf("ToolGoalList returned error: %s", result.Error)

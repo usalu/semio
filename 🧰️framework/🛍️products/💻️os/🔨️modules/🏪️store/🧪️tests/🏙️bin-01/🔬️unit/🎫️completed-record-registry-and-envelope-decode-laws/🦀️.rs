@@ -218,19 +218,19 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
 fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_return_and_generation_reuse() {
     let registry = ArtifactEnvelopeFieldDecoderRegistry::new();
     let record = artifact_envelope_decode_test_cursor(&[br#"{"schema":"s","id":"i","vcs":{},"editMessages":[],"conflicts":[]}"#]);
-    let record_identity = record.tokens.pages.slots.as_ptr();
+    let record_identity = record.decode_pages().slot_address();
     let source = ArtifactEnvelopeDecodeAuthority::<(), ()>::try_new(record, &registry, Box::new(TestEnvelopeFieldDecoder { terminal: false, accepted: 0 })).unwrap_or_else(|_| panic!("fixed public rejection decoder admission"));
     let field_ticket = source.field_ticket;
     let registry_identity = Arc::as_ptr(&source.field_registry);
     let diagnostic = OwnedSchemaDecodeDiagnostic { code: "artifact-envelope.public-rejected", offset: 7, line: 2, column: 3, path: OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() };
     let mut rejected = source.reject(diagnostic).unwrap_or_else(|_| panic!("public rejection returns the exact owner authority"));
-    assert_eq!(rejected.record.as_ref().map(|record| record.tokens.pages.slots.as_ptr()), Some(record_identity));
+    assert_eq!(rejected.record.as_ref().map(|record| record.decode_pages().slot_address()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
     assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
     assert_eq!(rejected.diagnostic, diagnostic);
     assert!(!registry.ticket_reclaimed(field_ticket));
     assert_eq!(rejected.close_step(RetainedCloneGrant::default()), Ok(RetainedCloneStep::Progress(Default::default())));
-    assert_eq!(rejected.record.as_ref().map(|record| record.tokens.pages.slots.as_ptr()), Some(record_identity));
+    assert_eq!(rejected.record.as_ref().map(|record| record.decode_pages().slot_address()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
 
     let mut detached = None;

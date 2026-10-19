@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
+import { registryCompilerInputDependencies } from "../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
 import { registryCatalogPathMayAffect } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
 import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { type FrozenMarkdownCoordinateEvidenceContract, type Taxonomy, validateFrozenMarkdownCoordinateEvidenceContracts } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
@@ -37,7 +38,7 @@ function producerInputs(schema: Taxonomy) {
   expect(declarations).toHaveLength(3);
   const source = declarations.map((node) => node.getText(tree).replace(/^export /u, "")).join("\n"), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
   const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8"));
-  const build = new Function("getWorkspaceRoot", "lstatSync", "readFileSync", "createHash", "join", "posix", "registryCompilerInputDependencies", "DRAW_SOURCE_SCENARIO", compiled + "\nreturn { read: artifactProjectionProducerInput, collect: artifactProjectionProducerInputs };")(() => root, lstatSync, readFileSync, createHash, join, posix, discovery.registryCompilerInputDependencies, scenario);
+  const build = new Function("getWorkspaceRoot", "lstatSync", "readFileSync", "createHash", "join", "posix", "registryCompilerInputDependencies", "DRAW_SOURCE_SCENARIO", compiled + "\nreturn { read: artifactProjectionProducerInput, collect: artifactProjectionProducerInputs };")(() => root, lstatSync, readFileSync, createHash, join, posix, registryCompilerInputDependencies, scenario);
   return { ...build.collect(schema), read: build.read, sourceSha256: sha(source) } as { files: Record<string, { content: string; mode: number; sha256: string; origin: string }>; modules: unknown[]; read: (path: string) => { sha256: string; mode: number }; sourceSha256: string };
 }
 

@@ -1,4 +1,4 @@
-import { ecmaProgram, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
+import { ecmaProgram, type EcmaPattern, type EcmaExpression, type EcmaStatement } from "@semio-tech/compiler-syntax-ecma-ts";
 import type { PackageGlueGrammarSpec } from "../📜️taxonomy-contracts/🟦️.ts";
 
 interface EcmaRouteBinding {
@@ -12,7 +12,8 @@ interface EcmaRouteBinding {
 /** 🧭️ Carries one lexical binding environment without pooling sibling scopes. */
 class EcmaRouteScope {
   readonly bindings = new Map<string, EcmaRouteBinding>();
-  constructor(readonly parent?: EcmaRouteScope) {}
+  readonly parent?: EcmaRouteScope;
+  constructor(parent?: EcmaRouteScope) { this.parent = parent; }
   define(name: string, binding: EcmaRouteBinding): boolean {
     if (this.bindings.has(name)) return false;
     this.bindings.set(name, binding);
@@ -297,13 +298,25 @@ function ecmaRouteRouter(expression: EcmaExpression, scope: EcmaRouteScope, vali
   return (value.arguments ?? []).every(inspect);
 }
 
-function ecmaRouteTerminal(statement: EcmaStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false): boolean {
+/** 🐣️ Accepts only the process-birth wrapper whose single issued parameter reaches exactly one validated terminal. */
+function ecmaRouteReceivedTerminal(call: EcmaExpression, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard: boolean): boolean {
+  const [environment, body] = call.arguments ?? [], arrow = body ? ecmaRouteUnwrap(body) : undefined, root = environment ? ecmaRouteUnwrap(environment) : undefined;
+  if (call.arguments?.length !== 2 || arrow?.kind !== "arrow" || Array.isArray(arrow.body) || arrow.parameters?.length !== 1 || root?.kind !== "member" || root.property !== "env" || ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(root.object!) ?? "") !== "process") return false;
+  const pattern = arrow.parameters[0]!, nested = new EcmaRouteScope(scope);
+  if (pattern.defaults || pattern.destructured || pattern.names.length !== 1 || !nested.define(pattern.names[0]!, { kind: "parameter" })) return false;
+  return ecmaRouteTerminal({ kind: "expression", expression: arrow.body as EcmaExpression } as EcmaStatement, nested, validation, mainGuard, pattern.names[0]!);
+}
+
+function ecmaRouteTerminal(statement: EcmaStatement, scope: EcmaRouteScope, validation: EcmaRouteValidation, mainGuard = false, issued?: string): boolean {
   if (statement.kind !== "expression") return false;
   const expression = ecmaRouteUnwrap(statement.expression!);
   if (expression.kind !== "call") return false;
-  const callee = ecmaRouteUnwrap(expression.callee!);
-  if (mainGuard && callee.kind === "member" && callee.property === "run" && scope.resolve(ecmaRouteIdentifier(callee.object!) ?? "")?.kind === "router") {
-    const argument = expression.arguments?.length === 1 ? ecmaRouteUnwrap(expression.arguments[0]!) : undefined;
+  const callee = ecmaRouteUnwrap(expression.callee!), received = ecmaRouteIdentifier(expression.callee!), receiver = received ? scope.resolve(received) : undefined;
+  if (receiver?.kind === "import-value" && receiver.imported === "receiveScriptProcessInvocation") return issued === undefined && ecmaRouteReceivedTerminal(expression, scope, validation, mainGuard);
+  if (mainGuard && callee.kind === "member" && callee.property === "run" && (scope.resolve(ecmaRouteIdentifier(callee.object!) ?? "")?.kind === "router" || ecmaRouteRouter(callee.object!, scope, validation))) {
+    const only = expression.arguments?.length === (issued === undefined ? 1 : 2), last = issued === undefined ? undefined : expression.arguments?.[1] ? ecmaRouteUnwrap(expression.arguments[1]) : undefined;
+    if (issued !== undefined && (last?.kind !== "identifier" || last.name !== issued)) return false;
+    const argument = only ? ecmaRouteUnwrap(expression.arguments![0]!) : undefined;
     const slice = argument?.kind === "call" ? ecmaRouteUnwrap(argument.callee!) : undefined;
     const argv = slice?.kind === "member" && slice.property === "slice" ? ecmaRouteUnwrap(slice.object!) : undefined;
     if (argv?.kind !== "member" || argv.property !== "argv" || ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(argv.object!) ?? "") !== "process" || argument?.arguments?.length !== 1 || argument.arguments[0]?.kind !== "literal" || argument.arguments[0].value !== "2") return false;

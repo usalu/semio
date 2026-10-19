@@ -1,5 +1,5 @@
-import type {ScriptInvocation} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import type {ScriptInvocation} from "@semio-tech/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import type { DevHubCatalogPublisherV1 } from "@semio-tech/framework-os-dev/local-hub/execution";
 
 /** 📣️ Binds the services composition to the real Hub catalog producer. */

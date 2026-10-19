@@ -1,18 +1,17 @@
 import {join,relative} from "node:path";
 import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
-import {receiveScriptProcessInvocation,requireIssuedResourceControlInvocationV1,createIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {receiveScriptProcessInvocation,requireIssuedResourceControlInvocationV1,createIssuedResourceControlV1} from "@semio-tech/process/routing";
+import {checkScriptInvocation,type ScriptInvocation} from "@semio-tech/process/routing";
+import {readBuildMode} from "@semio-tech/process/build-mode";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {dirname,resolve} from "node:path";
 import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1} from "../🚪️launcher/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {writeOwnedCommandOutputV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import inventorySchema from "../../../../🧪️test/🏭️inventory/🧬️schema/🔣️.json" with {type:"json"};
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import {writeOwnedCommandOutputV1} from "@semio-tech/process/execution";
+import inventorySchema from "@semio-tech/repo-test/inventory/schema.json";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
+import type {RepositoryMutationCollectorV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
-/** 🎛️ Bounds runtime inventory work inside the same Original compiler operation. */
-export type RepositoryMutationCollectorV1=Readonly<{version:1;maximumUnits:number;maximumOwnedBytes:number;maximumMilliseconds:number}>;
 /** 🏭️ Declares one production inventory binary and its exact artifact coordinates. */
 export type RepositoryMutationBridgeV1=Readonly<{version:1;manifest:string;binary:string;command:"list-mutations";artifact:string;standard:string;subset:string;surface?:string;collector?:RepositoryMutationCollectorV1}>;
 /** 🔐️ Admits declared inventory facts without compiler/storage/environment overrides. */

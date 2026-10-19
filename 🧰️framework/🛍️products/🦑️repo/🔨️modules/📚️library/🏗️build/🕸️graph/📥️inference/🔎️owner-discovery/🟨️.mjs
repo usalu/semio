@@ -1,5 +1,5 @@
 /** 🔎️ Discovers canonical owners, their native manifests and the selected executable Source closures. */
-import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";

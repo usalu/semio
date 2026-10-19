@@ -1,0 +1,65 @@
+/** 🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back. */
+
+import type { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
+import type { compileInteraction, isFinalInteractionState, mergeInteractionCallOutputs, parseInteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
+import type { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import type { listSpatialInteractionsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
+import type { SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
+import type { ensureTypologyObjectFromCreateDiff, typologyConstructCommitActionForMode, typologyConstructKitByInteraction, typologyIdForInteractionCommit } from "../../🧬️typology/🟦️.ts";
+import type { EMPTY_MODEL_DIFF, applyModelDiff, isEmptyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import type { resolveDisplay } from "../../🎬️actions/🟦️.ts";
+import type { modelDefinitionActionRegistry, runRegisteredAction } from "../../🎬️actions/🏃️action-execution/🟦️.ts";
+import type { interactionRecordsDocumentHistory, selectionTargetsFromActionResult } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
+import type { clampPointAlongDirection, interactionLengthEntryForState, pureTsStateEngineProvider, readInteractionContextVec3 } from "../../🎬️actions/🎰️interaction-state/🟦️.ts";
+import type { DocumentHistory, InteractionResponse, InteractionRuntimeOptions } from "../📨️interaction-model/🟦️.ts";
+import type { buildAreaInteractionSpec, buildBoxInteractionSpec, buildDistanceInteractionSpec, listInteractionSpecs, loadSpatialInteraction, modelDefinitionInteractionRegistry, registerInteractionSpec, requireSpatialInteraction, selectionApplyParamsForInteraction, selectionSeedTargetsForOperation } from "../📚️interaction-catalog/🟦️.ts";
+import type { createInteractionRuntime, InteractionRuntime } from "../🏃️interaction-runtime/🟦️.ts";
+
+/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts`. */
+export type ArtifactTestDependencies = {
+  readonly CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON: string;
+  readonly CAD_E2E_LOOM_MODEL_SPACE_JSON: string;
+  readonly CAD_E2E_ROUTES_MODEL_SPACE_JSON: string;
+  readonly DocumentHistory: typeof DocumentHistory;
+  readonly EMPTY_MODEL_DIFF: typeof EMPTY_MODEL_DIFF;
+  readonly InteractionRuntime: typeof InteractionRuntime;
+  readonly Model: typeof Model;
+  readonly __artifactTestKernel: typeof import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") | null;
+  readonly __artifactTestRuntime: typeof import("../../🏃️runtime/🟦️.ts") | null;
+  readonly applyModelDiff: typeof applyModelDiff;
+  readonly buildAreaInteractionSpec: typeof buildAreaInteractionSpec;
+  readonly buildBoxInteractionSpec: typeof buildBoxInteractionSpec;
+  readonly buildDistanceInteractionSpec: typeof buildDistanceInteractionSpec;
+  readonly clampPointAlongDirection: typeof clampPointAlongDirection;
+  readonly compileInteraction: typeof compileInteraction;
+  readonly createInteractionRuntime: typeof createInteractionRuntime;
+  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
+  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
+  readonly ensureTypologyObjectFromCreateDiff: typeof ensureTypologyObjectFromCreateDiff;
+  readonly interactionLengthEntryForState: typeof interactionLengthEntryForState;
+  readonly interactionRecordsDocumentHistory: typeof interactionRecordsDocumentHistory;
+  readonly isEmptyModelDiff: typeof isEmptyModelDiff;
+  readonly isFinalInteractionState: typeof isFinalInteractionState;
+  readonly listInteractionSpecs: typeof listInteractionSpecs;
+  readonly listSpatialInteractionsForModelDefinition: typeof listSpatialInteractionsForModelDefinition;
+  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
+  readonly mergeInteractionCallOutputs: typeof mergeInteractionCallOutputs;
+  readonly modelDefinitionActionRegistry: typeof modelDefinitionActionRegistry;
+  readonly modelDefinitionInteractionRegistry: typeof modelDefinitionInteractionRegistry;
+  readonly parseInteractionSpec: typeof parseInteractionSpec;
+  readonly pureTsStateEngineProvider: typeof pureTsStateEngineProvider;
+  readonly readInteractionContextVec3: typeof readInteractionContextVec3;
+  readonly registerInteractionSpec: typeof registerInteractionSpec;
+  readonly requireSpatialInteraction: typeof requireSpatialInteraction;
+  readonly resolveDisplay: typeof resolveDisplay;
+  readonly runRegisteredAction: typeof runRegisteredAction;
+  readonly runSelectionOperationInteraction: (interactionId: string, opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] }) => Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }>;
+  readonly selectionApplyParamsForInteraction: typeof selectionApplyParamsForInteraction;
+  readonly selectionSeedTargetsForOperation: typeof selectionSeedTargetsForOperation;
+  readonly selectionTargetsFromActionResult: typeof selectionTargetsFromActionResult;
+  readonly solidRef: typeof solidRef;
+  readonly typologyConstructCommitActionForMode: typeof typologyConstructCommitActionForMode;
+  readonly typologyConstructKitByInteraction: typeof typologyConstructKitByInteraction;
+  readonly typologyIdForInteractionCommit: typeof typologyIdForInteractionCommit;
+};

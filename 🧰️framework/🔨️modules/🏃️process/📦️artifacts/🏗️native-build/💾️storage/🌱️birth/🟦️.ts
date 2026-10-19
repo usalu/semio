@@ -17,7 +17,7 @@ const unbornCleanupSchema=structuredClone(schema.definitions.UnbornCleanup);
 export function nativeStorageUnbornCleanupDecisionV1(value:unknown):boolean{if(validateJsonSchemaSubset(unbornCleanupSchema,value).length)throw Error("Closed unborn funding cleanup evidence required");const row=value as{known:boolean;entered:boolean;ordinaryJoined:boolean;phase:string};return row.known&&!row.entered&&row.ordinaryJoined&&row.phase==="cleanup";}
 
 import{types}from"node:util";
-import type{NativeFixedPlatformOptionsV1}from"../🧱️fixed/🟦️.ts";
+import type{NativeFixedPlatformOptionsV1}from"../🔌️port/🟦️.ts";
 import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";
 import type{ScriptInvocation}from"../../../../🧭️routing/📥️invocation/🟦️.ts";
 import exportedStorageSchema from"../🧬️schema/🔣️.json" with{type:"json"};

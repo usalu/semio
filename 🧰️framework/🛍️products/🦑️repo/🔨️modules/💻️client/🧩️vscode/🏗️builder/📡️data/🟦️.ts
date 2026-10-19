@@ -1,5 +1,5 @@
 /** 📡️ Data: module exporting `vscodeArtifactOwnerV1`, `readVscodeCompilerFilesV1`, `vscodePackageManifestV1`. */
-import type{BuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import type{BuildMode}from"@semio-tech/process/build-mode";
 import{createHash}from"node:crypto";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};

@@ -11,6 +11,7 @@ import (
 	identity "github.com/usalu/semio/repo/identity"
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestContributorDiscovery(t *testing.T) {
@@ -21,9 +22,7 @@ func TestContributorDiscovery(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	originalRootDir := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(originalRootDir)
+	sandbox.BindRoot(t, tmpDir)
 
 	contributorsDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🧑️‍💻️devs")
 	os.MkdirAll(contributorsDir, 0755)
@@ -164,9 +163,7 @@ func TestSessionGetURI(t *testing.T) {
 
 func TestStreamSessionsReadsEmojiDatedLogDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
-	originalRootDir := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(originalRootDir)
+	sandbox.BindRoot(t, tmpDir)
 
 	logDir := filepath.Join(workspace.GetRepoMetaDir(), "⚡️cache", "🤖️generated", model.FormatYearDir(26), model.FormatMonthDir(3), model.FormatDayDir(2), "stream-session")
 	if err := os.MkdirAll(logDir, 0o755); err != nil {

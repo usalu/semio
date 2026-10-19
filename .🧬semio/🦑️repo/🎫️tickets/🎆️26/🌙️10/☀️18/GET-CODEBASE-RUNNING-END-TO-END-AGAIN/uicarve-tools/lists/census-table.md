@@ -1,0 +1,35 @@
+| crate | worst lib | worst test | binding closure (files / bytes / lines) |
+| --- | ---: | ---: | --- |
+| `semio-framework-ui-tui-core` | 0.664 | 0.892 | default: 14 / 192869 / 3568 |
+| `semio-framework-ui-tui-vt` | 0.725 | 0.725 | default: 13 / 108867 / 2899 |
+| `semio-framework-ui-tui-terminal` | 0.639 | 0.806 | native: 21 / 143891 / 3223 |
+| `semio-framework-ui-tui-widgets` | 0.707 | 0.707 | default: 20 / 117575 / 2828 |
+| `semio-framework-ui-tui-frame` | 0.566 | 0.566 | default: 7 / 95799 / 2263 |
+| `semio-framework-ui-tui-engine` | 0.273 | 0.273 | default: 6 / 44778 / 1092 |
+| `semio-framework-ui-tui-laws` | 0.031 | 0.574 | default: 10 / 137579 / 2294 |
+| `semio-framework-ui-tui-unit-laws` | 0.031 | 0.405 | native: 8 / 78687 / 1621 |
+| `semio-framework-ui-tui-vt-laws` | 0.031 | 0.547 | default: 14 / 143512 / 1233 |
+| `semio-framework-ui-tui-host` | 0.031 | 0.031 | default: 1 / 3279 / 58 |
+| `semio-framework-ui-wgpu-light` | 0.197 | 0.442 | default: 10 / 115750 / 1177 |
+| `semio-framework-ui-wgpu-input` | 0.193 | 0.195 | default: 1 / 29403 / 779 |
+| `semio-framework-ui-wgpu-layout` | 0.462 | 0.633 | default: 10 / 144595 / 2533 |
+| `semio-framework-ui-wgpu-mounted-layout` | 0.444 | 0.649 | default: 7 / 157694 / 2595 |
+| `semio-framework-ui-wgpu-widget-kit` | 0.150 | 0.189 | default: 4 / 42686 / 754 |
+| `semio-framework-ui-wgpu-controls` | 0.313 | 0.313 | default: 10 / 42053 / 623 |
+| `semio-framework-ui-wgpu-events` | 0.840 | 0.840 | default: 1 / 187058 / 3361 |
+| `semio-framework-ui-wgpu-paint` | 0.778 | 0.778 | default: 1 / 173011 / 3112 |
+| `semio-framework-ui-wgpu-widgets` | 0.170 | 0.214 | default: 4 / 51724 / 855 |
+| `semio-framework-ui-wgpu-hosting` | 0.364 | 0.637 | default: 17 / 166995 / 2465 |
+| `semio-framework-ui-wgpu-engine-surface` | 0.315 | 0.315 | default: 1 / 59368 / 1261 |
+| `semio-framework-ui-wgpu-paint-reference` | 0.195 | 0.195 | default: 1 / 51183 / 750 |
+| `semio-framework-ui-wgpu-events-laws` | 0.031 | 0.565 | default: 10 / 145696 / 2259 |
+| `semio-framework-ui-wgpu-events-control-laws` | 0.031 | 0.197 | default: 3 / 45827 / 787 |
+| `semio-framework-ui-wgpu-engine-scene-laws` | 0.031 | 0.283 | default: 7 / 74230 / 1008 |
+| `semio-framework-ui-wgpu-paint-laws` | 0.031 | 0.435 | default: 9 / 101000 / 1741 |
+| `semio-framework-ui-wgpu-engine-laws` | 0.031 | 0.858 | default: 12 / 214070 / 3430 |
+| `semio-framework-ui-wgpu-input-laws` | 0.031 | 0.188 | default: 6 / 20869 / 310 |
+| `semio-framework-ui-wgpu-layout-laws` | 0.031 | 0.236 | default: 7 / 61827 / 577 |
+| `semio-framework-ui-wgpu-mounted-layout-laws` | 0.031 | 0.145 | default: 3 / 38016 / 481 |
+| `semio-framework-ui-wgpu-laws` | 0.031 | 0.523 | default: 7 / 137019 / 2077 |
+| `semio-framework-ui-wgpu-engine` | 0.714 | 0.712 | testkit: 1 / 168214 / 2857 |
+| `semio-framework-ui` | 0.063 | 0.194 | default: 5 / 50963 / 208 |

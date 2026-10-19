@@ -1,11 +1,12 @@
 //! 🛍️ BIM library: the materials and the seven type families (wall, slab, roof, column, beam, window, door) of the project, one virtualised section per family, bound to the framework
 //! `library` interaction domain so a pick shows the type in the properties panel. A family gets an add row as soon as its `create-*` mutation exists in the entity table.
 
-use crate::editor::bim::entities::{EntityKind, ENTITIES};
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
@@ -48,7 +49,7 @@ enum Row {
 fn roster(snapshot: &ModelSnapshot, family: &'static EntityKind) -> Vec<Row> {
     let mut rows: Vec<Row> = family.create.iter().map(|_| Row::Add(family)).collect();
     if family.kind == "schedule" {
-        rows.extend(crate::editor::bim::modes::edit::windows::schedule::edit::presets().iter().copied().map(Row::Preset));
+        rows.extend(semio_s_artifact_bim_model_ramp_runs::editor::bim::modes::edit::windows::schedule::edit::presets().iter().copied().map(Row::Preset));
     }
     rows.extend((family.ids)(snapshot).into_iter().map(Row::Entry));
     rows
@@ -70,7 +71,7 @@ fn add_row(family: &EntityKind, labels: &BimLabels) -> UiAssemblyResult<BuiltNod
     tree_item_with_icon(format!("{ROOT}.add.{}", family.kind), Label::data(BimLabels::named(labels.action_add_named, (family.label)(labels).as_str())), "plus", bim_action("createEntity", Some(args)))
 }
 fn preset_row(key: &str, labels: &BimLabels) -> UiAssemblyResult<BuiltNode> {
-    let name = crate::editor::bim::modes::edit::windows::schedule::preset_label(labels, key);
+    let name = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::preset_label(labels, key);
     let args = ui_value_map([("kind", ui_value_text("schedule")?), ("parent", ui_value_text(key)?), ("name", ui_value_text(&name)?)])?;
     tree_item_with_icon(format!("{ROOT}.preset.{key}"), Label::data(BimLabels::named(labels.act_new_named, &name)), "plus", bim_action("createEntity", Some(args)))
 }

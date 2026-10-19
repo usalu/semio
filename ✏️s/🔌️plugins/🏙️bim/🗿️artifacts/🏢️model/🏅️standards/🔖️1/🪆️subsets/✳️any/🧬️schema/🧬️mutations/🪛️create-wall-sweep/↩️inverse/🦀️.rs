@@ -1,12 +1,12 @@
 //! ↩️ Inverse of `CreateWallSweep`: the concrete `DeleteWallSweep` of the id it created, none when the id was already taken.
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep;
+use semio_s_artifact_bim_model_mut_any_111::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep;
 use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateWallSweep, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep>,
+    Op: From<semio_s_artifact_bim_model_mut_any_111::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep>,
 {
     if base.wall_sweeps.contains_key(&payload.id) {
         return Vec::new();

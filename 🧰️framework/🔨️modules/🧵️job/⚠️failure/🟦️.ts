@@ -10,3 +10,10 @@ export interface OriginalTurnFailure {readonly primary:OriginalTurnPrimary;reado
 
 /** 🤝️ Complete original failure owners remain distinct through source retirement. */
 export interface OriginalClosureFailure {readonly initial:OriginalTurnFailure;readonly closure:OriginalTurnFailure}
+
+/** 📬️ Transports the original semantic cause and the complete distinct receipt refusal. */
+export function faultFromOriginalTurnFailure(error:OriginalTurnFailure):Fault {
+ const primary=error.primary,secondary=[error.receiptRefusal,error.contextRefusal].flatMap(cause=>cause?[{message:cause.message,code:cause.kind,retainedProgress:cause.retainedProgress}]:[]);
+ const fault:Fault=primary.kind==="fault"?primary.fault:primary.kind==="domain"?{origin:"framework",code:primary.domain.code,severity:"error",message:primary.domain.message,scope:{},retryable:false,retainedProgress:primary.domain.retainedProgress,domain:primary.domain.original}:{origin:"framework",code:primary.value.kind,severity:"error",message:primary.value.message,scope:{},retryable:false,retainedProgress:primary.value.retainedProgress};
+ return secondary.length?{...fault,causes:[...(fault.causes??[]),...secondary]}:fault;
+}

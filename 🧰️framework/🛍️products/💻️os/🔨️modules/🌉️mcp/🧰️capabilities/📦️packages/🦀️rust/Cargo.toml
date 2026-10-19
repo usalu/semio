@@ -23,11 +23,10 @@ path = "../../🦀️.rs"
 doctest = false
 
 [features]
-testkit = ["dep:semio-framework-ui", "dep:semio-framework-test-fixtures"]
+testkit = ["dep:semio-framework-ui-declaration", "dep:semio-framework-test-fixtures"]
 
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"], optional = true }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["sync", "ureq"] }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
@@ -35,10 +34,11 @@ serde_json = { workspace = true }
 semio-framework-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
 semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
 semio-framework-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }

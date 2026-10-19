@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,9 +10,10 @@ import { collectMediaTransportBytes, type MediaTransportPort } from "../../🎬�
 import { mediaTransportPort } from "../../🎬️media/📡️channel/🟦️.ts";
 import { BrowserMediaRegistry, parsePresentedMediaSlots, type PresentedMediaSlot, type BrowserMediaCommand } from "../../🎬️media/🌐️browser/🟦️.ts";
 import { createBrowserMediaOverlay } from "../../🎬️media/🌐️browser/🎛️host/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
-import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
+import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
 import { AppChannelClient, AppChannelRequestSequence, decodeAppCommand, decodeAppFrame, encodeAppCommand, encodeAppFrame, type AppFrameValue } from "../../../../../🟦️.ts";
 import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { channelDocumentIdentitySchemaUrl } from "../../../../📡️spr/🧪️tests/🧫️fixtures/🟦️.ts";
@@ -44,7 +45,7 @@ afterEach(() => { vi.restoreAllMocks(); document.body.replaceChildren(); vi.unst
 
 describe("accepted browser media authority", () => {
   it("admits the neutral real-app reservation journey with independent schema and production boot decoding", async () => {
-    const { runBrowserMediaAppAcceptance } = await import("../../🎯️targets/🧊️wgpu/🧪️tests/🎬️media-app/🟦️.ts");
+    const { runBrowserMediaAppAcceptance } = await import("@semio-tech/framework-renderer-wgpu/testing/media-app");
     await expect(runBrowserMediaAppAcceptance([])).rejects.toThrow("requires serve, explicit locale and output");
     const path = resolve(testDirectory, "../🧫️fixtures/🎬️media-app-acceptance");
     const journey = JSON.parse(readFileSync(resolve(path, "🔣️.json"), "utf8"));

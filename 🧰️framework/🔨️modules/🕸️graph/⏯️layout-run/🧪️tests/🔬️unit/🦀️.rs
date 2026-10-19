@@ -173,7 +173,7 @@ pub(crate) fn wallet() -> RetainedCloneGrant {
 pub(crate) fn layout_run_close_job(job: &mut LayoutRunJob<TestEncoder>) {
     job.begin_close();
     for _ in 0..4096 {
-        if matches!(job.close_step(wallet()), InteractiveJobCloseStep::Complete { .. }) {
+        if matches!(semio_framework_job::close_with_self_funded_context(wallet(), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
             return;
         }
     }
@@ -682,7 +682,6 @@ fn layout_run_close_releases_every_owned_buffer_in_bounded_steps() {
             InteractiveJobCloseStep::Pending { progress } => assert_eq!(progress.copied_items, 1),
             InteractiveJobCloseStep::Complete { .. } => break,
             InteractiveJobCloseStep::Blocked => panic!("close never blocks once begun"),
-            InteractiveJobCloseStep::Refused { kind, .. } => panic!("close refused: {kind:?}"),
         }
         steps += 1;
         assert!(steps < 64, "close is bounded");

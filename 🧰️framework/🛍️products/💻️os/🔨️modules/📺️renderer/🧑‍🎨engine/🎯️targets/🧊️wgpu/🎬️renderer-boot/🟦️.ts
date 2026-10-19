@@ -1,4 +1,4 @@
-import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 // #region 🧲️Header
@@ -7,7 +7,7 @@ import { resolveEmbeddedWgpuBoot } from "./🧩️selection/🟦️.ts";
 
 import { type WgpuBootDefaults, type WgpuBootHub, type WgpuBootLocks } from "../🧭️boot-descriptor/🟦️.ts";
 import { mountWgpuBrowserHost, type WgpuBrowserMount, type WgpuBootProgress } from "../🌐️browser-host/🟦️.ts";
-import { Locale } from "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/🟦️.ts";
+import { Locale } from "@semio-tech/ui-locale-rs/index";
 
 /** 🧊️ The embeddable wgpu boot door. Field-for-field React's `FrameworkOsBootOptions`
  * (`🧱️elements/🐚️Shell/🟦️.tsx`), so one call site can swap renderers without dropping options: it

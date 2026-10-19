@@ -3,18 +3,16 @@
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { unsignedLebOracleV1 } from "@semio-tech/framework-pack-ts/format/testing/oracles/leb";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { decodePresencePeer, encodePresencePeer, PRESENCE_PRINCIPAL_KINDS, type ArtifactPresencePeer, type ArtifactPresencePrincipalKind } from "@semio-tech/framework-replication";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCargo, runCmd, orchestratorBudgetOpts, runProbe } from "@semio-tech/process/execution";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { assertObservationExpectation, type ObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
@@ -437,7 +435,7 @@ export class SpaceAdministrationCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("space-administration-check accepts source or native");
     const checks = await proveDirectorySpaceAdministrationPageV1(this.repoRoot);
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-directory-route-laws",
             target: { kind: "lib" },
@@ -742,7 +740,7 @@ export class PresenceNormalizationCheckScript extends BundleScript {
     if (segments.length > 1 || !["source", "native"].includes(phase)) throw new Error("presence-normalization-check accepts source or native");
     const checks = await provePresenceNormalizationFixture(this.repoRoot);
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-presence-route-laws",
             target: { kind: "lib" },
@@ -781,7 +779,7 @@ export class AdminPresenceTargetRecoveryCheckScript extends BundleScript {
     if (!hub.includes(`fn ${law}(`) || !hub.includes("with_graceful_shutdown") || !hub.includes("test_state_with_directory")) throw new Error("missing composed SQLite shutdown/reopen acceptance journey");
     if (hub.match(/const STUDIO: &str = "([^"]+)";/)?.[1] !== fixture.scope.spaceId) throw new Error("recovery fixture differs from seeded test space");
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: hubLawGroups([["semio-hub-directory-route-laws", law]]),progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: hubLawGroups([["semio-hub-directory-route-laws", law]]),progress(event) {
           console.log(`admin-presence-target-recovery-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
       for (const receipt of receipts) console.log(`admin-presence-target-recovery-native-receipt: ${JSON.stringify(receipt)}`);
@@ -800,7 +798,7 @@ export class PresenceLeaseCheckScript extends BundleScript {
       const hubGroups = hubLawGroups(hubLaws, ["--all-features"]);
       const groups =
         phase === "native" ? [{ package: "semio-framework-os-kernel", target: { kind: "lib" as const, name: "semio_framework_os_kernel" }, laws: ["presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner"] }, ...hubGroups] : hubGroups;
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: phase === "native" ? this.repoRoot : this.root,...exactCargoStageEnvironments(),groups,progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: phase === "native" ? this.repoRoot : this.root,...exactCargoStageEnvironments(),groups,progress(event) {
           console.log(`presence-lease-${phase} ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
       for (const receipt of receipts) console.log(`presence-lease-${phase}-receipt: ${JSON.stringify(receipt)}`);

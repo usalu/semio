@@ -5,7 +5,7 @@ import{captureBoundedSourceRevisionV1}from"../../../../../🏗️build/📥️in
 import{captureRepositorySourceRootV1,captureExactSourcePathV1}from"../../../../../🏗️build/📥️inputs/📋️data/📥️load/🟨️.mjs";
 import{withExactSourceReadBatchV1,readExactSourceJsonV1,readExactSourceFileV1,type ExactSourceReadBatchV1}from"../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{captureRustUnitDescriptorNodeV2,rustUnitDescriptorNodeArtifactV2,requireRustUnitDescriptorPredecessorsV2,type RustUnitDescriptorNodeV2}from"../🕸️nodes/🟦️.ts";
 import{rustUnitPlanSlotV1}from"../../📋️plan/🔏️identity/🟦️.ts";
 import{withRustUnitDescriptorNamespaceV2}from"../🔒️namespace/🟦️.ts";

@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 import { uiIntentToActionDescriptor } from "../../🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
 import type { UiValue } from "@semio-tech/framework";
 import laws from "../🧫️fixtures/🌳️wgpu-document-reconcile/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

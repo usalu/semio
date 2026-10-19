@@ -7,7 +7,6 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./extensions/epw/testing/unit": "./🧩️extensions/🌦️epw/🧪️testing/🔬️unit/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/energy-js:test"

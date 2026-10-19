@@ -1,4 +1,5 @@
-import type { StatelyMachineSpec, StatelyTestDependencies } from "../../🟦️.ts";
+import type { StatelyTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import type { StatelyMachineSpec } from "../../🎛️machine-views/🟦️.ts";
 import type { EdgeRef, FaceRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import type { Command } from "@semio-tech/framework/machine";

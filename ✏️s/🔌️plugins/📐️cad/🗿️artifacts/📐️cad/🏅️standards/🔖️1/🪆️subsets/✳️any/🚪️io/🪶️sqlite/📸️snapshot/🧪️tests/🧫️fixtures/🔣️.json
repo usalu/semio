@@ -433,13 +433,15 @@
       "DeleteStructureClassicModel": [],
       "CreateDrawing": [
         "childId",
-        "target"
+        "target",
+        "index"
       ],
       "DeleteDrawing": [
         "childId"
       ],
       "CreateNode": [
-        "node"
+        "node",
+        "index"
       ],
       "DeleteNode": [
         "nodeId"

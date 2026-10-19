@@ -46,7 +46,7 @@ async fn the_undo_remove_row_takes_the_hamburg_row_back_out() {
     let mutation = insert_row();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(semio_s_artifact_stdio_semio_table_mutations::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
+    assert_eq!(undo, vec![SemioTableMutation::RemoveRow(semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward insert-row applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-row applies to the lengthened table");

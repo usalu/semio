@@ -40,8 +40,8 @@ fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack
 
 struct FlowHostEffectJob {
     pub(super) payload: Option<Arc<FlowHostEffectPayload>>,
-    payload_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
-    decoder_close: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<FlowHostEffectPayload>>,
+    payload_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
+    decoder_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
     completion_refusal: Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<FlowPlayApp>>>>,
     pub(super) input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     decoder: Option<store::os_pack::record::scalar_witness::ScalarRecordWireWitness<FlowHostEffectPayload>>,
@@ -65,8 +65,9 @@ impl FlowHostEffectJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> {
+impl FlowHostEffectJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_value::ValueError> {
         if context.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
         }
@@ -114,6 +115,10 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
         }
         semio_framework_job::JobOutcomeBorrow::admit_complete(context,None,None)
     }
+}
+
+impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
         match descriptor.kind(){semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),semio_framework_job::JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),_=>Err(Self::fault())}
@@ -126,17 +131,19 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
         }
     }
 
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
-        use semio_framework_job::InteractiveJobCloseStep as Close;use semio_framework_value::{RetainedCloneProgress as Progress,RetainedCloneStep};
-        if !self.closing||grant.maximum_items==0{return Close::Blocked}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Close::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Close::Blocked}
-        if let Some(owner)=self.completion_refusal.as_mut(){if owner.terminal_is_empty(){self.completion_refusal=None;return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}return match owner.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}}
-        if let Some(input)=self.input.as_mut(){let step=input.close_step(grant);if input.terminal_is_empty(){self.input=None;}return match step{Close::Complete{progress}=>Close::Pending{progress:Progress{copied_items:progress.copied_items.max(1),..progress}},step=>step}}
-        if let Some(decoder)=self.decoder.as_mut(){decoder.begin_close();let root=decoder.take_root().expect("original decoder owns its original payload Arc");assert!(self.payload.as_ref().is_some_and(|payload|Arc::ptr_eq(payload,&root)));assert!(decoder.terminal_is_empty());self.decoder=None;self.decoder_close=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(root));return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}
-        let owner=if self.decoder_close.is_some(){&mut self.decoder_close}else{&mut self.payload_close};
-        if let Some(cursor)=owner.as_mut(){if cursor.terminal_is_empty(){*owner=None;return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}return match cursor.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>Close::Refused{kind:error.kind,progress:error.retained_progress()}}}
-        if let Some(payload)=self.payload.take(){self.payload_close=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(payload));return Close::Pending{progress:Progress{copied_items:1,..Default::default()}}}
-        Close::Complete{progress:Default::default()}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep as Close;use semio_framework_value::{RetainedCloneProgress as Progress,RetainedCloneStep};
+            if !self.closing||grant.maximum_items==0{return Ok(Close::Blocked)}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Err(error)};
+            if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Close::Blocked)}
+            if let Some(owner)=self.completion_refusal.as_mut(){if owner.terminal_is_empty(){self.completion_refusal=None;return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}return Ok(match owner.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>return Err(error)})}
+            if let Some(input)=self.input.as_mut(){let step=input.close_step(grant)?;if input.terminal_is_empty(){self.input=None;}return Ok(match step{Close::Complete{progress}=>Close::Pending{progress:Progress{copied_items:progress.copied_items.max(1),..progress}},step=>step})}
+            if let Some(decoder)=self.decoder.as_mut(){decoder.begin_close();let root=decoder.take_root().expect("original decoder owns its original payload Arc");assert!(self.payload.as_ref().is_some_and(|payload|Arc::ptr_eq(payload,&root)));assert!(decoder.terminal_is_empty());self.decoder=None;self.decoder_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(root));return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}
+            let owner=if self.decoder_close.is_some(){&mut self.decoder_close}else{&mut self.payload_close};
+            if let Some(cursor)=owner.as_mut(){if cursor.terminal_is_empty(){*owner=None;return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}return Ok(match cursor.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>return Err(error)})}
+            if let Some(payload)=self.payload.take(){self.payload_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(payload));return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}
+            Ok(Close::Complete{progress:Default::default()})
+        })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}

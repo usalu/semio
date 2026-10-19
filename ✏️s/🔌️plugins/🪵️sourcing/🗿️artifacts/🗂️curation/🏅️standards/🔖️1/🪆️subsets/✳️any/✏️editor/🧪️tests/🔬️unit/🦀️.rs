@@ -4,7 +4,7 @@ pub(crate) mod context {
     
     use semio_framework_plugin::EditorApp;
     use crate::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry_impl};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>;
@@ -25,13 +25,14 @@ pub(crate) mod context {
     /// so an empty `AppActionRegistry` rejects every row with `interactive-job.catalog-authority`.
     /// Same reason trinity's `🔌️jack`/`♻️rewriting` editors are registry-backed.
     pub async fn new_app() -> SourcingTestApp {
-        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await;
+        let scope = OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         // 🪪️ `dispatch_typed_command_inner` refuses any command whose `ActionMeta.instance_id` is not the
         // app's bound live runtime instance, and a freshly constructed app has none — so bind the id
         // `artifact_app_laws::meta` stamps. A test that wants another instance rebinds (see
         // `retained_example_load_publishes_authored_stock_and_closes_exact_owners`, which uses 7).
         app.bind_instance_id(1).await;
-        SourcingTestApp(app)
+        SourcingTestApp(app, scope)
     }
     
     /// 🧹️ Owning guard around a live `SourcingApp` that runs the bounded plugin close protocol on the
@@ -41,7 +42,16 @@ pub(crate) mod context {
     /// takes every other test in the binary with it. Draining here rather than at ~14 call sites keeps
     /// the teardown impossible to forget, and it is idempotent: a test that closes explicitly (see
     /// `retained_example_load_publishes_authored_stock_and_closes_exact_owners`) leaves nothing to do.
-    pub struct SourcingTestApp(SourcingApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads
+    /// `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct SourcingTestApp(pub SourcingApp, pub OriginalFixtureScope);
+
+    impl SourcingTestApp {
+        /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
+        pub fn close_fixture(&mut self) {
+            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+        }
+    }
     
     impl std::ops::Deref for SourcingTestApp {
         type Target = SourcingApp;
@@ -59,30 +69,26 @@ pub(crate) mod context {
     
     impl Drop for SourcingTestApp {
         fn drop(&mut self) {
-            for turn in 0usize..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                self.0.close_step(1, 4_096).expect("test app closes within its exact grant");
+            if !std::thread::panicking() {
+                self.close_fixture();
             }
-            panic!("test app must reach its terminal-empty shell");
         }
     }
     
     /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
     /// host does — a migrated command's document and config edits land only once it settles.
-    pub async fn dispatch(app: &mut SourcingApp, command: SourcingCurationCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+    pub async fn dispatch(app: &mut SourcingTestApp, command: SourcingCurationCommand) -> InvocationResult {
+        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
 
     /// 🏁️ Drains every pending typed operation for instance 1, returning the document effects it published.
-    pub async fn settle(app: &mut SourcingApp) -> Vec<semio_framework::kernel::Effect> {
+    pub async fn settle(app: &mut SourcingTestApp) -> Vec<semio_framework::kernel::Effect> {
         let mut effects = Vec::new();
         for turn in 0usize..100_000 {
-            app.maintenance_step(1, 4_096).expect("maintenance step");
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("typed operation publication");
+            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("typed operation publication");
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 assert!(app.acknowledge_typed_operation_result(page.token).expect("typed operation acknowledgement"));
             }
@@ -114,8 +120,18 @@ pub(crate) mod context {
         }
     }
 
-    pub async fn render(app: &mut SourcingApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("bounded retained fixture projection")
+    /// 📤️ One media port exported through the app's original caller, its pending turns driven until the port answers.
+    pub async fn export_media(app: &mut SourcingTestApp, port: &str) -> semio_framework_plugin::Media {
+        for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            if let Some(media) = app.0.export_media(port, app.1.cx()).await.expect("media export turn") {
+                return media;
+            }
+        }
+        panic!("media export of {port} stayed pending under its original caller");
+    }
+
+    pub async fn render(app: &mut SourcingTestApp, body_key: &str) -> String {
+        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("bounded retained fixture projection")
     }
 
     /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
@@ -143,16 +159,17 @@ pub(crate) mod context {
     }
 
     /// 📊️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
-    pub async fn table_of(app: &mut SourcingApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
-        let rendered = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-        let scene = table_scene_of(&rendered.root).expect("a table scene in the rendered body");
-        let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
-        (columns.iter().map(|column| column["id"].as_str().unwrap_or_default().to_string()).collect(), rows)
+    pub async fn table_of(app: &mut SourcingTestApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
+        observe_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| {
+            let scene = table_scene_of(root).expect("a table scene in the rendered body");
+            let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
+            let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
+            (columns.iter().map(|column| column["id"].as_str().unwrap_or_default().to_string()).collect(), rows)
+        }).await.expect("render")
     }
 
     /// 🪪️ The `id` of every row a table body currently shows, in display order.
-    pub async fn row_ids(app: &mut SourcingApp, body_key: &str) -> Vec<String> {
+    pub async fn row_ids(app: &mut SourcingTestApp, body_key: &str) -> Vec<String> {
         table_of(app, body_key).await.1.iter().map(|row| row["id"].as_str().unwrap_or_default().to_string()).collect()
     }
 }
@@ -165,7 +182,7 @@ use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview
 use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_set_count, drop_on_curated, drop_on_pool, load_document_json, set_active_example, set_contributions, set_filter_min_availability, set_filter_module, set_filter_query, set_filter_typology, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::{SOURCING_CURATION_BOUNDED_TOOL_IDS, SOURCING_CURATION_CONFIG_GRANT_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS, SOURCING_CURATION_RETAINED_RAW_BYTES, SourcingCurationApp, SourcingCurationBoundedCommandJobFactory, SourcingCurationCommand, create_sourcing_curation_app, prepare_sourcing_curation_config, sourcing_curation_config_mutation_retained_bytes};
-use crate::editor::sourcing::base::{sourcing_curation_io, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
+use crate::editor::sourcing::editor_vocabulary::{sourcing_curation_io, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
 use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 
 //#region 🧪️RetainedConfigOracle
@@ -175,12 +192,12 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
+        app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         let mut document = None;
         let mut terminal = false;
         for turn in 0usize..100_000 {
-            app.maintenance_step(1, 4_096).unwrap();
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
+            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
             if let Some(page) = app.take_typed_operation_result_page(7) {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                 terminal |= page.lane == TypedOperationResultLane::Terminal;
@@ -216,7 +233,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
             if app.close_terminal_is_empty() {
                 break;
             }
-            app.close_step(1, 4_096).unwrap();
+            app.0.close_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
             std::thread::yield_now();
         }
         assert!(app.close_terminal_is_empty());
@@ -231,11 +248,11 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
-    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
+    app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(7) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -250,20 +267,20 @@ async fn example_load_settles_through_the_host_document_archive_door() {
         std::thread::yield_now();
     }
     let (parent_pack, parent_spr) = loaded.expect("example publishes a document load");
-    PluginApp::begin_document_archive_load(&mut *app, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut app.0, 91).expect("archive acknowledgement");
     assert_eq!(crate::stock_of(&app.snapshot().expect("loaded snapshot")), oracle);
 }
 
@@ -281,10 +298,10 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     let archive = PluginApp::document_archive(&*app).await.expect("document archive");
     assert_eq!(archive.members.len(), 1, "boot genesis opened exactly the catalog member");
     assert_eq!((archive.members[0].owner.slot.as_str(), archive.members[0].reference.artifact_id.as_str(), archive.members[0].reference.subset.as_str()), (crate::CATALOG_CHILD_SLOT, catalog_id.as_str(), "kit"));
-    PluginApp::begin_document_archive_load(&mut *app, 92, archive).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut app.0, 92, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 92, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 92, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
@@ -293,7 +310,7 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     }
     let status = status.expect("archive reload reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut *app, 92).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut app.0, 92).expect("archive acknowledgement");
     let reloaded = app.snapshot().expect("reloaded snapshot");
     assert_eq!(reloaded.catalog.child_id, catalog_id);
     assert_eq!(reloaded.curated.iter().map(|item| (item.object_id.as_str(), item.count)).collect::<Vec<_>>(), vec![(object_id.as_str(), 1)]);
@@ -633,7 +650,7 @@ async fn sourcing_curation_io_declares_the_catalog_out_port_alongside_the_implic
 #[semio_framework_async_macros::async_test]
 async fn sourcing_curation_io_and_catalog_export_round_trip() {
     let mut app = new_app().await;
-    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("catalog export");
+    let media = context::export_media(&mut app, "catalog:out").await;
     assert_eq!(media.media_type.class, MediaClass::Kit);
     assert_eq!(media.media_type.form, MediaForm::Type);
     match media.payload {

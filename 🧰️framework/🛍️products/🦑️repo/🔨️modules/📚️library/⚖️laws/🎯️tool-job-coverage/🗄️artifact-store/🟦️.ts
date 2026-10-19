@@ -9,25 +9,28 @@ export function toolJobImmutableOperationRootsExact(store: string): boolean {
   };
   const local = blockOf("pub fn local_read(&self) -> Result<SnapshotRead<P>, String>");
   const transient = blockOf("pub fn current_root(&self) -> Arc<P>");
-  const snapshot = blockOf("pub fn snapshot_root(&self) -> Arc<P>");
-  const owner = blockOf("pub fn snapshot_owner(&self) -> Arc<P>");
-  const group = blockOf("fn durable_group_read_root(&self)");
-  const groupRoot = owner?.body.trim() === 'self.durable_group_read_root().map_or_else(|| Arc::clone(&*self.current), |root| Arc::clone(root.current.as_ref().expect("unadopted durable group root retains its current snapshot")))' && group?.body.trim() === "self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)";
-  const arcClone = (body: string | undefined) => body?.trim() === "self.current.clone()" || body?.trim() === "Arc::clone(&*self.current)";
+  const snapshot = blockOf("pub fn snapshot_root(&self, store_wire: &StoreWire<P, Mutation>) -> Arc<P>");
+  const owner = blockOf("pub fn snapshot_owner(&self, store_wire: &StoreWire<P, Mutation>) -> Arc<P>");
+  const delegate = blockOf("#[inline] pub fn snapshot_root(&self) -> Arc<P>");
+  const group = blockOf("pub fn durable_group_read_root(&self)");
+  const groupRoot = owner?.body.trim() === 'store_wire.durable_group_read_root().map_or_else(|| Arc::clone(&*self.current), |root| Arc::clone(root.current.as_ref().expect("unadopted durable group root retains its current snapshot")))' && group?.body.trim() === "self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)";
+  const arcClone = (body: string | undefined) => body?.trim() === 'self.current.as_ref().expect("live transient root remains").clone()' || body?.trim() === "Arc::clone(&*self.current)";
+  const hook = /#\[cfg\(any\(test, feature = "testkit"\)\)\]\s*impl<P, Mutation> PresenceStore<P, Mutation> \{\s*\/\/\/[^\n]*\n\s*#\[doc\(hidden\)\]\s*pub fn local_root\(/u;
   return (
     !!local &&
     !!transient &&
     !!snapshot &&
-    store.includes("local: std::mem::ManuallyDrop<Arc<P>>") &&
+    store.includes("local: std::mem::ManuallyDrop<Option<Arc<P>>>") &&
     store.includes("current: Arc<P>") &&
-    local.body.includes("self.local_reads.try_issue(owner.clone())") &&
+    local.body.includes(".try_issue(owner.clone())") &&
     local.body.includes("SnapshotRead::new(owner, lease)") &&
     local.body.includes("self.close_started || self.local_retirement_factory.is_none()") &&
-    !store.includes("pub fn local_root(") &&
-    transient.body.trim() === "self.current.clone()" &&
-    (arcClone(snapshot.body) || (snapshot.body.trim() === "self.snapshot_owner()" && (arcClone(owner?.body) || groupRoot))) &&
-    store.includes("self.local = Arc::new(candidate)") &&
-    store.includes("self.current = Arc::new(candidate)") &&
+    store.split("pub fn local_root(").length === 2 && hook.test(store) &&
+    arcClone(transient.body) &&
+    delegate?.body.trim() === "self.live.snapshot_root(&self.wire)" &&
+    snapshot.body.trim() === "self.snapshot_owner(store_wire)" && (arcClone(owner?.body) || groupRoot) &&
+    store.includes("*self.local = Some(Arc::new(candidate));") &&
+    store.includes("self.current = Some(Arc::new(candidate));") &&
     store.includes("pub fn content_revision_now(&self) -> [u8; 32]") &&
     !local.body.includes("Arc::new") &&
     !transient.body.includes("Arc::new") &&

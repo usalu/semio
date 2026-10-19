@@ -8,15 +8,14 @@ import (
 	languages "github.com/usalu/semio/repo/languages"
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 🧵️Scan Comments Tests
 
 func TestFixConfigIgnored(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// comment in config\nconst x = 1;\n"
 	testFile := "package.json"

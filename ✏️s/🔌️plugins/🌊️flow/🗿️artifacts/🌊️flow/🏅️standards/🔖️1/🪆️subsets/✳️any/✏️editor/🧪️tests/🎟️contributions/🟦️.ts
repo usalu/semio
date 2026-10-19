@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import { fileURLToPath } from "node:url";
 
 /** 🧾️ The original contribution worker consumes actual effects before yielding or refusing. */
@@ -36,7 +36,7 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
  assert.ok(work.includes("flow.registry-retirement-full"));assert.ok(work.includes("flow-contributions-retirement"));assertions+=2;
  const owner=source.match(/struct FlowContributionsWork\s*\{([^}]+)\}/)?.[1];assert(owner,"Actual contribution owner fields required");assert.deepEqual([...owner.matchAll(/^\s*(\w+)\s*:/gm)].map(match=>match[1]),fixture.ownerFields);assertions++;
  assert.ok(work.includes("semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original)"));assertions++;
- assert.ok(work.includes("fn close_step(&mut self, grant:semio_framework_value::RetainedCloneGrant)"));assertions++;
+ assert.ok(work.includes("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)")&&work.includes("close_original_nested_step(cx,|cx,grant|"));assertions++;
  assert.ok(work.includes("owner.step(grant)"));assert.ok(work.includes("owner.terminal_is_empty()"));assertions+=2;
  assert.equal(work.includes("self.instance_owner.take().is_some()"),false);assertions++;
  for(const field of ["copy_byte","capacity_byte","release_byte","depth"]){assert.ok(work.includes("next_close_"+field+"_demand"));assertions++;}

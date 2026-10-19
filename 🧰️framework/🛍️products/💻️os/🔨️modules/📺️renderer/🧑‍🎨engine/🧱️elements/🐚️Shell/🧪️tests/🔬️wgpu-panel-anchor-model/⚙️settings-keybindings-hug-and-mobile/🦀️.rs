@@ -78,8 +78,8 @@ fn a_keybinding_override_remaps_a_shell_chord_and_frees_its_default() {
     overrides.insert("ui.search.toggle".to_string(), "ctrl+j".to_string());
     let table = shell_shortcut_table(&overrides);
     let accelerator = PointerModifiers { ctrl: true, ..PointerModifiers::default() };
-    let remapped = ui_wgpu::wgpu::KeyAction::Char("j".into());
-    let default = ui_wgpu::wgpu::KeyAction::Char("p".into());
+    let remapped = semio_framework_ui_wgpu_input::KeyAction::Char("j".into());
+    let default = semio_framework_ui_wgpu_input::KeyAction::Char("p".into());
     assert_eq!(shell_shortcut_for_in(&table, &remapped, &accelerator), Some(ShellShortcut::ToggleSearch), "⌨️ the override's chord opens the palette");
     assert!(is_reserved_shell_chord_in(&table, &remapped, &accelerator), "⌨️ and is reserved at its new spelling");
     assert_eq!(shell_shortcut_for_in(&table, &default, &accelerator), None, "⌨️ `mod+p` is no longer the shell's");
@@ -118,11 +118,11 @@ fn an_armed_capture_writes_the_next_chord_as_an_override() {
     let mut shell = fresh_state();
     shell.input.keybinding_capture_control_id = Some("ui.nav.up".into());
     let modifiers = PointerModifiers { ctrl: true, alt: true, shift: true, ..PointerModifiers::default() };
-    assert!(shell.input.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::ArrowUp, &modifiers, &mut shell.chrome), "⌨️ the capture consumes the event");
+    assert!(shell.input.capture_keybinding_chord(&semio_framework_ui_wgpu_input::KeyAction::ArrowUp, &modifiers, &mut shell.chrome), "⌨️ the capture consumes the event");
     assert_eq!(shell.chrome.chrome_build.preferences.keybinding_overrides.get("ui.nav.up").map(String::as_str), Some("ctrl+alt+shift+arrowup"));
     assert_eq!(shell.input.keybinding_capture_control_id, None, "⌨️ one gesture, one write, then disarmed");
     shell.input.keybinding_capture_control_id = Some("ui.nav.back".into());
-    assert!(shell.input.capture_keybinding_chord(&ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut shell.chrome), "⌨️ Escape cancels and still consumes");
+    assert!(shell.input.capture_keybinding_chord(&semio_framework_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut shell.chrome), "⌨️ Escape cancels and still consumes");
     assert!(!shell.chrome.chrome_build.preferences.keybinding_overrides.contains_key("ui.nav.back"), "⌨️ a cancelled capture writes nothing");
 }
 

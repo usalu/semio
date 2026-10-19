@@ -123,7 +123,7 @@ impl FlowHost {
         let Some(owner)=self.pending_baseline_publication.as_ref()else{return Ok(Default::default())};
         if owner.revision!=self.evaluation_revision{return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(display)=owner.display.as_ref(){if !display.complete(){return display.demands(&self.host_snapshot,owner.channels.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original display channel source was transferred"))?,&self.kind_infos)}}
-        let capacity_bytes=if owner.converged&&owner.snapshot.is_some(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<TreeSnapshot>()}else if owner.channels.is_some(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<EvalChannels>()}else{0};
+        let capacity_bytes=if owner.converged&&owner.snapshot.is_some(){semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<TreeSnapshot>()}else if owner.channels.is_some(){semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<EvalChannels>()}else{0};
         Ok(RetirementDemand{capacity_bytes,depth:1,..Default::default()})
     }
     /// 🎟️ Creates one admitted Arc header or transfers the same original baseline owners.

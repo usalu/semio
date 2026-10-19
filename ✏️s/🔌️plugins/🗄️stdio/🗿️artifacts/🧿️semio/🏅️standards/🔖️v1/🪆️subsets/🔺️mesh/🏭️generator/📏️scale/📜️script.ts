@@ -27,7 +27,7 @@
 
 //#region 🔌️Adapters
 import type { Manifold } from "manifold-3d";
-import type { Recipe, Toolkit } from "../📜️script.ts";
+import type { Recipe, Toolkit } from "../📇️recipe-contract/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧰️Reference shapes

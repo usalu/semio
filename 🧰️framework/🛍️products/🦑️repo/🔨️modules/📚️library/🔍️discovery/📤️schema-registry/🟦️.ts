@@ -1,4 +1,4 @@
-import { requireRecord, validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord, validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import type { SchemaRustEntryDump } from "../🧾️schema-scope-catalog/🟦️.ts";
 
 /** 📤️ Supplies only freshly completed native registry output. */

@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 export interface NxPristineFileObservationV1{readonly path:string;readonly present:boolean;readonly links:number;readonly archive:boolean;readonly shared:boolean;readonly matches:boolean}
 /** 📋️ Classifies each actual private-clone file without admitting foreign shared inode ownership. */

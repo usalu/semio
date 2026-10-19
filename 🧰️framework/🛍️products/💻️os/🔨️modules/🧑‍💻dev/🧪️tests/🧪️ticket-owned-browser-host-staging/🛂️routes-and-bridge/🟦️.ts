@@ -5,7 +5,8 @@ import { createTestKit, type TestDependencies, type TestSource } from "../🧰�
 export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
   const { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, descriptorRouteDecision, finalizePluginDescriptor, join, mkdirSync, mkdtempSync, pluginComponentBridgeSource, readFileSync, repoRoot, rmSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, tmpdir, writeFileSync } = dependencies;
   const { describe, expect, it } = vitest;
-  const { itLong } = createTestKit(vitest, dependencies, source);
+  const { itLong, generatedBridge, retainedGuestSource } = createTestKit(vitest, dependencies, source);
+  const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
 
   type PackValue = import("@semio-tech/framework-os").PackValue;
   type ParityDump = import("../../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
@@ -62,157 +63,106 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
 
   //#region 🔖️T-P8-tests
   describe("pluginComponentBridgeSource", () => {
-    itLong("stages canonical command-page bytes unchanged and leaves poll carrying no page", async () => {
-      const { execFileSync } = await import("node:child_process");
+    itLong("holds a canonical command page unchanged as producer input and never stages it or carries it through poll", async () => {
       const { createShardCommandIngressPages } = await import("@semio-tech/framework-actor/shard-client");
       const fixture = JSON.parse(readFileSync(actorPageFixtureUrl, "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
-      const inputs = vectors.map((row: { length: number }, index: number) => {
-        const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
-        return { hex: Buffer.from(command).toString("hex"), page: createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: index, commandCount: vectors.length, instance: 13, seq: BigInt(index + 17), command })[0] };
-      });
-      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
-        import { SourceTextModule, createContext } from "node:vm";
-        import { readFileSync } from "node:fs";
-        const input = JSON.parse(readFileSync(0, "utf8"));
-        let received;
-        let pollArity;
-        const context = createContext({ URL, Uint8Array, record: (cursor, bytes) => { received = { cursor, bytes }; }, recordPollArity: count => { pollArity = count; } });
-        const component = new SourceTextModule("export const reactor = { stageCommandPage: async (cursor, bytes) => { record(cursor, bytes); }, poll: async (...args) => { recordPollArity(args.length); return { uiPatches: [], status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
-        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
-        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
-        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
-        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
-        const api = await bridge.namespace.createActorApi("paged", 1n);
-        const rows = [];
-        for (const entry of input.inputs) {
-          const page = entry.page;
-          for (const key of ["owner", "generation", "seq"]) page.cursor[key] = BigInt(page.cursor[key]);
-          page.bytes = Uint8Array.from(Object.values(page.bytes));
-          await api.poll([], page, undefined, { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 });
-          rows.push({ sameCursor: received.cursor === page.cursor, sameBytes: received.bytes === page.bytes, length: received.bytes.length, hex: Buffer.from(received.bytes).toString("hex"), pollArity });
+      const bridge = await generatedBridge(retainedGuestSource({ extra: `stageCommandPage: async () => { globalThis.__bridgeStaged?.(); },` }));
+      const reached: string[] = [];
+      Object.assign(globalThis, { __bridgePolled: () => reached.push("poll"), __bridgeStaged: () => reached.push("stage") });
+      try {
+        for (const [index, row] of vectors.entries() as Iterable<[number, { length: number }]>) {
+          const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
+          const page = createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: index, commandCount: vectors.length, instance: 13, seq: BigInt(index + 17), command })[0]!;
+          const api = await bridge.activate(1n);
+          const refusal = await api.poll([], page, undefined, budget).then(() => undefined, (failure: unknown) => failure as { message: string; originalProducer: { phase: string; commandPage: unknown } });
+          expect(refusal?.message).toBe("original-turn.canonical-input-held");
+          expect(refusal?.originalProducer.phase).toBe("canonical-input");
+          expect(refusal?.originalProducer.commandPage).toBe(page);
+          expect(api.originalSource.producerRefusal).toBe(refusal?.originalProducer);
+          expect(bridge.held.at(-1)).toBe(refusal?.originalProducer);
+          await expect(api.poll([], undefined, undefined, budget)).rejects.toThrow("original-turn.source-not-ready");
         }
-        console.log(JSON.stringify(rows));
-      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), inputs }, (_key, value) => typeof value === "bigint" ? value.toString() : value), encoding: "utf8", timeout: 10_000 });
-      expect(JSON.parse(output)).toEqual(inputs.map((entry: { hex: string }, index: number) => ({ sameCursor: true, sameBytes: true, length: vectors[index].length, hex: entry.hex, pollArity: 2 })));
-    });
-
-    itLong("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
-      const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(actorLifetimePatchFixtureUrl, "utf8"));
-      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
-        import { SourceTextModule, createContext } from "node:vm";
-        import { readFileSync } from "node:fs";
-        const input = JSON.parse(readFileSync(0, "utf8"));
-        const observed = [];
-        const context = createContext({ URL, Uint8Array, nextResult: null, record: events => observed.push(events) });
-        const component = new SourceTextModule("export const reactor = { poll: async events => { record(events); return nextResult; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
-        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
-        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
-        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
-        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
-        const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
-        const result = (receipt, count) => ({ uiPatches: Array.from({ length: count }, () => ({})), uiPatchReceipt: receipt, status: { tag: "idle" }, commandIngress: { kind: 0 } });
-        const convert = value => ({ lifetime: { activationGeneration: BigInt(value.lifetime.activationGeneration), instanceId: value.lifetime.instanceId, guestLifetime: BigInt(value.lifetime.guestLifetime) }, patchSequence: BigInt(value.patchSequence) });
-        const rows = [];
-        for (const vector of input.fixture.vectors) {
-          const receipt = convert(vector.value);
-          const api = await bridge.namespace.createActorApi("same", receipt.lifetime.activationGeneration);
-          context.nextResult = result(receipt, 1);
-          const actual = await api.poll([], undefined, undefined, budget);
-          const row = { hex: actual.uiPatchReceipt instanceof Uint8Array ? Buffer.from(actual.uiPatchReceipt).toString("hex") : null, feedback: [] };
-          context.nextResult = result(undefined, 0);
-          for (const kind of input.fixture.feedback.kinds) {
-            const payload = { receipt, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: BigInt(input.fixture.feedback.revision), ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) };
-            await api.poll([{ kind: "patch-" + kind, payload }], undefined, undefined, budget);
-            row.feedback.push(observed.at(-1)[0]);
-          }
-          rows.push(row);
-        }
-        const receipt = convert(input.fixture.vectors[1].value);
-        const api = await bridge.namespace.createActorApi("same", receipt.lifetime.activationGeneration);
-        const pairings = [];
-        for (const row of input.fixture.pairing) {
-          context.nextResult = result(row.hasReceipt ? receipt : undefined, row.patchCount);
-          try { await api.poll([], undefined, undefined, budget); pairings.push(true); } catch { pairings.push(false); }
-        }
-        const malformedResults = [result({ ...receipt, patchSequence: 0n }, 1), result({ ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }, 1), { ...result(undefined, 0), uiPatches: undefined }];
-        const refusedResults = [];
-        for (const raw of malformedResults) { context.nextResult = raw; try { await api.poll([], undefined, undefined, budget); refusedResults.push(false); } catch { refusedResults.push(true); } }
-        context.nextResult = result(undefined, 0);
-        const refusedEvents = [];
-        for (const kind of input.fixture.feedback.kinds) {
-          for (const wrong of [undefined, { ...receipt, patchSequence: 0n }, { ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }]) {
-            const before = observed.length;
-            try { await api.poll([{ kind: "patch-" + kind, payload: { receipt: wrong, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: 1n, reason: "fixture" } }], undefined, undefined, budget); refusedEvents.push(false); } catch { refusedEvents.push(observed.length === before); }
-          }
-        }
-        console.log(JSON.stringify({ rows, pairings, refusedResults, refusedEvents }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
-      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), fixture }), encoding: "utf8", timeout: 10_000 });
-      const result = JSON.parse(output);
-      expect(result.rows.map((row: { hex: string }) => row.hex)).toEqual(fixture.vectors.map((row: { hex: string }) => row.hex));
-      expect(result.pairings).toEqual(fixture.pairing.map((row: { accepted: boolean }) => row.accepted));
-      expect(result.refusedResults).toEqual([true, true, true]);
-      expect(result.refusedEvents).toEqual([true, true, true, true, true, true]);
-      for (let index = 0; index < fixture.vectors.length; index += 1) {
-        for (let kindIndex = 0; kindIndex < fixture.feedback.kinds.length; kindIndex += 1) {
-          const kind = fixture.feedback.kinds[kindIndex];
-          expect(result.rows[index].feedback[kindIndex]).toEqual({ tag: "patch-" + kind, val: { receipt: fixture.vectors[index].value, surface: { instance: fixture.vectors[index].value.lifetime.instanceId, surface: fixture.feedback.surface }, revision: fixture.feedback.revision, ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) } });
-        }
+        expect(bridge.held).toHaveLength(vectors.length);
+        expect(reached).toEqual([]);
+      } finally {
+        delete (globalThis as Record<string, unknown>).__bridgePolled;
+        delete (globalThis as Record<string, unknown>).__bridgeStaged;
+        bridge.dispose();
       }
     });
 
-    itLong("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
-      const { execFileSync } = await import("node:child_process");
-      const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8"));
-      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
-        import { SourceTextModule, createContext } from "node:vm";
-        import { readFileSync } from "node:fs";
-        const input = JSON.parse(readFileSync(0, "utf8"));
-        const observed = [];
-        const context = createContext({ URL, Uint8Array, nextReceipt: undefined, record: events => observed.push(events) });
-        const component = new SourceTextModule("export const reactor = { poll: async events => { record(events); return { uiPatches: [], lifecycleReceipt: nextReceipt, status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
-        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
-        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
-        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
-        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
-        const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
-        const rows = [];
-        const body = receipt => ({ lifetime: receipt.lifetime, requestSequence: BigInt(receipt.requestSequence), ...(receipt.kind === "captured" ? {} : { closeGeneration: receipt.closeGeneration }) });
-        for (const row of input.vectors) {
-          const value = JSON.parse(JSON.stringify(row.value), (key, value) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(value) : value);
-          const receipt = value.kind === "ack" ? value.receipt : value;
-          const generation = value.kind === "open" ? value.activationGeneration : receipt.lifetime.activationGeneration;
-          const api = await bridge.namespace.createActorApi("same", generation);
-          context.nextReceipt = undefined;
-          if (["captured", "accepted", "retired"].includes(value.kind)) {
-            context.nextReceipt = { tag: value.kind, val: body(value) };
-            const result = await api.poll([], undefined, undefined, budget);
-            rows.push({ kind: value.kind, hex: Buffer.from(result.lifecycleReceipt).toString("hex") });
-          } else {
-            const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
-            const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
-            await api.poll([{ kind, payload }], undefined, undefined, budget);
-            rows.push({ kind: value.kind, event: observed.at(-1)[0] });
+    itLong("maps issued UI patch receipts through the generated bridge and holds every patch ACK or rejection as producer input", async () => {
+      const fixture = JSON.parse(readFileSync(actorLifetimePatchFixtureUrl, "utf8"));
+      const convert = (value: { lifetime: { activationGeneration: string; instanceId: number; guestLifetime: string }; patchSequence: string }) => ({ lifetime: { activationGeneration: BigInt(value.lifetime.activationGeneration), instanceId: value.lifetime.instanceId, guestLifetime: BigInt(value.lifetime.guestLifetime) }, patchSequence: BigInt(value.patchSequence) });
+      const result = (receipt: unknown, count: number) => ({ uiPatches: Array.from({ length: count }, () => ({})), uiPatchReceipt: receipt });
+      const bridge = await generatedBridge(retainedGuestSource());
+      const polled: unknown[] = [];
+      (globalThis as Record<string, unknown>).__bridgePolled = (events: unknown) => polled.push(events);
+      const answer = async (generation: bigint, next: Record<string, unknown>, events: readonly { kind: string; payload: unknown }[] = []) => {
+        (globalThis as Record<string, unknown>).__bridgeNext = next;
+        return (await bridge.activate(generation)).poll(events, undefined, undefined, budget);
+      };
+      try {
+        for (const vector of fixture.vectors) {
+          const receipt = convert(vector.value);
+          const actual = await answer(receipt.lifetime.activationGeneration, result(receipt, 1));
+          expect(actual.uiPatchReceipt instanceof Uint8Array ? Buffer.from(actual.uiPatchReceipt).toString("hex") : null).toBe(vector.hex);
+          for (const kind of fixture.feedback.kinds) {
+            const payload = { receipt, surface: { instance: receipt.lifetime.instanceId, surface: fixture.feedback.surface }, revision: BigInt(fixture.feedback.revision), ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) };
+            const before = bridge.held.length;
+            await expect(answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "patch-" + kind, payload }])).rejects.toThrow("original-turn.canonical-input-held");
+            expect(bridge.held).toHaveLength(before + 1);
+            expect(bridge.held.at(-1)).toMatchObject({ phase: "canonical-input", events: [{ kind: "patch-" + kind, payload }] });
           }
         }
-        const api = await bridge.namespace.createActorApi("same", 1n);
-        const errors = [];
-        for (const receipt of [{ tag: "open", val: {} }, { tag: "captured", val: { lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 13n }, requestSequence: 9007199254740992n } }]) {
-          context.nextReceipt = receipt;
-          try { await api.poll([], undefined, undefined, budget); errors.push(false); } catch { errors.push(true); }
+        const receipt = convert(fixture.vectors[1].value);
+        for (const row of fixture.pairing) {
+          const outcome = await answer(receipt.lifetime.activationGeneration, result(row.hasReceipt ? receipt : undefined, row.patchCount)).then(() => true, () => false);
+          expect(outcome, JSON.stringify(row)).toBe(row.accepted);
         }
-        console.log(JSON.stringify({ rows, errors }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
-      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), vectors: fixture.vectors }), encoding: "utf8", timeout: 10_000 });
-      const result = JSON.parse(output);
-      expect(result.errors).toEqual([true, true]);
-      for (let index = 0; index < fixture.vectors.length; index += 1) {
-        const value = fixture.vectors[index].value;
-        const actual = result.rows[index];
-        if (["captured", "accepted", "retired"].includes(value.kind)) expect(actual.hex).toBe(fixture.vectors[index].hex);
-        else if (value.kind === "open") expect(actual.event).toMatchObject({ tag: "instance-open", val: { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: String(value.requestSequence) } });
-        else if (value.kind === "close") expect(actual.event).toEqual({ tag: "instance-close", val: { lifetime: value.lifetime, requestSequence: String(value.requestSequence) } });
-        else expect(actual.event).toEqual({ tag: "instance-lifecycle-ack", val: { tag: value.receipt.kind, val: { lifetime: value.receipt.lifetime, requestSequence: String(value.receipt.requestSequence), ...(value.receipt.kind === "captured" ? {} : { closeGeneration: value.receipt.closeGeneration }) } } });
+        for (const raw of [result({ ...receipt, patchSequence: 0n }, 1), result({ ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }, 1), { ...result(undefined, 0), uiPatches: undefined }]) {
+          await expect(answer(receipt.lifetime.activationGeneration, raw)).rejects.toThrow();
+        }
+        expect(polled.length).toBeGreaterThan(0);
+        expect(polled.every((events) => (events as unknown[]).length === 0), "a held patch ACK or rejection never reaches the guest poll").toBe(true);
+      } finally {
+        delete (globalThis as Record<string, unknown>).__bridgeNext;
+        delete (globalThis as Record<string, unknown>).__bridgePolled;
+        bridge.dispose();
+      }
+    });
+
+    itLong("maps canonical lifecycle receipts through the real generated bridge and holds every lifecycle request or ACK as producer input", async () => {
+      const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8"));
+      const bigint = (value: unknown) => JSON.parse(JSON.stringify(value), (key, entry) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(entry) : entry);
+      const body = (receipt: { lifetime: unknown; requestSequence: string; kind: string; closeGeneration?: bigint }) => ({ lifetime: receipt.lifetime, requestSequence: BigInt(receipt.requestSequence), ...(receipt.kind === "captured" ? {} : { closeGeneration: receipt.closeGeneration }) });
+      const bridge = await generatedBridge(retainedGuestSource());
+      const answer = async (generation: bigint, next: Record<string, unknown>, events: readonly { kind: string; payload: unknown }[] = []) => {
+        (globalThis as Record<string, unknown>).__bridgeNext = next;
+        return (await bridge.activate(generation)).poll(events, undefined, undefined, budget);
+      };
+      try {
+        for (const row of fixture.vectors) {
+          const value = bigint(row.value);
+          const receipt = value.kind === "ack" ? value.receipt : value;
+          const generation = value.kind === "open" ? value.activationGeneration : receipt.lifetime.activationGeneration;
+          if (["captured", "accepted", "retired"].includes(value.kind)) {
+            const mapped = await answer(generation, { lifecycleReceipt: { tag: value.kind, val: body(value) } });
+            expect(Buffer.from(mapped.lifecycleReceipt).toString("hex"), value.kind).toBe(row.hex);
+            continue;
+          }
+          const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
+          const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
+          await expect(answer(generation, {}, [{ kind, payload }]), value.kind).rejects.toThrow("original-turn.canonical-input-held");
+          expect(bridge.held.at(-1)).toMatchObject({ phase: "canonical-input", events: [{ kind, payload }] });
+        }
+        for (const raw of [{ tag: "open", val: {} }, { tag: "captured", val: { lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 13n }, requestSequence: 9007199254740992n } }]) {
+          await expect(answer(1n, { lifecycleReceipt: raw })).rejects.toThrow();
+        }
+      } finally {
+        delete (globalThis as Record<string, unknown>).__bridgeNext;
+        bridge.dispose();
       }
     });
 
@@ -249,10 +199,9 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       expect(source).toContain('kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })');
     });
 
-    it("adapts the actor grant into the reactor budget vocabulary", () => {
+    it("adapts the retained original turn and the actor grant into the reactor budget vocabulary", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
-      expect(source).toContain("fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs");
-      expect(source).toContain("maxFrames: 8");
+      expect(source).toContain("fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames");
     });
 
     it("normalizes the scalar command-ingress wire record without relying on async variant discriminants", () => {

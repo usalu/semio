@@ -40,7 +40,7 @@ func EnsureDir(dirPath string) error {
 // 🔹️GetRelativePath MUST return the stored value without modification.
 // 🔷️GetRelativePath returns the relative path of the value.
 func GetRelativePath(filePath string) string {
-	rel, err := filepath.Rel(RootDir, filePath)
+	rel, err := filepath.Rel(GetRootDir(), filePath)
 	if err != nil {
 		return filePath
 	}

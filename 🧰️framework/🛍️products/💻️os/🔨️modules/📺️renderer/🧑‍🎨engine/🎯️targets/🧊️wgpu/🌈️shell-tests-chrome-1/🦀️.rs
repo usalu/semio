@@ -70,7 +70,10 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::future::Future;
 use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText};
-use ui_wgpu::wgpu::{DragPayload, FontAtlas, InputState, KeyAction, PointerModifiers, UiStackNode};
+use semio_framework_ui_wgpu_events::DragPayload;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_declaration::ui::UiStackNode;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs"]

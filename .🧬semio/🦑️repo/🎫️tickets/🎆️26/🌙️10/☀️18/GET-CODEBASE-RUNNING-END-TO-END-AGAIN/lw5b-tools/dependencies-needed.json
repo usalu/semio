@@ -1,0 +1,19 @@
+{
+ "bun.lock": {
+  "problem": "bun.lock still names the pre-rename flow package paths; root package.json workspaces already names the new ones. Dependency-store projection (storage 🟦️.ts line 152) throws 'Locked workspace package lacks original admitted Source' for every locked @workspace: path that is not an authored workspace member.",
+  "renames": [
+   {
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+    "package": "@semio-tech/flow-core-build"
+   },
+   {
+    "from": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings",
+    "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings",
+    "package": "@semio-tech/flow-core"
+   }
+  ],
+  "occurrences": "2 `workspaces` keys (bun.lock lines ~1444, ~1451) and 2 `packages` ids `@semio-tech/flow-core@workspace:…`, `@semio-tech/flow-core-build@workspace:…` (lines ~6411, ~6414)",
+  "fix": "once the freeze lifts: `bun install --lockfile-only` (regenerates ordering) or the 4 literal path substitutions; no dependency version changes (all other 120 workspaces match package.json deps exactly)"
+ }
+}

@@ -32,7 +32,7 @@
     {
       "variant": "flow",
       "engines": [
-        "semio-framework-os-flow-core:wasm"
+        "semio-framework-os-flow-browser-package:wasm"
       ],
       "forbiddenProjects": [
         "@semio-tech/puzzle-plugin"
@@ -55,7 +55,7 @@
     "wgpu"
   ],
   "sharedEngines": [
-    "semio-framework-os-flow-core:wasm"
+    "semio-framework-os-flow-browser-package:wasm"
   ],
   "fontTool": {
     "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",

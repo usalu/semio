@@ -1,15 +1,23 @@
 //! 🧷️ The wall depth rows of the entity table: the wall sweep kind (a profile run along one face of a wall) with its pickers and its create default, the base slab and attached top rows of a wall (the pickers of the
 //! slab its base follows and of the roof, slab or ceiling its top follows) and the reveal rows of an opening. Every write is a sparse `set-wall-sweep`, `set-wall-base-slab`, `set-wall-top` or `set-opening` mutation.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::editor::bim::entities::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, ramps, rename_element, variant, zoning, Created, FieldRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
-use crate::standards::v1::subsets::any::schema::authored::references::top_target;
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, TopConstraint, WallSide, WallSweep}};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, variant};
+use crate::editor::bim::entities::{ramps, rename_element, zoning};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_186::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
+use semio_s_artifact_bim_model_mut_any_188::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
+use semio_s_artifact_bim_model_mut_any_174::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::top_target;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, TopConstraint, WallSide};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_176::standards::v1::subsets::any::schema::mutations::set_opening;
+use semio_s_artifact_bim_model_mut_any_187::standards::v1::subsets::any::schema::mutations::set_wall_sweep;
 
 /// 📏️ How far a new sweep runs out of the wall face, in metres: a baseboard two centimetres deep.
 pub const BASEBOARD_OUT: f64 = 0.02;
@@ -60,7 +68,7 @@ pub fn write_base_slab(snapshot: &ModelSnapshot, id: &str, value: &str) -> Optio
 }
 
 /// 🔝️ The top that follows the roof, slab or ceiling `target` names, keeping the offset the wall already has over such a surface.
-pub fn attached_top(snapshot: &ModelSnapshot, wall: &crate::standards::v1::subsets::any::schema::snapshot::Wall, target: &str) -> Option<TopConstraint> {
+pub fn attached_top(snapshot: &ModelSnapshot, wall: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall, target: &str) -> Option<TopConstraint> {
     let offset = top_target(&wall.top).map_or(0.0, |(_, offset)| offset);
     let target = target.trim().to_string();
     if snapshot.roofs.contains_key(&target) {

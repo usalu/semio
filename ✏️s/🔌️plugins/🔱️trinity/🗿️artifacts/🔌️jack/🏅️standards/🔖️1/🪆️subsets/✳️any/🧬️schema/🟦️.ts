@@ -1,5 +1,5 @@
 /** 🔌️ The complete persisted Jack parent, inline manifest and literal content identity. */
-import {parseArtifactChild,type ArtifactChild} from "@semio-tech/framework-os/modules/store/child/schema";
+import {parseArtifactChild,type ArtifactChild} from "@semio-tech/framework/schema/artifact-reference";
 import {type Binary64,parseBinary64} from "@semio-tech/framework/value/ieee754";
 import {readValueType,type ValueType} from "@semio-tech/framework/value/type";
 export type {ValueType,Binary64};

@@ -5,14 +5,15 @@
 //! their bounds). The placement is the inferred one (host fit, yaw, origin in the storey), the body the faceted brep or tessellation of the inferred solid in that frame (a mirror is baked into the body, IFC placements cannot mirror).
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowterminal.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
-use crate::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, FamilyParameter, FamilySolid};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{FamilyParameter, FamilySolid};
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
 
@@ -87,7 +88,7 @@ pub fn local_mesh(solid: &ElementSolid, placement: &ComponentPlacement) -> TriMe
 
 
 /// 🧬️ The authored rows of a family type: the family record, its parameters by name and its solids by id, as canonical JSON.
-fn family_rows(family: &crate::standards::v1::subsets::any::schema::snapshot::Family, parameters: &BTreeMap<String, FamilyParameter>, solids: Option<&BTreeMap<String, FamilySolid>>) -> Vec<(&'static str, V)> {
+fn family_rows(family: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Family, parameters: &BTreeMap<String, FamilyParameter>, solids: Option<&BTreeMap<String, FamilySolid>>) -> Vec<(&'static str, V)> {
     let empty = BTreeMap::new();
     vec![
         (FAMILY_ROWS[0], label(&semio_framework_pack_json::to_json_string(family))),
@@ -96,7 +97,7 @@ fn family_rows(family: &crate::standards::v1::subsets::any::schema::snapshot::Fa
     ]
 }
 
-fn family_type(x: &mut Export<'_>, family_id: &str, family: &crate::standards::v1::subsets::any::schema::snapshot::Family, kind: Kind, primary: bool, solids: &BTreeMap<&str, BTreeMap<String, FamilySolid>>) -> u64 {
+fn family_type(x: &mut Export<'_>, family_id: &str, family: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Family, kind: Kind, primary: bool, solids: &BTreeMap<&str, BTreeMap<String, FamilySolid>>) -> u64 {
     let key = if primary { family_id.to_string() } else { format!("{family_id}|{kind:?}") };
     let prefix = format!("{family_id}.");
     let parameters: BTreeMap<String, FamilyParameter> = x.model.family_parameters.range(prefix.clone()..).take_while(|(name, _)| name.starts_with(&prefix)).filter(|(_, row)| row.family == family_id).map(|(_, row)| (row.name.clone(), row.clone())).collect();
@@ -109,7 +110,7 @@ fn family_type(x: &mut Export<'_>, family_id: &str, family: &crate::standards::v
     object
 }
 
-fn component(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Component, kind: Kind, object: u64) {
+fn component(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Component, kind: Kind, object: u64) {
     let model = x.model;
     let (Some(storey), Some(value)) = (x.storeys.get(&row.storey).copied(), x.inferred.components.get(id)) else { return };
     let placement = &value.placement;

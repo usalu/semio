@@ -1,6 +1,6 @@
 /** 📥️ Source: module exporting `SelectedRustSourceInputV1`, `readSelectedRustSourceInputsV1`. */
 import{types}from"node:util";
-import{validateJsonSchemaSubset}from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import publicSchema from"./🧬️schema/🔣️.json";
 const schema=structuredClone(publicSchema);
 export interface SelectedRustSourceInputV1{readonly path:string;readonly digest:string;readonly bytes:number}

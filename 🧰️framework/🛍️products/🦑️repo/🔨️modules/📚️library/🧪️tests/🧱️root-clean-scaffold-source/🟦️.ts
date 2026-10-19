@@ -114,7 +114,7 @@ test("typechecks every cleanup and scaffold owner with the installed TypeScript 
     allowImportingTsExtensions: true,
     skipLibCheck: true,
     noEmit: true,
-    types: ["node"],
+    types: ["node", "bun"],
   });
   const diagnostics = paths.flatMap((path) => {
     const source = program.getSourceFile(path);
@@ -204,7 +204,7 @@ test("scaffolds through explicit physical owner paths and refuses ambiguous or e
   const { join } = await import("node:path");
   const ownerModule = await import("../../🏗️authoring/🎮️command/🟦️.ts");
   const requestSchema = JSON.parse(readFileSync(resolve(libraryRoot, "🏗️authoring/🎮️command/🧬️schema/🔣️.json"), "utf8"));
-  const corpus = JSON.parse(readFileSync(resolve(libraryRoot, "🏗️authoring/🎮️command/🧫️fixtures/🔣️.json"), "utf8"));
+  const corpus = JSON.parse(readFileSync(resolve(libraryRoot, "🏗️authoring/🎮️command/🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: true });
   
   const admitted = ajv.compile(requestSchema.$defs.request);
@@ -238,7 +238,7 @@ test("scaffolds through explicit physical owner paths and refuses ambiguous or e
       expect(() => ownerModule.newScaffoldDestinationV1(root, "artifact", "owners/external", "🧾️json")).toThrow();
     } finally { rmSync(outside, { recursive: true, force: true }); }
     expect(messages.filter((message) => message.startsWith("new:")).length).toBe(3);
-    const surface = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts");
+    const surface = await import("@semio-tech/plugin-registry/surface-scaffold");
     expect(surface.discoverOwnedSubsetRels(root, [])).toEqual([]);
     const subset = `${standard}/🪆️subsets/✳️any`;
     expect(surface.discoverOwnedSubsetRels(root, ["owners/🔌️neutral"])).toEqual([subset]);

@@ -37,7 +37,7 @@ use semio_framework::manifest::WindowKinds;
 use semio_framework::manifest;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_ui::wgpu::SurfaceKind;
+use semio_framework_ui_declaration::ui::SurfaceKind;
 use semio_framework_ui_locale::LocalizedLabel;
 use crate::core_capabilities::core_tool_capabilities;
 use semio_framework_os_mcp_catalog::catalog::CatalogSource;

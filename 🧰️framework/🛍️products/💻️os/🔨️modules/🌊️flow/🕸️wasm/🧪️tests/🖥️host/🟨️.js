@@ -130,7 +130,7 @@ await Promise.all([pendingClose, externalEvent]);
 equal(eventObserved, sessionClose.browser.yieldsToEvents, "pending-close-yields-to-user-events");
 equal(closePolls, sessionClose.browser.pendingClosePolls, "bounded-close-poll-count");
 
-const integrated = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
+const integrated = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🎁️browser-package/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
 const integratedSession = integrated.openSession();
 const integratedSibling = integrated.openSession();
 const integratedCatalogue = await integratedSession.catalogueJson().result;

@@ -21,7 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-framework-ui-retained-tree-tree/testkit"]
 
 [dependencies]
 semio-framework-ui-retained-tree-tree = { path = "../../🍃️nodes/📦️packages/🦀️rust" }

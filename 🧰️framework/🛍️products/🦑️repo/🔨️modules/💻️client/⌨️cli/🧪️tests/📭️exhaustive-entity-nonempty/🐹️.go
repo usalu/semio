@@ -46,7 +46,7 @@ func TestExhaustiveContributorsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow contributor test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ contributors { github } }", nil)
 	if err != nil {
@@ -69,7 +69,7 @@ func TestExhaustiveTicketsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tickets test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ tickets { slug } }", nil)
 	if err != nil {
@@ -92,7 +92,7 @@ func TestExhaustivePoliciesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policies test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ policies { name } }", nil)
 	if err != nil {
@@ -115,7 +115,7 @@ func TestExhaustiveStatutesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statutes test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ statutes { id } }", nil)
 	if err != nil {
@@ -152,7 +152,7 @@ func TestExhaustiveFoldersNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow folders test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ folders { path } }", nil)
 	if err != nil {
@@ -175,7 +175,7 @@ func TestExhaustiveFilesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow files test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ files { path } }", nil)
 	if err != nil {
@@ -198,7 +198,7 @@ func TestExhaustiveBreachsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow breachs test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	// Unscoped breachs defaults to technology scope "compose" and runs full policy
 	// analysis across the tree (very slow). Single-file scope keeps the test
@@ -296,7 +296,7 @@ func TestBuildTechnologyLinkArgs(t *testing.T) {
 }
 
 func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	if executor == nil {
 		t.Fatal("executor is nil")
 	}
@@ -324,7 +324,7 @@ func TestExhaustiveNormalizeTicketFileInput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow normalize ticket file input test in short mode")
 	}
-	absRoot := GetRootDir()
+	absRoot := withExhaustiveRepo(t)
 	filePath := filepath.ToSlash(filepath.Join("repo", "client", "main.go"))
 	absPath := filepath.Join(absRoot, filePath)
 	fileID := FileHeaderId(filePath)

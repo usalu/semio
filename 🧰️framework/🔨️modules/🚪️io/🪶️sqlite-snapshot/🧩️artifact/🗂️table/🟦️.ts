@@ -1,6 +1,6 @@
 /** 🗂️ Checked table lookup whose admitted Uint32 slots perform every collision probe. */
 import {ValueError,sqliteOperation,type SqliteOperation,type SqliteDatabaseOptions} from "../../🟦️.ts";
-import {artifactSqliteCheckpoint} from "../🟦️.ts";
+import {artifactSqliteCheckpoint} from "../🚦️checkpoint/🟦️.ts";
 
 function code(value:number):number{return value>=65&&value<=90?value+32:value}
 

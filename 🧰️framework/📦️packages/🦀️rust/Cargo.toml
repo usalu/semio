@@ -17,7 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }

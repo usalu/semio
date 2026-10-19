@@ -1,24 +1,23 @@
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::keep_entry;
+use semio_s_artifact_bim_model_gestures::editor::bim::gestures::keep_entry;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::engagement_input::*;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::presence::BimPresenceMutation;
-use crate::editor::bim::transient::BimWindowTransient;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::{demo, run};
+use semio_s_artifact_bim_model_gestures::editor::bim::commands::engagement_input::{handle, EngagementInput};
+use semio_s_artifact_bim_model_tests::editor::bim::presence::BimPresenceMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::BimWindowTransient;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
 use semio_framework_ui_locale::Locale;
 
 fn addressed() -> BimDispatchCtx {
-    let view = view(Locale::En, &[("bim-plan", plan::WINDOW_KIND_ID)], Some("bim-plan"));
+    let view = view(Locale::En, &[("bim-plan", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID)], Some("bim-plan"));
     BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&view), None, None)
 }
 

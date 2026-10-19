@@ -125,7 +125,7 @@ pub fn pick_vortex_at(session_state: &WorldSessionState, camera_state: &WorldCam
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for vortex in &scene_state.vortices {
         let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
@@ -150,7 +150,7 @@ pub(super) fn pick_reference_at(session_state: &WorldSessionState, camera_state:
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let plane_normal = Vec3::new(0.0, 0.0, 1.0);
     let mut best: Option<(f32, String)> = None;
     for reference in &scene_state.references {
@@ -210,7 +210,7 @@ pub(super) fn update_dragged_instance_position(scene_state: &mut WorldSceneState
 pub fn world3d_ground_plane_pick(session_state: &WorldSessionState, camera_state: &WorldCameraState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     if dir.z.abs() < 1e-5 {
         return None;
     }

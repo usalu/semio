@@ -39,7 +39,15 @@ use semio_framework_ui_locale::{Locale, Terminology};
 use std::collections::HashMap;
 use store_sync::PresencePeer;
 use ui_contract::UiText;
-use ui_wgpu::wgpu::{ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, Rect, RetainedGlyphCursor, RetainedGlyphStep, Rgba, Theme, UtilityNode, chrome_item_bg, chrome_item_text, push_chrome_group_border};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::{Level, Rgba, Theme};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep};
+use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_framework_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text, push_chrome_group_border};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🍱️view-chrome/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_view_chrome__dock_model_and_measures;

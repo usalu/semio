@@ -4,9 +4,8 @@
 //! window body surfaces and the per-kind scene bounds.
 
 use serde_json::Value;
-use ui_wgpu::wgpu::UiComponentSceneNode;
-#[cfg(any(test, feature = "testkit"))]
-use ui_wgpu::wgpu::{UiNode, UiPresence};
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
+#[cfg(any(test, feature = "testkit"))] use semio_framework_ui_declaration::ui::{UiNode, UiPresence};
 
 //#region RenderPlanValidator
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

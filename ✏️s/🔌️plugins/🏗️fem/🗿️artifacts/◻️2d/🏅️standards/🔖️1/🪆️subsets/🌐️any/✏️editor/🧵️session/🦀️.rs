@@ -54,7 +54,7 @@ mod model_build_close;
 #[path = "🗂️mounted-state-and-preparation/🦀️.rs"]
 mod mounted_state_and_preparation;
 use mounted_state_and_preparation::{
-    child_end, session_child_failure, session_pending, ChildEnd, MountedState,
+    child_end, session_child_step, session_pending, ChildEnd, MountedState,
     SESSION_CLOSE_COPY_BYTES, SESSION_CLOSE_DEPTH, SESSION_CLOSE_RELEASE_BYTES,
 };
 

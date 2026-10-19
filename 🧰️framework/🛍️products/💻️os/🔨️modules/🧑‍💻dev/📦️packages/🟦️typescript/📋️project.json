@@ -24,6 +24,7 @@
     ],
     "stagingRootSources": [
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🏭️build-owners/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/📇️bootstrap-folder-mirror/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts",
@@ -32,6 +33,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗃️sqlite-constructor/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗄️backbone-storage/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🏭️runtime/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚧️production-test-boundary/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🧭️repo-root/🟦️.ts",

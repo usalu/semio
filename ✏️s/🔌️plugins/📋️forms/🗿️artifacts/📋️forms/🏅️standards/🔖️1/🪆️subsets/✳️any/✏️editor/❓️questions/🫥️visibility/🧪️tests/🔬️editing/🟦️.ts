@@ -5,7 +5,7 @@ import { applyPatch, compare } from "fast-json-patch";
 import fixtures from "../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { patchCondition } from "../../🟦️.ts";
-import type { FormExpr } from "../../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormExpr } from "../../../../../🧬️schema/🧱️form-model/🟦️.ts";
 
 /** 🧪️ Visual rule edits agree with language-neutral vectors and independent patch application. */
 export function testFormsVisibility(): void {

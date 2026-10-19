@@ -15,7 +15,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("Chromium preserves the exact captured sibling when a new scene is inserted before it", async () => {
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner/🔣️.json"), "utf8"));

@@ -2,7 +2,10 @@
 //! a positive length; restating the current value is a no-op. Nothing else is written: only the plan view reads it.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_storey_cut_height::SetStoreyCutHeight;
-use crate::standards::v1::subsets::any::schema::{snapshot::{cut_height_problem, ModelSnapshot}, diff::{Assigned, Entry, ModelDiff, patches::StoreyPatch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{cut_height_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetStoreyCutHeight, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

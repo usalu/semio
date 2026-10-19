@@ -172,7 +172,7 @@ impl ToolCancellationHandle {
 
 }
 
-pub(crate) struct ToolCancellationLeaseOriginal {
+pub struct ToolCancellationLeaseOriginal {
     pub(crate) handle: ToolCancellationHandle,
     pub(crate) document: ArtifactDocumentAuthority,
     pub(crate) document_generation: u64,

@@ -2,17 +2,24 @@
 //! node, every window render in `🎭️modes/✏️edit/🪟️windows/*`, every panel in `📌️panels/*`, derived values in `model_graph::instance`, what an entity kind is in `🧩️entities`. A command only
 //! emits mutations (or window config, presence and effects); nothing here applies a diff.
 
-use crate::editor::bim::commands::{browse_families, gesture_keys, set_override, analyse_model, arm_utility, attach_walls, export_sheets, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, create_entity, create_view, delete_selection, edit_family, edit_schedule, apply_template, conditions, edit_classification, edit_template, search_classification, engagement_input, export_schedule_csv, export_model, engagement_submit, flip_walls, move_storey, place_elements, place_grid_columns, cursor_keys, remove_classification, remove_property, rename_entity, select_findings, coordinate, set_camera, set_classification, set_field, set_property, set_view, split_wall, world_pointer_down, world_pointer_move};
-use crate::editor::bim::config::app_schema_descriptor;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::modes::edit;
-use crate::editor::bim::modes::edit::windows::{family, plan, schedule, section, sheet, world};
-use crate::editor::bim::panels::{families as families_panel, classification as classification_panel, diagnostics as diagnostics_panel, coordination as coordination_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
-use crate::editor::bim::presence::{BimPresence, BimPresenceMutation};
-use crate::editor::bim::terminology::{bim_labels, BimLabels};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{browse_families, set_override, apply_template, conditions, edit_classification, edit_template, search_classification, move_storey, place_elements, place_grid_columns, remove_classification, remove_property, select_findings, coordinate, set_classification, set_property, split_wall};
+use semio_s_artifact_bim_model_gestures::editor::bim::commands::{gesture_keys, canvas_commit_draft, canvas_escape, delete_selection, engagement_input, engagement_submit, cursor_keys, world_pointer_down, world_pointer_move};
+use crate::editor::bim::commands::{analyse_model, export_sheets, canvas_double_click, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, export_schedule_csv, export_model};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::{arm_utility, attach_walls, create_entity, create_view, edit_family, edit_schedule, flip_walls, rename_entity, set_camera, set_field, set_view};
+use semio_s_artifact_bim_model_tests::editor::bim::config::app_schema_descriptor;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::{families as families_panel, classification as classification_panel, properties as properties_panel};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::{diagnostics as diagnostics_panel, library as library_panel, outliner as outliner_panel};
+use semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination as coordination_panel;
+use semio_s_artifact_bim_model_tests::editor::bim::presence::{BimPresence, BimPresenceMutation};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::{bim_labels, BimLabels};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;

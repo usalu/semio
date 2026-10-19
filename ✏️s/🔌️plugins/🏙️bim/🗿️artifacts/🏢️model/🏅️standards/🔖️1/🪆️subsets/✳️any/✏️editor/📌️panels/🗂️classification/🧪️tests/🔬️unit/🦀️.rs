@@ -1,13 +1,13 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 #[allow(unused_imports)]
 use crate::editor::bim::panels::properties::input_row;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::tree_item_desc;
 #[allow(unused_imports)]
@@ -27,7 +27,7 @@ use semio_framework_ui_locale::Label;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
 use crate::editor::bim::panels::classification::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 
@@ -36,7 +36,7 @@ fn item(code: &str, title: &str, parent: Option<&str>) -> ClassificationItem {
 }
 
 fn model() -> ModelSnapshot {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let entries = vec![item("EF", "Elements and functions", None), item("EF_25", "Walls and barriers", Some("EF")), item("EF_25_10", "Walls", Some("EF_25")), item("Pr", "Products", None), item("Pr_20", "Structure", Some("Pr"))];
     snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass 2015".into(), edition: "2024".into(), source: None, entries });
     snapshot.classifications.insert("w-south".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
@@ -46,7 +46,7 @@ fn model() -> ModelSnapshot {
 fn text(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let view = ViewModel::new(locale, Terminology::Native);
-    let node = render(snapshot, crate::editor::bim::terminology::bim_labels(&view), &own(elements), &own(library), &TreeWindows::for_body(&view, BODY_KEY)).expect("the classification browser renders");
+    let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &own(elements), &own(library), &TreeWindows::for_body(&view, BODY_KEY)).expect("the classification browser renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 

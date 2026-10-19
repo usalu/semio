@@ -2,15 +2,16 @@ use super::*;
 use semio_framework_ui_prepared::{PreparedRenderJob, PreparedRenderInput, DrawMeasureCursor};
 use semio_framework_ui_prepared::testing::{prepared_process_guard, drive_preparation_until_terminal, close_packet_step, close_job_step};
 use std::mem::size_of;
+use semio_framework_test_fixtures::fixture_text;
 
 /// 🧵️ Original wire and point leases submit empty surface domains without fabricating triangles or requesting another mesh.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_mesh() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::*;
+    use ui_scene::math::*;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🎬️scene/🧪️tests/🧫️fixtures/🎯️component-source/🔣️.json")).unwrap();
     let law = &fixture["zeroIndex"]["gpuSubmission"];
     let width = law["size"][0].as_u64().unwrap() as u32;
     let height = law["size"][1].as_u64().unwrap() as u32;
@@ -128,9 +129,9 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
 #[test]
 fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_physically() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::draw_types::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
-    use crate::wgpu::draw_types::ScissorRect;
-    use crate::wgpu::kernel_3d_scene::ProceduralGrid3d;
+    use semio_framework_ui_draw_contract::{physical_scissor_rect, physical_viewport_rect, World3dGridUniforms};
+    use semio_framework_ui_draw_contract::ScissorRect;
+    use ui_scene::math::ProceduralGrid3d;
     let grid = ProceduralGrid3d { plane_z: 2.001, camera_plane_projection: [7.0, -4.0, 2.001], cell_size: 2.5, fade_distance: 18.0, cell_color: [0.2, 0.3, 0.4] };
     let at_one = World3dGridUniforms::from_grid(&grid);
     let at_two = World3dGridUniforms::from_grid(&grid);
@@ -150,15 +151,15 @@ fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_p
 #[test]
 fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored stacking steps");
     let mut draw = DrawList::default();
     for step in steps {
         let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
         let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
         match step["op"].as_str().expect("operation") {
-            "solid" => draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
-            "scene" => draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d { viewport: rect, ..Default::default() }),
+            "solid" => draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            "scene" => draw.push_scene_pass(ui_scene::math::ScenePass3d { viewport: rect, ..Default::default() }),
             op => panic!("unknown fixture operation {op}"),
         }
     }
@@ -209,21 +210,21 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
 #[test]
 fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
     let steps = fixture["steps"].as_array().expect("source stacking steps");
     let mut draw = DrawList::default();
     for step in steps {
         let rect = std::array::from_fn(|index| step["rect"][index].as_f64().expect("rect scalar") as f32);
         let rgba = std::array::from_fn::<_, 4, _>(|index| step["rgba"][index].as_u64().expect("color scalar") as f32 / 255.0);
         match (step["op"].as_str().expect("operation"), step["route"].as_str().expect("route")) {
-            ("solid", "normal") => draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
+            ("solid", "normal") => draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3])),
             ("solid", "overlay") => {
                 draw.begin_overlay_route();
-                draw.push_solid(rect, crate::wgpu::theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3]));
+                draw.push_solid(rect, semio_framework_ui_theme::Rgba::new(rgba[0], rgba[1], rgba[2], rgba[3]));
                 draw.end_overlay_route();
             }
             ("raster", "normal") => draw.push_raster_quad(step["rasterKey"].as_str().expect("raster key"), rect, [0.0, 0.0, 1.0, 1.0], 1.0),
-            ("scene", "scene") => draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d { viewport: rect, ..Default::default() }),
+            ("scene", "scene") => draw.push_scene_pass(ui_scene::math::ScenePass3d { viewport: rect, ..Default::default() }),
             (op, route) => panic!("unknown fixture operation {op}/{route}"),
         }
     }
@@ -286,7 +287,7 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
 #[test]
 fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     let _guard = prepared_process_guard();
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored steps");
     let mut draw = DrawList::default();
     let mut current_glass = None;
@@ -296,11 +297,11 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
         match step["op"].as_str().expect("operation") {
             "solid" => {
                 let color = rgba();
-                draw.push_solid(rect(), crate::wgpu::theme::Rgba::new(color[0], color[1], color[2], color[3]));
+                draw.push_solid(rect(), semio_framework_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]));
             }
             "glass" => {
                 let color = rgba();
-                current_glass = Some(draw.push_glass(rect(), 0.0, crate::wgpu::theme::GlassStyle { tint: crate::wgpu::theme::Rgba::new(color[0], color[1], color[2], color[3]), alpha: color[3], blur_px: 0.0, saturate: 1.0 }));
+                current_glass = Some(draw.push_glass(rect(), 0.0, semio_framework_ui_theme::GlassStyle { tint: semio_framework_ui_theme::Rgba::new(color[0], color[1], color[2], color[3]), alpha: color[3], blur_px: 0.0, saturate: 1.0 }));
             }
             "begin" => draw.begin_glass_content(current_glass.expect("preceding glass")),
             "end" => draw.end_glass_content(),

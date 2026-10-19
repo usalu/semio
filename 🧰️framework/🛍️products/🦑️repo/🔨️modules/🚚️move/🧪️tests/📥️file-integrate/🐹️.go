@@ -67,7 +67,7 @@ func root(ctx *host.Context, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	workspace.RootDir = dir
+	workspace.SetRootDir(dir)
 	return dir, nil
 }
 

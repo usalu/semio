@@ -5,8 +5,8 @@ import { StreamMuxPortEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { BackboneWorkerRequest, BackboneWorkerWireMessage, DocumentScope } from "../../../🟦️";
 import { ArtifactBootstrapAssembler, DOCUMENT_BACKBONE_RETENTION_LIMITS, decodeClientFrame, decodeServerFrame, encodeDocumentBackboneEnvelopeBatchExact, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import { DirectoryClient, HUB_RECONNECT_MAX_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, documentRuntimeKeyV1, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, parseDocumentBackboneMessage } from "../../../🟦️";
-import { browserActorChildCapacity } from "../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
-import { verifyBrowserActorDescribeV1 } from "../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
+import { browserActorChildCapacity } from "@semio-tech/framework-plugin/browser-bundle/child";
+import { verifyBrowserActorDescribeV1 } from "@semio-tech/framework-plugin/browser-bundle/describe";
 import { encodeActorUiPatchReceipt } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { parseBrowserActorActionRequestV1 } from "@semio-tech/framework/browser-bundle/action-handoff";
 import { parseBrowserActorViewStateRequest } from "@semio-tech/framework/browser-bundle/view-context";
@@ -17,8 +17,8 @@ import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatus
  * §C3) — the neutral backbone module owns the actor configs and the identity fold; never redefined here. */
 import { IDENTITY_CONFIG_SCHEMA, foldIdentityEvent, identityActorConfig } from "@semio-tech/framework/backbone/config-lane";
 import { COLD_PAIR_WAIT_POLICY, browserActorActionDisposition, browserActorAppCommandV1, coldPairWaitDelay, documentRuntimeKeyForConfig, hubBinding, retryColdPairBackpressure, settleColdPairLoading } from "./🧩️actor-wire-helpers/🟦️.ts";
-import { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, documentExecutionTargetLeaseMintToken, dropVerifiedColdDocumentPair, workerScope } from "./⚙️constants/🟦️.ts";
-import { artifactState, artifacts, documentServices, emitEvent, post, setWorkerPostTestSink, workerPostTestSink } from "./🧾️document-state/🟦️.ts";
+import { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, documentExecutionTargetLeaseMintToken, workerScope } from "./⚙️constants/🟦️.ts";
+import { artifactState, artifacts, documentServices, dropVerifiedColdDocumentPair, emitEvent, post, setWorkerPostTestSink, workerPostTestSink } from "./🧾️document-state/🟦️.ts";
 import { DirectoryEventPageBootstrapV1, acceptBrowserSessionAuthority, attachHubSessionPort, browserDirectoryRequest, browserSessionAuthority, browserSessionOperationFence, bytesHex, captureBrowserSessionOperationFence, clearHubSessionCapability, closeDirectory, detachHubSessionPort, directoryAdministration, directoryBootstrap, directoryClient, directorySessionEpoch, directoryWorkerEpoch, documentSocketGrantTestIssue, flushDirectoryQueue, hubSessionCapability, hubSessionFetch, hubSessionQueued, installHubSessionCapability, loadDirectoryAdministrationPage, openDirectory, openDirectoryAdministration, openDirectoryBootstrap, setDirectoryAdministration, setDirectoryClient, setDirectorySessionEpoch, setDocumentSocketGrantTestIssue, setHubSessionQueued, setSocketGrantTestIssue, settleDirectoryCommand, socketGrantTestIssue } from "./🔐️hub-session/🟦️.ts";
 import { VerifiedColdDocumentPair, verifiedColdDocumentPairMintToken } from "./🧊️cold-pair/🟦️.ts";
 import { DocumentExecutionTargetLease, browserExecutionTargetAssetRequest } from "./🪪️execution-lease/🟦️.ts";

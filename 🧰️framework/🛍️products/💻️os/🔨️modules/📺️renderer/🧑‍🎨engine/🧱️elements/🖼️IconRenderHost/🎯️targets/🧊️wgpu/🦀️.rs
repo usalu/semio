@@ -11,7 +11,7 @@
 //! port (`semio_framework_canvas::icon_pack`), in byte order of the public icon id, followed by the 682 byte engine logo.
 
 use semio_framework_canvas::{icon_pack, IconPack};
-use ui_wgpu::wgpu::IconAtlas;
+use semio_framework_ui_draw_contract::IconAtlas;
 
 const ICON_SIZE: u32 = 24;
 const ATLAS_COLS: u32 = 16;

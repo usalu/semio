@@ -4,9 +4,10 @@
 //! grid line takes the next free number or label. Refused: a pattern with no copies, more than 1024, a spacing or step without effect,
 //! a blank prefix, a minted id that is taken and any refusal of the copy itself.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::Map;
 use crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 /// 🗺️ The map of every copy of the pattern, in copy order; none when the pattern is refused.
@@ -21,7 +22,7 @@ pub fn diff(payload: &ArrayElements, base: &ModelSnapshot) -> MutationOutcome<Mo
     let Some(maps) = maps_of(payload) else {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "The pattern makes no copies.", ["pattern"]);
     };
-    match modify::duplicate(base, &payload.ids, &payload.prefix, &maps) {
+    match semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::duplicate(base, &payload.ids, &payload.prefix, &maps) {
         Err(refusal) => refusal.outcome(),
         Ok(built) => {
             let carried = built.carried;

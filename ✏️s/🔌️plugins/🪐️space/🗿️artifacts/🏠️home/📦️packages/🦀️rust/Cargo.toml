@@ -23,7 +23,7 @@ semio-s-artifact-space-home-schema = { path = "../../🏅️standards/🔖️1/�
 semio-s-artifact-space-home-operations = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust" }
 semio-s-artifact-space-home-kinds-conformance = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️kinds-conformance/📦️packages/🦀️rust" }
 semio-s-artifact-space-home-viewer = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

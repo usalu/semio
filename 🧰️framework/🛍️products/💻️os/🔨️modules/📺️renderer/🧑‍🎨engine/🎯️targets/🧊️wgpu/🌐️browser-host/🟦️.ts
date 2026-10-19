@@ -1,5 +1,5 @@
-import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
-import { rendererOriginalWorkStock } from "../../../../../../../../🔨️modules/🖼️canvas/🧵️renderer-work/🟦️.ts";
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
+import { rendererOriginalWorkStock } from "@semio-tech/framework-canvas-ts/renderer-work";
 import { admitPluginCatalogV1 } from "../../../../../🔌️plugin/📇️registry/🟦️.ts";
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 /** 🪆️ Owns one independently rooted browser renderer and its frame Worker lifetime. */
@@ -21,11 +21,13 @@ export type WgpuBrowserHostOptions = {
 };
 import { admitWgpuPluginModules, admitWgpuPluginRegistrySelection, type WgpuPluginModule, type WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { createBrowserMediaOverlay } from "../../../🎬️media/🌐️browser/🎛️host/🟦️.ts";
-import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport } from "../🚚️browser-frame-transport/🟦️.ts";
+import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🖱️dom-events/🟦️.ts";
+import { type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserFrameWorkerStepReport, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/📋️contract/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
-import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
+import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpuHostAppearance, resolveWgpuHostPlatform, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";

@@ -1,11 +1,12 @@
 import type { BuildGraphV1 } from "../🕸️graph/🟦️.ts";
+import type { BuildWatchChildPortV1 } from "./👁️watch/🟦️.ts";
 import { checkScriptInvocation, scriptInvocationBudget, scriptInvocationEnvironment, advanceScriptInvocation, createRequestedIssuedResourceControlV1, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand, captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import cachePolicy from "../../⚡️caching/🔣️policy.json";
 import ownership from "../../🗂️workspaces/🔣️policy.json";
 import { watch } from "node:fs";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 /** 🔎️ Reads portable options without crossing the task argument boundary. */
 export function buildOptionV1(args:readonly string[],name:string,short?:string):string|undefined {
@@ -94,19 +95,19 @@ export async function selectBuildTasksV1(root:string,graph:BuildGraphV1,args:rea
 }
 
 /** 👁️ Watches source events beneath the exact active issued phase through descendant drainage. */
-export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{initial?:boolean}={}):Promise<void> {
+export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args:readonly string[],invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:{initial?:boolean;readonly child:BuildWatchChildPortV1}):Promise<void> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);
   const controller=new AbortController(),control=createRequestedIssuedResourceControlV1(phaseControl,0,controller.signal),check=()=>checkResourceLeaseControl(control);
   const boundary=args.indexOf("--"),command=boundary<0?[]:args.slice(boundary+1);
   if(!command.length)throw Error("Expected repo watch --projects=<projects> -- <command>");
   const includeGlobal=buildBooleanOptionV1(args.slice(0,boundary),"include-global-files")===true;
   const {watchBuildChildArgumentsV1,buildWatchChangesEnvironmentV1,watchBuildChangeLimitsV1}=await import("./👁️watch/🟦️.ts");check();const child=watchBuildChildArgumentsV1(root,command);
-  if(child){const {readOwnedBuildInvocationV1}=await import("../📥️caller/🟦️.ts");check();readOwnedBuildInvocationV1(root,invocation,child);check();}
+  if(child){options.child.readOwnedBuildInvocationV1(root,invocation,child);check();}
   const names=selectBuildProjectsV1(graph,buildOptionsV1(args,["projects","p"]).flatMap(value=>value.split(",").filter(Boolean)),buildOptionsV1(args,["exclude"]).flatMap(value=>value.split(",").filter(Boolean))),changed=new Set<string>();
   let pending:ReturnType<typeof setTimeout>|undefined,deadline:ReturnType<typeof setTimeout>|undefined,running=Promise.resolve(),busy=false,stopped=false,failure:{error:unknown}|undefined,finish:(()=>void)|undefined;
   const stop=()=>{stopped=true;finish?.();},error=(error:unknown)=>{failure??={error};controller.abort(error);stop();},armDeadline=()=>{const remaining=check();if(remaining!==null)deadline=setTimeout(()=>{try{armDeadline();}catch(fault){error(fault);}},Math.max(1,Math.ceil(remaining)));},progress=async()=>{check();await advanceScriptInvocation(invocation,"build:watch","running");check();};
   const flush=()=>{if(stopped||busy||!changed.size)return;const files=[...changed];changed.clear();busy=true;running=Promise.resolve().then(async()=>{if(stopped)return;check();const changes={files,projects:names};
-   if(child){const {runOwnedBuildChildInvocationV1}=await import("../📥️caller/📤️child/🟦️.ts");check();await runOwnedBuildChildInvocationV1(root,child,invocation,control,changes);check();}
+   if(child){await options.child.runOwnedBuildChildInvocationV1(root,child,invocation,control,changes);check();}
    else{await progress();const milliseconds=compilerAdmissionBudgetV1(control);await runOwnedCommand(command[0]!,command.slice(1),root,"build:watch",scriptInvocationBudget(invocation,milliseconds),{signal:control.signal,env:scriptInvocationEnvironment(invocation,{...process.env,...buildWatchChangesEnvironmentV1(changes)}),onProgress:progress});check();}
   }).catch(error=>{failure??={error};controller.abort(failure.error);stop();}).finally(()=>{busy=false;if(!stopped&&changed.size)pending=setTimeout(flush,200);});};
   check();const watcher=watch(root,{recursive:true},(_event,filename)=>{

@@ -1,25 +1,21 @@
-import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
-import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../../📦️deployment/🟦️.ts";
-import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { PLAYGROUND_SESSION_ARTIFACT_KEY,playgroundSessionsRootV1, playgroundSessionOutputPath, playgroundSessionStagedOutputPath } from "@semio-tech/framework-os-dev/activation";
+export { PLAYGROUND_SESSION_ARTIFACT_KEY } from "@semio-tech/framework-os-dev/activation";
 import type { PluginHostMetadata } from "../../🔎️discovery/🟦️.ts";
 import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterProjectedPluginRegistry, projectedHostPluginFilter, registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 
 import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
 import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
-import { discoverCatalogPackages } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
-import { registryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 export class SessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {

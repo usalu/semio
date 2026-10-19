@@ -41,9 +41,10 @@ async fn node_graph_viewport_writes_config_not_mutations() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let result = app
+        .0
         .dispatch_typed(
             EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()
         )
         .await
         .expect("viewport");
@@ -80,8 +81,8 @@ async fn node_graph_edit_delete_removes_nodes_and_incident_edges() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_refuses_an_unknown_operation_and_an_empty_array_emits_nothing() {
     let mut app = math_app().await;
-    assert!(app.dispatch_typed(node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
-    let result = app.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("empty array");
+    assert!(app.0.dispatch_typed(node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
+    let result = app.0.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty array");
     assert!(result.mutations.is_empty());
 }
 
@@ -90,11 +91,11 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = math_app().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
+        &mut app.0,
         EquationCommand::AddNode(AddNode { x: 1.0, y: 2.0 }),
         |app| app.snapshot().expect("projection").graph.nodes.len(),
         before,
-        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()
     )
     .await;
 }
@@ -111,8 +112,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         |app| {
             let projection = (app.snapshot().expect("projection")).graph.clone();
             (projection.nodes.len(), projection.directed)
-        },
-    )
+        }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
     .await;
 }
 
@@ -122,8 +122,7 @@ async fn ingest_operations_is_idempotent_for_equation() {
     semio_framework_plugin::artifact_app_laws::assert_registered_ingest_idempotent_with_members::<semio_framework_plugin::EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _, _>(
         || async { crate::editor::equation::unit_tests::context::equation_app_manifest_for_tests() },
         EquationCommand::AddNode(AddNode { x: 3.0, y: 4.0 }),
-        |app| app.snapshot().expect("projection").graph.nodes.len(),
-    )
+        |app| app.snapshot().expect("projection").graph.nodes.len(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
     .await;
 }
 

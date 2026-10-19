@@ -2,9 +2,11 @@
 //! list of grid lines at positive distances in strictly ascending order; an assigned none clears the override so the wall follows its type again. The grid lines are ONE list owned
 //! by the curtain wall: a provided list replaces the list as a whole, its lines have no identity of their own. Cells, panels and overrides follow by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::grid_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::grid_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCurtainWallGrid, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

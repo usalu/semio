@@ -20,7 +20,7 @@ type FragmentFixture = {
   readonly cases: readonly FragmentCase[];
 };
 
-const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "🧪️tests/🧫️fixtures/🩹️fragment-validation-vectors.json", "🩹️fragment-validation-vectors.json");
+const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "🧪️tests/🧫️fixtures/🩹️fragment-validation-vectors.json");
 const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as FragmentFixture;
 const AjvConstructor = (Ajv as unknown as { readonly default?: typeof Ajv }).default ?? Ajv;
 

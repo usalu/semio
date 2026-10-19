@@ -9,7 +9,7 @@ import type { OwnedBuildMiddleware } from "@semio-tech/ui-react/build-tooling";
 import type { MeshCollectionAssetSpecV1 } from "../../../🏗️builder/🌐️vite/🟦️.ts";
 import { createHash } from "node:crypto";
 import { MESH_DELIVERY_CATALOG } from "@semio-tech/assets/mesh/catalog";
-import { ownedServer, repoRoot } from "../🧰️shared/🟦️.ts";
+import { ownedServer, repoRoot } from "../🧰️suite-build-server/🟦️.ts";
 
 describe("nested mesh source identity", () => {
   it("preserves explicit neutral source ownership and nested output paths in HTTP and static output", async () => {

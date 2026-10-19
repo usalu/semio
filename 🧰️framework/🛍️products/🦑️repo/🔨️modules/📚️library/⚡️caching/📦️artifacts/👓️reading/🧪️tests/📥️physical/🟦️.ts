@@ -2,9 +2,9 @@ import {expect} from "bun:test";
 import {join} from "node:path";
 import {readFile,writeFile} from "node:fs/promises";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {resourceLeasePathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type {NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
+import {resourceLeasePathV1,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import type {NativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
 import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../🟦️.ts";
 import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactReaderV1,type RepositoryArtifactV1} from "../../🟦️.ts";
 

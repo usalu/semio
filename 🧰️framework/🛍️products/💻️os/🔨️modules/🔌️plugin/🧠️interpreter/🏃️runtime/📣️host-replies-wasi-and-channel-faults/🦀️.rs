@@ -1,6 +1,7 @@
 //! 📣️ Host replies, wasi and channel faults: the wasi clock and entropy answers, the owned host reply, the guest memory helpers, the channel admission and result decoding and the turn and core faults. See [`super`].
 
 use super::*;
+use semio_framework_plugin_guest_contract::GUEST_DIAGNOSTICS_CAPACITY_BYTES;
 
 //#region 🧠️OwnedRuntime
 pub(super) fn owned_wasi_nanoseconds(duration: std::time::Duration) -> Result<u64, PluginHostError> {

@@ -6,10 +6,10 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSyn
 import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
-import type { StreamMuxJsonV1, StreamMuxServerV1 } from "../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import type { StreamMuxJsonV1, StreamMuxServerV1 } from "@semio-tech/framework/io/stream-mux";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
-import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
-import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
+import { parseInstallationDirectoryV1, installationDirectoryCollision, installationDirectoryEmoji } from "@semio-tech/framework/identity/installation";
+import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
 import {
   PLUGIN_HOST_SHIM_FILE,
   SHARD_WORKER_FILE,

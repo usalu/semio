@@ -127,7 +127,7 @@ fn ime_commit_inserts_the_composed_text_and_clears_composition() {
 /// the actual React Stepper oracle, including the browser-owned selection, clipboard and IME paths.
 #[test]
 fn number_stepper_editing_and_hold_repeat_match_the_neutral_react_contract() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("NumberStepper editing fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("NumberStepper editing fixture");
     let uniform = &fixture["uniform"];
     let number = |value: &serde_json::Value| value.as_f64().expect("fixture number");
     let min = number(&uniform["min"]);

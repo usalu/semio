@@ -2,7 +2,7 @@
 //! datum; spaces of the building that share a number are ambiguous.
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🪜️ The level and number findings of one building.

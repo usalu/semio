@@ -3,18 +3,19 @@
 //! classifications stay with the original. Refused: an unknown wall, a taken new id, a distance that is not finite or has no effect and an
 //! offset that collapses an arc into its centre.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::offset_axis;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::offset_axis;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
 use crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Wall}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &OffsetWall, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let Some(wall) = base.walls.get(&payload.id) else {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Wall \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if let Some(noun) = elements::taken(base, &payload.new_id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.new_id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.new_id), [payload.new_id.clone()]);
     }
     if !(payload.distance.is_finite() && payload.distance.abs() > 1e-9) {

@@ -64,7 +64,7 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio_framework_ui_contract = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-ui_wgpu = {path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

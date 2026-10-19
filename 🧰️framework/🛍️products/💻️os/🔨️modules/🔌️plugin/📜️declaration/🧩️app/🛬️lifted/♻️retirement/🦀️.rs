@@ -37,7 +37,7 @@ impl<A:ArtifactApp> CompletionRetirement<A>{
 impl<A:ArtifactApp> RetirementCursor for CompletionRetirement<A>{
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
         if self.terminal_is_empty(){return RetirementStep::Complete;}if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
-        if self.source.is_some(){let bytes=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Cell<A>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
+        if self.source.is_some(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Cell<A>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
             let original=self.source.take().unwrap().return_alias();let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()});
         }
         if self.child.is_some(){return self.child_step(grant);}
@@ -47,7 +47,7 @@ impl<A:ArtifactApp> RetirementCursor for CompletionRetirement<A>{
     fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.original.is_none()&&self.child.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.child.as_ref().map_or(Ok(0),|child|child.next_copy_byte_demand())}
     fn next_birth_bytes(&self,copy:usize)->Option<usize>{if let Some(child)=self.child.as_ref(){return child.next_capacity_byte_demand(copy).ok();}self.original.as_ref().map_or(Some(0),A::completion_retirement_birth_bytes)}
-    fn next_close_byte_demand(&self)->Option<usize>{if self.source.is_some(){return Some(semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Cell<A>>());}self.child.as_ref().map_or(Some(0),|child|if child.terminal_is_empty(){Some(size_of_val(&**child))}else{child.next_release_byte_demand().ok()})}
+    fn next_close_byte_demand(&self)->Option<usize>{if self.source.is_some(){return Some(semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Cell<A>>());}self.child.as_ref().map_or(Some(0),|child|if child.terminal_is_empty(){Some(size_of_val(&**child))}else{child.next_release_byte_demand().ok()})}
     fn next_depth_demand(&self)->Result<usize,ValueError>{if let Some(child)=self.child.as_ref(){return child.next_depth_demand();}if let Some(original)=self.original.as_ref(){if A::completion_retirement_birth_bytes(original).is_none(){return Err(Self::error());}}Ok(usize::from(!self.terminal_is_empty()))}
     fn allows_admitted_narrow_work(&self)->bool{true}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}

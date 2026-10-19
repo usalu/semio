@@ -3,14 +3,15 @@
 //! result stands (a formula that parses, names only existing parameters and closes no circle) is decided by the mutation, not here. Formulas are canonicalised before they are emitted, so text that does
 //! not parse never reaches a mutation.
 
-use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
-use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
-use crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
-use crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
-use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
-use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint, ExprPoint3, FamilyCategory, FamilySolid, ModelSnapshot, ParameterKind, ParametricProfile, SolidAxis, SolidShape}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
+use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
+use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
+use semio_s_artifact_bim_model_mut_any_43::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ExprPoint3, FamilyCategory, ParameterKind, ParametricProfile, SolidAxis, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{FamilySolid, ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 🧩️ One edit as the command carries it: the part (`family`, `parameter`, `solid`), the operation, the key (a parameter name, a parameter kind token, a solid id with a slot, a shape token) and the value.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -52,7 +53,7 @@ pub fn shape_token(shape: &SolidShape) -> &'static str {
 }
 
 fn canonical(text: &str) -> Result<String, &'static str> {
-    formula::canonical(text).map_err(|_| "bim.family.formula-invalid")
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::canonical(text).map_err(|_| "bim.family.formula-invalid")
 }
 
 fn quoted(id: &str) -> Result<String, &'static str> {
@@ -73,7 +74,7 @@ pub fn default_formula(snapshot: &ModelSnapshot, kind: ParameterKind) -> Result<
 
 fn fresh_name(snapshot: &ModelSnapshot, family: &str, kind: ParameterKind) -> String {
     let base = format!("new_{}", format!("{kind:?}").to_ascii_lowercase());
-    let taken = |name: &str| snapshot.family_parameters.contains_key(&formula::parameter_id(family, name));
+    let taken = |name: &str| snapshot.family_parameters.contains_key(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, name));
     std::iter::once(base.clone()).chain((2..).map(|n| format!("{base}_{n}"))).find(|name| !taken(name)).expect("an endless range yields a free name")
 }
 
@@ -138,7 +139,7 @@ fn solid(snapshot: &ModelSnapshot, family: &str, edit: &Edit, fresh: &str) -> Re
         "remove" => return Ok(vec![ModelMutation::DeleteFamilySolid(DeleteFamilySolid { id: id.to_string() })]),
         "name" => after.name.clone_from(&edit.value),
         "slot" => {
-            if !formula::set_slot(&mut after, field, &canonical(&edit.value)?) {
+            if !semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::set_slot(&mut after, field, &canonical(&edit.value)?) {
                 return Err("bim.family.slot-unknown");
             }
         }

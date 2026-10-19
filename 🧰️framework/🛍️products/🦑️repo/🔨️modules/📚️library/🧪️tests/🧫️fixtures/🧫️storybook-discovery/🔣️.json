@@ -13,7 +13,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-model/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️2d-model/🧪️.story.tsx",
       "title": "🏗️fem◻️2d/Model",
       "stories": [
         {
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-results/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️2d-results/🧪️.story.tsx",
       "title": "🏗️fem◻️2d/Results",
       "stories": [
         {
@@ -55,7 +55,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-viewer/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️2d-viewer/🧪️.story.tsx",
       "title": "🏗️fem◻️2d/Viewer",
       "stories": [
         {
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-model/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️3d-model/🧪️.story.tsx",
       "title": "🏗️fem🧊️3d/Model",
       "stories": [
         {
@@ -97,7 +97,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-results/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️3d-results/🧪️.story.tsx",
       "title": "🏗️fem🧊️3d/Results",
       "stories": [
         {
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️3d-viewer/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🎭️3d-viewer/🧪️.story.tsx",
       "title": "🏗️fem🧊️3d/Viewer",
       "stories": [
         {
@@ -155,7 +155,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️frames/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️frames/🧪️.story.tsx",
       "title": "📸️remodel🖼️Frames",
       "stories": [
         {
@@ -176,7 +176,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️model/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️model/🧪️.story.tsx",
       "title": "📸️remodel🧊️Model",
       "stories": [
         {
@@ -192,7 +192,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️modes/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️modes/🧪️.story.tsx",
       "title": "📸️remodel🕒️Modes",
       "stories": [
         {
@@ -213,7 +213,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️panels/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️panels/🧪️.story.tsx",
       "title": "📸️remodel📌️Panels",
       "stories": [
         {
@@ -269,7 +269,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️report/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️report/🧪️.story.tsx",
       "title": "📸️remodel📊️Report",
       "stories": [
         {
@@ -305,7 +305,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/📸️remodel/📖️stories/🎭️viewer/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/📸️remodel/📖️stories/🎭️viewer/🧪️.story.tsx",
       "title": "📸️remodel👁️Viewer",
       "stories": [
         {
@@ -321,7 +321,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️2d-board/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-board/🧪️.story.tsx",
       "title": "🧩️puzzle🩻️2d",
       "stories": [
         {
@@ -352,7 +352,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
       "title": "🧩️puzzle🩻️2d/Fixtures",
       "stories": [
         {
@@ -368,7 +368,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx",
       "title": "🧩️puzzle🕐️5d",
       "stories": [
         {
@@ -389,7 +389,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
       "title": "🧩️puzzle🧊️3d",
       "stories": [
         {
@@ -405,7 +405,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️2d-board/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️2d-board/🧪️.story.tsx",
       "title": "🧱️block◻️2d",
       "stories": [
         {
@@ -426,7 +426,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
       "title": "🧱️block◻️2d/Fixtures",
       "stories": [
         {
@@ -447,7 +447,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️3d-world/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️3d-world/🧪️.story.tsx",
       "title": "🧱️block🧊️3d",
       "stories": [
         {
@@ -463,7 +463,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️5d-board/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️5d-board/🧪️.story.tsx",
       "title": "🧱️block🖐️5d/Board",
       "stories": [
         {
@@ -484,7 +484,7 @@
       ]
     },
     {
-      "path": "✏️s/🔌️plugins/🧱️block/📖️stories/🎭️5d-world/🧪️.story.tsx",
+      "path": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🎭️5d-world/🧪️.story.tsx",
       "title": "🧱️block🖐️5d/World",
       "stories": [
         {

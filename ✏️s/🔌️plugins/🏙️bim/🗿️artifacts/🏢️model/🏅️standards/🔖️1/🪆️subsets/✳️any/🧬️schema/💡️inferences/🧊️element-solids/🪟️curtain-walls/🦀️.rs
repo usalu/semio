@@ -4,14 +4,16 @@
 //! material, a door or a window that fills the cell with its frame, or nothing; the openings hosted by the curtain wall cut their rectangle out of every panel they overlap, the panel is
 //! rebuilt from the rectangles that remain.
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::mesh::{extrude, sweep_profile, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};
@@ -93,12 +95,12 @@ fn add_panel(builder: &mut SolidBuilder, snapshot: &ModelSnapshot, kind: &Curtai
         CurtainPanel::Empty => {}
         CurtainPanel::Glass => {
             for part in remaining(rect, cuts) {
-                builder.add(parts::PANEL, &kind.panel_material, 0, &panel_mesh(axis, length, part, PANEL_THICKNESS.min(depth), base_z));
+                builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::PANEL, &kind.panel_material, 0, &panel_mesh(axis, length, part, PANEL_THICKNESS.min(depth), base_z));
             }
         }
         CurtainPanel::Solid { material } => {
             for part in remaining(rect, cuts) {
-                builder.add(parts::PANEL, material, 0, &panel_mesh(axis, length, part, SOLID_THICKNESS.min(depth), base_z));
+                builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::PANEL, material, 0, &panel_mesh(axis, length, part, SOLID_THICKNESS.min(depth), base_z));
             }
         }
         CurtainPanel::Window { window_type } => {
@@ -184,16 +186,16 @@ pub fn curtain_solid_in(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout:
     let mut builder = SolidBuilder::new(SolidFamily::CurtainWall);
     let Some(kind) = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type) else { return builder.build() };
     let Some(members) = members_of(kind, layout, profiles) else { return builder.build() };
-    let axis = seg(&curtain.axis);
+    let axis = segment_of(&curtain.axis);
     let length = layout.length;
     let (last_u, last_v) = (members.verticals.len() - 1, members.horizontals.len() - 1);
     for (k, (start, end)) in members.verticals.iter().enumerate() {
-        builder.add(parts::MULLION, &kind.mullion_material, 0, &vertical_member(&axis, length, members.outline(k, last_u), (start + end) / 2.0, base_z, base_z + height));
+        builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::MULLION, &kind.mullion_material, 0, &vertical_member(&axis, length, members.outline(k, last_u), (start + end) / 2.0, base_z, base_z + height));
     }
     for (k, (start, end)) in members.horizontals.iter().enumerate() {
         for pair in members.verticals.windows(2) {
             if pair[1].0 - pair[0].1 > EPS {
-                builder.add(parts::MULLION, &kind.mullion_material, 0, &horizontal_member(&axis, length, members.outline(k, last_v), pair[0].1, pair[1].0, (start + end) / 2.0, base_z));
+                builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::MULLION, &kind.mullion_material, 0, &horizontal_member(&axis, length, members.outline(k, last_v), pair[0].1, pair[1].0, (start + end) / 2.0, base_z));
             }
         }
     }

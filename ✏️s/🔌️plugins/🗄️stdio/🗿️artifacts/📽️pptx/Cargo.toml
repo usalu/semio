@@ -10,6 +10,7 @@ members = [
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🏷️vocabulary/📦️packages/🦀️rust",
     "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
@@ -112,6 +113,9 @@ path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schem
 
 [workspace.dependencies.semio-s-artifact-stdio-pptx-base-model]
 path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-vocabulary]
+path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🏷️vocabulary/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-pptx-base]
 path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📦️packages/🦀️rust"

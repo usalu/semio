@@ -95,7 +95,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<FormsPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<FormsPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("forms-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
@@ -174,6 +175,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<For
             }),
             None => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {

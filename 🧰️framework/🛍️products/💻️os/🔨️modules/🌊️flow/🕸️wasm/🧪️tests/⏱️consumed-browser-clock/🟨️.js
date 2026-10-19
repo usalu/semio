@@ -22,7 +22,7 @@ export async function testFlowBrowserClock() {
     return value;
   } } });
   try {
-    const runtime = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
+    const runtime = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../🎁️browser-package/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
     const session = runtime.openSession();
     const started = samples;
     await session.catalogueJson().result;

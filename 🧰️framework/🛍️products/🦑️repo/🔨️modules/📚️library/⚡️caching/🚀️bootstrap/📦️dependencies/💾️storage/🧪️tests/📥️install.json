@@ -3,6 +3,7 @@
   "protocol": {
     "version": 2,
     "excludedTopLevelFields": [
+      "scripts",
       "semio"
     ],
     "keyOrder": "recursive-utf8-keys-preserve-array-order",
@@ -30,6 +31,23 @@
               "native"
             ]
           }
+        }
+      },
+      "sameInstallMaterial": true
+    },
+    {
+      "name": "script edit",
+      "before": {
+        "name": "owned",
+        "scripts": {
+          "build": "a"
+        }
+      },
+      "after": {
+        "name": "owned",
+        "scripts": {
+          "build": "b",
+          "test": "c"
         }
       },
       "sameInstallMaterial": true

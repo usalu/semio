@@ -1,7 +1,7 @@
 //! 📬️ Config store preparation: the byte bounds, the admission and the one-item publication preparation of the Config lane.
 
 use super::*;
-use crate::editor::sourcing::base::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
+use crate::editor::sourcing::editor_vocabulary::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
 
 //#region 📬️ConfigStorePreparation
 /// 📏️ The typed-in filter state's own retained byte envelope — query, module ids, typology path and

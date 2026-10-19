@@ -5,9 +5,9 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATIONS;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATIONS;
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_action, ui_value_map, ui_value_text};
+use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
 use semio_framework_ui_contract::Label;
 #[allow(unused_imports)]

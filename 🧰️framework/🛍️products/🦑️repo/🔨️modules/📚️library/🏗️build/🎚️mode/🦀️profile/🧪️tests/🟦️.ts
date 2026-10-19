@@ -5,7 +5,7 @@ import TOML from"@iarna/toml";
 import{Database}from"bun:sqlite";
 import{existsSync,readFileSync}from"node:fs";
 import{join}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 import constraints from"../📋️constraints/🔣️.json"with{type:"json"};

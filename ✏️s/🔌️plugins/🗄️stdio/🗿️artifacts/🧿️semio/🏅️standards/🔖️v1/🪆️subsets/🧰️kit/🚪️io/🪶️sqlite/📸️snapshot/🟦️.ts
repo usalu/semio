@@ -2,7 +2,7 @@
 import type {SemioKitSnapshot,SemioKitDesign,SemioKitType} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {parseSemioTransform,type SemioTransform} from "../../../../✉️base/🧬️schema/🧮️geometry/🟦️.ts";
 import {parseSemioChild,type ArtifactChild} from "../../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
-import {parseArtifactLink,type ArtifactLink,type ArtifactRef,type BlobRef} from "@semio-tech/framework-os/modules/store/link/schema";
+import {parseArtifactLink,type ArtifactLink,type ArtifactRef,type BlobRef} from "@semio-tech/framework/schema/artifact-reference";
 import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteDocumentReference,artifactSqliteInteger,artifactSqliteText,artifactSqliteOrderedRowsControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 import {encodeIeee754Cells,readBinary64,type Ieee754Column} from "@semio-tech/framework/io/sqlite-snapshot/ieee754";
 import type {SqliteDatabase,SqliteRow} from "@semio-tech/framework/io/sqlite-snapshot";

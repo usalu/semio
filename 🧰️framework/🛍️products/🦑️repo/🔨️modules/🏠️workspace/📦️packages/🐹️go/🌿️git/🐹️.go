@@ -27,7 +27,7 @@ func ExecCommand(command string, args []string, cwd string) (stdout, stderr stri
 // ▫️ExecCommandContext runs a child process with explicit cancellation and deadline propagation.
 func ExecCommandContext(ctx context.Context, command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
-		cwd = RootDir
+		cwd = GetRootDir()
 	}
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Dir = cwd
@@ -77,7 +77,7 @@ var gitTopLevelCache sync.Map
 // workspace — would otherwise make `git check-ignore` answer for the enclosing repository and
 // silently drop every file below it.
 func RootDirIsGitTopLevel() bool {
-	root := RootDir
+	root := GetRootDir()
 	if strings.TrimSpace(root) == "" {
 		return false
 	}
@@ -87,11 +87,7 @@ func RootDirIsGitTopLevel() bool {
 	stdout, _, exitCode := ExecCommand("git", []string{"rev-parse", "--show-toplevel"}, root)
 	verdict := false
 	if exitCode == 0 {
-		top, err := filepath.Abs(strings.TrimSpace(stdout))
-		if err == nil {
-			current, absErr := filepath.Abs(root)
-			verdict = absErr == nil && NormalizePath(top) == NormalizePath(current)
-		}
+		verdict = NormalizePath(CanonicalPath(strings.TrimSpace(stdout))) == NormalizePath(CanonicalPath(root))
 	}
 	gitTopLevelCache.Store(root, verdict)
 	return verdict
@@ -130,7 +126,7 @@ func CountLinesAtCheckpoint(checkpoint, filePath string) int {
 // ✔️ReadTextFileAtCheckpoint reads and returns text file at checkpoint from the source.
 func ReadTextFileAtCheckpoint(checkpoint, filePath string) (string, error) {
 	if checkpoint == "" {
-		return ReadTextFile(filepath.Join(RootDir, filePath))
+		return ReadTextFile(filepath.Join(GetRootDir(), filePath))
 	}
 	stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", checkpoint, filePath)}, "")
 	if exitCode != 0 {

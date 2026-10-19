@@ -10,7 +10,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {withGraphPublicationNodeV1} from "./📦️transaction/🟦️.ts";
 import {withGraphPublicationLeaseV1,publishGraphGenerationV1,type GraphPublicationLeaseV1} from "../🟦️.ts";
-import {withBuildTestInvocationV1} from "./../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {withNxGraphFixtureV1} from "./../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "./../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {advanceScriptInvocation} from "./../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

@@ -1,17 +1,18 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::element_storey;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::element_storey;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 #[allow(unused_imports)]
 use protocol::TouchedPaths;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::dirty::*;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::dirty::touched;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::{DiffRegions, Inference};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_value::DslValue;
@@ -90,7 +91,7 @@ fn variants(base: &Value) -> Vec<(String, ModelSnapshot)> {
 }
 
 fn dependencies(snapshot: &ModelSnapshot) -> BTreeMap<ModelNode, DslValue> {
-    plan::build(snapshot, kinds::closure(kinds::ALL)).into_iter().map(|step| (step.key.clone(), dependency(snapshot, &step.key))).collect()
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL)).into_iter().map(|step| (step.key.clone(), dependency(snapshot, &step.key))).collect()
 }
 
 fn json_of(snapshot: &ModelSnapshot) -> Value {
@@ -136,7 +137,7 @@ fn a_node_whose_dependency_a_diff_changed_is_always_reported_touched() {
         for (what, variant) in variants(&json) {
             let diff = between(&base, &variant);
             let touches = diff.touches();
-            for step in plan::build(&variant, kinds::closure(kinds::ALL)) {
+            for step in semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&variant, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL)) {
                 let Some(old) = before.get(&step.key) else { continue };
                 checked += 1;
                 if !touched(&variant, &step.key, &touches) {

@@ -1,7 +1,7 @@
 /** 🕹️ Interaction transforms: curve arc, move and copy sessions and numeric entry commit. */
 import { EdgeRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { ArtifactTestDependencies } from "../../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../../🎒️test-dependencies/🟦️.ts";
 import type { InteractionRuntime } from "../../../🏃️interaction-runtime/🟦️.ts";
 import type { SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
 import type { SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";

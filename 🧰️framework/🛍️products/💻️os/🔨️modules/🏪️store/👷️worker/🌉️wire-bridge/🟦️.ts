@@ -5,7 +5,7 @@ import { encodeDocumentBackboneEnvelopeBatchExact, decodePresenceInteraction, de
 import { fetchWithTimeout } from "@semio-tech/framework";
 import { type ArtifactState, emitEvent } from "../🧾️document-state/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
-import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🟦️.ts";
+import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🏷️mirror-owner/🟦️.ts";
 import { CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH, FOLDER_FETCH_TIMEOUT_MS } from "../⚙️constants/🟦️.ts";
 
 /** 🧮️ A stable, deterministic 32-bit seed for an actor id string, for `WireMutationEnvelope.

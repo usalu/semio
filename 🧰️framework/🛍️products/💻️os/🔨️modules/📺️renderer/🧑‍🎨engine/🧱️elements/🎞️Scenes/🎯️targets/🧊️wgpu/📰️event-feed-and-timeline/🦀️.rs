@@ -484,7 +484,7 @@ pub fn event_feed_accessibility_controls(
         .collect()
 }
 
-pub fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<Result<(), semio_framework_ui_action::BoundedActionFault>> {
     let control = accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
     let action = control.action.as_ref()?;
     let feed = scene.event_feed.as_ref()?;
@@ -560,7 +560,7 @@ pub fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let title_right = time_x.map_or(content_right, |x| x - theme.gap_standard);
         if title_right > title_x {
             ctx.draw.push_scissor(Rect::new(title_x, y + pad, title_right - title_x, layout.line_height));
-            let weight = if entry.tone.as_deref() == Some("fatal") { ui_wgpu::wgpu::TextWeight::Semibold } else { ui_wgpu::wgpu::TextWeight::Medium };
+            let weight = if entry.tone.as_deref() == Some("fatal") { semio_framework_ui_text::TextWeight::Semibold } else { semio_framework_ui_text::TextWeight::Medium };
             draw_text_weighted(ctx.draw, ctx.atlas, &entry.title, title_x, y + pad + layout.line_height * 0.7, theme.font_size_small, tone_color, weight);
             ctx.draw.pop_scissor();
         }
@@ -725,13 +725,13 @@ struct GraphTimelineLayout {
 const GRAPH_TIMELINE_CHIP_FONT_PX: f32 = ui_styling::metrics::typography::TEXT2XS_PX as f32;
 
 /// 📏️ One chip label's width in the face the painter pens it with.
-fn graph_timeline_chip_text_width(atlas: &mut ui_wgpu::wgpu::FontAtlas, text: &str) -> f32 {
+fn graph_timeline_chip_text_width(atlas: &mut semio_framework_ui_text::FontAtlas, text: &str) -> f32 {
     atlas.measure_text(text, GRAPH_TIMELINE_CHIP_FONT_PX).0
 }
 
 /// 📏️ The label track React's `auto` grid column resolves to: the widest row's chips (each `px-1.5` around its measured label,
 /// `gap-1` apart) or its `checkpoint` placeholder, inside the row's `px-single` padding.
-pub fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
+pub fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme, atlas: &mut semio_framework_ui_text::FontAtlas) -> f32 {
     let chip_padding = theme.root_rem_pixels * 0.375;
     let chip_gap = theme.root_rem_pixels * 0.25;
     columns
@@ -748,7 +748,7 @@ pub fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &T
 }
 
 /// 📏️ [`graph_timeline_label_track_width`] of one scene's own columns.
-pub fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Theme, atlas: &mut ui_wgpu::wgpu::FontAtlas) -> f32 {
+pub fn graph_timeline_scene_label_track(scene: &UiComponentSceneNode, theme: &Theme, atlas: &mut semio_framework_ui_text::FontAtlas) -> f32 {
     let columns: Vec<HistoryColumnJson> = scene.graph_timeline.as_ref().and_then(|history| serde_json::from_str(&history.columns_json).ok()).unwrap_or_default();
     graph_timeline_label_track_width(&columns, theme, atlas)
 }
@@ -820,8 +820,8 @@ pub fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bound
 pub fn graph_timeline_accessibility_activate(
     scene: &UiComponentSceneNode,
     key: &str,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Option<Result<(), semio_framework_ui_action::BoundedActionFault>> {
     let control = accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
     let history = scene.graph_timeline.as_ref()?;
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).ok()?;

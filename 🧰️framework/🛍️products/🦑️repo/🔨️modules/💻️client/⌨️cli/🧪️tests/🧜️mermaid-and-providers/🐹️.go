@@ -19,8 +19,7 @@ func TestExhaustiveMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("walks all bundles for LOC treemap; too slow for -short runs on large monorepos")
 	}
-	root := findTestRepoRoot(".")
-	SetRootDir(root)
+	withExhaustiveRepo(t)
 	result := MermaidLocByTechnologiesBundlesFoldersFiles()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
@@ -59,8 +58,7 @@ func TestExhaustiveMermaidLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	SetRootDir(root)
+	withExhaustiveRepo(t)
 	result := MermaidLocByLanguage()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
@@ -88,8 +86,7 @@ func TestExhaustiveMermaidLocByContributors(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-contributors test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	SetRootDir(root)
+	withExhaustiveRepo(t)
 	result := MermaidLocByContributors()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
@@ -107,8 +104,7 @@ func TestExhaustiveMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc command test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	SetRootDir(root)
+	withExhaustiveRepo(t)
 	cmd := NewRoot(testEngineFactory)
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
@@ -126,8 +122,7 @@ func TestExhaustiveMermaidCommandLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language command test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	SetRootDir(root)
+	withExhaustiveRepo(t)
 	cmd := NewRoot(testEngineFactory)
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
@@ -186,9 +181,7 @@ func TestGetManagementProvider(t *testing.T) {
 }
 
 func TestGoalIDForFilesystem(t *testing.T) {
-	oldRoot := rootDir
-	rootDir = findTestRepoRoot(".")
-	defer func() { rootDir = oldRoot }()
+	withGoalPath(t, "AI-OPTIMIZED-REPO/REPO-CLIENT")
 
 	tests := []struct {
 		in   string

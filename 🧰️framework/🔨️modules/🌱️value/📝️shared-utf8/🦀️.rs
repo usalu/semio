@@ -1,5 +1,5 @@
 //! 📝️ Shared immutable UTF8 adopts the original byte allocation and exposes borrowed projections.
-use crate::{paged::Utf8Text,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,shared::{SharedControlledRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
+use crate::{paged::Utf8Text,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,arc_custody::{SharedControlledRetirement,shared_retirement_allocation_bytes}},ValueError,ValueRefusalKind};
 use std::{sync::Arc,mem::size_of};
 
 #[derive(Clone,Debug,Default)]

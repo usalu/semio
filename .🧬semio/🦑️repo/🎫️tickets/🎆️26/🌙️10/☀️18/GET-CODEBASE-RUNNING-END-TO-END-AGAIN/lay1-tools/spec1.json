@@ -1,0 +1,5 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts","leaf":"📇️recipe-contract","names":["Family","Toolkit","Recipe"],"doc":"📇️ The fixture recipe contract of the semio mesh generator: families, toolkit and corpus entry."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts","leaf":"📇️recipe-contract","names":["Family","MutationKind","Recipe","Kernel","unwrap","call"],"doc":"📇️ The fixture recipe contract of the semio brep generator: families, mutation kinds, corpus entry and kernel call."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts","leaf":"📇️recipe-contract","names":["Family","Kernel","Recipe","unwrap","call"],"doc":"📇️ The fixture recipe contract of the step ap214 cc6 generator."}
+]

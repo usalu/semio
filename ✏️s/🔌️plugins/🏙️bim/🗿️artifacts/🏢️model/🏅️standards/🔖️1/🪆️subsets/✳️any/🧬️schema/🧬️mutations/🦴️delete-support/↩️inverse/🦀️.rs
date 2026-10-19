@@ -1,6 +1,6 @@
 //! ↩️ Concrete semantic inverse restoring only authored parameters.
 use crate::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 pub fn inverse<Op>(payload: &DeleteSupport, base: &ModelSnapshot) -> Vec<Op>
 where
     Op: From<crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport>,

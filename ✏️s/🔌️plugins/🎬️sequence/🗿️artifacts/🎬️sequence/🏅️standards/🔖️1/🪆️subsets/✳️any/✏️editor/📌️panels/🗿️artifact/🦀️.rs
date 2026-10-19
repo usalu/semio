@@ -2,8 +2,8 @@
 
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::host::{control_slots, is_control_kind};
-use crate::editor::sequence::base::SEQUENCE_INTERACTION_STEPS;
-use crate::editor::sequence::base::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
+use crate::editor::sequence::editor_vocabulary::SEQUENCE_INTERACTION_STEPS;
+use crate::editor::sequence::editor_vocabulary::{sequence_action, ui_label, ui_value_map, ui_value_text, SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_PLAY_APP_ID};
 use crate::{SequenceHostSnapshot, SequenceStep};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
 use semio_framework_plugin::tree_item_desc;

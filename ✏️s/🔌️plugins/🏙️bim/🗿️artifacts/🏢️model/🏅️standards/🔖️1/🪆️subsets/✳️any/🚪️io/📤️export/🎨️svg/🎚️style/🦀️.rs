@@ -3,7 +3,7 @@
 //! 📎 https://www.w3.org/TR/SVG11/styling.html
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 
 /// 🖊️ The class of a line style.
 pub fn style_class(style: PlanStyle) -> &'static str {

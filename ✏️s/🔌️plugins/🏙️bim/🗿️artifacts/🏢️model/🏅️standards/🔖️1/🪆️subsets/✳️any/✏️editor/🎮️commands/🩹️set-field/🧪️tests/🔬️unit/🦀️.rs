@@ -1,18 +1,20 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{fields_of, kind_holding, FieldRow, PROJECT_FIELDS, PROJECT_ID};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding, PROJECT_FIELDS, PROJECT_ID};
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::set_field::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field::{handle, SetField};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 
 fn set(ids: &[&str], field: &str, value: &str, selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();

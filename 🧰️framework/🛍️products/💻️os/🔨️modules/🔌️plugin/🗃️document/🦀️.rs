@@ -74,7 +74,7 @@ pub use store_replacement_initializer_and_retirement::{AppProjectionCache, Artif
 
 #[path = "🗄️document-archive-load/🦀️.rs"]
 mod document_archive_load;
-pub use document_archive_load::{ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
+pub use document_archive_load::{document_archive_history_decoder, ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadPhase, ActiveDocumentArchiveLoadState, PendingDocumentArchiveMember};
 
 pub use semio_framework_plugin_operation::original_catalog_constructor::{ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase};
 

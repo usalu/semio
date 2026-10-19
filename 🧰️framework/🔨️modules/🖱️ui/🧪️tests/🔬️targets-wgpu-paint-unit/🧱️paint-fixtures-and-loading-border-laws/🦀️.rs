@@ -42,7 +42,7 @@ fn setup(ui: &UiNode) -> (UiTree, NodeId, Theme, FontAtlas) {
     let root = tree.root.unwrap();
     let theme = Theme::default();
     let atlas = FontAtlas::builtin();
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
+    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(&mut tree, root, theme, 400.0, 400.0), "layout pass");
     (tree, root, theme, atlas)
 }
 

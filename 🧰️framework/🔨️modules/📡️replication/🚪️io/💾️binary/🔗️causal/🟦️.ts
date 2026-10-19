@@ -1,5 +1,5 @@
 //! 🔗️ Causal binary representation implements the original replication domain contracts.
-import type { MutationEnvelope, WireMutationEnvelope, ExactWireMutationEnvelope, WireFrontierSummary } from "../../../🟦️.ts";
+import type { MutationEnvelope, WireMutationEnvelope, ExactWireMutationEnvelope, WireFrontierSummary } from "../../../🔖️sync-protocol/🟦️.ts";
 import { writeVarintU64, readVarintU64, writeVarintU64Exact, writeStr, readStr, writeBytes, readBytes, writeHash32, readHash32, writeBool, readBool } from "../🟦️.ts";
 
 /** 📦️ Owned interface to the host-selected schema-less pack implementation. */

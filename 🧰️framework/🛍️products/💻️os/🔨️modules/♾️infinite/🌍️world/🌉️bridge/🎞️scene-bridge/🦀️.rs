@@ -143,13 +143,13 @@ pub struct World3dSceneCameraRecord {
 impl World3dSceneCameraRecord {
     /// 📐️ React's `worldProjectionFamily` over the delivered spec.
     pub fn projection(&self) -> CameraProjection3d {
-        self.projection.map_or(CameraProjection3d::Perspective, ui_wgpu::wgpu::projection_spec_family)
+        self.projection.map_or(CameraProjection3d::Perspective, ui_scene::math::projection_spec_family)
     }
 
     /// 📐️ React's `worldProjectionPerspectiveFov` fallback chain: the record's own `fov`, else the
     /// mode's, else the 45° `parseCameraState` default.
     fn fov_degrees(&self) -> f64 {
-        self.projection.map(|spec| f64::from(ui_wgpu::wgpu::projection_spec_fov_degrees(spec))).or(self.fov).unwrap_or(45.0)
+        self.projection.map(|spec| f64::from(ui_scene::math::projection_spec_fov_degrees(spec))).or(self.fov).unwrap_or(45.0)
     }
 }
 
@@ -200,7 +200,7 @@ pub fn sync_world3d_projection_content_frame(session_state: &mut WorldSessionSta
     }
     let Some((minimum, maximum)) = world3d_content_bounds(selection_state, scene_state) else { return };
     let key = world3d_content_bounds_key(minimum, maximum);
-    let framed = ui_wgpu::wgpu::frame_projection_orbit_to_spec_bounds(&camera_state.orbit, camera_state.projection_spec, minimum, maximum, session_state.bounds.w, session_state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
+    let framed = ui_scene::math::frame_projection_orbit_to_spec_bounds(&camera_state.orbit, camera_state.projection_spec, minimum, maximum, session_state.bounds.w, session_state.bounds.h, ui_scene::math::WORLD_PROJECTION_FRAME_PADDING);
     camera_state.projection_frame_key = Some(key);
     camera_state.projection_frame_zoom = Some(framed.zoom);
     camera_state.projection_frame_owed = false;
@@ -287,7 +287,7 @@ pub fn apply_world3d_camera_fit(session_state: &mut WorldSessionState, camera_st
         camera_state.fit_bounds_cursor = None;
         return World3dCameraFitStep::Idle;
     }
-    camera_state.orbit = ui_wgpu::wgpu::frame_orbit_to_bounds(&camera_state.orbit, minimum, maximum, session_state.bounds.w, session_state.bounds.h, request.padding);
+    camera_state.orbit = ui_scene::math::frame_orbit_to_bounds(&camera_state.orbit, minimum, maximum, session_state.bounds.w, session_state.bounds.h, request.padding);
     camera_state.fit_applied_key = Some(key);
     camera_state.fit_bounds_cursor = None;
     advance_world3d_view_revision(session_state, scene_state);
@@ -302,7 +302,7 @@ pub fn sync_world3d_scene_fit(camera_state: &mut WorldCameraState, fit_json: Opt
         .filter(|fit| fit.enabled)
         .map(|fit| World3dCameraFitRequest {
             revision: fit.revision,
-            padding: fit.padding.unwrap_or(f64::from(ui_wgpu::wgpu::WORLD_FRAME_BOUNDS_MARGIN)).max(1.0) as f32,
+            padding: fit.padding.unwrap_or(f64::from(ui_scene::math::WORLD_FRAME_BOUNDS_MARGIN)).max(1.0) as f32,
             bounds: fit
                 .bounds_min
                 .zip(fit.bounds_max)
@@ -431,7 +431,7 @@ pub struct World3dSceneBridgeCursor {
     pub scalar_slot_cursor:usize,
     pub retiring_mesh: bool,
     pub mesh_digest:Option<WorldMeshDigestCursor>,
-    pub scalar_field: Option<ui_wgpu::wgpu::World3dScalarField>,
+    pub scalar_field: Option<semio_framework_ui_declaration::ui::World3dScalarField>,
 }
 
 /// 🎯️ The plain-JSON instance lane may retain at most the objects and identifier bytes the
@@ -458,9 +458,9 @@ pub enum World3dSceneBridgeStep {
 /// 🌉️ Notes a scene whose producer published no typed snapshot of its own, so the next
 /// [`step_world3d_scene_bridge`] turns its plain-JSON mesh/instance lanes into one. Cheap and
 /// idempotent: an unchanged payload re-stages nothing.
-pub fn stage_world3d_scene_bridge(camera_state: &mut WorldCameraState, bridge_state: &mut WorldBridgeState, world: &ui_wgpu::wgpu::World3dScene) {
+pub fn stage_world3d_scene_bridge(camera_state: &mut WorldCameraState, bridge_state: &mut WorldBridgeState, world: &semio_framework_ui_declaration::ui::World3dScene) {
     let camera_digest = world3d_scene_digest(&[&world.camera_json]);
-    let field_key = world.scalar_field.as_ref().map(|field| world.lanes.iter().find(|lane| lane.lane == "scalarField").map_or_else(|| ui_wgpu::wgpu::scene_lane_hash(&ui_wgpu::wgpu::world3d_modelling_lane_text(field)), |lane| lane.hash.clone())).unwrap_or_default();
+    let field_key = world.scalar_field.as_ref().map(|field| world.lanes.iter().find(|lane| lane.lane == "scalarField").map_or_else(|| semio_framework_ui_declaration::ui::scene_lane_hash(&semio_framework_ui_declaration::ui::world3d_modelling_lane_text(field)), |lane| lane.hash.clone())).unwrap_or_default();
     let digest = world3d_scene_digest(&[&world.meshes_json, &world.instances_json, &world.camera_json, &field_key]);
     if bridge_state.scene_bridge_digest == Some(digest) || bridge_state.scene_bridge.as_ref().is_some_and(|cursor| cursor.digest == digest) {
         return;
@@ -516,13 +516,13 @@ pub fn step_world3d_scene_bridge_close(bridge_state: &mut WorldBridgeState,conte
         return true;
     };
     if !begun {
-        match ui_wgpu::wgpu::world3d_snapshot_begin_close(lease) {
+        match semio_framework_ui_declaration::ui::world3d_snapshot_begin_close(lease) {
             Ok(()) => bridge_state.scene_bridge_retired = Some((lease, true)),
             Err(_) => bridge_state.scene_bridge_retired = None,
         }
         return true;
     }
-    match ui_wgpu::wgpu::world3d_snapshot_close_step(lease) {
+    match semio_framework_ui_declaration::ui::world3d_snapshot_close_step(lease) {
         Ok(true) | Err(_) => bridge_state.scene_bridge_retired = None,
         Ok(false) => {}
     }
@@ -633,11 +633,11 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
     let draw_count = u16::try_from(draws.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
     let instance_total = u32::try_from(draws.iter().map(|(_, instances)| instances.len()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     let draw_bytes = u32::try_from(draws.iter().map(|(mesh, instances)| mesh.id.len() + instances.iter().map(|instance| instance.id.len()).sum::<usize>()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
-    let mut pages: Vec<ui_wgpu::wgpu::World3dSnapshotPage> = Vec::new();
+    let mut pages: Vec<semio_framework_ui_declaration::ui::World3dSnapshotPage> = Vec::new();
     for (ordinal, (mesh, instances)) in draws.iter().enumerate() {
         let own_instances = u32::try_from(instances.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
         let own_bytes = u32::try_from(mesh.id.len() + instances.iter().map(|instance| instance.id.len()).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
-        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Mesh);
+        let mut page = semio_framework_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Mesh);
         let span = page.push_string(&mesh.id)?;
         page.push_item(World3dSnapshotItem {
             strings: [Some(span), None, None, None],
@@ -648,8 +648,8 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
         })?;
         page.seal()?;
         pages.push(page);
-        for chunk in instances.chunks(ui_wgpu::wgpu::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY.min(ui_wgpu::wgpu::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY / (WORLD_DYNAMIC_ID_BYTE_CAPACITY + 128))) {
-            let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Instance);
+        for chunk in instances.chunks(semio_framework_ui_declaration::ui::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY.min(semio_framework_ui_declaration::ui::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY / (WORLD_DYNAMIC_ID_BYTE_CAPACITY + 128))) {
+            let mut page = semio_framework_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Instance);
             for instance in chunk {
                 let span = page.push_string(&instance.id)?;
                 let source_spans = match instance.component_source.as_ref() {
@@ -683,7 +683,7 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
         let target = camera.target.unwrap_or([0.0; 3]);
         let up = camera.up.unwrap_or([0.0, 0.0, 1.0]);
         let parallel = camera.projection().is_parallel();
-        let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
+        let mut page = semio_framework_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
         page.push_item(World3dSnapshotItem {
             numbers: [position[0], position[1], position[2], target[0], target[1], target[2], up[0], up[1], up[2], camera.fov_degrees(), camera.zoom.unwrap_or(1.0), if parallel { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0],
             number_len: 12,
@@ -696,26 +696,26 @@ pub fn publish_world3d_scene_bridge_snapshot(session_state: &mut WorldSessionSta
         return Err(World3dSnapshotFault::Capacity);
     }
     let page_count = u16::try_from(pages.len()).map_err(|_| World3dSnapshotFault::Capacity)?;
-    let item_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::item_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
-    let byte_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::byte_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let item_count = u32::try_from(pages.iter().map(semio_framework_ui_declaration::ui::World3dSnapshotPage::item_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
+    let byte_count = u32::try_from(pages.iter().map(semio_framework_ui_declaration::ui::World3dSnapshotPage::byte_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     bridge_state.scene_bridge_generation = bridge_state.scene_bridge_generation.wrapping_add(1).max(1);
     let revision = session_state.interaction_revision.checked_add(1).ok_or(World3dSnapshotFault::Capacity)?;
     let descriptor =
-        ui_wgpu::wgpu::World3dSnapshotDescriptor { revision, generation: bridge_state.scene_bridge_generation, page_count, item_count, byte_count, draw_count, draw_instance_count: instance_total, draw_byte_count: draw_bytes };
-    let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor)?;
+        semio_framework_ui_declaration::ui::World3dSnapshotDescriptor { revision, generation: bridge_state.scene_bridge_generation, page_count, item_count, byte_count, draw_count, draw_instance_count: instance_total, draw_byte_count: draw_bytes };
+    let token = semio_framework_ui_declaration::ui::world3d_snapshot_begin(descriptor)?;
     for page in pages {
-        if let Err(rejected) = ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page) {
+        if let Err(rejected) = semio_framework_ui_declaration::ui::world3d_snapshot_admit_page(token, page) {
             let fault = rejected.fault;
-            let _ = ui_wgpu::wgpu::world3d_snapshot_abort_write(token);
+            let _ = semio_framework_ui_declaration::ui::world3d_snapshot_abort_write(token);
             for _ in 0..usize::from(page_count) + 2 {
-                if ui_wgpu::wgpu::world3d_snapshot_abort_write_step(token).unwrap_or(true) {
+                if semio_framework_ui_declaration::ui::world3d_snapshot_abort_write_step(token).unwrap_or(true) {
                     break;
                 }
             }
             return Err(fault);
         }
     }
-    ui_wgpu::wgpu::world3d_snapshot_seal(token)
+    semio_framework_ui_declaration::ui::world3d_snapshot_seal(token)
 }
 
 /// 🎨️ The base color an instance without its own `color` paints with: the scene environment's
@@ -786,8 +786,8 @@ pub fn sync_world3d_scene_selection(session_state: &mut WorldSessionState, selec
 /// `world3dSelectionWithPickFilter` (`🌐️World3dHost/📏️modelling`): hover and selection reach only the chosen
 /// granularity, components of another granularity are dropped, and no filter leaves the guest-authored channels alone.
 /// Idempotent: it advances the view revision only when it changed something.
-pub fn apply_world3d_pick_filter(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, scene_state: &mut WorldSceneState, filter: Option<ui_wgpu::wgpu::World3dPickGranularity>) {
-    use ui_wgpu::wgpu::World3dPickGranularity as Granularity;
+pub fn apply_world3d_pick_filter(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, scene_state: &mut WorldSceneState, filter: Option<semio_framework_ui_declaration::ui::World3dPickGranularity>) {
+    use semio_framework_ui_declaration::ui::World3dPickGranularity as Granularity;
     let Some(filter) = filter else { return };
     let (granularity, targets) = match filter {
         Granularity::Shape => ("mesh", WorldSelectionTargets { vertex: false, edge: false, face: false }),
@@ -828,8 +828,8 @@ pub fn srgb_byte_to_linear(byte: u8) -> f32 {
 }
 
 /// 🌡️ Validates the original field cardinality before any mesh attribute is displaced.
-pub fn world3d_scalar_field_fits(data: &WorldMeshBuffers, field: &ui_wgpu::wgpu::World3dScalarField) -> bool {
-    use ui_wgpu::wgpu::World3dScalarDomain;
+pub fn world3d_scalar_field_fits(data: &WorldMeshBuffers, field: &semio_framework_ui_declaration::ui::World3dScalarField) -> bool {
+    use semio_framework_ui_declaration::ui::World3dScalarDomain;
     let expected = match field.domain {
         World3dScalarDomain::Vertex => data.vertex_count(),
         World3dScalarDomain::Face => data.indices.len() / 3,
@@ -837,8 +837,8 @@ pub fn world3d_scalar_field_fits(data: &WorldMeshBuffers, field: &ui_wgpu::wgpu:
     field.values.len()==expected
 }
 
-pub fn world3d_apply_scalar_field_colors(data:&mut WorldMeshBuffers,field:&ui_wgpu::wgpu::World3dScalarField){
-    use ui_wgpu::wgpu::World3dScalarDomain;
+pub fn world3d_apply_scalar_field_colors(data:&mut WorldMeshBuffers,field:&semio_framework_ui_declaration::ui::World3dScalarField){
+    use semio_framework_ui_declaration::ui::World3dScalarDomain;
     let bytes = field.color_bytes();
     let linear: Vec<[f32; 4]> = bytes.chunks_exact(3).map(|rgb| [srgb_byte_to_linear(rgb[0]), srgb_byte_to_linear(rgb[1]), srgb_byte_to_linear(rgb[2]), 1.0]).collect();
     let colored: Vec<String> = data.attributes.iter().filter(|(_, attribute)| attribute.semantic == semio_framework::MeshAttributeSemantic::Color).map(|(name, _)| name.clone()).collect();
@@ -864,7 +864,7 @@ pub fn world3d_apply_scalar_field_colors(data:&mut WorldMeshBuffers,field:&ui_wg
 ///
 /// 🧲️ Caps applied at PARSE time (see `world_pick_targets_from_json`), so no later reader has to
 /// know the bound and the retained set can never exceed it however large the lane arrives.
-pub fn sync_world3d_scene_document_lanes(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, scene_state: &mut WorldSceneState, bridge_state: &mut WorldBridgeState, assets_state: &mut WorldAssetsState, world: &ui_wgpu::wgpu::World3dScene) {
+pub fn sync_world3d_scene_document_lanes(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, scene_state: &mut WorldSceneState, bridge_state: &mut WorldBridgeState, assets_state: &mut WorldAssetsState, world: &semio_framework_ui_declaration::ui::World3dScene) {
     let digest = world3d_scene_digest(&[
         world.vortices_json.as_deref().unwrap_or(""),
         world.attractions_json.as_deref().unwrap_or(""),

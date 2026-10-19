@@ -1,33 +1,35 @@
 //! 🧪️ The sheet window: which sheet it shows, the records of the paper, the viewports and the marks, the placement of a view's records into a window, the picking of viewports and the accessible labels in both languages.
 
-use crate::editor::bim::kit::{path, path_record, text_record, Paint};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PlacedViewport;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{path, path_record, text_record, Paint};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::PlacedViewport;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{canvas_surface, meta_record, Rgba};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{canvas_surface, meta_record, Rgba};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::sheets::{self, ink::sheet_marks, ink::Mark, ink::TitleLabels};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::InteractionRef;
 #[allow(unused_imports)]
 use semio_framework_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
 use semio_framework_plugin::WindowOptions;
-use crate::editor::bim::modes::edit::windows::sheet::{INK};
-use crate::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
-use crate::editor::bim::modes::edit::windows::sheet::*;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{ViewMap, PaperRect};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::INK;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::{records, definition, WINDOW_KIND_ID, BODY_KEY, active_sheet, placed_records, pick, handle_of, title_labels};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{ViewMap, PaperRect};
 
 fn ids(records: &[DslValue]) -> Vec<String> {
     records.iter().filter_map(|record| record.get("id").and_then(DslValue::as_str).map(str::to_string)).collect()
@@ -47,7 +49,7 @@ fn the_window_shows_its_sheet_while_it_exists_else_the_first_in_print_order() {
     assert_eq!(shown("sh-sections").as_deref(), Some("sh-sections"));
     assert_eq!(shown("sh-gone").as_deref(), Some("sh-plans"));
     assert_eq!(shown("").as_deref(), Some("sh-plans"));
-    assert_eq!(active_sheet(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &BimSheetWindowConfig::default()), None);
+    assert_eq!(active_sheet(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &BimSheetWindowConfig::default()), None);
 }
 
 #[test]
@@ -77,7 +79,7 @@ fn a_selected_viewport_is_outlined_in_the_accent_colour_and_a_finding_in_red() {
     assert!(ids(&selected).contains(&"selected:vp-first".to_string()));
     assert!(!ids(&selected).contains(&"selected:vp-ground".to_string()));
     let mut crowded = house_with_sheets();
-    crowded.viewports.get_mut("vp-first").unwrap().position = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 40.0, y: 40.0 };
+    crowded.viewports.get_mut("vp-first").unwrap().position = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 40.0, y: 40.0 };
     let inference = inferred(&crowded);
     let crowded = records(inference.sheet_layouts.get("sh-plans"), &inference, &[], "select", &BimLabels::NATIVE_EN);
     assert!(ids(&crowded).iter().any(|id| id.starts_with("finding:")), "two windows on top of each other raise a finding");
@@ -85,7 +87,7 @@ fn a_selected_viewport_is_outlined_in_the_accent_colour_and_a_finding_in_red() {
 
 #[test]
 fn a_missing_sheet_paints_the_empty_text_in_both_languages() {
-    let inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::default();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::default();
     for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
         let found = records(None, &inference, &[], "select", labels);
         let text = found.iter().find(|record| record.get("id").and_then(DslValue::as_str) == Some("empty")).expect("the empty text");
@@ -100,7 +102,7 @@ fn the_records_of_a_view_are_renamed_below_the_viewport_and_scaled_into_its_wind
         viewport: "vp-1".into(),
         view: "v-1".into(),
         label: "Plan".into(),
-        kind: crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan,
+        kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Plan,
         scale: 100,
         window: PaperRect { x: 30.0, y: 40.0, width: 90.0, height: 70.0 },
         map: ViewMap { min_x: -0.5, max_y: 6.5, mm: 10.0 },
@@ -119,7 +121,7 @@ fn the_records_of_a_view_are_renamed_below_the_viewport_and_scaled_into_its_wind
 
 #[test]
 fn a_transform_the_record_already_had_is_composed_not_replaced() {
-    let placed = PlacedViewport { viewport: "vp-1".into(), view: "v-1".into(), label: String::new(), kind: crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan, scale: 50, window: PaperRect { x: 10.0, y: 10.0, width: 50.0, height: 50.0 }, map: ViewMap { min_x: 0.0, max_y: 0.0, mm: 20.0 }, empty: false, cropped: false };
+    let placed = PlacedViewport { viewport: "vp-1".into(), view: "v-1".into(), label: String::new(), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Plan, scale: 50, window: PaperRect { x: 10.0, y: 10.0, width: 50.0, height: 50.0 }, map: ViewMap { min_x: 0.0, max_y: 0.0, mm: 20.0 }, empty: false, cropped: false };
     let rotated = text_record("note", (1.0, 2.0), "x", 0.2, INK);
     let moved = placed_records(vec![rotated], &placed);
     let matrix: Vec<f64> = moved[0].get("transform").and_then(DslValue::as_array).expect("a transform").iter().filter_map(DslValue::as_f64).collect();

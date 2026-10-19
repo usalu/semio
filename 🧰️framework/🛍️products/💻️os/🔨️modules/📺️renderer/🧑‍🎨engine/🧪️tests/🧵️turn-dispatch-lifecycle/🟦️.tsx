@@ -1,10 +1,10 @@
 /** 🧵 submitPluginTurn: captured lifecycle scheduling, UI owner composition, command pages and acknowledgement crossings. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import type { UiNodeRecord } from "@semio-tech/framework";
-import type { ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import type { ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import type { ShardInstanceLifecycleLease } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts";
-import type { ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
+import type { ActivationRegistry } from "@semio-tech/framework-kernel";
+import type { ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client";
+import type { ShardInstanceLifecycleLease } from "@semio-tech/framework-actor/shard-client";
+import type { ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import type { PluginWasmHandle, WireTurnResult } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { flushMicrotasks, createPluginRuntimeSupport, type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
@@ -384,7 +384,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
         const schema = { $ref: `${rendererModule.$id}#/$defs/PluginRuntimeTypedOperationSettlementV1` };
         expect(new Ajv({ strict: true }).addSchema(rendererModule).compile(schema)(settlement)).toBe(true);
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const token = Buffer.alloc(25);
         token.writeUInt32LE(fixture.wire.receiver, 0);
         token.writeBigUInt64LE(BigInt(fixture.wire.operation), 4);
@@ -414,7 +414,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
 
       it("retires every result page one turn carried in a single acknowledgement crossing", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const operations = 4;
         const tokenBytes = (operation: number): Buffer => {
           const token = Buffer.alloc(25);
@@ -450,7 +450,7 @@ export async function registerTurnDispatchLifecycleTests(vitest: PluginRuntimeVi
         const { Buffer } = await import("node:buffer");
         const { default: equal } = await import("fast-deep-equal");
         const { default: settlement } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/📬️typed-operation-settlement.json");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const results: WireTurnResult[] = fixture.wire.lanes.map((lane, sequence) => {
           const header = Buffer.alloc(30);
           header.writeUInt32LE(fixture.wire.receiver, 0);

@@ -51,6 +51,7 @@ export * from "../../🔨️modules/🛂️manifest/📋️app-definition-refres
 export * from "@semio-tech/framework-time-travel-ts/actions";
 export * from "@semio-tech/framework-tool-run-ts/actions";
 export * from "../../🔨️modules/🎓️onboarding/🟦️.ts";
+export * from "../../🔨️modules/🖱️ui/🔨️modules/🎯️canvas-pick-targets/🟦️.ts";
 export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // 🕹️wave-2b: named (not `export *`) — the 🕹️interaction module's own `InteractionDefinition`/`MergeMode`/…
 // family is already re-exported above via `🛂️manifest` (owned-schema-generated mirror of the same Rust types),

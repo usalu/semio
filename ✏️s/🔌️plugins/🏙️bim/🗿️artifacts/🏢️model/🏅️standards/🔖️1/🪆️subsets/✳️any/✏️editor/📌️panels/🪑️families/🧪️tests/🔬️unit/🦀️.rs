@@ -1,20 +1,21 @@
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, inferences::ModelInference};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::components::{placeable, wall_mounted};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{placeable, wall_mounted};
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 #[allow(unused_imports)]
-use crate::editor::bim::panels::properties::input_row;
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::input_row;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
 #[allow(unused_imports)]
 use semio_framework_plugin::tree_item_desc;
 #[allow(unused_imports)]
@@ -39,8 +40,8 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_ui_locale::Label;
 #[allow(unused_imports)]
 use semio_framework_ui_locale::LabelText;
-use crate::editor::bim::panels::families::*;
-use crate::editor::bim::fixture::{furnished, placed};
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::families::{render, BODY_KEY, size_of, selected};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{furnished, placed};
 use protocol::Inference;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
@@ -49,7 +50,7 @@ fn text(snapshot: &ModelSnapshot, library: &[&str], locale: Locale) -> String {
     let own: Vec<String> = library.iter().map(|id| id.to_string()).collect();
     let view = ViewModel::new(locale, Terminology::Native);
     let inference = ModelInference::infer(snapshot).expect("infers");
-    let node = render(snapshot, &inference, crate::editor::bim::terminology::bim_labels(&view), &own, &TreeWindows::for_body(&view, BODY_KEY)).expect("the family browser renders");
+    let node = render(snapshot, &inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &own, &TreeWindows::for_body(&view, BODY_KEY)).expect("the family browser renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
@@ -87,7 +88,7 @@ async fn the_selected_family_shows_its_measures_and_the_rows_that_place_or_open_
 async fn a_model_without_a_placeable_family_says_so() {
     let mut bare = placed();
     bare.components.clear();
-    bare.families.retain(|_, family| family.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile);
+    bare.families.retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
     assert!(text(&bare, &[], Locale::En).contains("The model has no family to place"));
     assert!(text(&bare, &[], Locale::De).contains("keine Familie zum Platzieren"));
 }

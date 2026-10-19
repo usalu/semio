@@ -19,10 +19,30 @@ use std::collections::BTreeSet;
 /// reads its own work and nothing a concurrent law allocates.
 #[global_allocator]
 static PUZZLE2D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
+use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, VcsArtifactApp, ViewModel, ViewWindowInstance};
 use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::board_snapshot_nodes;
 
-pub type Puzzle2dApp = VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>;
+/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// scope pays the caller's terminal retirement after the app's paid close.
+pub struct Puzzle2dApp(pub VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+
+impl std::ops::Deref for Puzzle2dApp {
+    type Target = VcsArtifactApp<EditorApp<Puzzle2dPlayApp>>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for Puzzle2dApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+/// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
+fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
+    failure.primary_fault().cloned().unwrap_or_else(|| Fault::from(format!("{failure:?}")))
+}
 
 pub fn meta(actor: &str) -> ActionMeta {
     semio_framework_plugin::artifact_app_laws::meta(actor)
@@ -68,9 +88,10 @@ fn puzzle2d_manifest_for_tests() -> App {
 /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
 /// utility contract are enforced exactly as in production.
 pub fn app_with_registry() -> Puzzle2dApp {
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Puzzle2dPlayApp>>(puzzle2d_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
-    app
+    Puzzle2dApp(app, scope)
 }
 
 pub fn window_view(kind: &str, id: &str) -> ViewModel {
@@ -153,8 +174,8 @@ fn settle(app: &mut Puzzle2dApp, result: Result<InvocationResult, Fault>) -> Res
             drain_settled(app, &mut result, &mut fault)?;
             return fault.map_or(Ok(result), Err);
         }
-        semio_s_plugin_puzzle_jobs::testing::maintain(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
-        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))?;
+        semio_s_plugin_puzzle_jobs::testing::maintain(&mut app.0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, app.1.cx())?;
+        block_on(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
         // counts the outboxes and the mounted operations but NOT a page already presented and waiting
         // for its ACK, so a turn that leaves a second page (or the terminal completion that CARRIES
@@ -199,10 +220,10 @@ pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, windo
             | "hostEvent"
     ) {
         let dsl_args = args.map(semio_framework_value::DslValue::from);
-        let result = block_on(app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)));
+        let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, dsl_args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted))).map_err(fault_of);
         return settle(app, result);
     }
-    let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let result = block_on(app.0.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
     settle(app, result)
 }
 
@@ -210,7 +231,7 @@ pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, windo
 /// such as the window's active utility.
 pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
     let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-    let result = block_on(app.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let result = block_on(app.0.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
     settle(app, result)
 }
 
@@ -237,7 +258,7 @@ pub fn load_example(app: &mut Puzzle2dApp, example_id: &str) -> usize {
     let mut loaded = 0;
     for effect in &result.requested_effects {
         if let Effect::LoadDocument { pack, spr } = effect {
-            block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the example loads");
+            block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the example loads");
             loaded += 1;
         }
     }
@@ -280,21 +301,21 @@ pub fn render_body(app: &mut Puzzle2dApp, body_key: &str) -> String {
 }
 
 pub fn render_body_with_view(app: &mut Puzzle2dApp, body_key: &str, view_state: &ViewModel) -> String {
-    let tree = block_on(app.render(body_key, None, view_state)).expect("render");
-    let mut stack = vec![&tree.root];
-    while let Some(node) = stack.pop() {
-        if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-            if surface.doc_schema.as_str() == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                // 🚚️ The snapshot rides an out-of-doc lane (`Board2dSceneLane::Snapshot`) — a bare decode reads an empty `snapshot_json`.
-                let scene: semio_framework_ui_scene::Board2dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("decode board scene with lanes");
-                return semio_framework_pack_json::to_json_string(&json!({ "schema": surface.doc_schema, "board2d": scene }));
+    let scene = block_on(semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx(), |root| {
+        let mut stack = vec![root];
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::Board2dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    let scene: semio_framework_ui_scene::Board2dScene = semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("decode board scene with lanes");
+                    return Some(semio_framework_pack_json::to_json_string(&json!({ "schema": surface.doc_schema, "board2d": scene })));
+                }
             }
+            stack.extend(node.children.iter());
         }
-        stack.extend(node.children.iter());
-    }
-    // 🪟️ A built tree's children now travel as retained pages, so a bare `serde_json` of the root
-    // is refused — the projection helper walks and retires them exactly (5d's context already did).
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire rendered node")
+        None
+    }))
+    .expect("render");
+    scene.unwrap_or_else(|| block_on(semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx())).expect("render projection"))
 }
 
 /// 🪟️ `body_key` rendered as the window instance `window_id`. The instance travels in the view state
@@ -309,16 +330,7 @@ pub fn render_window(app: &mut Puzzle2dApp, body_key: &str, window_id: &str) -> 
 /// two-app law did not get there.
 #[track_caller]
 pub fn close_app(app: &mut Puzzle2dApp) {
-    for _ in 0..1_048_576 {
-        if app.close_terminal_is_empty() {
-            return;
-        }
-        let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close quote");
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        if matches!(PluginApp::close_step(app, grant).expect("Puzzle 2D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-            break;
-        }
-    }
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("Puzzle 2D registered app close");
     assert!(app.close_terminal_is_empty(), "Puzzle 2D registered app close did not reach terminal-empty ownership");
 }
 
@@ -365,7 +377,7 @@ pub fn seed_board(app: &mut Puzzle2dApp, board: &Value) {
     use protocol::OpText as _;
     let typed: crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(board)).expect("the seed board admits");
     let text = board_genesis_kinds(&typed).iter().map(|kind| kind.print_op()).collect::<Vec<_>>().join("\n");
-    block_on(app.ingest_operations_text(&text)).expect("seed the board");
+    block_on(app.ingest_operations_text(&text, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("seed the board");
 }
 
 /// 📥️ Dispatches `importSnapshot` for `board` and loads the whole document it requests, as the host does with an
@@ -376,7 +388,7 @@ pub fn import_board(app: &mut Puzzle2dApp, board: &Value) {
     let mut loaded = 0;
     for effect in result.requested_effects {
         if let Effect::LoadDocument { pack, spr } = effect {
-            block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the import loads");
+            block_on(semio_framework_plugin::app::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("the import loads");
             loaded += 1;
         }
     }

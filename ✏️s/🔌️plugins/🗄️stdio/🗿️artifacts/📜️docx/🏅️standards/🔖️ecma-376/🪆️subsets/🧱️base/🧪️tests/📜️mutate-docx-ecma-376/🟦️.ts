@@ -15,7 +15,7 @@ import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/te
  *  `➡️after.docx`, and the real README itself is the expected package of every inverse and the identity round trip — handed to the
  *  `docx-ecma-376-jszip-compare-v1` pipeline as `expected-docx`, where the jszip reader reads it and the subject's
  *  `actual-docx`. */
-import { committedArtifact } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { committedArtifact } from "@semio-tech/framework/test/adapter";
 
 //#region 🧭️Adapter
 const DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";

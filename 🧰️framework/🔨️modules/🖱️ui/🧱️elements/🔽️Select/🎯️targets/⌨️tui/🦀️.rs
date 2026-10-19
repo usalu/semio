@@ -20,7 +20,7 @@ fn cycle(s: &mut SelectState, forward: bool) -> WidgetSignal {
     WidgetSignal::SelectionChanged(s.index)
 }
 
-pub(crate) fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if s.options.is_empty() {
         return None;
     }
@@ -33,7 +33,7 @@ pub(crate) fn select_on_key(s: &mut SelectState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn select_on_mouse(s: &mut SelectState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn select_on_mouse(s: &mut SelectState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     if s.options.is_empty() || !rect.contains(event.pos) {
         return None;
     }
@@ -45,7 +45,7 @@ pub(crate) fn select_on_mouse(s: &mut SelectState, rect: Rect, event: &MouseEven
     }
 }
 
-pub(crate) fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_select(s: &SelectState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     let fg = if focused { theme.role(Role::Accent) } else { theme.role(Role::Foreground) };
     let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Panel), |c| c.bg);
     let value = s.options.get(s.index).map_or("", String::as_str);

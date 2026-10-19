@@ -21,9 +21,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 
 /** ⏱️ The first `server/discover` answer waits on a real catalog compile over every installed plugin

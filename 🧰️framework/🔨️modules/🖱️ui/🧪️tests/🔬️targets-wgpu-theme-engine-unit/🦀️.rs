@@ -23,5 +23,5 @@ fn every_theme_metric_is_a_multiple_of_the_shared_ui_spacing() {
         assert!((multiple - multiple.round()).abs() < 1e-3 || (multiple * 1000.0).fract().abs() < 1.0, "theme.{field} = {value} is not a `--ui-spacing` multiple ({multiple})");
     }
     assert_eq!(theme.control_height_small, step * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING as f32);
-    assert_eq!(crate::wgpu::chrome::ICON_TINY, step * ui_styling::metrics::chrome::ICON_INLINE_UI_SPACING as f32);
+    assert_eq!(semio_framework_ui_wgpu_layout::chrome::ICON_TINY, step * ui_styling::metrics::chrome::ICON_INLINE_UI_SPACING as f32);
 }

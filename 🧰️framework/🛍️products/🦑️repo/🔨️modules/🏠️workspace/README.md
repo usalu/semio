@@ -7,6 +7,7 @@ with, the `📋️config.toml` reader, and the owned glob and gitignore matchers
 
 - `📦️packages/🦀️rust` — `semio-framework-repo-workspace`
 - `📦️packages/🐹️go` — `github.com/usalu/semio/repo/workspace`
+- `📦️packages/🐹️go/🏖️sandbox` — `github.com/usalu/semio/repo/workspace/sandbox`, a nested Go module: the hermetic harness (sandboxed test runs, root guard, fixture repositories) every Go module's tests run under; it is imported by tests only, so no test-only code ships in the production package
 
 ## 🧪️ Tests
 
@@ -16,4 +17,4 @@ One `🥒️.feature` per case under `🧪️tests/` with an adapter per impleme
 decisions.
 
 `🧭️root-discovery`, `🃏️glob-matching`, `🙈️ignore-precedence`, `🚫️posix-negation-class`,
-`🐙️gitignore-divergence`.
+`🐙️gitignore-divergence`, `🛡️hermetic-root-guard` and `🏖️sandbox` (Go-only proofs of the unbound workspace and of the sandbox).

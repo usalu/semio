@@ -17,9 +17,9 @@ use std::sync::{Arc,Weak};
 // every `BrepKernel` method is `async fn`, which is not dyn-compatible (E0038) — `dyn BrepKernel`
 // could not have compiled as-is.
 
-#[path = "🧰️helpers/🦀️.rs"]
-mod helpers;
-pub use helpers::{
+#[path = "🧰️operator-registration/🦀️.rs"]
+mod operator_registration;
+pub use operator_registration::{
     brep_schema, classify_number, domain_span, empty_list_value, geometry_channel, geometry_dict, geometry_schema, kind_label, list_channel, list_indices, map_kernel_error, number_channel, number_dictionary, operator_info_with_outputs, out_area,
     out_box, out_center, out_classification, out_compound, out_curvature, out_curve, out_distance, out_face, out_face_result, out_geometry, out_geometry_result, out_length, out_normal, out_obj, out_point, out_point_result, out_report, out_solid,
     out_span, out_stl, out_surface, out_vertex, out_volume, out_wire, point_channel, point_dictionary, points_to_grid, read_channel_number, read_geometry, read_geometry_list, read_geometry_list_or_empty, read_list, read_nested_point_lists,

@@ -4,7 +4,7 @@ import { vizPathRecorder, type VizPathCommand } from "../✒️mark/🟦️.ts";
 import { drawVizSymbol, vizCurve } from "../✒️mark/💠️curve-registry-and-symbols/🟦️.ts";
 import { vizArc, vizArea, vizLine, vizLink, vizRibbon, type VizLinkKind } from "../🥧shape/🟦️.ts";
 import { formatVizTime, formatVizValue } from "../🔢format/🟦️.ts";
-import { inferVizLayerTable } from "../🧮transform/🟦️.ts";
+import { inferVizLayerTable } from "../🧮transform/🎛️layer-inference/🟦️.ts";
 import { vizGeoProjection } from "../🌍geo/🟦️.ts";
 import { buildVizCoordinate, coordinateGeographic } from "../🧭coordinate/🟦️.ts";
 import { buildVizScale, type VizScale } from "../📐scale/🟦️.ts";

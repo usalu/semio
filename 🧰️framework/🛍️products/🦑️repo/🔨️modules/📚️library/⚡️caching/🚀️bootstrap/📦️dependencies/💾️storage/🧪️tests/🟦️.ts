@@ -1,4 +1,4 @@
-import{withBuildTestInvocationV1}from"../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -58,7 +58,7 @@ test("closed binding receipts agree with Ajv and independent SQLite projection",
 
 test("portable install material excludes only top-level task metadata against independent SQLite and Ajv",()=>{
  const ajv=new Ajv({strict:true}),manifest=ajv.compile({$schema:installSchema.$schema,$defs:installSchema.$defs,$ref:"#/$defs/InstallManifest"}),mutation=ajv.compile({$schema:installSchema.$schema,$defs:installSchema.$defs,$ref:"#/$defs/Mutation"}),database=new Database(":memory:");
- try{expect(ajv.validate(installSchema,installCorpus.protocol)).toBe(true);for(const row of installCorpus.mutations){expect(mutation(row)).toBe(true);const actual=[row.before,row.after].map(value=>javascriptDependencyInstallManifestV1(value));for(const[index,value]of[row.before,row.after].entries()){const oracle=database.query("SELECT json_remove(?, '$.semio') AS document").get(JSON.stringify(value)) as {document:string};expect(JSON.parse(actual[index]!)).toEqual(JSON.parse(oracle.document));expect(manifest(JSON.parse(actual[index]!))).toBe(true);}expect(actual[0]===actual[1]).toBe(row.sameInstallMaterial);expect(createHash("sha256").update(actual[0]!).digest("hex")===createHash("sha256").update(actual[1]!).digest("hex")).toBe(row.sameInstallMaterial);}for(const value of[null,[],true,"manifest"])expect(()=>javascriptDependencyInstallManifestV1(value)).toThrow("Original Bun manifest object required");expect(javascriptDependencyInstallManifestV1({z:{z:1,a:2},a:[2,1],semio:{ignored:true}})).toBe('{"a":[2,1],"z":{"a":2,"z":1}}');}finally{database.close();}
+ try{expect(ajv.validate(installSchema,installCorpus.protocol)).toBe(true);for(const row of installCorpus.mutations){expect(mutation(row)).toBe(true);const actual=[row.before,row.after].map(value=>javascriptDependencyInstallManifestV1(value));for(const[index,value]of[row.before,row.after].entries()){const oracle=database.query("SELECT json_remove(?, '$.semio', '$.scripts') AS document").get(JSON.stringify(value)) as {document:string};expect(JSON.parse(actual[index]!)).toEqual(JSON.parse(oracle.document));expect(manifest(JSON.parse(actual[index]!))).toBe(true);}expect(actual[0]===actual[1]).toBe(row.sameInstallMaterial);expect(createHash("sha256").update(actual[0]!).digest("hex")===createHash("sha256").update(actual[1]!).digest("hex")).toBe(row.sameInstallMaterial);}for(const value of[null,[],true,"manifest"])expect(()=>javascriptDependencyInstallManifestV1(value)).toThrow("Original Bun manifest object required");expect(javascriptDependencyInstallManifestV1({z:{z:1,a:2},a:[2,1],semio:{ignored:true},scripts:{x:"y"}})).toBe('{"a":[2,1],"z":{"a":2,"z":1}}');}finally{database.close();}
 });
 
 test("an actual recheck delayed in original control refuses settlement after callback release against SQLite and Ajv",async()=>{
@@ -225,7 +225,7 @@ test("projected workspace edges beyond the descriptor binding bound are all rewr
   mkdirSync(join(generationRoot,"node_modules"),{recursive:true});
   for(const[index,member]of members.entries()){const directory=join(workspace,"s",member);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"package.json"),JSON.stringify({name:"@t/"+member}));mkdirSync(join(generationRoot,"w",String(index),"node_modules","@t"),{recursive:true});}
   const holder=join(generationRoot,"w","0","node_modules","@t");for(let index=1;index<count;index++)link(join("..","..","..",String(index)),join(holder,"p"+index));
-  const row={plan:{generation,directory:generationRoot,scope:"s",members,sources:members.map(member=>({path:join(workspace,"s",member,"package.json"),kind:"file",bytes:readFileSync(join(workspace,"s",member,"package.json"))}))}};
+  const row={scope:"s",plan:{generation,directory:generationRoot,members,sources:members.map(member=>({path:join(workspace,"s",member,"package.json"),kind:"file",bytes:readFileSync(join(workspace,"s",member,"package.json"))}))}};
   const control={publish:async()=>{},yieldContinuation:async()=>{}};
   await descriptors.withArtifactRelativeDirectoryV1(base,()=>{},async directory=>storage.publishJavascriptDependencyExportsDescriptorV1(directory,workspace,base,row as never,control as never,()=>{}));
   const oracle=spawnSync("python3",["-I","-c","import os,sys,json;h=sys.argv[1];print(json.dumps({n:os.readlink(os.path.join(h,n)) for n in sorted(os.listdir(h))}))",holder],{encoding:"utf8"});expect(oracle.status).toBe(0);
@@ -246,4 +246,16 @@ test("declared provider manifests keep browser and imports fields outside the bu
  const profile=read(text,()=>{});expect(profile.name).toBe("@t/provider");expect(profile.packageVersion).toBe("1.2.3");
  expect(read(versionless,()=>{}).packageVersion).toBeNull();
  expect(Bun.semver.satisfies("1.2.3","*")).toBe(true);
+});
+
+test("unready store generations are discarded only when exact, unready and directly under the generation container",async()=>{
+ const {discardUnreadyJavascriptDependencyGenerationV1:discard}=await import("../🟦️.ts"),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original dependency path artifact root required");
+ const {existsSync}=await import("node:fs"),root=mkdtempSync(join(artifacts,"ug-")),name="a".repeat(20),directory=join(root,"j",name);
+ try{
+  mkdirSync(join(directory,"w","0"),{recursive:true});writeFileSync(join(directory,"w","0","package.json"),"{}");
+  expect(()=>discard(root,join(root,"j","short"))).toThrow("Exact unready store generation directory required");
+  expect(()=>discard(root,join(directory,"w"))).toThrow("Exact unready store generation directory required");
+  writeFileSync(join(directory,"bindings.json"),"{}");expect(()=>discard(root,directory)).toThrow("Exact unready store generation directory required");expect(existsSync(directory)).toBe(true);
+  rmSync(join(directory,"bindings.json"));discard(root,directory);expect(existsSync(directory)).toBe(false);expect(existsSync(join(root,"j"))).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

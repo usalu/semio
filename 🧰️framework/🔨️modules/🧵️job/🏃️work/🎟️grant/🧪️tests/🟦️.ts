@@ -12,19 +12,22 @@ test("retained work funding matches shared independent decimal oracle",()=>{
 });
 test("retained command host validates original work demand before calling producer",async()=>{
  const source=readModuleTreeSource(new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",import.meta.url));
- const quote=source.indexOf("let demand = match work.work_demands");
- const entry=source.indexOf("let step = work.step(&input, cx)",quote);
+ const quote=source.indexOf("let demand = work.work_demands(&input");
+ const entry=source.indexOf("let step = work.step(&input, cx)?;",quote);
  expect(quote>=0&&entry>quote).toBe(true);
  const boundary=source.slice(quote,entry);
- expect(boundary.includes("cx.retained_work_can_enter(demand)")).toBe(true);
- expect(boundary.includes("return StepOutcome::Yield")).toBe(true);
- expect(source.includes("artifact command normal-work demand is undeclared")).toBe(true);
+ expect(boundary.includes("if !cx.retained_work_can_enter(demand)")).toBe(true);
+ expect(boundary.includes("RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand)")).toBe(true);
+ expect(boundary.includes("retained command normal-work demand exceeds its original funding")).toBe(true);
+ expect(boundary.match(/return Ok\(None\);/g)?.length).toBe(2);
+ expect(source.split("work.step(&input, cx)").length).toBe(2);
 });
 test("worker normal funding stays independent of CPU fuel",async()=>{
  const demand={copyBytes:24,capacityBytes:17,releaseBytes:0,depth:1};
  for(const row of fixture.contexts){const budget=new RetainedWorkBudget(row.grant);expect(budget.canEnter(demand)).toBe(row.accepted);expect(budget.remaining()).toEqual(row.grant);expect(new Decimal(row.grant.maximumCapacityBytes).gte(demand.capacityBytes)&&new Decimal(row.grant.maximumCopyBytes).gte(demand.copyBytes)).toBe(row.accepted);}
- const source=await Bun.file(new URL("../../../🦀️.rs",import.meta.url)).text();
- expect(source.includes("retained_work: retained_work::RetainedWorkBudget::new(budget.work_grant)")).toBe(true);
- expect(source.includes(".with_retained_work(config.work_grant)")).toBe(true);
- expect(source.includes("pub fn retained_work_charge")).toBe(true);
+ const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));
+ expect(source.includes("pub fn retained_work_can_enter(&self,demand:RetirementDemand)->bool{retained_work::RetainedWorkBudget::new(self.retained_grant()).can_enter(demand)}")).toBe(true);
+ expect(source.includes("pub fn retained_grant(&self)->RetainedCloneGrant")).toBe(true);
+ expect(source.includes("pub fn consume_retained(&mut self,progress:RetainedCloneProgress)")).toBe(true);
+ expect(/work_grant|NO_RETAINED_WORK|retained_work:\s*retained_work::/.test(source)).toBe(false);
 });

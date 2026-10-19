@@ -2,10 +2,11 @@
 //! length), both parts share type, top and height, and openings hosted beyond the split point change host with a re-based offset while
 //! the others stay.
 
-use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
-use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
 static WITH_OPENINGS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json"));

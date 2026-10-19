@@ -2,7 +2,7 @@
 import { SolidRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { EMPTY_MODEL_DIFF, ModelDiff, SpatialKernel, SpatialPreviewKernel, applyModelDiff, isEmptyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import { DisplayModel } from "../../🎬️actions/🟦️.ts";
+import { DisplayModel } from "../../🎬️actions/🖼️display-model/🟦️.ts";
 import { ActionRegistry } from "../../🎬️actions/🧬️action-contract/🟦️.ts";
 import { ConstructRunner } from "../../🎬️actions/🏃️action-execution/🟦️.ts";
 import { InteractionSpatialResolved, StateEngineProvider } from "../../🎬️actions/🎰️interaction-state/🟦️.ts";

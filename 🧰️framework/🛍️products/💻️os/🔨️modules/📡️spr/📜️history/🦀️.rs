@@ -18,6 +18,13 @@ use protocol::format::{Blake3Hasher, FrameCursor, RecoveryMode, ReverseFrameCurs
 use protocol::ProtocolError;
 use protocol::wire::{DictBuilder, DictReader, ProtocolLimits, RecordHasher};
 use std::collections::{HashMap, HashSet};
+use protocol::codec::{HistoryReadLimits, OriginalWireSourceIdentity, RetainedWireByteSource};
+use semio_framework_value::native_decoding::allocation::NativeForwardedDecodeReceipt;
+use semio_framework_value::native_decoding::{NativeDecodeAllocation, NativeForwardedDecodeControl};
+use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress};
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::{admit_owned_retirement, owned_retirement_birth_bytes, ErasedSnapshotRetirement, NativeDecodeControl, NativeDecodeRetirementRecipient, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use std::mem::{size_of_val, ManuallyDrop};
 
 
 // Whole-file compile: HistoryLog <-> .spr bytes, using protocol::format::SprWriter/FrameCursor.
@@ -47,289 +54,403 @@ pub struct DecodeOptions {
     pub limits: ProtocolLimits,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RetainedHistoryDecodeStep {
-    Pending { completed_bytes: u64, total_bytes: u64, decoded_records: u64 },
-    Ready,
+/// 🚦️ Caller authority of one actual receiving turn: the decoder asks it at every checkpoint and never owns it.
+pub trait RetainedHistoryTurn {
+    fn should_yield(&self) -> bool;
+    fn is_cancelled(&self) -> bool;
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum RetainedHistoryDecodePhase {
-    Verify,
-    Decode,
-    Validate,
-    Ready,
-    Fault,
+/// 🛤️ A turn that never yields and is never cancelled, for callers that bound their work through the grant alone.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct RetainedHistoryUninterrupted;
+
+impl RetainedHistoryTurn for RetainedHistoryUninterrupted {
+    fn should_yield(&self) -> bool {
+        false
+    }
+    fn is_cancelled(&self) -> bool {
+        false
+    }
 }
 
+/// 📥️ Original retained History decoder: one cumulative native ledger and one retirement recipient carry the borrowed-range receiving frontier across caller turns, so every typed receiver is quoted by `demands` before it moves.
 pub struct RetainedHistoryDecode {
-    verifier: Option<protocol::format::retained::RetainedSprVerification>,
-    log: Option<HistoryLog>,
-    dict: DictReader,
-    edit_ids: Vec<String>,
-    trusted_end: u64,
-    offset: u64,
-    decoded_records: u64,
-    validation_stage: u8,
-    validation_index: usize,
-    saw_conflicts: bool,
-    limits: protocol::format::retained::RetainedSprLimits,
-    require_persisted_document: bool,
-    phase: RetainedHistoryDecodePhase,
+    receipt: Option<NativeForwardedDecodeReceipt>,
+    recipient: NativeDecodeRetirementRecipient,
+    decoder: ManuallyDrop<Option<RetainedHistorySourceDecode>>,
+    partial: ManuallyDrop<Option<RetainedHistorySourcePartial>>,
+    fault: ManuallyDrop<Option<RetainedHistoryOpMetaFault>>,
+    inner_fault: ManuallyDrop<Option<RetainedHistoryOpMetaFault>>,
+    active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    demand: RetirementDemand,
+    issued: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
+    maximum: usize,
+    range: (usize, usize),
+    limits: HistoryReadLimits,
+    persisted_document: bool,
+    admitted: bool,
+    closing: bool,
+    closed: bool,
+}
+
+fn invariant(reason: &'static str) -> ValueError {
+    ValueError::literal(ValueRefusalKind::InvariantViolated, reason)
+}
+
+fn permits(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
+    grant.maximum_depth >= demand.depth && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes
+}
+
+fn box_demands(owner: &dyn ErasedSnapshotRetirement, body: usize) -> Result<RetirementDemand, ValueError> {
+    if owner.terminal_is_empty() {
+        return Ok(RetirementDemand { release_bytes: size_of_val(owner), depth: 1, ..Default::default() });
+    }
+    let mut demand = owner.next_demand(body)?;
+    demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "original History retirement depth overflows"))?;
+    Ok(demand)
+}
+
+fn birth_demands<T: RetireOwned>(pending: &Option<T>) -> Result<RetirementDemand, ValueError> {
+    if pending.is_none() {
+        return Ok(Default::default());
+    }
+    if !T::controlled_retirement_supported() {
+        return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original History owner has no controlled retirement authority"));
+    }
+    Ok(RetirementDemand { capacity_bytes: owned_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+}
+
+fn admit_owned<T: RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    if active.is_some() {
+        return Err(invariant("original History retirement admission requires an empty child slot"));
+    }
+    let demand = birth_demands(pending)?;
+    let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+    let original = pending.take().ok_or_else(|| invariant("original History retirement admission lost its owner"))?;
+    match admit_owned_retirement(original, child) {
+        Ok((owner, progress)) => {
+            *active = Some(owner);
+            admit_retained_clone_progress(child, progress, "original History child birth")?;
+            if progress.retained_capacity_bytes != demand.capacity_bytes {
+                return Err(invariant("original History child birth receipt differs from its quote"));
+            }
+            Ok(RetainedCloneStep::Progress(progress))
+        }
+        Err((error, original)) => {
+            *pending = Some(original);
+            Err(error)
+        }
+    }
+}
+
+fn close_box(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    let Some(owner) = slot.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())) };
+    if owner.terminal_is_empty() {
+        let extent = size_of_val(owner.as_ref());
+        drop(slot.take());
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }));
+    }
+    let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+    let step = owner.close_step(child)?;
+    admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original History retirement child")?;
+    Ok(RetainedCloneStep::Progress(step.progress()))
+}
+
+fn recipient_demands(recipient: &NativeDecodeRetirementRecipient, body: usize) -> Result<RetirementDemand, ValueError> {
+    Ok(RetirementDemand { copy_bytes: recipient.next_copy_byte_demand()?, capacity_bytes: recipient.next_capacity_byte_demand(body)?, release_bytes: recipient.next_release_byte_demand()?, depth: recipient.next_depth_demand()? })
+}
+
+fn receive(issued: Option<(RetainedCloneGrant, RetainedCloneProgress)>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+    let Some((original, progress)) = issued else { return Ok(Default::default()) };
+    if original == grant {
+        Ok(progress)
+    } else {
+        Err(invariant("original History cursor changed its supplied grant").with_retained_progress(progress))
+    }
+}
+
+fn receive_failure(issued: Option<(RetainedCloneGrant, RetainedCloneProgress)>, grant: RetainedCloneGrant, primary: ValueError) -> ValueError {
+    let progress = issued.map_or_else(|| primary.retained_progress(), |(_, progress)| progress);
+    let error = if issued.is_some_and(|(original, _)| original != grant) { invariant("original History failure changed its supplied grant") } else { primary };
+    error.with_retained_progress(progress)
+}
+
+fn with_control<T>(
+    receipt: &mut Option<NativeForwardedDecodeReceipt>,
+    recipient: &mut NativeDecodeRetirementRecipient,
+    maximum: usize,
+    turn: &dyn RetainedHistoryTurn,
+    ceiling: usize,
+    closing: bool,
+    run: impl FnOnce(&mut NativeDecodeControl<'_>) -> T,
+) -> Result<T, ValueError> {
+    let mut progress = |_| !turn.should_yield() && (closing || !turn.is_cancelled());
+    let mut reserved = 0usize;
+    let mut allocate = |quote: NativeDecodeAllocation| -> Result<(), ValueError> {
+        reserved = reserved.checked_add(quote.bytes).filter(|bytes| *bytes <= ceiling).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "original History decode reservation exceeds its actual turn"))?;
+        Ok(())
+    };
+    let mut control = if let Some(original) = receipt.take() {
+        match NativeForwardedDecodeControl::rebind(original, &mut progress, &mut allocate, recipient) {
+            Ok(control) => control,
+            Err((error, original)) => {
+                *receipt = Some(original);
+                return Err(error);
+            }
+        }
+    } else {
+        let mut control = NativeDecodeControl::new_forwarded(maximum, &mut progress, &mut allocate);
+        control.install_retirement_recipient(recipient)?;
+        control
+    };
+    let result = control.scoped_stage(|original| Ok::<_, std::convert::Infallible>(run(original))).unwrap();
+    *receipt = Some(control.detach().unwrap_or_else(|_| panic!("original History decode continuation violated canonical control invariants")));
+    Ok(result)
 }
 
 impl RetainedHistoryDecode {
-    pub fn new(total_bytes: usize, limits: protocol::format::retained::RetainedSprLimits) -> Result<Self, String> {
-        let verifier = protocol::format::retained::RetainedSprVerification::new(total_bytes as u64, limits).map_err(|error| format!("SPR history admission failed: {error:?}"))?;
+    pub fn new(range: (usize, usize), limits: HistoryReadLimits, persisted_document: bool, maximum_allocation_bytes: usize) -> Result<Self, ValueError> {
+        limits.validate()?;
+        if maximum_allocation_bytes == 0 || range.0 > range.1 {
+            return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "original History receiving bounds are invalid"));
+        }
         Ok(Self {
-            verifier: Some(verifier),
-            log: Some(HistoryLog::default()),
-            dict: DictReader::new(),
-            edit_ids: Vec::new(),
-            trusted_end: 0,
-            offset: HEADER_SIZE as u64,
-            decoded_records: 0,
-            validation_stage: 0,
-            validation_index: 0,
-            saw_conflicts: false,
+            receipt: None,
+            recipient: NativeDecodeRetirementRecipient::new(),
+            decoder: ManuallyDrop::new(None),
+            partial: ManuallyDrop::new(None),
+            fault: ManuallyDrop::new(None),
+            inner_fault: ManuallyDrop::new(None),
+            active: ManuallyDrop::new(None),
+            demand: RetirementDemand { depth: 2, ..Default::default() },
+            issued: None,
+            maximum: maximum_allocation_bytes,
+            range,
             limits,
-            require_persisted_document: false,
-            phase: RetainedHistoryDecodePhase::Verify,
+            persisted_document,
+            admitted: false,
+            closing: false,
+            closed: false,
         })
     }
 
-    pub fn new_persisted_document(total_bytes: usize, limits: protocol::format::retained::RetainedSprLimits) -> Result<Self, String> {
-        let mut decoder = Self::new(total_bytes, limits)?;
-        decoder.require_persisted_document = true;
-        Ok(decoder)
+    pub fn source_identity(&self) -> Option<OriginalWireSourceIdentity> {
+        self.decoder.as_ref().map(RetainedHistorySourceDecode::source_identity)
     }
 
-    pub fn step(&mut self, bytes: &[u8], maximum_bytes: usize, maximum_records: usize) -> Result<RetainedHistoryDecodeStep, String> {
-        if self.phase == RetainedHistoryDecodePhase::Fault {
-            return Err("SPR history decoder is faulted".into());
+    pub fn consumed_end(&self) -> usize {
+        self.decoder.as_ref().map_or(self.range.1, RetainedHistorySourceDecode::consumed_end)
+    }
+
+    pub fn fault(&self) -> Option<&RetainedHistoryOpMetaFault> {
+        self.fault.as_ref().or(self.inner_fault.as_ref()).or_else(|| self.decoder.as_ref().and_then(RetainedHistorySourceDecode::fault))
+    }
+
+    pub fn take_receipt(&mut self) -> Option<(RetainedCloneGrant, RetainedCloneProgress)> {
+        self.issued.take()
+    }
+
+    pub fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if let Some(active) = self.active.as_ref() {
+            return box_demands(active.as_ref(), body);
         }
-        if self.phase == RetainedHistoryDecodePhase::Ready {
-            return Ok(RetainedHistoryDecodeStep::Ready);
+        if self.fault.is_some() {
+            return birth_demands(&self.fault);
         }
-        if bytes.len() as u64 > self.limits.file_bytes {
-            self.phase = RetainedHistoryDecodePhase::Fault;
-            return Err("SPR history exceeds retained file byte authority".into());
+        if self.inner_fault.is_some() {
+            return birth_demands(&self.inner_fault);
         }
-        if self.phase == RetainedHistoryDecodePhase::Verify {
-            let verifier = self.verifier.as_mut().ok_or_else(|| "SPR history verifier owner is absent".to_string())?;
-            if verifier.consumed() > bytes.len() as u64 {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history input changed during retained verification".into());
+        if !self.closing && !self.recipient.terminal_is_empty() {
+            return recipient_demands(&self.recipient, body);
+        }
+        if self.decoder.is_some() {
+            return Ok(RetirementDemand { depth: self.demand.depth.max(2), ..self.demand });
+        }
+        if self.partial.is_some() {
+            return birth_demands(&self.partial);
+        }
+        if !self.recipient.terminal_is_empty() {
+            return recipient_demands(&self.recipient, body);
+        }
+        Ok(RetirementDemand { depth: if self.closed { 0 } else if !self.admitted && !self.closing { 2 } else { 1 }, ..Default::default() })
+    }
+
+    pub fn step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant, history: &mut Option<HistoryLog>) -> Result<RetainedHistorySourceStep, ValueError> {
+        if self.closed {
+            return Ok(RetainedHistorySourceStep::Closed);
+        }
+        if self.closing || self.fault.is_some() {
+            return Ok(RetainedHistorySourceStep::Fault);
+        }
+        if turn.should_yield() || turn.is_cancelled() || grant.maximum_items == 0 {
+            return Ok(RetainedHistorySourceStep::Blocked);
+        }
+        if !permits(grant, self.demands(grant.maximum_copy_bytes)?) {
+            return Ok(RetainedHistorySourceStep::Blocked);
+        }
+        let decoder = &mut self.decoder;
+        let admitted = &mut self.admitted;
+        let quote = &mut self.demand;
+        let (range, limits, persisted_document) = (self.range, self.limits, self.persisted_document);
+        let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, false, |control| {
+            if control.has_retirement_owner() {
+                let raw = control.close_retirement_recipient(grant);
+                let progress = match &raw {
+                    Ok(step) => step.progress(),
+                    Err(error) => error.retained_progress(),
+                };
+                return (raw.map(|_| RetainedHistorySourceStep::Progress).map_err(RetainedHistoryOpMetaFault::from), Some((grant, progress)));
             }
-            let start = verifier.consumed() as usize;
-            let end = start.saturating_add(maximum_bytes).min(bytes.len());
-            let mut fuel = end - start;
-            if fuel != 0 {
-                if let Err(error) = verifier.push(&bytes[start..end], &mut fuel) {
-                    self.phase = RetainedHistoryDecodePhase::Fault;
-                    return Err(format!("SPR history verification failed: {error:?}"));
+            let result = if !*admitted {
+                match RetainedHistorySourceDecode::admit(source, range, limits, persisted_document, control, grant) {
+                    Ok(Some(owner)) => {
+                        **decoder = Some(owner);
+                        *admitted = true;
+                        Ok(RetainedHistorySourceStep::Progress)
+                    }
+                    Ok(None) => Ok(RetainedHistorySourceStep::Blocked),
+                    Err(error) => Err(error),
                 }
-            }
-            if verifier.consumed() != bytes.len() as u64 {
-                return Ok(self.progress(bytes.len()));
-            }
-            let span = match verifier.finish() {
-                Ok(span) => span,
-                Err(error) => {
-                    self.phase = RetainedHistoryDecodePhase::Fault;
-                    return Err(format!("SPR history verification failed: {error:?}"));
+            } else if let Some(owner) = decoder.as_mut() {
+                if owner.terminal_is_empty() {
+                    decoder.take();
+                    Ok(RetainedHistorySourceStep::Closed)
+                } else if owner.is_ready() {
+                    owner.take_ready_into(history, grant).map(|ready| if ready { RetainedHistorySourceStep::Ready } else { RetainedHistorySourceStep::Blocked })
+                } else {
+                    owner.step(source, control, grant)
                 }
+            } else {
+                Ok(RetainedHistorySourceStep::Ready)
             };
-            if span.sequence() == 0 || span.end() != bytes.len() as u64 || span.tail() != 0 {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history requires one exact committed span without a torn or uncommitted tail".into());
-            }
-            self.trusted_end = span.end();
-            self.verifier = None;
-            self.phase = RetainedHistoryDecodePhase::Decode;
-            if maximum_records == 0 {
-                return Ok(self.progress(bytes.len()));
-            }
-        }
-
-        if self.phase == RetainedHistoryDecodePhase::Validate {
-            for _ in 0..maximum_records {
-                match self.validate_one() {
-                    Ok(true) => {
-                        self.phase = RetainedHistoryDecodePhase::Ready;
-                        return Ok(RetainedHistoryDecodeStep::Ready);
-                    }
-                    Ok(false) => {}
-                    Err(error) => {
-                        self.phase = RetainedHistoryDecodePhase::Fault;
-                        return Err(error);
-                    }
+            let issued = decoder.as_mut().and_then(|owner| owner.take_receipt());
+            if let Some(owner) = decoder.as_ref() {
+                if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
+                    *quote = next;
                 }
             }
-            return Ok(self.progress(bytes.len()));
+            (result, issued)
+        })?;
+        let step = match result {
+            Ok(step) => step,
+            Err(RetainedHistoryOpMetaFault::Value(primary)) => {
+                self.closing = true;
+                return Err(receive_failure(issued, grant, primary));
+            }
+            Err(error) => {
+                *self.fault = Some(error);
+                self.closing = true;
+                RetainedHistorySourceStep::Fault
+            }
+        };
+        let progress = receive(issued, grant)?;
+        self.issued = issued;
+        if self.fault.is_some() {
+            return Ok(RetainedHistorySourceStep::Fault);
         }
+        if self.admitted && self.decoder.is_none() && self.recipient.terminal_is_empty() && issued.is_none() {
+            self.receipt.take();
+            self.closed = true;
+            self.issued = Some((grant, RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+            return Ok(RetainedHistorySourceStep::Ready);
+        }
+        Ok(if progress.copied_items > 0 { RetainedHistorySourceStep::Progress } else { step })
+    }
 
-        let trusted_end = usize::try_from(self.trusted_end).map_err(|_| "SPR history trusted span exceeds this platform".to_string())?;
-        if trusted_end > bytes.len() {
-            self.phase = RetainedHistoryDecodePhase::Fault;
-            return Err("SPR history input shortened after retained verification".into());
+    pub fn close_step<S: RetainedWireByteSource + ?Sized>(&mut self, source: &S, turn: &dyn RetainedHistoryTurn, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        if self.terminal_is_empty() {
+            return Ok(RetainedCloneStep::Complete(Default::default()));
         }
-        for _ in 0..maximum_records {
-            if self.offset == self.trusted_end {
-                self.phase = RetainedHistoryDecodePhase::Validate;
-                return Ok(self.progress(bytes.len()));
-            }
-            if self.offset < HEADER_SIZE as u64 || self.offset > self.trusted_end {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history semantic cursor escaped its verified span".into());
-            }
-            let mut cursor = ::semio_framework_async::poll::resolve_ready(FrameCursor::new(&bytes[..trusted_end], self.offset));
-            let frame = ::semio_framework_async::poll::resolve_ready(cursor.next_frame())
-                .map_err(|error| {
-                    self.phase = RetainedHistoryDecodePhase::Fault;
-                    format!("SPR history record framing failed: {error}")
-                })?
-                .ok_or_else(|| {
-                    self.phase = RetainedHistoryDecodePhase::Fault;
-                    "SPR history ended before its verified span".to_string()
-                })?;
-            let frame_len = ::semio_framework_async::poll::resolve_ready(frame.frame_len());
-            if frame_len > self.limits.frame_body_bytes.saturating_add(18) {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history record exceeds retained frame byte authority".into());
-            }
-            let next = frame.offset.checked_add(frame_len).ok_or_else(|| "SPR history record offset overflowed".to_string())?;
-            if next > self.trusted_end {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history record crossed its verified span".into());
-            }
-            self.decode_frame(frame).map_err(|error| {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                error
+        self.closing = true;
+        if turn.should_yield() || grant.maximum_items == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        let demand = self.demands(grant.maximum_copy_bytes)?;
+        if !permits(grant, demand) {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        if self.active.is_some() || self.fault.is_some() || self.inner_fault.is_some() || self.decoder.is_none() && self.partial.is_some() {
+            let active = &mut self.active;
+            let fault = &mut self.fault;
+            let inner_fault = &mut self.inner_fault;
+            let partial = &mut self.partial;
+            let raw = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, true, |control| {
+                control.charge(demand.capacity_bytes)?;
+                if active.is_some() {
+                    close_box(active, grant)
+                } else if fault.is_some() {
+                    admit_owned(fault, active, grant)
+                } else if inner_fault.is_some() {
+                    admit_owned(inner_fault, active, grant)
+                } else {
+                    admit_owned(partial, active, grant)
+                }
             })?;
-            self.offset = next;
-            self.decoded_records = self.decoded_records.checked_add(1).ok_or_else(|| "SPR history decoded record count overflowed".to_string())?;
-            if self.decoded_records > self.limits.records {
-                self.phase = RetainedHistoryDecodePhase::Fault;
-                return Err("SPR history exceeds retained record authority".into());
-            }
+            return raw;
         }
-        Ok(self.progress(bytes.len()))
-    }
-
-    fn validate_one(&mut self) -> Result<bool, String> {
-        let log = self.log.as_ref().ok_or_else(|| "SPR history log owner is absent".to_string())?;
-        match self.validation_stage {
-            0 if self.validation_index < log.edits.len() => {
-                let index = self.validation_index;
-                let edit = &log.edits[index];
-                if edit.id.trim().is_empty() || log.edits.iter().take(index).any(|prior| prior.id == edit.id) {
-                    return Err(format!("SPR history repeats or omits authoritative edit {}", edit.id));
+        if self.decoder.is_some() {
+            let decoder = &mut self.decoder;
+            let partial = &mut self.partial;
+            let fault = &mut self.inner_fault;
+            let quote = &mut self.demand;
+            let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, true, |control| {
+                let owner = decoder.as_mut().unwrap();
+                owner.cancel();
+                let result = if owner.terminal_is_empty() {
+                    Ok(RetainedHistorySourceStep::Closed)
+                } else if owner.fault().is_some() {
+                    owner.take_fault_into(fault, grant).map(|_| RetainedHistorySourceStep::Progress)
+                } else if owner.partial_is_receivable() {
+                    owner.take_partial_into(partial, grant).map(|_| RetainedHistorySourceStep::Progress)
+                } else {
+                    owner.close_step(source, control, grant)
+                };
+                let issued = owner.take_receipt();
+                if let Ok(next) = owner.demands(source, control, grant.maximum_copy_bytes) {
+                    *quote = next;
                 }
-                if self.require_persisted_document && edit.meta.is_none() {
-                    return Err(format!("SPR history edit {} has no authoritative operation metadata", edit.id));
-                }
-                if edit.meta.as_ref().is_some_and(|meta| meta.len() != edit.ops.len()) || edit.ops.iter().chain(&edit.inverse).any(|payload| payload.binary.is_none() && payload.text.is_none()) {
-                    return Err(format!("SPR history edit {} has malformed operations or metadata", edit.id));
-                }
-                self.validation_index += 1;
-                Ok(false)
+                (result, issued)
+            })?;
+            match result {
+                Err(RetainedHistoryOpMetaFault::Value(primary)) => return Err(receive_failure(issued, grant, primary)),
+                Err(error) => *self.fault = Some(error),
+                Ok(_) => {}
             }
-            0 => {
-                self.validation_stage = 1;
-                self.validation_index = 0;
-                Ok(false)
-            }
-            1 if self.validation_index < log.transitions.len() => {
-                let index = self.validation_index;
-                let transition = &log.transitions[index];
-                if transition.id.trim().is_empty() || transition.actor.trim().is_empty() || log.transitions[..index].iter().any(|prior| prior.id == transition.id) {
-                    return Err(format!("SPR history repeats or omits authoritative transition {}", transition.id));
+            let progress = receive(issued, grant)?;
+            if self.decoder.as_ref().is_some_and(RetainedHistorySourceDecode::terminal_is_empty) {
+                self.decoder.take();
+                if issued.is_none() {
+                    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
-                if protocol::decode_history_transition(&transition.payload).is_err() {
-                    return Err(format!("SPR history transition {} has a malformed payload", transition.id));
-                }
-                self.validation_index += 1;
-                Ok(false)
             }
-            1 => {
-                self.validation_stage = 2;
-                self.validation_index = 0;
-                Ok(false)
-            }
-            _ => Ok(true),
+            return Ok(RetainedCloneStep::Progress(progress));
         }
-    }
-
-    fn decode_frame(&mut self, frame: protocol::RecordFrame<'_>) -> Result<(), String> {
-        let payload = ::semio_framework_async::poll::resolve_ready(frame.payload());
-        let log = self.log.as_mut().ok_or_else(|| "SPR history log owner is absent".to_string())?;
-        match frame.kind {
-            protocol::REC_STR_DICT => ::semio_framework_async::poll::resolve_ready(apply_dict_record(&mut self.dict, payload)).map_err(|error| error.to_string())?,
-            protocol::REC_ACTOR_DICT => {}
-            protocol::REC_DOC => {
-                let (doc_id, schema) = ::semio_framework_async::poll::resolve_ready(decode_doc(payload, &self.dict)).map_err(|error| error.to_string())?;
-                log.doc_id = doc_id;
-                log.schema = schema;
-            }
-            protocol::REC_EDIT => {
-                let edit_ids = &self.edit_ids;
-                let edit = ::semio_framework_async::poll::resolve_ready(decode_edit(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
-                    .map_err(|error| error.to_string())?;
-                self.edit_ids.push(edit.id.clone());
-                log.edits.push(edit);
-            }
-            REC_TRANSITION => log.transitions.push(::semio_framework_async::poll::resolve_ready(decode_transition(payload, &self.dict)).map_err(|error| error.to_string())?),
-            REC_COMPOSITION => log.composition = Some(::semio_framework_async::poll::resolve_ready(decode_composition(payload, &self.dict)).map_err(|error| error.to_string())?),
-            REC_CONFLICT => {
-                if self.saw_conflicts {
-                    return Err("SPR history repeats its conflict record".into());
-                }
-                let edit_ids = &self.edit_ids;
-                log.conflicts = ::semio_framework_async::poll::resolve_ready(decode_conflicts(payload, &self.dict, |ordinal| edit_ids.get(ordinal as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ordinal as u32))))
-                    .map_err(|error| error.to_string())?;
-                self.saw_conflicts = true;
-            }
-            REC_VIEWER => {
-                let (viewer_line, viewer_checkpoint) = ::semio_framework_async::poll::resolve_ready(decode_viewer(payload, &self.dict)).map_err(|error| error.to_string())?;
-                log.viewer_line = viewer_line;
-                log.viewer_checkpoint = viewer_checkpoint;
-            }
-            _ => {}
+        if !self.recipient.terminal_is_empty() {
+            let raw = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, true, |control| control.close_retirement_recipient(grant))?;
+            return raw;
         }
-        Ok(())
-    }
-
-    fn progress(&self, total_bytes: usize) -> RetainedHistoryDecodeStep {
-        let completed_bytes = self.verifier.as_ref().map_or(self.offset, protocol::format::retained::RetainedSprVerification::consumed);
-        RetainedHistoryDecodeStep::Pending { completed_bytes, total_bytes: total_bytes as u64, decoded_records: self.decoded_records }
-    }
-
-    pub fn take_ready(&mut self) -> Option<HistoryLog> {
-        if self.phase != RetainedHistoryDecodePhase::Ready {
-            return None;
-        }
-        self.log.take()
-    }
-
-    pub fn take_partial(&mut self) -> Option<HistoryLog> {
-        self.phase = RetainedHistoryDecodePhase::Fault;
-        self.verifier = None;
-        self.log.take()
-    }
-
-    pub fn take_auxiliary_owners(&mut self) -> (Vec<String>, Vec<String>) {
-        (self.dict.take_entries(), std::mem::take(&mut self.edit_ids))
+        self.receipt.take();
+        self.closed = true;
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.verifier.is_none() && self.log.is_none() && self.dict.is_empty() && self.edit_ids.is_empty()
+        self.closed && self.decoder.is_none() && self.partial.is_none() && self.fault.is_none() && self.inner_fault.is_none() && self.active.is_none() && self.recipient.terminal_is_empty() && self.receipt.is_none()
     }
 }
 
 impl Drop for RetainedHistoryDecode {
     fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "retained history decoder reached Drop before every parsed and auxiliary owner was transferred");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "retained history decoder reached Drop before every native receiving owner was closed");
+        if self.terminal_is_empty() {
+            unsafe {
+                ManuallyDrop::drop(&mut self.decoder);
+                ManuallyDrop::drop(&mut self.partial);
+                ManuallyDrop::drop(&mut self.fault);
+                ManuallyDrop::drop(&mut self.inner_fault);
+                ManuallyDrop::drop(&mut self.active);
+            }
+        }
     }
 }
 

@@ -197,7 +197,7 @@ struct DeliveredPreview {
 /// contentless `$kernel: ""`. A refusal read that way names nothing, so a row whose kernel genuinely
 /// refuses the value looked like a silent empty payload.
 fn delivered_preview(preview_body_json: &str) -> DeliveredPreview {
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let status: serde_json::Value = serde_json::from_str(world.status_json.as_deref().unwrap_or("{}")).expect("preview status json");
     let mut widget_errors = widget_errors_of(world.status_json.as_deref());
     for entry in status.get("diagnostics").and_then(serde_json::Value::as_array).cloned().unwrap_or_default() {
@@ -226,7 +226,7 @@ fn set_slider_args(slider_id: &str, value: f64, gesture: &str, commit: bool) -> 
 /// 🎚️ One press, driven the way the host lane drives it: a `drag` lets each round trip settle before
 /// offering the next value, a `burst` lands every value of the press before any evaluation answers —
 /// which is exactly how a value supersedes an evaluation already in flight.
-async fn drive_slider_press(app: &mut context::Generation3dApp, flow_view: &semio_framework_plugin::ViewModel, slider_id: &str, values: &[f64], burst: bool, gesture: &str) {
+async fn drive_slider_press(app: &mut context::Generation3dAppFixture, flow_view: &semio_framework_plugin::ViewModel, slider_id: &str, values: &[f64], burst: bool, gesture: &str) {
     let last = values.len().saturating_sub(1);
     let mut carried = Vec::new();
     for (index, value) in values.iter().enumerate() {
@@ -260,7 +260,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
     let (flow_view, preview_view) = context::shell_views(flow_window::GENERATION_3D_PLAY_WINDOW_MAIN, edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let mut faults: Vec<String> = Vec::new();
     for row in &fixture.rows {
-        app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": row.example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
+        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": row.example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
         let switched = context::settle(&mut app).await;
         context::drive_preview_run(&mut app, &flow_view, &switched.effects).await;
         // 🪪️ The example's OWN authored value, before any slider moves — so a row that was already
@@ -295,7 +295,7 @@ async fn every_moved_slider_converges_on_the_geometry_its_released_value_makes()
         }
     }
     assert!(faults.is_empty(), "a moved slider did not converge on its value's geometry:\n{}", faults.join("\n"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ Everything one released value owes, as a list of what it failed rather than the first

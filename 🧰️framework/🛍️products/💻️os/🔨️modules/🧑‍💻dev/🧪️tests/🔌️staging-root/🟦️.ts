@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import picomatch from "picomatch";
 import { URL as OracleURL } from "whatwg-url";
 import { describe, expect, it } from "vitest";
-import { COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, GENERATED_COMPONENT_OWNER_FILES, UNWATCHED_COMPONENT_SOURCE_DIRECTORIES, buildComponentSourceStatIndex, componentSourceContentHash, newestComponentSourceMtime, readStagedSourceContentHash, readStagedSourceStatIndex, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, SOURCE_FRESHNESS_FILE_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash, writeStagedSourceFreshness } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, GENERATED_COMPONENT_OWNER_FILES, UNWATCHED_COMPONENT_SOURCE_DIRECTORIES, buildComponentSourceStatIndex, componentSourceContentHash, newestComponentSourceMtime, readStagedSourceContentHash, readStagedSourceStatIndex, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, SOURCE_FRESHNESS_FILE_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash, writeStagedSourceFreshness } from "@semio-tech/framework-plugin/build/freshness";
 import { healthyPreparedComponents, preparedComponentReportLines, preparedComponentVerdict, builtPluginModulesRootIn, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../♻️activation/🟦️.ts";
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));

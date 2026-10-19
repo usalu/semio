@@ -1,5 +1,5 @@
 //#region 🧬️WitReturnContract
-import { encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts";
+import { encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "@semio-tech/framework-actor/shard-client";
 import type { ActorBytePage } from "../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts";
 type WitOrigin = { readonly activationGeneration: bigint; readonly requestSequence: bigint };
 type WitIdentity = { readonly origin: WitOrigin; readonly returnSequence: bigint };

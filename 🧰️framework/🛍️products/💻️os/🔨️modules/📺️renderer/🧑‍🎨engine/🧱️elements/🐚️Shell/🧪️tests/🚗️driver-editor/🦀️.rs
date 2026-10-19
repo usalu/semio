@@ -75,14 +75,14 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     dispatch(&mut shell, "setDriverField", fixture["transitions"]["edit"].clone());
     assert!(shell.prefs.driver_draft.is_some());
     assert_eq!(shell.prefs.driver_document(&shell.chrome).config["labels"], "icons");
-    assert_eq!(shell.chrome.chrome_build.driver.labels, ui_wgpu::wgpu::UiDriverLabels::Icons, "draft changes live chrome");
+    assert_eq!(shell.chrome.chrome_build.driver.labels, semio_framework_ui_wgpu_layout::chrome::UiDriverLabels::Icons, "draft changes live chrome");
     assert!(shell.chrome.chrome_build.preferences.custom_drivers.is_empty(), "draft never persists");
 
     dispatch(&mut shell, "setDriver", serde_json::json!({ "value": fixture["transitions"]["select"]["selected"] }));
     assert!(shell.prefs.driver_draft.is_none(), "selection clears draft");
     assert_eq!(shell.prefs.driver_id, "compact");
-    assert_eq!(shell.chrome.chrome_build.driver.tooltips, ui_wgpu::wgpu::UiDriverTooltips::None);
-    assert_eq!(shell.chrome.chrome_build.driver.drag, ui_wgpu::wgpu::chrome::UiDriverDrag::Surface);
+    assert_eq!(shell.chrome.chrome_build.driver.tooltips, semio_framework_ui_wgpu_layout::chrome::UiDriverTooltips::None);
+    assert_eq!(shell.chrome.chrome_build.driver.drag, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Surface);
 
     dispatch(&mut shell, "setDriverField", serde_json::json!({ "key": "labelTier", "value": "beginner" }));
     dispatch(&mut shell, "setDriverSaveLabel", serde_json::json!({ "value": fixture["transitions"]["save"]["label"] }));
@@ -102,7 +102,7 @@ fn draft_is_live_selection_clears_it_and_save_delete_use_owned_preferences() {
     assert!(!shell.chrome.chrome_build.preferences.custom_drivers.contains_key(saved_id));
     assert_eq!(shell.prefs.driver_id, "default");
     assert!(shell.prefs.driver_draft.is_none());
-    assert_eq!(shell.chrome.chrome_build.driver, ui_wgpu::wgpu::UiDriverChrome::DEFAULT);
+    assert_eq!(shell.chrome.chrome_build.driver, semio_framework_ui_wgpu_layout::chrome::UiDriverChrome::DEFAULT);
 }
 
 #[test]

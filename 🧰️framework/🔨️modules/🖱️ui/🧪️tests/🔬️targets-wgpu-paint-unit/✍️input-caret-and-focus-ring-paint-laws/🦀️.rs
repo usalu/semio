@@ -108,7 +108,7 @@ fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declar
 
 #[test]
 fn retained_input_paints_a_caret_only_while_the_accepted_cadence_is_visible() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
     assert_eq!(fixture["halfPeriodMs"].as_u64(), Some(500));
     let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
     let node = tree.node_mut(root).expect("retained input");

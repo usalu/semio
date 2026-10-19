@@ -1,4 +1,4 @@
-import{captureOwnedCommandV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import {testRecordV1} from "../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import assert from "node:assert/strict";
@@ -8,8 +8,8 @@ import { dirname, join, resolve, relative, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import {createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts";
-import{readNxAuthorizerSourceV1}from"../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"@semio-tech/nx-bootstrap-tools/authorizers/workspace";
+import{readNxAuthorizerSourceV1}from"@semio-tech/nx-bootstrap-tools/authorizers";
 import {nativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 /** 🏗️ Proves native preparation is an uncached, application-independent build leaf against Cargo and esbuild. */

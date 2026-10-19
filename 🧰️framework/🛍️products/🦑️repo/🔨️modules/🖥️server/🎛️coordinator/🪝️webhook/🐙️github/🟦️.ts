@@ -15,8 +15,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 // #endregion 🔌️Adapters
 
-import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
-import { removeContributorWorkForCheckpoint } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
+import { publishEvent } from "../../../📚️library/📡️event/🟦️.ts";
+import { removeContributorWorkForCheckpoint } from "../../../📚️library/🗄️persistence/🟦️.ts";
 
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "";
 

@@ -1,7 +1,7 @@
 //! ♻️ Block3d document retirement: every semantic field derives its owner; only the materialized kit catalog behind the child handle needs this snapshot to lift it into a leased shared owner.
 
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
-use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, arc_custody::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 type CatalogOwner = Option<SharedControlledRetirement<SemioKitSnapshot>>;

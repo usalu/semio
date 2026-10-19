@@ -125,7 +125,7 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     // — these tests build the retained tree by hand (no `paint_tree` call), so it's set directly.
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
-    router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()));
+    router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default()));
 
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((row_id, CaptureKind::Press)), "the row must be a real hit-test target once DRAG_SOURCE-flagged");
@@ -148,7 +148,7 @@ fn handle_driver_arms_only_the_canonical_trailing_tree_handle() {
     let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     router.set_tree_drag_policy(&mut tree, UiDriverDrag::Handle, metrics);
 
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
@@ -177,7 +177,7 @@ fn changing_tree_drag_driver_cancels_an_in_flight_surface_drag() {
     let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, metrics);
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0, modifiers: Default::default() });

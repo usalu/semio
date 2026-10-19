@@ -1,0 +1,35 @@
+{
+ "extends": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "composite": false,
+  "tsBuildInfoFile": null
+ },
+ "files": [
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-artifact-history/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-artifact-submit/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-capability-open/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-catalog-bootstrap/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-catalog-read/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-compaction/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-create-catalog/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-database-sync-hello/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-db-cli/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-db-io-b1-b6/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-db-io-caller-migration/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-db-io-direct-writer/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-db-io/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-mcp-http-transport/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-p1q-r4/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-prepared-raster-producer/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-shard-executor/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧪️tests/🔬️interactivity-store-sync/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-artifact-envelope-rejection-transfer/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-artifact-retained-command/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-drawing-gesture-operation-owner/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts",
+  "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🧪️tests/🔬️tool-job-live-fixed-replay/🟦️.ts"
+ ],
+ "include": []
+}

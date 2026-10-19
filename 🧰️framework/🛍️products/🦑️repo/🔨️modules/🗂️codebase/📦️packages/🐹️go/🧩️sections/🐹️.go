@@ -26,7 +26,7 @@ func BuildCodebaseSections(ctx *CodebaseContext) []model.CodebaseSection {
 	var result []model.CodebaseSection
 
 	for _, file := range ctx.Files {
-		absPath := filepath.Join(workspace.RootDir, file)
+		absPath := filepath.Join(workspace.GetRootDir(), file)
 		content, err := workspace.ReadTextFile(absPath)
 		if err != nil {
 			continue
@@ -80,7 +80,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []model.CodebaseDefinition {
 	var result []model.CodebaseDefinition
 
 	for _, file := range ctx.Files {
-		absPath := filepath.Join(workspace.RootDir, file)
+		absPath := filepath.Join(workspace.GetRootDir(), file)
 		content, err := workspace.ReadTextFile(absPath)
 		if err != nil {
 			continue
@@ -306,7 +306,7 @@ func FindSectionBySlug(sections []model.Section, slug string) *model.Section {
 // 🟫️ResolveSectionName MUST return the resolved value or an error if unresolvable.
 // 📩️ResolveSectionName resolves and returns the section name.
 func ResolveSectionName(filePath string, slug string) string {
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	content, err := workspace.ReadTextFile(absPath)
 	if err != nil {
 		return model.UnSlugify(slug)

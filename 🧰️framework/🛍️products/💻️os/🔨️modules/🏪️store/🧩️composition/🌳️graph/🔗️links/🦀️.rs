@@ -2,8 +2,9 @@
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 type Row = (String, Vec<String>);
 #[derive(Debug, Default)]
-#[cfg_attr(test, derive(Clone, PartialEq, Eq))]
-pub(super) struct LinkRoot(Vec<Row>);
+#[cfg_attr(any(test, feature = "testkit"), derive(Clone, PartialEq, Eq))]
+#[doc(hidden)]
+pub struct LinkRoot(Vec<Row>);
 impl LinkRoot {
     pub fn get(&self, source: &str) -> Option<&Vec<String>> { self.0.binary_search_by(|row| row.0.as_str().cmp(source)).ok().map(|index| &self.0[index].1) }
     pub fn get_mut(&mut self, source: &str) -> Option<&mut Vec<String>> { self.0.binary_search_by(|row| row.0.as_str().cmp(source)).ok().map(|index| &mut self.0[index].1) }

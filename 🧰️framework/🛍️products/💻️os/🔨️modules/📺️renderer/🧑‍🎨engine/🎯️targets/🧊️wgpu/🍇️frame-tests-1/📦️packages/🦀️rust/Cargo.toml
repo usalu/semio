@@ -44,7 +44,8 @@ serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
@@ -64,7 +65,8 @@ serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu  = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]

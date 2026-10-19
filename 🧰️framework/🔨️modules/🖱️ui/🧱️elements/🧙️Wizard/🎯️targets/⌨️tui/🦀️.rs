@@ -66,7 +66,7 @@ fn plain(ev: &KeyEvent) -> bool {
     ev.mods & !mods::SHIFT == 0
 }
 
-pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let count = w.list.count();
     if let Some(changed) = w.list.rows.navigate(ev.key, count) {
         return changed.then(|| w.list.selected_option().map(WidgetSignal::SelectionChanged)).flatten();
@@ -90,13 +90,13 @@ pub(crate) fn wizard_on_key(w: &mut WizardState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn wizard_on_paste(w: &mut WizardState, text: &str) -> Option<WidgetSignal> {
+pub fn wizard_on_paste(w: &mut WizardState, text: &str) -> Option<WidgetSignal> {
     let mut query = w.list.query().to_string();
     query.extend(text.chars().map(|c| if c.is_whitespace() { ' ' } else { c }).filter(|c| !c.is_control()));
     w.list.set_query(&query).then_some(WidgetSignal::ValueChanged(query))
 }
 
-pub(crate) fn wizard_on_mouse(w: &mut WizardState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn wizard_on_mouse(w: &mut WizardState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     let area = areas(w, rect).list;
     let count = w.list.count();
     match w.list.rows.pointer(area, event, count) {
@@ -107,13 +107,13 @@ pub(crate) fn wizard_on_mouse(w: &mut WizardState, rect: Rect, event: &MouseEven
     }
 }
 
-pub(crate) fn wizard_set_hover(w: &mut WizardState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn wizard_set_hover(w: &mut WizardState, rect: Rect, pos: Option<Pos>) -> bool {
     let area = areas(w, rect).list;
     let count = w.list.count();
     w.list.rows.hover_at(area, pos, count)
 }
 
-pub(crate) fn wizard_cursor(w: &WizardState, rect: Rect) -> Option<CursorSpec> {
+pub fn wizard_cursor(w: &WizardState, rect: Rect) -> Option<CursorSpec> {
     let filter = areas(w, rect).filter;
     (filter.height > 0 && filter.width > 0).then(|| {
         let x = (filter.x + 2 + display_width(w.filter())).min(filter.x + filter.width - 1);
@@ -121,7 +121,7 @@ pub(crate) fn wizard_cursor(w: &WizardState, rect: Rect) -> Option<CursorSpec> {
     })
 }
 
-pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

@@ -12,7 +12,9 @@ use semio_framework_ui_locale::Label;
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, HitKind, InputState, UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{HitKind, InputState};
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎹️commands/🧬️component/🦀️.rs"]
 mod staged_commands__component;

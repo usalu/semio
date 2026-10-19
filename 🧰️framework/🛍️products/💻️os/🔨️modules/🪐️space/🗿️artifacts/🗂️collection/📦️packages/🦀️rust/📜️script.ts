@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🗂️ Framework Space Collection Rust artifact package router. */
-import{runArtifactRustPackageMain,runArtifactRustTests}from"../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import{BundleScript,scriptInvocationBudget}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{runBudgetedTestCommand}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import{resolve}from"node:path";

@@ -69,6 +69,7 @@ const contract = JSON.parse(readFileSync(join(packageDir, "../../🧪️tests/�
   readonly entry: string;
   readonly deny: readonly string[];
   readonly require: readonly string[];
+  readonly lazy: readonly string[];
   readonly maxModules: number;
   readonly maxSourceBytes: number;
 };
@@ -85,8 +86,8 @@ const externalizeDeps: Plugin = {
 
 const repoRelative = (path: string): string => relative(repoRoot, resolve(repoRoot, path)).replaceAll("\\", "/");
 
-async function esbuildConfigGraph(): Promise<{ readonly modules: readonly string[]; readonly sourceBytes: number }> {
-  const result = await build({ entryPoints: [entryPath], bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent", absWorkingDir: repoRoot, plugins: [externalizeDeps] });
+async function esbuildConfigGraph(entry: string = entryPath): Promise<{ readonly modules: readonly string[]; readonly sourceBytes: number }> {
+  const result = await build({ entryPoints: [entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent", absWorkingDir: repoRoot, plugins: [externalizeDeps] });
   return { modules: Object.keys(result.metafile.inputs).map(repoRelative).sort(), sourceBytes: Object.values(result.metafile.inputs).reduce((total, input) => total + input.bytes, 0) };
 }
 
@@ -136,6 +137,14 @@ describe("vite config module graph", () => {
     expect(sourceBytes).toBeLessThanOrEqual(contract.maxSourceBytes);
   });
 
+  it("keeps every lazily loaded owner outside the static config graph and resolvable as a complete graph of its own", async () => {
+    const { modules } = await esbuildConfigGraph();
+    for (const owner of contract.lazy) {
+      expect(modules, `${owner} is loaded at config-resolve time, never statically`).not.toContain(owner);
+      expect((await esbuildConfigGraph(join(repoRoot, owner))).modules, `${owner} must resolve every import it declares`).toContain(owner);
+    }
+  });
+
   it("resolves nothing outside the parsed graph and every required module under Bun's independent bundler", async () => {
     const { modules } = await esbuildConfigGraph();
     const parsed = modules.filter((module) => /\.[cm]?[jt]sx?$/u.test(module));
@@ -169,7 +178,7 @@ describe("dev server watch policy", () => {
     const events: string[] = [];
     const closed: (() => void)[] = [];
     const siblings: string[] = [];
-    const freshness: Pick<ReturnType<typeof createSourceFreshnessRegistry>, "movedInDirectory" | "tracks"> = { movedInDirectory: (directory: string) => (siblings.push(directory), [join(directory, "source.ts")]), tracks: () => true };
+    const freshness: Pick<ReturnType<typeof createSourceFreshnessRegistry>, "movedFile" | "movedInDirectory" | "tracks"> = { movedFile: () => true, movedInDirectory: (directory: string) => (siblings.push(directory), [join(directory, "source.ts")]), tracks: () => true };
     expect(fs.existsSync(target)).toBe(false);
     vi.mocked(existsSync).mockImplementation((path) => path === target ? watchPolicy.vanishedRename.previousExists : fs.existsSync(path));
     vi.mocked(watch).mockImplementation(((root: string, _options: unknown, callback: (event: string, name: string) => void) => {
@@ -640,8 +649,8 @@ describe("browser entry module graph", () => {
   it("declares the alias map and the resolve order the Vite config actually installs", () => {
     const source = readFileSync(join(repoRoot, browserContract.configPath), "utf8");
     for (const { find, replacement } of browserContract.alias) {
-      expect(source, `alias ${find} drifted from the Vite config`).toContain(`{ find: "${find}", replacement: path.resolve(repoRoot, "./${replacement}") }`);
+      expect(source, `alias ${find} drifted from the Vite config`).toContain(`{ find: /^${find.replaceAll("/", "\\/")}$/u, replacement: path.resolve(repoRoot, "./${replacement}") }`);
     }
-    expect(source, "an explicit resolve.extensions would replace the order this contract is resolved under").not.toMatch(/extensions:\s*\[/u);
+    expect(source, "an explicit resolve.extensions would replace the order this contract is resolved under").not.toMatch(/\bextensions:\s*\[\s*["'`]/u);
   });
 });

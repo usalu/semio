@@ -5,14 +5,13 @@
 //!
 //! @see ../../../🚪️io/📤️export/📊️csv/🦀️.rs — the dialect writer this command speaks.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::schedule;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::editor::bim::{BimCommand, BimModelApp};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::io::export::csv::codec;
-use crate::standards::v1::subsets::any::io::export::csv::schedule_records;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::schedule_records;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
@@ -79,7 +78,7 @@ pub enum Advance {
 /// 🧵️ The export of one schedule as a stepped, cancellable job: infer, then encode. Dropping it half-way is the cancellation: the session keeps every node it finished.
 pub struct CsvJob {
     id: String,
-    analysis: inference::Analysis,
+    analysis: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis,
     records_per_step: usize,
     stage: Stage,
     records: Vec<Vec<String>>,
@@ -89,8 +88,8 @@ pub struct CsvJob {
 
 impl CsvJob {
     /// 🏗️ A job exporting schedule `id` of the document that instance `instance` shows.
-    pub fn new(id: String, instance: inference::Instance<'_>) -> Self {
-        Self{id,analysis:inference::Analysis::new(instance),records_per_step:RECORDS_PER_STEP,stage:Stage::Open,records:Vec::new(),written:0,text:String::new()}
+    pub fn new(id: String, instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
+        Self{id,analysis:semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis::new(instance),records_per_step:RECORDS_PER_STEP,stage:Stage::Open,records:Vec::new(),written:0,text:String::new()}
     }
 
     pub fn cancel(&mut self, snapshot: &ModelSnapshot) {
@@ -166,8 +165,8 @@ pub fn handle(payload: &ExportScheduleCsv, doc: &ArtifactView<'_, ModelSnapshot>
     let id = resolve(&payload.id, &ctx.schedule.schedule, doc.snapshot)?;
     let schedule = &doc.snapshot.schedules[&id];
     let instance = ctx.gestures.as_ref();
-    let records = inference::with_inference(instance, doc.snapshot, |found| schedule_records(schedule, found.schedules.get(&id).unwrap_or(&Default::default())));
-    Ok(download(doc.snapshot, &id, codec::document_text(records.into_iter().map(codec::record).collect())))
+    let records = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, doc.snapshot, |found| schedule_records(schedule, found.schedules.get(&id).unwrap_or(&Default::default())));
+    Ok(download(doc.snapshot, &id, semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::document_text(records.into_iter().map(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::record).collect())))
 }
 
 

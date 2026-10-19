@@ -11,7 +11,7 @@ use semio_framework_os_renderer_wgpu_fixtures::shell::{actions_shell, engaged_pa
 use super::*;
 use semio_framework::UtilityDefinition;
 use semio_framework_ui_layout::layout::{WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 fn pane_fixture() -> Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")

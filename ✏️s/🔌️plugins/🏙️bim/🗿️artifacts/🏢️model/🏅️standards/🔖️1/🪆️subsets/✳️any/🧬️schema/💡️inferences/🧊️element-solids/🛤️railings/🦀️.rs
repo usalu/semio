@@ -10,11 +10,14 @@
 //! Related: <https://en.wikipedia.org/wiki/Baluster>.
 
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::beams::section_of;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, point, rectangle};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{Infill, MaterialCategory, ModelSnapshot, Railing};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Infill, MaterialCategory};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Railing};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::mesh::{extrude_loops, sweep_profile, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
@@ -118,7 +121,7 @@ pub fn railing_geometry(railing: &Railing, own: &StoreyLevel) -> RailingGeometry
     let underside = top_z - extents_of(&railing.profile).1;
     let positions = post_positions(&segments, railing.post_spacing);
     let posts: Vec<Point> = positions.iter().map(|row| row.0).collect();
-    let column = |profile: &crate::standards::v1::subsets::any::schema::snapshot::Profile, at: Point, angle: f64| extrude_loops(&placed(&profile_loop(profile), at, angle), &[], CHORD_TOLERANCE, ZPlane::flat(base_z), ZPlane::flat(underside));
+    let column = |profile: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile, at: Point, angle: f64| extrude_loops(&placed(&profile_loop(profile), at, angle), &[], CHORD_TOLERANCE, ZPlane::flat(base_z), ZPlane::flat(underside));
     if underside - base_z <= 1e-9 {
         return RailingGeometry { rail_mesh, ..empty(posts) };
     }
@@ -159,7 +162,7 @@ pub fn railing_solid(snapshot: &ModelSnapshot, railing: &Railing, own: &StoreyLe
         Infill::Glass { .. } => glass_material(snapshot).unwrap_or(&railing.material),
         _ => &railing.material,
     };
-    builder.add(parts::POST, &railing.material, 0, &geometry.post_mesh).add(parts::RAIL, &railing.material, 0, &geometry.rail_mesh).add(parts::BALUSTER, &railing.material, 0, &geometry.baluster_mesh).add(parts::INFILL, infill, 0, &geometry.infill_mesh);
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::POST, &railing.material, 0, &geometry.post_mesh).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::RAIL, &railing.material, 0, &geometry.rail_mesh).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BALUSTER, &railing.material, 0, &geometry.baluster_mesh).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::INFILL, infill, 0, &geometry.infill_mesh);
     builder.build()
 }
 

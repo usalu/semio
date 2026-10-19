@@ -60,6 +60,8 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub window_config_authority: Option<semio_framework_plugin_window_config::WindowConfigAuthority>,
     pub window_transient_authority: Option<semio_framework_plugin_window_transient::window_transient::WindowTransientAuthority>,
     pub publication_lanes: &'static [ArtifactToolPublicationLane],
+    /// 🔒️ The admitted tool's exact execution contract, which bounds each worker step to `max_work_units_per_step` work units and `max_step_micros` microseconds; a completed-output mount never runs a worker and retains none.
+    pub contract: Option<semio_framework::ToolExecutionContract>,
     pub session: Option<semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
     pub session_rejected: Option<semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,
     pub reserved_producer: Option<ArtifactReservedToolJob>,
@@ -190,9 +192,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             let step=(||->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
+        let contract=self.contract.ok_or_else(||plugin_sdk_fault("typed operation worker requires its admitted execution contract"))?;
         if let Some(rejected)=self.session_rejected.as_mut(){
             if rejected.admission_pending()&&!cx.is_cancelled(){
-                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
+                let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
                 let before=cx.retained_progress();
                 if let Some(session)=rejected.admit_pending(config,cx)?{self.session=Some(session);drop(self.session_rejected.take());}
                 let after=cx.retained_progress();
@@ -273,7 +276,9 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             self.worker_semantic_pending=false;self.worker_outcome_pending=true;
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
-        match session.pump_one_for_interactive_turn(cx){
+        let step_fuel=cx.fuel_remaining().min(contract.max_work_units_per_step);
+        let step_deadline_us=cx.now_us().map_or(cx.deadline_us(),|now|now.saturating_add(u64::from(contract.max_step_micros)));
+        match cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same)){
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;

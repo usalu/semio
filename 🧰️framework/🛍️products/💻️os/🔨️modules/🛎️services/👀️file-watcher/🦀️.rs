@@ -7,7 +7,8 @@ use std::time::{Duration, Instant, UNIX_EPOCH};
 //#region 📸️Snapshot
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-struct FileStamp {
+#[doc(hidden)]
+pub struct FileStamp {
     path: PathBuf,
     directory: bool,
     len: u64,

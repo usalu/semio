@@ -18,7 +18,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import type { Recipe, Toolkit } from "../📜️script.ts";
+import type { Recipe, Toolkit } from "../📇️recipe-contract/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Recipes

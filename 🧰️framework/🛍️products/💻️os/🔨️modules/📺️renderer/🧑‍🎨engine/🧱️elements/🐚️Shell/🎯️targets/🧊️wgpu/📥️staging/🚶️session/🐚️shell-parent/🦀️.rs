@@ -7,7 +7,7 @@ use super::*;
 //#region ShellTypes
 /// 🧭️ Projects the structural fields observed by React Mode without presentation-only titles.
 pub fn dock_mode_layout_identity(layout: &WindowLayout) -> WindowLayout {
-    use ui_wgpu::wgpu::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+    use semio_framework_ui_declaration::layout::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
     fn stack(node: &mut WindowLayoutStackNode) {
         node.active_window_kind_id = None;
         for leaf in &mut node.children {

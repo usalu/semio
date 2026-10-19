@@ -1,8 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
-import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { repoTestArtifactEnvironment } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { configDefaults, defineConfig } from "vitest/config";
+import { repoCacheDirectory, repoTestArtifactEnvironment } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -21,7 +20,7 @@ export default defineConfig({
     environment: "node",
     include: ["**/🧪️tests/**/🟦️.ts"],
     env: { SEMIO_TEST_ARTIFACT_DIR: repoTestArtifactEnvironment(repoRoot, "plugin-registry").SEMIO_TEST_ARTIFACT_DIR! },
-    exclude: ["🧪️tests/🎚️config/🟦️.ts", "🧪️tests/📚️storybook-plugins/**", ...NOT_VITEST_SUITES],
+    exclude: [...configDefaults.exclude, "dist/**", "🧪️tests/🎚️config/🟦️.ts", "🧪️tests/📚️storybook-plugins/**", ...NOT_VITEST_SUITES],
     testTimeout: 120_000,
   },
 });

@@ -1,6 +1,6 @@
-import {validateSceneSourceAddress} from "../📋️prepare/🟦️.ts";
+import { validateSceneSourceAddress } from "../🗺️plan-model/🟦️.ts";
 /** 🔍️ Actual encoded image records become private trace paths under grants. */
-import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode } from "../🗺️plan-model/🟦️.ts";
 import {BitmapTraceJob,type BitmapTraceProgress} from "@semio-tech/framework/2d/trace";
 import type {PixelImage} from "@semio-tech/framework/pixels/editing";
 import type {PathSegment} from "@semio-tech/framework/2d";

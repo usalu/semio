@@ -14,7 +14,7 @@ test("retention negative operations leave accepted parent frames through strict 
 import{existsSync}from"node:fs";
 import{join}from"node:path";
 import{observeRetentionNegativePurposeV1}from"../🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{repositoryCachePartitionRootV1}from"../../../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 test("retention negative receiver retains actual strict wire and rejected request status without physical effects",async()=>withBuildTestInvocationV1(async original=>{
  const workspace=join(repositoryCachePartitionRootV1(process.cwd(),"products"),"tr-negative-proof");expect(existsSync(workspace)).toBe(false);for(const purpose of["queued-invalid-0","queued-invalid-1","queued-invalid-2"])await observeRetentionNegativePurposeV1(original,workspace,purpose);expect(existsSync(workspace)).toBe(false);expect(original.control.signal.aborted).toBe(false);

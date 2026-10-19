@@ -10,8 +10,8 @@ use semio_framework_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the BIM model editor and viewer surfaces.
     pub enum BimApps: PluginApp {
-        BimEditor(VcsArtifactApp<EditorApp<crate::editor::bim::BimModelApp>>),
-        BimViewer(VcsArtifactApp<ViewerApp<crate::viewer::bim::BimModelViewer>>),
+        BimEditor(VcsArtifactApp<EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>),
+        BimViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>),
     }
 }
 //#endregion 🗃️Apps
@@ -24,9 +24,9 @@ pub fn plugin() -> Result<Plugin<BimApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:bim")
         .declare_artifact(crate::artifacts::model::artifact())
-        .editor_mutation_roster::<crate::editor::bim::BimModelApp>()
-        .viewer_mutation_roster::<crate::viewer::bim::BimModelViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::model::standards::v1::subsets::any::schema::artifact_kind().id })
+        .editor_mutation_roster::<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>()
+        .viewer_mutation_roster::<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>()
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist building model edits to the open document".into(), optional: false })
         .try_build()

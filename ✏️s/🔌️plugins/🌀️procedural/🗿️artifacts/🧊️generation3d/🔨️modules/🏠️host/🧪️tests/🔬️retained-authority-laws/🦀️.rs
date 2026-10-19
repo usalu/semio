@@ -10,6 +10,8 @@ use semio_s_artifact_procedural_3d_testkit::retirement_driver::STEP_GRANT;
 use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
 use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
 
+const SEMANTIC_WIRE_CORPUS: &str = include_str!("../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json");
+
 //#region 🔮️ThirdPartyOracle
 #[derive(Debug, PartialEq)]
 struct Generation3dSemanticResult {
@@ -250,7 +252,7 @@ fn close_session(session: &mut Generation3dMutationSession) {
 
 #[test]
 fn every_variant_decodes_through_retained_structural_grants() {
-    let mutations = generation3d_all_retained_mutation_fixtures_for_test();
+    let mutations = generation3d_all_retained_mutation_fixtures_for_test(SEMANTIC_WIRE_CORPUS);
     assert_eq!(mutations.iter().map(std::mem::discriminant).collect::<std::collections::HashSet<_>>().len(), GENERATION3D_MUTATION_VARIANT_COUNT, "the fixtures cover every variant");
     for mutation in mutations {
         let bytes = encode_op(&mutation).expect("P3 retained mutation fixture encode");
@@ -324,7 +326,7 @@ fn every_document_retirement_pays_its_own_flow_frontier_under_its_quoted_grants(
 #[test]
 fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_grants() {
     let mut snapshot = Generation3dSnapshot::default();
-    let mutations = generation3d_all_retained_mutation_fixtures_for_test();
+    let mutations = generation3d_all_retained_mutation_fixtures_for_test(SEMANTIC_WIRE_CORPUS);
     let mut displaced = 0usize;
     for mutation in &mutations {
         let Ok(Some(value)) = generation3d_apply_initialization_mutation(&mut snapshot, mutation) else { continue };

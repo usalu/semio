@@ -1,6 +1,6 @@
 /** 🧬️ Presentation document: one shared figure, its tile crops, and independently owned presentation and animation children. */
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
-export type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
+export type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 /** 📐️ Normalized `x,y,width,height` rect. */
 export interface FigureTileFrame {

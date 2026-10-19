@@ -86,7 +86,7 @@ macro_rules! semio_snapshot_retirement {
     ($snapshot:ty) => {
         impl ::semio_framework_os_kernel::SnapshotRetirementFactory<$snapshot> for $crate::SemioSnapshotRetirementFactory<$snapshot> {
             fn retirement_birth_bytes(&self, _snapshot: &::std::sync::Arc<$snapshot>) -> usize {
-                ::semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<$snapshot>()
+                ::semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<$snapshot>()
             }
 
             fn retire(
@@ -94,7 +94,7 @@ macro_rules! semio_snapshot_retirement {
                 snapshot: ::std::sync::Arc<$snapshot>,
                 grant: ::semio_framework_value::retained_clone::RetainedCloneGrant,
             ) -> Result<(Box<dyn ::semio_framework_os_kernel::ErasedSnapshotRetirement>, ::semio_framework_value::retained_clone::RetainedCloneProgress), (::semio_framework_value::ValueError, ::std::sync::Arc<$snapshot>)> {
-                ::semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
+                ::semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
             }
         }
     };

@@ -1,5 +1,5 @@
 import { dirname, resolve } from "node:path";
-import { rustTokenPairs, rustTokenSegments, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokenPairs, rustTokenSegments, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
 
 /** 🧾️ One companion leaf that leaves the compiled closure and is served from its repository document. */

@@ -1,10 +1,11 @@
 //! 🔗️ `set-wall-base-offset` / `follows-by-inference`: the `wall-layout` inference follows the offset. A wall capped by its storey top is
 //! shortened by a raised base, a wall with a free height is lifted whole, and a non-finite offset is refused in code.
 
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset;
+use semio_s_artifact_bim_model_mut_any_21::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔽️set-wall-base-offset/✅️raises-the-base/📸️snapshot/⬅️before/🔣️.json"));

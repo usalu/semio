@@ -1,10 +1,10 @@
 syntax = "proto3";
 package semio.s.sourcing.curation.snapshot;
 import "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message CurationSnapshot {
   // @state artifact @child kind=s.stdio.semio
-  semio.os.store.ArtifactChild catalog = 1;
+  semio.framework.schema.artifact_child.ArtifactChild catalog = 1;
   // @state artifact
   repeated semio.s.sourcing.curation.artifact.ObjectKindExtra stock_extra = 2;
   // @state artifact

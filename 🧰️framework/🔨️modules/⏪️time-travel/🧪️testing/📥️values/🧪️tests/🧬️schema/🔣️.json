@@ -81,8 +81,8 @@
     },
     "inferenceExports": {
       "type": "array",
-      "minItems": 15,
-      "maxItems": 15,
+      "minItems": 17,
+      "maxItems": 17,
       "uniqueItems": true,
       "items": {
         "type": "string",

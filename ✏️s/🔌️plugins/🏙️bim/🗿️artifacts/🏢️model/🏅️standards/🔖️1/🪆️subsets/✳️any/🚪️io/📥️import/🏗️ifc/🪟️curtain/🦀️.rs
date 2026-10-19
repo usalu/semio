@@ -5,10 +5,10 @@
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccurtainwall.htm>
 
 use crate::standards::v1::subsets::any::io::import::ifc::data::label;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, CurtainWall, CurtainWallType};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, CurtainWall, CurtainWallType};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeMap;
 

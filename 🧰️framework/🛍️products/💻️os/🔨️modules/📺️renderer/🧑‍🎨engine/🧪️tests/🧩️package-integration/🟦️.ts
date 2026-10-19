@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -11,19 +11,21 @@ import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-t
 import documentSurfaceFixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧪️tests/🧫️fixtures/🔣️.json";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
-import { loadTaxonomy } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts";
+import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "@semio-tech/repo-lib/inventory";
 import browserAuthorityFixture from "../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
-import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
-import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { assertPinnedBunVersion, decodeAstralEscapes } from "@semio-tech/framework-renderer-wgpu/browser-build";
+import { decodeInvocationPayloads, type WgpuPluginHandle } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
+import { pluginHandleForBridge } from "@semio-tech/framework-renderer-wgpu/plugin-bridge";
+import { reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, WgpuOwnedUiInstanceRoute } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/ui-intake-and-route";
+import { settleFailedInstanceOpen } from "@semio-tech/framework-actor/shard-client";
 import { resolvePlaygroundBoot, type PluginCatalog } from "@semio-tech/framework";
 import bootSelectionFixture from "../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
 import activationFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎬️artifact-activation/🔣️.json";
 import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🧫️operation-publication/🔣️.json";
 
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 
 const browserBuildModule = new URL("../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts", import.meta.url).href;
 const frameWorkerModule = new URL("../../🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts", import.meta.url).href;
@@ -100,7 +102,7 @@ describe("framework renderer wgpu plugin bridge", () => {
   });
 
   it("hands the guest's last ephemeral frame to Rust as bytes, and nothing before the guest published one", async () => {
-    const { wgpuEphemeralSnapshot } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
+    const { wgpuEphemeralSnapshot } = await import("@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle");
     const published = pluginHandleForBridge(fakeHandle({ ephemeralSnapshot: (instanceId) => (instanceId === 7 ? wgpuEphemeralSnapshot({ presence: [1, 2], presenceGeneration: 3, interaction: [4], toolRun: [5], historyEdit: [6, 7] }) : null) }));
     expect(published.ephemeralSnapshot(7), "the guest's own tool run and history edit ride along for the presence heartbeat").toEqual({ presence: Uint8Array.from([1, 2]), presenceGeneration: 3, interaction: Uint8Array.from([4]), toolRun: Uint8Array.from([5]), historyEdit: Uint8Array.from([6, 7]) });
     expect(published.ephemeralSnapshot(8), "an instance whose guest published nothing carries no app presence").toBeNull();
@@ -109,7 +111,7 @@ describe("framework renderer wgpu plugin bridge", () => {
 
   it("queues what a guest publishes between two host calls and hands it to Rust once, as JSON", async () => {
     const { encodeAppFrame, encodePackValue, packUInt } = await import("@semio-tech/framework-os");
-    const { operationCompletionPublication, stashOperationProgress, stashOperationPublication, takeOperationPublications, WGPU_OPERATION_PUBLICATION_CAPACITY } = await import("../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts");
+    const { operationCompletionPublication, stashOperationProgress, stashOperationPublication, takeOperationPublications, WGPU_OPERATION_PUBLICATION_CAPACITY } = await import("@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle");
     const frame = (carried: { readonly output?: unknown; readonly uiScope?: unknown; readonly historyPatch?: unknown }) => encodeAppFrame({ Invocation: { in_reply_to: 0, output: carried.output === undefined ? [] : Array.from(encodePackValue(carried.output as never)), diagnostics: [], ui_scope: carried.uiScope === undefined ? [] : Array.from(encodePackValue(carried.uiScope as never)), history_patch: carried.historyPatch === undefined ? [] : Array.from(encodePackValue(carried.historyPatch as never)), messages: [], mutations: [], inverse_group: [] } });
     expect(stashOperationProgress(9_001, frame({})), "a frame that says nothing stays the next dispatch's").toBe(false);
     expect(stashOperationProgress(9_001, frame({ historyPatch: { cursor: packUInt(4n), timeTravel: { stage: "replaying", done: packUInt(2n), total: packUInt(5n) } } })), "a pure progress frame is the lane's alone").toBe(true);
@@ -272,9 +274,9 @@ describe("framework renderer wgpu plugin bridge", () => {
     const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧪️tests/🧫️fixtures/⏱️lifecycle-scheduler.json");
     const { default: equal } = await import("fast-deep-equal");
     const { encodePackValue } = await import("@semio-tech/framework-os");
-    const { OwnedResidentLedger } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts");
-    const { ShardClient } = await import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts");
-    const { DEFAULT_SHARD_BUDGET } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
+    const { OwnedResidentLedger } = await import("@semio-tech/value-ts/resident");
+    const { ShardClient } = await import("@semio-tech/framework-actor/shard-client");
+    const { DEFAULT_SHARD_BUDGET } = await import("@semio-tech/framework-actor/shard-runtime");
     const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts");
     const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts");
     

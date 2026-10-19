@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, leaning, quantity, real, rows, string, tags, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, leaning, quantity, real, rows, string, tags, target};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 
 fn solid_of<'a>(document: &'a Part21Document, args: &[Part21Value]) -> &'a Vec<Part21Value> {
@@ -61,8 +61,9 @@ fn frames_carry_area_and_volume_quantities() {
     assert!(count(&document, "IFCRELASSOCIATESMATERIAL") > 0);
 }
 
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{property_sets, text_of};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Column, ModelSnapshot, Point2, Slope};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{property_sets, text_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, Slope};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Column, ModelSnapshot};
 
 fn shape_items<'a>(document: &'a Part21Document, args: &[Part21Value]) -> Vec<(String, &'a Part21Instance)> {
     let shape = target(document, args, 6).and_then(|instance| instance.entity("IFCPRODUCTDEFINITIONSHAPE")).expect("the shape");
@@ -125,7 +126,7 @@ const FRAME_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../�
 /// 🏗️ The frame model: [`leaning`] with the door, open and window panels of the curtain wall of the curtain wall export tests.
 pub(crate) fn frame() -> ModelSnapshot {
     let mut model = leaning();
-    model.curtain_panel_overrides = crate::standards::v1::subsets::any::io::export::ifc::testkit::framed().curtain_panel_overrides;
+    model.curtain_panel_overrides = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::framed().curtain_panel_overrides;
     model
 }
 
@@ -150,7 +151,7 @@ fn the_committed_frame_snapshot_is_the_frame_model() {
 
 #[test]
 fn the_committed_frame_file_is_the_current_export() {
-    let (bytes, notes) = crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&frame()).expect("the frame exports");
+    let (bytes, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&frame()).expect("the frame exports");
     assert!(notes.is_empty(), "{notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
         let path = format!("{FRAME_DIR}/🏗️frame.ifc");
@@ -162,7 +163,7 @@ fn the_committed_frame_file_is_the_current_export() {
 
 #[test]
 fn the_frame_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::projection::projection;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
     let oracle: serde_json::Value = serde_json::from_slice(&read_frame("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&frame()).to_json()).expect("the report parses");
     assert_eq!(oracle["schema"], ours["schema"]);

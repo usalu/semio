@@ -6,7 +6,8 @@ use super::engine_surface_attach::take_engine_surface_registrations;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::{begin_engine_surface_close_token, close_engine_surface_step, ENGINE_SURFACES};
 use semio_framework_os_renderer_wgpu_engine_registry::fixtures::with_engine_close_context;
 use semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::STAGED_ENGINE_SCENES;
-use ui_wgpu::wgpu::{ActionDescriptor, InputState};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::InputState;
 
 /// 🧹️ Drains one attached surface through the registry's OWN retirement ladder. `FlowHostSnapshot`'s
 /// ordered maps refuse to drop unretired, so a plain `remove` panics inside the registry mutex and

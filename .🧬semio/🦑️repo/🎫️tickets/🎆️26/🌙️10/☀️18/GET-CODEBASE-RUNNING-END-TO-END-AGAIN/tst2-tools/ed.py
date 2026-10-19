@@ -12,6 +12,10 @@ def edit(path, pairs, add_import=False, name="readModuleTreeSource"):
         if n!=cnt: raise SystemExit(f"count mismatch {n}!={cnt} for {old[:90]!r} in {path}")
         t=t.replace(old,new)
     if add_import and not re.search(r'import[^;]*\b'+name+r'\b[^;]*from',t):
+        mm=re.search(r'import \{ ([^}]*) \} from "'+re.escape(r)+'";',t)
+        if mm:
+            t=t.replace(mm.group(0),'import { '+mm.group(1)+', '+name+' } from "'+r+'";',1)
+            open(p,"w",encoding="utf-8").write(t); return
         lines=t.split("\n"); idx=-1
         for i,l in enumerate(lines):
             if re.search(r'from\s*["\'][^"\']+["\']\s*(with\s*\{[^}]*\})?\s*;?\s*$',l) and (l.startswith("import") or l.startswith("}")): idx=i

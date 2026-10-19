@@ -1,4 +1,4 @@
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { frameworkOsLockedPrefsEnv } from "@semio-tech/repo-lib/dev";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";

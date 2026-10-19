@@ -12,7 +12,7 @@ import{captureNativeImagePublicationWitnessV1}from"../../🟦️.ts";
 const schema={...witnessSchema.definitions.Windows,definitions:{...witnessSchema.definitions.Windows.definitions,Protocol:nativeWindowsSystemSchemaV1.definitions.NativeReadProtocol,Facts:nativeWindowsSystemSchemaV1.definitions.NativeReadFacts,Root:nativeWindowsSystemSchemaV1.definitions.NativeReadRoot}};
 const windowsValidators=new Map<string,ReturnType<Ajv["compile"]>>(),acceptWindowsData=(name:string,value:unknown)=>{let validator=windowsValidators.get(name);if(!validator){validator=new Ajv({strict:true}).addSchema(nativeWindowsSystemSchemaV1).compile({...witnessSchema,$ref:"#/definitions/Windows/definitions/"+name});windowsValidators.set(name,validator);}return validator(value);};
 import corpus from"./🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../🎛️owned-execution/🟦️.ts";
 registerBuildTestLawV1("Windows publication observer directory bytes agree with independent Python and SQLite","caller-birth",async original=>{

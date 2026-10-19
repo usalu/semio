@@ -1,12 +1,13 @@
-use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
-use crate::standards::v1::subsets::any::schema::snapshot::Vertex;
-use crate::editor::bim::gestures::plane::signed_area;
-use crate::editor::bim::gestures::session::{REJECTED, TYPE_MISSING};
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{model, room, Rig};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::RoofShape};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::ceilings::DEFAULT_DROP;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::signed_area;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{REJECTED, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{model, room, Rig};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape;
 
-fn ring(vertices: &[crate::standards::v1::subsets::any::schema::snapshot::Vertex]) -> Vec<[f64; 2]> {
+fn ring(vertices: &[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex]) -> Vec<[f64; 2]> {
     vertices.iter().map(|vertex| [vertex.point.x, vertex.point.y]).collect()
 }
 
@@ -89,15 +90,15 @@ async fn the_slab_from_walls_takes_the_closed_wall_loop_around_the_click() {
     assert_eq!(rig.down(30.0, 30.0).refused, Some(REJECTED), "outside no loop is closed");
 }
 
-fn hung(mut snapshot: crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
-    let layer = crate::standards::v1::subsets::any::schema::snapshot::Layer { material: "m-concrete".into(), thickness: 0.0125, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Finish };
-    snapshot.ceiling_types.insert("ct-board".into(), crate::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![layer] });
+fn hung(mut snapshot: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+    let layer = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer { material: "m-concrete".into(), thickness: 0.0125, function: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Finish };
+    snapshot.ceiling_types.insert("ct-board".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![layer] });
     snapshot
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_ceiling_polygon_hangs_the_default_drop_below_the_storey_top_and_is_written_counter_clockwise() {
-    use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
+    use semio_s_artifact_bim_model_entities::editor::bim::entities::ceilings::DEFAULT_DROP;
     let mut rig = Rig::plan("ceiling", hung(model()));
     for (x, y) in [(0.0, 0.0), (0.0, 4.0), (5.0, 4.0), (5.0, 0.0)] {
         assert!(rig.click(x, y).mutations.is_empty(), "a corner only extends the polygon");

@@ -23,7 +23,7 @@ impl ShellInputState {
 
     /// 🎬️ Admits only the exact published scene hit while its originating surface remains live.
     pub fn retained_scene_hit_is_live(&self, hit: &HitTarget<ActionDescriptor>, x: f32, y: f32) -> bool {
-        use ui_wgpu::wgpu::SurfaceKind;
+        use semio_framework_ui_declaration::ui::SurfaceKind;
         let Some(control) = hit.control_id.as_deref() else { return false };
         let Some((rect, scene)) = self.retained_scene_hits.get(control) else { return false };
         let window = &scene.window_id;
@@ -47,7 +47,7 @@ impl ShellInputState {
         let (rect, scene) = scene_entry?;
         let (window_id, body) = owner_entry?;
         let live = live?;
-        (*rect == hit.rect && rect.contains(x, y) && body.contains(x, y) && scene.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && scene.window_id == *window_id && live.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d && live == *scene)
+        (*rect == hit.rect && rect.contains(x, y) && body.contains(x, y) && scene.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d && scene.window_id == *window_id && live.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d && live == *scene)
             .then(|| (window_id.clone(), *body))
     }
 
@@ -87,7 +87,7 @@ impl ShellInputState {
     }
 
     /// 🧭 Resolves one timer owner from this shell's GPU-accepted retained surface roster.
-    pub fn retained_clock_surface(&self, index: usize) -> Option<(&str, ui_wgpu::wgpu::UiSurfaceToken)> {
+    pub fn retained_clock_surface(&self, index: usize) -> Option<(&str, semio_framework_ui_wgpu_engine::UiSurfaceToken)> {
         self.presented_input_geometry.retained_surfaces.get(index).map(|(id, surface)| (id.as_str(), *surface))
     }
 
@@ -178,13 +178,13 @@ impl ShellInputState {
         if let Some(previous) = self.retained_hover_window.clone() {
             if current.as_ref().map(|(window_id, _)| window_id.as_str()) != Some(previous.as_str()) {
                 if let Some(body) = self.retained_window_body_rect(&previous) {
-                    let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&previous, pointer_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
+                    let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&previous, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
                 }
             }
         }
         self.retained_hover_window = current.as_ref().map(|(window_id, _)| window_id.clone());
         let Some((window_id, body)) = current else { return };
-        let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
+        let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_pointer_event(&window_id, pointer_id, semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: retained_event_modifiers(input) }, input);
     }
 
     //#endregion 🎯️RetainedPointerRouting
@@ -295,7 +295,7 @@ impl ShellInputState {
         }
         if let Some((surface, body)) = self.retained_hit_window(&hit) {
             let modifiers = retained_event_modifiers(input);
-            let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers }, input);
+            let _ = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(&surface, semio_framework_ui_wgpu_events::UiEvent::Scroll { x: x - body.x, y: y - body.y, delta_x, delta_y, modifiers }, input);
             return true;
         }
         if hit.kind != HitKind::ScrollRegion {

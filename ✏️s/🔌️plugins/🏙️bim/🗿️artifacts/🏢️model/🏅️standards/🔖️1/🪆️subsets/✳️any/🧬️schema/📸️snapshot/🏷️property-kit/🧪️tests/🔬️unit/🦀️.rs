@@ -1,10 +1,10 @@
-use crate::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
-use crate::standards::v1::subsets::any::schema::snapshot::entities::ClassificationSystem;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::ClassificationSystem;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
-use crate::standards::v1::subsets::any::schema::snapshot::property_kit::*;
-use crate::standards::v1::subsets::any::schema::snapshot::values::*;
-use crate::standards::v1::subsets::any::schema::snapshot::property_kit_values::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::property_kit::{template_problem, entries_problem};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values::*;
 
 fn real(value: f64) -> PropertyValue {
     PropertyValue::Real { value }

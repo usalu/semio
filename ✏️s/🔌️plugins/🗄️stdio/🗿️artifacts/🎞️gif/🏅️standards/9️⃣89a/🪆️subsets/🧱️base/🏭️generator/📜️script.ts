@@ -41,16 +41,16 @@ import { createHash } from "node:crypto";
 import { readdirSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
 const ENGINE_MANIFEST = join(ENGINE_DIR, "Cargo.toml");
-const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate");
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 const APPLICATION_FIXTURES_DIR = join(HERE, "..", "..", "🧩️application", "🧪️tests/🧫️fixtures");
 const COMMENT_FIXTURES_DIR = join(HERE, "..", "..", "💬️comment", "🧪️tests/🧫️fixtures");
@@ -352,7 +352,7 @@ print(kind + ': written')
     const readerDir = join(HERE, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
     const built = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(readerDir, "Cargo.toml")], { stdio: "inherit" });
     if (built.status !== 0) throw new Error(`cargo build failed with status ${built.status}`);
-    const readerBin = join(cargoTargetDirectory(getWorkspaceRoot()), "release", "reader");
+    const readerBin = join(cargoTargetDirectory(findWorkspaceRoot()), "release", "reader");
     const explicitRoot = flagValue(rest, "--out") ?? fixtureOutRoot ?? null;
     if (command === "extensions") {
       const failures: string[] = [];

@@ -1,9 +1,11 @@
-use crate::editor::bim::gestures::plane::angle;
-use crate::editor::bim::gestures::session::Step;
-use crate::editor::bim::gestures::session::{Modifiers, Surface, ToolEvent};
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Column, CurtainGrid, CurtainPanel, CurtainWall, ModelSnapshot, Phase, Point2, Slope, TopConstraint}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::angle;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Step;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Surface, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, CurtainGrid, CurtainPanel, Phase, Point2, Slope, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, CurtainWall, ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 fn framed() -> ModelSnapshot {
     let mut snapshot = room();
@@ -25,7 +27,7 @@ fn framed() -> ModelSnapshot {
     snapshot
 }
 
-fn shifted(rig: &mut Rig, x: f64, y: f64) -> crate::editor::bim::gestures::session::Step {
+fn shifted(rig: &mut Rig, x: f64, y: f64) -> semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Step {
     let pointer = rig.pointer(x, y, Modifiers { shift: true, ..Modifiers::default() });
     rig.send(ToolEvent::Down(pointer))
 }

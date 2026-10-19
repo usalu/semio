@@ -10,7 +10,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
-use ui_wgpu::wgpu::WindowLayout;
+use semio_framework_ui_declaration::layout::WindowLayout;
 use semio_framework_manifest_actions::{ActionDefinition, ActionKind};
 use semio_framework_manifest_address::{ActionRef, ToolRef, UtilityRef};
 use semio_framework_manifest_arg_schema::{ActionArgDef, ActionArgOption};

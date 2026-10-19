@@ -15,7 +15,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, ExtensionIn
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::flow_eval_tick::*;
 use crate::editor::flow::commands::evaluate::evaluate_result;
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
 
 /// 🔢️ How many hops the starter graph's chain is allowed before a law calls it a spin. The live
 /// defect this bounds ran 2015 hops in ~3 s and only stopped when it had exhausted the host's

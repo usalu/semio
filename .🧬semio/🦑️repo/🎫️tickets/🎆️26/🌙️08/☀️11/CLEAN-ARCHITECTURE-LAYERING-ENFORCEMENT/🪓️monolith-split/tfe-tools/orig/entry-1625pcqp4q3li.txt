@@ -1,8 +1,0 @@
-/** 🧫 The infinite module's public fixture entry: the language-neutral corpora its consumers read, exposed by name under one import so no consumer spells the owner's internal folders. */
-export { default as sceneShadowParityFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
-export { default as worldSceneShadowsFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
-export { default as worldSceneLightingFixture } from "../../🌍️world/🧪️tests/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
-export const loadPrimaryGeometryStyleFixture = () => import("../../🌍️world/🧪️tests/🧫️fixtures/🎨️primary-geometry-style/🔣️.json").then(module => module.default);
-export { default as dagSliderOverlayFixture } from "../../🎲️board/🔌️ports/➡️directed/🕸️dag/🧪️tests/🧫️fixtures/🎚️slider-overlay.json" with { type: "json" };
-export { default as infiniteFontsReadingSchema } from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
-export { default as artifactsDagVcsSchema } from "../../🗿️artifacts/🕸️dag/🌿️vcs/🧬️schema/🔣️.json" with { type: "json" };

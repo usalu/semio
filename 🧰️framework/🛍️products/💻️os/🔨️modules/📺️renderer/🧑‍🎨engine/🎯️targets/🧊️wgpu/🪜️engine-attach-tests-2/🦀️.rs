@@ -55,7 +55,8 @@ mod engine_canvas {
     use serde_json::{Value, json};
     use std::collections::HashMap;
     use std::mem::ManuallyDrop;
-    use ui_wgpu::wgpu::{InputState, KeyAction, PointerModifiers, UiPresence};
+    use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_declaration::ui::UiPresence;
 
     include!("../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧊️wgpu-standalone/🦀️.rs");
 

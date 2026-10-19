@@ -1,7 +1,7 @@
 /** 🎪️ One locale pass and the whole run with its markdown report. */
 import { join } from "node:path";
 import { ensureParityPlaywrightBrowsersPath } from "../../../⚖️parity/🏃️execution/🟦️.ts";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { writeFileSync } from "node:fs";
 import { context, scenario, setCurrentLocale, setCurrentStep, setNavigations, setExpectedReloads, serveOrigin, renderer, universalRoute, wgpuSeedTerminology, lastBootFault, setWgpuSeedTerminology, page, navigations, probeReloadAt, setInvalidatedBy, invalidatedBy, setMod, mod, explore, OUT, stamp, cancelled, only, expectedReloads, setBrowser, locales, browser, chordLocales, reloadSelected, base, longHistory } from "@semio-tech/framework-time-travel-ts/testing/state";
 import type { Locale } from "@semio-tech/framework-time-travel-ts/testing/state";

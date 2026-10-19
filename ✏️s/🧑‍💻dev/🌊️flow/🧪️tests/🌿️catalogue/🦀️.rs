@@ -412,7 +412,7 @@ fn supplied_operator_registries_and_geometry_ports_keep_host_authorities_indepen
         assert_eq!(volume["value"].as_f64(),row["volume"].as_f64());
         handles.push(handle);
         host.retire_cold();
-        for _ in 0..100_000 { if retirement.terminal_is_empty() { break; } retirement.close_step(1,4096).unwrap(); }
+        for _ in 0..100_000 { if retirement.terminal_is_empty() { break; } retirement.close_step(neural_engine::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }).unwrap(); }
         assert!(retirement.terminal_is_empty());
     }
     sessions[0].close();

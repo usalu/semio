@@ -1,13 +1,13 @@
 /** 🧬️ ProgramSnapshot artifact schema — every field with its state class. */
 
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseBinary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 import type { ProgramMeta, ProjectDefinition, QuantitySpec, TraceLink } from "./🪪️entity-foundation/🟦️.ts";
 import type { AccessRule, Activity, Adjacency, AdjacencyKind, FlowRequirement, Function, Process, ProgramElement, QuantityRequirement, Relationship, Stakeholder, UserProfile } from "./🏗️program-structure/🟦️.ts";
 import type { AccessibilityRequirement, CommunicationRequirement, CostRequirement, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, OperationalRequirement, OrganizationalRequirement, PrivacyRequirement, RegulatoryRequirement, ResilienceRequirement, Resource, SafetyRequirement, ScheduleRequirement, SecurityRequirement, ServiceRequirement, SiteContext, StorageRequirement, SustainabilityRequirement, WayfindingRequirement } from "./📋️requirements/🟦️.ts";
 import type { AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, BenchmarkRecord, ChangeRecord, CollaborationRecord, ComplianceRecord, Conflict, ConstraintRecord, Decision, Governance, Issue, KnowledgeRecord, MeetingRecord, OptionEvaluation, PerformanceCriterion, PriorityRecord, QualityRecord, ReportRecord, Requirement, Risk, Scenario, SearchFilter, StatusRecord, Survey, TemplateRecord, ValidationRecord, Workshop } from "./🗃️decision-records/🟦️.ts";
-export { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+export { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 export type { RegisterKey, RegisterRow } from "./🗄️registers/🗂️catalog/🟦️.ts";
 
 export const PROGRAM_ARTIFACT_FIELDS = [

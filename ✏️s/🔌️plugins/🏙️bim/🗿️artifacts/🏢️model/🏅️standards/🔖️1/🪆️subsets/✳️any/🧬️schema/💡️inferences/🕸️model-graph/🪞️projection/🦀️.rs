@@ -2,7 +2,7 @@
 //! `Room(storey)` → the rooms of its spaces in `spaces`, `Quantity`/`Totals` → `quantities`, `Zone` → `zone_totals`, `Scheme` → `scheme_totals`, every `Diagnostics` node → the ordered `diagnostics`, `DiagnosticIndex` → `diagnostic_index`). The same functions fill a whole
 //! inference ([`project`]) and update a held one entry by entry ([`apply`], [`retract`]).
 
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{Data, ModelNode, ModelValue, TotalsScope, Values};
 use std::sync::Arc;

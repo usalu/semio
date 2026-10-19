@@ -126,7 +126,7 @@ describe("framework sync utilities", () => {
     );
     expect(remote.container.querySelector("[data-semio-sync-browse]")).toBeNull();
     remote.unmount();
-    const { spacesUiLabel } = await import("../../🎯️targets/⚛️react/🟦️.tsx");
+    const { spacesUiLabel } = await import("@semio-tech/framework-renderer-react");
     expect(spacesUiLabel("ui.sync.browse", "en")).toBe("Browse…");
     expect(spacesUiLabel("ui.sync.browse", "de")).toBe("Durchsuchen…");
     await uiI18n.changeLanguage("en");

@@ -34,7 +34,7 @@ semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d-compute = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }

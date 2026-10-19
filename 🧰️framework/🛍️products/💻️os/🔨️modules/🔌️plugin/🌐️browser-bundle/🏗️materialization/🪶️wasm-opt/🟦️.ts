@@ -3,8 +3,9 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readdirSync, renameSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { preparedBinaryen } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
-import { runCmdStatus, semioBuildMode } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { preparedBinaryen } from "@semio-tech/nx-bootstrap-tools/wasm/script";
+import { runCmdStatus } from "@semio-tech/process/execution";
+import { semioBuildMode } from "@semio-tech/repo-lib/process";
 import type { PluginWebMaterializeContext } from "../🧾️contract/🟦️.ts";
 
 const WASM_OPT_ARGS: readonly string[] = [

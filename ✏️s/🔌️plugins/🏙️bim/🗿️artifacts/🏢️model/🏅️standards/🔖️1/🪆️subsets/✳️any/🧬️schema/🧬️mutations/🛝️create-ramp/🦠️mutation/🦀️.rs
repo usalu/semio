@@ -1,6 +1,7 @@
 //! 🛝️ `create-ramp` payload. Brings a new ramp onto a storey; its length, rise, slope, landings, solid and compliance are inferred from the authored path, landings and top constraint.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Ramp}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Ramp};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateRamp {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateRamp
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRamp> + From<crate::standards::v1::subsets::any::schema::mutations::delete_ramp::DeleteRamp>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRamp> + From<semio_s_artifact_bim_model_mut_any_92::standards::v1::subsets::any::schema::mutations::delete_ramp::DeleteRamp>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "ramp", kind: "create-ramp", record: "CreateRamp" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

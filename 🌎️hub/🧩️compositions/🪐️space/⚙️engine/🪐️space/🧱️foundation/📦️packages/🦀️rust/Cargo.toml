@@ -28,7 +28,7 @@ semio-framework-dsl-record-derive = { path = "../../../../../../../../🧰️fra
 semio-framework-ui-locale = { path = "../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-os = { workspace = true }
 

@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { applyLocalCatalogConfigMutation, inverseLocalCatalogConfigMutation, type LocalCatalog, type LocalCatalogConfigMutation } from "../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import { applyLocalCatalogConfigMutation, inverseLocalCatalogConfigMutation, type LocalCatalog, type LocalCatalogConfigMutation } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Fixtures

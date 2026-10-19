@@ -4,7 +4,7 @@ import {runOwnedCommand} from "../../../../../🧰️framework/📦️packages/�
 /** 🧱️ Block source, schema, and publication-authority laws. */
 import { resolve } from "node:path";
 
-import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCmd } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../🧰️framework/📦️packages/🟦️typescript/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";

@@ -15,16 +15,21 @@ use semio_framework_os_infinite_world_scene::WORLD_REFERENCE_TEXTURE_BYTES;
 use semio_framework_os_infinite_world_bridge::{advance_world3d_view_revision, classify_world_navigation_gestures, component_mode_active, DecodedMeshPaintImage, gumball_preview_in_place, mesh_face_id, reference_image_aspect, retain_world_blocked_owner, scene_mesh_awaits_its_asset, selection_centroid, world3d_camera_zoom, WORLD_NAVIGATION_GESTURE_IDS, world_navigation_snapshot, WorldInteractionActive, WorldInteractionRegistryBuildCursor, WorldRetirementState};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_bridge::{apply_gumball_preview, pointer_drag_distance, reset_gumball_preview};
-use ui_wgpu::wgpu::{ActionDescriptor, axis_rotate_angle, Camera3d, gumball_eye, gumball_project_ray_onto_axis, HitKind, HitTarget, Instance3d, interpolate_mesh_uv, LineVertex3d, marquee_is_crossing_from_path, Mat4, Mesh3dField, Mesh3dLease, PointerModifiers, ray_aabb_slab, ray_plane_point, Rect, Rgba, SceneDraw3d, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode, UiComponentSceneNode, Vec3, World3dSnapshotFault};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{axis_rotate_angle, Camera3d, gumball_eye, gumball_project_ray_onto_axis, Instance3d, interpolate_mesh_uv, LineVertex3d, marquee_is_crossing_from_path, Mat4, Mesh3dField, Mesh3dLease, ray_aabb_slab, ray_plane_point, SceneDraw3d, Vec3};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_framework_ui_declaration::ui::{UiComponentSceneNode, World3dSnapshotFault};
 use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
 use std::collections::{HashMap, HashSet};
 use semio_framework_ui_locale::LocalizedLabel;
 use std::sync::Mutex;
 use semio_framework_value::RetainedCloneGrant;
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{SceneAuthoredMaterial3d, SceneLighting3d, SceneMaterialAlpha3d};
-#[cfg(any(test, feature = "testkit"))]
-use ui_wgpu::wgpu::{gizmo, ray_pick_instance, ray_pick_mesh_detail, screen_select_components, screen_select_instances};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneAuthoredMaterial3d, SceneLighting3d, SceneMaterialAlpha3d};
+#[cfg(any(test, feature = "testkit"))] use semio_framework_ui_draw_contract::gizmo;
+#[cfg(any(test, feature = "testkit"))] use ui_scene::math::{ray_pick_instance, ray_pick_mesh_detail, screen_select_components, screen_select_instances};
 use serde_json::json;
 
 /// 🧩️ World3d authority component: the interaction authority state machine with its active cursor or job.
@@ -348,7 +353,7 @@ pub fn begin_world3d_interaction_close(authority_state: &mut WorldAuthorityState
     }
 }
 
-pub fn close_world3d_interaction_step(authority_state: &mut WorldAuthorityState, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+pub fn close_world3d_interaction_step(authority_state: &mut WorldAuthorityState, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> bool {
     if context.should_yield() {
         return false;
     }

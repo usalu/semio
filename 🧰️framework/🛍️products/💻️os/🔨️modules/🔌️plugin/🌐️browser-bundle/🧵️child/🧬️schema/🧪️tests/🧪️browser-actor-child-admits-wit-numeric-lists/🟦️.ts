@@ -1,14 +1,14 @@
 /** 🔢️ The child boundary admits exactly the typed arrays jco lifts WIT numeric lists into — a `set-children` patch op's
  * `list<node-id>` arrives as a `BigUint64Array` — each as one exclusive transferable buffer, and refuses every other view
  * by name. Neutral rows: the containment corpus' `valueAdmission`. */
-import * as ModuleUnderTest from "../../../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework/browser-bundle/child/schema";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 type Row = { readonly name: string; readonly lift: string; readonly length: number; readonly offsetElements?: number; readonly repeat?: true; readonly expected: string };
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"), "measureChildValue">, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework/browser-bundle/child/schema"), "measureChildValue">, source: TestSource): Promise<void> {
   const { measureChildValue } = dependencies;
   const { expect, it } = vitest;
   it("browser actor child admits WIT numeric lists as exclusive buffers and refuses other views by name", async () => {

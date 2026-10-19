@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 dashboard_registry = { path = "../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }
 dashboard_repo_domain = { path = "../../../🏛️repo-domain/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-repo-domain" }
 serde = { workspace = true }

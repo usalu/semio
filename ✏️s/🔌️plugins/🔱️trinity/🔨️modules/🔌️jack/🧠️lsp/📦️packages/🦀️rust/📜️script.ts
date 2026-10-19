@@ -4,14 +4,14 @@ import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../🧰�
 import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/trinity-jack-lsp` router: `bun ./📜️script.ts wasm`. */
-import { runRepositoryCargoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { buildAdmittedWasmWebV1 } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
+    await buildAdmittedWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: this.root,
       componentDir: this.root,
       logPrefix: "trinity/jack/lsp",
@@ -30,7 +30,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-s-plugin-trinity-jack-lsp"], this.repoRoot, this.invocation, rest);
   }
 }
 

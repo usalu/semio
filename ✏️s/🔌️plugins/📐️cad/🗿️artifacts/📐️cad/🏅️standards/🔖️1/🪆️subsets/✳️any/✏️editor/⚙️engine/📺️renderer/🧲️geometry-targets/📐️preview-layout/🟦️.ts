@@ -3,7 +3,7 @@ import { type Object3D as ThreeObject3D } from "@semio-tech/framework/ui/targets
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { type SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import { type DisplayModel } from "../../../🎬️actions/🟦️.ts";
+import type { DisplayModel } from "../../../🎬️actions/🖼️display-model/🟦️.ts";
 import { scenePreview } from "../../🔌️ports/🟦️.ts";
 
 // #region 🪩️ArchivedFootprints

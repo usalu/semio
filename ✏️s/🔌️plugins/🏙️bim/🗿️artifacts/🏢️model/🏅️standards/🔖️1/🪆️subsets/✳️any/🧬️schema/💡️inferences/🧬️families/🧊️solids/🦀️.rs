@@ -2,11 +2,13 @@
 //! empty. The geometry is the framework's: [`extrude_loops`] for extrusions and cuboids, [`sweep_profile`] for sweeps along a plan path, [`revolve_profile`] for revolutions, all within the chord
 //! tolerance of the element solids. A solid lives in the family frame (metres, `z` up); its offset moves it.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBounds, SolidPoint, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid, ModelSnapshot, ParametricProfile, SolidAxis, SolidShape};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBounds, SolidPoint};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ParametricProfile, SolidAxis, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{FamilySolid, ModelSnapshot};
 use semio_framework_expression::{evaluate, parse, Kind, Value};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::{self, Vertex};

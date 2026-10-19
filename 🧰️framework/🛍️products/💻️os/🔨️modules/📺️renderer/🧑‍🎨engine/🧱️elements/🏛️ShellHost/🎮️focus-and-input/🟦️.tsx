@@ -61,7 +61,6 @@ import {
   writeStoredIntroductionSeen
 } from "@semio-tech/ui-react";
 import { resolveAppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
 import { type ActiveSession } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 // #endregion 🔌️Adapters
@@ -76,7 +75,7 @@ import {
 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
-import { parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { parsePanelState, type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { createLatestAsyncDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { timeTravelIndicatorTextV1, TimeTravelWindowIndicator } from "../../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";

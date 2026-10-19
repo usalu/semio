@@ -101,8 +101,9 @@ impl TunedDeflateEncodeJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl TunedDeflateEncodeJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
             return retire_delivered_publication(&mut self.publication, context);
         }
@@ -127,6 +128,10 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
             }
         }
     }
+}
+
+impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         borrow_publication_outcome(&self.publication, descriptor)
@@ -134,32 +139,34 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
 
     fn begin_close(&mut self) {}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        let demand = match self.close_demands() {
-            Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
-        if semio_framework_job::InteractiveJob::terminal_is_empty(self) {
-            return deflate_close_complete();
-        }
-        if !deflate_close_admits_demand(grant, demand) {
-            return deflate_close_idle();
-        }
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(grant);
-            if publication.terminal_is_empty() {
-                self.publication = None;
-            }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            let demand = match self.close_demands() {
+                Ok(demand) => demand,
+                Err(error) => return Err(error),
             };
-        }
-        match self.engine.close_step() {
-            Some(released_bytes) => deflate_close_receipt(1, released_bytes),
-            None => deflate_close_complete(),
-        }
+            if semio_framework_job::InteractiveJob::terminal_is_empty(self) {
+                return Ok(deflate_close_complete());
+            }
+            if !deflate_close_admits_demand(grant, demand) {
+                return Ok(deflate_close_idle());
+            }
+            if let Some(publication) = self.publication.as_mut() {
+                let step = publication.close_step(grant)?;
+                if publication.terminal_is_empty() {
+                    self.publication = None;
+                }
+                return Ok(match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            Ok(match self.engine.close_step() {
+                Some(released_bytes) => deflate_close_receipt(1, released_bytes),
+                None => deflate_close_complete(),
+            })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

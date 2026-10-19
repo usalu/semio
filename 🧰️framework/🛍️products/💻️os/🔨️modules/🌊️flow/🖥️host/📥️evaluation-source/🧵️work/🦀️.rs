@@ -3,7 +3,7 @@ use super::*;
 use super::seeds::FlowEvaluationSeeds;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use neural::OperatorWorkFailure;
-use semio_framework_value::retirement::shared::{SharedControlledRetirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes};
+use semio_framework_value::retirement::arc_custody::{SharedControlledRetirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes};
 
 struct WorkLease<T:RetireOwned+Sync>(Arc<T>);
 impl<T:RetireOwned+Sync> RetireOwned for WorkLease<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(shared_retirement_birth_bytes::<T>())}fn controlled_retirement_supported()->bool{true}}

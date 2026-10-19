@@ -39,6 +39,7 @@ semio-framework-value = { path = "../../../../../../../../../../../../../../../�
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-svg-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-diff = { path = "../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml = { workspace = true }
 
 [dev-dependencies]

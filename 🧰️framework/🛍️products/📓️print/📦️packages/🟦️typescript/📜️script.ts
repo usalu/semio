@@ -7,7 +7,7 @@ import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
 import { generateVizArtifacts } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
-import {runArtifactTypeScriptPackageMain} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 
 //#region 🖨️RouterAdapters
 class FontsScript extends BundleScript {
@@ -54,4 +54,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check",CheckScript)
   .register("test", TestScript);
 
-if(import.meta.main){if(process.argv[2]==="test"&&process.argv[3]==="inspect-refusal"){const{runPrintCompilerRefusalInspectorV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts");await runPrintCompilerRefusalInspectorV1(process.env,process.argv.slice(4));}else await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test"}));}
+if(import.meta.main){if(process.argv[2]==="test"&&process.argv[3]==="inspect-refusal"){const{runPrintCompilerRefusalInspectorV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts"),{withCompiledPrintProbeV1}=await import("../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts");await runPrintCompilerRefusalInspectorV1(process.env,process.argv.slice(4),withCompiledPrintProbeV1);}else await receiveScriptProcessInvocation(process.env,original=>runScriptMain(router,{invocation:original,defaultCommand:"test"}));}

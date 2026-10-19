@@ -8,7 +8,7 @@ use super::*;
 use crate::schema::mutations::*;
 use {semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::set_sample_rate;
 use {semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation, semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot};
 use crate::schema::diff::SemioDiff;
 use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};

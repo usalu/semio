@@ -40,7 +40,7 @@ pub mod editor {
         #[path = "../../🦀️.rs"]
         mod component;
         pub use component::*;
-        pub use semio_s_artifact_flow_flow_inferences::editor::flow::base;
+        pub use semio_s_artifact_flow_flow_inferences::editor::flow::editor_vocabulary;
         pub use semio_s_artifact_flow_flow_mutations::editor::flow::host;
         #[path = "."]
         pub mod presence {

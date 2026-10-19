@@ -1,9 +1,9 @@
-use crate::editor::bim::entities::ENTITIES;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::ordered_storeys;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::DomainTopology;
 #[allow(unused_imports)]
@@ -29,7 +29,7 @@ use semio_framework_plugin::TopologyNode;
 use crate::editor::bim::interaction::*;
 
 fn demo() -> ModelSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -43,9 +43,9 @@ async fn the_manifest_declares_both_domains_with_one_granularity_per_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_wall_sweep_is_a_node_of_the_element_domain_under_its_wall() {
-    let create = crate::editor::bim::entities::kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
+    let create = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
     let snapshot = demo();
-    let snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
     let topology = element_topology(&snapshot);
     let position = |id: &str| topology.ordered.iter().position(|node| node.id == id).unwrap_or_else(|| panic!("{id} in topology"));
     assert!(position("w-south") < position("sw-1") && position("sw-1") < position("st-first"));

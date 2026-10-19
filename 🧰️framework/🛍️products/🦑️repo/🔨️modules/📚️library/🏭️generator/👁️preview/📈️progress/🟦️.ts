@@ -1,5 +1,5 @@
-import policySchema from "./🧬️schema/🔣️.json";
-import eventSchema from "./🧬️schema/🔣️event.json";
+import policySchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import eventSchema from "./🧬️schema/🔣️event.json" with { type: "json" };
 
 export interface GeneratorPreviewProgressPolicyV1 { readonly protocol: "physical-file-progress-v1"; readonly maxEventBytes: number; readonly maxBytes: number; readonly maxEvents: number; readonly maxWork: number; readonly maxDurationMs: number; readonly maxSourceBytes: number; readonly maxSources: number }
 export interface GeneratorPreviewProgressEventV1 { readonly protocol: "physical-file-progress-v1"; readonly sourceIndex: number; readonly bytes: number; readonly totalBytes: number; readonly work: number; readonly elapsedMs: number }

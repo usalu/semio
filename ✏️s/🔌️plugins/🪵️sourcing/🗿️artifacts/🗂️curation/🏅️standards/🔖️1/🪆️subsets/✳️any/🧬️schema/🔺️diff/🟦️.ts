@@ -1,5 +1,5 @@
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { parseCurationCatalogChild, parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
 export interface CurationObjectKindExtraPatchEntry { extra: ObjectKindExtra }
 export interface CurationCuratedPatchEntry { count?: number | null }

@@ -1,5 +1,6 @@
-use crate::editor::bim::fixture::{model, room, Rig};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{Point2, SpaceBoundary, StairFlight, TopConstraint}};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{model, room, Rig};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, SpaceBoundary, StairFlight, TopConstraint};
 
 #[semio_framework_async_macros::async_test]
 async fn one_click_stands_a_column_of_the_first_type_on_the_storey() {

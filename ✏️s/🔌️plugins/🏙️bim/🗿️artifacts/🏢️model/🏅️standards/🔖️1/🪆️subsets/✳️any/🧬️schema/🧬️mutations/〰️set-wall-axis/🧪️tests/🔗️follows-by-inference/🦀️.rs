@@ -1,10 +1,12 @@
 //! 🔗️ `set-wall-axis` / `follows-by-inference`: the `wall-layout` inference follows the new axis. A longer axis lengthens the layout, a
 //! bulge curves it (arc length of `tan(sweep / 4)`), hosted openings keep their record, and a bad bulge is refused in code.
 
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
+use semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Point2}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/〰️set-wall-axis/✅️stretches-under-an-opening/📸️snapshot/⬅️before/🔣️.json"));

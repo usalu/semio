@@ -4,7 +4,7 @@ import{createHash}from"node:crypto";
 import{Worker}from"node:worker_threads";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{withPrintStorageTaskV1,type PrintExecutionV1}from"../🎛️operation/🟦️.ts";
-import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{awaitPrintPageWorkerV1,type PrintPageWorkerPortV1}from"../🧵️worker/🟦️.ts";

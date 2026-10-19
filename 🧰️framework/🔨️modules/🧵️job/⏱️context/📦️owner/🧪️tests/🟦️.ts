@@ -4,7 +4,7 @@ import { applyPatch } from "fast-json-patch";
 import {consumeRetainedProgress,remainingRetainedGrant} from "../../../⏱️budget/🟨️.js";
 import { readFileSync, existsSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("retained step context neutral ledger alias and whole-frame authority", () => {
   for (const row of fixture.cases) {
@@ -58,7 +58,7 @@ test("retained context constructor accepts the original full grant and returns i
 });
 
 test("original refused Job close retains all actual failed currencies",()=>{
- const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");expect(source).toContain("Refused { kind:ValueRefusalKind, progress:RetainedCloneProgress }");expect(source).toContain("progress:error.retained_progress()");
+ const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));expect(source).toContain("Result<InteractiveJobCloseStep,OriginalTurnFailure>");expect(source).toContain("Err(failure)=>failure.primary.retained_progress()");
  const actual=applyPatch({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0},[{op:"replace",path:"/copiedItems",value:1},{op:"replace",path:"/retainedCapacityBytes",value:64}],true).newDocument;expect(actual).toEqual(fixture.failedCloseReceipt);
 });
 

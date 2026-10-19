@@ -26,7 +26,7 @@ semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀�
 semio-framework-os-store-backbone = { path = "../../../🔗️backbone/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../../🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-bundle = { path = "../../🧳️bundle/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../🎞️live/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-stage = { path = "../../🗄️stage/📦️packages/🦀️rust" }

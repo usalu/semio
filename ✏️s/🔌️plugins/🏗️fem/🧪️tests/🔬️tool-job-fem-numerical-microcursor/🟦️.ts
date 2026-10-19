@@ -1,7 +1,8 @@
-import { toolJobFemNumericalMicrocursorExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts";
-
 /** 🧪️ Faithful P6h false-positive mutations. */
-export function toolJobFemNumericalMicrocursorSelfTests(sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string, runtime: string): number {
+/** 🧪️ The numerical microcursor law, injected by the caller that owns it. */
+export type FemNumericalMicrocursorLaw = (...sources: string[]) => boolean;
+
+export function toolJobFemNumericalMicrocursorSelfTests(toolJobFemNumericalMicrocursorExact: FemNumericalMicrocursorLaw, sparse: string, mesh: string, analyses: string, model: string, elements: string, session: string, runtime: string): number {
   const exact = (s = sparse, m = mesh, a = analyses, mo = model, e = elements, se = session, r = runtime) => toolJobFemNumericalMicrocursorExact(s, m, a, mo, e, se, r);
   if (!exact()) throw new Error("[verify interactivity tool-jobs p6h] live structural fixture was falsely rejected.");
   const mutations: readonly [string, () => boolean][] = [

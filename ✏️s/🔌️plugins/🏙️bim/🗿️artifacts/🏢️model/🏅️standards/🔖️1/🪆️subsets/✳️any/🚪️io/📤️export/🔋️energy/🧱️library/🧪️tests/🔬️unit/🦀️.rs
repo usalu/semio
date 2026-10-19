@@ -1,11 +1,11 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Layer;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::energy::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::energy::library::*;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::energy::library::{millimetres, Profile, ScheduleBook, Library};
 
 #[test]
 fn millimetres_are_short() {
@@ -36,9 +36,9 @@ fn schedules_are_interned() {
 
 #[test]
 fn a_material_at_a_thickness_and_a_stack_are_interned_and_a_layer_without_conductivity_has_no_id() {
-    let mut model = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut model = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let id = model.materials.keys().next().cloned().expect("a material");
-    let layer = |thickness| Layer { material: id.clone(), thickness, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure };
+    let layer = |thickness| Layer { material: id.clone(), thickness, function: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Structure };
     let (mut library, mut next) = (Library::default(), 0);
     let a = library.construction(&model, "A", &[layer(0.2)], &mut next).expect("a stack");
     assert_eq!(library.construction(&model, "B", &[layer(0.2)], &mut next), Some(a), "the same stack, the first name");

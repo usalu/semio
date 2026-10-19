@@ -1,6 +1,6 @@
 /** 📋️ Thirty authored Forms entities preserve questions, submissions, condition trees and intrinsic values. */
 import type{FormsSnapshot}from"../../../🧬️schema/📸️snapshot/🟦️.ts";
-import type{FormExpr,DslValue,FormQuestion}from"../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormExpr, DslValue, FormQuestion } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 import type{ ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 import{sqliteOperation,type SqliteDatabase,type SqliteRow,type SqliteValue}from"@semio-tech/framework/io/sqlite-snapshot";
 import{ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteCheckpoint as checkpoint,artifactSqliteInteger as integer,artifactSqliteText as text,artifactSqliteBoolean as boolean,artifactSqliteValueBudget as budget,artifactSqliteValueByteLengthControlled as measured,type ArtifactSqliteOptions}from"@semio-tech/framework/io/sqlite-snapshot/artifact";

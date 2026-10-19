@@ -29,7 +29,7 @@ semio-framework-os-kernel-db-cluster = { path = "../../../🌐️cluster/📦️
 semio-framework-os-kernel-db-conflict = { path = "../../../⚔️conflict/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-durability = { path = "../../../💾️durability/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../../⚙️engine/🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../../⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-ids = { path = "../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-observe = { path = "../../../👁️observe/📦️packages/🦀️rust" }
@@ -48,7 +48,7 @@ serde_json = "1.0.140"
 
 [dev-dependencies]
 semio-framework-os-kernel-db-artifact-history = { path = "../../../🗿️artifact/📜️history/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-engine-base = { path = "../../../⚙️engine/🧱️base/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-engine-base = { path = "../../../⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-core = { path = "../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-driver = { path = "../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }

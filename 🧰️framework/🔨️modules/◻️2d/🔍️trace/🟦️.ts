@@ -1,6 +1,6 @@
 /** 🔍️ Pixel-cell contours with bounded grants, topology checks and private publication. */
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../🧹️retire/🟦️.ts";
-import type {PathSegment,Vec2} from "../🟦️.ts";
+import type {PathSegment,Vec2} from "../📐️drawing-contract/🟦️.ts";
 export type BitmapTraceInput={width:number;height:number;mask:readonly number[]|Uint8Array;threshold:number;simplifyEpsilon:number;maxPixels:number;maxEdges:number;maxSegments:number;maxWork:number};
 export type BitmapTraceProgress={phase:"scan"|"contours"|"compact"|"simplify"|"topology"|"coverage"|"emit"|"complete";scanned:number;pixels:number;edges:number;contours:number;segments:number;simplified:boolean;work:number;done:boolean};
 export type BitmapTraceOptions={workBudget?:number;signal?:AbortSignal;onProgress?:(progress:BitmapTraceProgress)=>void};

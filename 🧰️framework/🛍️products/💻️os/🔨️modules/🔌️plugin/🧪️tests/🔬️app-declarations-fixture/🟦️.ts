@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { inspectRustBindingFacts } from "../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🟦️.ts";
-import { rustTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustBindingFacts } from "@semio-tech/repo-lib/inventory";
+import { rustTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
 
 type Channel = Readonly<{ snapshot: string; diff: string; mutation: string; leafOwner: string; command: string; editor: string; viewer: string; dialect: string; schema: string }>;
 type Fixture = Readonly<{ version: 1; source: string; originalSource: string; originalSha256: string; canonicalHandles: readonly string[]; channels: readonly Channel[] }>;

@@ -1,35 +1,35 @@
 //! 💡️ BIM model inference schema: everything derivable from a [`ModelSnapshot`]. One field per named inference under
 //! `💡️inferences/`; the snapshot stores authored parameters only, so elevations, wall heights and quantities live here.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ModelQuantities;
-use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
-use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ModelQuantities;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyTotals, EnvelopeSpace};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::ClashSetResult;
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyTotals, EnvelopeSpace};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::ClashSetResult;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a model snapshot, keyed by element id.
@@ -37,11 +37,11 @@ use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleRe
 #[artifact_schema(id = "s.bim.model.inference")]
 pub struct ModelInference {
     #[derived]
-    pub analytical_members: BTreeMap<String, crate::standards::v1::subsets::any::schema::inferences::analytical_members::AnalyticalMember>,
+    pub analytical_members: BTreeMap<String, semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::AnalyticalMember>,
     #[derived]
-    pub structural_analysis: crate::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis,
+    pub structural_analysis: semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis,
     #[derived]
-    pub option_scope: crate::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope,
+    pub option_scope: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope,
     #[derived]
     pub storey_levels: BTreeMap<String, StoreyLevel>,
     #[derived]
@@ -113,33 +113,33 @@ impl protocol::InferenceSpec<ModelSnapshot> for ModelInference {
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.analytical-members", reads: crate::standards::v1::subsets::any::schema::inferences::analytical_members::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.option-scope", reads: crate::standards::v1::subsets::any::schema::inferences::option_scope::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.analytical-members", reads: semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.option-scope", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.storey-levels", reads: &["storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.wall-layout", reads: &["walls", "wall_types", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.curtain-layout", reads: &["curtain_walls", "curtain_wall_types", "curtain_panel_overrides", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.stair-runs", reads: &["stairs", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.ramp-runs", reads: &["ramps", "storeys", "buildings", "sites"] },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.families", reads: crate::standards::v1::subsets::any::schema::inferences::families::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.components", reads: crate::standards::v1::subsets::any::schema::inferences::components::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.mep", reads: crate::standards::v1::subsets::any::schema::inferences::mep::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.quantities", reads: crate::standards::v1::subsets::any::schema::inferences::quantities::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.phase-visibility", reads: crate::standards::v1::subsets::any::schema::inferences::phase_visibility::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.families", reads: semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.components", reads: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.mep", reads: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.quantities", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.phase-visibility", reads: semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::READS },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.spaces", reads: &["spaces", "walls", "wall_types", "curtain_walls", "curtain_wall_types", "columns", "column_types", "slabs", "slab_types", "storeys", "buildings", "sites"] },
             protocol::InferenceFieldSpec { id: "s.bim.model.inference.opening-frames", reads: &["openings", "walls", "curtain_walls", "curtain_wall_types", "wall_types", "window_types", "door_types", "storeys", "buildings", "sites"] },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.element-solids", reads: crate::standards::v1::subsets::any::schema::inferences::element_solids::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.plan-linework", reads: crate::standards::v1::subsets::any::schema::inferences::plan_linework::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.view-linework", reads: crate::standards::v1::subsets::any::schema::inferences::view_linework::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.sheet-layout", reads: crate::standards::v1::subsets::any::schema::inferences::sheet_layout::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.clash-sets", reads: crate::standards::v1::subsets::any::schema::inferences::clash_sets::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.rule-results", reads: crate::standards::v1::subsets::any::schema::inferences::rule_results::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostics", reads: crate::standards::v1::subsets::any::schema::inferences::diagnostics::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostic-index", reads: crate::standards::v1::subsets::any::schema::inferences::diagnostics::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.annotation-layout", reads: crate::standards::v1::subsets::any::schema::inferences::annotation_layout::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.schedules", reads: crate::standards::v1::subsets::any::schema::inferences::schedules::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.effective-properties", reads: crate::standards::v1::subsets::any::schema::inferences::effective_properties::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.zones", reads: crate::standards::v1::subsets::any::schema::inferences::zones::READS },
-            protocol::InferenceFieldSpec { id: "s.bim.model.inference.energy-envelope", reads: crate::standards::v1::subsets::any::schema::inferences::energy_envelope::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.element-solids", reads: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.plan-linework", reads: semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.view-linework", reads: semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.sheet-layout", reads: semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.clash-sets", reads: semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.rule-results", reads: semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostics", reads: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.diagnostic-index", reads: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.annotation-layout", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.schedules", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.effective-properties", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.zones", reads: semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::READS },
+            protocol::InferenceFieldSpec { id: "s.bim.model.inference.energy-envelope", reads: semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::READS },
         ]
     }
 }

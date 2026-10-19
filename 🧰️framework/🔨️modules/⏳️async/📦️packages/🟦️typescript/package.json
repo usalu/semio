@@ -8,6 +8,8 @@
   "exports": {
     ".": "./🟦️.ts",
     "./continuation": "./🪃️continuation/🟦️.ts",
+    "./continuation/testing/oracle": "./🪃️continuation/🧪️testing/⚖️oracle/🟦️.ts",
+    "./cooperative/testing/tool-job-cooperative-maintenance": "./🤝️cooperative/🧪️testing/🔬️tool-job-cooperative-maintenance/🟦️.ts",
     "./event-wait": "./🔔️event-wait/🟦️.ts",
     "./jittered-backoff": "./🔁️jittered-backoff/🟦️.ts",
     "./latest-wins": "./🥇️latest-wins/🟦️.ts",

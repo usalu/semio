@@ -1,6 +1,6 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 const protocol=schema.definitions.Protocol.const;
 /** 🧭️ Selects only literal supported unit compiler inventory, retaining complete fallback routes. */
@@ -16,7 +16,7 @@ import {createRequire} from "node:module";
 import {join,dirname} from "node:path";
 import {withSelectedNativeSnapshotV1,SELECTED_NATIVE_SNAPSHOT_ENV,type SelectedNativeSnapshotRequestV1} from "../📦️snapshot/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 const hash=(value:Uint8Array|string)=>createHash("sha256").update(value).digest("hex");
 function sourceInputsV1(value:unknown):string[]|null{

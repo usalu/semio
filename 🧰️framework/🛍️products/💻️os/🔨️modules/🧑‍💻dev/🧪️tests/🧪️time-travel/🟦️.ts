@@ -8,7 +8,7 @@ import { checkScriptInvocation } from "../../../../../../🔨️modules/🏃️p
 import type { ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withAcceptanceRecord, publishAcceptanceCheckResult, acceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { timeTravelServeVariantV1 } from "./🚀️boot/🟦️.ts";
-import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 import { ensureDevServe, devServePortV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";

@@ -1,11 +1,11 @@
 import {join,resolve,isAbsolute,sep} from "node:path";
 import {lstat} from "node:fs/promises";
 import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readScriptProcessJsonV1} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
-import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
+import {acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {requireNativeStorageReservationV1} from "@semio-tech/process/artifacts/native-build/storage";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {readNativeCallerAuthorityV1} from "../../📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withArtifactStorageOperationV1} from "../../💾️storage/🟦️.ts";
 import type {RepositoryArtifactV1,RepositoryArtifactRequestV1,RepositoryArtifactReaderOptionsV1} from "../📋️contract/🟦️.ts";

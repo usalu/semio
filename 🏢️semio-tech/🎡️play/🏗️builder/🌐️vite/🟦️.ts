@@ -1,27 +1,26 @@
-import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import {managedWasmPackagesVitePluginV1} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import {flowBrowserDeliveryV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
-import {defineOwnedBuildConfigFactory,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import {runtimeAssetDeliveries} from "../../../../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
-import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
-import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
+import {defineOwnedBuildConfigFactory,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
+import {runtimeAssetDeliveries} from "../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
+import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { playgroundFlowWasmDevStubPlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
 import { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host/🟦️.ts";
-import { semioAssetsVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
-import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { semioAssetsVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
 import { semioViteBuild, staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
-import { createAssetBuildPluginsV1 } from "../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { packageAssetDeliveries } from "../../../../🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
+import { semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
+import { createAssetBuildPluginsV1 } from "../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { packageAssetDeliveries } from "../../../../🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📦️package-assets/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { devStreamMuxServer } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts";
-import { semioBackboneVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
+import { devStreamMuxServer } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts";
+import { semioBackboneVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
 import { semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
 import { semioBlobVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🫧️blob-vite-plugin/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
@@ -64,7 +63,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
         { find: /^@semio-tech\/assets$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
         { find: /^@semio-tech\/ui-styling$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
         { find: /^@semio-tech\/canvas-react-renderer$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
-        { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
+        { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
         { find: /^@semio-tech\/framework-renderer-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
         { find: /^@semio-tech\/framework$/u, replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
         { find: /^@semio-tech\/framework-os$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
@@ -102,6 +101,6 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       entries: [path.join(playDir, "🌐️.html")],
       ...playgroundSceneHostOptimizeDeps({ exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE] }),
     },
-    build: semioViteBuild(undefined, readBuildMode(mode)),
+    build: semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))),
   };
 });

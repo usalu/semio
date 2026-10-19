@@ -9,7 +9,8 @@ use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
 use semio_framework_os_infinite_world_bridge::{world3d_scene_instance_interactions_are_bounded, World3dDynamicRetirement, World3dSceneInstanceEntry};
 use semio_framework_os_infinite_world_interaction::{INTERACTION_TARGETS_EMPTY, plan_world3d_camera_settle, plan_world3d_wheel, publish_world3d_plan_step, store_mesh, world3d_begin_relocate_drag, world3d_cancel_relocate_drag, world3d_end_relocate_drag, world3d_relocate_active, world3d_relocate_mode, world_merge_code};
 use semio_framework_os_infinite_world_host::World3dState;
-use ui_wgpu::wgpu::{ActionDescriptor, Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneDraw3d, Vec3};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneDraw3d, Vec3};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework::SelectionMethod;
 
@@ -24,7 +25,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -60,7 +61,7 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         colors: (data.colors.len() / 4) as u32,
     surface_uvs:[0;4],tangents:0,};
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
     let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
     assert!(progress.fits(grant));
     allocate_oracle_mesh(token);
@@ -86,10 +87,10 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
     }
     for value in data.uvs.as_chunks::<2>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
     }
     for value in data.colors.as_chunks::<4>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
     }
     mesh3d_seal(token).expect("oracle mesh publication")
 }
@@ -114,7 +115,7 @@ pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio
 
 fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
     loop {
-        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
         let step=mesh3d_allocate_step(token,grant).unwrap();
         assert!(step.progress.fits(grant));
         if step.complete{break}
@@ -189,7 +190,7 @@ fn ray_cursor(state: &World3dState, purpose: WorldRayPickPurpose, origin: Vec3, 
         local_x: 0.0,
         local_y: 0.0,
         viewport: render_pick_viewport(&state.session),
-        view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
+        view_projection: ui_scene::math::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
         projection_spec: state.camera.projection_spec,
         draw: 0,
         instance: 0,
@@ -213,7 +214,7 @@ fn publish_pick(state: &mut World3dState, mut cursor: WorldRayPickCursor) -> Opt
         assert!(turns < 256, "bounded pick terminates");
     }
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 1).expect("live pick")?;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 1, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -331,7 +332,7 @@ fn a_marquee_release_replaces_with_the_deduplicated_topology_targets() {
     }
     let gesture_state = WorldMarqueeGesture::new(3, 1, [0.0, 0.0]);
     let mut job = WorldMarqueePublishJob::new(2, gesture_state, results, false, false);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 2, &mut input, context)).expect("bounded marquee publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -354,7 +355,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     let case = gesture("orbit-completes-into-one-setcamera");
     let mut state = fixture_state();
     let mut plan = plan_world3d_wheel(&state.session, &state.camera, 1, 200.0).expect("bounded wheel plan");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 1, &mut input, context)).expect("bounded publication") != WorldInteractionStep::Complete {
         turns += 1;
@@ -394,7 +395,7 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
 fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
     let state = fixture_state();
     let job = WorldMarqueePublishJob::new(2, WorldMarqueeGesture::new(state.session.interaction_revision, 1, [0.0, 0.0]), WorldMarqueeResultPages::default(), false, false);
-    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[state.session.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state.session), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
+    let base = semio_framework_ui_action::checked_action_string_bytes(&[state.session.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state.session), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
         .expect("base action bytes");
     let credit = job.page_credit(&state.session, &state.interaction, 0).expect("empty page credit");
     assert_eq!(credit - base, INTERACTION_TARGETS_EMPTY.len(), "an empty page reserves exactly the `[]` it writes");

@@ -16,7 +16,7 @@ type TestSource = { readonly directory: string; readonly url: string };
  * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts */
 export async function registerCancelJobReplyTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
-  dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1,
+  dependencies: import("@semio-tech/framework-actor/shard-client").ShardClientTestDependenciesV1,
   _testSource: TestSource,
 ): Promise<void> {
   const { SHARD_LIVENESS_POLICY } = dependencies;

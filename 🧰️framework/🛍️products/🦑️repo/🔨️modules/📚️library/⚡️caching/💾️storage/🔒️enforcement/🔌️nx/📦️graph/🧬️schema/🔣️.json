@@ -2,11 +2,10 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://repo.caching/NxGraphCacheOwnerV1",
   "definitions": {
-    "ParentHeadroom": {
+    "SnapshotHeadroom": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "allocatedBytes",
         "snapshotBytes",
         "allocationUnitBytes"
       ],
@@ -22,11 +21,6 @@
             32768,
             65536
           ]
-        },
-        "allocatedBytes": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
         },
         "snapshotBytes": {
           "type": "integer",
@@ -139,7 +133,9 @@
         "maximumPhysicalBytes": 67108864,
         "filesystemBytes": 66060288,
         "directory": "native",
-        "environment": "SEMIO_NX_NATIVE_GRAPH_DIRECTORY"
+        "environment": "SEMIO_NX_NATIVE_GRAPH_DIRECTORY",
+        "fundingOwner": "repository:nx-namespace",
+        "fundingMetadataBytes": 131072
       }
     },
     "NativeBinding": {
@@ -429,7 +425,7 @@
                 },
                 "owner": {
                   "enum": [
-                    "repository:nx-graph-pool",
+                    "repository:nx-store",
                     "repository:graph-store"
                   ]
                 },
@@ -459,6 +455,7 @@
         "repositoryRoot",
         "partition",
         "hostDirectory",
+        "poolDirectory",
         "workspace",
         "producerLogSha256",
         "intent",
@@ -479,11 +476,16 @@
         },
         "partition": {
           "enum": [
-            "graph",
+            "nx",
             "products"
           ]
         },
         "hostDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "poolDirectory": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
@@ -505,7 +507,7 @@
         },
         "containers": {
           "type": "array",
-          "maxItems": 2,
+          "maxItems": 1,
           "items": {
             "$ref": "#/definitions/CurrentMaintenanceImage"
           }

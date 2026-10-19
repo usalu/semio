@@ -1,41 +1,32 @@
 //! 🎬️ Controlled native stream and sample ownership keeps full integer widths.
-use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, SemioVideoSample, SemioRational, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
+use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind, SemioRational, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
 pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioVideoSnapshot,ValueError>{
- let limits=control.limits();crate::io::sqlite::snapshot::admit_layout(limits)?;
- let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Video native input exceeds file limit"))}
- control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,_checkpoint|{
-  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
-  let result=(||->Result<SemioVideoSnapshot,ValueError>{let result=match payload{
-   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
-   store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
-  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();result});(result,native_control.owned_bytes().saturating_sub(native_before))
- })?
+ crate::io::sqlite::snapshot::admit_layout(control.limits())?;
+ native::with_body(payload,STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,control,native_control,|body,decoder,limits|workspace::decode(decoder,empty,|output,decoder|match body{native::Body::Binary(body)=>binary_into(output,body,decoder,limits),native::Body::Text(body)=>document_into(output,body,decoder,limits)}))
 }
 
 fn integer(reader:&mut store::ByteReader<'_>)->Result<i64,ValueError>{Ok(i64::from_le_bytes(reader.read_bytes(8).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?.try_into().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Semio video native rational truncated"))?))}
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioVideoSnapshot,ValueError>{
+/// 🧩️ Fills the retained video root from borrowed binary octets, inserting every stream and sample before its fields.
+pub fn binary_into(output:&mut SemioVideoSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  crate::io::sqlite::snapshot::admit_binary(body,control,limits)?;let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio video native format"))}
- let schema=native::text(&mut reader,control)?;let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut streams=control.allocate_vec::<SemioVideoStream>(count)?;
- control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{
-  let kind=crate::io::binary::snapshot::kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let codec=native::text(&mut reader,control)?;let width=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let height=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let rate=SemioRational{num:integer(&mut reader)?,den:integer(&mut reader)?};
-  let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut samples=control.allocate_vec::<SemioVideoSample>(count)?;
-  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let pts=reader.read_u64_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let key=match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>false,1=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native key flag"))};let data=control.copy_bytes(native::bytes(&mut reader)?)?;samples.push(SemioVideoSample{pts,key,data});control.step()?;}Ok::<_,ValueError>(())})?;
-  streams.push(SemioVideoStream{kind,codec,width,height,rate,samples});control.step()?;
- }Ok::<_,ValueError>(())})?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio video native trailing bytes"))}Ok(SemioVideoSnapshot{schema,streams})
+ native::reader_text_into(&mut output.schema,&mut reader,control)?;
+ native::binary_list_into(&mut output.streams,&mut reader,control,limits,&mut entities,Default::default,|stream,reader,control,entities|{
+  stream.kind=crate::io::binary::snapshot::kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;native::reader_text_into(&mut stream.codec,reader,control)?;stream.width=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;stream.height=reader.read_u32_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;stream.rate=SemioRational{num:integer(reader)?,den:integer(reader)?};
+  native::binary_list_into(&mut stream.samples,reader,control,limits,entities,Default::default,|sample,reader,control,_|{sample.pts=reader.read_u64_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;sample.key=match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>false,1=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native key flag"))};native::reader_bytes_into(&mut sample.data,reader,control)})
+ })?;
+ if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio video native trailing bytes"))}Ok(())
 }
-pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioVideoSnapshot,ValueError>{
- crate::io::sqlite::snapshot::admit_document(body,control,limits)?;let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","streams"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio video native schema missing"))?,control)?;let mut items=native::Items::new(fields[1].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut streams=control.allocate_vec::<SemioVideoStream>(count)?;
- control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{
-  let[kind,codec,width,height,rate,sample_fields]=native::record(value,control)?;let kind=match kind{"V"=>SemioVideoStreamKind::Video,"A"=>SemioVideoStreamKind::Audio,"S"=>SemioVideoStreamKind::Subtitle,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native stream kind"))};let codec=native::hex_text(codec,control)?;let width=width.parse::<u32>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let height=height.parse::<u32>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let[num,den]=native::record(rate,control)?;let rate=SemioRational{num:num.parse::<i64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?,den:den.parse::<i64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?};
-  let mut sample_items=native::Items::new(sample_fields)?;let count=sample_items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut samples=control.allocate_vec::<SemioVideoSample>(count)?;
-  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=sample_items.next(control)?{let[pts,key,data]=native::record(value,control)?;let pts=pts.parse::<u64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let key=match key{"0"=>false,"1"=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native key flag"))};let data=native::hex(data,control)?;samples.push(SemioVideoSample{pts,key,data});control.step()?;}Ok::<_,ValueError>(())})?;
-  streams.push(SemioVideoStream{kind,codec,width,height,rate,samples});control.step()?;
- }Ok::<_,ValueError>(())})?;Ok(SemioVideoSnapshot{schema,streams})
+/// 📝️ Fills the retained video root from the borrowed document body, inserting every stream and sample before its fields.
+pub fn document_into(output:&mut SemioVideoSnapshot,body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+ crate::io::sqlite::snapshot::admit_document(body,control,limits)?;let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","streams"],control)?;native::hex_text_into(&mut output.schema,fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio video native schema missing"))?,control)?;
+ native::text_list_into(&mut output.streams,fields[1].unwrap_or("[]"),control,limits,&mut entities,Default::default,|stream,value,control,entities|{
+  let[kind,codec,width,height,rate,sample_fields]=native::record(value,control)?;stream.kind=match kind{"V"=>SemioVideoStreamKind::Video,"A"=>SemioVideoStreamKind::Audio,"S"=>SemioVideoStreamKind::Subtitle,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native stream kind"))};native::hex_text_into(&mut stream.codec,codec,control)?;stream.width=width.parse::<u32>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;stream.height=height.parse::<u32>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;let[num,den]=native::record(rate,control)?;stream.rate=SemioRational{num:num.parse::<i64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?,den:den.parse::<i64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?};
+  native::text_list_into(&mut stream.samples,sample_fields,control,limits,entities,Default::default,|sample,value,control,_|{let[pts,key,data]=native::record(value,control)?;sample.pts=pts.parse::<u64>().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?;sample.key=match key{"0"=>false,"1"=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video native key flag"))};native::hex_bytes_into(&mut sample.data,data,control)})
+ })
 }
 /// 🕳️ The empty typed root every native prefix starts from.
-pub(crate) fn empty()->SemioVideoSnapshot{SemioVideoSnapshot{schema:String::new(),streams:Vec::new()}}
+pub fn empty()->SemioVideoSnapshot{SemioVideoSnapshot{schema:String::new(),streams:Vec::new()}}

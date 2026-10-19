@@ -2,7 +2,7 @@ import{createHash}from"node:crypto";
 import{resolve}from"node:path";
 import{createNativeBuildCallerCapabilitiesV1,type NativeBuildCallerCapabilitiesV1}from"../../../../../📥️caller/🟦️.ts";
 import{createScriptProcessEnvelope,readScriptProcessEnvelope,type ScriptProcessEnvelope}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import callerSchema from"../../../../../🧬️schema/📥️caller.json";
 import contextSchema from"../🧬️schema/🔣️.json";
 import birthSchema from"../🧬️schema/🌱️birth.json";

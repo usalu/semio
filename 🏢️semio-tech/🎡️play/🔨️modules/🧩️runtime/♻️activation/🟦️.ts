@@ -1,15 +1,15 @@
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, type ActivationReceipt } from "@semio-tech/framework-os-dev/activation";
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts";
-import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
-import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { artifactFiles } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
-import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import { FONT_ASSET } from "../../../../../🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
+import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } from "@semio-tech/plugin-registry/deployment";
+import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
+import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
+import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
 import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } from "../🟦️.ts";
 
 //#region 🛣️PlayActivationLanes

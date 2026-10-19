@@ -1,5 +1,5 @@
 # import SemioTransform from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 type SemioObjectArtifact {
   schema: String! @state(class: ARTIFACT)
   transform: SemioTransform! @state(class: ARTIFACT)

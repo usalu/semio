@@ -26,7 +26,7 @@ semio-framework = { path = "../../../../../../📦️packages/🦀️rust", pack
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
 semio-framework-artifact-workflow-workflow = { workspace = true }

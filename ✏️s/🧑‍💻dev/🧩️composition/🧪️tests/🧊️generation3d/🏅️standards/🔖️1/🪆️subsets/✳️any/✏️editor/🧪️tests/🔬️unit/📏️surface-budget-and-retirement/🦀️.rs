@@ -102,13 +102,7 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     }
 
     let mut owner = Generation3dInstanceOperationOwner::new();
-    let mut closed = false;
-    for _ in 0..1_000_000 {
-        if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
-            closed = true;
-            break;
-        }
-    }
+    let closed = context::close_instance_operation_owner(&mut owner);
     assert!(closed, "the retained evaluation-session owner never reached its terminal close");
     assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
 }

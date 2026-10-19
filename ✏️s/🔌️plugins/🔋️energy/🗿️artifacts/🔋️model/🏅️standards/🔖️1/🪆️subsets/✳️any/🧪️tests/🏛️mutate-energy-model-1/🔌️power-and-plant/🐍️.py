@@ -7,7 +7,7 @@ import importlib.util
 import os
 import sys
 
-from mutate_energy_model_1_base import applied, no_op, rejected, unchanged
+from mutate_energy_model_1_mutation_vocabulary import applied, no_op, rejected, unchanged
 
 
 def _load(alias, folder):

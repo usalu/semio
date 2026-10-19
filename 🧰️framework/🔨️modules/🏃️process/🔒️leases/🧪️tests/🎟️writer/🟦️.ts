@@ -27,7 +27,7 @@ test("actual shared lease public promotion cannot prove exclusive writer custody
  });
 },120000);
 
-import{withBuildTestInvocationV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
 import componentSchema from"../../🧬️schema/📜️ticket.json";
 import ownership from"../🧫️fixtures/📜️queue.json";
 import{createHash}from"node:crypto";

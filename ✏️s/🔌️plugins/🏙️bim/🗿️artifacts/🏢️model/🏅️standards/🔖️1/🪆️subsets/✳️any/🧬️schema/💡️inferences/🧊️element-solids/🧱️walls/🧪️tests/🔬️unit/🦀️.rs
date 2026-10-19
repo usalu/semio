@@ -1,18 +1,20 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Wall;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
 #[allow(unused_imports)]
@@ -21,11 +23,11 @@ use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace};
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::*;
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
@@ -211,7 +213,7 @@ async fn every_wall_of_the_join_fixture_fills_exactly_its_trimmed_footprint() {
     let (layouts, solids) = (compute_wall_layout(&snapshot), compute_element_solids(&snapshot));
     assert_eq!(solids.len(), snapshot.walls.len());
     for (id, wall) in &snapshot.walls {
-        let curved = matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { .. }) || layouts[id].footprint.iter().any(|vertex| vertex.bulge.abs() > 1e-12);
+        let curved = matches!(wall.axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { .. }) || layouts[id].footprint.iter().any(|vertex| vertex.bulge.abs() > 1e-12);
         let tolerance = if curved { 1e-4 } else { 1e-9 };
         assert!(close(solids[id].volume, layouts[id].volume, tolerance), "{id}: solid {} against footprint {}", solids[id].volume, layouts[id].volume);
         let layers = snapshot.wall_types[&wall.wall_type].layers.len();

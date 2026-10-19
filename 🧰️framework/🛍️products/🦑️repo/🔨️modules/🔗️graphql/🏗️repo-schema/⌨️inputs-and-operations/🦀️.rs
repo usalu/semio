@@ -244,6 +244,7 @@ pub(super) fn schema_mutation() -> Vec<NamedType> {
                 .arg("targetFile", nn(ty("String")))
                 .arg("targetParent", ty("String")),
             Field::resolved("extract", ty("File"), "mutation.extract").arg("sourceFile", nn(ty("String"))).arg("sourceSection", nn(ty("String"))).arg("targetFile", nn(ty("String"))),
+            Field::resolved("fix", nn(ty("FixResult")), "mutation.fix").arg("scope", ty("String")),
         ],
     })]
 }

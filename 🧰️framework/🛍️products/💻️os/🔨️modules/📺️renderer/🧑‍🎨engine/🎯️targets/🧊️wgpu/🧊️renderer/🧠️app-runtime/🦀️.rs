@@ -148,7 +148,7 @@ impl AppRuntime {
         match cursor.phase {
             FrameBuildPhase::Deferred => {
                 let grant = context.retained_grant();
-                let step = ui_wgpu::wgpu::PreparedAtlasPages::close_abandoned_step(grant);
+                let step = semio_framework_ui_prepared::PreparedAtlasPages::close_abandoned_step(grant);
                 match frame_prepared_abandonment_complete(grant, step,context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedGpuAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
@@ -163,7 +163,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedInputAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderInput::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderInput::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedJobAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -171,7 +171,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedJobAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderJob::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderJob::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PreparedAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -179,7 +179,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PreparedAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderReceiver::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderReceiver::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::PacketAbandonment,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -187,7 +187,7 @@ impl AppRuntime {
             }
             FrameBuildPhase::PacketAbandonment => {
                 let grant=context.retained_grant();
-                match frame_prepared_abandonment_complete(grant, ui_wgpu::wgpu::PreparedRenderPacket::close_abandoned_step(grant),context) {
+                match frame_prepared_abandonment_complete(grant, semio_framework_ui_prepared::PreparedRenderPacket::close_abandoned_step(grant),context) {
                     Ok(true) => cursor.phase = FrameBuildPhase::Text,
                     Ok(false) => return FrameBuildBoundaryStep::Pending,
                     Err(failure) => return FrameBuildBoundaryStep::CloseFailure(failure),
@@ -298,7 +298,7 @@ impl AppRuntime {
                         if let Some(atlas) = cell.borrow_mut().take() {
                             observed = true;
                             self.icons = atlas;
-                            match ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: cursor.retained }) {
+                            match semio_framework_ui_prepared::PreparedAtlasPages::try_new(self.icons.width, self.icons.height, 4, self.icons.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: cursor.retained }) {
                                 Ok((pages, progress)) => { cursor.icon_pages = Some(pages); pending = context.consume_retained(progress).is_ok(); }
                                 Err(error) => { let _ = context.consume_retained(error.retained_progress()); }
                             }
@@ -324,7 +324,7 @@ impl AppRuntime {
                         return FrameBuildBoundaryStep::Pending;
                     }
                     let Some(pages) = cursor.icon_pages.take() else { return FrameBuildBoundaryStep::Fault("frame icon atlas pages lost ownership") };
-                    cursor.icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlasPages { pixels: pages });
+                    cursor.icon_upload = Some(semio_framework_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages });
                 }
                 cursor.phase = FrameBuildPhase::Tutorial;
             }
@@ -395,7 +395,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::ResourceInput;
             }
             FrameBuildPhase::ResourceInput => {
-                match ui_wgpu::wgpu::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
+                match semio_framework_ui_prepared::PreparedRenderInput::try_new(cursor.presentation_witness.scene_revision, cursor.presentation_witness.input_generation, DrawList::empty(), None, 0.0) {
                     Ok(input) => cursor.resource_input = Some(input),
                     Err(rejected) => {
                         cursor.input_rejected = Some(rejected);
@@ -520,7 +520,7 @@ impl AppRuntime {
                 if cursor.icon_pages.is_none() {
                     if self.icon_rebuild.is_none() { cursor.phase = FrameFinishPhase::GlyphUpload; return FrameFinishBoundaryStep::Pending; }
                     let Some(atlas) = self.drive_icon_raster_step() else { return FrameFinishBoundaryStep::Pending };
-                    let result = ui_wgpu::wgpu::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained });
+                    let result = semio_framework_ui_prepared::PreparedAtlasPages::try_new(atlas.width, atlas.height, 1, atlas.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained });
                     self.icons = atlas;
                     let (pages, progress) = match result { Ok(result) => result, Err(error) => { let _ = context.consume_retained(error.retained_progress()); return FrameFinishBoundaryStep::Fault("frame icon atlas page admission failed"); } };
                     cursor.icon_pages = Some(pages);
@@ -538,7 +538,7 @@ impl AppRuntime {
                 if !complete { return FrameFinishBoundaryStep::Pending; }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame icon transfer lost resource input") };
                 let Some(pages) = cursor.icon_pages.take() else { return FrameFinishBoundaryStep::Fault("frame icon atlas pages lost ownership") };
-                if let Err(rejected) = input.try_push_upload(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
+                if let Err(rejected) = input.try_push_upload(semio_framework_ui_prepared::PreparedRenderUpload::IconAtlasPages { pixels: pages }) {
                     partial.upload_rejected = Some(rejected);
                     return FrameFinishBoundaryStep::Fault("frame icon upload fixed admission was refused");
                 }
@@ -555,7 +555,7 @@ impl AppRuntime {
                     if next > input.limits.max_upload_items {
                         return FrameFinishBoundaryStep::Fault("frame glyph upload credits exceeded");
                     }
-                    let Ok((pages, progress)) = ui_wgpu::wgpu::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len(), ui_wgpu::wgpu::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained }) else {
+                    let Ok((pages, progress)) = semio_framework_ui_prepared::PreparedAtlasPages::try_new(self.atlas.width, self.atlas.height, 1, self.atlas.pixels.len(), semio_framework_ui_prepared::PreparedAtlasAuthority { normal: context.retained_grant(), retirement: partial.retained }) else {
                         return FrameFinishBoundaryStep::Fault("frame glyph atlas page admission failed");
                     };
                     cursor.glyph_pages = Some(pages);
@@ -578,7 +578,7 @@ impl AppRuntime {
                 }
                 let Some(input) = partial.resource_input.as_mut() else { return FrameFinishBoundaryStep::Fault("frame glyph transfer lost resource input") };
                 let Some(pages) = cursor.glyph_pages.take() else { return FrameFinishBoundaryStep::Fault("frame glyph atlas pages lost ownership") };
-                if let Err(upload) = input.try_push_upload(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlasPages { pixels: pages }) {
+                if let Err(upload) = input.try_push_upload(semio_framework_ui_prepared::PreparedRenderUpload::GlyphAtlasPages { pixels: pages }) {
                     partial.upload_rejected = Some(upload);
                     return FrameFinishBoundaryStep::Fault("frame glyph upload fixed admission was refused");
                 }
@@ -600,7 +600,7 @@ impl AppRuntime {
                     && self
                         .shell.input
                         .scene_pointer_target_at(self.last_pointer_x, self.last_pointer_y, &self.input, &self.theme)
-                        .filter(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::NodeGraph)
+                        .filter(|target| target.kind == semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph)
                         .and_then(|target| {
                             self.shell.surfaces.node_graph_states.get(&target.host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                                 semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_connection_cursor_active(

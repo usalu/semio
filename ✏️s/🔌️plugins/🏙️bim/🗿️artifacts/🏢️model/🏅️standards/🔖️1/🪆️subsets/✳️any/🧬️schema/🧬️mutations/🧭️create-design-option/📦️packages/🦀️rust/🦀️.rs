@@ -15,20 +15,13 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules;
-                    }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
+                    
                     #[path = "."]
                     pub mod mutations {
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
                         #[path = "../../🦀️.rs"]
                         pub mod create_design_option;
                         #[path = "../../../🧭️delete-design-option/🦀️.rs"]
                         pub mod delete_design_option;
-                        pub use semio_s_artifact_bim_model_mut_any_50::standards::v1::subsets::any::schema::mutations::set_element_option;
                     }
                 }
             }

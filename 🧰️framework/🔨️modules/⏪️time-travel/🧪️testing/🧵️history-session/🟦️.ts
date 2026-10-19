@@ -1,15 +1,15 @@
 /** 🧵️ History sessions shared by every scenario: opening the editor, the alternatives list and leaving a session. */
-import { waitUntil, sleep, evalSafe, shot } from "../📄️page/🟦️.ts";
-import { editor, revealHistory } from "../🖊️editor/🟦️.ts";
+import { waitUntil, sleep, evalSafe, markToken, shot } from "../🔬️probe/🟦️.ts";
+import { editor } from "../🖊️editor/🟦️.ts";
 import { log } from "../🧾️report/🟦️.ts";
-import { openHistory, findMutationRow, pressRowAction, scrollHistory, treeWindow, allHistoryRows, documentEntries, expandEntry, isShellChromeRow } from "../📜️history/🟦️.ts";
+import { openHistory, revealHistory, findMutationRow, pressRowAction, scrollHistory, treeWindow, allHistoryRows, documentEntries, expandEntry, isShellChromeRow } from "../📜️history/🟦️.ts";
 import type { HistoryRow } from "../📜️history/🟦️.ts";
 import { band, pressBand, finalizeDialog, dialogChoose, prepareChord } from "../🎗️band/🟦️.ts";
-import type { Band } from "../🎗️band/🟦️.ts";
+import type { Band } from "../🎗️band/📋️readout/🟦️.ts";
 import { COPY } from "../🌍️copy/🟦️.ts";
 import { currentLocale, renderer, page } from "../🧠️state/🟦️.ts";
 import { mirror, mirrorAwait, wgpuPress, mirrorFind, mirrorLocator } from "../🧊️wgpu-mirror/🟦️.ts";
-import { openPanelTabIds, markToken } from "../🧱️chrome/🟦️.ts";
+import { openPanelTabIds } from "../🧱️chrome/🟦️.ts";
 
 //#region 🔖️Steps
 

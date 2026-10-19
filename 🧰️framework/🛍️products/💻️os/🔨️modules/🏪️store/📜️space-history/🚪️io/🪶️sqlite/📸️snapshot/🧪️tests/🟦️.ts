@@ -88,10 +88,10 @@ test("actual native isolated law admits explicit owner registration and generic 
 });
 
 test("actual owner literals and existing GUI source/native routes identify the same SpaceHistory boundary", async () => {
-  const corpus = JSON.parse(readFileSync(join(snapshot, "🧪️tests/🧫️fixtures/📣️registration/🔣️.json"), "utf8")), source = readFileSync(join(store, "🦀️.rs"), "utf8"), owner = readFileSync(join(snapshot,"🦀️.rs"), "utf8");
-  const parsedStore = await sourceTokens(join(store, "🦀️.rs")), parsedOwner = await sourceTokens(join(snapshot,"🦀️.rs"));
-  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"', "]"])).toBe(true);
-  expect(containsTokens(parsedStore, ["#", "[", "path", "=", '"📜️space-history/🦀️.rs"', "]"])).toBe(true);
+  const corpus = JSON.parse(readFileSync(join(snapshot, "🧪️tests/🧫️fixtures/📣️registration/🔣️.json"), "utf8")), owner = readFileSync(join(snapshot,"🦀️.rs"), "utf8");
+  const parsedBin = await sourceTokens(join(store, "🧪️tests/🌲️bin-07/🦀️.rs")), parsedSchemaRoot = await sourceTokens(join(store, "🧬️schema/🦀️.rs")), parsedOwner = await sourceTokens(join(snapshot,"🦀️.rs"));
+  expect(containsTokens(parsedBin, ["#", "[", "path", "=", '"../../📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"', "]"])).toBe(true);
+  expect(containsTokens(parsedSchemaRoot, ["#", "[", "path", "=", '"📜️space-history/🦀️.rs"', "]"])).toBe(true);
   expect(containsTokens(parsedOwner, ["standard", ":", "semio_framework_artifact_reference", "::", "StandardId", "(", '"1"', ")"])).toBe(true); expect(containsTokens(parsedOwner, ["subset", ":", "semio_framework_artifact_reference", "::", "SubsetId", "(", '"*"', ")"])).toBe(true);
   expect(containsTokens(await sourceTokens(join(store,"🧬️schema/📜️space-history/🦀️.rs")), ["pub", "const", "S_SPACE_HISTORY_SCHEMA", ":", "&", "str", "=", JSON.stringify(corpus.owner), ";"])).toBe(true);
   const project = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📋️project.json"), "utf8"));
@@ -172,7 +172,7 @@ test("Space-history native codec bodies and publication have an explicit IO owne
  const corpus=JSON.parse(readFileSync(join(snapshot,"🧪️tests/🧫️fixtures/🚪️ownership/🔣️.json"),"utf8"));
  const native=await sourceTokens(join(snapshot,"🚦️native/🦀️.rs"),"decode_with");
  expect(containsTokens(native,["semio_framework_pack_json","::","from_json_str_controlled"])).toBe(true);
- const storeOwner=await sourceTokens(join(store,"🦀️.rs"));
+ const storeOwner=await sourceTokens(join(store,"🧬️schema/🦀️.rs"));
  expect(containsTokens(storeOwner,["#","[","path","=",'"📜️space-history/🦀️.rs"',"]"])).toBe(true);
  expect(storeOwner.includes('"📜️space-history/🧬️schema/📸️snapshot/🪶️sqlite/🦀️.rs"')).toBe(false);
  const bound=await sourceTokens(join(snapshot,"🚦️native/🦀️.rs"),corpus.law);
@@ -180,7 +180,7 @@ test("Space-history native codec bodies and publication have an explicit IO owne
 });
 
 test("native snapshot owner policy is a closed independent five-axis caller input",async()=>{
- const defining=join(process.cwd(),"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot");const fixture=JSON.parse(readFileSync(join(defining,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
+ const defining=join(process.cwd(),"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot");const fixture=JSON.parse(readFileSync(join(defining,"🧪️tests/🧫️fixtures/🎟️encode-owner/🔣️.json"),"utf8"));
  const contract=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const ordered=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const ajv=new Ajv({strict:false,allErrors:true});ajv.addSchema(ordered);ajv.addSchema(contract);const validate=ajv.compile({$ref:contract.$id+"#/$defs/Grant"});
  for(const row of fixture.cases){expect(validate(row.grant)).toBe(true);expect(validate({...row.grant,undeclared:1})).toBe(false);expect(validate({...row.grant,maximumCopyBytes:-1})).toBe(false);}
  for(const row of fixture.cases){const db=new HistoryOutputDatabase(":memory:");try{db.exec("CREATE TABLE owner(owned INTEGER NOT NULL,ceiling INTEGER NOT NULL,items INTEGER NOT NULL,copy INTEGER NOT NULL,capacity INTEGER NOT NULL,released INTEGER NOT NULL,depth INTEGER NOT NULL,CHECK(owned<=ceiling))");const g=row.grant;db.run("INSERT INTO owner VALUES(?,?,?,?,?,?,?)",[fixture.initialBytes,fixture.nativeMaximumBytes,g.maximumItems,g.maximumCopyBytes,g.maximumCapacityBytes,g.maximumReleaseBytes,g.maximumDepth]);db.run("UPDATE owner SET owned=owned+?",[new TextEncoder().encode(fixture.copy).length]);expect(db.query("SELECT owned FROM owner").get()).toEqual({owned:row.expectedNativeOwnedBytes});expect(db.query("SELECT items,copy,capacity,released,depth FROM owner").get()).toEqual({items:g.maximumItems,copy:g.maximumCopyBytes,capacity:g.maximumCapacityBytes,released:g.maximumReleaseBytes,depth:g.maximumDepth});if(row.id!=="full")expect(g[row.id]).toBe(0);}finally{db.close();}}
@@ -201,12 +201,12 @@ test("field close examples preserve genuine progress and actual physical totals"
   } finally { db.close(); }
   await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));
   const tree=parser.parse(readFileSync(join(store,"🚪️io/🧬️schema/⚠️diagnostic/🦀️.rs"),"utf8"));
-  try {const visit=(n:Parser.SyntaxNode):Parser.SyntaxNode[]=>[n,...n.namedChildren.flatMap(visit)];const diagnostic=visit(tree.rootNode).find(n=>n.type==="struct_item"&&n.childForFieldName("name")?.text==="SchemaDecodeDiagnostic");expect(diagnostic?.text.includes("retained_progress:RetainedCloneProgress")).toBe(true);expect(diagnostic?.text.includes("refusal_kind:ValueRefusalKind")).toBe(true);expect(readFileSync(join(store,"🦀️.rs"),"utf8")).toContain("OwnedSchemaDecodeDiagnostic=schema_diagnostic::SchemaDecodeDiagnostic<OwnedSchemaPath>");} finally {tree.delete();}
+  try {const visit=(n:Parser.SyntaxNode):Parser.SyntaxNode[]=>[n,...n.namedChildren.flatMap(visit)];const diagnostic=visit(tree.rootNode).find(n=>n.type==="struct_item"&&n.childForFieldName("name")?.text==="SchemaDecodeDiagnostic");expect(diagnostic?.text.includes("retained_progress:RetainedCloneProgress")).toBe(true);expect(diagnostic?.text.includes("refusal_kind:ValueRefusalKind")).toBe(true);expect(readFileSync(join(root,"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/🔡️path-and-token-cursor/🦀️.rs"),"utf8")).toContain("OwnedSchemaDecodeDiagnostic=schema_diagnostic::SchemaDecodeDiagnostic<OwnedSchemaPath>");} finally {tree.delete();}
 });
 
 test("actual retained child owners use independently bounded physical currencies", async () => {
  const child=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation");
- const law=JSON.parse(readFileSync(join(child,"🧪️tests/🧫️fixtures/♻️child-currencies/🔣️.json"),"utf8"));
+ const law=JSON.parse(readFileSync(join(child,"🧫️fixtures/♻️child-currencies/🔣️.json"),"utf8"));
  const contract=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));
  const grant={maximumItems:law.maximumItems,maximumCopyBytes:law.maximumCopyBytes,maximumCapacityBytes:law.maximumCapacityBytes,maximumReleaseBytes:law.maximumReleaseBytes,maximumDepth:law.maximumDepth};
  const ajv=new Ajv({strict:true,allErrors:true});ajv.addSchema(contract);const valid=ajv.compile({$ref:contract.$id+"#/$defs/Grant"}),validProgress=ajv.compile({$ref:contract.$id+"#/$defs/Progress"});expect(valid(grant)).toBe(true);
@@ -261,7 +261,7 @@ test("encoding-only native laws require representation contracts without Store p
  await Parser.init();const parser=new Parser();let tree:Parser.Tree|undefined;
  try{
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",root)),"out/tree-sitter-rust.wasm")));
-  tree=parser.parse(readFileSync(join(store,"🦀️.rs"),"utf8"));
+  tree=parser.parse(readFileSync(join(store,"🧰️test-support/🦀️.rs"),"utf8"));
   const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];
   for(const name of ["assert_pack_round_trip","assert_pack_schema_identity","assert_dsl_pack_equivalence","assert_dsl_pack_equivalence_cold","assert_pack_round_trip_cold"]){
    const functions=visit(tree.rootNode).filter(node=>node.type==="function_item"&&node.childForFieldName("name")?.text===name);expect(functions.length).toBe(1);

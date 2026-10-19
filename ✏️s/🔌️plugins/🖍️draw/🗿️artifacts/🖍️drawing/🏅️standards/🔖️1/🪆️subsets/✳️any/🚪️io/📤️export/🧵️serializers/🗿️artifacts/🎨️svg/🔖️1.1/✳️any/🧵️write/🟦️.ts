@@ -1,5 +1,5 @@
 /** 🧵️ Authoritative scene owners emit SVG scalar fragments and bounded byte pages. */
-import type {DocumentScenePlan,DocumentSceneNode} from "../../../../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode } from "../../../../../../../../🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../../../../🧬️schema/🎬️scene/🧹️retire/🟦️.ts";
 import {PngEncodeJob} from "@semio-tech/framework/pixels/png/encode";
 import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";

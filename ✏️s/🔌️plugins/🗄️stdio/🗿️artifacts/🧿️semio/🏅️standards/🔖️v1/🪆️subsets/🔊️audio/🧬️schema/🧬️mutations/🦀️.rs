@@ -10,7 +10,6 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioChannelDiff;
 use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
 
 
@@ -30,34 +29,16 @@ use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChanne
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
-use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
-use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
-use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation};
 
 //#region 🔖️Mutations
-#[path = "🎙️insert-channel/🦀️.rs"]
-pub mod insert_channel;
-#[path = "🏷️insert-tag/🦀️.rs"]
-pub mod insert_tag;
-#[path = "🔇remove-channel/🦀️.rs"]
-pub mod remove_channel;
-#[path = "✂️remove-tag/🦀️.rs"]
-pub mod remove_tag;
-#[path = "🌊set-channel-samples/🦀️.rs"]
-pub mod set_channel_samples;
-#[path = "💽set-format/🦀️.rs"]
-pub mod set_format;
-#[path = "🎚️set-sample-rate/🦀️.rs"]
-pub mod set_sample_rate;
-/// 📐️ Typed content mutation for `s.stdio.semio.audio`.
 //#region 🔖️Leaves
-#[path = "💬set-tag-value/🦀️.rs"]
-pub mod set_tag_value;
+use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::{insert_channel, insert_tag, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_tag_value};
 //#endregion 🔖️Leaves
 
+/// 📐️ Typed content mutation for `s.stdio.semio.audio`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation")]

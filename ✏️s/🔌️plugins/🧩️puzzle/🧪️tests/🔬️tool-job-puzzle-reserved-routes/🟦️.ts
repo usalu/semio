@@ -1,5 +1,3 @@
-import { toolJobPuzzle2dReservedRoutesExact, toolJobPuzzleReservedRoutesExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts";
-
 /** 🧪️ The puzzle outbox as the guards read it: the commit builder prepares the raw wire, completion lends the sealed pages. */
 const PUZZLE_JOBS_FIXTURE = `
 pub enum JobTurn { Yield, Cancelled, Complete, Prepare(Vec<u8>) }
@@ -21,11 +19,17 @@ const ROUTE_JOBS = ["Puzzle5dClipboardJob", "Puzzle5dPasteJob", "Puzzle5dImportJ
 
 const routeJob = (name: string, raw: string) => `struct ${name} { outbox: JobOutbox }
 impl ${name} { fn turn(&mut self, cx: &StepContext<'_>) -> JobTurn { if self.closing || cx.is_cancelled() { return JobTurn::Cancelled; } return JobTurn::Prepare(std::mem::take(&mut self.${raw})); completion.complete(Ok(emit), EphemeralEmit::default()); JobTurn::Complete } }
-impl InteractiveJob for ${name} { fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { match self.outbox.phase(cx)? {} let turn = self.turn(cx); self.outbox.settle(turn, cx) } fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> { self.outbox.borrow_outcome(descriptor) } fn begin_close(&mut self) { self.closing = true; } fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep { crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant) } fn terminal_is_empty(&self) -> bool { self.closing } }
+impl ${name} { fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { match self.outbox.phase(cx)? {} let turn = self.turn(cx); self.outbox.settle(turn, cx) } }
+impl InteractiveJob for ${name} { fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)} fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> { self.outbox.borrow_outcome(descriptor) } fn begin_close(&mut self) { self.closing = true; } fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|crate::puzzle_job::job_close_step(&mut self.outbox, &mut self.owners, grant))} fn terminal_is_empty(&self) -> bool { self.closing } }
 impl ArtifactReservedJob for ${name} {}`;
 
+/** 🧪️ One reserved-route law over the route, host and job sources, injected by the caller that owns it. */
+export type ReservedRoutesLaw = (source: string, host: string, jobs: string) => boolean;
+/** 🧪️ The two reserved-route laws of the puzzle plugin. */
+export type PuzzleReservedRoutesLaws = Readonly<{ toolJobPuzzleReservedRoutesExact: ReservedRoutesLaw; toolJobPuzzle2dReservedRoutesExact: ReservedRoutesLaw }>;
+
 /** 🧪️ Executes tool job puzzle reserved routes policy assertions. */
-export function toolJobPuzzleReservedRoutesSelfTests(): number {
+export function toolJobPuzzleReservedRoutesSelfTests({ toolJobPuzzleReservedRoutesExact, toolJobPuzzle2dReservedRoutesExact }: PuzzleReservedRoutesLaws): number {
   const source = `
 const PUZZLE5D_RESERVED_PAGE_BYTES: usize = 4_096;
 fn puzzle5d_preflight_reserved_wire(raw: Vec<u8>, maximum_bytes: usize) -> Result<Vec<u8>, (Fault, Vec<u8>)> { if raw.len() > maximum_bytes { return Err((Fault::from("puzzle5d reserved wire exceeds its exact route cap before fixed-page copy"), raw)); } Ok(raw) }
@@ -68,13 +72,13 @@ ${routeJob("Puzzle5dImportJob", "raw")}
     ["host terminal close witness omitted", () => exact(source, host.replace("Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) if session.terminal_is_empty() => break", "Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) => break"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle5d ${name} was falsely accepted.`);
-  return mutations.length + 1 + toolJobPuzzle2dReservedRoutesSelfTests(host, jobs);
+  return mutations.length + 1 + toolJobPuzzle2dReservedRoutesSelfTests(toolJobPuzzle2dReservedRoutesExact, host, jobs);
 }
 
 /** 🧪️ Executes the puzzle 2d half of the reserved-routes policy — its clipboard producer is the
  * one-step `Puzzle2dClipboardJob`, so the fixture proves route ownership, the app-owned fragment
  * vocabulary, and the cancellable prepare-then-complete step rather than 5d's fixed-page ingress. */
-export function toolJobPuzzle2dReservedRoutesSelfTests(host: string, jobs: string): number {
+export function toolJobPuzzle2dReservedRoutesSelfTests(toolJobPuzzle2dReservedRoutesExact: ReservedRoutesLaw, host: string, jobs: string): number {
   const source = `
 const PUZZLE2D_CLIPBOARD_SCHEMA: &str = "puzzle.2d.clipboard.v1";
 fn puzzle2d_copy_fragment_from(fixture: &Value, node_ids: &[String]) -> Result<ClipboardFragment, ClipboardError> {}

@@ -1,7 +1,8 @@
 //! 🏃️ Synchronous headless driver over the same retained worker session the interactive hosts submit.
 
-use semio_framework_job::{root_cancel_token,InteractiveJob,InteractiveJobCloseStep,InteractiveStage,JobOutcomeView,Operation,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedJobPayload,StepBudget};
-use semio_framework_job_worker::{BatchJobSession,WorkerJobPoll};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobAdmissionContext,WorkerJobCloseStep};
+use semio_framework_job::{root_cancel_token,CancelToken,Generation,InteractiveJob,InteractiveJobCloseStep,InteractiveStage,JobOutcomeView,Operation,OperationId,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedJobPayload,StepBudget,StepContext};
+use semio_framework_job_worker::{BatchJobSession,WorkerJobDemandError,WorkerJobPoll};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
+use semio_framework_value::{ValueError,ValueRefusalKind};
 
 /// 🎟️ The bounded five-currency authority one headless caller supplies for every admitted turn.
 pub const HEADLESS_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
@@ -61,11 +62,88 @@ pub fn close_job(job: &mut impl InteractiveJob) {
             release_bytes: job.next_close_release_byte_demand().expect("a locally owned job quotes its release demand"),
             depth: job.next_close_depth_demand().expect("a locally owned job quotes its depth demand"),
         };
-        let step = job.close_step(self_funded(demand));
+        let step = semio_framework_job::close_with_self_funded_context(self_funded(demand), |cx| job.close_step(cx)).expect("a locally owned job close turn");
         assert!(step.progress().fits(self_funded(demand)), "a job close receipt must fit its own quoted grant");
-        assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }), "a locally owned job close has no external owner and no refusal");
+        assert!(!matches!(step, InteractiveJobCloseStep::Blocked), "a locally owned job close has no external owner and no refusal");
     }
     panic!("job did not close");
+}
+
+const HEADLESS_TURNS: usize = 8;
+const HEADLESS_ACKNOWLEDGE_TURNS: usize = 1_000_000;
+const HEADLESS_CLOSE_TURNS: usize = 2_000_000;
+
+/// 🪪️ The original caller of one headless run: it owns the operation's one cancellation root and payload authority and lends a fresh
+/// self-funded context per turn, so admission, every step, every acknowledgement and the whole close ladder are paid by the same caller.
+struct HeadlessCaller {
+    operation: OperationId,
+    generation: Generation,
+    now_us: fn() -> Option<u64>,
+    cancel: CancelToken,
+    authority: semio_framework_job::JobPayloadAuthority,
+    sequence: u64,
+}
+
+impl HeadlessCaller {
+    fn new(operation: Operation, now_us: fn() -> Option<u64>) -> Self {
+        Self { operation: operation.operation, generation: operation.generation, now_us, cancel: root_cancel_token(), authority: admit_payload_authority(operation), sequence: 0 }
+    }
+
+    fn turn<R>(&mut self, budget: StepBudget, run: impl FnOnce(&mut StepContext<'_>) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = StepContext::with_payload_authority(self.operation, self.generation, budget, &self.cancel, self.now_us, &mut self.sequence, &mut receipt, &self.authority)?;
+        run(&mut cx)
+    }
+
+    fn funded<R>(&mut self, run: impl FnOnce(&mut StepContext<'_>) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
+        self.turn(StepBudget::new(u64::MAX, u64::MAX, HEADLESS_GRANT), run)
+    }
+
+    fn step_turn<R>(&mut self, site: &HeadlessSite, run: impl FnOnce(&mut StepContext<'_>) -> Result<R, OriginalTurnFailure>) -> Result<R, OriginalTurnFailure> {
+        let now = (self.now_us)().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "headless caller has no monotonic clock"))?;
+        let budget = StepBudget::from_duration(site.fuel_per_step, now, site.step_budget_us, HEADLESS_GRANT).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "headless step deadline leaves the clock domain"))?;
+        self.turn(budget, run)
+    }
+
+    fn admit_alias(&mut self) -> Result<Option<CancelToken>, OriginalTurnFailure> {
+        self.funded(|cx| {
+            let alias = cx.admit_original_cancel_alias()?;
+            if alias.is_some() {
+                cx.consume_fuel(1);
+            }
+            Ok(alias)
+        })
+    }
+
+    fn close_owner<J: InteractiveJob + 'static>(&mut self, session: &mut BatchJobSession<J>, grant: RetainedCloneGrant) -> Result<WorkerJobCloseStep, OriginalTurnFailure> {
+        self.turn(StepBudget::new(u64::MAX, u64::MAX, grant), |cx| {
+            let remaining = cx.retained_grant();
+            if cx.should_yield() || remaining.maximum_items == 0 || remaining.maximum_depth == 0 {
+                return Ok(WorkerJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            let witnessed = match session.has_original_cancel_alias_witness(cx.original_cancel_token()) {
+                Ok(witnessed) => witnessed,
+                Err(WorkerJobDemandError::Contention(_)) => return Ok(WorkerJobCloseStep::Blocked),
+                Err(WorkerJobDemandError::Refused(error)) => return Err(error.into()),
+            };
+            if !witnessed {
+                return session.close_step(cx);
+            }
+            match session.return_original_cancel_alias_step(cx.original_cancel_token(), remaining) {
+                Ok(Some(step)) => {
+                    cx.consume_retained(step.progress())?;
+                    cx.consume_fuel(1);
+                    Ok(WorkerJobCloseStep::Pending { progress: step.progress() })
+                }
+                Ok(None) | Err(WorkerJobDemandError::Contention(_)) => Ok(WorkerJobCloseStep::Blocked),
+                Err(WorkerJobDemandError::Refused(error)) => Err(OriginalTurnFailure::debit_original(error, cx)),
+            }
+        })
+    }
+
+    fn retire(mut self) {
+        close_payload_authority(&mut self.authority);
+    }
 }
 
 /// 🏁️ Drives `job` through one retained worker session to its terminal outcome. `finish` runs while the completed job is still
@@ -75,60 +153,76 @@ where
     J: InteractiveJob + Send + 'static,
 {
     let label = site.label;
-    let params = BatchJobParams {
-        operation: operation.operation,
-        generation: operation.generation,
-        cancel: root_cancel_token(),
-        config: BatchDriveConfig { retained: HEADLESS_GRANT, site: site.site, stage: site.stage, fuel_per_step: site.fuel_per_step, step_budget_us: site.step_budget_us },
-        now_us,
+    let mut caller = HeadlessCaller::new(operation, now_us);
+    let alias = (0..HEADLESS_TURNS).find_map(|_| caller.admit_alias().transpose());
+    let Some(Ok(alias)) = alias else {
+        let mut unadmitted = job;
+        close_job(&mut unadmitted);
+        caller.retire();
+        return Err(format!("{label}-admission-rejected"));
     };
     let mut job_slot = Some(job);
-    let mut params_slot = Some(params);
-    let mut recipient = RetainedCloneProgress::default();
-    let admitted = match WorkerJobAdmissionContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, HEADLESS_GRANT), now_us, &mut recipient) {
-        Ok(mut control) => BatchJobSession::try_admit_owned(&mut job_slot, &mut params_slot, &mut control),
-        Err(error) => Err(error),
-    };
+    let mut params_slot = Some(BatchJobParams {
+        operation: operation.operation,
+        generation: operation.generation,
+        cancel: alias,
+        config: BatchDriveConfig { retained: HEADLESS_GRANT, site: site.site, stage: site.stage, fuel_per_step: site.fuel_per_step, step_budget_us: site.step_budget_us },
+        now_us,
+    });
+    let admitted = caller.funded(|cx| BatchJobSession::try_admit_owned(&mut job_slot, &mut params_slot, cx).map_err(OriginalTurnFailure::from));
     let mut session = match admitted {
         Ok(Some((session, _admission))) => session,
         Ok(None) | Err(_) => {
+            drop(params_slot.take());
             if let Some(mut rejected) = job_slot.take() {
                 close_job(&mut rejected);
             }
+            caller.retire();
             return Err(format!("{label}-admission-rejected"));
         }
     };
-    let result = drive_session(&mut session, label, finish);
+    let result = drive_session(&mut caller, &mut session, &site, finish);
     session.begin_close();
-    for _ in 0..2_000_000 {
+    for _ in 0..HEADLESS_CLOSE_TURNS {
         if session.terminal_is_empty() {
+            caller.retire();
             return result;
         }
         let demand = match session.retirement_demands(HEADLESS_GRANT.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(error) => panic!("the {label} session quoted a refused close demand: {error:?}"),
+            Err(WorkerJobDemandError::Contention(_)) => {
+                std::thread::yield_now();
+                continue;
+            }
+            Err(WorkerJobDemandError::Refused(error)) => panic!("the {label} session quoted a refused close demand: {error:?}"),
         };
-        let grant = self_funded(demand);
-        match session.close_step(grant) {
-            WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress } => assert!(progress.fits(grant), "the {label} session close receipt exceeded its quoted grant"),
-            WorkerJobCloseStep::Blocked => std::thread::yield_now(),
-            WorkerJobCloseStep::Refused { kind, .. } => panic!("the {label} session close was refused: {kind:?}"),
+        let grant = RetainedCloneGrant {
+            maximum_items: HEADLESS_GRANT.maximum_items,
+            maximum_copy_bytes: HEADLESS_GRANT.maximum_copy_bytes.max(demand.copy_bytes),
+            maximum_capacity_bytes: HEADLESS_GRANT.maximum_capacity_bytes.max(demand.capacity_bytes),
+            maximum_release_bytes: HEADLESS_GRANT.maximum_release_bytes.max(demand.release_bytes),
+            maximum_depth: HEADLESS_GRANT.maximum_depth.max(demand.depth),
+        };
+        match caller.close_owner(&mut session, grant) {
+            Ok(WorkerJobCloseStep::Pending { progress } | WorkerJobCloseStep::Complete { progress }) => assert!(progress.fits(grant), "the {label} session close receipt exceeded its quoted grant"),
+            Ok(WorkerJobCloseStep::Blocked) => std::thread::yield_now(),
+            Err(failure) => panic!("the {label} session close was refused: {failure:?}"),
         }
     }
     panic!("the {label} session's close ladder never reached terminal-empty");
 }
 
-fn drive_session<J, R>(session: &mut BatchJobSession<J>, label: &'static str, finish: impl FnOnce(&mut J, &[u8]) -> Result<R, String>) -> Result<R, String>
+fn drive_session<J, R>(caller: &mut HeadlessCaller, session: &mut BatchJobSession<J>, site: &HeadlessSite, finish: impl FnOnce(&mut J, &[u8]) -> Result<R, String>) -> Result<R, String>
 where
     J: InteractiveJob + Send + 'static,
 {
-    let acknowledgement = HEADLESS_GRANT;
+    let label = site.label;
     let mut finish = Some(finish);
     loop {
-        match session.step(HEADLESS_GRANT) {
+        match caller.step_turn(site, |cx| session.step_on_original_caller(cx)) {
             Ok(WorkerJobPoll::Outcome | WorkerJobPoll::Terminal) => {}
             Ok(_) => continue,
-            Err(error) => return Err(format!("{label}-contention:{error:?}")),
+            Err(failure) => return Err(format!("{label}-turn:{failure:?}")),
         }
         if !session.checkout_outcome() {
             continue;
@@ -155,9 +249,17 @@ where
             Seen::Cancelled => Some(Err(format!("{label}-cancelled"))),
             Seen::Fault(detail) => Some(Err(String::from_utf8_lossy(&detail).into_owned())),
         };
-        for _ in 0..1_000_000 {
-            if matches!(session.acknowledge_outcome(acknowledgement), RetainedCloneStep::Complete(_)) {
-                break;
+        for _ in 0..HEADLESS_ACKNOWLEDGE_TURNS {
+            let step = caller.funded(|cx| {
+                let step = session.acknowledge_outcome(cx.retained_grant());
+                cx.consume_retained(step.progress())?;
+                cx.consume_fuel(1);
+                Ok(step)
+            });
+            match step {
+                Ok(RetainedCloneStep::Complete(_)) => break,
+                Ok(_) => {}
+                Err(failure) => return Err(format!("{label}-acknowledge:{failure:?}")),
             }
         }
         if let Some(result) = result {

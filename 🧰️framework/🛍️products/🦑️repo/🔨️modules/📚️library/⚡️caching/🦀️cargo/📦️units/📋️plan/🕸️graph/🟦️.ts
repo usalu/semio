@@ -1,7 +1,7 @@
 /** 🕸️ Graph: module exporting `rustUnitGraphLimitsV1`, `captureRustUnitGraphInputsV1`. */
 import{types}from"node:util";
-import type{RustUnitPlanV1,RustUnitV1}from"../../🟦️.ts";
-import{requireRustUnitInputV1,constructRustUnitPlanV1,rustUnitPlanLimitsV1}from"../🟦️.ts";
+import type{RustUnitV1}from"../../🧬️definition/🟦️.ts";
+import{requireRustUnitInputV1,constructRustUnitPlanV1,rustUnitPlanLimitsV1,type RustUnitPlanV1}from"../🟦️.ts";
 import{compareRustUnitTextV1}from"../🔏️identity/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 export const rustUnitGraphLimitsV1=Object.freeze({...schema.definitions.Policy.const});

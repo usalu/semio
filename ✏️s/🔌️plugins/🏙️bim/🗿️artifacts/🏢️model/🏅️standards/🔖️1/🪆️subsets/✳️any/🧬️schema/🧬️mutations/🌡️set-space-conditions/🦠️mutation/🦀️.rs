@@ -1,8 +1,10 @@
 //! 🌡️ `set-space-conditions` payload. Sparsely sets the thermal conditions of a space (occupancy type and density, heating and cooling set points, ventilation, lighting and equipment power density, schedule profile); the first use creates the record of the space, an assigned null clears a field. The envelope, the areas and the U-values are inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::SpaceConditionsPatch};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::SpaceConditionsPatch;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -29,7 +31,7 @@ pub struct SetSpaceConditions {
 
 impl SetSpaceConditions {
     /// 🌡️ The payload that states every field of `record` (an unstated field as an assigned null): applied to a space without conditions it recreates the record exactly.
-    pub fn stating(id: &str, record: &crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions) -> Self {
+    pub fn stating(id: &str, record: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::SpaceConditions) -> Self {
         Self {
             id: id.to_string(),
             occupancy: Some(Assigned::new(record.occupancy.clone())),

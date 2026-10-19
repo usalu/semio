@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import { turnAdmissionReadyFixtureUrl, turnAdmissionReadySchemaUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { turnAdmissionReadyFixtureUrl, turnAdmissionReadySchemaUrl } from "@semio-tech/framework-actor/testing/fixtures";
 /** 🎟️ An outstanding guest receipt retains its exact initiating scope after expiry or cancellation. */
 test("original Host root requires explicit policy and preserves the exact suspended receipt scope",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law.policy)).toBe(true);for(const key of Object.keys(law.policy)){const missing={...law.policy};delete missing[key];expect(new Ajv({strict:true}).compile(schema)(missing)).toBe(false)}

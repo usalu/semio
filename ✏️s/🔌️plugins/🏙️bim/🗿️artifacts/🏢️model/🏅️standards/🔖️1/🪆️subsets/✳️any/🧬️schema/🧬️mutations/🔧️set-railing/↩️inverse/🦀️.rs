@@ -1,7 +1,8 @@
 //! ↩️ Inverse of `SetRailing`: an absolute `SetRailing` restoring the base value of exactly the fields the forward really changes, none when the railing is absent or nothing changes.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Patch;
 
 pub fn inverse<Op>(payload: &SetRailing, base: &ModelSnapshot) -> Vec<Op>
 where

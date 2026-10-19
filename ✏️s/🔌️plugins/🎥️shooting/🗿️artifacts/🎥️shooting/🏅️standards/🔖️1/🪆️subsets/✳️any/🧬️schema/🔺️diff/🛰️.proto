@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Shooting diff schema — sparse field delta over the artifact.
 
@@ -24,7 +24,7 @@ message ShootingDiff {
 }
 
 message ShootingAssignedEmblem {
-  optional semio.os.store.ArtifactChild value = 1;
+  optional semio.framework.schema.artifact_child.ArtifactChild value = 1;
 }
 
 message ShootingAssignedQuaternion {
@@ -156,7 +156,7 @@ message ShootingArtifact {
   repeated ShootingShot shots = 5;
   string active_shot_id = 6;
   string active_asset_id = 7;
-  optional semio.os.store.ArtifactChild emblem = 8;
+  optional semio.framework.schema.artifact_child.ArtifactChild emblem = 8;
 }
 
 message ShootingCamera {

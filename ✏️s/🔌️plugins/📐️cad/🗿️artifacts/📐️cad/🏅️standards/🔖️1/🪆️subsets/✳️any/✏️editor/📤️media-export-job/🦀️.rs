@@ -6,11 +6,16 @@ use super::*;
 /// 🎞️ A media delivery uses the retained command's exact preparation and publication lifecycle.
 pub(super) struct CadMediaJob(pub(super) ArtifactRetainedCommandJob<EditorApp<CadPlayApp>>);
 
+impl CadMediaJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+}
+
 impl semio_framework_job::InteractiveJob for CadMediaJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::step(&mut self.0, cx) }
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::borrow_outcome(&self.0, descriptor) }
     fn begin_close(&mut self) { semio_framework_job::InteractiveJob::begin_close(&mut self.0); }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep { semio_framework_job::InteractiveJob::close_step(&mut self.0, grant) }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{ semio_framework_job::InteractiveJob::close_step(&mut self.0, cx) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_copy_byte_demand(&self.0) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(&self.0, maximum_copy_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { semio_framework_job::InteractiveJob::next_close_release_byte_demand(&self.0) }
@@ -119,31 +124,33 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand(0)?.depth) }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        use semio_framework_value::retained_clone::RetainedCloneStep;
-        if !self.closing || grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        let mapped = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
-            Ok(RetainedCloneStep::Progress(progress)) | Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
-        if self.retirement.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child)); }
-        if self.pending.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child)); }
-        if self.media.is_some() {
-            let payload = self.media.take().expect("admitted media owner").payload;
-            let (schema, value) = match payload {
-                MediaPayload::Structured { schema, json } => (schema, semio_framework_value::DslValue::String(json)),
-                MediaPayload::Intrinsic { schema, value } => (schema, value),
-                MediaPayload::Binary { format_kind, blob_hash } => (format_kind, semio_framework_value::DslValue::String(blob_hash)),
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            use semio_framework_value::retained_clone::RetainedCloneStep;
+            if !self.closing || grant.maximum_items == 0 { return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }); }
+            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+            let mapped = |step: Result<RetainedCloneStep, semio_framework_value::ValueError>| match step {
+                Ok(RetainedCloneStep::Progress(progress)) | Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => return Err(error),
             };
-            self.pending = Some((std::mem::take(&mut self.port), schema, value));
-            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        if self.children.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        InteractiveJobCloseStep::Complete { progress: Default::default() }
+            if self.retirement.is_some() { return Ok(mapped(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child))); }
+            if self.pending.is_some() { return Ok(mapped(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child))); }
+            if self.media.is_some() {
+                let payload = self.media.take().expect("admitted media owner").payload;
+                let (schema, value) = match payload {
+                    MediaPayload::Structured { schema, json } => (schema, semio_framework_value::DslValue::String(json)),
+                    MediaPayload::Intrinsic { schema, value } => (schema, value),
+                    MediaPayload::Binary { format_kind, blob_hash } => (format_kind, semio_framework_value::DslValue::String(blob_hash)),
+                };
+                self.pending = Some((std::mem::take(&mut self.port), schema, value));
+                return Ok(InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            if self.children.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })
+        })
     }
     fn terminal_is_empty(&self) -> bool { self.closing && self.media.is_none() && self.port.is_empty() && self.children.is_none() && self.pending.is_none() && self.retirement.is_none() }
 }

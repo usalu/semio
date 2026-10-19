@@ -5,7 +5,7 @@ import{isBuiltin}from"node:module";
 import{dirname,extname,isAbsolute,join,relative,resolve}from"node:path";
 import schema from"./🧬️schema/🔣️.json";
 import{advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🧊️ Bounded original module images and module-owned schemas for immutable execution. */
 export interface BuildSourceClosureV1{readonly version:1;readonly root:string;readonly entry:string;readonly files:readonly{readonly path:string;readonly sha256:string;readonly base64:string;readonly imports:Readonly<Record<string,string>>}[]}

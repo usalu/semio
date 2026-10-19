@@ -9,12 +9,12 @@
 //! arena-stored `UiNode` — never a second parallel structure — so a host reading a slot's payload is
 //! reading the exact same data `paint::paint_node` would have painted a placeholder for.
 
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
-use crate::wgpu::draw_types::{DrawList, IconAtlas};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::tree::UiTree;
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_retained_tree::tree::UiTree;
 
 /// 🎬️ A `SceneSlot`'s borrowed payload — points directly at the leaf's own `UiNode` variant stored
 /// in the retained `UiTree`'s arena, never a clone.
@@ -30,7 +30,7 @@ pub enum SlotContent<'tree> {
 pub struct SceneSlot<'tree> {
     pub node: NodeId,
     pub document_id: Option<ui_contract::UiNodeId>,
-    pub key: &'tree crate::wgpu::tree::NodeKey,
+    pub key: &'tree semio_framework_ui_retained_tree::tree::NodeKey,
     pub component_generation: u64,
     pub rect: Rect,
     pub content: SlotContent<'tree>,
@@ -132,7 +132,7 @@ impl ScenePaintCursor {
         Ok(())
     }
 
-    pub(crate) const fn progress_witness(&self) -> (bool, u16, usize, usize, usize, u64) {
+    pub const fn progress_witness(&self) -> (bool, u16, usize, usize, usize, u64) {
         (self.node.is_some(), self.phase, self.item, self.page, self.byte, self.external_completed)
     }
 
@@ -206,14 +206,14 @@ pub trait SceneHost {
 /// reachable leaf regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene/image leaves are always-dirty
 /// unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the host's behalf
 /// this milestone.
-#[cfg(test)]
-pub(crate) fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
     let mut slots = Vec::new();
     collect_scene_slots_node(tree, root, 0.0, 0.0, &mut slots);
     slots
 }
 
-pub(crate) fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32) -> Option<SceneSlot<'tree>> {
+pub fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32) -> Option<SceneSlot<'tree>> {
     let node = tree.node(id)?;
     let layout = tree.accepted_layout(id)?;
     let rect = Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
@@ -224,7 +224,7 @@ pub(crate) fn scene_slot_for_node<'tree>(tree: &'tree UiTree, id: NodeId, origin
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
     let Some(node) = tree.node(id) else { return };
     let Some(layout) = tree.accepted_layout(id) else { return };

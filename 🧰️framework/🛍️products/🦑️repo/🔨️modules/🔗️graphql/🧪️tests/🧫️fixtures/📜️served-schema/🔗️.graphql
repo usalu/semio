@@ -194,6 +194,12 @@ input FilterInput {
   includeKinds: [FileKind]
 }
 
+type FixResult {
+  fixed: Int!
+  remaining: Int!
+  breachs: [Breach!]!
+}
+
 type Folder {
   id: ID!
   path: String!
@@ -333,6 +339,7 @@ type Mutation {
   sectionDelete(file: String!, name: String!): Boolean!
   integrate(source: String!, targetSection: String!, targetFile: String!, targetParent: String): File
   extract(sourceFile: String!, sourceSection: String!, targetFile: String!): File
+  fix(scope: String): FixResult!
 }
 
 union Node = Repo | Bundle | Folder | File | Section | Definition | Contributor | Ticket | Policy | Statute | Breach | Draft

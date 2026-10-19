@@ -36,7 +36,8 @@ use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use semio_framework_ui_locale::{Locale, Terminology};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use store_sync::sync::{ArtifactHost, DocumentLinkStatus};
-use ui_wgpu::wgpu::{Rect, WidgetInteractionMaps};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🐙️state/🧬️composer/🦀️.rs"]
 mod staged_state__composer;

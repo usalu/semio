@@ -1,0 +1,6 @@
+{
+ "name": "hdr4b-pptx",
+ "crates": ["semio-s-artifact-stdio-pptx-base-model", "semio-s-artifact-stdio-pptx-base-vocabulary", "semio-s-artifact-stdio-pptx-base", "semio-s-artifact-stdio-pptx-base-mutations", "semio-s-artifact-stdio-pptx-strict-mutations", "semio-s-artifact-stdio-pptx-transitional", "semio-s-artifact-stdio-pptx-strict"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-s-artifact-stdio-pptx-base-model", "semio-s-artifact-stdio-pptx-base", "semio-s-artifact-stdio-pptx-base-mutations", "semio-s-artifact-stdio-pptx-strict-mutations", "semio-s-artifact-stdio-pptx-transitional", "semio-s-artifact-stdio-pptx-strict"]},
+ "note": "HDR-4b: pptx vocabulary consumers repointed, no re-export"
+}

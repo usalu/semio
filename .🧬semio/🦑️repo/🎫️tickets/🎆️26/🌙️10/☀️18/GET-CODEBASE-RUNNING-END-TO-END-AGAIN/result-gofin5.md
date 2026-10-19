@@ -1,0 +1,49 @@
+# Result gofin5: the workspace module binds no root implicitly, every Go module's tests run against a root they own, the dispatcher tests run under a real script envelope
+
+Root `M` = `🧰️framework/🛍️products/🦑️repo/🔨️modules`. No cargo, no package.json/bun.lock edits. Tools in `gofin5-tools/` (`mkcopy.sh` builds the lean throwaway repo copy under the scratchpad, `sync.sh` resyncs the modules, `run-mod.sh <slug> <module dir> [go test args]` runs one module with the canonical overlay `gocanon/plan.py`, `vet-mod.sh`/`vetfix.sh`/`fiximports.py` vet and drop unused imports, `all.sh` runs every module). The copy and `🗑️generated/gofin5-logs` are deleted. Nothing but the TS law (read-only) ran against the real checkout.
+
+## What was wrong
+- `workspace` (`M/🏠️workspace/📦️packages/🐹️go/🐹️.go`) resolved the cwd checkout in `init()` and exported the mutable `RootDir`; every other module's tests ran bound to the real repo through it (or wrote `workspace.RootDir = ...` directly and never restored it).
+- `graphql` kept a process-global `executor` created lazily from that default (`ensureExecutor`, `workspace.ExecutorOnce`); `Gql`/`PrintGQL` (used by the module cli's MCP resources and `analyze`) answered from it.
+- `RootDirIsGitTopLevel` compared `/var/...` with `/private/var/...` on macOS, so `GetGitIgnoredSet` silently answered "nothing ignored" for any temp repo (real defect, fixed with `CanonicalPath`).
+- Hidden leaks the guard exposed: hooks and client tests left the process root pointing at a deleted temp repo (`RunHook` binds as a side effect); the tree "exhaustive" goal tests indexed `tree.Children[2]`, which is the drafts node, so they were vacuous.
+
+## Production changes
+- `workspace`: no `init()`, no exported `RootDir`/`ExecutorOnce`. New API in the root file: `BindWorkingDirectory()`, `LookupRootDir()`, `GetRootDir()` (panics "repository root is not bound" instead of falling back to the cwd; every derived path getter goes through it), `ResolveRepoRoot` (unobserved) and `FindRepoRoot` (reports to an observer), `ObserveRootResolution`. Hermetic harness: `RootGuard` (`NewRootGuard`, `Observe`, `Report`), `CanonicalPath`, `PathWithin`, `RunSandboxed(name, held, run)` (temp git repo bound as root and cwd, observer installed, run fails and names the offending `Test*` if anything resolved or still holds the checkout), `SandboxOrigin`/`OriginPath`/`SandboxRoot`, `SandboxProblems(guardCase)` and `UnownedRootLookups` (static scan of the test sources for `os.Getwd(`, `runtime.Caller(`, `FindRepoRoot(".")`, `FindRepoRoot("")`; skips the guard case and the language-agnostic `package adapter` host adapters), fixture builders `NewFixtureRepo`, `BindRootForTest`, `WriteFixtureFile`, `CopyFixtureTree` (over the small `FixtureT` interface, no `testing` import).
+- Callers: all 68 production/test files that read or assigned `workspace.RootDir` use `GetRootDir()`/`SetRootDir()`; `graphql` `🖊️executor` replaces the global with `boundExecutor()` (refuses while unbound, rebuilds when the root moved); `⌨️cli` `RunCLI`, `RunMcpServerFor` and `RunHookFor` call `workspace.BindWorkingDirectory()`.
+- Client (`💻️client/⌨️cli`): its private `rootGuard`, `canonicalPath`, `pathWithin`, `resolveRepoRoot` and observer are gone; `findRepoRoot` = `workspace.FindRepoRoot`, `TestMain` = `workspace.RunSandboxed("client", heldBindings, ...)`; the client keeps only what is client-specific (held `rootDir`/executor/override bindings, unbound executor refusal, per-invocation bind).
+
+## Test changes
+- New case `🧪️tests/🛡️hermetic-root-guard` in providers, model, languages, statutes, codebase, move, contributors, goals, tickets, todos, test-runner, hooks, tree, graphql and cli: `TestMain` through `RunSandboxed` plus `TestTestsRunAgainstAnOwnedRoot` (bound root, cwd and test sources). yaml, search, identity and events do not depend on `workspace` and never resolve a root.
+- workspace case `🛡️hermetic-root-guard` (7 tests): unbound refusal of `GetRootDir`/`GetRepoMetaDir`/`GetRepoGoalsDir`, no implicit bind by chdir, `BindWorkingDirectory`, guard flags only paths inside the checkout (prefix sibling not flagged, offending test named), held bindings, observed `SetRootDir` inside the checkout, scan self-test.
+- Language-agnostic scenario `the-start-directory-alone-decides-the-root` in `🏠️workspace/🧪️tests/🧭️root-discovery` (`🥒️.feature`, Go adapter, Rust adapter): discovery from a named start gives the same root per tree while the process stands inside the tree, outside it and inside a decoy checkout.
+- Converted to fixtures (all previously read the real checkout): goals `TestComposeIDToGoalPath` (`withGoalFixture`, was a silent skip), codebase statute fixture tests (`withStatuteFixtures`), statutes/tree/cli/graphql shared-fixture reads (`workspace.OriginPath`), graphql `TestGraphQL{Repo,Policies,Contributors}Query` (fixture executor instead of the global), module cli `setupToolTest` -> `withExhaustiveRepo` (adds contributor `ueli`; `TestGoalList`, `TestGoalListIDs`, `TestGoalsMcpResource`, `TestContributorListIDs`, `TestToolGoalUri` now fail instead of skipping on an empty store), tree exhaustive goal/contributor/checkpoint tests (`withExhaustiveHistory`, `exhaustiveCategory`), `TestMicroCommitPostCommitHookResetsTemplates` (stub hook, as in the client), `TestBuildBinaryArtifactsGitIgnored` (fixture `.gitignore`), module cli `TestRenderPromptTemplateUsesRepoMetaRoot` (`t.Chdir`).
+- Removed, because they read checked-in files (a repository law held by `🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts`) or legacy data: workspace `TestMcpStdioInitializeHandshake`, module cli `🔚️bootstrap` (`TestMcpBootstrapAssetsStayRepoRelative`), hooks `TestNativeHookEventMappingFromRealLogFiles`, graphql "the checked-in devcontainer block equals its derivation" (held by `testDerivedConfig`/`checkDerivedConfig`).
+- Leak fixes: standalone `SetRootDir(tmpDir)` in hooks/todos/client tests became `BindRootForTest`/`bindRootForTest` (restores).
+
+## Dispatcher tests under an envelope
+`🚦️test-dispatch` no longer skips. `requireToolchainRoot` (client `🎼️executor-harness`) names the toolchain checkout (`SEMIO_TOOLCHAIN_ROOT` if exported, else the checkout that contains the module via `OriginPath`), fails with a clear message if the dispatcher script or `bun` is missing, exports `SEMIO_TOOLCHAIN_ROOT`, and `provideScriptEnvelope` sets `SEMIO_SCRIPT_PROCESS_INVOCATION` to the same wire the bun suites build with `createScriptProcessEnvelope` (`{version:1, policy:{version:1, owner, maximumElapsedMilliseconds}, deadlineEpochMilliseconds: now+budget, capabilities:{}}`, 2 minutes). An envelope inherited from a real `bun repo` parent is kept. The toolchain is never bound as the repository.
+
+## Verification (throwaway copy, canonical overlay, foreground, non-short; `go vet` incl. `-tags exhaustive` clean for every module, gofmt clean on every file I touched)
+| module | before | after |
+|---|---|---|
+| workspace | 72 pass, 1 fail | 79 pass, 0 fail |
+| providers / model / languages / statutes | 74 / 770 / 7 / 112 | 75 / 771 / 8 / 113, 0 fail |
+| codebase / move / contributors / goals | 15 / 16 / 13 / 2 | 16 / 17 / 14 / 3, 0 fail |
+| tickets / todos / test-runner / hooks | 31 / 138 / 77 / 1727 (+2 skip) | 32 / 139 / 78 / 1729, 0 fail, 0 skip (tickets: 1 live-network skip) |
+| tree / graphql / module cli | 175 / 67 / 455 | 176 / 67 / 448 (1 skip: needs a built `./cli` binary), 0 fail |
+| yaml / search / identity / events | 9 / 12 / 14 / 49 | unchanged, 0 fail |
+| `-tags exhaustive` | n/a | tree 194, tickets 37, graphql 99, cli 637, 0 fail |
+| client cli | 3972 pass, 0 fail, 7 skip | 3972 pass, 0 fail, 5 skip (the 2 dispatcher children by design, `TestHookCommandStdinPiped`, live ticket comment, rust section) |
+| client mcp | 45 | 45 |
+- `go test -run TestCanonicalGoTestDispatcher` in the client: `TestCanonicalGoTestDispatcher` (8.5 s) and `...Cancellation` (4.8 s) now run and pass against the copy as toolchain (bun, real dispatcher script); the two `NestedBudget*` helpers stay skipped outside their owner root (they execute inside the cancellation run).
+- Mutation check: a temporary test calling `workspace.SetRootDir(workspace.OriginPath())` in the codebase module made the run print the offending test (`TestMutationLeaksTheCheckout`), the resolution and the held workspace root, and exit 1 (temporary test removed with the copy).
+- Root-discovery scenarios: compiled and executed the Go adapter in a scratch package inside the copy (all four subjects, the new one gives identical roots for the three working directories); the Rust adapter was not compiled.
+- `bun test ./🧪️tests/🧱️checked-in-asset-contracts/🟦️.ts` in the real checkout: 11 pass, 0 fail, exit 0, including the dev MCP stdio initialize handshake (the root `📜️script.ts` imports are fixed). The trailing "Original Script process terminated" line is the killed child's stderr after the test ended.
+
+## Open
+- The Rust twin of the new root-discovery scenario (`🦀️.rs`) is written but not compiled (no cargo); the Rust workspace crate has no process-global root, so it needs no behaviour change.
+- `workspace.GetRootDir()` now panics when unbound; the production entry points bind first (`RunCLI`, `RunMcpServerFor`, `RunHookFor`, the client's entry points), but a future entry point must call `BindWorkingDirectory()`.
+- `📚️library` still fails its own Go build in the copy (`malformed import path` for `🧹️normalization/🔮️oracles/📦️package-boundary-classification`), unrelated and unchanged.
+- gofmt reports pre-existing/peer drift in client tests `📤️event-export`, `⭐️ticket-important`, `🤝️g1-contract` (not touched by me).
+- The hermetic harness lives in the production `workspace` package (small, no `testing` import) so that every module shares one guard; moving it behind a dedicated member directory needs a taxonomy registry entry.

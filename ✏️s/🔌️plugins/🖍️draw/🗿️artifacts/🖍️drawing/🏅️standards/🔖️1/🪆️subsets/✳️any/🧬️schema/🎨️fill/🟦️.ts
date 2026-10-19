@@ -1,8 +1,6 @@
 /** 🎨️ Owned fill edits shared by inspector controls and gradient handles. */
 import {GradientRamp} from "./🎨️sampling/🟦️.ts";
-export type Color = [number,number,number,number];
-export interface Stop { offset:number; color:Color }
-export type Fill = {kind:"solid";color:Color} | {kind:"linearGradient";x1:number;y1:number;x2:number;y2:number;stops:Stop[]} | {kind:"radialGradient";cx:number;cy:number;r:number;stops:Stop[]};
+import type { Color, Stop, Fill } from "./🖌️paint-model/🟦️.ts";
 export type FillEdit = {kind:"type";value:"none"|Fill["kind"]} | {kind:"coordinate";axis:"x1"|"y1"|"x2"|"y2"|"cx"|"cy"|"r";value:number} | {kind:"color";index?:number;value:Color} | {kind:"alpha";index?:number;value:number} | {kind:"offset";index:number;value:number} | {kind:"addStop";offset:number} | {kind:"removeStop";index:number};
 const invalid = (message:string):never => { throw new Error(message); };
 const unit = (value:number):number => Number.isFinite(value) && value>=0 && value<=1 ? value : invalid("Value must be between zero and one");

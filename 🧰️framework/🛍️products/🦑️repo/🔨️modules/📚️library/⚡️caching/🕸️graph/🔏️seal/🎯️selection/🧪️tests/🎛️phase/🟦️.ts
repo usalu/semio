@@ -3,10 +3,10 @@ import {readFileSync} from "node:fs";
 import ts from "typescript";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import {withBuildTestInvocationV1} from "../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {readInferenceSourceV1} from "../../../../../../🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import fixture from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};
 test("selected producer fixture passes its genuine phase into actual inference admission",async()=>withBuildTestInvocationV1(async original=>{

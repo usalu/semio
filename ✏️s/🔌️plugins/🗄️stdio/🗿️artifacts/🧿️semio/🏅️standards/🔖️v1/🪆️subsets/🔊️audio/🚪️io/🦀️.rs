@@ -169,11 +169,11 @@ pub mod derived_construction {
     use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
     use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
     #[cfg(test)]
-    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::insert_channel;
+    use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::insert_channel;
     #[cfg(test)]
-    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_format;
+    use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::set_format;
     #[cfg(test)]
-    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+    use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::set_sample_rate;
     use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
     use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
     use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;

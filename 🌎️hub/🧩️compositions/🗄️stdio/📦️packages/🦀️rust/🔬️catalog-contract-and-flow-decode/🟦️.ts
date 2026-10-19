@@ -1,18 +1,16 @@
 /** 🔬️ The catalog root contract tests and the flow retained decode script of the hub stdio package. */
-import { requireIssuedResourceControlInvocationV1, BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { requireIssuedResourceControlInvocationV1, BundleScript } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { decodePackValue, encodePackValue } from "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts";
-import { devToolingEnv } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { resolveWorkspaceBin } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { devToolingEnv, resolveWorkspaceBin, cargoTargetDirectory, cargoBuildDirectory } from "@semio-tech/process/execution";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { ARTIFACT_MAX_BYTES, ARTIFACT_OWNER, CATALOG_DEADLINE_MS, COMPONENT_MANIFEST, DESCRIPTOR_JSON, DESCRIPTOR_PACK, IO_CHUNK_BYTES, PACKAGE_NAME } from "../🧮️component-constants/🟦️.ts";
 import { assertComponentizableCore, assertRegularBounded, atomicDescriptorPair, catalogControlV1, type CatalogExecution, componentPackageId, copyCatalogArtifact, inspectWasmCoreStructure, prepareReleaseComponent, runControlled, webSha256 } from "../🧾️catalog-artifact-io/🟦️.ts";
 import { catalogCargoEnvironment, requireEmptyFreshRoot } from "../🏗️catalog-root-script/🟦️.ts";
@@ -237,7 +235,7 @@ export class FlowRetainedDecodeScript extends BundleScript {
     assert(source.includes("semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures"));
     assert(source.includes("semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"), "retained Flow lifecycle native law is absent");
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: PACKAGE_NAME, target: { kind: "test", name: "flow_retained_decode" }, laws: ["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures", "semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }

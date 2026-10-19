@@ -3,10 +3,13 @@
 use semio_framework_os_infinite_world_model::{World3dBuildContext, WORLD_DYNAMIC_DRAW_INSTANCE_CAPACITY, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_INTERACTION_BYTE_CAPACITY, WORLD_INTERACTION_ID_BYTE_CAPACITY, WORLD_INTERACTION_INTENT_CAPACITY, WORLD_INTERACTION_ITEM_CAPACITY, WORLD_INTERACTION_OBJECT_CAPACITY, world_pick_keys_match, WORLD_PICK_TARGET_CAPACITY, WORLD_PICK_TARGET_POINT_CAPACITY, world_pick_targets_from_json, world_scene_raster_pool, WorldCursorWakeAuthority, WorldCursorWakeFault, WorldDrawRegistry, WorldDynamicEntry, WorldDynamicFault, WorldDynamicRegistry, WorldFlatAction, WorldFlatActionKind, WorldInteractionIntent, WorldInteractionIntentQueue, WorldInteractionObjectKind, WorldInteractionObjectRegistry, WorldInteractionObjectSlot, WorldInteractionPhase, WorldInteractionPlan, WorldOpaqueOwner, WorldOpaqueQuarantine};
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
-use ui_wgpu::wgpu::{Camera3d, Instance3d, Mat4, PreparedRenderUpload, Rect, SceneDraw3d, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use ui_scene::math::{Camera3d, Instance3d, Mat4, SceneDraw3d};
+use semio_framework_ui_prepared::PreparedRenderUpload;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(test)]
-use ui_wgpu::wgpu::{gizmo, SceneRasterMeshSeal};
+#[cfg(test)] use semio_framework_ui_draw_contract::gizmo;
+#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 
@@ -44,7 +47,7 @@ fn WORLD_SOURCE() -> &'static str {
 /// 🧊️ The wgpu renderer glue as the one text the unsplit file held: its root and every mounted child.
 #[allow(non_snake_case)]
 fn RENDERER_SOURCE() -> &'static str {
-    read_joined(&["../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🗂️asset-authority/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📊️scale-bench/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🎨️presentation-raster/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧠️app-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔬️native-socket-probe/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧠️kernel-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/🏊️kernel-pool/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📦️kernel-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏊️kernel-pool/📥️lifted/🗃️kernel-retained-state/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/📥️lifted/🔁️asset-decode-jobs/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/📥️lifted/🏊️kernel-pool/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/📬️kernel-replay-client/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🗃️kernel-retained-state/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs"])
+    read_joined(&["../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🗂️asset-authority/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🔤️json-lexer-and-schema-types/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🗃️schema-output-and-cursor-state/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🧮️schema-token-application/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🏁️schema-finishing-and-plan-types/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/📐️instance-plan-math-and-outline/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🧵️materialize-cursor-step/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/📖️materialize-readers-and-component-helpers/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📊️scale-bench/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🛎️frame-actions/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🎨️presentation-raster/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🏗️mailbox-construction-and-authorities/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/📥️renderer-asset-steps/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🖼️asset-decode-pump-and-reference-images/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🌐️native-asset-pumps/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/⏳️pending-work-deadlines-and-spawns/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧾️frame-build/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🎞️present-state-and-engine-closers/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🧯️retirement-and-present-steps/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🎬️present-step-inner/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🧠️app-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔬️native-socket-probe/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧠️kernel-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🔁️spawn-recovery/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🚫️request-refusal/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🛂️admission-claim/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/📄️typed-result/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/🏊️kernel-pool/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📦️kernel-runtime/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏊️kernel-pool/📥️lifted/🗃️kernel-retained-state/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/📥️lifted/🔁️asset-decode-jobs/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏛️host-base/📥️lifted/🏊️kernel-pool/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🧮️kernel-core/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/📬️kernel-replay-client/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🗃️kernel-retained-state/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🏗️pool-construction-and-product-replay/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/📼️job-replay-and-command-maintenance/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🧩️app-lifecycle-and-realm-close/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🔄️exchange-and-turn-settling/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🚀️turn-dispatch-and-pool-runner/🦀️.rs"])
 }
 
 /// 🐚️ The wgpu Shell as the one text the unsplit file held: its root and every child split out of it.
@@ -59,7 +62,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=ui_wgpu::wgpu::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -179,7 +182,7 @@ fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and
 
     let glue = RENDERER_SOURCE();
     let host = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏠️os-host/🦀️.rs");
-    let native = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let native = read_joined(&["../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🎞️frame-generation-and-os-host/🦀️.rs", "../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🚀️native-winit-app/🦀️.rs"]);
     let browser = fixture_text!("../../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs");
     assert!(exact(glue, host, native, browser));
     assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
@@ -311,17 +314,17 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     let lease = test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1);
     let identity = lease.identity();
     resources.ensure_world_plane_texture("plan", lease);
-    let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
+    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
     assert!(matches!(input.uploads.get(0), Some(PreparedRenderUpload::SceneRaster { lease, .. }) if lease.identity() == identity));
     while !input.close_step() {}
     assert!(input.close_step());
 
-    let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
+    let mut input = semio_framework_ui_prepared::PreparedRenderInput::try_new(1, 2, semio_framework_ui_draw_contract::DrawList::default(), None, 0.0).ok().expect("second prepared input admitted");
     let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     resources.ensure_world_plane_texture("plan", test_scene_raster_lease(1, 1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None, 1));
     assert_eq!(resources.append_step(&mut input).ok(), Some(false));
-    let mut job = ui_wgpu::wgpu::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
+    let mut job = semio_framework_ui_prepared::PreparedRenderJob::try_new(input).ok().expect("prepared job admitted");
     let mut preview = 0;
     let (outcome,receipt) = semio_framework_job::drive_step(
         &mut job,
@@ -339,7 +342,7 @@ fn an_appended_world_scene_raster_keeps_its_exact_pool_lease() {
     assert!(matches!(outcome, semio_framework_job::StepOutcome::Yield), "a bound producer keeps the preparation alive");
     assert_eq!(job.fault(), None, "the prepared job never refuses this lane's own producer");
     job.begin_close();
-    while !matches!(InteractiveJob::close_step(&mut job, world_original_fixture_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
+    while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
 }
 
 /// 🧭️ React's own `resolveSceneGizmoViewportPlacement` oracle — the block margin clears the folded

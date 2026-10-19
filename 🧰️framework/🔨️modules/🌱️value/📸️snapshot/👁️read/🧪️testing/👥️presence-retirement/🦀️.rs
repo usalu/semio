@@ -16,7 +16,7 @@ pub fn admit_returned_string(registry: &crate::SnapshotReadRegistryHandle, expec
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.try_admit_one_returned::<String, _>(CLOSE_GRANT, |original, grant| {
         assert_eq!(original.as_str(), expected);
         assert_eq!(Arc::strong_count(&original), 1);
-        semio_framework_value::retirement::shared::admit_shared_retirement(original, grant, false)
+        semio_framework_value::retirement::arc_custody::admit_shared_retirement(original, grant, false)
     }));
     match result {
         Ok((owner, receipt)) => { assert!(receipt.fits(CLOSE_GRANT)); assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes)); owner }

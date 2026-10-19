@@ -22,7 +22,7 @@ async fn delete_selection_removes_the_framework_owned_graph_selection_from_the_f
         assert!(!after.host_snapshot.widgets.iter().any(|widget| widget_id(widget) == "extrude"), "the selected widget survived its own delete");
         assert!(!after.host_snapshot.synapses.iter().any(|synapse| synapse.from == "extrude" || synapse.to == "extrude"), "a dangling synapse survived the delete");
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🧯️ With an EMPTY graph selection the delete is a no-op — never a whole-document wipe. This is the

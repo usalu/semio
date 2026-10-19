@@ -8,7 +8,7 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join,isAbsolute } from "node:path";
-import {buildGraphPathV1} from "../../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
+import { buildGraphPathV1 } from "@semio-tech/repo-lib/build";
 
 export type Json = Record<string, any>;
 export type Selection = { id: string; parameters: Record<string, string | boolean>; extraArgs: string[]; env?: Record<string, string> };

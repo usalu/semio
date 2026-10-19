@@ -175,7 +175,7 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, window_id:
         publish(window_id, document, assignments)
     };
     let status = status_json(document, satisfiable, &instances);
-    let scene = semio_framework_ui::wgpu::World3dScene {
+    let scene = semio_framework_ui_declaration::ui::World3dScene {
         instances_delta_json: delta,
         status_json: Some(status),
         ..world3d_scene(

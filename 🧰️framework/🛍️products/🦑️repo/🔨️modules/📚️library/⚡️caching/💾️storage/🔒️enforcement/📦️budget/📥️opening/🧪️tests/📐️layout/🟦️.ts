@@ -6,7 +6,7 @@ import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import*as issuer from"../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../../🏪️store/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";

@@ -7,17 +7,14 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync
 import { homedir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { cargoBuildDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { NATIVE_BUILD_DRIVER_POLICY_V1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, type ComponentSourceOwnerV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, type ComponentSourceOwnerV1 } from "@semio-tech/plugin-registry/discovery";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentProfileV1, componentProvenanceDigestsV1, rustToolchainIdentityV1, writeComponentReceiptV1, type ComponentDeliverableV1, type ComponentProfileV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "@semio-tech/plugin-registry/catalog-verification";
+import { verifySemanticDescriptorPairBytesV1 } from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../🏗️component-build/🟦️.ts";
 import { emitSemanticDescriptorV1, type DescriptorEmissionControlV1, type SemanticDescriptorEmissionV1 } from "../🛂️descriptor-emission/🟦️.ts";
 

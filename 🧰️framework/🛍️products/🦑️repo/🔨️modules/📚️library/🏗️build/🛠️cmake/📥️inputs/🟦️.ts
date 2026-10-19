@@ -1,7 +1,7 @@
 /** 📥️ Inputs: module exporting `CmakeInputsV1`, `withCmakeInputsV1`, `cmakeInputBytesV1`, `cmakeInputFactsV1` and more. */
-import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,recheckArtifactSourceSetV1,type ArtifactSourceSetV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withArtifactSourceSetV1,artifactSourceEntriesV1,readArtifactSourceChunkV1,recheckArtifactSourceSetV1,type ArtifactSourceSetV1}from"@semio-tech/process/artifacts/publication/sources";
+import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"@semio-tech/process/routing";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"../🧬️schema/🔣️.json";
 declare const inputBrand:unique symbol;
 /** 📚️ Identifies live pinned CMake inputs without lending descriptor or Native authority. */

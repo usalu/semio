@@ -3,8 +3,8 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runCmdStatus } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { WGPU_SCRIPT_PATH } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { runCmdStatus } from "@semio-tech/process/execution";
+import { WGPU_SCRIPT_PATH } from "@semio-tech/framework-plugin/build/plan";
 
 const SCALE_COMPONENT_ARTIFACT = "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm";
 

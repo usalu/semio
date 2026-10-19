@@ -7,7 +7,7 @@ type TestSource = { readonly directory: string; readonly url: string };
  * @see 🔌️plugin/🖥️host/🔁️lifecycle/🧪️tests/🔁️lifecycle/🦀️.rs */
 export async function registerRetryableLifecycleDeadlineTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
-  dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientRetryableLifecycleTestDependenciesV1,
+  dependencies: import("@semio-tech/framework-actor/shard-client").ShardClientRetryableLifecycleTestDependenciesV1,
   testSource: TestSource,
 ): Promise<void> {
   const { RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, graftWorkerStack, isRetryableLifecycleTurn } = dependencies;
@@ -80,7 +80,7 @@ export async function registerRetryableLifecycleDeadlineTests(
     });
 
     it("replays the exact same lifecycle events on a marked rejection, bounded by the shared attempt budget", async () => {
-      const { readModuleTreeSource } = await import("../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts");
+      const { readModuleTreeSource } = await import("@semio-tech/framework-compiler-ts/syntax/module-tree");
       const source = readModuleTreeSource(new URL(testSource.url));
       const start = source.indexOf("async sendInstanceLifecycle(");
       expect(start).toBeGreaterThan(0);

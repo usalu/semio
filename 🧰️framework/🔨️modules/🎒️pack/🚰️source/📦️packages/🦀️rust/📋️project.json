@@ -14,6 +14,7 @@
       ],
       "outputs": [],
       "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-contract",
         "forwardAllArgs": false
       },
@@ -40,6 +41,7 @@
       ],
       "outputs": [],
       "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-native",
         "forwardAllArgs": false
       },

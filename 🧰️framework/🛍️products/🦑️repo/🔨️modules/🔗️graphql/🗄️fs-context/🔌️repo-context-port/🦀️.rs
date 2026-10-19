@@ -145,6 +145,10 @@ impl RepoContext for FsRepoContext {
         }
         Ok(AnalyzeResult { metrics: Some(AnalyzeMetrics { total: breachs.len() as i64, by_priority: Some(by_priority), autofixable }), breachs: Some(breachs) })
     }
+    fn fix(&self, scope: Option<&str>) -> Result<FixResult, ContextError> {
+        self.autofix(scope)
+    }
+
     fn goal_create(&self, input: GoalCreateInput) -> Result<Goal, ContextError> {
         self.with_goals(input.no_management, |goals| goals.create(&input)).map_err(|error| ContextError::new(error.to_string()))
     }

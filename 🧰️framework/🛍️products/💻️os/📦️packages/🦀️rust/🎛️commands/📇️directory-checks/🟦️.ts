@@ -10,9 +10,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
@@ -29,7 +28,7 @@ export class DirectoryDescriptorDigestSourceScript extends BundleScript {
 }
 
 export class DirectoryDescriptorDigestNativeScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","os_directory::io::binary::","--no-fail-fast",...rest,"--","--nocapture"]);}
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","os_directory::io::binary::","--no-fail-fast",...rest,"--","--nocapture"]);}
 }
 
 export class DirectoryCheckpointPairSourceScript extends BundleScript {
@@ -44,7 +43,7 @@ export class DirectoryCheckpointPairSourceScript extends BundleScript {
 export class DirectoryCheckpointPairNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib", "os_directory::io::binary::checkpoint_pair::tests::", "--no-fail-fast", ...rest, "--", "--nocapture"]);
+    await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib", "os_directory::io::binary::checkpoint_pair::tests::", "--no-fail-fast", ...rest, "--", "--nocapture"]);
   }
 }
 
@@ -109,7 +108,7 @@ export class DirectorySessionAuthorityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-session-authority-check accepts only --native");
     const checks = await directorySessionAuthorityOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
           package: "semio-framework-os-kernel",
           target: { kind: "lib" },
           laws: [
@@ -198,7 +197,7 @@ export class DirectoryEventPageContractCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-event-page-contract-check accepts only --native");
     const checks = await directoryEventPageContractOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }], progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }], progress(event) {
           console.log(`directory-event-page-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`directory-event-page-contract-native-receipts: ${JSON.stringify(receipts)}`);
@@ -212,7 +211,7 @@ export class DirectoryEventPageClientCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-event-page-client-check accepts only --native");
     const checks = await directoryEventPageClientOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }], progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }], progress(event) {
           console.log(`directory-event-page-client ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`directory-event-page-client-native-receipts: ${JSON.stringify(receipts)}`);

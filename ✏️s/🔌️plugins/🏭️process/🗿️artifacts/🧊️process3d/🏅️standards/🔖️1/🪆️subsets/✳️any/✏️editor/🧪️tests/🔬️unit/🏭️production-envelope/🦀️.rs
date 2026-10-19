@@ -93,7 +93,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
         "conflicts": []
     }))
     .expect("schema-first Process3d production fixture envelope");
-    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
     let funded = semio_s_artifact_process_process3d_host::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
@@ -108,7 +108,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
     panic!("Process3d fixture envelope retirement did not reach terminal")
 }
 
-fn admit_production_envelope(app: &mut crate::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_production_envelope(app: &mut crate::context::Process3dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
     semio_s_artifact_process_process3d_host::process3d_admit_publication_authority(
@@ -126,15 +126,15 @@ fn admit_production_envelope(app: &mut crate::context::Process3dRawApp, wire: &[
         let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Process3d production envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Process3d production envelope page admission failed: {fault:?}"));
     }
-    assert!(app.seal_artifact_envelope_ingress(handle).expect("Process3d production envelope seal"));
+    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("Process3d production envelope seal"));
     handle
 }
 
-fn drive_production_envelope(app: &mut crate::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
         semio_s_artifact_process_process3d_host::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
-        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
-        let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Process3d production maintenance turn");
+        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }

@@ -305,6 +305,14 @@
         "informationMaximumBytes": 1048576,
         "informationMaximumLines": 32768,
         "publicationDirectory": ".publication",
+        "attachArguments": [
+          "-nobrowse",
+          "-noautoopen",
+          "-owners",
+          "on"
+        ],
+        "mountProgram": "/sbin/mount",
+        "mountWithoutOwnersFlag": "noowners",
         "reservedApplicationDirectories": [
           ".fseventsd"
         ]

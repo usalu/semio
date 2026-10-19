@@ -19,6 +19,10 @@ function laws(source: ts.SourceFile): ts.ExpressionStatement[] {
   return source.statements.filter((node): node is ts.ExpressionStatement => ts.isExpressionStatement(node) && ts.isCallExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "test");
 }
 
+function named(source: ts.SourceFile, title: string): ts.ExpressionStatement[] {
+  return laws(source).filter(node => ts.isCallExpression(node.expression) && node.expression.arguments[0] !== undefined && ts.isStringLiteralLike(node.expression.arguments[0]) && node.expression.arguments[0].text === title);
+}
+
 function registrations(source: ts.SourceFile): string[] {
   const result: string[] = [];
   const visit = (node: ts.Node): void => {
@@ -59,8 +63,8 @@ test("the portable ownership schema preserves every original law, witness byte a
   expect(digest(laws(general)[0]!.getText(general))).toBe(corpus.generalLawSha256);
   for (const row of corpus.moved) {
     const source = parse(row.owner);
-    expect(laws(source)).toHaveLength(1);
-    expect(digest(laws(source)[0]!.getText(source)), row.law).toBe(row.sha256);
+    expect(named(source, row.law)).toHaveLength(1);
+    expect(digest(named(source, row.law)[0]!.getText(source)), row.law).toBe(row.sha256);
     expect(read(corpus.generalOwner)).not.toContain(row.law);
     expect(registrations(parse(row.script))).toContain(row.command.split(" ")[0]!);
     const project = JSON.parse(read(row.project));

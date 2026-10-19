@@ -1,32 +1,33 @@
 //#region 💾️ResidentAdmission
-import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import { ShardClient, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
-import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiActivationLease, UiInstanceLifetime } from "../🔌️host/🟦️.ts";
+import { uiResidentComposition, type UiResidentComposition } from "../🔌️host/🏦️composition/🟦️.ts";
+import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, OwnedResidentRecordDetachment, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentResources } from "@semio-tech/value-ts/resident";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 import { OwnedUiInstance } from "../🏘️instance/🟦️.ts";
+import { bindResidentScopeMatcher } from "../🏘️instance/🪪️resident-scope/🟦️.ts";
 import { OwnedUiOperationPayloadBuilder, type OwnedUiOperationInputCopied, type OwnedUiOperationInputCancelled } from "../🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { uiResidentMetadataEnvelope } from "./🪪️metadata/🟦️.ts";
-import { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } from "@semio-tech/framework-kernel/return/content/input";
+import { uiInputHost, type UiInputField, type UiPayloadDetachment } from "../🔌️host/📥️input/🟦️.ts";
 
 export type OwnedUiResidentPoolAdmission = { readonly step: RetainedUiWireStep; readonly pool: OwnedUiResidentPool | null };
 export type OwnedUiResidentInstanceAdmission = { readonly step: RetainedUiWireStep; readonly scope: OwnedUiResidentInstance | null };
 export type OwnedUiResidentPayloadAdmission = { readonly step: RetainedUiWireStep; readonly payload: OwnedUiResidentPayload | null };
 type SlotPhase = "empty" | "preparing" | "bootstrap-rejected" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "shell-installed" | "roster-observing" | "closing-domain" | "handoff-observing" | "detaching" | "record-closing" | "record-observing" | "cell-closing" | "cell-observing" | "fault-held";
 type Slot = { requestOwner: OwnedUiInstance | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Instance | null; phase: SlotPhase; failure: unknown; witness: InstanceWitness | null };
-type Pool = { ledger: OwnedResidentLedger | null; composition: ShardClient | null; failure: unknown; phase: "open" | "closing" | "closed"; bindings: WeakMap<OwnedUiInstance, OwnedUiResidentInstance> | null; head: Instance | null; tail: Instance | null; pending: Slot | null; closing: boolean; closed: boolean; facade: OwnedUiResidentPool | null; witness: OwnedUiResidentPoolRetirement | null };
-type Instance = { pool: Pool | null; owner: OwnedUiInstance | null; facade: OwnedUiResidentInstance | null; activation: ShardActorActivationLease | null; lifetime: ActorInstanceLifetime | null; previous: Instance | null; next: Instance | null; head: Payload | null; tail: Payload | null; children: number; closing: boolean; closed: boolean; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: "constructing" | "live" | "domain-closed" | "retired"; witness: InstanceWitness | null; failure: unknown; slot: Slot | null; bindingInstalled: boolean; pending: PayloadSlot | null };
+type Pool = { ledger: OwnedResidentLedger | null; composition: UiResidentComposition | null; failure: unknown; phase: "open" | "closing" | "closed"; bindings: WeakMap<OwnedUiInstance, OwnedUiResidentInstance> | null; head: Instance | null; tail: Instance | null; pending: Slot | null; closing: boolean; closed: boolean; facade: OwnedUiResidentPool | null; witness: OwnedUiResidentPoolRetirement | null };
+type Instance = { pool: Pool | null; owner: OwnedUiInstance | null; facade: OwnedUiResidentInstance | null; activation: UiActivationLease | null; lifetime: UiInstanceLifetime | null; previous: Instance | null; next: Instance | null; head: Payload | null; tail: Payload | null; children: number; closing: boolean; closed: boolean; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: "constructing" | "live" | "domain-closed" | "retired"; witness: InstanceWitness | null; failure: unknown; slot: Slot | null; bindingInstalled: boolean; pending: PayloadSlot | null };
 type PayloadPhase = "constructing" | "live" | "body-retired" | "source-detached" | "source-settled" | "domain-retired" | "registration-retired";
 type BuilderEntry = { facade: OwnedUiOperationPayloadBuilder | null; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: "constructing" | "live" | "closing" | "retired"; witness: BuilderWitness | null };
-type BuilderSlot = { requestOwner: OwnedKernelReturnInputField | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: BuilderEntry | null; phase: SlotPhase | "entry-held" | "constructing" | "source-installing" | "source-bound" | "witness-ready" | "finalized" | "binding-detaching" | "binding-settling" | "binding-settled"; failure: unknown; witness: BuilderWitness | null };
+type BuilderSlot = { requestOwner: UiInputField | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: BuilderEntry | null; phase: SlotPhase | "entry-held" | "constructing" | "source-installing" | "source-bound" | "witness-ready" | "finalized" | "binding-detaching" | "binding-settling" | "binding-settled"; failure: unknown; witness: BuilderWitness | null };
 type InputEvidence = OwnedUiOperationInputCopied | OwnedUiOperationInputCancelled;
 type EvidenceEntry = { facade: InputEvidence | null; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: "constructing" | "live" | "closing" | "retired"; witness: EvidenceWitness | null };
 type EvidenceSlot = { requestOwner: OwnedUiOperationPayloadBuilder | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: EvidenceEntry | null; phase: SlotPhase | "entry-held" | "constructing" | "witness-ready" | "finalized"; failure: unknown; witness: EvidenceWitness | null };
 export type OwnedUiResidentEvidenceAdmission = { readonly step: RetainedUiWireStep; readonly evidence: InputEvidence | null };
-type PayloadSlot = { requestOwner: OwnedKernelReturnInputField | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Payload | null; phase: SlotPhase | "source-installing" | "source-bound" | "finalized" | "body-proving" | "source-never-installed" | "source-detaching" | "source-observing" | "source-clearing" | "source-settling" | "source-settle-observing" | "source-settled"; failure: unknown; witness: OwnedKernelReturnPayloadDetachment | OwnedUiResidentPayloadSourceRelease | null };
+type PayloadSlot = { requestOwner: UiInputField | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Payload | null; phase: SlotPhase | "source-installing" | "source-bound" | "finalized" | "body-proving" | "source-never-installed" | "source-detaching" | "source-observing" | "source-clearing" | "source-settling" | "source-settle-observing" | "source-settled"; failure: unknown; witness: UiPayloadDetachment | OwnedUiResidentPayloadSourceRelease | null };
 type PageSlot = { requestOwner: number | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Page | null; phase: SlotPhase | "owner-preparing" | "owner-cell-held" | "owner-claiming" | "owner-claimed" | "owner-admitting" | "page-state" | "page-shell" | "page-storage" | "page-binding" | "page-builder-installing" | "page-finalizing" | "page-unbound" | "finalized"; failure: unknown; witness: PageWitness | null };
 export type OwnedUiResidentPageAdmission = { readonly step: RetainedUiWireStep; readonly page: OwnedUiResidentPage | null };
-type Payload = { instance: Instance | null; facade: OwnedUiResidentPayload | null; previous: Payload | null; next: Payload | null; head: Page | null; tail: Page | null; cursor: Page | null; builder: BuilderEntry | null; storageCell: OwnedResidentAdmission | null; reader: Reader | null; evidence: EvidenceEntry | null; closing: boolean; closed: boolean; field: OwnedKernelReturnInputField | null; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: PayloadPhase; witness: OwnedUiResidentPayloadSourceRelease | null; parentSlot: PayloadSlot | null; failure: unknown; pending: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot | null };
+type Payload = { instance: Instance | null; facade: OwnedUiResidentPayload | null; previous: Payload | null; next: Payload | null; head: Page | null; tail: Page | null; cursor: Page | null; builder: BuilderEntry | null; storageCell: OwnedResidentAdmission | null; reader: Reader | null; evidence: EvidenceEntry | null; closing: boolean; closed: boolean; field: UiInputField | null; record: OwnedResidentRecord | null; cell: OwnedResidentAdmission | null; phase: PayloadPhase; witness: OwnedUiResidentPayloadSourceRelease | null; parentSlot: PayloadSlot | null; failure: unknown; pending: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot | null };
 type Page = { payload: Payload | null; facade: OwnedUiResidentPage | null; previous: Page | null; next: Page | null; readonly length: number; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; storageCell: OwnedResidentAdmission | null; phase: "constructing" | "sealed" | "storage-empty" | "storage-preparing" | "storage-rejected" | "storage-cell-held" | "storage-claiming" | "storage-claimed" | "storage-admitting" | "live" | "closing" | "domain-retired" | "registration-retired"; witness: PageWitness | null; failure: unknown };
 type ReaderSlot = { requestOwner: OwnedUiResidentPayload | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; entry: Reader | null; phase: SlotPhase | "reader-state" | "reader-shell" | "reader-witness" | "builder-installing" | "builder-installed" | "reader-finalized" | "binding-detaching" | "binding-settling" | "binding-settled"; failure: unknown; witness: OwnedUiResidentReaderRetirement | null };
 type Reader = { payload: Payload | null; facade: OwnedUiResidentPayloadReader | null; cell: OwnedResidentAdmission | null; record: OwnedResidentRecord | null; page: Page | null; storageCell: OwnedResidentAdmission | null; offset: number; phase: "constructing" | "live" | "page-held" | "alias-preparing" | "alias-rejected" | "alias-held" | "alias-claiming" | "alias-claimed" | "alias-admitting" | "reading" | "alias-closing" | "page-detaching" | "page-retiring" | "page-observing" | "closing" | "body-retired" | "domain-retired" | "registration-retired"; witness: OwnedUiResidentReaderRetirement | null; failure: unknown; consumed: bigint };
@@ -39,7 +40,7 @@ let moveReaderWitness: (witness: OwnedUiResidentReaderRetirement, phase: "body-r
 const MINT = Object.freeze({});
 const NO_POOL_FAULT = Object.freeze({});
 const PAGE_BYTES = 256;
-const admitted = (grant: NumericIndexGrant, bytes: number): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= bytes;
+const admitted = (grant: UiIndexGrant, bytes: number): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= bytes;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 let instanceOwner: (state: Instance) => OwnedUiResidentInstance;
 let payloadOwner: (state: Payload) => OwnedUiResidentPayload;
@@ -57,13 +58,13 @@ let finishPoolWitness: (witness: OwnedUiResidentPoolRetirement, pool: OwnedUiRes
 let createInstanceWitness: (state: Instance) => InstanceWitness;
 let markInstanceDomainClosed: (witness: InstanceWitness, state: Instance) => void;
 let instanceDomainClosed: (witness: InstanceWitness, state: Instance) => boolean;
-let closeInstance: (state: Instance, grant: NumericIndexGrant) => RetainedUiWireStep;
+let closeInstance: (state: Instance, grant: UiIndexGrant) => RetainedUiWireStep;
 let scopeAvailable: (scope: OwnedUiResidentInstance) => boolean;
 let payloadState: (payload: unknown) => Payload | null;
 let payloadWitness: (state: Payload) => OwnedUiResidentPayloadSourceRelease;
 let movePayloadWitness: (state: Payload, phase: Exclude<PayloadPhase, "constructing" | "live">) => void;
 let payloadWitnessOriginal: (witness: OwnedUiResidentPayloadSourceRelease) => OwnedUiResidentPayload;
-let closePayload: (state: Payload, grant: NumericIndexGrant) => RetainedUiWireStep;
+let closePayload: (state: Payload, grant: UiIndexGrant) => RetainedUiWireStep;
 function active(instance: Instance): boolean {
   if (instance.phase !== "live" || instance.failure !== NO_POOL_FAULT || instance.cell?.hasFailure || !instance.pool || instance.pool.closing || instance.closing || instance.closed || !instance.owner || !instance.activation || !instance.lifetime || !OwnedUiInstance.matches(instance.owner, instance.activation, instance.lifetime)) return false;
   try { instance.activation.assertActive(); return true; } catch { return false; }
@@ -72,11 +73,11 @@ function activePayload(payload: Payload): boolean { return payload.phase === "li
 function payloadSlotEmpty(slot: PayloadSlot | BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot): boolean { return slot.phase === "empty" && slot.requestOwner === null && !slot.cell && !slot.record && !slot.entry && !slot.witness && slot.failure === NO_POOL_FAULT; }
 function evidenceSlot(slot: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot): slot is EvidenceSlot { return OwnedUiOperationPayloadBuilder.hasBrand(slot.requestOwner); }
 function payloadBodyEmpty(state: Payload): boolean { return !state.head && !state.tail && !state.cursor && !state.builder && !state.storageCell && !state.reader && !state.evidence && (!state.pending || payloadSlotEmpty(state.pending)) && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure; }
-function childStep(current: RetainedUiWireStep, grant: NumericIndexGrant): RetainedUiWireStep {
+function childStep(current: RetainedUiWireStep, grant: UiIndexGrant): RetainedUiWireStep {
   if (!Number.isSafeInteger(current.items) || current.items < 0 || current.items > 1 || !Number.isSafeInteger(current.bytes) || current.bytes < 0 || current.bytes > grant.maxBytes) return { ...current, kind: "rejected" };
   return current.kind === "complete" ? { ...current, kind: "pending" } : current;
 }
-function admissionStep(current: RetainedUiWireStep, grant: NumericIndexGrant): RetainedUiWireStep { const result = childStep(current, grant); return result.kind === "ready" ? { ...result, kind: "pending" } : result; }
+function admissionStep(current: RetainedUiWireStep, grant: UiIndexGrant): RetainedUiWireStep { const result = childStep(current, grant); return result.kind === "ready" ? { ...result, kind: "pending" } : result; }
 function clearSlot(slot: Slot): void { slot.requestOwner = null; slot.cell = null; slot.record = null; slot.entry = null; slot.witness = null; slot.phase = "empty"; }
 function slotFault(slot: Slot, error: unknown): void { if (slot.failure !== NO_POOL_FAULT && !Object.is(slot.failure, error)) throw error; slot.failure = error; }
 function observeSlot(pool: Pool, slot: Slot): RetainedUiWireStep | null {
@@ -86,7 +87,7 @@ function observeSlot(pool: Pool, slot: Slot): RetainedUiWireStep | null {
   if (slot.phase === "record-admitting") { slot.record = slot.cell!.result?.record ?? null; slot.phase = slot.record && slot.cell!.result?.step.kind === "ready" && !slot.cell!.hasFailure ? "record-held" : "fault-held"; return step(slot.phase === "record-held" ? "pending" : "rejected", "resident-scope-record-observation", 64); }
   return null;
 }
-function closeSlot(pool: Pool | null, slot: Slot, grant: NumericIndexGrant): RetainedUiWireStep {
+function closeSlot(pool: Pool | null, slot: Slot, grant: UiIndexGrant): RetainedUiWireStep {
   if (!admitted(grant, 64)) return step("blocked", "resident-scope-slot-close");
   if (slot.failure !== NO_POOL_FAULT) {
     if (!slot.cell) { const cell = pool?.ledger?.preparedAdmission(slot); if (!cell) return step("rejected", "resident-scope-fault-held"); slot.cell = cell; return step("pending", "resident-scope-fault-cell-observation", 64); }
@@ -113,7 +114,7 @@ function closeSlot(pool: Pool | null, slot: Slot, grant: NumericIndexGrant): Ret
 /** 🏦️ The exact Shard composition owns this charged pool before any fallible finalization. */
 export class OwnedUiResidentPool {
   readonly #state: Pool;
-  private constructor(mint: object, client: ShardClient, ledger: OwnedResidentLedger, grant: NumericIndexGrant) {
+  private constructor(mint: object, client: UiResidentComposition, ledger: OwnedResidentLedger, grant: UiIndexGrant) {
     if (mint !== MINT) throw new Error("Invalid resident pool authority");
     const state: Pool = { ledger, composition: client, failure: NO_POOL_FAULT, phase: "open", bindings: null, head: null, tail: null, pending: null, closing: false, closed: false, facade: this, witness: null }; this.#state = state;
     try {
@@ -122,8 +123,8 @@ export class OwnedUiResidentPool {
       state.pending = { requestOwner: null, cell: null, record: null, entry: null, phase: "empty", failure: NO_POOL_FAULT, witness: null }; state.bindings = new WeakMap(); poolWitness(state, this); Object.freeze(this);
     } catch (error) { state.failure = error; state.closing = true; state.phase = "closing"; throw error; }
   }
-  static begin(client: ShardClient, ledger: OwnedResidentLedger, grant: NumericIndexGrant): OwnedUiResidentPoolAdmission {
-    if (!ShardClient.matchesResidentLedger(client, ledger)) return { step: step("rejected", "resident-pool-composition"), pool: null };
+  static begin(client: UiResidentComposition, ledger: OwnedResidentLedger, grant: UiIndexGrant): OwnedUiResidentPoolAdmission {
+    if (!uiResidentComposition().matchesResidentLedger(client, ledger)) return { step: step("rejected", "resident-pool-composition"), pool: null };
     if (!admitted(grant, 1)) return { step: step("blocked", "resident-pool-admission"), pool: null };
     const prepared = client.prepareUiResidentPool(ledger, grant); const current = childStep(prepared, grant);
     if (current.kind !== "ready" || current.items !== 0 || current.bytes !== 0) return { step: current.kind === "ready" ? { ...current, kind: "pending" } : current, pool: null };
@@ -131,14 +132,14 @@ export class OwnedUiResidentPool {
     try { return { step: step("ready", "resident-pool-construction", bytes), pool: new OwnedUiResidentPool(MINT, client, ledger, { maxItems: 1, maxBytes: 64 }) }; }
     catch (error) { client.captureUiResidentPoolFault(error); return { step: step("rejected", "resident-pool-construction", bytes), pool: null }; }
   }
-  static matchesComposition(pool: unknown, client: ShardClient, ledger: OwnedResidentLedger): pool is OwnedUiResidentPool {
-    return pool !== null && typeof pool === "object" && #state in pool && pool.#state.composition === client && pool.#state.ledger === ledger && ShardClient.matchesResidentLedger(client, ledger);
+  static matchesComposition(pool: unknown, client: UiResidentComposition, ledger: OwnedResidentLedger): pool is OwnedUiResidentPool {
+    return pool !== null && typeof pool === "object" && #state in pool && pool.#state.composition === client && pool.#state.ledger === ledger && uiResidentComposition().matchesResidentLedger(client, ledger);
   }
   get usage(): ResidentResources { const state = this.#state; if (!state.ledger) throw new Error("Resident pool is retired"); return state.ledger.usage.data; }
-  bindInstance(owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime, grant: NumericIndexGrant): OwnedUiResidentInstanceAdmission {
+  bindInstance(owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime, grant: UiIndexGrant): OwnedUiResidentInstanceAdmission {
     const result = (current: RetainedUiWireStep): OwnedUiResidentInstanceAdmission => ({ step: current, scope: null });
     if (!admitted(grant, 64)) return result(step("blocked", "resident-scope-admission")); const pool = this.#state; const slot = pool.pending;
-    if (pool.closing || !pool.bindings || !slot || !ShardClient.matchesActivation(pool.composition, activation) || !OwnedUiInstance.matches(owner, activation, lifetime)) return result(step("rejected", "resident-scope-authority"));
+    if (pool.closing || !pool.bindings || !slot || !uiResidentComposition().matchesActivation(pool.composition, activation) || !OwnedUiInstance.matches(owner, activation, lifetime)) return result(step("rejected", "resident-scope-authority"));
     try {
       activation.assertActive(); const previous = pool.bindings.get(owner); if (previous) { const usable = scopeAvailable(previous); return { step: step(usable ? "ready" : "rejected", "resident-scope-held"), scope: usable ? previous : null }; }
       if (slot.requestOwner && slot.requestOwner !== owner) return result(step("blocked", "resident-scope-slot-busy"));
@@ -158,7 +159,7 @@ export class OwnedUiResidentPool {
     } catch (error) { slotFault(slot, error); if (slot.entry) { slot.entry.failure = error; slot.entry.closing = true; } return result(step("rejected", "resident-scope-fault")); }
   }
   beginClose(): void { const state = this.#state; state.closing = true; if (state.phase === "open") state.phase = "closing"; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant, 64)) return step("blocked", "resident-pool-close"); const state = this.#state;
     if (!state.closing) throw new Error("Resident pool close has not begun"); if (state.closed) return step("complete", "resident-pool-close");
     if (!state.witness) { try { poolWitness(state, this); return step("pending", "resident-pool-witness", 64); } catch (error) { if (state.failure !== NO_POOL_FAULT && !Object.is(state.failure, error)) throw error; state.failure = error; state.composition!.captureUiResidentPoolFault(error); return step("rejected", "resident-pool-witness"); } }
@@ -180,8 +181,8 @@ export class OwnedUiResidentPoolRetirement {
     poolWitness = (state, pool) => new OwnedUiResidentPoolRetirement(MINT, state, pool);
     finishPoolWitness = (witness, pool) => { if (witness.#pool !== pool) throw new Error("Pool retirement identity differs"); witness.#terminal = true; };
   }
-  static matches(witness: unknown, pool: OwnedUiResidentPool, client: ShardClient, ledger: OwnedResidentLedger): witness is OwnedUiResidentPoolRetirement {
-    return witness !== null && typeof witness === "object" && #pool in witness && witness.#pool === pool && witness.#terminal && ShardClient.matchesResidentLedger(client, ledger) && Reflect.apply(ShardClient.prototype.ownsUiResidentPool, client, [pool]);
+  static matches(witness: unknown, pool: OwnedUiResidentPool, client: UiResidentComposition, ledger: OwnedResidentLedger): witness is OwnedUiResidentPoolRetirement {
+    return witness !== null && typeof witness === "object" && #pool in witness && witness.#pool === pool && witness.#terminal && uiResidentComposition().matchesResidentLedger(client, ledger) && uiResidentComposition().ownsPool(client, pool);
   }
 }
 //#endregion 🏦️SharedPool
@@ -202,15 +203,15 @@ export class OwnedUiResidentInstance {
     if (pool.tail) pool.tail.next = state; else pool.head = state; pool.tail = state;
     const installed = state.record!.install(this, { maxItems: 1, maxBytes: 64 }); if (installed.kind !== "ready") throw new Error("Resident instance record refused installation"); state.pending = newPayloadSlot(); createInstanceWitness(state); Object.freeze(this);
   }
-  static { instanceOwner = state => new OwnedUiResidentInstance(MINT, state); scopeAvailable = scope => active(scope.#state); closeInstance = (state, grant) => { state.closing = true; return state.facade ? state.facade.#close(grant) : closeSlot(null, state.slot!, grant); }; }
-  static matches(scope: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): scope is OwnedUiResidentInstance {
+  static { instanceOwner = state => new OwnedUiResidentInstance(MINT, state); scopeAvailable = scope => active(scope.#state); closeInstance = (state, grant) => { state.closing = true; return state.facade ? state.facade.#close(grant) : closeSlot(null, state.slot!, grant); }; bindResidentScopeMatcher((scope, owner, activation, lifetime) => OwnedUiResidentInstance.matches(scope, owner as OwnedUiInstance, activation as UiActivationLease, lifetime as UiInstanceLifetime)); }
+  static matches(scope: unknown, owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime): scope is OwnedUiResidentInstance {
     if (scope === null || typeof scope !== "object" || !(#state in scope)) return false; const state = scope.#state;
     return !state.closed && state.owner === owner && state.activation === activation && state.lifetime !== null && state.lifetime.activationGeneration === lifetime.activationGeneration && state.lifetime.instanceId === lifetime.instanceId && state.lifetime.guestLifetime === lifetime.guestLifetime;
   }
-  beginPayload(field: OwnedKernelReturnInputField, grant: NumericIndexGrant): OwnedUiResidentPayloadAdmission { return admitPayload(this.#state, field, grant); }
+  beginPayload(field: UiInputField, grant: UiIndexGrant): OwnedUiResidentPayloadAdmission { return admitPayload(this.#state, field, grant); }
   beginClose(): void { this.#state.closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep { return this.#close(grant); }
-  #close(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep { return this.#close(grant); }
+  #close(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant, 64)) return step("blocked", "resident-instance-close"); const state = this.#state;
     if (!state.closing) throw new Error("Resident instance close has not begun"); if (state.closed) return step("complete", "resident-instance-close");
     if (state.phase === "domain-closed") { try { return closeSlot(null, state.slot!, grant); } catch (error) { slotFault(state.slot!, error); return step("rejected", "resident-scope-slot-fault"); } }
@@ -242,13 +243,13 @@ function observePayloadSlot(instance: Instance, slot: PayloadSlot): RetainedUiWi
   if (slot.phase === "record-admitting") { slot.record = slot.cell!.result?.record ?? null; slot.phase = slot.record && slot.cell!.result?.step.kind === "ready" && !slot.cell!.hasFailure ? "record-held" : "fault-held"; return step(slot.phase === "record-held" ? "pending" : "rejected", "resident-payload-record-observation", 64); }
   return null;
 }
-function admitPayload(instance: Instance, field: OwnedKernelReturnInputField, grant: NumericIndexGrant): OwnedUiResidentPayloadAdmission {
+function admitPayload(instance: Instance, field: UiInputField, grant: UiIndexGrant): OwnedUiResidentPayloadAdmission {
   const result = (current: RetainedUiWireStep): OwnedUiResidentPayloadAdmission => ({ step: current, payload: null });
   if (!admitted(grant, 64)) return result(step("blocked", "resident-payload-admission")); const slot = instance.pending;
-  if (!active(instance) || !slot || !OwnedKernelReturnInputField.matchesOwner(field, instance.owner!, instance.activation!, instance.lifetime!)) return result(step("rejected", "resident-payload-authority"));
+  if (!active(instance) || !slot || !uiInputHost().field.matchesOwner(field, instance.owner!, instance.activation!, instance.lifetime!)) return result(step("rejected", "resident-payload-authority"));
   try {
-    if (OwnedKernelReturnPayloadDetachment.matchesOwner(field.residentPayloadDetachment, field)) return result(step("rejected", "resident-payload-source-retired"));
-    const previous = field.residentPayload(instance.facade!); if (previous) { const state = payloadState(previous); if (state && activePayload(state)) return { step: step("ready", "resident-payload-held"), payload: previous }; if (slot.entry !== state) return result(step("rejected", "resident-payload-held")); }
+    if (uiInputHost().detachment.matchesOwner(field.residentPayloadDetachment, field)) return result(step("rejected", "resident-payload-source-retired"));
+    const previous = field.residentPayload(instance.facade!) as OwnedUiResidentPayload | null; if (previous) { const state = payloadState(previous); if (state && activePayload(state)) return { step: step("ready", "resident-payload-held"), payload: previous }; if (slot.entry !== state) return result(step("rejected", "resident-payload-held")); }
     if (slot.requestOwner && slot.requestOwner !== field) return result(step("blocked", "resident-payload-slot-busy")); if (slot.failure !== NO_POOL_FAULT || slot.cell?.hasFailure) return result(step("rejected", "resident-payload-fault-held"));
     const observed = observePayloadSlot(instance, slot); if (observed) return result(observed); const ledger = instance.pool!.ledger!;
     if (slot.phase === "empty") { if (!admitted(grant, 296)) return result(step("blocked", "resident-payload-bootstrap")); slot.requestOwner = field; slot.phase = "preparing"; const current = ledger.prepareAdmission(slot, "data", grant); if (current.kind === "blocked") clearPayloadSlot(slot); else if (current.kind === "rejected") slot.phase = "bootstrap-rejected"; return result(admissionStep(current, grant)); }
@@ -258,13 +259,13 @@ function admitPayload(instance: Instance, field: OwnedKernelReturnInputField, gr
       if (!admitted(grant, 272)) return result(step("blocked", "resident-payload-shell")); const state: Payload = { instance, facade: null, previous: instance.tail, next: null, head: null, tail: null, cursor: null, builder: null, storageCell: null, reader: null, evidence: null, closing: false, closed: false, field, record: slot.record, cell: slot.cell, phase: "constructing", witness: null, parentSlot: slot, failure: NO_POOL_FAULT, pending: null }; slot.entry = state; slot.phase = "shell-installed"; payloadOwner(state); return result(step("pending", "resident-payload-shell", 272));
     }
     if (slot.phase === "shell-installed") { slot.phase = "source-installing"; const current = field.installResidentPayload(slot.entry!.facade!, grant); if (current.kind === "blocked") slot.phase = "shell-installed"; return result(admissionStep({ ...current, phase: "resident-payload-source-install" }, grant)); }
-    if (slot.phase === "source-installing") { if (!OwnedKernelReturnInputField.matchesResidentPayload(field, slot.entry!.facade)) return result(step("rejected", "resident-payload-source-observation")); slot.phase = "source-bound"; return result(step("pending", "resident-payload-source-observation", 64)); }
+    if (slot.phase === "source-installing") { if (!uiInputHost().field.matchesResidentPayload(field, slot.entry!.facade)) return result(step("rejected", "resident-payload-source-observation")); slot.phase = "source-bound"; return result(step("pending", "resident-payload-source-observation", 64)); }
     if (slot.phase === "source-bound") { if (!admitted(grant, 104)) return result(step("blocked", "resident-payload-finalization")); const state = slot.entry!; state.pending = newBuilderSlot(); payloadWitness(state); Object.freeze(state.facade); slot.phase = "finalized"; return result(step("pending", "resident-payload-finalization", 104)); }
     if (slot.phase === "finalized") { const state = slot.entry!; state.phase = "live"; state.parentSlot = null; const payload = state.facade; clearPayloadSlot(slot); return { step: step("ready", "resident-payload-publication", 64), payload }; }
     return result(step("rejected", "resident-payload-phase"));
   } catch (error) { payloadSlotFault(slot, error); return result(step("rejected", "resident-payload-fault")); }
 }
-function closePayloadSlot(instance: Instance | null, slot: PayloadSlot, grant: NumericIndexGrant): RetainedUiWireStep {
+function closePayloadSlot(instance: Instance | null, slot: PayloadSlot, grant: UiIndexGrant): RetainedUiWireStep {
   if (!admitted(grant, 64)) return step("blocked", "resident-payload-slot-close");
   if (slot.failure !== NO_POOL_FAULT) {
     if (!slot.cell) { const cell = instance?.pool?.ledger?.preparedAdmission(slot); if (!cell) return step("rejected", "resident-payload-fault-held"); slot.cell = cell; return step("pending", "resident-payload-fault-cell-observation", 64); }
@@ -302,7 +303,7 @@ class BuilderWitness {
 export { BuilderWitness as OwnedUiResidentBuilderRetirement };
 function clearBuilderSlot(slot: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot): void { slot.requestOwner = null; slot.cell = null; slot.record = null; slot.entry = null; slot.witness = null; slot.phase = "empty"; }
 function builderFault(slot: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot, error: unknown): void { if (slot.failure !== NO_POOL_FAULT && !Object.is(slot.failure, error)) throw error; slot.failure = error; }
-function observeBuilderSlot(state: Payload, slot: BuilderSlot | EvidenceSlot, grant: NumericIndexGrant): RetainedUiWireStep | null {
+function observeBuilderSlot(state: Payload, slot: BuilderSlot | EvidenceSlot, grant: UiIndexGrant): RetainedUiWireStep | null {
   if ((slot.phase === "bootstrap-rejected" || slot.phase === "preparing" || slot.phase === "claiming" || slot.phase === "record-admitting") && !admitted(grant, 64)) return step("blocked", "resident-builder-observation");
   const ledger = state.instance!.pool!.ledger!;
   if (slot.phase === "bootstrap-rejected") { const cell = ledger.preparedAdmission(slot); if (cell) { slot.cell = cell; slot.phase = "cell-held"; } else clearBuilderSlot(slot); return step("pending", "resident-builder-rejection-observation", 64); }
@@ -311,10 +312,10 @@ function observeBuilderSlot(state: Payload, slot: BuilderSlot | EvidenceSlot, gr
   if (slot.phase === "record-admitting") { slot.record = slot.cell!.result?.record ?? null; slot.phase = slot.record && slot.cell!.result?.step.kind === "ready" && !slot.cell!.hasFailure ? "record-held" : "fault-held"; return step(slot.phase === "record-held" ? "pending" : "rejected", "resident-builder-record-observation", 64); }
   return null;
 }
-function admitBuilder(state: Payload, field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission {
+function admitBuilder(state: Payload, field: UiInputField, grant: UiIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission {
   const result = (current: RetainedUiWireStep): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission => ({ step: current, builder: null });
   if (!admitted(grant, 32)) return result(step("blocked", "resident-builder-admission")); const slot = state.pending;
-  if (!activePayload(state) || !slot || state.field !== field || !OwnedKernelReturnInputField.matchesResidentPayload(field, state.facade)) return result(step("rejected", "resident-builder-owner"));
+  if (!activePayload(state) || !slot || state.field !== field || !uiInputHost().field.matchesResidentPayload(field, state.facade)) return result(step("rejected", "resident-builder-owner"));
   if (pageSlot(slot) || readerSlot(slot) || evidenceSlot(slot)) return result(step("blocked", "resident-builder-slot-busy"));
   try {
     if (state.builder?.phase === "live") { const builder = state.builder.facade!; return OwnedUiOperationPayloadBuilder.healthy(builder) && !state.builder.cell?.hasFailure ? { step: step("ready", "resident-builder-held"), builder } : result(step("rejected", "resident-builder-held")); }
@@ -326,14 +327,14 @@ function admitBuilder(state: Payload, field: OwnedKernelReturnInputField, grant:
     if (slot.phase === "record-held") { if (!admitted(grant, 56)) return result(step("blocked", "resident-builder-entry")); const entry: BuilderEntry = { facade: null, record: slot.record, cell: slot.cell, phase: "constructing", witness: null }; slot.entry = entry; state.builder = entry; slot.phase = "entry-held"; return result(step("pending", "resident-builder-entry", 56)); }
     if (slot.phase === "entry-held") { if (!admitted(grant, 272)) return result(step("blocked", "resident-builder-shell")); slot.phase = "constructing"; OwnedUiOperationPayloadBuilder.construct(field, state.facade!, grant); slot.phase = "shell-installed"; return result(step("pending", "resident-builder-shell", 272)); }
     if (slot.phase === "shell-installed") { if (!admitted(grant, 64)) return result(step("blocked", "resident-builder-source-bind")); slot.phase = "source-installing"; return result(admissionStep(OwnedUiOperationPayloadBuilder.bindSource(slot.entry!.facade!, state.facade!, grant), grant)); }
-    if (slot.phase === "source-installing") { if (!admitted(grant, 64)) return result(step("blocked", "resident-builder-source-observation")); if (!OwnedKernelReturnInputField.matchesBuilder(field, slot.entry!.facade)) return result(step("rejected", "resident-builder-source-observation")); slot.phase = "source-bound"; return result(step("pending", "resident-builder-source-observation", 64)); }
+    if (slot.phase === "source-installing") { if (!admitted(grant, 64)) return result(step("blocked", "resident-builder-source-observation")); if (!uiInputHost().field.matchesBuilder(field, slot.entry!.facade)) return result(step("rejected", "resident-builder-source-observation")); slot.phase = "source-bound"; return result(step("pending", "resident-builder-source-observation", 64)); }
     if (slot.phase === "source-bound") { if (!admitted(grant, 32)) return result(step("blocked", "resident-builder-witness")); createBuilderWitness(slot.entry!); slot.phase = "witness-ready"; return result(step("pending", "resident-builder-witness", 32)); }
     if (slot.phase === "witness-ready") { const current = OwnedUiOperationPayloadBuilder.finalize(slot.entry!.facade!, state.facade!, grant); if (current.kind === "pending") slot.phase = "finalized"; return result(admissionStep(current, grant)); }
     if (slot.phase === "finalized") { if (!admitted(grant, 64)) return result(step("blocked", "resident-builder-publication")); const entry = slot.entry!; entry.phase = "live"; clearBuilderSlot(slot); return { step: step("ready", "resident-builder-publication", 64), builder: entry.facade }; }
     return result(step("rejected", "resident-builder-phase"));
   } catch (error) { builderFault(slot, error); return result(step("rejected", "resident-builder-fault")); }
 }
-function closeBuilderSlot(state: Payload, grant: NumericIndexGrant): RetainedUiWireStep {
+function closeBuilderSlot(state: Payload, grant: UiIndexGrant): RetainedUiWireStep {
   if (!admitted(grant, 64)) return step("blocked", "resident-builder-close"); const slot = state.pending!; const ledger = state.instance!.pool!.ledger!;
   if (readerSlot(slot) || state.reader && payloadSlotEmpty(slot)) return closeReaderSlot(state, grant);
   if (pageSlot(slot) || state.head && payloadSlotEmpty(slot)) return closePageSlot(state, grant);
@@ -362,8 +363,8 @@ function closeBuilderSlot(state: Payload, grant: NumericIndexGrant): RetainedUiW
       if (!entry.witness) { createBuilderWitness(entry); slot.witness = entry.witness; return step("pending", "resident-builder-close-witness", 32); }
       slot.witness = entry.witness; const field = slot.requestOwner; if (!field) return step("rejected", "resident-builder-binding-owner");
       try {
-        if (slot.phase === "binding-detaching") { if (OwnedKernelReturnInputField.matchesBuilderDetached(field, entry.witness)) { if (!OwnedUiOperationPayloadBuilder.sourceDetached(builder)) return childStep(OwnedUiOperationPayloadBuilder.detachRetirementSource(builder, state.facade!, grant), grant); moveBuilderWitness(entry.witness, builder, "source-detached"); slot.phase = "binding-settling"; return step("pending", "resident-builder-source-detachment-observation", 64); } return childStep({ ...field.detachBuilder(builder, entry.witness, grant), phase: "resident-builder-source-detach" }, grant); }
-        if (slot.phase === "binding-settling") { if (OwnedKernelReturnInputField.matchesBuilderSettled(field, entry.witness)) { moveBuilderWitness(entry.witness, builder, "source-settled"); slot.phase = "binding-settled"; return step("pending", "resident-builder-source-settlement-observation", 64); } return childStep({ ...field.settleBuilder(entry.witness, grant), phase: "resident-builder-source-settle" }, grant); }
+        if (slot.phase === "binding-detaching") { if (uiInputHost().field.matchesBuilderDetached(field, entry.witness)) { if (!OwnedUiOperationPayloadBuilder.sourceDetached(builder)) return childStep(OwnedUiOperationPayloadBuilder.detachRetirementSource(builder, state.facade!, grant), grant); moveBuilderWitness(entry.witness, builder, "source-detached"); slot.phase = "binding-settling"; return step("pending", "resident-builder-source-detachment-observation", 64); } return childStep({ ...field.detachBuilder(builder, entry.witness, grant), phase: "resident-builder-source-detach" }, grant); }
+        if (slot.phase === "binding-settling") { if (uiInputHost().field.matchesBuilderSettled(field, entry.witness)) { moveBuilderWitness(entry.witness, builder, "source-settled"); slot.phase = "binding-settled"; return step("pending", "resident-builder-source-settlement-observation", 64); } return childStep({ ...field.settleBuilder(entry.witness, grant), phase: "resident-builder-source-settle" }, grant); }
         if (slot.phase === "binding-settled") return childStep(OwnedUiOperationPayloadBuilder.finishRetirement(builder, state.facade!, grant), grant);
         moveBuilderWitness(entry.witness, builder, "body-retired"); slot.phase = "binding-detaching"; return step("pending", "resident-builder-body-proof", 64);
       } catch (error) { builderFault(slot, error); return step("rejected", "resident-builder-binding-fault"); }
@@ -393,7 +394,7 @@ class EvidenceWitness {
   get evidence(): InputEvidence { return this.#evidence; }
   get terminal(): boolean { return this.#terminal && OwnedUiOperationPayloadBuilder.evidenceEmpty(this.#evidence); }
 }
-function admitEvidence(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): OwnedUiResidentEvidenceAdmission {
+function admitEvidence(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): OwnedUiResidentEvidenceAdmission {
   const result = (current: RetainedUiWireStep): OwnedUiResidentEvidenceAdmission => ({ step: current, evidence: null }); const slot = state.pending;
   if (!admitted(grant, 32)) return result(step("blocked", "resident-evidence-admission"));
   if (!state.instance?.pool?.ledger || !state.facade || !slot || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure || state.builder?.facade !== builder || state.builder.phase !== "live" || state.builder.cell?.hasFailure || !OwnedUiOperationPayloadBuilder.evidenceEligible(builder, state.facade)) return result(step("rejected", "resident-evidence-owner"));
@@ -418,7 +419,7 @@ function admitEvidence(state: Payload, builder: OwnedUiOperationPayloadBuilder, 
     return result(step("rejected", "resident-evidence-phase"));
   } catch (error) { builderFault(slot, error); return result(step("rejected", "resident-evidence-fault")); }
 }
-function advanceEvidence(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): RetainedUiWireStep {
+function advanceEvidence(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): RetainedUiWireStep {
   if (!admitted(grant, 1)) return step("blocked", "resident-evidence-retirement"); const slot = state.pending;
   if (!slot || !state.facade || state.builder?.facade !== builder || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-evidence-retirement-owner");
   if (!state.evidence && payloadSlotEmpty(slot)) return step("complete", "resident-evidence-retirement");
@@ -460,20 +461,20 @@ export class OwnedUiResidentPayload {
   static matchesBuilderPhase(payload: unknown, builder: unknown, phase: "source-installing" | "witness-ready"): payload is OwnedUiResidentPayload { const state = payloadState(payload); return state !== null && activePayload(state) && state.builder?.facade === builder && state.pending?.entry === state.builder && state.pending.phase === phase && state.pending.failure === NO_POOL_FAULT && !state.pending.cell?.hasFailure; }
   static matchesBuilderLive(payload: unknown, builder: unknown): payload is OwnedUiResidentPayload { const state = payloadState(payload); const entry = state?.builder; return state !== null && activePayload(state) && entry !== null && entry !== undefined && entry.facade === builder && entry.phase === "live" && !entry.cell?.hasFailure; }
   static matchesBuilderRetirement(payload: unknown, builder: unknown, field: unknown, witness: unknown): boolean { const state = payloadState(payload); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && !state.builder?.cell?.hasFailure && slot !== null && slot !== undefined && !pageSlot(slot) && !readerSlot(slot) && !evidenceSlot(slot) && slot.requestOwner !== null && slot.requestOwner === field && slot.entry !== null && slot.entry === state.builder && slot.entry.facade === builder && slot.entry.witness === witness && slot.witness === witness && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure && !state.evidence; }
-  static matchesBuilderRetirementPhase(payload: unknown, builder: unknown, phase: "binding-detaching" | "binding-settled"): boolean { const state = payloadState(payload); const slot = state?.pending; if (!state || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure || !slot || pageSlot(slot) || evidenceSlot(slot) || slot.phase !== phase || !slot.requestOwner || !slot.witness || !OwnedUiResidentPayload.matchesBuilderRetirement(payload, builder, slot.requestOwner, slot.witness)) return false; return phase === "binding-detaching" ? OwnedKernelReturnInputField.matchesBuilderDetached(slot.requestOwner, slot.witness) : OwnedKernelReturnInputField.matchesBuilderSettled(slot.requestOwner, slot.witness); }
-  installBuilder(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): RetainedUiWireStep {
+  static matchesBuilderRetirementPhase(payload: unknown, builder: unknown, phase: "binding-detaching" | "binding-settled"): boolean { const state = payloadState(payload); const slot = state?.pending; if (!state || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure || !slot || pageSlot(slot) || evidenceSlot(slot) || slot.phase !== phase || !slot.requestOwner || !slot.witness || !OwnedUiResidentPayload.matchesBuilderRetirement(payload, builder, slot.requestOwner, slot.witness)) return false; return phase === "binding-detaching" ? uiInputHost().field.matchesBuilderDetached(slot.requestOwner, slot.witness) : uiInputHost().field.matchesBuilderSettled(slot.requestOwner, slot.witness); }
+  installBuilder(builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant, 64)) return step("blocked", "resident-builder-install"); const state = this.#state; const slot = state.pending; const entry = state.builder;
     if (!slot || slot.phase !== "constructing" || slot.entry !== entry || !entry || entry.facade || !OwnedUiOperationPayloadBuilder.matchesResident(builder, this) || !OwnedUiOperationPayloadBuilder.matchesField(builder, state.field!)) return step("rejected", "resident-builder-install"); entry.facade = builder;
     return entry.record!.install(builder, grant);
   }
-  beginBuilder(field: OwnedKernelReturnInputField, grant: NumericIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission { return admitBuilder(this.#state, field, grant); }
-  beginEvidence(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): OwnedUiResidentEvidenceAdmission { return admitEvidence(this.#state, builder, grant); }
+  beginBuilder(field: UiInputField, grant: UiIndexGrant): import("../🩹️operations/📥️wire/📃️pages/🟦️.ts").OwnedUiOperationPayloadAdmission { return admitBuilder(this.#state, field, grant); }
+  beginEvidence(builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): OwnedUiResidentEvidenceAdmission { return admitEvidence(this.#state, builder, grant); }
   static matchesInputCancellation(payload: unknown, builder: unknown): boolean { const state = payloadState(payload); return state !== null && state.closing && state.phase === "live" && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && state.builder !== null && state.builder.facade === builder && state.builder.phase === "live" && !state.builder.cell?.hasFailure && state.pending !== null && payloadSlotEmpty(state.pending) && !state.reader && !state.head && !state.evidence; }
-  advanceEvidence(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): RetainedUiWireStep { return advanceEvidence(this.#state, builder, grant); }
+  advanceEvidence(builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): RetainedUiWireStep { return advanceEvidence(this.#state, builder, grant); }
   static matchesEvidenceRetirement(payload: unknown, builder: unknown, token: unknown): boolean { const state = payloadState(payload); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && !state.builder?.cell?.hasFailure && slot !== null && slot !== undefined && evidenceSlot(slot) && slot.requestOwner === builder && state.builder?.facade === builder && slot.phase === "closing-domain" && slot.entry !== null && slot.entry === state.evidence && slot.entry.facade === token && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
   static matchesEvidenceCancellation(payload: unknown, builder: unknown, token: unknown): boolean { const state = payloadState(payload); return state !== null && state.closing && OwnedUiResidentPayload.matchesEvidenceRetirement(payload, builder, token); }
   static matchesEvidencePhase(payload: unknown, builder: unknown, phase: "constructing" | "witness-ready" | "finalized"): payload is OwnedUiResidentPayload { const state = payloadState(payload); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && !state.builder?.cell?.hasFailure && slot !== null && slot !== undefined && evidenceSlot(slot) && slot.requestOwner === builder && slot.phase === phase && slot.entry === state.evidence && state.evidence !== null && state.builder?.facade === builder && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
-  installEvidence(token: InputEvidence, builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): RetainedUiWireStep {
+  installEvidence(token: InputEvidence, builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant, 64)) return step("blocked", "resident-evidence-install"); const state = this.#state; const slot = state.pending; const entry = state.evidence;
     if (!slot || !evidenceSlot(slot) || slot.requestOwner !== builder || slot.phase !== "constructing" || slot.entry !== entry || !entry || entry.facade || !OwnedUiOperationPayloadBuilder.matchesEvidenceConstruction(token, builder)) return step("rejected", "resident-evidence-install"); entry.facade = token; return entry.record!.install(token, grant);
   }
@@ -482,25 +483,25 @@ export class OwnedUiResidentPayload {
   static matchesSourceDetachment(payload: unknown, observation: unknown): payload is OwnedUiResidentPayload {
     const state = payloadState(payload); return state !== null && state.field === null && state.parentSlot !== null && state.parentSlot.entry === state && state.parentSlot.witness !== null && state.parentSlot.witness === observation && (state.phase === "source-detached" || state.phase === "source-settled") && payloadBodyEmpty(state);
   }
-  static matchesOwner(payload: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): payload is OwnedUiResidentPayload {
+  static matchesOwner(payload: unknown, owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime): payload is OwnedUiResidentPayload {
     if (payload === null || typeof payload !== "object" || !(#state in payload)) return false; const state = payload.#state; const instance = state.instance;
     return !state.closing && !state.closed && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && instance !== null && active(instance) && instance.lifetime !== null && instance.owner === owner && instance.activation === activation && instance.lifetime.activationGeneration === lifetime.activationGeneration && instance.lifetime.instanceId === lifetime.instanceId && instance.lifetime.guestLifetime === lifetime.guestLifetime;
   }
-  beginReader(builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): OwnedUiResidentReaderAdmission { return admitReader(this.#state, builder, grant); }
-  closeReader(reader: OwnedUiResidentPayloadReader, grant: NumericIndexGrant): RetainedUiWireStep { const original = readerState(reader); const state = this.#state; if (!original || original.payload !== state && (!state.pending || !readerSlot(state.pending) || state.pending.witness?.original !== reader)) return step("rejected", "resident-reader-close-owner"); return closeReaderSlot(state, grant, original); }
+  beginReader(builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): OwnedUiResidentReaderAdmission { return admitReader(this.#state, builder, grant); }
+  closeReader(reader: OwnedUiResidentPayloadReader, grant: UiIndexGrant): RetainedUiWireStep { const original = readerState(reader); const state = this.#state; if (!original || original.payload !== state && (!state.pending || !readerSlot(state.pending) || state.pending.witness?.original !== reader)) return step("rejected", "resident-reader-close-owner"); return closeReaderSlot(state, grant, original); }
   static matchesReaderConstruction(payload: unknown, reader: unknown): boolean { const state = payloadState(payload); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && slot !== null && slot !== undefined && readerSlot(slot) && slot.phase === "builder-installing" && slot.entry === state.reader && slot.entry?.facade === reader && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
   static matchesReaderBinding(payload: unknown, reader: unknown, witness: unknown): boolean { const state = payloadState(payload); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && slot !== null && slot !== undefined && readerSlot(slot) && slot.entry === state.reader && slot.entry?.facade === reader && slot.witness === witness && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
   static matchesPageConstruction(payload: unknown, page: unknown): boolean { const state = payloadState(payload); const original = pageState(page); const slot = state?.pending; return state !== null && activePayload(state) && original !== null && original.payload === state && slot !== null && slot !== undefined && pageSlot(slot) && slot.phase === "page-builder-installing" && slot.entry === original && original.facade === page && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
   static matchesPageRetirement(payload: unknown, page: unknown, proof: unknown): boolean { const state = payloadState(payload); const original = pageState(page); const slot = state?.pending; return state !== null && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && original !== null && original.payload === state && original.failure === NO_POOL_FAULT && !original.cell?.hasFailure && state.reader?.page !== original && slot !== null && slot !== undefined && pageSlot(slot) && slot.phase === "closing-domain" && slot.entry === original && original.facade === page && slot.witness !== null && slot.witness === proof && original.witness === proof && slot.failure === NO_POOL_FAULT && !slot.cell?.hasFailure; }
   static pageLength(payload: unknown, builder: unknown, page: unknown): number | null { const state = payloadState(payload); const original = pageState(page); return state !== null && activePayload(state) && state.builder?.facade === builder && original !== null && original.payload === state && original.facade === page && (original.phase === "live" || original.phase === "sealed") && original.failure === NO_POOL_FAULT && !original.cell?.hasFailure ? original.length : null; }
-  beginPage(builder: OwnedUiOperationPayloadBuilder, length: number, grant: NumericIndexGrant): OwnedUiResidentPageAdmission { return admitPage(this.#state, builder, length, grant); }
-  closePage(page: OwnedUiResidentPage, grant: NumericIndexGrant): RetainedUiWireStep { if (!admitted(grant, 64)) return step("blocked", "resident-page-close"); const original = pageState(page); const state = this.#state; if (!original) return step("rejected", "resident-page-close-owner"); const slot = state.pending; if (original.payload !== state && (!slot || !pageSlot(slot) || slot.witness?.original !== page)) return step("rejected", "resident-page-close-owner"); return closePageSlot(state, grant, original); }
+  beginPage(builder: OwnedUiOperationPayloadBuilder, length: number, grant: UiIndexGrant): OwnedUiResidentPageAdmission { return admitPage(this.#state, builder, length, grant); }
+  closePage(page: OwnedUiResidentPage, grant: UiIndexGrant): RetainedUiWireStep { if (!admitted(grant, 64)) return step("blocked", "resident-page-close"); const original = pageState(page); const state = this.#state; if (!original) return step("rejected", "resident-page-close-owner"); const slot = state.pending; if (original.payload !== state && (!slot || !pageSlot(slot) || slot.witness?.original !== page)) return step("rejected", "resident-page-close-owner"); return closePageSlot(state, grant, original); }
 
   beginClose(): void { const state = this.#state; if (state.closing) return; state.closing = true; state.cursor = state.head; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     try { return this.#close(grant); } catch (error) { const state = this.#state; if (state.parentSlot) payloadSlotFault(state.parentSlot, error); else { if (state.failure !== NO_POOL_FAULT && !Object.is(state.failure, error)) throw error; state.failure = error; } return step("rejected", "resident-payload-close-fault"); }
   }
-  #close(grant: NumericIndexGrant): RetainedUiWireStep {
+  #close(grant: UiIndexGrant): RetainedUiWireStep {
     const state = this.#state;
     if (admitted(grant, 32) && state.closing && state.phase === "live" && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && state.builder?.facade && state.pending && (payloadSlotEmpty(state.pending) || evidenceSlot(state.pending)) && !state.reader && !state.head && (!state.evidence || state.evidence.phase === "constructing") && OwnedUiOperationPayloadBuilder.cancellationPrepared(state.builder.facade)) return admissionStep(admitEvidence(state, state.builder.facade, grant).step, grant);
     if (!admitted(grant, 64)) return step("blocked", "resident-payload-close");
@@ -519,17 +520,17 @@ export class OwnedUiResidentPayload {
     const field = slot.requestOwner;
     if (slot.phase === "source-detaching" || slot.phase === "source-never-installed") {
       if (!field) return step("rejected", "resident-payload-source-owner"); const observation = field.residentPayloadDetachment;
-      if (OwnedKernelReturnPayloadDetachment.matches(observation, field, this)) { slot.witness = observation; slot.phase = "source-clearing"; return step("pending", "resident-payload-source-observation", 64); }
-      if (slot.phase === "source-never-installed" && !OwnedKernelReturnInputField.matchesResidentPayload(field, this)) { state.field = null; movePayloadWitness(state, "source-settled"); slot.phase = "source-settled"; return step("pending", "resident-payload-never-installed-source", 64); }
+      if (uiInputHost().detachment.matches(observation, field, this)) { slot.witness = observation; slot.phase = "source-clearing"; return step("pending", "resident-payload-source-observation", 64); }
+      if (slot.phase === "source-never-installed" && !uiInputHost().field.matchesResidentPayload(field, this)) { state.field = null; movePayloadWitness(state, "source-settled"); slot.phase = "source-settled"; return step("pending", "resident-payload-never-installed-source", 64); }
       const current = field.detachResidentPayload(this, state.witness, grant); const forwarded = childStep({ ...current, phase: "resident-payload-source-detach" }, grant); if (current.kind === "pending" && forwarded.kind === "pending") slot.phase = "source-observing"; return forwarded;
     }
-    if (slot.phase === "source-observing") { const observation = field!.residentPayloadDetachment; if (!OwnedKernelReturnPayloadDetachment.matches(observation, field, this)) return step("rejected", "resident-payload-source-observation"); slot.witness = observation; slot.phase = "source-clearing"; return step("pending", "resident-payload-source-observation", 64); }
-    if (slot.phase === "source-clearing") { if (!OwnedKernelReturnPayloadDetachment.matches(slot.witness, field, this)) return step("rejected", "resident-payload-source-proof"); state.field = null; movePayloadWitness(state, "source-detached"); slot.phase = "source-settling"; return step("pending", "resident-payload-ui-source-detach", 64); }
+    if (slot.phase === "source-observing") { const observation = field!.residentPayloadDetachment; if (!uiInputHost().detachment.matches(observation, field, this)) return step("rejected", "resident-payload-source-observation"); slot.witness = observation; slot.phase = "source-clearing"; return step("pending", "resident-payload-source-observation", 64); }
+    if (slot.phase === "source-clearing") { if (!uiInputHost().detachment.matches(slot.witness, field, this)) return step("rejected", "resident-payload-source-proof"); state.field = null; movePayloadWitness(state, "source-detached"); slot.phase = "source-settling"; return step("pending", "resident-payload-ui-source-detach", 64); }
     if (slot.phase === "source-settling") {
-      if (OwnedKernelReturnPayloadDetachment.matchesSettled(slot.witness, this)) { slot.phase = "source-settle-observing"; return step("pending", "resident-payload-settle-recovery", 64); }
-      if (!OwnedKernelReturnPayloadDetachment.matchesOwner(slot.witness, field)) return step("rejected", "resident-payload-source-proof"); const current = field!.settleResidentPayload(slot.witness, state.witness, grant); const forwarded = childStep({ ...current, phase: "resident-payload-source-settle" }, grant); if (current.kind === "complete" && forwarded.kind === "pending") slot.phase = "source-settle-observing"; return forwarded;
+      if (uiInputHost().detachment.matchesSettled(slot.witness, this)) { slot.phase = "source-settle-observing"; return step("pending", "resident-payload-settle-recovery", 64); }
+      if (!uiInputHost().detachment.matchesOwner(slot.witness, field)) return step("rejected", "resident-payload-source-proof"); const current = field!.settleResidentPayload(slot.witness, state.witness, grant); const forwarded = childStep({ ...current, phase: "resident-payload-source-settle" }, grant); if (current.kind === "complete" && forwarded.kind === "pending") slot.phase = "source-settle-observing"; return forwarded;
     }
-    if (slot.phase === "source-settle-observing") { if (!OwnedKernelReturnPayloadDetachment.matchesSettled(slot.witness, this)) return step("rejected", "resident-payload-settled-proof"); movePayloadWitness(state, "source-settled"); slot.phase = "source-settled"; return step("pending", "resident-payload-settle-observation", 64); }
+    if (slot.phase === "source-settle-observing") { if (!uiInputHost().detachment.matchesSettled(slot.witness, this)) return step("rejected", "resident-payload-settled-proof"); movePayloadWitness(state, "source-settled"); slot.phase = "source-settled"; return step("pending", "resident-payload-settle-observation", 64); }
     if (slot.phase === "source-settled") { slot.witness = state.witness; slot.requestOwner = null; slot.phase = "closing-domain"; return step("pending", "resident-payload-domain-proof-handoff", 64); }
     if (slot.phase !== "closing-domain" || !admitted(grant, 128)) return step("blocked", "resident-payload-domain-unlink");
     if (state.previous) state.previous.next = state.next; else instance.head = state.next; if (state.next) state.next.previous = state.previous; else instance.tail = state.previous;
@@ -564,13 +565,13 @@ function pageSlot(slot: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot): slo
 function capturePageSlot(slot: BuilderSlot | EvidenceSlot | PageSlot | ReaderSlot, page: Page): slot is PageSlot { if (!payloadSlotEmpty(slot)) return false; slot.requestOwner = page.length; return pageSlot(slot); }
 function pageStorage(page: Page) { return page.storageCell?.result?.page ?? null; }
 function storageOwner(state: Payload) { return state.storageCell?.result?.owner ?? null; }
-function closeStorage(state: Payload, grant: NumericIndexGrant): RetainedUiWireStep {
+function closeStorage(state: Payload, grant: UiIndexGrant): RetainedUiWireStep {
   const cell = state.storageCell; if (!cell) return step("complete", "resident-storage-empty");
   if (cell.hasFailure) return step("rejected", "resident-storage-fault-held");
   if (!cell.terminalIsEmpty()) { cell.beginClose(); return childStep(cell.closeStep(grant), grant); }
   if (!admitted(grant, 64)) return step("blocked", "resident-storage-observation"); state.storageCell = null; return step("pending", "resident-storage-observation", 64);
 }
-function admitPage(state: Payload, builder: OwnedUiOperationPayloadBuilder, length: number, grant: NumericIndexGrant): OwnedUiResidentPageAdmission {
+function admitPage(state: Payload, builder: OwnedUiOperationPayloadBuilder, length: number, grant: UiIndexGrant): OwnedUiResidentPageAdmission {
   const result = (current: RetainedUiWireStep): OwnedUiResidentPageAdmission => ({ step: current, page: null }); const slot = state.pending;
   if (!admitted(grant, 32)) return result(step("blocked", "resident-page-admission"));
   if (!slot || !activePayload(state) || !OwnedUiResidentPayload.matchesBuilderLive(state.facade, builder) || !Number.isInteger(length) || length < 0 || length > 256) return result(step("rejected", "resident-page-owner"));
@@ -623,7 +624,7 @@ class PageWitness {
   get original(): OwnedUiResidentPage { return this.#original; }
   get terminal(): boolean { const page = pageState(this.#original); return this.#phase === "terminal" && page !== null && pageDomainEmpty(page); }
 }
-function closePageSlot(state: Payload, grant: NumericIndexGrant, requested: Page | null = null): RetainedUiWireStep {
+function closePageSlot(state: Payload, grant: UiIndexGrant, requested: Page | null = null): RetainedUiWireStep {
   if (!admitted(grant, 64)) return step("blocked", "resident-page-close"); if (state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-parent-fault"); const slot = state.pending; if (!slot) return step("rejected", "resident-page-parent-slot"); const ledger = state.instance!.pool!.ledger!;
   if (!pageSlot(slot)) {
     if (!payloadSlotEmpty(slot)) return step("blocked", "resident-page-slot-busy"); const page = requested ?? state.head; if (!page) return step("complete", "resident-page-empty");
@@ -672,9 +673,9 @@ export class OwnedUiResidentPage {
     const current = state.record!.install(this, { maxItems: 1, maxBytes: 64 }); if (current.kind !== "ready" || current.items !== 1 || current.bytes !== 64) throw new Error("Resident page record refused installation");
   }
   static { pageOwner = state => new OwnedUiResidentPage(MINT, state); pageState = value => value !== null && typeof value === "object" && #state in value ? value.#state : null; }
-  allocate(grant: NumericIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 256)) return step("blocked", "resident-page-allocate"); if (state.phase !== "live" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-allocate"); try { const page = pageStorage(state); return page ? childStep(page.allocate(grant), grant) : step("rejected", "resident-page-storage"); } catch (error) { this.#retain(error); return step("rejected", "resident-page-allocation-fault"); } }
-  writeByte(value: number, grant: NumericIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 1)) return step("blocked", "resident-page-write"); if (state.phase !== "live" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-write"); try { const page = pageStorage(state); return page ? childStep(page.writeByte(value, grant), grant) : step("rejected", "resident-page-storage"); } catch (error) { this.#retain(error); return step("rejected", "resident-page-write-fault"); } }
-  seal(grant: NumericIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 64)) return step("blocked", "resident-page-seal"); if (state.phase !== "live" && state.phase !== "sealed" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-seal"); try { const page = pageStorage(state); if (!page) return step("rejected", "resident-page-storage"); const result = childStep(page.seal(grant), grant); if (result.kind === "ready") state.phase = "sealed"; return result; } catch (error) { this.#retain(error); return step("rejected", "resident-page-seal-fault"); } }
+  allocate(grant: UiIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 256)) return step("blocked", "resident-page-allocate"); if (state.phase !== "live" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-allocate"); try { const page = pageStorage(state); return page ? childStep(page.allocate(grant), grant) : step("rejected", "resident-page-storage"); } catch (error) { this.#retain(error); return step("rejected", "resident-page-allocation-fault"); } }
+  writeByte(value: number, grant: UiIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 1)) return step("blocked", "resident-page-write"); if (state.phase !== "live" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-write"); try { const page = pageStorage(state); return page ? childStep(page.writeByte(value, grant), grant) : step("rejected", "resident-page-storage"); } catch (error) { this.#retain(error); return step("rejected", "resident-page-write-fault"); } }
+  seal(grant: UiIndexGrant): RetainedUiWireStep { const state = this.#state; if (!admitted(grant, 64)) return step("blocked", "resident-page-seal"); if (state.phase !== "live" && state.phase !== "sealed" || !state.payload || !activePayload(state.payload) || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-page-seal"); try { const page = pageStorage(state); if (!page) return step("rejected", "resident-page-storage"); const result = childStep(page.seal(grant), grant); if (result.kind === "ready") state.phase = "sealed"; return result; } catch (error) { this.#retain(error); return step("rejected", "resident-page-seal-fault"); } }
   beginClose(): void { if (this.#state.phase === "live" || this.#state.phase === "sealed") this.#state.phase = "closing"; }
   terminalIsEmpty(): boolean { return this.#state.phase === "registration-retired" && pageDomainEmpty(this.#state); }
   #retain(error: unknown): void { const state = this.#state; if (state.failure !== NO_POOL_FAULT && !Object.is(state.failure, error)) throw error; state.failure = error; }
@@ -689,7 +690,7 @@ function readerPublished(state: Reader): boolean { const slot = state.payload?.p
 function readerBodyEmpty(state: Reader): boolean { return !state.page && !state.storageCell && state.failure === NO_POOL_FAULT && !state.cell?.hasFailure && (state.phase === "closing" || state.phase === "body-retired"); }
 function readerDomainEmpty(state: Reader): boolean { return !state.payload && !state.facade && !state.cell && !state.record && !state.page && !state.storageCell && !state.witness && state.failure === NO_POOL_FAULT && (state.phase === "domain-retired" || state.phase === "registration-retired"); }
 function readerFault(state: Reader, error: unknown): void { if (state.failure !== NO_POOL_FAULT && !Object.is(state.failure, error)) throw error; state.failure = error; }
-function admitReader(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: NumericIndexGrant): OwnedUiResidentReaderAdmission {
+function admitReader(state: Payload, builder: OwnedUiOperationPayloadBuilder, grant: UiIndexGrant): OwnedUiResidentReaderAdmission {
   const result = (current: RetainedUiWireStep): OwnedUiResidentReaderAdmission => ({ step: current, reader: null }); const slot = state.pending;
   if (!admitted(grant, 32)) return result(step("blocked", "resident-reader-admission"));
   if (!slot || !activePayload(state) || !OwnedUiResidentPayload.matchesBuilderLive(state.facade, builder)) return result(step("rejected", "resident-reader-owner"));
@@ -716,13 +717,13 @@ function admitReader(state: Payload, builder: OwnedUiOperationPayloadBuilder, gr
     return result(step("rejected", "resident-reader-phase"));
   } catch (error) { builderFault(slot, error); return result(step("rejected", "resident-reader-admission-fault")); }
 }
-function closeReaderAlias(state: Reader, grant: NumericIndexGrant): RetainedUiWireStep {
+function closeReaderAlias(state: Reader, grant: UiIndexGrant): RetainedUiWireStep {
   const cell = state.storageCell; if (!cell) return step("complete", "resident-reader-alias-empty");
   if (cell.hasFailure) return step("rejected", "resident-reader-alias-fault-held");
   if (!cell.terminalIsEmpty()) { cell.beginClose(); return childStep(cell.closeStep(grant), grant); }
   if (!admitted(grant, 64)) return step("blocked", "resident-reader-alias-observation"); state.storageCell = null; return step("pending", "resident-reader-alias-observation", 64);
 }
-function advanceReader(state: Reader, grant: NumericIndexGrant): OwnedUiResidentReaderStep {
+function advanceReader(state: Reader, grant: UiIndexGrant): OwnedUiResidentReaderStep {
   if (!admitted(grant, 1)) return step("blocked", "resident-reader");
   if (!readerHealthy(state) || !readerPublished(state) || state.payload!.closing) return step("rejected", "resident-reader");
   const payload = state.payload!; const builder = payload.builder?.facade; if (!builder) return step("rejected", "resident-reader-builder");
@@ -751,7 +752,7 @@ export class OwnedUiResidentPayloadReader {
   readonly #state: Reader;
   private constructor(mint: object, state: Reader) { if (mint !== MINT) throw new Error("Invalid resident reader authority"); this.#state = state; state.facade = this; const current = state.record!.install(this, { maxItems: 1, maxBytes: 64 }); if (current.kind !== "ready" || current.items !== 1 || current.bytes !== 64) throw new Error("Reader record installation refused"); }
   static { createReader = state => new OwnedUiResidentPayloadReader(MINT, state); readerState = value => value !== null && typeof value === "object" && #state in value ? value.#state : null; }
-  advance(grant: NumericIndexGrant): OwnedUiResidentReaderStep { return advanceReader(this.#state, grant); }
+  advance(grant: UiIndexGrant): OwnedUiResidentReaderStep { return advanceReader(this.#state, grant); }
   terminalIsEmpty(): boolean { return this.#state.phase === "registration-retired" && readerDomainEmpty(this.#state); }
 }
 /** 🧾️ The same original witness traverses body, builder-binding and domain retirement. */
@@ -765,7 +766,7 @@ export class OwnedUiResidentReaderRetirement {
   get original(): OwnedUiResidentPayloadReader { return this.#original; }
   get terminal(): boolean { const state = readerState(this.#original); return this.#phase === "terminal" && state !== null && readerDomainEmpty(state); }
 }
-function closeReaderSlot(state: Payload, grant: NumericIndexGrant, requested: Reader | null = null): RetainedUiWireStep {
+function closeReaderSlot(state: Payload, grant: UiIndexGrant, requested: Reader | null = null): RetainedUiWireStep {
   if (!admitted(grant, 64)) return step("blocked", "resident-reader-close"); const slot = state.pending; if (!slot || state.failure !== NO_POOL_FAULT || state.cell?.hasFailure) return step("rejected", "resident-reader-parent");
   const ledger = state.instance!.pool!.ledger!;
   if (!readerSlot(slot)) { const reader = requested ?? state.reader; if (!reader || !readerSlotStart(state.pending!, state)) return step("blocked", "resident-reader-slot-busy"); const held = state.pending!; held.entry = reader; held.cell = reader.cell; held.record = reader.record; held.witness = reader.witness; held.phase = "closing-domain"; return step("pending", "resident-reader-close-capture", 64); }

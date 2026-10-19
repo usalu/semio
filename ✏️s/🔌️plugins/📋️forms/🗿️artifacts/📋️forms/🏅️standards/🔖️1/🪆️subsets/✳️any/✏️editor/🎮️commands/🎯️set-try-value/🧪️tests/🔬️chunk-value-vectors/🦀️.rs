@@ -1,5 +1,5 @@
 use semio_framework_pack_json::Value;
-use crate::editor::forms::commands::set_try_value::*;
+use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::set_try_value::*;
 use semio_framework_test_fixtures::fixture_text;
 
 #[test]

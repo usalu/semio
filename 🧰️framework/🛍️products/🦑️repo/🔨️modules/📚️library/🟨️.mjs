@@ -4,14 +4,11 @@ import {join,resolve,relative,dirname,isAbsolute} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
-import {conformsOwnerContractV1 as conforms,ownerArgumentsSourceIdentityV1} from "./🏗️build/📤️arguments/🟨️.mjs";
-const publicationSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url)),publicationSchema=JSON.parse(publicationSchemaSource.toString("utf8"));
-const engineSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url)),engineSchema=JSON.parse(engineSchemaSource.toString("utf8")),engineNamedInput=engineSchema.definitions.NamedInput.const;
-const privateTaskSources=["./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json","./🏗️build/📥️caller/📤️orchestration/🟨️.mjs","./🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json","./🏗️build/🧬️schema/📥️caller.json"],privateTaskBytes=privateTaskSources.map(path=>readFileSync(new URL(path,import.meta.url)));
-const dependencySourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([createHash("sha256").update(readFileSync(new URL(import.meta.url))).digest("hex"),createHash("sha256").update(captured?publicationSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url))).digest("hex"),createHash("sha256").update(captured?engineSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url))).digest("hex"),ownerArgumentsSourceIdentityV1(),...privateTaskSources.map((path,index)=>createHash("sha256").update(captured?privateTaskBytes[index]:readFileSync(new URL(path,import.meta.url))).digest("hex"))])).digest("hex"),loadedDependencySourceIdentity=dependencySourceIdentity(true);
+import {nxBuildDependencySourceIdentityV1,nxEngineNamedInputV1 as engineNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
+import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
 
 /** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
-export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();if(dependencySourceIdentity()!==loadedDependencySourceIdentity)throw Error("Loaded private Nx dependency Source changed");return loadedDependencySourceIdentity;}
+export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();return nxBuildDependencySourceIdentityV1();}
 
 
 /** 🔎️ Classifies exact literal module and URL references as portable source facts. */
@@ -53,14 +50,9 @@ export function nxBuildEngineInputsV1(){
  return [...engineAuthority.files,{externalDependencies:[...engineAuthority.packages]},{runtime:"node --version"},{runtime:"bun --version"}];
 }
 
-/** 📌️ Reads the exact portable graph pinned by this owned build invocation. */
-async function graphPublication(workspaceRoot,environment,body){
- const captured=Object.freeze({...environment}),pin={path:captured.SEMIO_BUILD_GRAPH_PATH,digest:captured.SEMIO_BUILD_GRAPH_DIGEST},check=()=>{nxBuildDependencyImplementationV1();if(process.env.SEMIO_BUILD_GRAPH_PATH!==pin.path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==pin.digest)throw Error("Original private Nx graph binding changed");};check();const {withReceivedNxGraphTaskV1}=await import("./⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts"),{withRepositoryBuildGraphPublicationV1}=await import("./🏗️build/🕸️graph/🟦️.ts");check();
- return withReceivedNxGraphTaskV1(workspaceRoot,captured,actual=>withRepositoryBuildGraphPublicationV1(workspaceRoot,actual,async(graph,digest)=>{check();const value=await body({graph,digest});check();return value;}));
-}
+/** 📌️ Reads the exact portable graph pinned by this owned build invocation under the plugin implementation identity. */
+const graphPublication=(workspaceRoot,environment,body)=>withNxBuildGraphPublicationV1(workspaceRoot,environment,body,nxBuildDependencyImplementationV1);
 
-/** 🔏️ Exposes only immutable private backend DATA read under its genuine received Graph task. */
-export function readPrivateNxBuildGraphV1(workspaceRoot,environment){if(environment.SEMIO_BUILD_GRAPH_PATH!==process.env.SEMIO_BUILD_GRAPH_PATH||environment.SEMIO_BUILD_GRAPH_DIGEST!==process.env.SEMIO_BUILD_GRAPH_DIGEST)throw Error("Original private Nx graph binding changed");return graphPublication(workspaceRoot,environment,async({graph})=>graph);}
 
 /** 🔌️ Projects only portable process execution onto Nx's internal executor contract. */
 export function projectBuildTargetForNxV1(target){

@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-hub-space-app = { workspace = true, features = ["testkit"] }

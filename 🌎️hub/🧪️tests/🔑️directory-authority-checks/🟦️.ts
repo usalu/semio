@@ -2,15 +2,15 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { readHubDirectorySource } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
@@ -87,7 +87,7 @@ export class AdminDirectoryAuthorityCheckScript extends BundleScript {
       oracle.close();
     }
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-directory-route-laws",
             target: { kind: "lib" },
@@ -232,7 +232,7 @@ export class ShareIssuanceAtomicityCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("share-issuance-atomicity-check accepts only --native");
     const checks = await proveShareIssuanceAtomicity(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-directory-backend-laws",
             target: { kind: "lib" },
@@ -491,7 +491,7 @@ export class RetainedShortAdminCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--native")) throw new Error("retained-short-admin-check accepts only --native");
     const checks = await proveRetainedShortAdmin(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-hostile-input-laws",
             target: { kind: "lib" },
@@ -604,7 +604,7 @@ export class DirectoryMessageAuthorityCheckScript extends BundleScript {
     ];
     if (mutants.some((mutant) => mutant === hubSource || directoryMessageAuthoritySourceConforms(mutant))) throw new Error("directory message authority guard admitted a hostile source mutation");
     if (phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-directory-route-laws",
             target: { kind: "lib" },
@@ -652,7 +652,7 @@ export class ScopedDirectorySocketCheckScript extends BundleScript {
       console.log("scoped-directory-socket-source-check: neutral=19 hostile=3 browser-terminal=3");
     }
     if (phase === "all" || phase === "native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,groups: [
           {
             package: "semio-framework-os-kernel",
             target: { kind: "lib", name: "semio_framework_os_kernel" },
@@ -664,7 +664,7 @@ export class ScopedDirectorySocketCheckScript extends BundleScript {
       for (const receipt of receipts) console.log(`scoped-directory-socket-native-receipt: ${JSON.stringify(receipt)}`);
     }
     if (phase === "all" || phase === "process") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.root,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-open-plan-laws",
             target: { kind: "lib" },

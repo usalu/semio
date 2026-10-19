@@ -1,4 +1,4 @@
-import { ephemeralBox } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { ephemeralBox } from "@semio-tech/framework/transient";
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

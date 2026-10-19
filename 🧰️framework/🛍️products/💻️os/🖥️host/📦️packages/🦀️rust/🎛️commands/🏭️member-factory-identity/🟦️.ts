@@ -8,7 +8,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️mod
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
@@ -153,7 +153,7 @@ export class MemberFactoryIdentityScript extends BundleScript {
     assert(/const OPEN_DECLARATIONS:\s*&'static\s*\[MemberOpenDeclaration\]\s*=\s*&\[\];/.test(noMembers), "NoMembers has exactly the empty declaration table");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("mod factory;"), "selected factory native laws require the coordinated mount");
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }

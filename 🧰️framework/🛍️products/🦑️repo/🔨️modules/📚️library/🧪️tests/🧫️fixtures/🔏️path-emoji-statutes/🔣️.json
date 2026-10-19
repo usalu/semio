@@ -1640,7 +1640,7 @@
           "nodeKind": "file"
         },
         {
-          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json",
           "nodeKind": "file",
           "reserved": true
         },

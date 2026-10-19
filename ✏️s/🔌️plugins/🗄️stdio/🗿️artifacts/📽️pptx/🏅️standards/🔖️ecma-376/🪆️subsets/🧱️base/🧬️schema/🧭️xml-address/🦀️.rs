@@ -1,7 +1,7 @@
 //! 🧭️ Revision-bound canonical PresentationML addresses and projections over a PPTX snapshot.
 
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{PptxTransform, PptxXmlPart};
-use crate::standards::v_ecma_376::subsets::base::{schema::{vocabulary::{attribute_value,element_matches,expanded_element_name,namespace_scope,resolve_office_document_relationship,DRAWINGML_NAMESPACES,OFFICE_RELATIONSHIP_NAMESPACES,PRESENTATIONML_NAMESPACES}}};
+use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::{attribute_value,element_matches,expanded_element_name,namespace_scope,resolve_office_document_relationship,DRAWINGML_NAMESPACES,OFFICE_RELATIONSHIP_NAMESPACES,PRESENTATIONML_NAMESPACES};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;

@@ -1,6 +1,7 @@
 //! 🪨️ `create-material` payload. Brings a new material into the library; physical values are finite and non-negative and every colour component lies in 0..1.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Material, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Material, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

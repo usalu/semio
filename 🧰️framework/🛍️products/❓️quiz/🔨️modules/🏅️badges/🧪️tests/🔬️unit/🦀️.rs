@@ -4,7 +4,7 @@
 
 use super::*;
 use crate::challenge::points;
-use crate::sheet::tests::{quiz, text};
+use semio_framework_quiz_tests_support::sheet::{quiz, text};
 use quiz_schema::{Task, TaskKind, TaskResult, CHALLENGES};
 
 fn badge(id: &str, rule: BadgeRule) -> Badge {

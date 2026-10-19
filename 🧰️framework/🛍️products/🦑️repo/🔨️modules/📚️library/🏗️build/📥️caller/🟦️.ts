@@ -1,5 +1,5 @@
-import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "./📤️orchestration/🟨️.mjs";
 import nxCallerSchema from"../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import authoringSchema from "../🧬️schema/📥️authoring.json";
@@ -9,9 +9,10 @@ import executionPolicy from "../../⚡️caching/📦️artifacts/📋️native-
 import { canonicalArchitectureEnvironment } from "../../⚡️caching/🦀️cargo/🌿️environment/🟦️.ts";
 import {createNativeWindowsSystemGrantV1, readNativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import type { NativeOwnerCapabilities } from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, readIssuedScriptProcessEnvelopeV1, scriptProcessEnvironment, readScriptProcessEnvelope, type ScriptProcessEnvelope, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { BuildExecutionV1 } from "../🕸️graph/🟦️.ts";
+import type { BuildExecutionV1, BuildGraphV1 } from "../🕸️graph/🟦️.ts";
+import type { selectBuildTasksV1 } from "../🧭️selection/🟦️.ts";
 import { resolve } from "node:path";
 import {issueRepositoryCargoExecutionBackendV1} from "../../🏃️process/🦀️cargo/🏃️execution/🟦️.ts";
 
@@ -85,16 +86,19 @@ export function projectOwnedNxProcessEnvelopeV1(root:string,invocation:ScriptInv
  if(validateJsonSchemaSubset(nxCallerSchema,capabilities).length)throw Error("Closed original Nx child data required");return readScriptProcessEnvelope({...original,capabilities},Date.now());
 }
 
+/** 🗺️ Plans one selected request into the declared neutral task roster; the composition root injects its planner so the caller never imports a build tool. */
+export type BuildOrchestrationPlannerV1=(graph:BuildGraphV1,request:Awaited<ReturnType<typeof selectBuildTasksV1>>)=>Readonly<{tasks:Readonly<Record<string,Readonly<{args:readonly string[]}>>>}>;
+
 /** 🧭️ Keeps actual pinned graph custody while issuing only a reachable neutral task's declared descendants. */
-export async function withBuildOrchestrationTaskEnvironmentV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,execution:BuildExecutionV1,args:readonly string[],environment:NodeJS.ProcessEnv,context:object,body:(environment:NodeJS.ProcessEnv,actual:ResourceLeaseControl)=>Promise<T>):Promise<T>{
+export async function withBuildOrchestrationTaskEnvironmentV1<T>(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,execution:BuildExecutionV1,args:readonly string[],environment:NodeJS.ProcessEnv,context:object,planner:BuildOrchestrationPlannerV1,body:(environment:NodeJS.ProcessEnv,actual:ResourceLeaseControl)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);const original=readIssuedScriptProcessEnvelopeV1(invocation),caller=original.capabilities as NativeBuildCallerCapabilitiesV1;
  if(validateJsonSchemaSubset(schema,caller).length||resolve(caller.workspaceRoot)!==resolve(root)||caller.selection[0]!=="repo")throw Error("Original selected Repo orchestration required");
  const processPin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST},check=()=>{checkScriptInvocation(invocation);if(environment.SEMIO_BUILD_GRAPH_PATH!==processPin.path||environment.SEMIO_BUILD_GRAPH_DIGEST!==processPin.digest||process.env.SEMIO_BUILD_GRAPH_PATH!==processPin.path||process.env.SEMIO_BUILD_GRAPH_DIGEST!==processPin.digest)throw Error("Original process orchestration graph binding changed");};check();
- const [{withRepositoryBuildGraphPublicationV1,resolveBuildTargetV1},{parseBuildInvocationV1,resolveBuildInvocationV1},{selectBuildTasksV1},{planBazelTasksV1}]=await Promise.all([import("../🕸️graph/🟦️.ts"),import("../🧭️invocation/🟦️.ts"),import("../🧭️selection/🟦️.ts"),import("../🔧️tools/🏗️bazel/📜️script.ts")]);check();
+ const [{withRepositoryBuildGraphPublicationV1,resolveBuildTargetV1},{parseBuildInvocationV1,resolveBuildInvocationV1},{selectBuildTasksV1}]=await Promise.all([import("../🕸️graph/🟦️.ts"),import("../🧭️invocation/🟦️.ts"),import("../🧭️selection/🟦️.ts")]);check();
  return withRepositoryBuildGraphPublicationV1(root,phaseControl,async(graph,_digest,actual)=>{
    check();const bound=requireBuildOrchestrationContextV1(graph.projects,context),selection=bound.task,target=graph.projects[selection.project]!.targets[selection.target]!,effective=resolveBuildTargetV1(target,selection.configuration);
    if(JSON.stringify(effective.execution)!==JSON.stringify(execution))throw Error("Immutable orchestration execution changed");
-   const parsed=parseBuildInvocationV1(caller.selection.slice(1),{...environment,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode}),resolved=resolveBuildInvocationV1(root,parsed.args,{...environment,SEMIO_BUILD_MODE:caller.buildMode}),request=await selectBuildTasksV1(root,graph,resolved.args,invocation),plan=planBazelTasksV1(graph,request),id=[selection.project,selection.target,...(selection.configuration?[selection.configuration]:[])].join(":");
+   const parsed=parseBuildInvocationV1(caller.selection.slice(1),{...environment,SEMIO_BUILD_TOOL:caller.tool,SEMIO_BUILD_MODE:caller.buildMode}),resolved=resolveBuildInvocationV1(root,parsed.args,{...environment,SEMIO_BUILD_MODE:caller.buildMode}),request=await selectBuildTasksV1(root,graph,resolved.args,invocation),plan=planner(graph,request),id=[selection.project,selection.target,...(selection.configuration?[selection.configuration]:[])].join(":");
    if(!Object.hasOwn(plan.tasks,id))throw Error("Original orchestration task is unreachable");if(JSON.stringify(plan.tasks[id]!.args)!==JSON.stringify(args))throw Error("Original orchestration task arguments changed");if(JSON.stringify(effective.execution)!==JSON.stringify(execution))throw Error("Immutable orchestration execution changed");check();const capabilities=projectBuildOrchestrationCapabilitiesV1(original,resolve(root),caller.tool,bound,Date.now()),result=await body(buildTaskEnvironmentV1(root,invocation,execution,args,environment,capabilities),actual);check();return result;
  });
 }

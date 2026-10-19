@@ -1,4 +1,4 @@
-import { toolJobReservedSpecs } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
+import { toolJobReservedSpecs } from "@semio-tech/repo-lib/laws";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";

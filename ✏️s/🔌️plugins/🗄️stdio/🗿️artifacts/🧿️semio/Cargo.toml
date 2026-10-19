@@ -59,6 +59,7 @@ members = [
   "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📋️tabular-internals/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧭️causal-internals/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📐️cad/📚️examples/📐️drawing/📦️packages/🦀️rust",
@@ -102,6 +103,7 @@ members = [
   "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🎚️set-sample-rate/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/📦️packages/🦀️rust",
@@ -684,6 +686,10 @@ path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/�
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-mutations]
 path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-mut-family]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🏗️create-column/📦️packages/🦀️rust"
+
+
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-descriptor]
 path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
 
@@ -737,6 +743,9 @@ path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/�
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-audio-mutations]
 path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-mut-family]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/🎚️set-sample-rate/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-audio-model]
 path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📦️packages/🦀️rust"

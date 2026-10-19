@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 
 #[path = "⌨️keymap/🦀️.rs"]
 pub mod keymap;
+#[path = "🌐️language/🦀️.rs"]
+pub mod language;
 
 const LIMIT: u64 = 1024 * 1024;
 const PREFIX: &str = "ctrl+b";
@@ -27,7 +29,7 @@ pub struct Preferences {
 }
 
 impl Default for Preferences {
-    fn default() -> Self { Self { language: "en".into(), appearance: "dark".into(), terminology: "native".into(), renderer: "react".into(), layout: "tabs".into(), prefix: PREFIX.into(), bindings: BTreeMap::new() } }
+    fn default() -> Self { Self { language: language::declared().fallback().as_str().into(), appearance: "dark".into(), terminology: "native".into(), renderer: "react".into(), layout: "tabs".into(), prefix: PREFIX.into(), bindings: BTreeMap::new() } }
 }
 
 /// ✉️ One validated preference command, matching the language-neutral schema.
@@ -85,8 +87,11 @@ impl Preferences {
     /// ⌨️ The effective keymap and the customizations it had to ignore, each named.
     pub fn keymap(&self) -> (keymap::Keymap, Vec<String>) { keymap::Keymap::build(&self.prefix, &self.bindings) }
 
-    /// 🌐️ The language the dashboard speaks; changes are validated, so an unknown language never occurs.
-    pub fn locale(&self) -> ui_locale::Locale { ui_locale::Locale::parse(&self.language).unwrap_or_default() }
+    /// 🌐️ The language the dashboard speaks; changes are validated, so an unknown language never occurs and the declared fallback only covers a hand-built value.
+    pub fn locale(&self) -> ui_locale::Locale { ui_locale::Locale::parse(&self.language).unwrap_or_else(|| language::declared().fallback()) }
+
+    /// 🏁️ The layer under every journal: the opinionated settings with the language the system names, or the declared fallback.
+    pub fn baseline(lookup: language::Lookup<'_>) -> Self { Self { language: language::declared().resolve(lookup).as_str().into(), ..Self::default() } }
 
     /// 🚀️ The parameter values these preferences pre-select among the parameters a command offers.
     pub fn launch_defaults(&self, accepted: &[dashboard_registry::Parameter]) -> Vec<(String, String)> {
@@ -103,22 +108,23 @@ struct Event { version: u32, revision: u64, change: Change }
 /// 📖️ Folds the complete events of a journal into `preferences`. A last line the writer did not finish
 /// (a crash between write and newline) is ignored; the byte length up to the last complete event is returned
 /// so the next writer can cut the torn tail off.
-fn project(file: &mut File, preferences: &mut Preferences) -> io::Result<(u64, u64)> {
+fn project(file: &mut File, preferences: &mut Preferences) -> io::Result<(u64, u64, bool)> {
     if file.metadata()?.len() > LIMIT { return Err(invalid("preference journal exceeds 1 MiB")); }
     file.seek(SeekFrom::Start(0))?;
     let mut bytes = Vec::new(); file.take(LIMIT + 1).read_to_end(&mut bytes)?;
     if bytes.len() as u64 > LIMIT { return Err(invalid("preference journal exceeds 1 MiB")); }
     let complete = bytes.iter().rposition(|byte| *byte == b'\n').map_or(0, |at| at + 1);
     let text = std::str::from_utf8(&bytes[..complete]).map_err(|error| invalid(error.to_string()))?;
-    let mut revision = 0;
+    let (mut revision, mut language_set) = (0, false);
     for line in text.lines() {
         let value: serde_json::Value = serde_json::from_str(line).map_err(|error| invalid(error.to_string()))?;
         let change = Change::parse(&value.get("change").ok_or_else(|| invalid("preference event missing change"))?.to_string())?;
         let event: Event = serde_json::from_str(line).map_err(|error| invalid(error.to_string()))?;
         if event.version != 1 || event.revision != revision + 1 { return Err(invalid("preference events must have consecutive revisions at version 1")); }
+        language_set |= change.language.is_some();
         preferences.apply(&change); revision = event.revision;
     }
-    Ok((revision, complete as u64))
+    Ok((revision, complete as u64, language_set))
 }
 
 /// ⏳️ Takes a journal lock, waiting a bounded time for another process to finish publishing.
@@ -138,12 +144,12 @@ fn lock(file: &File, path: &Path, shared: bool) -> io::Result<()> {
 pub fn replay(path: &Path, preferences: &mut Preferences) -> io::Result<u64> {
     let mut file = match File::open(path) { Ok(file) => file, Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(0), Err(error) => return Err(error) };
     lock(&file, path, true)?;
-    project(&mut file, preferences).map(|(revision, _)| revision)
+    project(&mut file, preferences).map(|(revision, _, _)| revision)
 }
 
-/// 🗜️ The single event that states every setting the journal currently holds.
-fn snapshot(preferences: &Preferences) -> Change {
-    Change { language: Some(preferences.language.clone()), appearance: Some(preferences.appearance.clone()), terminology: Some(preferences.terminology.clone()), renderer: Some(preferences.renderer.clone()), layout: Some(preferences.layout.clone()), prefix: Some(preferences.prefix.clone()), bindings: Some(preferences.bindings.clone()).filter(|bindings| !bindings.is_empty()) }
+/// 🗜️ The single event that states every setting the journal currently holds; a language the journal never chose stays with the system.
+fn snapshot(preferences: &Preferences, language_set: bool) -> Change {
+    Change { language: Some(preferences.language.clone()).filter(|_| language_set), appearance: Some(preferences.appearance.clone()), terminology: Some(preferences.terminology.clone()), renderer: Some(preferences.renderer.clone()), layout: Some(preferences.layout.clone()), prefix: Some(preferences.prefix.clone()), bindings: Some(preferences.bindings.clone()).filter(|bindings| !bindings.is_empty()) }
 }
 
 fn line(revision: u64, change: &Change) -> io::Result<Vec<u8>> {
@@ -160,12 +166,12 @@ pub fn append(path: &Path, change: &Change) -> io::Result<u64> {
     let mut file = OpenOptions::new().create(true).read(true).write(true).truncate(false).open(path)?;
     lock(&file, path, false)?;
     let mut current = Preferences::default();
-    let (revision, complete) = project(&mut file, &mut current)?;
+    let (revision, complete, language_set) = project(&mut file, &mut current)?;
     if file.metadata()?.len() > complete { file.set_len(complete)?; }
     let mut bytes = line(revision + 1, change)?;
     let mut next = revision + 1;
     if complete + bytes.len() as u64 > LIMIT {
-        let mut compacted = line(1, &snapshot(&current))?;
+        let mut compacted = line(1, &snapshot(&current, language_set))?;
         bytes = line(2, change)?;
         compacted.extend_from_slice(&bytes);
         if compacted.len() as u64 > LIMIT { return Err(invalid("preference journal exceeds 1 MiB")); }
@@ -186,9 +192,9 @@ pub fn local_path(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> Pat
 /// 🌍️ Workspace-shared preference events, separate from local customization.
 pub fn shared_path(root: &Path) -> PathBuf { root.join(".🧬semio/🦑️repo/🎛️dashboard/⚙️preferences.jsonl") }
 
-/// 🗨️ The language a command speaks to the developer: the stored and environment preferences, or the first language when
-/// they cannot be read; it never fails, because it only words a message.
-pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> ui_locale::Locale { load_lenient(root, parsed).map_or_else(|_| ui_locale::Locale::default(), |(preferences, _)| preferences.locale()) }
+/// 🗨️ The language a command speaks to the developer: the stored and environment preferences, or the system language and
+/// then the declared fallback chain when they cannot be read; it never fails, because it only words a message.
+pub fn cli_locale(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> ui_locale::Locale { load_lenient(root, parsed).map_or_else(|_| language::declared().resolve(&language::process_environment), |(preferences, _)| preferences.locale()) }
 
 /// 🥇️ Applies strict explicit flags last, with no startup questions.
 pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<()> {
@@ -204,15 +210,23 @@ pub fn apply_arguments(preferences: &mut Preferences, parsed: &dashboard_core::a
     Ok(())
 }
 
-/// 🧭️ Resolves defaults, shared events, local events, environment and explicit arguments.
-pub fn load(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<Preferences> {
-    let mut preferences = Preferences::default();
-    replay(&shared_path(root), &mut preferences)?; replay(&local_path(root, parsed), &mut preferences)?;
+/// 🔧️ The environment overrides of the preferences, each strict because the developer typed them just now.
+fn environment_change(lookup: language::Lookup<'_>) -> io::Result<Option<Change>> {
     let mut map = serde_json::Map::new();
     for (key, variable) in [("language", "SEMIO_LOCALE"), ("appearance", "SEMIO_APPEARANCE"), ("terminology", "SEMIO_LOCKED_TERMINOLOGY"), ("renderer", "SEMIO_DASHBOARD_RENDERER"), ("layout", "SEMIO_DASHBOARD_LAYOUT"), ("prefix", "SEMIO_DASHBOARD_PREFIX")] {
-        if let Ok(value) = std::env::var(variable) { if !value.is_empty() { map.insert(key.into(), serde_json::Value::String(value)); } }
+        if let Some(value) = lookup(variable) { map.insert(key.into(), serde_json::Value::String(value)); }
     }
-    if !map.is_empty() { preferences.apply(&Change::parse(&serde_json::Value::Object(map).to_string())?); }
+    if map.is_empty() { Ok(None) } else { Change::parse(&serde_json::Value::Object(map).to_string()).map(Some) }
+}
+
+/// 🧭️ Resolves the system language, shared events, local events, environment and explicit arguments over the opinionated settings.
+pub fn load(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<Preferences> { load_in(root, parsed, &language::process_environment) }
+
+/// 🎯️ [`load`] over an explicit environment, so a test or an embedder does not depend on the process.
+pub fn load_in(root: &Path, parsed: &dashboard_core::args::ParsedArgs, lookup: language::Lookup<'_>) -> io::Result<Preferences> {
+    let mut preferences = Preferences::baseline(lookup);
+    replay(&shared_path(root), &mut preferences)?; replay(&local_path(root, parsed), &mut preferences)?;
+    if let Some(change) = environment_change(lookup)? { preferences.apply(&change); }
     apply_arguments(&mut preferences, parsed)?;
     Ok(preferences)
 }
@@ -220,18 +234,17 @@ pub fn load(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Resul
 /// 🩹️ Like [`load`], but a journal that cannot be read (torn beyond repair, locked too long, foreign
 /// content) never stops the dashboard: it is skipped and named in the returned problems. Explicit
 /// arguments and environment stay strict, because the developer typed them just now.
-pub fn load_lenient(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<(Preferences, Vec<String>)> {
-    let mut preferences = Preferences::default();
+pub fn load_lenient(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> io::Result<(Preferences, Vec<String>)> { load_lenient_in(root, parsed, &language::process_environment) }
+
+/// 🛟️ [`load_lenient`] over an explicit environment.
+pub fn load_lenient_in(root: &Path, parsed: &dashboard_core::args::ParsedArgs, lookup: language::Lookup<'_>) -> io::Result<(Preferences, Vec<String>)> {
+    let mut preferences = Preferences::baseline(lookup);
     let mut problems = Vec::new();
     for path in [shared_path(root), local_path(root, parsed)] {
         let mut layer = preferences.clone();
         match replay(&path, &mut layer) { Ok(_) => preferences = layer, Err(error) => problems.push(format!("{}: {error}", path.display())) }
     }
-    let mut map = serde_json::Map::new();
-    for (key, variable) in [("language", "SEMIO_LOCALE"), ("appearance", "SEMIO_APPEARANCE"), ("terminology", "SEMIO_LOCKED_TERMINOLOGY"), ("renderer", "SEMIO_DASHBOARD_RENDERER"), ("layout", "SEMIO_DASHBOARD_LAYOUT"), ("prefix", "SEMIO_DASHBOARD_PREFIX")] {
-        if let Ok(value) = std::env::var(variable) { if !value.is_empty() { map.insert(key.into(), serde_json::Value::String(value)); } }
-    }
-    if !map.is_empty() { preferences.apply(&Change::parse(&serde_json::Value::Object(map).to_string())?); }
+    if let Some(change) = environment_change(lookup)? { preferences.apply(&change); }
     apply_arguments(&mut preferences, parsed)?;
     Ok((preferences, problems))
 }

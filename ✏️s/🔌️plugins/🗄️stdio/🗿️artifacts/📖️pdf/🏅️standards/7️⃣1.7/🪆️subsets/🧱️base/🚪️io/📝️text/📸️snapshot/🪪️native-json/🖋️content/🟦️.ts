@@ -1,8 +1,9 @@
-import {pdfImageBodyFromNativeJson} from "../🖼️resource/🟦️.ts";
+import { pdfImageBodyFromNativeJson } from "../🧱️image-body/🟦️.ts";
 /** 🖋️ Explicit native content JSON admission into the canonical owned PDF operator model. */
 import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage } from "../../../../../🧬️schema/📸️snapshot/🖋️content/🟦️.ts";
 import type { Binary64 } from "@semio-tech/framework/value/ieee754";
-import { record, array, text, boolean, integer, integers, real, reals, pdfDictionaryFromNativeJson, pdfCosFromNativeJson, pdfColorFromNativeJson, filters } from "../🟦️.ts";
+import { pdfDictionaryFromNativeJson, pdfCosFromNativeJson, pdfColorFromNativeJson } from "../🟦️.ts";
+import { record, array, text, boolean, integer, integers, real, reals, filters } from "../🧰️scalars/🟦️.ts";
 
 /** 📐️ Admit a finite native six-component matrix as six exact owned IEEE words. */
 export function pdfMatrixFromNativeJson(input: unknown): [Binary64,Binary64,Binary64,Binary64,Binary64,Binary64] { const values=reals(input);if(values.length!==6)throw new Error("PDF matrix requires six components");return [values[0]!,values[1]!,values[2]!,values[3]!,values[4]!,values[5]!]; }

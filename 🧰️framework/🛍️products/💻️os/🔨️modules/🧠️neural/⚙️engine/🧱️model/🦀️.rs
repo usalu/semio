@@ -5,7 +5,7 @@ use protocol::causal::transition::HistoryFoldIndex;
 use std::sync::Arc;
 use std::hash::Hasher;
 /// 🔮️ Test-only: production moved to `ToValue`/`FromValue` below (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass — see `📓️orderedmap-tenth-seam.md`).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use serde::{Deserialize, Serialize};
 use protocol::value::ordered::OrderedMap;
 use protocol::value::{DslValue, FromValue, Number, ToValue, ValueError};

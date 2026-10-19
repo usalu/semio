@@ -7,21 +7,21 @@
 //! The export runs in stages ([`STAGES`]) so a job can report progress and stop between two of them.
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html, https://www.iso.org/standard/65708.html
 
-use crate::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSpace};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, OpeningKind}};
-use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
-use crate::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
+#[cfg(test)]
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec;
-pub use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry;
-pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing;
 #[path = "📊️tables/🦀️.rs"]
 pub mod tables;
 
@@ -444,7 +444,7 @@ pub fn surfaces(b: &mut Build<'_>) {
     let space_xml: BTreeMap<String, String> = b.plan.spaces.iter().map(|row| (row.cad.clone(), row.xml.clone())).collect();
     let mut names = std::mem::take(&mut b.plan.names);
     let mut rows = Vec::new();
-    for merged in pairing::merge(&inferred.energy_envelopes) {
+    for merged in semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing::merge(&inferred.energy_envelopes) {
         let storey = storey_of.get(merged.space).copied().unwrap_or_default();
         let turn = bearing(b.model, storey);
         let polygon = polygon_of(merged.surface, turn);
@@ -562,7 +562,7 @@ fn campus_node(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference, si
         let Some(building_xml) = plan.buildings.get(building_id) else { continue };
         let spaces: Vec<&SpaceRow> = plan.spaces.iter().filter(|row| row.building == *building_id).collect();
         let mut inner = vec![leaf("Name", Vec::new(), &building.name), quantity("Area", None, round9(spaces.iter().map(|row| row.area).sum()))];
-        let mut storeys: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Storey)> = model.storeys.iter().filter(|(_, storey)| storey.building == *building_id).collect();
+        let mut storeys: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey)> = model.storeys.iter().filter(|(_, storey)| storey.building == *building_id).collect();
         storeys.sort_by(|a, b| a.1.level.cmp(&b.1.level).then_with(|| a.0.cmp(b.0)));
         for (storey_id, storey) in storeys {
             let level = inferred.storey_levels.get(storey_id).map_or(0.0, |level| level.elevation);
@@ -643,18 +643,18 @@ pub fn plan_of(model: &ModelSnapshot, inferred: &ModelInference) -> Result<Plan,
 /// 📄️ The gbXML text of `model` from its inference plus a note per item that could not be written.
 pub fn inferred_to_gbxml(model: &ModelSnapshot, inferred: &ModelInference) -> Result<(String, Vec<String>), String> {
     let plan = plan_of(model, inferred)?;
-    let text = codec::document_text(document(&plan, model, inferred))?;
+    let text = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::document_text(document(&plan, model, inferred))?;
     Ok((text, plan.notes))
 }
 
 /// 📤️ The gbXML text of `model` plus a note per item that could not be written: the inference comes from the shared session.
 pub fn export_gbxml(model: &ModelSnapshot) -> Result<(String, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_gbxml(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📊️ The canonical JSON table of the export of `model` (see [`tables`]): the table the lxml, shapely and numpy oracle measures from the written file.
 pub fn export_table(model: &ModelSnapshot) -> Result<String, String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred).map(|plan| tables::table_json(&plan, model))).map_err(|error| error.to_string())?
 }
 
 /// 🧵️ An export that runs one [`STAGES`] entry per step, so a job can report how far it is and stop between two stages; it keeps the plan and no borrow of the inference.
@@ -693,7 +693,7 @@ impl StagedGbxml {
             return None;
         }
         self.next += 1;
-        let text = codec::document_text(document(&build.plan, model, inferred));
+        let text = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::document_text(document(&build.plan, model, inferred));
         Some(text.map(|text| (text, build.plan.notes)))
     }
 }

@@ -15,10 +15,10 @@ import {buildExecutionArgumentsV1,issueBuildTaskEnvironmentV1,withBuildOrchestra
 import {BAZEL_VERSION,prepareBazel} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
 export {prepareBazel} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureOwnedCommandV1,runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {advanceScriptInvocation,checkScriptInvocation,receiveScriptProcessInvocation,scriptInvocationBudget,scriptInvocationEnvironment,withScriptInvocationSignalV1,readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,withScriptProcessEnvelope,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 
 
@@ -287,7 +287,7 @@ async function executeTask(manifest:BazelTaskManifestV1,invocation:ScriptInvocat
  if(execution.parallel===false)for(const operation of operations)await run(operation);else{const pending=operations.map(run);try{await Promise.all(pending);}catch(error){controller.abort(error);await Promise.allSettled(pending);throw error;}}
  };
  const base={...process.env,...execution.env,SEMIO_BUILD_TOOL:"bazel",SEMIO_WORKSPACE_ROOT:workspace,SEMIO_TASK_PROJECT:task.project,SEMIO_TASK_TARGET:task.target,...(task.configuration?{SEMIO_TASK_CONFIGURATION:task.configuration}:{})};
- if(manifest.orchestration)return withBuildOrchestrationTaskEnvironmentV1(workspace,invocation,phaseControl,execution,task.args,base,manifest.orchestration,runTask);
+ if(manifest.orchestration)return withBuildOrchestrationTaskEnvironmentV1(workspace,invocation,phaseControl,execution,task.args,base,manifest.orchestration,planBazelTasksV1,runTask);
  return runTask(issueBuildTaskEnvironmentV1(workspace,invocation,execution,task.args,base));
 }
 

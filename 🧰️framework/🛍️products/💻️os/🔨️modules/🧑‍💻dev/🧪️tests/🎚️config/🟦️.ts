@@ -1,6 +1,7 @@
 /** 🧪️ Vitest config for `@semio-tech/framework-os-dev`. Every suite is an ordinary `include` entry that imports the
  * module it tests (the task-router entry `📜️script.ts` has no separate library entry point); the WIT mapping
  * suites of `🔌️plugin` join from the `long` level. */
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -16,6 +17,11 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️
 const testLevelAtLeast = (level: "long" | "exhaustive"): boolean => (level === "long" ? ["long", "exhaustive"] : ["exhaustive"]).includes(process.env.SEMIO_TEST_LEVEL ?? "");
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+
+/** 📚️ The generated playground catalog the suites read: the launcher's `SEMIO_PLUGIN_CATALOG`, else the output root the catalog owner's publication manifest declares (absent until the catalog is generated). */
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../..");
+const catalogPublication = resolve(repoRoot, "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🔣️.json");
+const catalogRoot = process.env.SEMIO_PLUGIN_CATALOG ?? (existsSync(catalogPublication) ? resolve(repoRoot, (JSON.parse(readFileSync(catalogPublication, "utf8")) as { outputRoot: string }).outputRoot) : undefined);
 
 /** 🎚️WIT mapping suites whose every case spawns a full strict-TypeScript program check (~60 s each,
  * measured 2026-09-05) — far past the `quick` wall-clock budget, so they join the run from `long` upwards.
@@ -49,6 +55,7 @@ export default defineConfig({
      * where a runtime builtin is refused outright ("Cannot bundle built-in module") and the runner's own
      * `Bun`/`URL` globals are replaced. That refusal failed the whole 88-law staging FILE and six of its laws. */
     environment: "node",
+    ...(catalogRoot !== undefined && existsSync(catalogRoot) ? { env: { SEMIO_PLUGIN_CATALOG: catalogRoot } } : {}),
     // 🩹️ Never list one file in both `include` and `includeSource`: Vitest would collect it twice.
     include: ["../../🧪️tests/🧪️time-travel/🚀️boot/🧪️tests/🟦️.ts", "../../🧪️tests/🧪️time-travel/🪞️inventory/🧪️tests/🟦️.ts", "../../🧪️tests/⚖️scale-registry/🟦️.ts", "../../🧪️tests/💼️inference-service-law/🟦️.ts", "../../🧪️tests/🧩️contribution/🟦️.ts", "../../🧪️tests/✅️parity-verdict/🟦️.ts", "../../🧪️tests/🔖️channel-version/🟦️.ts", "../../🧪️tests/🧹️config/🟦️.ts", "../../🧪️tests/🔌️staging-root/🟦️.ts", "../../🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts", "../../🧪️tests/🚀️local-hub/🟦️.ts", "../../🧪️tests/💤️idle-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🥾️boot-budget/🧮️reducers/🟦️.ts", "../../🧪️tests/🧮️program-matrix/🧮️reducers/🟦️.ts", "../../🧪️tests/⏱️interaction-latency/🧮️reducers/🟦️.ts", "../../🧪️tests/♨️hot-update/🟦️.ts", "../../🧪️tests/🚶️shell-interaction/🟦️.ts", ...witMappingSuites],
     coverage: { include: ["../../**/🟦️.ts", ...WIT_MAPPING_MODULES] },

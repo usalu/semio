@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.s.imperative.procedure;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message ProcedureArtifact {
   string schema = 1;
-  semio.os.store.ArtifactChild flow = 2;
-  semio.os.store.ArtifactChild text = 3;
+  semio.framework.schema.artifact_child.ArtifactChild flow = 2;
+  semio.framework.schema.artifact_child.ArtifactChild text = 3;
 }

@@ -4,23 +4,18 @@
 //! 🔖 `IoFidelity::Lossy`: glTF has no slot for parametric constraints, types, layers, property sets or quantities; geometry, hierarchy, names and colours are exact.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::codec;
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::gltf::materials;
-pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene;
-pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection;
 
 /// 🪪️ The glTF 2.0 dialect this leaf writes.
 pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
 
 /// 🧊️ The glTF model of `model` plus a note per element that could not be placed: the inference comes from the shared session.
-pub fn model_to_gltf(model: &ModelSnapshot) -> Result<(document::GltfModel, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| scene::build(model, inferred)).map_err(|error| error.to_string())
+pub fn model_to_gltf(model: &ModelSnapshot) -> Result<(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfModel, Vec<String>), String> {
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The GLB bytes of `model` plus a note per element that could not be placed.
@@ -50,7 +45,5 @@ impl Serializer<ModelSnapshot> for ModelIntoGlb {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(any(test, feature = "testkit"))]
-pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit;
 
 

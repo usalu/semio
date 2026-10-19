@@ -1,7 +1,7 @@
 /** 🚮️ Runs every canonical JSON ownership law with specialization roots physically absent. */
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 import contract from "../../🧪️tests/🧫️fixtures/🚮️absence/🔣️.json";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -17,7 +17,7 @@ test("the complete JSON reference route executes with products, S, Hub and ticke
     for (const owner of contract.neutralRoots) {
       const target = resolve(workspace, owner);
       mkdirSync(resolve(target, ".."), {recursive: true});
-      cpSync(resolve(root, owner), target, {recursive: true, dereference: false, filter: (path) => { if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; }});
+      cpSync(resolve(root, owner), target, {recursive: true, dereference: false, filter: (path) => { if (basename(path) === "node_modules") return false; if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path); return true; }});
     }
     for (const dependency of contract.testDependencies) {
       const target = resolve(workspace, "node_modules", dependency);

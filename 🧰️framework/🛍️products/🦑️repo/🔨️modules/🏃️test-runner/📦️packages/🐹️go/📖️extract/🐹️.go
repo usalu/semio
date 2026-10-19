@@ -83,7 +83,7 @@ func isHeaderMetaLine(text string) bool {
 }
 
 func ExtractFileHeaderSummary(filePath string) string {
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	content, err := workspace.ReadTextFile(absPath)
 	if err != nil {
 		return ""
@@ -156,7 +156,7 @@ func ExtractFileHeaderSummary(filePath string) string {
 
 // 📄️ExtractFileHeaderRequirements holds the data fields for a ExtractFileHeaderRequirements record.
 func ExtractFileHeaderRequirements(filePath string) string {
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	content, err := workspace.ReadTextFile(absPath)
 	if err != nil {
 		return ""

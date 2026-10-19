@@ -61,7 +61,7 @@ pub mod editor {
     pub mod sequence {
         pub use semio_s_artifact_sequence_sequence_inferences::editor::sequence::edit_rules;
         pub use semio_s_artifact_sequence_sequence_inferences::editor::sequence::terminology;
-        pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::base;
+        pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::editor_vocabulary;
         pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::host;
         #[path = "../../🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs"]
         pub mod retained;

@@ -80,7 +80,7 @@ pub use semio_s_artifact_flow_flow_tests::examples;
 pub mod editor {
     #[path = "."]
     pub mod flow {
-        pub use semio_s_artifact_flow_flow_inferences::editor::flow::base;
+        pub use semio_s_artifact_flow_flow_inferences::editor::flow::editor_vocabulary;
         #[path = "../../../../✏️editor/🖥️host/🦀️.rs"]
         pub mod host;
         pub use semio_s_artifact_flow_flow_inferences::editor::flow::edit_rules;

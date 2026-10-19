@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/♻️retirement/🔣️.json", import.meta.url), "utf8"));
 const valueSchema = JSON.parse(readFileSync(frameworkSourceUrl("🔨️modules/🌱️value/🧬️schema/🔣️.json"), "utf8"));

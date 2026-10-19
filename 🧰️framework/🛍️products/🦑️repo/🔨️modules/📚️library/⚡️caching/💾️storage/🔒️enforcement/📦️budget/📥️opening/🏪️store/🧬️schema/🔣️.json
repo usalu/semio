@@ -18,7 +18,7 @@
     },
     "owner": {
       "type": "string",
-      "pattern": "^repository:(rust|tooling|graph|dependencies|products|diagnostics|leases)-store$"
+      "pattern": "^repository:(rust|tooling|graph|dependencies|products|diagnostics|nx|leases)-store$"
     },
     "bytes": {
       "type": "integer",

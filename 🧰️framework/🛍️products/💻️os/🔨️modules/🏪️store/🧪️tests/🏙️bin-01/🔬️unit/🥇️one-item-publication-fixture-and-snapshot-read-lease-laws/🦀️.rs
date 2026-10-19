@@ -96,7 +96,7 @@ fn ephemeral_one_item_publication_fixture_matches_the_third_party_json_oracle() 
 
 #[test]
 fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
-    let source = ["../../../../⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs", "../../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", "../../../../🎮️one-item/📬️publication/🦀️.rs"].iter().map(|file| std::fs::read_to_string(fixture_path!(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
+    let source = ["../../../../⚙️engine/🧱️store-components/📥️lifted/🏪️store/🦀️.rs", "../../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", "../../../../🎮️one-item/📬️publication/🦀️.rs"].iter().map(|file| std::fs::read_to_string(fixture_path!(file)).unwrap_or_else(|error| panic!("read {file}: {error}"))).collect::<String>();
     let authority_start = source.find("pub struct ArtifactStoreOneItemLiveAuthority").expect("private live authority");
     let authority_end = source[authority_start..].find("impl ArtifactStoreOneItemLiveAuthority").map(|offset| authority_start + offset).expect("authority helper");
     let authority_shape = &source[authority_start..authority_end];
@@ -186,8 +186,8 @@ fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_take
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(String::from("retained"));
     let lease = registry.try_issue(owner.clone()).expect("snapshot read lease admission");
-    let index = lease.index;
-    let generation = lease.generation;
+    let index = lease.slot_index();
+    let generation = lease.slot_generation();
     let read = ErasedSnapshotRead::new(owner, lease);
     assert!(registry.contains(index, generation));
     assert!(!registry.terminal_is_empty());
@@ -210,8 +210,8 @@ fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(7u32);
     let lease = registry.try_issue(owner.clone()).expect("first exact lease");
-    let index = lease.index;
-    let generation = lease.generation;
+    let index = lease.slot_index();
+    let generation = lease.slot_generation();
     let read = ErasedSnapshotRead::new(owner, lease);
     drop(match read.into_typed::<u32>(&registry) {
         Ok(owner) => owner,
@@ -225,7 +225,7 @@ fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
 fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(String::from("contention-owner"));
-    let guard = registry.state.try_lock().expect("hold exact registry contention fixture");
+    let guard = registry.state_lock().try_lock().expect("hold exact registry contention fixture");
     let rejected = match registry.try_issue(owner.clone()) {
         Ok(_) => panic!("nonblocking admission rejects while the fixed registry is contended"),
         Err(rejected) => rejected,

@@ -17,7 +17,7 @@ import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦
 import { useInteractionCommands } from "../👻️PanelGhost/🟦️.tsx";
 import { dialAngle, dialPosition, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, uiNumberCrossedBound, uiNumberDisplayText, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
 import { formatUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
-import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
+import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider

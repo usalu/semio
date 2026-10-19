@@ -12,7 +12,7 @@ import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
  *  each row's expected archive is its committed pair's `➡️after.bcf` for a mutation, `⬅️before.bcf` for its inverse,
  *  handed to the `bcf-2-1-jszip-compare-v1` pipeline as `expected-bcf`, where the jszip reader reads it and the
  *  subject's `actual-bcf`. */
-import { committedArtifact } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { committedArtifact } from "@semio-tech/framework/test/adapter";
 
 //#region 🧭️Adapter
 export default defineTestAdapter({

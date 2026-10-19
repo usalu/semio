@@ -3,9 +3,9 @@
   "cases": [
     {
       "id": "single-level-owner",
-      "subset": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any",
-      "implementationRoot": "🧬️schema/🧬️mutations/⚠️create-fault/🧪️tests/✅️applies",
-      "fixtureRoot": "🧫️fixtures/🧬️mutations/⚠️create-fault/✅️applies",
+      "subset": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any",
+      "implementationRoot": "🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/⚠️skips",
+      "fixtureRoot": "🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-slots/⚠️skips",
       "implementationNodes": 2,
       "fixtureNodes": 12,
       "fixtureLeaves": [
@@ -20,7 +20,7 @@
       "id": "domain-owner-under-subset-directory-override",
       "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any",
       "implementationRoot": "🧬️schema/🧬️mutations/📣️used/➕️add/🧪️tests/🔬️t056",
-      "fixtureRoot": "🧫️fixtures/🧬️mutations/📣️used/➕️add/🔬️t056",
+      "fixtureRoot": "🧪️tests/🧫️fixtures/🧬️mutations/📣️used/➕️add/🔬️t056",
       "implementationNodes": 2,
       "fixtureNodes": 12,
       "fixtureLeaves": [

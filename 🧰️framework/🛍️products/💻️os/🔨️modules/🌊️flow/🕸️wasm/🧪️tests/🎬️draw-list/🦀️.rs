@@ -297,11 +297,11 @@ fn every_captioned_zoom_band_names_the_node_instead_of_abbreviating_it() {
     // 🔡️ Exactly what the plugin publishes for a kind its catalogue does not carry
     // (`document_operator_records` in `🧊️generation3d/…/🪟️windows/🕸️flow/🦀️.rs`): the name is the
     // last kind segment and the abbreviation is its first letter.
-    let records: Vec<ui_wgpu::wgpu::NodeGraphOperatorRecord> = ["brep.curve.polygon", "math.vector", "brep.solid.extrude"]
+    let records: Vec<semio_framework_ui_declaration::ui::NodeGraphOperatorRecord> = ["brep.curve.polygon", "math.vector", "brep.solid.extrude"]
         .into_iter()
         .map(|kind| {
             let (extension, name) = kind.rsplit_once('.').expect("dotted kind");
-            ui_wgpu::wgpu::NodeGraphOperatorRecord {
+            semio_framework_ui_declaration::ui::NodeGraphOperatorRecord {
                 id: kind.to_string(),
                 extension: extension.to_string(),
                 name: name.to_string(),

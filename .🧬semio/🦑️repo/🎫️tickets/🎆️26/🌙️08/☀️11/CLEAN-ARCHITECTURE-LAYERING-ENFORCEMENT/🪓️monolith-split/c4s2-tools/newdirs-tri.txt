@@ -1,6 +1,0 @@
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🔌️live-load-envelope
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🖼️scene-rendering-and-text-edit
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🔭️lod-catalogue-and-examples
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🔎️query-ownership-and-examples
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🩹️rail-verb-laws
-✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/✏️editor/🤖️agent-lane-and-archive-laws

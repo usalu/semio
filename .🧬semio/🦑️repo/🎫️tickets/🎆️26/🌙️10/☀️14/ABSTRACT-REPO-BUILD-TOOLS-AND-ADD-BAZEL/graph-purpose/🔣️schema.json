@@ -58,7 +58,7 @@
         "partition": {
           "enum": [
             null,
-            "graph",
+            "nx",
             "products"
           ]
         },
@@ -128,7 +128,7 @@
             },
             "partition": {
               "enum": [
-                "graph",
+                "nx",
                 "products"
               ]
             },

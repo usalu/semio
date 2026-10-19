@@ -9,8 +9,8 @@ import{resolve,relative,sep,parse,join}from"node:path";
 import{createHash}from"node:crypto";
 import{createRequire}from"node:module";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{withArtifactDescriptorV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{withArtifactDescriptorV1}from"../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 const sourceURL=new URL(import.meta.url),policyURL=new URL("./🧬️schema/🔣️.json",import.meta.url),loadedPolicy=captureBoundedSourceRevisionV1(fileURLToPath(policyURL),65536,true),schema=JSON.parse(loadedPolicy.text??""),loadedRevision=captureBoundedSourceRevisionV1(fileURLToPath(sourceURL),8388608).sha256,loadedPolicyRevision=loadedPolicy.sha256;
 const policy=Object.freeze({...schema.definitions.Policy.const}),owners=new WeakMap();
 /** 🧷️ Refuses retained reader behavior or privately captured policy superseded before managed admission or delivery. */

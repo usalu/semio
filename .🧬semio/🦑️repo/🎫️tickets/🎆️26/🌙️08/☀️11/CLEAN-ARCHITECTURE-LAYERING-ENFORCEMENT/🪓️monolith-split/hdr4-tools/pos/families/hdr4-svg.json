@@ -1,0 +1,32 @@
+{
+ "name": "hdr4-svg",
+ "crates": [
+  "semio-s-artifact-stdio-svg-schema-2",
+  "semio-s-artifact-stdio-svg-mut-family",
+  "semio-s-artifact-stdio-svg-mutations-2",
+  "semio-s-artifact-stdio-svg-schema-3",
+  "semio-s-artifact-stdio-svg-schema",
+  "semio-s-artifact-stdio-svg-snapshot",
+  "semio-s-artifact-stdio-svg-diff",
+  "semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests",
+  "semio-s-artifact-stdio-svg-mutations",
+  "semio-s-artifact-stdio-svg-tests",
+  "semio-s-artifact-stdio-svg"
+ ],
+ "base": {
+  "rev": "4dab415ed90",
+  "crates": [
+   "semio-s-artifact-stdio-svg-schema-2",
+   "semio-s-artifact-stdio-svg-mut-family",
+   "semio-s-artifact-stdio-svg-mutations-2",
+   "semio-s-artifact-stdio-svg-schema-3",
+   "semio-s-artifact-stdio-svg-schema",
+   "semio-s-artifact-stdio-svg-snapshot",
+   "semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests",
+   "semio-s-artifact-stdio-svg-mutations",
+   "semio-s-artifact-stdio-svg-tests",
+   "semio-s-artifact-stdio-svg"
+  ]
+ },
+ "note": "HDR-4: svg diff family to its own crate, document-part codecs shared in snapshot"
+}

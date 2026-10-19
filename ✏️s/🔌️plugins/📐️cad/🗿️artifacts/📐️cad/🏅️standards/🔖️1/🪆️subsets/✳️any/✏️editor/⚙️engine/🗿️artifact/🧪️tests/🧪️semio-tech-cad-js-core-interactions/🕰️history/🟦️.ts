@@ -1,7 +1,7 @@
 /** 🕰️ Document history, measure history, session undo and redo, and undo routing. */
 import { VertexRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { ArtifactTestDependencies } from "../../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../../🎒️test-dependencies/🟦️.ts";
 import type { InteractionResponse, ShapeNode } from "../../../📨️interaction-model/🟦️.ts";
 import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import type { SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";

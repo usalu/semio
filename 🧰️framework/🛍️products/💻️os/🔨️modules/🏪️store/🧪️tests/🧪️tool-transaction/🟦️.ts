@@ -166,7 +166,7 @@ function lifecycleRun(steps: readonly Step[]): { refused: Refusal | null; open: 
 //#endregion 🔄️LifecycleOracle
 
 //#region 🧪️Corpus
-const corpus = read("../../🧫️fixtures/🧫️tool-transaction/🔣️.json");
+const corpus = read("../🧫️fixtures/🧫️tool-transaction/🔣️.json");
 const cases = corpus.cases as Case[];
 
 

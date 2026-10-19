@@ -16,8 +16,8 @@ fn block_on_norm_results_windows<F: std::future::Future>(future: F) -> F::Output
     }
 }
 
-/// 🧹️ A registered runtime fixture that always drives its exact retained close witness.
-struct ClosingFixtureApp<A: semio_framework_plugin::PluginApp>(Box<A>);
+/// 🧹️ A registered runtime fixture that always drives its exact retained close witness. Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`.
+struct ClosingFixtureApp<A: semio_framework_plugin::PluginApp>(Box<A>, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl<A: semio_framework_plugin::PluginApp> std::ops::Deref for ClosingFixtureApp<A> {
     type Target = A;
@@ -30,7 +30,10 @@ impl<A: semio_framework_plugin::PluginApp> std::ops::DerefMut for ClosingFixture
 
 impl<A: semio_framework_plugin::PluginApp> Drop for ClosingFixtureApp<A> {
     fn drop(&mut self) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        if std::thread::panicking() {
+            return;
+        }
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -94,15 +97,14 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
 
             type NormApp = VcsArtifactApp<EditorApp<En1996PlayApp>>;
 
-            async fn dispatch(app: &mut NormApp, instance_id: u32, index: Option<u32>, view: &ViewModel) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
+            async fn dispatch(app: &mut ClosingFixtureApp<NormApp>, instance_id: u32, index: Option<u32>, view: &ViewModel) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id, view_state: Some(view.clone()), ..artifact_app_laws::meta("norm-results-window-ownership") };
-                app.dispatch_typed(En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
+                app.0.dispatch_typed(En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(&mut *app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))
             }
 
-            async fn render_inspection(app: &mut NormApp, view: &ViewModel) -> Result<String, String> {
-                let tree = app.render(inspection::BODY_INSPECTION, None, view).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)
+            async fn render_inspection(app: &mut ClosingFixtureApp<NormApp>, view: &ViewModel) -> Result<String, String> {
+                artifact_app_laws::render_registered_fixture_app(&mut *app.0, inspection::BODY_INSPECTION, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))
             }
 
             fn panel_view(roster: &[ViewWindowInstance], focused_window_id: &str) -> ViewModel {
@@ -120,7 +122,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
             let right = all.for_window_instance("norm-results-right").expect("right Results window");
             let left_panel = panel_view(&roster, "norm-results-left");
             let right_panel = panel_view(&roster, "norm-results-right");
-            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await));
+            let mut app = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await), semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit());
             app.bind_instance_id(204).await;
             let outcome: Result<(), String> = async {
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
@@ -164,7 +166,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
                 }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                 if packs.len() != 2 { return Err(format!("Norm persisted {} Results packs instead of two", packs.len())); }
-                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await));
+                let mut reopened = ClosingFixtureApp(Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<En1996PlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await), semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit());
                 reopened.bind_instance_id(205).await;
                 let reopened_outcome: Result<(NormResultsWindowConfig, NormResultsWindowConfig), String> = async {
                     for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }

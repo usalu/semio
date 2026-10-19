@@ -23,7 +23,7 @@ import {
 import { type SurfaceId, type SurfaceProps, type UiNodeId, type UiNodeRecord } from "@semio-tech/framework";
 import { decodeScenePackValue } from "@semio-tech/framework/packs";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { resolveComponentSceneHost } from "../🗺️element-host-registry/🟦️.ts";
 import { interpLabel, type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { VirtualFileSystemHost } from "../🗄️virtual-file-system/🟦️.tsx";

@@ -16,7 +16,7 @@ test("original domain failure admits only its whole physical frame",()=>{
 
 /** 🧬️ The actual canonical transport borrows exact domain integers and octets with independent SQLite evidence. */
 test("original domain fault transport preserves intrinsic source and separate receipts",async()=>{
- const {faultFromOriginalTurnFailure}=await import("@semio-tech/framework-diagnostic-ts/retained"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts"),corpus=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/📦️domain.json"),"utf8")),bytes=Uint8Array.of(0,255,3,128),operand=BigInt(corpus.domain.operand);
+ const {faultFromOriginalTurnFailure}=await import("../🟦️.ts"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts"),corpus=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/📦️domain.json"),"utf8")),bytes=Uint8Array.of(0,255,3,128),operand=BigInt(corpus.domain.operand);
  const original:Extract<IntrinsicValue,{kind:"object"}>={kind:"object",members:[{name:"operand",value:{kind:"unsigned",value:operand}},{name:"bytes",value:{kind:"bytes",value:bytes}}]},primary={code:corpus.domain.code as string,message:corpus.domain.message as string,retainedProgress:corpus.domain.retainedProgress as ValueErrorRetainedProgress,original};
  const secondary=new ValueError("workLimit","Original receipt 源").withRetainedProgress({copiedItems:2,copiedBytes:5,retainedCapacityBytes:13,releasedBytes:17}),observed=faultFromOriginalTurnFailure({primary:{kind:"domain",domain:primary},receiptRefusal:secondary});
  assert.equal(observed.domain,original);assert.equal(observed.retainedProgress,primary.retainedProgress);assert.equal(observed.code,primary.code);assert.equal(observed.message,primary.message);assert.equal(observed.causes?.[0]?.retainedProgress,secondary.retainedProgress);assert.equal(observed.domain?.members[1]?.value,original.members[1]?.value);
@@ -36,7 +36,7 @@ test("original turn failure retains primary and receipt refusal",()=>{
 
 /** 📬️ Canonical fault transport preserves both complete causes and distinct actual receipts. */
 test("original turn failure projects both distinct receipts on normal fault wire",async()=>{
- const diagnostic=await import("@semio-tech/framework-diagnostic-ts/retained"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
+ const diagnostic=await import("../🟦️.ts"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
  const original=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/🔣️.json"),"utf8")).wire,primary=new ValueError(original.primary.kind,original.primary.message).withRetainedProgress(original.primary.retainedProgress),secondary=new ValueError(original.receiptRefusal.kind,original.receiptRefusal.message).withRetainedProgress(original.receiptRefusal.retainedProgress);
  const pair={primary:{kind:"value" as const,value:primary},receiptRefusal:secondary},fault=diagnostic.faultFromOriginalTurnFailure(pair),wire=JSON.parse(JSON.stringify(fault));assert.equal(fault.retainedProgress,primary.retainedProgress);assert.equal(fault.causes?.[0]?.retainedProgress,secondary.retainedProgress);assert.deepEqual(wire.causes,[{message:secondary.message,code:secondary.kind,retainedProgress:secondary.retainedProgress}]);assert.equal(wire.message,primary.message);assert.equal(wire.code,primary.kind);
  const repo=resolve(import.meta.dirname,"../../../../.."),schema=JSON.parse(readFileSync(diagnosticControlledSchemaUrl,"utf8")),valueSchema=JSON.parse(readFileSync(valueRefusalSchemaUrl,"utf8"));const {default:Ajv2020}=await import("ajv/dist/2020");const validate=new Ajv2020({strict:true}).addSchema(valueSchema).compile(schema);assert.equal(validate(wire),true,JSON.stringify(validate.errors));
@@ -44,7 +44,7 @@ test("original turn failure projects both distinct receipts on normal fault wire
 
 /** 🧳️ A complete application diagnostic and its own causes survive the normal fault projection. */
 test("original diagnostic primary preserves every canonical field and receipt cause",async()=>{
- const {faultFromOriginalTurnFailure}=await import("@semio-tech/framework-diagnostic-ts/retained"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
+ const {faultFromOriginalTurnFailure}=await import("../🟦️.ts"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
  const original=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/🔣️.json"),"utf8")).faultWire,primary=original.primary,secondary=new ValueError(original.receiptRefusal.kind,original.receiptRefusal.message).withRetainedProgress(original.receiptRefusal.retainedProgress);
  assert.equal(faultFromOriginalTurnFailure({primary:{kind:"fault",fault:primary}}),primary);
  const observed=faultFromOriginalTurnFailure({primary:{kind:"fault",fault:primary},receiptRefusal:secondary});
@@ -55,7 +55,7 @@ test("original diagnostic primary preserves every canonical field and receipt ca
 
 /** 🪢️ The separate context refusal joins both complete original causes on the canonical wire. */
 test("original failure wire retains independent context and receipt refusals",async()=>{
- const {faultFromOriginalTurnFailure}=await import("@semio-tech/framework-diagnostic-ts/retained"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
+ const {faultFromOriginalTurnFailure}=await import("../🟦️.ts"),{ValueError}=await import("../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts");
  const original=JSON.parse(readFileSync(resolve(import.meta.dirname,"🧫️fixtures/🔣️.json"),"utf8")).contextWire,make=(row:{kind:ValueRefusalKind;message:string;retainedProgress:ValueErrorRetainedProgress})=>new ValueError(row.kind,row.message).withRetainedProgress(row.retainedProgress),receipt=make(original.receiptRefusal),context=make(original.contextRefusal),primary=original.primary;
  const observed=faultFromOriginalTurnFailure({primary:{kind:"fault",fault:primary},receiptRefusal:receipt,contextRefusal:context});
  const expected=applyPatch(primary,[receipt,context].map(cause=>({op:"add" as const,path:"/causes/-",value:{message:cause.message,code:cause.kind,retainedProgress:cause.retainedProgress}})),true,false).newDocument;

@@ -43,7 +43,10 @@ use semio_framework_ui_theme::{Rgba, Theme};
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers, RetainedGlyphCursor, UiControlNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiTreeItemNode, WindowStackCorner};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_wgpu_paint::RetainedGlyphCursor;
+use semio_framework_ui_declaration::ui::{UiControlNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiTreeItemNode};
+use semio_framework_ui_declaration::layout::WindowStackCorner;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-chrome-overlays-tour/🦀️.rs"]
 mod chrome_overlays_tour_tests;

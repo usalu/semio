@@ -1,6 +1,7 @@
 //! 🌆️ `delete-ceiling` payload. Removes a ceiling together with its properties and classifications.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,7 +13,7 @@ pub struct DeleteCeiling {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteCeiling
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteCeiling> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteCeiling> + semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "ceiling", kind: "delete-ceiling", record: "DeleteCeiling" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

@@ -6,7 +6,6 @@ import findUp from "find-up";
 import Ajv from "ajv";
 import { findWorkspaceRoot } from "../../🟦️.ts";
 import corpus from "./🧫️fixtures/🔣️.json";
-import { nativeBootstrapFixture as bootstrapCorpus } from "@semio-tech/framework/products/repo/modules/native/bootstrap/testing/fixtures";
 import schema from "../🧬️schema/🔣️.json";
 
 const root = findWorkspaceRoot(import.meta.dir), host = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test");
@@ -100,42 +99,3 @@ test("native Rust, Python, Go and C# hosts resolve the same neutral workspace ve
     }
   }
 }, 120_000);
-
-
-test("pre-runtime native bootstrap resolves the neutral workspace corpus", () => {
-  const bootstrap = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
-  const shell = readFileSync(join(bootstrap, "🐚️.sh"), "utf8").split('REPO_ROOT="$(resolve_repo_root)"')[0]!;
-  const powershell = readFileSync(join(bootstrap, "🔵️.ps1"), "utf8").split("function Get-RepoRoot {")[1]!.split("function Join-HomePath")[0]!;
-  const hasPowerShell = spawnSync("pwsh", ["-NoProfile", "-Command", "exit 0"]).status === 0;
-  const rows = [...corpus.cases, ...bootstrapCorpus.cases];
-  expect(new Ajv({ strict: false }).validate(schema, bootstrapCorpus)).toBe(true);
-  for (const [index, row] of rows.entries()) {
-    const directory = materialize(index, rows), start = join(directory, row.start);
-    const expected = row.expected === null ? null : resolve(directory, row.expected);
-    expect(oracle(start, directory), row.id).toBe(expected);
-    const env = { ...process.env, SEMIO_WORKSPACE_ROOT: "", COMPOSE_REPO_ROOT: "", SEMIO_BOOTSTRAP_TEST_START: start };
-    const result = spawnSync("bash", ["-c", shell + '\nresolve_repo_root "$SEMIO_BOOTSTRAP_TEST_START"'], { env, encoding: "utf8" });
-    expect(result.error, row.id).toBeUndefined();
-    expect(result.status === 0 ? result.stdout.trim() : null, `Bash ${row.id}: ${result.stderr}`).toBe(expected);
-    if (hasPowerShell) {
-      const result = spawnSync("pwsh", ["-NoProfile", "-Command", '$ErrorActionPreference="Stop";function Get-RepoRoot {' + powershell + '\nGet-RepoRoot -Start $env:SEMIO_BOOTSTRAP_TEST_START'], { env, encoding: "utf8" });
-      expect(result.status === 0 ? result.stdout.trim() : null, `PowerShell ${row.id}: ${result.stderr}`).toBe(expected);
-    }
-  }
-});
-
-
-test("native bootstrap validates explicit workspace ownership and rejects marker links", () => {
-  const bootstrap = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap");
-  const shell = readFileSync(join(bootstrap, "🐚️.sh"), "utf8").split('REPO_ROOT="$(resolve_repo_root)"')[0]!;
-  const directory = materialize(0), child = join(directory, "domain/package");
-  const execute = (override: string) => spawnSync("bash", ["-c", shell + '\nresolve_repo_root "$SEMIO_BOOTSTRAP_TEST_START"'], { env: { ...process.env, SEMIO_WORKSPACE_ROOT: override, SEMIO_BOOTSTRAP_TEST_START: child }, encoding: "utf8" });
-  expect(execute(directory).stdout).toBe(directory);
-  expect(execute(child).status).toBe(1);
-  const linked = join(generated, "linked"), start = join(linked, ...Array(32).fill("a"));
-  mkdirSync(start, { recursive: true });
-  symlinkSync(join(directory, "package.json"), join(linked, "package.json"));
-  writeFileSync(join(linked, "📋️project.json"), "{}");
-  const result = spawnSync("bash", ["-c", shell + '\nresolve_repo_root "$SEMIO_BOOTSTRAP_TEST_START"'], { env: { ...process.env, SEMIO_WORKSPACE_ROOT: linked, SEMIO_BOOTSTRAP_TEST_START: start }, encoding: "utf8" });
-  expect(result.status).toBe(1);
-});

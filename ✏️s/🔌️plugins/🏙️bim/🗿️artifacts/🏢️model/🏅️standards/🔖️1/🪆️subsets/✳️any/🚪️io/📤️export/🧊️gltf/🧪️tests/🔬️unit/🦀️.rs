@@ -1,24 +1,26 @@
 use semio_framework::io_schema::IoPayload;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use crate::standards::v1::subsets::any::io::export::gltf::*;
-use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
-use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read, third_party, HOUSE_DIR};
-use crate::standards::v1::subsets::any::io::io;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::export::gltf::{GLTF_DIALECT, export_glb, model_to_gltf};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::{document, codec};
+use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::{house, read, third_party, HOUSE_DIR};
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::io;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_gltf_export_between_the_bim_and_the_gltf_dialect() {
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == GLTF_DIALECT).expect("the glTF entry");
-    assert_eq!((entry.from, entry.direction), (crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
+    assert_eq!((entry.from, entry.direction), (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
     assert_eq!(GLTF_DIALECT.artifact_kind, "s.stdio.gltf");
 }
 
@@ -27,7 +29,7 @@ fn the_export_entry_turns_a_packed_model_into_the_glb_bytes() {
     let model = house();
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == GLTF_DIALECT).expect("the glTF entry");
-    let produced = (entry.run)(&IoPayload::Binary(pack::encode(&model))).expect("the entry runs");
+    let produced = (entry.run)(&IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
     assert_eq!(produced.value, IoPayload::Binary(export_glb(&model).expect("exports").0));
     assert!(produced.diagnostics.is_empty());
 }
@@ -83,7 +85,7 @@ fn the_gltf_crate_composes_the_same_world_position_for_a_known_vertex() {
     }
     let solid = &solids["w-south"];
     let (sin, cos) = solid.placement.rotation.sin_cos();
-    let layer_zero = solid.indices.iter().map(|corner| &solid.positions[*corner as usize * 3..*corner as usize * 3 + 3]).map(|p| scene::y_up(solid.placement.x + cos * p[0] - sin * p[1], solid.placement.y + sin * p[0] + cos * p[1], solid.placement.z + p[2])).collect::<Vec<_>>();
+    let layer_zero = solid.indices.iter().map(|corner| &solid.positions[*corner as usize * 3..*corner as usize * 3 + 3]).map(|p| semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::y_up(solid.placement.x + cos * p[0] - sin * p[1], solid.placement.y + sin * p[0] + cos * p[1], solid.placement.z + p[2])).collect::<Vec<_>>();
     assert!(layer_zero.iter().any(|p| (0..3).all(|axis| (p[axis] - world[axis]).abs() < 1e-3)), "{world:?} is not a vertex of the solid placed by the model");
 }
 
@@ -100,7 +102,7 @@ fn the_committed_house_file_is_the_current_export() {
 #[test]
 fn the_exported_house_is_a_valid_binary_container_with_a_json_chunk_the_spec_accepts() {
     let (bytes, _) = export_glb(&house()).expect("exports");
-    let decoded = codec::decode(&bytes).expect("the stdio codec decodes the container");
+    let decoded = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::codec::decode(&bytes).expect("the stdio codec decodes the container");
     assert_eq!(decoded.document.asset.version, "2.0");
     assert_eq!(decoded.document.buffers[0].byte_length, decoded.buffers[0].len());
     assert!(decoded.document.nodes.iter().all(|node| node.name.as_deref().is_some_and(|name| !name.is_empty())));
@@ -109,7 +111,7 @@ fn the_exported_house_is_a_valid_binary_container_with_a_json_chunk_the_spec_acc
 
 #[test]
 fn the_committed_components_file_is_the_current_export() {
-    use crate::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components, COMPONENTS_DIR};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components, COMPONENTS_DIR};
     let (bytes, notes) = export_glb(&components()).expect("exports");
     assert!(notes.is_empty(), "{notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
@@ -121,9 +123,9 @@ fn the_committed_components_file_is_the_current_export() {
 
 #[test]
 fn the_components_and_runs_are_element_nodes_with_the_colour_of_their_service() {
-    use crate::standards::v1::subsets::any::io::export::gltf::testkit::components;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::components;
     let (gltf, _) = model_to_gltf(&components()).expect("infers");
-    let report = projection::project(&gltf);
+    let report = semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection::project(&gltf);
     assert_eq!((report.kinds["component"], report.kinds["mep"]), (12, 7));
     let names: Vec<&str> = gltf.materials.iter().map(|material| material.name.as_str()).collect();
     for system in ["supply", "return", "domestic-water", "waste", "gas", "power", "lighting"] {
@@ -137,9 +139,9 @@ fn the_components_and_runs_are_element_nodes_with_the_colour_of_their_service() 
 
 #[test]
 fn the_components_subject_report_equals_the_table_the_three_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::{components, read_components};
     let oracle: serde_json::Value = serde_json::from_slice(&read_components("🔬️measure/🔣️.json")).expect("the oracle table");
-    let ours: serde_json::Value = serde_json::from_str(&projection::project(&model_to_gltf(&components()).expect("infers").0).to_json()).expect("the report parses");
+    let ours: serde_json::Value = serde_json::from_str(&semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection::project(&model_to_gltf(&components()).expect("infers").0).to_json()).expect("the report parses");
     for key in ["nodes", "meshes", "primitives", "triangles", "materials", "kinds", "storeys"] {
         assert_eq!(oracle[key], ours[key], "{key}");
     }

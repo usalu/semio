@@ -3,7 +3,7 @@ import {readFileSync} from "node:fs";
 import {join,resolve} from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { policyDiffOnlyFileBreaches, policyInverseSumLawUntestedLeafBreaches } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts";
+import { policyDiffOnlyFileBreaches, policyInverseSumLawUntestedLeafBreaches } from "@semio-tech/repo-lib/laws";
 
 const root=resolve(import.meta.dir,"../../.."),owner=join(root,"🧪️tests/🧫️fixtures/🧫️diff-only-law-gate"),vectors=JSON.parse(readFileSync(join(owner,"🔣️.json"),"utf8")) as {codes:Record<string,string>;cases:{id:string;segments:string[];lines:string[];breaches:{line:number;rule:string}[]}[];leafTrees:{id:string;files:Record<string,string[]>;breaches:string[]}[]},fixture=JSON.parse(readFileSync(join(owner,"🫧️lanes/🔣️.json"),"utf8")) as {version:1;cases:{id:string;expected:string[]}[]},validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🫧️lanes/🧬️schema/🔣️.json"),"utf8")));
 

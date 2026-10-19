@@ -4,21 +4,21 @@ import { describe, expect, it } from "vitest";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../🤖️generated/🎮️playgrounds/🟦️.ts";
-import { auditPluginCatalogSources } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🔎️source-audit/🟦️.ts";
-import { auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/📚️navbar-example-audits/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { auditPluginCatalogSources } from "@semio-tech/plugin-registry/catalog-verification/source-audit";
+import { auditNavbarExamplePickerCoverage, auditNavbarExampleArtifactPayload } from "@semio-tech/plugin-registry/catalog-verification/navbar-example-audits";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "@semio-tech/framework/manifest";
 import { installedScope, sourceDeploymentOwnersV1 } from "../🧩️scope/🟦️.ts";
-import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
-import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import { resolveFrameworkOsCatalogConfigurationV1 } from "@semio-tech/framework-os/modules/renderer/engine/elements/Shell/catalog";
+import { admitPluginCatalogV1, pluginCatalogV1 } from "@semio-tech/plugin-registry/catalog";
 const catalogAdmissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
-import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
 const composition = composeSpecificOsCatalogV1("http://localhost/", { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} });
 const catalog = composition.catalog;
 describe("Specific original catalog completion", () => {
   it("independently enumerates every current deployed source identity and verifies each committed descriptor pair", async () => {
     const operation = new AbortController(), started = Date.now();
-    const audit = auditPluginCatalogSources(getWorkspaceRoot(), { cancelled: () => operation.signal.aborted || Date.now() - started >= installedScope.sourceCensus.maxMs, progress: (completed, total) => {} });
+    const audit = auditPluginCatalogSources(findWorkspaceRoot(), { cancelled: () => operation.signal.aborted || Date.now() - started >= installedScope.sourceCensus.maxMs, progress: (completed, total) => {} });
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
     const owners = await sourceDeploymentOwnersV1({ signal: operation.signal, progress: completed => {} });
     expect(audit.manifestCount).toBe(owners.length);
@@ -40,7 +40,7 @@ describe("Specific original catalog completion", () => {
   }, 120_000);
 
   it("checked-in manifest examples carry dialect so the navbar picker can resolve them", () => {
-    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const pluginsRoot = join(findWorkspaceRoot(), "✏️s/🔌️plugins");
     const legacy: string[] = [];
     for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
@@ -59,7 +59,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("every playground editor dialect has at least one manifest example for NavbarExampleSelect", () => {
-    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const pluginsRoot = join(findWorkspaceRoot(), "✏️s/🔌️plugins");
     const coverage: string[] = [];
     for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
@@ -74,7 +74,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("every manifest example row carries a body — inline artifactJson, or a declared example-body asset once the body is over the inline ceiling — so setActiveExample can load a document", () => {
-    const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
+    const pluginsRoot = join(findWorkspaceRoot(), "✏️s/🔌️plugins");
     const payload: string[] = [];
     for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
@@ -89,7 +89,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("sourcing editor surface resolves the demo row the ShellHost navbar picker reads", () => {
-    const descriptorPath = join(getWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/🔣️.json");
+    const descriptorPath = join(findWorkspaceRoot(), "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component/🔣️.json");
     const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
     const manifest = descriptor.manifest;
     expect(manifest?.pluginId).toBe("sourcing");
@@ -102,7 +102,7 @@ describe("Specific original catalog completion", () => {
   });
 
   it("resolves a non-empty, dependency-fault-free boot plan for every admitted installed playground variant — the wgpu frame Worker resolves this graph itself at boot, so an empty plan is a dead playground", () => {
-    const deployed = readGeneratedCatalogProjection(join(getWorkspaceRoot(), "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"));
+    const deployed = readGeneratedCatalogProjection(join(findWorkspaceRoot(), "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"));
     expect(composition.rows.targets.map(row => row.pluginId).sort()).toEqual([...installedScope.installedTargetIds].sort());
     expect(composition.rows.playgrounds.map(row => row.variant).sort()).toEqual([...installedScope.installedVariants].sort());
     expect(composition.rows.playgrounds.map(row => row.variant).sort()).toEqual(deployed.playgrounds.map(row => row.variant).sort());

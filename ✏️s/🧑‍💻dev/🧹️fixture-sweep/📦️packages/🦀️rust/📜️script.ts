@@ -5,7 +5,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ Fleet conformance remains an explicit test leaf, separate from kernel unit tests. */
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { assertFixtureSweepLawCoverage, fixtureSweepLawGroup, testFixtureSweepExtraction } from "../../🧪️tests/🔬️ownership/🟦️.ts";
@@ -23,7 +23,7 @@ class TestScript extends BundleScript {
     const { level, rest } = resolveTestLevel(segments);
     await testFixtureSweepExtraction();
     if (level === "quick") return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), lawMilliseconds: 600_000 }, cwd: this.repoRoot, cargoArgs: rest, env: { ...process.env, RUST_TEST_NOCAPTURE: "1" }, groups: [fixtureSweepLawGroup()] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), lawMilliseconds: 600_000 }, cwd: this.repoRoot, cargoArgs: rest, env: { ...process.env, RUST_TEST_NOCAPTURE: "1" }, groups: [fixtureSweepLawGroup()] });
     assertFixtureSweepLawCoverage(receipts);
   }
 }

@@ -13,16 +13,13 @@ import (
 	testing "testing"
 
 	graphql "github.com/usalu/semio/repo/graphql"
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 func TestExhaustiveListCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow list commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)
@@ -159,9 +156,7 @@ func TestExhaustiveSectionCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow section commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)
@@ -277,9 +272,7 @@ func TestExhaustiveStreamingList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow streaming list test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)

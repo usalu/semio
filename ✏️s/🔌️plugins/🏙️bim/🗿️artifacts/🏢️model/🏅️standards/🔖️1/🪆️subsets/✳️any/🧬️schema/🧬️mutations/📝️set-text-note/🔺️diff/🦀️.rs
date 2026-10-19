@@ -1,9 +1,10 @@
 //! 🔺️ Diff constructor for `SetTextNote`: a sparse text note patch of exactly the provided fields that differ. The record that results must break none of the create rules: the storey and the style must exist, the position and rotation are finite and the text is not blank.
 //! Providing only equal values, or no field, is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::annotating;
 use crate::standards::v1::subsets::any::schema::mutations::set_text_note::SetTextNote;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetTextNote, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -11,7 +12,7 @@ pub fn diff(payload: &SetTextNote, base: &ModelSnapshot) -> MutationOutcome<Mode
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Text note \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     let next = payload.patch().write(record);
-    if let Some(fault) = annotating::note_fault(base, &next) {
+    if let Some(fault) = semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::annotating::note_fault(base, &next) {
         let path = fault.path(None);
         return MutationOutcome::refuse(fault.code, fault.message, path);
     }

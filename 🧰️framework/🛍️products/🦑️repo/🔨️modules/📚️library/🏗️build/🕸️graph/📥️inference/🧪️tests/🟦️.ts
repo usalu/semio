@@ -105,9 +105,9 @@ test("a revisioned reload reproduces the corpus under Bun and Node alike", () =>
   for (const [index, step] of corpus.steps.entries()) {
     const actual = bun.steps[index]!, expected = step.expect as Partial<StepObservation>;
     expect(actual.id).toBe(step.id);
-    expect(actual.accepted, step.id).toBe(expected.accepted);
-    expect(actual.wired, step.id).toEqual(expected.wired);
-    expect(actual.evaluations, step.id).toEqual(expected.evaluations);
+    expect(actual.accepted, step.id).toBe(expected.accepted as boolean);
+    expect(actual.wired, step.id).toEqual(expected.wired as readonly string[]);
+    expect(actual.evaluations, step.id).toEqual(expected.evaluations as Readonly<Record<string, number>>);
     expect(actual.render, step.id).toBe(expected.render);
     expect(actual.error, step.id).toBe(expected.error);
     expect(actual.scope, step.id).toBe(expected.scope);

@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { BrowserFrameTransport, FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
 
 describe("browser frame worker transport", () => {

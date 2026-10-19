@@ -322,49 +322,51 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        use semio_framework_value::retained_clone::RetainedCloneStep;
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(owner) = self.remnant.as_mut() {
-            let step = owner.step(grant);
-            if owner.terminal_is_empty() {
-                self.remnant = None;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_value::retained_clone::RetainedCloneStep;
+            if !self.closing {
+                return Ok(InteractiveJobCloseStep::Blocked);
             }
-            return match step {
-                Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
-                Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
+            if let Some(owner) = self.remnant.as_mut() {
+                let step = owner.step(grant);
+                if owner.terminal_is_empty() {
+                    self.remnant = None;
+                }
+                return Ok(match step {
+                    Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
+                    Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
+                    Err(error) => return Err(error),
+                });
+            }
+            if self.workspace_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            let remnant = NoteCommandRemnant {
+                units: std::mem::take(&mut self.units),
+                projection: self.projection.take(),
+                accumulated: std::mem::take(&mut self.accumulated),
+                ephemeral: std::mem::take(&mut self.ephemeral),
+                id_owner: self.id_owner.take(),
             };
-        }
-        if self.workspace_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        let remnant = NoteCommandRemnant {
-            units: std::mem::take(&mut self.units),
-            projection: self.projection.take(),
-            accumulated: std::mem::take(&mut self.accumulated),
-            ephemeral: std::mem::take(&mut self.ephemeral),
-            id_owner: self.id_owner.take(),
-        };
-        match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
-            Ok(owner) => {
-                self.remnant = Some(owner);
-                InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
-            }
-            Err((error, remnant)) => {
-                self.units = remnant.units;
-                self.projection = remnant.projection;
-                self.accumulated = remnant.accumulated;
-                self.ephemeral = remnant.ephemeral;
-                self.id_owner = remnant.id_owner;
-                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
-            }
-        }
+            Ok(match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+                Ok(owner) => {
+                    self.remnant = Some(owner);
+                    InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+                }
+                Err((error, remnant)) => {
+                    self.units = remnant.units;
+                    self.projection = remnant.projection;
+                    self.accumulated = remnant.accumulated;
+                    self.ephemeral = remnant.ephemeral;
+                    self.id_owner = remnant.id_owner;
+                    return Err(error)
+                }
+            })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

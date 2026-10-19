@@ -1,18 +1,20 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{point, segment_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, SolidFamily};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Wall;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
 #[allow(unused_imports)]
@@ -21,11 +23,10 @@ use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace};
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::*;
 use protocol::Inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use serde_json::json;
 
 fn gable_end(extra: serde_json::Value) -> ModelSnapshot {
@@ -73,7 +74,7 @@ async fn a_window_in_a_trimmed_wall_is_cut_when_it_fits_under_the_slope_and_refu
     assert!(close(solid.volume, 0.3 * (18.0 + 9.0 * 0.5f64.tan()) - 0.3 * 1.2 * 1.2), "volume {}", solid.volume);
     let high = gable_end(json!({ "openings": window(0.6, json!({ "sill_override": 2.5, "height": 0.9 })) }));
     let inference = ModelInference::infer(&high).expect("infers");
-    assert!(!inference.opening_frames["o"].valid && inference.opening_frames["o"].issues.contains(&crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::AboveHostTop), "{:?}", inference.opening_frames["o"].issues);
+    assert!(!inference.opening_frames["o"].valid && inference.opening_frames["o"].issues.contains(&semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::AboveHostTop), "{:?}", inference.opening_frames["o"].issues);
     assert!(close(inference.element_solids["w"].volume, 0.3 * (18.0 + 9.0 * 0.5f64.tan())), "an invalid frame cuts nothing");
 }
 

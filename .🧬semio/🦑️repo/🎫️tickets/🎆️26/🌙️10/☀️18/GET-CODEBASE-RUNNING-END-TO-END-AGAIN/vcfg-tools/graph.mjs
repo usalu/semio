@@ -1,0 +1,16 @@
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+const require = createRequire("/Users/ueli/Documents/semio/package.json");
+const { build } = require("esbuild");
+const root = process.cwd();
+const contract = JSON.parse(readFileSync("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json", "utf8"));
+const externalize = { name: "x", setup(b) { b.onResolve({ filter: /^[^.#].*/ }, ({ path, kind }) => (kind === "entry-point" || path.startsWith("/") ? null : { external: true })); } };
+const entry = process.argv[2] ?? contract.entry;
+const r = await build({ entryPoints: [root + "/" + entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent", absWorkingDir: root, plugins: [externalize] });
+const inputs = r.metafile.inputs;
+const mods = Object.keys(inputs);
+const bytes = mods.reduce((t, k) => t + inputs[k].bytes, 0);
+console.log("modules", mods.length, "bytes", bytes, "bounds", contract.maxModules, contract.maxSourceBytes);
+console.log("denied present", contract.deny.filter((d) => mods.includes(d)).length);
+console.log("required missing", contract.require.filter((d) => !mods.includes(d)));
+if (process.argv[3] === "list") for (const m of mods) console.log(inputs[m].bytes, m.replace("🧰️framework/🛍️products/", ""));

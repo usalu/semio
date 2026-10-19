@@ -9,18 +9,6 @@ mod artifacts {
 }
 //#endregion 🗿️Artifacts
 
-//#region ✏️Editor
-mod editor {
-    pub use semio_s_artifact_bim_model::editor::*;
-}
-//#endregion ✏️Editor
-
-//#region 👁️Viewer
-mod viewer {
-    pub use semio_s_artifact_bim_model::viewer::*;
-}
-//#endregion 👁️Viewer
-
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
 pub mod plugin;

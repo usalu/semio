@@ -1,0 +1,15 @@
+import { readFileSync } from "node:fs";
+import { policyReadModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+const R = "/Users/ueli/Documents/semio";
+const law = readFileSync(process.argv[2]!, "utf8");
+const src = policyReadModuleTreeSource(R, process.argv[3]!);
+const a = law.indexOf("const required = [", law.indexOf("export function toolJobArtifactRetainedCommandExact"));
+const b = law.indexOf("];", a);
+const frags = [...law.slice(a, b).matchAll(/^\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'),?$/gm)].map((m) => eval(m[1]!));
+console.log("frags", frags.length, "src", src.length);
+for (const f of frags) if (!src.includes(f)) console.log("MISSING", JSON.stringify(f).slice(0, 200));
+console.log("checkpoint fn:", [...src.matchAll(/fn checkpoint\(&mut self[^{]*\{/g)].map((m) => m[0]));
+for (const m of src.matchAll(/(?:pub )?(?:async )?fn (\w*checkpoint\w*|try_new\w*|from_wire\w*)\s*[(<]/g)) console.log("fn", m[1]);
+console.log([...src.matchAll(/impl[^{]*InteractiveJob[^{]*\{/g)].map((m) => m[0].slice(0, 160)));
+console.log([...src.matchAll(/StepOutcome::\w+/g)].map((m) => m[0]).filter((v, i, a) => a.indexOf(v) === i));
+console.log(src.match(/const ARTIFACT_COMMAND_CHECKPOINT[^;]*;/g));

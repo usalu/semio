@@ -1,14 +1,16 @@
 //! 🔎️ Project and lookup of the BIM entity table: the project fields, the classification text and the kind, holding, id and storey lookups. See [`super`].
 
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, mutations::ModelMutation};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::editor::bim::entities::*;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, EntityKind};
 
 //#region 🔖️Project
 /// 📇️ The id the project record answers to in `setField`: the project is no entity of the table, so its parameters are rows of their own.
 pub const PROJECT_ID: &str = "project";
 
-fn project_info(edit: impl FnOnce(&mut crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo)) -> Option<ModelMutation> {
-    let mut info = crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { name: None, description: None, author: None, organization: None, phase_names: None };
+fn project_info(edit: impl FnOnce(&mut semio_s_artifact_bim_model_mut_any_17::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo)) -> Option<ModelMutation> {
+    let mut info = semio_s_artifact_bim_model_mut_any_17::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { name: None, description: None, author: None, organization: None, phase_names: None };
     edit(&mut info);
     Some(ModelMutation::SetProjectInfo(info))
 }

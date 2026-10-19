@@ -1,15 +1,16 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ScheduleKey;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleKey;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::schedule_kit::{house, items, plain, table_of, texts};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::*;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{Phase, PropertyValue, ScheduleCategory, ScheduleColumn, ScheduleField}};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::schedule_kit::{house, items, plain, table_of, texts};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{rows, Facts, ScheduleCell, table};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, PropertyValue, ScheduleCategory, ScheduleColumn, ScheduleField};
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
@@ -46,7 +47,7 @@ async fn the_scope_of_a_door_schedule_follows_the_storey_and_the_phase_of_the_ho
 #[semio_framework_async_macros::async_test]
 async fn every_category_lists_exactly_the_elements_of_its_kind() {
     let snapshot = house();
-    let count = |category| rows::candidates(&snapshot, &plain(category, &[(ScheduleField::Id, false)])).len();
+    let count = |category| semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::rows::candidates(&snapshot, &plain(category, &[(ScheduleField::Id, false)])).len();
     assert_eq!(count(ScheduleCategory::Wall), snapshot.walls.len());
     assert_eq!(count(ScheduleCategory::CurtainWall), snapshot.curtain_walls.len());
     assert_eq!(count(ScheduleCategory::Slab), snapshot.slabs.len());
@@ -94,9 +95,9 @@ async fn the_property_keys_of_a_schedule_are_collected_once_in_order_of_appearan
     let mut schedule = plain(ScheduleCategory::Wall, &[(ScheduleField::Name, false)]);
     let key = |set: &str, name: &str| ScheduleKey::property(set, name);
     schedule.columns.push(ScheduleColumn { key: key("B", "two"), heading: None, total: false });
-    schedule.sort.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleSort { key: key("A", "one"), descending: false });
-    schedule.filter.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleFilter { key: key("B", "two"), op: crate::standards::v1::subsets::any::schema::snapshot::ScheduleOp::NotEmpty, value: String::new() });
-    schedule.group.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleGroup { key: key("C", "three") });
+    schedule.sort.push(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleSort { key: key("A", "one"), descending: false });
+    schedule.filter.push(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleFilter { key: key("B", "two"), op: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleOp::NotEmpty, value: String::new() });
+    schedule.group.push(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleGroup { key: key("C", "three") });
     assert_eq!(rows::property_keys(&schedule), [("B".to_string(), "two".to_string()), ("A".to_string(), "one".to_string()), ("C".to_string(), "three".to_string())]);
 }
 
@@ -113,7 +114,7 @@ async fn the_material_category_lists_one_row_per_layer_with_material_names_and_l
     let snapshot = house();
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     let table = table_of(&snapshot, plain(ScheduleCategory::Material, &[(ScheduleField::Id, false), (ScheduleField::Material, false), (ScheduleField::Thickness, false), (ScheduleField::LayerVolume, true)]));
-    let candidates = rows::candidates(&snapshot, &plain(ScheduleCategory::Material, &[(ScheduleField::Id, false)]));
+    let candidates = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::rows::candidates(&snapshot, &plain(ScheduleCategory::Material, &[(ScheduleField::Id, false)]));
     let layers: usize = candidates.iter().filter_map(|id| inferred.quantities.elements.get(id)).map(|quantity| quantity.layers.iter().filter(|layer| !layer.material.is_empty()).count()).sum();
     assert!(layers > 0);
     assert_eq!(table.items as usize, layers, "one source row per layer with a material");

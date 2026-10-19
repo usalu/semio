@@ -1,7 +1,7 @@
 import {lstatSync,opendirSync} from "node:fs";
 import {join,resolve,relative,isAbsolute,sep} from "node:path";
 import {requireMaterializedPathV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
-import type {NativeStoragePortV1} from "../../🟦️.ts";
+import type {NativeStoragePortV1} from "../../🔌️port/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{types}from"node:util";
@@ -66,8 +66,8 @@ declare const protectedParentBrand:unique symbol;
 /** 🔐️ Identifies only a live actual protected EX callback, never an image or a writer port. */
 export type NativeProtectedParentV1=Readonly<{readonly[protectedParentBrand]:true}>;
 /** 📋️ Carries observed descendant names as DATA without enrolling any child. */
-export type NativeProtectedParentReadV1=Readonly<{descendants:readonly string[];port:import("../../🟦️.ts").NativeStorageObservationPortV1;verify(control:ResourceLeaseControl):Promise<readonly string[]>}>;
-export type NativeProtectedParentJournalV1=import("../../🟦️.ts").NativeStorageJournalObservationV1&Readonly<{descendants:readonly string[]}>;
+export type NativeProtectedParentReadV1=Readonly<{descendants:readonly string[];port:import("../../🔌️port/🟦️.ts").NativeStorageObservationPortV1;verify(control:ResourceLeaseControl):Promise<readonly string[]>}>;
+export type NativeProtectedParentJournalV1=import("../../🔌️port/🟦️.ts").NativeStorageJournalObservationV1&Readonly<{descendants:readonly string[]}>;
 
 import{readIssuedResourceControlCapabilitiesV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🎟️ Reads only limits from the actual issued Native capability, never caller-authored authority DATA. */
@@ -98,12 +98,12 @@ const protectedMaintenanceProtocolV1=Object.freeze({...protectedMaintenanceSchem
 /** 📏️ Returns captured first-party maintenance limits independently of mutable exported schema DATA. */
 export function nativeProtectedMaintenanceProtocolV1():typeof protectedMaintenanceProtocolV1{return protectedMaintenanceProtocolV1;}
 /** 📚️ Carries current private-provider observation only, without an ordinary image or writable port. */
-export type NativeProtectedMaintenanceProviderV1=Readonly<{root:string;backing:import("../../🟦️.ts").NativeStorageBackingV1;associations:readonly NativeProtectedMaintenanceAssociationV1[];port:import("../../🟦️.ts").NativeStorageObservationPortV1;verify(control:ResourceLeaseControl):Promise<readonly NativeProtectedMaintenanceAssociationV1[]>;captureChild(value:NativeProtectedMaintenanceDeclarationV1,control:ResourceLeaseControl):NativeProtectedMaintenanceAssociationV1}>;
+export type NativeProtectedMaintenanceProviderV1=Readonly<{root:string;backing:import("../../📜️journal/🟦️.ts").NativeStorageBackingV1;associations:readonly NativeProtectedMaintenanceAssociationV1[];port:import("../../🔌️port/🟦️.ts").NativeStorageObservationPortV1;verify(control:ResourceLeaseControl):Promise<readonly NativeProtectedMaintenanceAssociationV1[]>;captureChild(value:NativeProtectedMaintenanceDeclarationV1,control:ResourceLeaseControl):NativeProtectedMaintenanceAssociationV1}>;
 /** 👁️ Makes bounded domain reads recheck actual retained custody throughout their callback lifetime. */
-export type NativeProtectedMaintenanceReadV1=Readonly<{root:string;backing:import("../../🟦️.ts").NativeStorageBackingV1;associations:readonly NativeProtectedMaintenanceAssociationV1[];check():void}>;
+export type NativeProtectedMaintenanceReadV1=Readonly<{root:string;backing:import("../../📜️journal/🟦️.ts").NativeStorageBackingV1;associations:readonly NativeProtectedMaintenanceAssociationV1[];check():void}>;
 
 /** 🧾️ Pins one complete current committed artifact row without historical funding or payload ownership claims. */
-export type NativeProtectedArtifactMaintenanceExpectationV1=Readonly<{version:1;purpose:"current-artifact-maintenance";action:"retain-allocation-payload"|"retire-allocation";policy:import("../../🟦️.ts").NativeStoragePolicyV1;backing:import("../../🟦️.ts").NativeStorageBackingV1;journalSha256:string;journalBytes:number;allocation:Readonly<{id:string;owner:string;kind:"artifact-publication";bytes:number;phase:"committed"}>}>;
+export type NativeProtectedArtifactMaintenanceExpectationV1=Readonly<{version:1;purpose:"current-artifact-maintenance";action:"retain-allocation-payload"|"retire-allocation";policy:import("../../📜️journal/🟦️.ts").NativeStoragePolicyV1;backing:import("../../📜️journal/🟦️.ts").NativeStorageBackingV1;journalSha256:string;journalBytes:number;allocation:Readonly<{id:string;owner:string;kind:"artifact-publication";bytes:number;phase:"committed"}>}>;
 /** 📸️ Captures closed primitive artifact intent before acquiring its real current journal EX. */
 export function readNativeProtectedArtifactMaintenanceExpectationV1(value:unknown):NativeProtectedArtifactMaintenanceExpectationV1{const captured=captureNativeProtectedMaintenanceDataV1(value);if(validateJsonSchemaSubset(protectedMaintenanceSchemaV1.definitions.ProtectedArtifactExpectation,captured,protectedMaintenanceSchemaV1).length)throw Error("Closed current artifact maintenance expectation required");return captured as NativeProtectedArtifactMaintenanceExpectationV1;}
 declare const protectedArtifactMaintenanceBrandV1:unique symbol;
@@ -117,7 +117,7 @@ export type NativeProtectedArtifactPayloadV1=Readonly<{version:1;purpose:"retire
 export function readNativeProtectedArtifactPayloadV1(value:unknown):NativeProtectedArtifactPayloadV1{const captured=captureNativeProtectedMaintenanceDataV1(value);if(validateJsonSchemaSubset(protectedMaintenanceSchemaV1.definitions.ProtectedArtifactPayload,captured,protectedMaintenanceSchemaV1).length)throw Error("Closed complete current artifact payload required");const tree=captured as NativeProtectedArtifactPayloadV1,known=new Map<string,typeof tree.entries[number]>();if(requireMaterializedPathV1(tree.root)!==tree.root)throw Error("Exact current artifact payload root required");for(const row of tree.entries){const parts=row.path.split("/"),first=parts[0]!,previous=tree.entries[known.size-1];if(parts.length>64||parts.some(part=>!part||part==="."||part===".."||part.includes("\\")||part.includes("\0"))||["storage-events.jsonl","storage-checkpoint.jsonl",...protocol.reservedApplicationDirectories].some(name=>name.toLowerCase()===first.toLowerCase())||known.has(row.path)||previous&&Buffer.compare(Buffer.from(previous.path),Buffer.from(row.path))>=0||row.kind==="directory"&&row.sha256!==null||row.kind==="file"&&row.sha256===null||parts.length>1&&known.get(parts.slice(0,-1).join("/"))?.kind!=="directory")throw Error("Complete unique current application payload hierarchy required");known.set(row.path,row);}return tree;}
 
 /** 🧾️ Pins current independent application removal while leaving absent or zero-row journal custody unchanged. */
-export type NativeProtectedIndependentPayloadExpectationV1=Readonly<{version:1;purpose:"retire-entire-current-independent-payload";policy:import("../../🟦️.ts").NativeStoragePolicyV1;backing:import("../../🟦️.ts").NativeStorageBackingV1;journal:Readonly<{presence:"absent"}>|Readonly<{presence:"present";journalSha256:string;journalBytes:number}>}>;
+export type NativeProtectedIndependentPayloadExpectationV1=Readonly<{version:1;purpose:"retire-entire-current-independent-payload";policy:import("../../📜️journal/🟦️.ts").NativeStoragePolicyV1;backing:import("../../📜️journal/🟦️.ts").NativeStorageBackingV1;journal:Readonly<{presence:"absent"}>|Readonly<{presence:"present";journalSha256:string;journalBytes:number}>}>;
 /** 📸️ Captures a distinct fixed payload intent without creating or restoring allocation ownership. */
 export function readNativeProtectedIndependentPayloadExpectationV1(value:unknown):NativeProtectedIndependentPayloadExpectationV1{const captured=captureNativeProtectedMaintenanceDataV1(value);if(validateJsonSchemaSubset(protectedMaintenanceSchemaV1.definitions.ProtectedIndependentPayloadExpectation,captured,protectedMaintenanceSchemaV1).length)throw Error("Closed independent current payload expectation required");const row=captured as NativeProtectedIndependentPayloadExpectationV1;if(row.policy.root!==row.backing.root)throw Error("Same current independent payload root required");return row;}
 

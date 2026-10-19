@@ -2,7 +2,7 @@
 #[test]
 fn realize_fault_remains_scheduled_until_the_aborted_cursor_is_terminal() {
     let glue = semio_framework_os_renderer_wgpu_test_support::renderer_source();
-    let native = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let native = semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     assert!(glue.contains("cursor.phase = AppPresentPhase::Aborted;\n                            if self.retained_fault.is_none()"));
     assert!(glue.contains("return Ok(AppPresentStep::Pending);"));
     assert!(native.contains("if self.presenter.has_pending_presentation()"));

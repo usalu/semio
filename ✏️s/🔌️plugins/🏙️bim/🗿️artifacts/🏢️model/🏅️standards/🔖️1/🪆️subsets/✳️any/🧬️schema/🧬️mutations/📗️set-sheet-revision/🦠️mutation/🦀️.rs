@@ -1,8 +1,9 @@
 //! 📗️ `set-sheet-revision` payload. Sparsely changes a revision row: the mark, the date, the description and the author. The sheet of a row never changes.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::diff::patches::SheetRevisionPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::SheetRevisionPatch;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

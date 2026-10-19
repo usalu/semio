@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { join } from "node:path";
-import { readGeneratedCatalogProjection, projectedHostPluginFilter } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { isHostPlaygroundFilter } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts";
+import { readGeneratedCatalogProjection, projectedHostPluginFilter } from "@semio-tech/plugin-registry/catalog-view";
+import { isHostPlaygroundFilter } from "@semio-tech/plugin-registry/catalog";
 describe("Specific installed host projection", () => { test("preserves every original installed host predicate comparison", () => {
     const live = readGeneratedCatalogProjection(join(import.meta.dirname, "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated"));
     const filters = [undefined, "", "not-a-plugin", ...live.playgrounds.flatMap((row) => [row.variant, ...row.aliases]), ...live.entries.map((entry) => entry.pluginId)];

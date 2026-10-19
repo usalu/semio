@@ -1,4 +1,4 @@
-import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import { typecheckRepositoryProjectV1 } from "../../🏗️build/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

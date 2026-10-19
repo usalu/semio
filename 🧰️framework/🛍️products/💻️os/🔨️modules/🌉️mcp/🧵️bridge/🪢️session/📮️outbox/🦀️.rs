@@ -3,23 +3,23 @@
 use super::*;
 
 //#region 🔖️BridgeHandle
-struct BridgeOutboxItem {
+pub(crate) struct BridgeOutboxItem {
     pub lease: BridgeEncodedLease,
     pub bytes: usize,
 }
 
 #[derive(Clone, Copy)]
-pub(super) struct BridgeOutboxGrant {
+pub(crate) struct BridgeOutboxGrant {
     pub generation: u64,
     pub bytes: usize,
 }
 
-pub(super) struct BridgeRejectedPublish {
+pub(crate) struct BridgeRejectedPublish {
     pub grant: BridgeOutboxGrant,
     pub(crate) encoded: Arc<BridgeEncodedFrame>,
 }
 
-struct BridgeOutboxState {
+pub(crate) struct BridgeOutboxState {
     pub slots: [Option<BridgeOutboxItem>; BRIDGE_OUTBOX_MAX_ITEMS],
     pub head: usize,
     pub len: usize,
@@ -31,11 +31,11 @@ struct BridgeOutboxState {
     #[cfg(test)]
     pub(crate) encode_count: usize,
     #[cfg(test)]
-    waker: Option<std::task::Waker>,
+    pub(crate) waker: Option<std::task::Waker>,
 }
 
 impl BridgeOutboxState {
-    pub(super) fn new(generation: u64) -> Self {
+    pub(crate) fn new(generation: u64) -> Self {
         Self {
             slots: std::array::from_fn(|_| None),
             head: 0,

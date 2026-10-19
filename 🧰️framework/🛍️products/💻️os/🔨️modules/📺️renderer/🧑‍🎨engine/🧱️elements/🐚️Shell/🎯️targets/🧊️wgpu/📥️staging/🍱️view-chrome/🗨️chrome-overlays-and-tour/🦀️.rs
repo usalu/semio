@@ -93,7 +93,7 @@ pub fn document_opening_rect(message: &str, action_label: &str, width: f32, them
 /// are stepped ACROSS host opportunities and can be abandoned at a fault, a closed session, a
 /// vanished step or a popped dialog, and an unbalanced `begin_glass_content` would classify every
 /// LATER overlay child as this sheet's foreground.
-pub fn open_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, rect: Rect, radius: f32, style: ui_wgpu::wgpu::GlassStyle) {
+pub fn open_chrome_overlay_glass_content(cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, rect: Rect, radius: f32, style: semio_framework_ui_theme::GlassStyle) {
     close_chrome_overlay_glass_content(cursor, overlay);
     let region = overlay.push_glass([rect.x, rect.y, rect.w, rect.h], radius, style);
     cursor.depth = region.saturating_add(1);

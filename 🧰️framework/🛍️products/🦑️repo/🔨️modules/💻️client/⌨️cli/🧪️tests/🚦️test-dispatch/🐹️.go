@@ -52,7 +52,7 @@ type goDispatchVector struct {
 
 func readGoDispatchVector(t *testing.T) goDispatchVector {
 	t.Helper()
-	path := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "⌨️cli", "🧪️tests", "🧫️fixtures", "🚦️test-dispatch", "🔣️.json")
+	path := moduleFixturePath("🧪️tests", "🧫️fixtures", "🚦️test-dispatch", "🔣️.json")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -136,6 +136,7 @@ func goDispatchMarkers(t *testing.T, root string) []string {
 }
 
 func TestCanonicalGoTestDispatcher(t *testing.T) {
+	requireToolchainRoot(t)
 	vector := readGoDispatchVector(t)
 	moduleRoot, testFile := materializeGoDispatchVector(t, vector)
 	t.Setenv("GOWORK", "off")
@@ -289,6 +290,7 @@ func goDispatchOverlayRuns(t *testing.T) []string {
 }
 
 func TestCanonicalGoTestDispatcherCancellation(t *testing.T) {
+	requireToolchainRoot(t)
 	if runtime.GOOS == "windows" {
 		t.Skip("native process-table oracle uses ps; Windows behavior is cross-compiled")
 	}

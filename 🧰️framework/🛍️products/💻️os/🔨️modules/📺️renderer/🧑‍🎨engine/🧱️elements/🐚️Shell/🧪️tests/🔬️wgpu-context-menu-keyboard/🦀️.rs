@@ -1,5 +1,5 @@
 use super::*;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 #[test]
 fn context_menu_path_for_ordinal_selects_enabled_rows() {

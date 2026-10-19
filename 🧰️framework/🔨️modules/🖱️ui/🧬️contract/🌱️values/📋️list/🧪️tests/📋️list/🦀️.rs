@@ -1,4 +1,7 @@
-use super::*;
+use semio_framework_ui_contract_values::*;
+use semio_framework_ui_contract_values::testkit::*;
+use std::mem::size_of;
+use semio_framework_ui_contract_budget::*;
 use semio_framework_test_fixtures::fixture_text;
 
 /// 📋️ A typed list's emptied backing retires one page per turn as an ITEM: the byte grant meters payload, so a
@@ -11,7 +14,7 @@ fn retained_fixed_list_pages_typed_retirement_meters_backing_as_items() {
         backings += usize::from(values.try_reserve_one(4096).unwrap().progressed);
     }
     let allocated = values.allocated_bytes();
-    let mut cursor = crate::UiTypedRetirementCursor::empty();
+    let mut cursor = semio_framework_ui_contract_values::UiTypedRetirementCursor::empty();
     let idle = cursor.advance(&mut values, 1, 0).unwrap();
     assert!(!idle.progressed);
     assert_eq!(values.allocated_bytes(), allocated);
@@ -31,7 +34,7 @@ fn retained_fixed_list_pages_typed_retirement_meters_backing_as_items() {
 
 //#region 🧪️PagedStorageLaws
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text!("../../../📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../../../📋️list/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 #[test]

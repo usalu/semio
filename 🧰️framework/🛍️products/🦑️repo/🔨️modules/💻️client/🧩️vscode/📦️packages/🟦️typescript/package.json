@@ -5,6 +5,13 @@
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑️‍💻️",
   "version": "0.0.1",
+  "exports": {
+    ".": "./dist/extension.js",
+    "./package.json": "./package.json",
+    "./builder": "./🏗️builder/🟦️.ts",
+    "./testing/package": "./🧪️testing/📦️package/🟦️.ts",
+    "./testing/host-build": "./🧪️testing/🧩️host-build/🟦️.ts"
+  },
   "publisher": "usalu",
   "engines": {
     "vscode": "^1.104.0"

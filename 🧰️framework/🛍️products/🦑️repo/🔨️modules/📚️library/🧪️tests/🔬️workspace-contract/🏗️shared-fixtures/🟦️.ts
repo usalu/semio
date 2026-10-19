@@ -1,9 +1,9 @@
 import toml from "@iarna/toml";
 import { expect } from "bun:test";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { chmodSync, closeSync, constants, existsSync, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { registryCompilerInputDependencies, type RegistryCompilerInputRole } from "../../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
@@ -753,4 +753,66 @@ export function expectNormalizationApplyFailure(run: () => TaxonomyApplyResult):
     failed = true;
   }
   expect(failed).toBe(true);
+}
+
+/** 🪟️ Tracked paths plus the untracked-not-ignored paths found by a weight-balanced parallel Git walk.
+ * [git-ls-files](https://git-scm.com/docs/git-ls-files) */
+export type CheckoutPathInventory = Readonly<{ tracked: readonly string[]; untracked: ReadonlySet<string> }>;
+
+type CheckoutWalkPiece = Readonly<{ path: string; weight: number }>;
+
+function checkoutGitPaths(root: string, args: readonly string[]): Promise<string[]> {
+  return new Promise((accept, reject) => {
+    const child = spawn("git", args, { cwd: root, windowsHide: true, stdio: ["ignore", "pipe", "ignore"] });
+    const chunks: Buffer[] = [];
+    child.stdout.on("data", (chunk: Buffer) => chunks.push(chunk));
+    child.once("error", reject);
+    child.once("close", (code) => (code === 0 ? accept(Buffer.concat(chunks).toString("utf8").split("\0").filter(Boolean)) : reject(new Error(`git ${args.join(" ")} exited ${code}`))));
+  });
+}
+
+function checkoutTrackedWeights(tracked: readonly string[]): ReadonlyMap<string, number> {
+  const weights = new Map<string, number>([[".", tracked.length]]);
+  for (const path of tracked)
+    for (let end = path.indexOf("/"); end !== -1; end = path.indexOf("/", end + 1)) {
+      const directory = path.slice(0, end);
+      weights.set(directory, (weights.get(directory) ?? 0) + 1);
+    }
+  return weights;
+}
+
+function checkoutWalkPieces(root: string, scope: string, weights: ReadonlyMap<string, number>, budget: number): CheckoutWalkPiece[] {
+  const weight = (path: string): number => weights.get(path) ?? 1;
+  const split = (directory: string): CheckoutWalkPiece[] => {
+    let names: string[];
+    try {
+      names = readdirSync(join(root, directory)).filter((name) => name !== ".git");
+    } catch {
+      return [{ path: directory, weight: weight(directory) }];
+    }
+    return names.flatMap((name) => {
+      const path = directory === "." ? name : `${directory}/${name}`;
+      return weight(path) > budget ? split(path) : [{ path, weight: weight(path) }];
+    });
+  };
+  return weight(scope) > budget ? split(scope) : [{ path: scope, weight: weight(scope) }];
+}
+
+/** 🪟️ Reads the tracked paths once and splits each requested scope into disjoint literal pathspecs balanced by tracked
+ * weight, so the untracked walk (the dominant cost of `git ls-files --others`) runs as parallel Git processes whose
+ * union equals one unscoped walk. */
+export async function checkoutPathInventory(root: string, scopes: readonly string[], options: Readonly<{ parallelism?: number; budget?: number }> = {}): Promise<CheckoutPathInventory> {
+  const parallelism = Math.max(1, options.parallelism ?? availableParallelism());
+  const tracked = await checkoutGitPaths(root, ["ls-files", "-z"]);
+  const weights = checkoutTrackedWeights(tracked);
+  const budget = Math.max(1, options.budget ?? Math.ceil(tracked.length / (parallelism * 4)));
+  const roots = scopes.includes(".") ? ["."] : [...new Set(scopes)];
+  const bins = Array.from({ length: parallelism }, () => ({ weight: 0, specs: [] as string[] }));
+  for (const piece of roots.flatMap((scope) => checkoutWalkPieces(root, scope, weights, budget)).sort((left, right) => right.weight - left.weight)) {
+    const bin = bins.reduce((lightest, candidate) => (candidate.weight < lightest.weight ? candidate : lightest));
+    bin.weight += piece.weight;
+    bin.specs.push(`:(literal)${piece.path}`);
+  }
+  const walked = await Promise.all(bins.filter((bin) => bin.specs.length > 0).map((bin) => checkoutGitPaths(root, ["ls-files", "-z", "--others", "--exclude-standard", "--", ...bin.specs])));
+  return { tracked, untracked: new Set(walked.flat()) };
 }

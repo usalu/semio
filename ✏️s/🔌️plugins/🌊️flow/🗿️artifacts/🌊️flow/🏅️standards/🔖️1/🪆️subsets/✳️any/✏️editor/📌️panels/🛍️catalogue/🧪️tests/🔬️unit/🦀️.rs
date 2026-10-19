@@ -6,7 +6,7 @@ use crate::editor::flow::host::with_host_from_snapshot;
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
 use crate::FlowSnapshot;
 #[allow(unused_imports)]

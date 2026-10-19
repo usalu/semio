@@ -5,7 +5,7 @@
 use super::*;
 use super::UiDirtyScope;
 use std::collections::{BTreeMap, BTreeSet};
-use ui_wgpu::wgpu::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
+use semio_framework_ui_wgpu_light::tree_window::{served_requests, TreeWindowRequest, TreeWindowServedMemory};
 
 /// 🪟️ One body's host-owned tree state, keyed by window path (`TreeWindowBodyState`).
 #[derive(Clone, Debug, Default)]
@@ -24,7 +24,7 @@ impl ShellDockState {
         let memory = self.tree_window_served.remove(&body).unwrap_or_default();
         let (requests, memory) = served_requests(&containers, viewport_height, &memory, ui_contract::TREE_WINDOW_BODY_NODE_BUDGET);
         self.tree_window_served.insert(body.clone(), memory);
-        let row_px = f64::from(ui_wgpu::wgpu::layout::tree_window_row_extent_px(ui_wgpu::wgpu::UiTreeWindowRowExtent::Standard));
+        let row_px = f64::from(semio_framework_ui_wgpu_layout::layout::tree_window_row_extent_px(semio_framework_ui_declaration::ui::UiTreeWindowRowExtent::Standard));
         let viewport_rows = ((viewport_height / row_px).ceil() as u32).max(1);
         let now = semio_framework_job::default_now_us().map_or(0, |now| now / 1_000);
         self.tree_windows.report(&body, &requests, viewport_rows, now);

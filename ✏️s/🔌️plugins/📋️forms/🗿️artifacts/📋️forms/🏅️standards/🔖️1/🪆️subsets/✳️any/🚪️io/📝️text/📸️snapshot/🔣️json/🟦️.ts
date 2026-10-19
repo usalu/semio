@@ -1,5 +1,5 @@
 /** 🔣️ Forms JSON transport projects literal intrinsic fields independently of snapshot storage. */
-import type{DslValue,FormExpr,FormQuestion}from"../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { DslValue, FormExpr, FormQuestion } from "../../../../🧬️schema/🧱️form-model/🟦️.ts";
 import{parseCondition,parseFormsDefinition,type FormsDefinition}from"../../../../🧬️schema/📝️definition/🟦️.ts";
 import{parseFormsResponse,type FormsResponse}from"../../../../🧬️schema/📨️response/🟦️.ts";
 import{parseFormsArtifact,type FormsArtifact}from"../../../../🧬️schema/🟦️.ts";

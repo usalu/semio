@@ -11,7 +11,7 @@ import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import { createBrowserStoragePort, type StoragePort } from "../../../🔨️modules/🗄️storage-port/🟦️.ts";
 import { ephemeralSet } from "@semio-tech/framework/transient";
-import { type ShellLocale } from "@semio-tech/framework";
+import { type ShellLocale } from "@semio-tech/framework/manifest/generated/ui-axes";
 import { resolveUiLabel, type DeepUiTranslationKeys, type UiI18nPort, type UiLabelPair, type UiLabelValue, type UiTranslationKey, type UiLocale, type UiRegisteredTranslationKey, type UiRibbonParentEntries, type UiTranslateFn, type UiTranslationSchema } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
 import { shellChromeDe, shellChromeEn } from "./🧭️shell-chrome/🟦️.ts";
 import { configurationDe, configurationEn } from "./⚙️configuration/🟦️.ts";

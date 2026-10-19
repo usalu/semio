@@ -5,7 +5,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { EXPORT_NAME, asDict, codePointOrder, isDict, type Dict } from "../🔡️json-text/🟦️.ts";
-import { listModuleTree } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { listModuleTree } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { PARSER_DIRECTORY } from "../📍️parser-files/🟦️.ts";
 import { Owner, type SourceReader } from "../🧾️parser-render/🟦️.ts";
 
 //#region 🔖️Leaves
@@ -33,7 +34,7 @@ const SKIPPED_DIRS = new Set(["node_modules", ".venv", ".git", "target", "🎯�
 /** 🧭️ A repository-relative path with forward slashes. */
 export const portable = (root: string, path: string): string => relative(root, path).split(sep).join("/");
 
-/** 📚️ The leaf sources of one run: each file is read once, and a file written with CRLF line ends keeps them. `read` and `write` address the leaf file itself; `tree` lists the leaf followed by the child modules it imports, and `declarations` is their text, so a TypeScript leaf split into child modules (types and parsers) still declares everything the unsplit leaf declared. */
+/** 📚️ The leaf sources of one run: each file is read once, and a file written with CRLF line ends keeps them. `read` and `write` address the leaf file itself; `tree` lists the leaf followed by the child modules it imports and the `🚪️parsers` file next to each of them (nothing imports a parser file, so the folder name is what finds it), and `declarations` is their text, so a TypeScript leaf split into child modules (types and parsers) still declares everything the unsplit leaf declared. */
 export class SourceStore implements SourceReader {
   private readonly texts = new Map<string, string>();
   private readonly crlf = new Set<string>();
@@ -68,6 +69,8 @@ export class SourceStore implements SourceReader {
       } catch {
         files = [path];
       }
+      const parserFiles = files.map((file) => join(dirname(file), PARSER_DIRECTORY, LEAF["🟦️typescript"])).filter((file) => !files.includes(file) && existsSync(file));
+      files = [...files, ...parserFiles];
     }
     this.listings.set(path, files);
     return files;

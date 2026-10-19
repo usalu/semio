@@ -1,8 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { toolJobProofs, toolJobStaticRows, toolJobDispositions } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
-import { toolJobProofCatalogFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobProofs, toolJobStaticRows, toolJobDispositions, toolJobProofCatalogFailures } from "@semio-tech/repo-lib/laws";
 
 /** 🧪️ Runs strict language-neutral cross-file factory laws and hostile module substitutions. */
 export function toolJobOwnerFactoryResolutionSelfTests(): number {

@@ -13,7 +13,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MOTIONS, type Sheet } from "@semio-tech/quiz";
 import { ICON_HOSTS, ICON_LOOP_MS, IconLabel, PreferencesPanel, TaskGlyph, effectiveIconMotion, playTappedIcons, localStore, memoryStorageOrigin, quizText, readPreferences, textPresentation, withIcons } from "@semio-tech/quiz-react";
-import { TaskView } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
+import { TaskView } from "@semio-tech/quiz-react/modules/run/.tsx";
 import { quizStylesheet } from "@semio-tech/quiz-react/stylesheet";
 import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 

@@ -146,10 +146,10 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let content_before = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     let result = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0), label: None, action: None, format: None })).await;
     assert!(result.mutations.is_empty(), "admission must retain the child publication");
-    let first = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("first child publication");
+    let first = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("first child publication");
     let repeated = dispatch(&mut app, FlowCommand::AddWidget(AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(50.0), y: Some(51.0), label: None, action: None, format: None })).await;
     assert!(repeated.mutations.is_empty(), "repeated admission must retain the child publication");
-    let second = settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("repeated child publication");
+    let second = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("repeated child publication");
     let parent_after = app.snapshot().expect("snapshot");
     let content_after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     for receipt in [first, second] {
@@ -168,11 +168,11 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let mut after_first_undo = content_before.clone();
     after_first_undo.nodes.push(inserted[0].clone());
     for expected in [after_first_undo, content_before] {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         let content = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child after undo").document_pack_bytes().await.expect("Flow child pack after undo")).expect("Flow child snapshot after undo");
         assert_eq!(content, expected, "each inverse must restore the complete preceding child document in reverse insertion order");
     }
-    close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -185,13 +185,13 @@ async fn rename_rejects_blank_unchanged_and_taken_ids() {
     for value in ["", " ", "slider"] {
         let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(crate::editor::flow::commands::rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() })).await;
         assert!(result.mutations.is_empty(), "rename to {value:?} must be a no-operation");
-        let lanes = settle_registered_typed_operation(&mut *app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map(|receipt| receipt.lanes).unwrap_or_default();
+        let lanes = settle_registered_typed_operation(&mut app.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map(|receipt| receipt.lanes).unwrap_or_default();
         assert!(
             !lanes.iter().any(|lane| matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Child)),
             "rename to {value:?} must publish no durable lane, published {lanes:?}"
         );
     }
-    close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -199,13 +199,10 @@ async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
 
     let mut app = flow_app().await;
-    app.dispatch_typed(
-        FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }),
-        &flow_main_window_meta(),&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    )
+    app.0.dispatch_typed(FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }), &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await
     .expect("dispatch");
-    settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("patchFlowWidgets publication");
+    settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("patchFlowWidgets publication");
     let patched = crate::editor::flow::unit_tests::context::composed_scene(&app).await;
     assert!(
         patched.widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
@@ -213,5 +210,5 @@ async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
         patched.widgets
     );
     patched.retire_cold();
-    close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

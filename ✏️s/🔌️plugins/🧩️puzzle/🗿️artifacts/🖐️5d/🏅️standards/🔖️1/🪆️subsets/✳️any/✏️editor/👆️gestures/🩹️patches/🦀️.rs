@@ -114,7 +114,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let projection = puzzle5d_editor_projection(snapshot);
@@ -153,6 +154,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-part-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-part-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -160,8 +164,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dPatchPartWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -272,7 +278,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -305,6 +312,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-fastener-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-fastener-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -312,8 +322,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dPatchFastenerWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -443,7 +455,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let projection = puzzle5d_editor_projection(snapshot);
         match self.stage {
@@ -486,6 +499,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dPatchPartStage::Complete => Err(Fault::from("puzzle5d-patch-grip-complete-repolled")),
             Puzzle5dPatchPartStage::Closing => Err(Fault::from("puzzle5d-patch-grip-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -493,8 +509,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dPatchGripWorkOwners { mutations: std::mem::take(&mut self.mutations), selected: std::mem::take(&mut self.selected) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

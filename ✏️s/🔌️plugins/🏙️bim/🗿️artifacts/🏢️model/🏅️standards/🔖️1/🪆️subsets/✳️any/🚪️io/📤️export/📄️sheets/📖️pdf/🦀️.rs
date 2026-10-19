@@ -3,19 +3,19 @@
 //! become cubic Béziers); the frame, captions, title block and revision table are the same marks the SVG draws. [`SheetsPdf`] writes page by page (`DocumentStream`), so an export can yield between sheets and be cancelled.
 //! 📎 https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
-use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
-use crate::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::{DocumentStream, EncodeOptions, PdfTextLayout};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfFont, PdfInfo, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfSnapshot, PdfTextString};
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs;
 
 /// 📏️ PDF points per paper millimetre (72 points to the inch).
 pub const POINTS_PER_MM: f64 = 72.0 / 25.4;
@@ -109,7 +109,7 @@ fn path(ops: &mut Vec<PdfOp>, vertices: &[PlanVertex], closed: bool, map: &dyn F
     for index in 0..segments {
         let (from, to) = (&vertices[index], &vertices[(index + 1) % vertices.len()]);
         if from.bulge.abs() > 1e-12 {
-            for (first_control, second_control, end) in arcs::arc_cubics((from.x, from.y), (to.x, to.y), from.bulge) {
+            for (first_control, second_control, end) in semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs::arc_cubics((from.x, from.y), (to.x, to.y), from.bulge) {
                 let (a, b, c) = (map(first_control.0, first_control.1), map(second_control.0, second_control.1), map(end.0, end.1));
                 ops.push(PdfOp::CurveTo { x1: a.0, y1: a.1, x2: b.0, y2: b.1, x3: c.0, y3: c.1 });
             }

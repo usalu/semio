@@ -5,11 +5,11 @@
   "scenario": "🧪️changes-the-value",
   "files": {
     "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🧪️changes-the-value/🦀️.rs": "pub fn sample() {}\n",
-    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦠️mutation/🔣️.json": "{}\n",
-    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/⬅️before/🔣️.json": "{}\n",
-    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/➡️after/🔣️.json": "{}\n",
-    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🔺️diff/🔣️.json": "{}\n",
-    "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json": "{}\n"
+    "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦠️mutation/🔣️.json": "{}\n",
+    "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/⬅️before/🔣️.json": "{}\n",
+    "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/📸️snapshot/➡️after/🔣️.json": "{}\n",
+    "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🔺️diff/🔣️.json": "{}\n",
+    "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json": "{}\n"
   },
   "cases": [
     {
@@ -24,7 +24,7 @@
       "id": "undeclared-physical-fixture-example",
       "remove": [],
       "add": {
-        "🧫️fixtures/🧬️mutations/🪄️change-value/🔬️unregistered/🎯️outcome/🔣️.json": "{}\n"
+        "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🔬️unregistered/🎯️outcome/🔣️.json": "{}\n"
       },
       "valid": false
     },
@@ -37,7 +37,7 @@
     {
       "id": "missing-fixture-outcome",
       "remove": [
-        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json"
+        "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🎯️outcome/🔣️.json"
       ],
       "add": {},
       "valid": false
@@ -56,7 +56,7 @@
         "🧬️schema/🧬️mutations/🪄️change-value/🧪️tests/🧪️changes-the-value/🦀️.rs"
       ],
       "add": {
-        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦀️.rs": "pub fn sample() {}\n"
+        "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/🦀️.rs": "pub fn sample() {}\n"
       },
       "valid": false
     },
@@ -64,7 +64,7 @@
       "id": "extra-fixture-member",
       "remove": [],
       "add": {
-        "🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/extra.json": "{}"
+        "🧪️tests/🧫️fixtures/🧬️mutations/🪄️change-value/🧪️changes-the-value/extra.json": "{}"
       },
       "valid": false
     }

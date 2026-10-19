@@ -35,7 +35,7 @@ async fn read_step_rejects_missing_data_section() {
 const CONCRETE_FOREST_STEP: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
 
 /// 🧊️ The piece's volume as an independent oracle: the signed-tetrahedron sum over the committed
-/// GLB export's 958 triangles (`♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb`),
+/// GLB export's 958 triangles (`🧰️framework/🔨️modules/🖼️assets/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb`),
 /// computed outside this kernel — `14.0998185 m³`.
 const CONCRETE_FOREST_VOLUME: f64 = 14.099_818_5;
 

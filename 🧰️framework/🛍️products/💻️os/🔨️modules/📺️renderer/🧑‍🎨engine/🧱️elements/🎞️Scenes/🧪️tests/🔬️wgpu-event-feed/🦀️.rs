@@ -4,7 +4,10 @@ use semio_framework_os_renderer_wgpu_scene_feeds::{EventFeedEntryJson, acknowled
 use semio_framework_os_renderer_wgpu_scene_state::{HostTemporalPresentation, SCENE_STATE, SceneSurfaceState, set_scroll_offset};
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
 
 #[test]
 fn entries_json_tolerates_missing_optional_fields() {
@@ -233,7 +236,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
 
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
@@ -253,7 +256,7 @@ fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
     let clipped_controls = event_feed_accessibility_controls(&scene, &layout, &entries, &heights, partial_scroll, None);
     let mut clipped_draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut clipped_atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut clipped_input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut clipped_input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     {
         let mut ctx = framework_widget_context(&mut clipped_draw, None, &mut clipped_atlas, None, &mut clipped_input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         render_event_feed(&scene, bounds, &mut ctx);
@@ -297,7 +300,7 @@ fn render_feed_entry(tone: Option<&str>) -> (semio_framework_ui_draw_contract::D
     };
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -463,7 +466,7 @@ fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
         seal_event_feed_accessibility_candidates(epoch);
         acknowledge_event_feed_accessibility_candidates(epoch);
         if let Some(expected) = row["expected"]["action"].as_object() {
-            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+            let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
             event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).expect("accepted control").expect("bounded action");
             let actions = collect_fixture_actions(&mut input);
             assert_eq!(actions.len(), 1);
@@ -473,7 +476,7 @@ fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
             assert_eq!(args.get("surfaceId").and_then(semio_framework::DslValue::as_str), expected["args"]["surfaceId"].as_str());
             assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), expected["args"]["id"].as_str());
         } else {
-            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+            let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
             assert!(event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).is_none());
             assert!(collect_fixture_actions(&mut input).is_empty());
         }

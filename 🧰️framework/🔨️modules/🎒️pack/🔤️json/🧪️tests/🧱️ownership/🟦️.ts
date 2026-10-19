@@ -5,7 +5,7 @@ import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 import { parseTree, getNodeValue, type Node, type ParseError } from "jsonc-parser";
 import { JsonMemberPolicy } from "../../🧩️members/🟦️.ts";
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 const tree = (): string => readModuleTreeSource(resolve(owner, "🦀️.rs"));

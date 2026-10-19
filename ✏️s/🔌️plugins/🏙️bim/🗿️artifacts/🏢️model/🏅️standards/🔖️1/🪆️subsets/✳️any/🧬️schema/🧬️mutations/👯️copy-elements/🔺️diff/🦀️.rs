@@ -4,9 +4,10 @@
 //! Refused: an empty selection, unknown ids, elements without a placement, an opening without its host, a blank prefix, a minted id that
 //! is taken and a vector that is not finite.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::Map;
 use crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CopyElements, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -14,7 +15,7 @@ pub fn diff(payload: &CopyElements, base: &ModelSnapshot) -> MutationOutcome<Mod
     if !map.finite() {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A translation must be a finite vector.", ["vector"]);
     }
-    match modify::duplicate(base, &payload.ids, &payload.prefix, &[map]) {
+    match semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::duplicate(base, &payload.ids, &payload.prefix, &[map]) {
         Err(refusal) => refusal.outcome(),
         Ok(built) => {
             let carried = built.carried;

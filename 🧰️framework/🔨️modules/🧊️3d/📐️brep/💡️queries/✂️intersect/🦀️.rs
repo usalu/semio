@@ -1,5 +1,5 @@
 //! ✂️ Curve/curve, curve/surface, and surface/surface intersection math. Split into local
-//! submodules under this directory (one per intersection kind, plus a `shared` numeric-plumbing
+//! submodules under this directory (one per intersection kind, plus an `intersection_numerics` numeric-plumbing
 //! module) rather than the old single-file layout, once the surface/surface rewrite (exact p-curves
 //! on both supports, coaxial meridian-profile solving, certified general marching) made one file
 //! unwieldy — still "one compute subdir, not a 1:1 file mapping" per the `🔺️euler`/imprint
@@ -19,8 +19,8 @@
 pub mod curve_curve;
 #[path = "➿️curve-surface/🦀️.rs"]
 pub mod curve_surface;
-#[path = "🤝️shared/🦀️.rs"]
-mod shared;
+#[path = "🤝️intersection-numerics/🦀️.rs"]
+mod intersection_numerics;
 #[path = "🏄️surface-surface/🦀️.rs"]
 pub mod surface_surface;
 

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const CRATE_ROOTS = [
   "../🧰️ops/🦀️.rs",

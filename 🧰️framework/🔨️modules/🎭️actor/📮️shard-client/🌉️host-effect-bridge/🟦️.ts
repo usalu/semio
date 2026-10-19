@@ -1,5 +1,5 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import type { HostEffectLedger, PendingHostEffect, ShardActivation } from "../🔐️activation/🟦️.ts";
 import { type ShardQuotaBreach, formatQuotaBreachMessage } from "../🚨️quota/🟦️.ts";
 import type { OutboundMessage } from "../📨️messages/🟦️.ts";
@@ -8,7 +8,8 @@ import type { ShardFrame } from "../📜️wire/🟦️.ts";
 /** 🌉️ Bridges the `effect-request` frames a guest sends up to the host effect handler and posts the replies back down. */
 export class ShardHostEffectBridge {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   /** 📨️ terra-shard-effect-bridge: dispatches an inbound `"frame"` — today the ONLY frame a worker
    * ever sends UP is `🟨️.js`'s `effect-request` (🧪️ terra-web-bridges); any other `Envelope`

@@ -1,7 +1,7 @@
 //! 📸️ Exact Flow snapshot and local scene sources retain their defining paid close frontiers.
 use crate::{FlowSnapshot,FlowWorkingScene};
 use std::{mem::ManuallyDrop,sync::Arc};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::SharedControlledRetirement}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,arc_custody::SharedControlledRetirement}};
 
 #[derive(semio_framework_value::RetireOwned)]
 struct FlowSnapshotSources{schema:String,child_id:String,target:semio_framework_artifact_reference::ArtifactRef,scene:Option<SharedControlledRetirement<FlowWorkingScene>>}
@@ -41,8 +41,8 @@ impl Drop for FlowSnapshotRetirement{fn drop(&mut self){assert!(std::thread::pan
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SnapshotRetirementFactory;
 impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
- fn retirement_birth_bytes(&self,_source:&Arc<FlowSnapshot>)->usize{semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<FlowSnapshot>()}
- fn retire(&self,source:Arc<FlowSnapshot>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowSnapshot>)>{semio_framework_value::retirement::shared::admit_shared_retirement(source,grant,true)}
+ fn retirement_birth_bytes(&self,_source:&Arc<FlowSnapshot>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowSnapshot>()}
+ fn retire(&self,source:Arc<FlowSnapshot>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowSnapshot>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
 }
 impl store::ArtifactOwnedValueRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
  fn retirement_birth_bytes(&self,_source:&FlowSnapshot)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FlowSnapshot>()}

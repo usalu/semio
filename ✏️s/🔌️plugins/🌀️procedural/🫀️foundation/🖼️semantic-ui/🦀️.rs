@@ -41,7 +41,7 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -
 }
 
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+pub fn scene_surface<T: semio_framework_ui_declaration::ui::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
     semio_framework_plugin::scene_surface(&id, kind, scene)
 }
@@ -58,7 +58,7 @@ pub fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String
 /// fail the whole refresh, and its full text is always reachable in the window's own outline.
 ///
 /// @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
-pub fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
+pub fn accessible_scene_surface<T: semio_framework_ui_declaration::ui::SceneDoc>(
     id: impl Into<String>,
     kind: SurfaceKind,
     scene: &T,

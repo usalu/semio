@@ -3,24 +3,22 @@
  */
 import { withTrustedCatalogCleanupV1 } from "../🧹️settlement/🟦️.ts";
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
-import { repositoryCargoNetworkV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import { type CompilerAdmissionControl } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { withRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { withRequestedIssuedResourceControlV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { parseSpaceArtifactCreationStatusJsonV1 } from "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1";
 import { writeTrustedCatalogPublicationProvenanceV1 } from "../🟦️.ts";
 import { withExactCargoLawOutputV1 } from "@semio-tech/process/testing/cargo/exact";
 import { withCheckInProcessFixtureV1 } from "../📦️cargo/🧫️fixture/📥️reading/🟦️.ts";
-import { buildBudgetMs } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash, randomBytes } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { setTimeout as waitForHubPhaseV1 } from "node:timers/promises";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
-import { buildRepositoryCargoArtifacts } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildAdmittedCargoArtifactsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { parseDocumentOpenPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../../🏗️build/🛂staging-environment/🟦️.ts";
 import { issueLocalCredential } from "../../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { type LocalProfile } from "../../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
@@ -159,7 +157,7 @@ async function proveTrustedStdioGisStalePlanRejected(run: LocalHubRun, stalePlan
 /** 🧪️ Qualifies the real Hub publication command with explicit synthetic guest fixture bytes. */
 export async function proveTrustedPublicationCli(invocation: ScriptInvocation, control:CompilerAdmissionControl, repoRoot: string, hubRoot: string): Promise<void> {
   const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
-  await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),cwd: repoRoot,...exactCargoStageEnvironments(),groups: [{
+  await runAdmittedExactCargoLawsV1({cwd: repoRoot,...exactCargoStageEnvironments(),groups: [{
     package: "semio-hub",
     target: { kind: "bin", name: "os-hub" },
     cargoArgs: ["--features", "integration-fixtures"],
@@ -170,7 +168,7 @@ export async function proveTrustedPublicationCli(invocation: ScriptInvocation, c
     target: { kind: "lib" },
     cargoArgs: ["--features", "integration-fixtures"],
     laws: ["tests::check_in_process_fixture_emits_verified_gis_ledger_and_catalog"],
-  }],invocation,control,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 180_000 },consume:outputs=>withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:outputs.receipts.findIndex(row=>row.package==="semio-hub-boot-laws")},output=>buildRepositoryCargoArtifacts(join(hubRoot,"Cargo.toml"),["--features","integration-fixtures","--bin","os-hub"],repoRoot,{producer:"artifact",invocation,control:output.control,network:repositoryCargoNetworkV1(invocation,repoRoot),consume:capture=>withCapturedLocalHubHostV1(invocation,output.control,capture,(host,context)=>withCheckInProcessFixtureV1(host,context.control,outputs,{version:1,purpose:"publication"},async(data,actualPhase)=>{
+  }],invocation,control,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 120_000, lawMilliseconds: 180_000 },consume:outputs=>withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:outputs.receipts.findIndex(row=>row.package==="semio-hub-boot-laws")},output=>buildAdmittedCargoArtifactsV1(join(hubRoot,"Cargo.toml"),["--features","integration-fixtures","--bin","os-hub"],repoRoot,{producer:"artifact",invocation,control:output.control,consume:capture=>withCapturedLocalHubHostV1(invocation,output.control,capture,(host,context)=>withCheckInProcessFixtureV1(host,context.control,outputs,{version:1,purpose:"publication"},async(data,actualPhase)=>{
   const {dataRoot,binaryPath,diagnosticsRoot:evidence}=context;
   const bundle=trustedBootstrapReadRegular(join(dataRoot,"trusted-catalog/generations",data.fixture.generationId,"trusted-catalog.json"),4*1024*1024,"publication CLI retained fixture",()=>{checkResourceLeaseControl(actualPhase);});
   let bundleSha256:string;try{bundleSha256=createHash("sha256").update(bundle).digest("hex");}finally{bundle.fill(0);}

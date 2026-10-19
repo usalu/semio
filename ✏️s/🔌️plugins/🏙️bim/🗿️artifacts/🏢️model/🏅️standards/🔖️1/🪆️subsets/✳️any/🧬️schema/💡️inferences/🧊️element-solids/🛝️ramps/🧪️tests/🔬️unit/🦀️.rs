@@ -1,14 +1,16 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, parts, ElementSolid, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::strip_of;
-use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, parts, ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::strip_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidBuilder;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{RampRun, RampStrip};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{standard_post_profile, standard_rail_profile};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{RampRun, RampStrip};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{standard_post_profile, standard_rail_profile};
 #[allow(unused_imports)]
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 #[allow(unused_imports)]
@@ -19,10 +21,10 @@ use semio_framework_geometry::vector::Xyz;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ramps::*;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{ramp_solid, stations_of, RailPoint, post_positions, rail_mesh, RailSpec, dependency};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{TopConstraint, Vertex};
 use std::f64::consts::{FRAC_PI_2, PI};
 
 const EPS: f64 = 1e-9;
@@ -32,7 +34,7 @@ fn level() -> StoreyLevel {
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
-    Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge }
+    Vertex { point: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x, y }, bulge }
 }
 
 fn ramp(path: Vec<Vertex>, rise: f64) -> Ramp {

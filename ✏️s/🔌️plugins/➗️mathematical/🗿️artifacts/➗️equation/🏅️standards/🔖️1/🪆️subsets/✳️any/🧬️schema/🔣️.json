@@ -22,17 +22,17 @@
       "x-semio-state": "artifact"
     },
     "notation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json",
       "x-semio-state": "artifact",
       "description": "🧾️ Content-addressed handle of the s.stdio.semio text child derived from `graph`."
     },
     "results": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json",
       "x-semio-state": "artifact",
       "description": "🧾️ Content-addressed handle of the s.stdio.semio table child derived from `graph`."
     },
     "computed": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json",
       "x-semio-state": "artifact",
       "description": "🧾️ Content-addressed handle of the s.stdio.semio value child derived from `graph` and `geometry`."
     },

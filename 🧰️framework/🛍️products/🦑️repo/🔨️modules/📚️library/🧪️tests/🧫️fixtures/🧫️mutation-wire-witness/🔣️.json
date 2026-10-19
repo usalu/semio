@@ -27,7 +27,7 @@
       "id": "outside-fixture-scope-tests",
       "name": "🧾️wire-witness",
       "parentKindId": "tests",
-      "expectedKindId": null
+      "expectedKindId": "members-of-tests"
     },
     {
       "id": "outside-fixture-scope-subset",
@@ -61,7 +61,7 @@
       "leafRoots": [
         "🧬️mutations/🔁️set-state"
       ],
-      "witnessRoot": "🧬️mutations/🔁️set-state/🧫️fixtures/🧾️wire-witness",
+      "witnessRoot": "🧬️mutations/🔁️set-state/🧪️tests/🧫️fixtures/🧾️wire-witness",
       "parentKindId": "fixtures"
     },
     {
@@ -69,9 +69,9 @@
       "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
       "leafRoots": [
         "🧬️schema/🧬️mutations/🚀️start-run",
-        "🧫️fixtures/🧬️mutations/🚀️start-run"
+        "🧪️tests/🧫️fixtures/🧬️mutations/🚀️start-run"
       ],
-      "witnessRoot": "🧫️fixtures/🧬️mutations/🚀️start-run/🧾️wire-witness",
+      "witnessRoot": "🧪️tests/🧫️fixtures/🧬️mutations/🚀️start-run/🧾️wire-witness",
       "parentKindId": "members-of-schema"
     }
   ]

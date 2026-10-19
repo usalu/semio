@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { type CssClockRule, type CssPaintRule, type CssAnimationScopeLaw, CSS_ANIMATION_SCOPE_LAWS, analyzeCssAnimationScope, cssAnimationScopeViolations, cssAnimationScopeUnclockedPaints } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { uiCss } from "../🧰️shared/🟦️.ts";
+import { uiCss } from "../🧰️suite-build-server/🟦️.ts";
 
 describe("🔁️ border effect animation scope", () => {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🔁️animation-scope/🔣️.json"), "utf8")) as {

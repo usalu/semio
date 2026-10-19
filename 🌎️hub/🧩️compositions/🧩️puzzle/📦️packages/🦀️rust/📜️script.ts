@@ -6,9 +6,9 @@ import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules
 /** 🧩️ `@semio-tech/puzzle-plugin` router: `bun ./📜️script.ts test`. */
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { buildRepositoryWasmWebV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { buildRepositoryWasmWebV1 } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -35,7 +35,8 @@ class TestScript extends BundleScript {
 class CanonicalArchitectureScript extends BundleScript {
   async run(): Promise<void> {
     const { toolJobPuzzleReservedRoutesSelfTests } = await import("../../../../../✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-puzzle-reserved-routes/🟦️.ts");
-    console.log(`puzzle-reserved-route-contributions: checks=${toolJobPuzzleReservedRoutesSelfTests()}`);
+    const { toolJobPuzzleReservedRoutesExact, toolJobPuzzle2dReservedRoutesExact } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts");
+    console.log(`puzzle-reserved-route-contributions: checks=${toolJobPuzzleReservedRoutesSelfTests({ toolJobPuzzleReservedRoutesExact, toolJobPuzzle2dReservedRoutesExact })}`);
     resolveTestLevel([], "quick");
     await runVitest(join(this.repoRoot, "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"), [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }

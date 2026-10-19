@@ -4,9 +4,9 @@ import{repositoryCompilerLayoutV1}from"../../💾️storage/🔒️enforcement/�
 import{openRepositoryCachePartitionV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{repositoryCompilerReservationV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{repositoryStrictStorageV1}from"../../💾️storage/🔒️enforcement/🟦️.ts";
-import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {BundleScript,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {BundleScript,type ScriptInvocation} from "@semio-tech/process/routing";
 import{join}from"node:path";
 import{retireInactiveCargoStoreV1,CARGO_RETIREMENT_POLICY_V1,type CargoRetirementPolicyV1}from"./⚙️execution/🟦️.ts";
 export{retireInactiveCargoStoreV1,CARGO_RETIREMENT_POLICY_V1,planInactiveCargoRetirementV1,type CargoRetirementPolicyV1,type CargoRetirementPlanV1}from"./⚙️execution/🟦️.ts";

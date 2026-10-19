@@ -1,18 +1,19 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::wall_sweeps::write_top_attach;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::write_top_attach;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::attach_walls::*;
-use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::attach_walls::{handle, AttachWalls};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_plugin::ArtifactEditor;
 
 fn furnished() -> ModelSnapshot {
@@ -20,7 +21,7 @@ fn furnished() -> ModelSnapshot {
     for (kind, id, parent) in [("slab-type", "sl-1", ""), ("slab", "slab-1", "st-ground"), ("roof-type", "rf-1", ""), ("roof", "roof-1", "st-ground")] {
         let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }
@@ -70,7 +71,7 @@ async fn without_a_wall_or_without_a_surface_the_command_is_refused_with_its_own
 
 #[semio_framework_async_macros::async_test]
 async fn the_command_is_reachable_by_its_action_id_and_the_shift_r_key() {
-    let command = crate::editor::bim::BimModelApp::command_from_action("attachWalls", None, None).expect("decodes without arguments");
-    assert!(crate::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));
-    assert!(crate::editor::bim::all_keybindings().contains(&("shift+r", "attachWalls")));
+    let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action("attachWalls", None, None).expect("decodes without arguments");
+    assert!(semio_s_artifact_bim_model_bim::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));
+    assert!(semio_s_artifact_bim_model_bim::editor::bim::all_keybindings().contains(&("shift+r", "attachWalls")));
 }

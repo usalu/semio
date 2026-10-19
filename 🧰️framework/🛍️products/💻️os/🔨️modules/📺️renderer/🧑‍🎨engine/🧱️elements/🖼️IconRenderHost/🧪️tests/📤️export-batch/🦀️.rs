@@ -97,7 +97,7 @@ fn icon_export_effect_publishes_an_accessible_cancel_control_and_drains_on_activ
     let mut cursor = super::ShellChromeChildCursor::default();
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::default();
     for _ in 0..1024 {
         if PanelsViewCtx::of(&mut shell).render_icon_export_step(&mut cursor, &mut draw, &mut atlas, &mut input, &semio_framework_ui_theme::Theme::default(), 1280.0) { break; }
     }

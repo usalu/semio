@@ -1,9 +1,14 @@
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Severity;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
-use crate::standards::v1::subsets::any::schema::inferences::quantities::QuantityKind;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::{diff::{patches::{ComponentPatch, FamilyParameterPatch, MepElementPatch, ProjectPatch}, Entry, ModelDiff}, snapshot::{ModelSnapshot, Point3}};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Severity;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::QuantityKind;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::{ComponentPatch, FamilyParameterPatch, MepElementPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::ProjectPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -55,8 +60,8 @@ fn components_and_runs_are_cache_transparent_warm_equals_cold_equals_uncached() 
 #[test]
 fn the_plan_is_topological_for_every_selection_that_involves_components() {
     let snapshot = room();
-    for wanted in [kinds::COMPONENTS, kinds::MEPS, kinds::SOLIDS, kinds::PLANS, kinds::QUANTITIES, kinds::DIAGNOSTICS, kinds::ALL] {
-        let steps = plan::build(&snapshot, kinds::closure(wanted));
+    for wanted in [semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::COMPONENTS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::MEPS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::SOLIDS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::PLANS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::QUANTITIES, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::DIAGNOSTICS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL] {
+        let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(wanted));
         let position = |key: &ModelNode| steps.iter().position(|step| &step.key == key).unwrap_or_else(|| panic!("{key:?} is planned"));
         for step in &steps {
             for parent in &step.parents {
@@ -64,7 +69,7 @@ fn the_plan_is_topological_for_every_selection_that_involves_components() {
             }
         }
     }
-    let steps = plan::build(&snapshot, kinds::closure(kinds::COMPONENTS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::COMPONENTS));
     let step = |id: &str| steps.iter().find(|step| step.key == ModelNode::Component(id.into())).expect("planned");
     assert_eq!(step("c-basin-south").parents, [ModelNode::Storey("st-ground".into()), ModelNode::Family("fam-basin".into()), ModelNode::WallLayout("w-south".into())]);
     assert_eq!(step("c-ghost").parents, [ModelNode::Storey("st-ground".into())], "a missing family and an unhosted component have no further parent");
@@ -156,7 +161,7 @@ fn a_moved_host_wall_recomputes_only_the_components_mounted_on_it_and_its_neighb
     settle(&mut session, &snapshot);
     let mut moved = snapshot.clone();
     let wall = moved.walls.get_mut("w-north").expect("wall");
-    wall.axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 6.0, y: 4.5 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 4.5 } };
+    wall.axis = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 6.0, y: 4.5 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 4.5 } };
     let after = session.refresh(&moved).clone();
     assert_eq!(after, ModelInference::infer(&moved).expect("infers"));
     let recomputed = count(&session, "component");
@@ -236,9 +241,9 @@ fn the_quantities_sum_per_family_category_system_and_size() {
 #[test]
 fn the_text_table_is_the_table_the_oracle_wrote() {
     let inference = ModelInference::infer(&room()).expect("infers");
-    let actual = crate::standards::v1::subsets::any::io::text::inferences::components::table_json(&inference);
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*TABLE), &actual);
+    let actual = semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::text::inferences::components::table_json(&inference);
+    let problems = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*TABLE), &actual);
     assert!(problems.is_empty(), "{problems:#?}");
-    let projected = crate::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json(&room(), "components").expect("the components projection exists");
+    let projected = semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json(&room(), "components").expect("the components projection exists");
     assert_eq!(projected, actual);
 }

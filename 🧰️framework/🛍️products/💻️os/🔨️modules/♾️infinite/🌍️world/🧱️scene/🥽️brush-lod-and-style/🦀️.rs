@@ -305,7 +305,7 @@ pub fn world3d_brush_mesh_announce_pending(scene_state: &WorldSceneState, assets
 /// a dropped feature, and it is what keeps a 2275×2560 scan (23 296 000 bytes) from being refused at
 /// raster admission, which the frame reports as a BUILD FAULT that quarantines the whole surface
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
-pub const WORLD_REFERENCE_TEXTURE_BYTES: usize = ui_wgpu::wgpu::SCENE_RASTER_ITEM_BYTES;
+pub const WORLD_REFERENCE_TEXTURE_BYTES: usize = semio_framework_ui_raster_owner::SCENE_RASTER_ITEM_BYTES;
 
 /// 🖼️ `image` scaled to at most [`WORLD_REFERENCE_TEXTURE_BYTES`] of RGBA, aspect preserved.
 pub fn bounded_reference_image(image: image::DynamicImage) -> image::DynamicImage {
@@ -632,7 +632,7 @@ pub const CELEBRATE_CONIC_SPIN_SECONDS: f32 = 1.2;
 ///
 /// 🎨️ React's `color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))` — the
 /// 55 % is the muted side, so the mix runs FROM the muted tone TOWARDS the panel by 0.45.
-pub fn mesh_style_paint(theme: &ui_wgpu::wgpu::Theme, kind: MeshStyleKind) -> MeshStylePaint {
+pub fn mesh_style_paint(theme: &semio_framework_ui_theme::Theme, kind: MeshStyleKind) -> MeshStylePaint {
     let rgba = |color: Rgba| [color.r, color.g, color.b, color.a];
     let (primary, secondary, tertiary) = (rgba(theme.celebrate[0]), rgba(theme.celebrate[1]), rgba(theme.celebrate[2]));
     match kind {
@@ -671,7 +671,7 @@ pub fn resolve_mesh_style(state: MeshStyleState) -> MeshStyleKind {
 
 /// 🎨️ Resolves React's retained material row while keeping semantic, authored, and environment
 /// colour authority distinct across live theme changes.
-pub fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, style: MeshStyleState, has_vertex_colors: bool, mut instance: Instance3d) -> Instance3d {
+pub fn world3d_style_paint(theme: &semio_framework_ui_theme::Theme, style: MeshStyleState, has_vertex_colors: bool, mut instance: Instance3d) -> Instance3d {
     let kind = resolve_mesh_style(style);
     let preserve_vertex_color = has_vertex_colors && matches!(kind, MeshStyleKind::Neutral | MeshStyleKind::Disabled);
     instance.material.preserve_vertex_color = preserve_vertex_color;

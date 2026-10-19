@@ -11,11 +11,11 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::set_grid_visible::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, settle, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, main_window_measures, settle, FlowAppFixture};
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::WindowMeasure;
 
-async fn grid_children(app: &mut FlowApp) -> Vec<WindowMeasure> {
+async fn grid_children(app: &mut FlowAppFixture) -> Vec<WindowMeasure> {
     main_window_measures(app)
         .await
         .into_iter()
@@ -26,11 +26,11 @@ async fn grid_children(app: &mut FlowApp) -> Vec<WindowMeasure> {
         .expect("grid measure group")
 }
 
-async fn grid_visible(app: &mut FlowApp) -> bool {
+async fn grid_visible(app: &mut FlowAppFixture) -> bool {
     grid_children(app).await.iter().any(|child| matches!(child, WindowMeasure::Toggle { id, pressed, .. } if id == "flow-play-measures.grid-visible" && *pressed))
 }
 
-async fn grid_factor(app: &mut FlowApp) -> f64 {
+async fn grid_factor(app: &mut FlowAppFixture) -> f64 {
     grid_children(app)
         .await
         .iter()

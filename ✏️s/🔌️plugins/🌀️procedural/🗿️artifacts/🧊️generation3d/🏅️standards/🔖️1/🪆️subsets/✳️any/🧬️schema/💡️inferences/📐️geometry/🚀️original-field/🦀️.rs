@@ -39,7 +39,7 @@ impl OriginalGeometryPending{
   self.check(snapshot,key,cx)?;if self.cancelled||!open(cx){return Ok(())}
   if self.owner.original().is_none_or(|state|state.phase==20){
    if !self.owner.terminal_is_empty(){close_owner(&mut self.owner,cx)?;return Ok(())}
-   if self.output.is_none(){let bytes=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<WidgetEvaluation>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(())}let evaluation=self.evaluation.take().ok_or_else(||invalid("original geometry pending has no produced evaluation donor"))?;*self.output=Some(Arc::new(evaluation));post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?}return Ok(())
+   if self.output.is_none(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<WidgetEvaluation>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(())}let evaluation=self.evaluation.take().ok_or_else(||invalid("original geometry pending has no produced evaluation donor"))?;*self.output=Some(Arc::new(evaluation));post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?}return Ok(())
   }
   let state=self.owner.original_mut().unwrap();let host=&snapshot.snapshot.host_snapshot;
   if state.phase==0{

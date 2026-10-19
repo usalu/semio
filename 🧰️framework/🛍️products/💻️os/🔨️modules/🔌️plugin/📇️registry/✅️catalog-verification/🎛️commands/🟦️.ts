@@ -2,8 +2,8 @@
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { existsSync } from "node:fs";
 import { isAbsolute } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { runVitest } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { runVitest } from "@semio-tech/process/vitest";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { auditPluginCatalogSources } from "../🔎️source-audit/🟦️.ts";
 import { createFreshCatalogBuildVerifier } from "../🏗️fresh-build-verifier/🟦️.ts";
@@ -37,7 +37,7 @@ export class NativeCatalogSelectionCheckScript extends BundleScript {
 /** 🛂️ Fails closed unless every discovered source and explicit fresh-root artifact verifies. */
 export class CatalogCompleteScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = findWorkspaceRoot();
     const option = (name: string): string | undefined => {
       const index = segments.indexOf(name);
       return index < 0 ? undefined : segments[index + 1];

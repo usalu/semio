@@ -17,11 +17,11 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapsh
 
 impl store::SnapshotRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<RasterSnapshot>) -> usize {
-        semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<RasterSnapshot>()
+        semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<RasterSnapshot>()
     }
 
     fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<RasterSnapshot>)> {
-        semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
+        semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
     }
 }
 

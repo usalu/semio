@@ -40,7 +40,9 @@ async fn block_list_gestures_reach_mounted_document_commands() {
             arguments: args.into_object().unwrap().into_iter().collect(),
         };
         let meta = semio_framework_plugin::ActionMeta { view_state: Some(view.clone()), ..artifact_app_laws::meta("local") };
-        app.handle_action_invocation(&invocation, Some(&definition.default_mode_id), &meta).await.expect("manifest admits scene gesture");
+        let mut invocation_arguments = Some(semio_framework_value::DslValue::object(invocation.arguments.iter().map(|(name, value)| (name.clone(), value.clone()))));
+        let mut invocation_fault = None;
+        artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0, &invocation.address, &mut invocation_arguments, &mut invocation_fault, Some(&definition.default_mode_id), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("manifest admits scene gesture");
         context::settle(&mut app).await;
         let snapshot = app.snapshot().unwrap();
         let projected = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot.definition));

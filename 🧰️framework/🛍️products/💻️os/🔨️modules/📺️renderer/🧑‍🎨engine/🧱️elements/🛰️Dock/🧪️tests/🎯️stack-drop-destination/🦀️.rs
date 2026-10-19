@@ -1,6 +1,6 @@
 //! 🎯️ Neutral whole-stack drops address the tree presented after source extraction.
 use semio_framework_os_renderer_wgpu_dock::*;
-use ui_wgpu::wgpu::WindowStackCorner;
+use semio_framework_ui_declaration::layout::WindowStackCorner;
 
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};

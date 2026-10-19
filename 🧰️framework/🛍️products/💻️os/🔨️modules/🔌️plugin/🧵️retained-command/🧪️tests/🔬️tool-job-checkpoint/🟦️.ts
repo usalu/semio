@@ -1,12 +1,12 @@
 import { join } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 /** 🧪️ Proves the verifier rejects the historical and audited false-positive classes. */
 /** 🧾️ Joins the native ARC1 contract to strict schema validation and independent platform byte encoders. */
 export function toolJobCheckpointSelfTests(): number {
-  const base = join(getWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
+  const base = join(findWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
   const fixture = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/📸️artifact-command-checkpoint.json"), "utf8")) as {
     format: string; version: number; maximumBytes: number; headerBytes: number;
     cases: { name: string; workPhase: boolean; rawPageCursor: number; rawBytes: number; workProgress: number; contextDigest: number; workspaceIdentity: number; workState: { bytes?: number[]; fill?: number; length?: number }; outcome: string }[];

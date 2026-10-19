@@ -12,7 +12,7 @@ export function testJackGraphWindowConfigOracle(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   addSemioMutationLeafSchemasV1(ajv, new URL("../../🧬️schema/🧬️mutations", import.meta.url));
   addSemioMutationLeafSchemasV1(ajv, new URL("../../../../📊️results/🫧️transient/🧬️schema/🧬️mutations", import.meta.url));
-  for (const document of [frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔣️.json"), frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"), frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"), "../../../../../../../../🧬️schema/📸️snapshot/🔣️.json", "../../../../../../../../🧬️schema/🔣️.json"]) ajv.addSchema(JSON.parse(readFileSync(new URL(document, import.meta.url), "utf8")));
+  for (const document of [frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔣️.json"), frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"), frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"), "../../../../../../../../🧬️schema/📸️snapshot/🔣️.json", "../../../../../../../../🧬️schema/🔣️.json"]) ajv.addSchema(JSON.parse(readFileSync(new URL(document, import.meta.url), "utf8")));
   const validate = ajv.compile(schema);
   const validateMutation = ajv.compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8")));
   let windows = Object.fromEntries([fixture.leftWindowId, fixture.rightWindowId].map((id: string) => [id, structuredClone(fixture.base)]));

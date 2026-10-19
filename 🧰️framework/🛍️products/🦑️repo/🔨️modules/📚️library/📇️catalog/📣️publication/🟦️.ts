@@ -3,9 +3,9 @@ import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import type { DiscoveredPackage } from "../../🔍️discovery/🪧️owner-markers/🟦️.ts";
 import type { RegistryCatalogInputView } from "../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { jsonDocumentDuplicateKeys } from "../../🧬️schema/🔣️json-document/🟦️.ts";
-import manifestSchema from "./🧬️schema/🔣️.json";
+import manifestSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 export interface OwnerCatalogPublicationV1 {
   readonly id: string;

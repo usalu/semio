@@ -7,7 +7,10 @@ use semio_framework_os_renderer_wgpu_scene_state::{CANVAS_CATALOGUE_HOVER, CANVA
 use semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::canvas_catalogue_drop;
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_theme::Theme;
 
 #[test]
 fn removed_scene_returns_its_credit_only_after_nested_retirement_and_preserves_the_successor() {
@@ -129,7 +132,7 @@ fn seed_catalogue_hover(scene: &UiComponentSceneNode) {
     });
 }
 
-fn catalogue_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+fn catalogue_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     collect_fixture_actions(input)
 }
 
@@ -143,7 +146,7 @@ fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payl
 
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["terminal"] != "nonCatalogue") {
         seed_catalogue_hover(&scene);
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         let point = &row["point"];
         let accepted = canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, point["x"].as_f64().unwrap() as f32, point["y"].as_f64().unwrap() as f32, row["rawPayload"].as_str().unwrap(), &mut input)
             .expect("terminal action batch admits");
@@ -166,8 +169,8 @@ fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
     let scene = canvas_scene("canvas-catalogue-refusal", "[]".into());
     let inner = Rect::new(0.0, 0.0, 320.0, 200.0);
     seed_catalogue_hover(&scene);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    for index in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    for index in 0..semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
         let action = format!("occupied-{index}");
         let bytes = semio_framework_ui_action::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
         input.reserve_action("fixture", &action, bytes).unwrap().publish().unwrap();
@@ -187,7 +190,7 @@ fn foreign_drop_is_inert_and_does_not_consume_the_catalogue_hover_owner() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let scene = canvas_scene("canvas-catalogue-foreign", "[]".into());
     seed_catalogue_hover(&scene);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let drag_data = std::collections::HashMap::from([("text/plain".to_string(), "foreign".to_string())]);
     assert!(!canvas_catalogue_drop("unpublished-window", 10.0, 10.0, &drag_data, &mut input));
     assert!(catalogue_actions(&mut input).is_empty());
@@ -205,7 +208,7 @@ fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
     let node = canvas_scene("s1", layers.to_string());
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -230,7 +233,7 @@ fn empty_layer_list_paints_the_react_empty_canvas_label() {
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
@@ -309,7 +312,7 @@ fn assert_canvas_pan_case(case_id: &str) {
     let end_x = row["end"]["x"].as_f64().unwrap() as f32;
     let end_y = row["end"]["y"].as_f64().unwrap() as f32;
     let button = row["button"].as_i64().unwrap() as i16;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, start_x, start_y, true, button, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_move_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, false, button, SceneModifiers::default(), &mut input).unwrap());
@@ -353,7 +356,7 @@ fn canvas2d_middle_pan_cancellation_retires_locally_without_a_document_action() 
     let node = canvas_scene("canvas2d-middle-pan-cancel", "[]".to_string());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(17);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-middle-pan-window", 1, 40.0, 50.0, true, 1, SceneModifiers::default(), &mut input).unwrap());
@@ -371,7 +374,7 @@ fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let owner = ui_render::PointerId(77);
     let foreign = ui_render::PointerId(78);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -397,7 +400,7 @@ fn two_canvas_documents_keep_independent_pointer_gestures() {
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let first_pointer = ui_render::PointerId(77);
     let second_pointer = ui_render::PointerId(78);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
 
     assert!(canvas_pointer_button_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -479,7 +482,7 @@ fn gumball_scene(surface_id: &str, live: bool) -> UiComponentSceneNode {
     node
 }
 
-fn gumball_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<(String, Value)> {
+fn gumball_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<(String, Value)> {
     catalogue_actions(input).into_iter().map(|action| (action.action.clone(), Value::from(action.args.as_ref().expect("gumball args")))).collect()
 }
 
@@ -492,7 +495,7 @@ fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
     let node = gumball_scene("canvas2d-gumball-live", true);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(41);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
     assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_move_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 270.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
@@ -516,7 +519,7 @@ fn gumball_cancels_abort_live_gestures_and_non_live_gestures_release_one_one_sho
     let _camera_owner = camera_fixture_lease(camera_fixture_grant());
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let pointer = ui_render::PointerId(42);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
     let live = gumball_scene("canvas2d-gumball-cancel", true);
     assert!(canvas_pointer_button_into(&live, bounds, pointer, "canvas2d-gumball-cancel-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
@@ -598,7 +601,7 @@ fn layout_path_records_paint_their_geometry_in_record_order() {
     mutate_scene_state("canvas2d-scene-path", |state| state.viewport = Viewport { x: 100.0, y: 75.0, zoom: 2.0 });
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     {

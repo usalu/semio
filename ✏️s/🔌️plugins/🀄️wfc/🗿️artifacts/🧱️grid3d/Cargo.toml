@@ -73,9 +73,6 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️pack
 [workspace.dependencies.semio-framework-tool-run]
 path = "../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui]
-path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 

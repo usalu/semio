@@ -46,8 +46,13 @@ use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::tree_window::TreeWindowRequest;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Theme, UiNode, WindowEngagement, WindowMeasure, WindowStackCorner};
+use semio_framework_ui_wgpu_light::tree_window::TreeWindowRequest;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::UiNode;
+use semio_framework_ui_declaration::layout::{WindowEngagement, WindowMeasure, WindowStackCorner};
 use winit::window::Window;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]

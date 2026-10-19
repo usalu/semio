@@ -1,7 +1,7 @@
 import {join,resolve} from "node:path";
 import type {CompletedCargoPublicationReferenceV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reference";
-import type {RuntimeCargoObservationV1,RuntimeCargoUnitV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts";
-import {runtimeActorCargoArgumentsV1,type RuntimeActorCargoArgumentsRequestV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
+import type { RuntimeCargoObservationV1, RuntimeCargoUnitV1 } from "@semio-tech/repo-lib/inventory";
+import { runtimeActorCargoArgumentsV1, type RuntimeActorCargoArgumentsRequestV1 } from "@semio-tech/repo-lib/inventory";
 /** 🏅️ Binds current package cdylib selection and original-to-final component custody to one production compiler unit. */
 export function trustedCargoActorUnitV1(observation:Omit<RuntimeCargoObservationV1,"status"|"cancelled">&{readonly status:number;readonly cancelled:boolean},selection:{cargoPackage:string;componentSha256:string;componentByteLength:number},reference:CompletedCargoPublicationReferenceV1,context:{root:string;expected:RuntimeActorCargoArgumentsRequestV1;read:(path:string)=>string|Uint8Array|undefined}):RuntimeCargoUnitV1|undefined{
   let args:readonly string[];try{if(reference.mode!==context.expected.mode||context.expected.kind!=="component"||context.expected.root!==context.root||context.expected.packageName!==selection.cargoPackage)return;args=runtimeActorCargoArgumentsV1(context.expected);}catch{return;}const manifest=join(context.root,context.expected.workspaceOwner);

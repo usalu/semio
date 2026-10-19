@@ -1,8 +1,11 @@
 //! 🏁️ `set-issue` payload. Sparsely changes an issue: title, description, status, priority, assignee, author, creation moment, labels, elements, the clash it was raised from (an assigned null clears it) and the viewpoint (an assigned null clears it).
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::IssuePatch}, snapshot::{ClashRef, IssuePriority, IssueStatus, IssueViewpoint}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::IssuePatch;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssuePriority, IssueStatus, IssueViewpoint};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

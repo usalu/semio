@@ -1,4 +1,4 @@
-import { requireRecord, requireString, requireLiteral, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord, requireString, requireLiteral, type UnknownRecord } from "@semio-tech/schema-validator-ts";
 import { normalizeRelative, utf8Compare } from "../🛣️path/🟦️.ts";
 import { sha256 } from "../📁️input/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";

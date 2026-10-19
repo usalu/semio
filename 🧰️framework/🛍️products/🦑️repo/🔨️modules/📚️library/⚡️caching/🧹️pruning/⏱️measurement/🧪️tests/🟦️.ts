@@ -13,7 +13,7 @@ import{mkdtemp,mkdir,writeFile,utimes,rm}from"node:fs/promises";
 import{join,dirname,isAbsolute}from"node:path";
 import{scanCargoBuildUnits,scanCargoIncrementalUnits,type CacheUnit}from"../../🟦️.ts";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import type{CacheScanTimingV1}from"../🟦️.ts";
 
 test("actual bounded scanner summaries preserve fresh metadata and primary thrown values",async()=>{

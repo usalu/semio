@@ -112,7 +112,7 @@ fn compact_slider_edit_uses_the_unscoped_input_font_while_its_resting_readout_st
 
 #[test]
 fn slider_paints_the_shared_rail_range_thumb_and_numeric_readout() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🎚️slider-presentation/🔣️.json")).unwrap();
     let case = law["cases"].as_array().unwrap().iter().find(|case| case["id"] == "fractional-middle").unwrap();
     let rect = |value: &serde_json::Value| [value[0].as_f64().unwrap() as f32, value[1].as_f64().unwrap() as f32, value[2].as_f64().unwrap() as f32, value[3].as_f64().unwrap() as f32];
     let node =

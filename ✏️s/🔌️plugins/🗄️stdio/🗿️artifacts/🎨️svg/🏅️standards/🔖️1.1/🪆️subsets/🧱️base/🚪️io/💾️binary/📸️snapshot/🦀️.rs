@@ -58,11 +58,11 @@ use crate::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
 
 pub fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8>) {
-    use crate::standards::v1_1::subsets::base::io::binary::diff::enc_svg_node_bin;
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{write_str_lp};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_declaration_bin};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_doctype_bin};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_prolog_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::enc_svg_node_bin;
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{write_str_lp};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{enc_declaration_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{enc_doctype_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{enc_prolog_bin};
     write_str_lp(output, &snapshot.schema);
     output.push(u8::from(snapshot.doc.root.is_some()));
     if let Some(root) = &snapshot.doc.root {
@@ -81,11 +81,11 @@ pub fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8>) {
 }
 
 pub fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_svg_node_bin};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{read_str_lp};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_declaration_bin};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_doctype_bin};
-    use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_prolog_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{dec_svg_node_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{read_str_lp};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{dec_declaration_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{dec_doctype_bin};
+    use crate::standards::v1_1::subsets::base::io::binary::snapshot::document_parts::{dec_prolog_bin};
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_svg_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
@@ -97,3 +97,6 @@ pub fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<SvgS
 }
 }
 pub use snapshot_wire_codec::*;
+
+#[path = "🧱️document-parts/🦀️.rs"]
+pub mod document_parts;

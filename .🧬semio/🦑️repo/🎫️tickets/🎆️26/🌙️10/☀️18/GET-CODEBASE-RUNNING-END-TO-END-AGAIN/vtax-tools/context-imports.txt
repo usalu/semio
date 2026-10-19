@@ -1,0 +1,5 @@
+import { type SemanticDescendantNode, canonicalTaxonomyEmoji } from "../📜️taxonomy-contracts/🟦️.ts";
+import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
+import type { SemanticDirectoryMatchContext } from "../📂️semantic-directory-kinds/🟦️.ts";
+import { type TaxonomyPathMatcher, createTaxonomyPathMatcher } from "../🎯️taxonomy-path-matching/🟦️.ts";
+import type { TaxonomyCliAttemptPreparationFacts, TaxonomyCliWritePreparationFacts } from "../🛠️generator-commands/🟦️.ts";

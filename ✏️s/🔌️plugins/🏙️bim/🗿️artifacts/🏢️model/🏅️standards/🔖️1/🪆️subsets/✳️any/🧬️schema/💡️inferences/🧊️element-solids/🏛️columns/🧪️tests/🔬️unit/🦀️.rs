@@ -1,18 +1,25 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, placed, point, rectangle};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, placed, rectangle};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Column, Slope};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::{self, Vertex};
 #[allow(unused_imports)]
@@ -21,13 +28,14 @@ use semio_framework_geometry::mesh::{extrude_loops, prism_between, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::{profile_loop, footprint, reach};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -109,7 +117,7 @@ async fn a_leaning_column_is_the_sheared_prism_of_its_stretched_section() {
     snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
     let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
     let angle = 0.3_f64;
-    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle });
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: 0.0, angle });
     let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
     let rise = plumb.bounds.max.z - plumb.bounds.min.z;
     assert!(close(leaning.volume, plumb.volume / angle.cos(), 1e-9), "area times rise over cos(angle)");
@@ -125,7 +133,7 @@ async fn the_lean_direction_turns_the_shift_in_plan() {
     let mut snapshot = case((*CASE)).snapshot;
     snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
     let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
-    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.2 });
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.2 });
     let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
     let rise = plumb.bounds.max.z - plumb.bounds.min.z;
     assert!(close(leaning.bounds.max.x - leaning.bounds.min.x, plumb.bounds.max.x - plumb.bounds.min.x, 1e-9), "no lean across x");
@@ -137,7 +145,7 @@ async fn the_footprint_at_a_height_follows_the_lean() {
     let mut snapshot = case((*CASE)).snapshot;
     let column = snapshot.columns.get_mut("c-rect").expect("column");
     column.rotation = 0.0;
-    column.tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.25 });
+    column.tilt = Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: 0.0, angle: 0.25 });
     let (column, profile) = (snapshot.columns["c-rect"].clone(), snapshot.column_types["ct-rect"].profile.clone());
     let centre = |ring: &[Point]| (ring.iter().map(|p| p.x).sum::<f64>() / ring.len() as f64, ring.iter().map(|p| p.y).sum::<f64>() / ring.len() as f64);
     let (base, high) = (centre(&footprint(&column, &profile, 0.0, 0.0)), centre(&footprint(&column, &profile, 0.0, 2.0)));
@@ -150,7 +158,7 @@ fn the_reach_of_a_column_grows_with_its_lean() {
     let snapshot = case((*CASE)).snapshot;
     let mut column = snapshot.columns["c-rect"].clone();
     let plumb = reach(&snapshot, &column).expect("a type");
-    column.tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.3 });
+    column.tilt = Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: 0.0, angle: 0.3 });
     assert!(reach(&snapshot, &column).expect("a type") > plumb + 1.0, "a lean may carry the section away from the base point");
     column.column_type = "ct-none".into();
     assert_eq!(reach(&snapshot, &column), None);

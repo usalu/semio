@@ -109,7 +109,7 @@ fn toggle(row: &mut TableRow, expanded: bool) -> bool {
     row.has_children && std::mem::replace(&mut row.expanded, expanded) != expanded
 }
 
-pub(crate) fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let visible = t.visible_indices();
     if visible.is_empty() {
         return None;
@@ -139,7 +139,7 @@ pub(crate) fn table_on_key(t: &mut TableState, ev: &KeyEvent) -> Option<WidgetSi
     }
 }
 
-pub(crate) fn table_on_mouse(t: &mut TableState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn table_on_mouse(t: &mut TableState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     let visible = t.visible_indices();
     let area = body_area(rect);
     t.view.select(t.position(&visible), visible.len());
@@ -163,7 +163,7 @@ pub(crate) fn table_on_mouse(t: &mut TableState, rect: Rect, event: &MouseEvent)
     }
 }
 
-pub(crate) fn table_set_hover(t: &mut TableState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn table_set_hover(t: &mut TableState, rect: Rect, pos: Option<Pos>) -> bool {
     let count = t.visible_indices().len();
     t.view.hover_with(body_area(rect), pos, count, ROW_LINES)
 }
@@ -198,7 +198,7 @@ fn paint_table_cell(buf: &mut CellBuffer, at: Pos, width: u16, text: &str, ink: 
 
 /// 🖌️ Header (muted, bold) + hairline underline, then hairline-separated body rows; tree rows
 /// indent by level and carry an expand marker. No vertical rules, no striping.
-pub(crate) fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 || t.columns.is_empty() {
         return;
     }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { acquireResourceLease, resourceLeasePathV1, checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { acquireResourceLease, resourceLeasePathV1, checkResourceLeaseControl } from "@semio-tech/process/leases";
 import { readFilesystemJournalWorkerOptionsV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts";
 import { mkdir, readFile, readdir, lstat, realpath, rm, writeFile, symlink, unlink } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -12,7 +12,7 @@ import { createHash } from "node:crypto";
 import type { ScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { createRepositoryFilesystemJournalV1 } from "../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts";
-import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+import { createLiveFilesystemJournalV1, type FilesystemJournalChangeV1 } from "@semio-tech/framework/filesystem/observation/journal";
 
 /** 🧪️ Checks the pinned daemon journal protocol and real native observation boundaries. */
 export async function proveDaemonJournal(workspace: string, output: string, invocation: ScriptInvocation, transport = false, fullWorkspace = false): Promise<void> {

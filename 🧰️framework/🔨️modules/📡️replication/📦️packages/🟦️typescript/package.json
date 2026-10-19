@@ -13,7 +13,8 @@
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./wire/command/ingress/ownership/testing/consumer": "./📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
     "./wire/local-interaction": "./📡️wire/🏠️local-interaction/🟦️.ts",
-    "./wire/local-interaction/transport": "./📡️wire/🏠️local-interaction/📡️transport/🟦️.ts"
+    "./wire/local-interaction/transport": "./📡️wire/🏠️local-interaction/📡️transport/🟦️.ts",
+    "./mutation/map/testing/shared-map-delta-source": "./🎮️mutation/🗂️map/🧪️testing/🧪️shared-map-delta-source/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-replication:test"

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 import micromatch from "micromatch";
-import { inspectRustPathLiterals } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
+import { inspectRustPathLiterals } from "@semio-tech/compiler-syntax-rust-ts/paths";
 import schema from "../🧬️schema/🔣️.json";
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 

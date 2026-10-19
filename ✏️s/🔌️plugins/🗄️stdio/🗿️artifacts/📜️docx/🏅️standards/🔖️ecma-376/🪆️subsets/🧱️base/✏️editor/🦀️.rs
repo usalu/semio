@@ -212,11 +212,13 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        self.copied_text.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            Ok(self.copied_text.close_step(grant))
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -321,7 +323,8 @@ macro_rules! canonical_docx_set_page_work {
                 &mut self,
                 input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>,
                 _cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<$editor>>, semio_framework_plugin::Fault> {
+            ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<$editor>>, semio_framework_job::OriginalTurnFailure> {
+                let original: Result<_, semio_framework_plugin::Fault> = (|| {
                 if self.closing || self.complete {
                     return Err(semio_framework_plugin::Fault::from("stdio.docx.set-page.work-closed"));
                 }
@@ -352,17 +355,21 @@ macro_rules! canonical_docx_set_page_work {
                     artifact_mutations: vec![DocxMutation::SetRunText(semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::set_run_text::SetRunText { address: address.clone(), text: copied })],
                     ..Default::default()
                 }))
+                })();
+                original.map_err(semio_framework_job::OriginalTurnFailure::from)
             }
 
             fn begin_close(&mut self) {
                 self.closing = true;
             }
 
-            fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-                if !self.closing {
-                    return semio_framework_job::InteractiveJobCloseStep::Blocked;
-                }
-                self.copied_text.close_step(grant)
+            fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+                semio_framework_job::close_original_granted_step(cx,|grant|{
+                    if !self.closing {
+                        return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+                    }
+                    Ok(self.copied_text.close_step(grant))
+                })
             }
 
             fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

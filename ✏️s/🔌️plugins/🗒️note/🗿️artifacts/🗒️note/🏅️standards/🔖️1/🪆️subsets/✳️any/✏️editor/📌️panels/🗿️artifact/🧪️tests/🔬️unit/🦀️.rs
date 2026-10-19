@@ -29,7 +29,7 @@ async fn renders_document_tree() {
             .expect("seed store for the semio example");
         store::os_store::text_format::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
     };
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load semio example");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio example");
     let json = render_body(&mut app, BODY_ARTIFACT).await;
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Welcome"));

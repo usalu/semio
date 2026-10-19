@@ -1,5 +1,5 @@
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import EquationGraph, EquationGeometry from "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type EquationSnapshot {
   graph: EquationGraph! @state(class: ARTIFACT)

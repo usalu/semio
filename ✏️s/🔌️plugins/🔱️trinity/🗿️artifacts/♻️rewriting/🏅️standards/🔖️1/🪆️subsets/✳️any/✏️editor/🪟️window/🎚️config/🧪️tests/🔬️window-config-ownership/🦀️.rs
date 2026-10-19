@@ -35,9 +35,8 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
     fn manifest() -> App {
         App { definition: create_rewriting_app(), examples: Vec::new() }
     }
-    async fn render(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, view: &ViewModel) -> Result<serde_json::Value, String> {
-        let tree = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, view).await.map_err(|error| format!("{error:?}"))?;
-        let text = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+    async fn render(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<serde_json::Value, String> {
+        let text = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, TRINITY_REWRITING_PLAY_BODY_BEFORE, view, cx).await.map_err(|error| format!("{error:?}"))?;
         let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&text).map_err(str::to_string)?;
         serde_json::to_value(scene).map_err(|error| error.to_string())
     }
@@ -48,6 +47,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
     };
     let left = view.for_window_instance(fixture["leftWindowId"].as_str().unwrap()).unwrap();
     let right = view.for_window_instance(fixture["rightWindowId"].as_str().unwrap()).unwrap();
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let mut reopened = artifact_app_laws::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
@@ -55,7 +55,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
     let outcome: Result<(), String> = async {
         let document = app.snapshot().map_err(|error| format!("{error:?}"))?;
         let config_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
-        let right_before = render(&mut app, &right).await?;
+        let right_before = render(&mut app, &right, scope.cx()).await?;
         for row in fixture["cases"].as_array().unwrap() {
             let context = view.for_window_instance(row["windowId"].as_str().unwrap()).unwrap();
             let (mutation, _) = witness(row);
@@ -67,7 +67,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut receipts = 0;
@@ -75,8 +75,8 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             if std::time::Instant::now() >= deadline {
                 return Err("window config operations did not finish".into());
             }
-            app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.map_err(|error| format!("{error:?}"))?;
+            app.maintenance_step(scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|error| format!("{error:?}"))?;
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 let lane = page.lane;
                 let bytes = page.bytes().to_vec();
@@ -106,8 +106,8 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
         if config_before.pack != config_after.pack || config_before.spr != config_after.spr {
             return Err("window publication changed the app configuration envelope".into());
         }
-        let left_tree = render(&mut app, &left).await?;
-        let right_tree = render(&mut app, &right).await?;
+        let left_tree = render(&mut app, &left, scope.cx()).await?;
+        let right_tree = render(&mut app, &right, scope.cx()).await?;
         let left_camera = scene_field(&left_tree, "viewport").ok_or_else(|| "left window is missing its rendered viewport".to_string())?;
         if ["x", "y", "zoom"].iter().any(|key| left_camera[key].as_f64() != witness(&fixture["cases"][0]).0["camera"][key].as_f64()) {
             return Err(format!("left window did not render its own camera: {left_tree}"));
@@ -137,7 +137,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
             reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
         }
         for (context, before) in [(&left, &left_tree), (&right, &right_tree)] {
-            let after = render(&mut reopened, context).await?;
+            let after = render(&mut reopened, context, scope.cx()).await?;
             for field in ["viewport", "lodJson"] {
                 let expected = scene_field(before, field).ok_or_else(|| format!("render omitted {field} for {:?}", context.window_id))?;
                 if Some(expected) != scene_field(&after, field) {
@@ -151,8 +151,8 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
     if let Err(error) = &outcome {
         eprintln!("Rewriting window configuration runtime failure before close: {error}");
     }
-    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     outcome.expect("retained Rewriting window configuration isolation and persistence");
 }
 

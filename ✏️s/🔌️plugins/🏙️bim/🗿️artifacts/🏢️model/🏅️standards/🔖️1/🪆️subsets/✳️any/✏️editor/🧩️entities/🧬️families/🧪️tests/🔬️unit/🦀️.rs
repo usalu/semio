@@ -1,10 +1,11 @@
-use crate::editor::bim::entities::families::{FAMILY_INFERRED, FAMILY_SOLID_INFERRED, create_family, create_family_solid};
-use crate::editor::bim::entities::InferredRow;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::families::{FAMILY_INFERRED, FAMILY_SOLID_INFERRED, create_family, create_family_solid};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::InferredRow;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::Inference;
-use crate::editor::bim::entities::{kind_of, kind_holding};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_of, kind_holding};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -69,6 +70,6 @@ fn a_new_family_takes_the_category_of_its_parent_and_a_new_solid_needs_its_famil
     assert_eq!(create_family_solid(&snapshot, "s-new", "fam-ghost", "Bench").err(), Some("bim.create.family-missing"));
     let created = create_family_solid(&snapshot, "s-new", "fam-table", "Bench").expect("creates");
     assert!(matches!(&created, ModelMutation::CreateFamilySolid(leaf) if leaf.solid.name == "Bench" && leaf.solid.family == "fam-table"));
-    let applied = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &created).expect("applies");
+    let applied = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &created).expect("applies");
     assert!(applied.family_solids.contains_key("s-new"));
 }

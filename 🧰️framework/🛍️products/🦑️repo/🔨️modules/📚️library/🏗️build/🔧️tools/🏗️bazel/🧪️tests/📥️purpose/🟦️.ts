@@ -1,5 +1,5 @@
-import{compilerAdmissionBudgetV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{compilerAdmissionBudgetV1}from"@semio-tech/process/compiler-capacity";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{createIssuedResourceControlV1,scriptResourceProcessEnvironmentV1,readScriptProcessEnvelope,type ScriptProcessEnvelope}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
@@ -12,7 +12,7 @@ import {scriptInvocationEnvironment,checkScriptInvocation,requireIssuedResourceC
 import {runBazelTasksV1,withBazelTaskCleanupV1,type BazelTaskRequestV1} from "../../📜️script.ts";
 import type {BuildGraphV1} from "../../../../🕸️graph/🟦️.ts";
 import{withRepositoryNxStorageV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
-import{withNxToolingUseV1,nxToolingUseStorageV1}from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts";
+import{withNxToolingUseV1,nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
 
 const parityImplementationPath=fileURLToPath(new URL("../../../../../🟨️.mjs",import.meta.url));
 type ParityAuthorizersV1={withNxLoadedToolingUseV1<T>(environment:Readonly<Record<string,string|undefined>>,body:()=>Promise<T>):Promise<T>;withOriginalNxGraphNativeStorageV1<T>(root:string,environment:Readonly<Record<string,string|undefined>>,body:()=>Promise<T>):Promise<T>};
@@ -46,8 +46,8 @@ export async function executeBazelExpectedFailureV1(root:string,project:string,g
 }
 
 
-import{runOwnedCommand}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{runOwnedCommand}from"@semio-tech/process/execution";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import parityOutputSchema from"./🧬️schema/📤️output.json";
 const protocol=parityOutputSchema.definitions.Protocol.const,importMetaDirectory=import.meta.dir;
 /** 📡️ Streams owned diagnostics while the unchanged issued phase bounds the real worker. */

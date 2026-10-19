@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 use semio_framework_ui_locale::LocalizedLabel;
-use ui_wgpu::wgpu::SurfaceKind;
+use semio_framework_ui_declaration::ui::SurfaceKind;
 
 /// 🌉️ Synchronous bridge for the kernel/`semio_framework` calls this crate's already-published
 /// sync API (`BackboneDocument` codecs, `OsBackbonePort`'s in-memory/localStorage bridge, media
@@ -407,7 +407,7 @@ pub fn resolve_os_app_definition(plugin_id: &str, app_id: &str) -> Option<AppDef
         body_key: registration.component_kind.clone(),
         surface_kind: SurfaceKind::Canvas2d,
         icon_id: "app-window".into(),
-        options: ui_wgpu::wgpu::WindowOptions::default(),
+        options: semio_framework_ui_declaration::layout::WindowOptions::default(),
         actions: Vec::new(),
         utilities: Vec::new(),
         interactions: Vec::new(),

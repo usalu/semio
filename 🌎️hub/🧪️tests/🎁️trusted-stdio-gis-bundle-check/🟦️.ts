@@ -2,19 +2,16 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { repositoryCargoNetworkV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
-import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { mkdirSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "@semio-tech/repo-lib/cargo";
+import { buildAdmittedCargoArtifactsV1, runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { proveGisComponentColdMapPatch } from "../../🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript } from "@semio-tech/process/routing";
 import { withCapturedLocalHubHostV1 } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { readHubScriptModule } from "../../🧪️testing/📜️script-sources/🟦️.ts";
 import { proveTrustedPublicationCli, validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
@@ -42,7 +39,7 @@ export class TrustedStdioGisBundleCheckScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "--publication-native") {
       await proveTrustedGenerationStageFixture(this.repoRoot);
       await proveTrustedPublicationFixture(this.repoRoot);
-      await runRepositoryCargoTests(["semio-hub-trusted-catalog-contract-laws", "semio-hub-trusted-catalog-laws"], this.repoRoot, this.invocation, ["--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
+      await runAdmittedCargoPackageTestsV1(["semio-hub-trusted-catalog-contract-laws", "semio-hub-trusted-catalog-laws"], this.repoRoot, this.invocation, ["--no-fail-fast", "--lib", "trusted_publication", "--", "--nocapture"]);
       return;
     }
     if (segments.length === 1 && segments[0] === "--publication-source") {
@@ -178,9 +175,9 @@ export class TrustedStdioGisBundleCheckScript extends BundleScript {
       mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
       const phaseControl=exactCargoCallerControlV1(this.invocation,"hub:trusted-native",0),hubEnv={...process.env};
       const targets=segments[0]==="--two-author-shell"?["-p","semio-hub","--bins","--features","semio-hub/integration-fixtures"]:["--bin","os-hub"];
-      if(segments[0]==="--two-author-shell")await buildRepositoryCargoArtifacts(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml"),["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
-      if(segments[0]==="--two-author-shell")await runRepositoryExactCargoLaws({control:phaseControl,preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:buildBudgetMs(),listMilliseconds:60000,lawMilliseconds:120000},cwd:this.root,env:hubEnv,nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-boot-laws",target:{kind:"lib"},cargoArgs:["--features","integration-fixtures"],laws:["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]}],progress(event){}});
-      await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),targets,this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:capture=>withCapturedLocalHubHostV1(this.invocation,phaseControl,capture,async(host,context)=>{
+      if(segments[0]==="--two-author-shell")await buildAdmittedCargoArtifactsV1(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml"),["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,consume:verifyCapturedCargoArtifactsV1});
+      if(segments[0]==="--two-author-shell")await runAdmittedExactCargoLawsV1({control:phaseControl,invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:buildBudgetMs(),listMilliseconds:60000,lawMilliseconds:120000},cwd:this.root,env:hubEnv,nativeEnv:{RUST_MIN_STACK:"268435456"},groups:[{package:"semio-hub-boot-laws",target:{kind:"lib"},cargoArgs:["--features","integration-fixtures"],laws:["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]}],progress(event){}});
+      await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),targets,this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,consume:capture=>withCapturedLocalHubHostV1(this.invocation,phaseControl,capture,async(host,context)=>{
       const {dataRoot,binaryPath:binary}=context;
       return withMaterializedTrustedCatalogBundleV1(host,context.control,trustedBootstrapSelectPackages(TRUSTED_BOOTSTRAP_LINKED_PACKAGES),async(receipt,actualPhase)=>{
       const initialPlan = await validateAndPublishTrustedStdioGisCandidate(host,actualPhase,receipt);

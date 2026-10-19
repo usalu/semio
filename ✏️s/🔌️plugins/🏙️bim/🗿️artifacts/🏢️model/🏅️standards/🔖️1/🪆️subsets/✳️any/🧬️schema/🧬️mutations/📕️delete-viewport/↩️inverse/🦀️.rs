@@ -1,13 +1,12 @@
 //! ↩️ Inverse of `DeleteViewport`: one concrete create per removed record and one setter per removed property or classification, in storage order (dependants first, the target last), so the store, which replays the
 //! vector reversed, recreates the target before anything on it.
 
-use crate::standards::v1::subsets::any::schema::mutations::cascade;
 use crate::standards::v1::subsets::any::schema::mutations::delete_viewport::DeleteViewport;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &DeleteViewport, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
-    cascade::inverse(base, std::slice::from_ref(&payload.id))
+    semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::inverse(base, std::slice::from_ref(&payload.id))
 }

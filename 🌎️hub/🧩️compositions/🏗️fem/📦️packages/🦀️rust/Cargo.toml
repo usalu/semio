@@ -18,8 +18,8 @@ role = "hub"
 [package.metadata.semio.storybook]
 id = "fem"
 titlePrefix = "🏗️fem"
-sourceRoots = ["../../../✏️s/🔌️plugins/🏗️fem"]
-storyGlobs = ["../../../✏️s/🔌️plugins/🏗️fem/📖️stories/**/🧪️.story.tsx"]
+sourceRoots = ["../../../✏️s/🔌️plugins/🏗️fem", "../../../✏️s/🧑‍💻dev/🏗️fem"]
+storyGlobs = ["../../../✏️s/🧑‍💻dev/🏗️fem/📖️stories/**/🧪️.story.tsx"]
 
 [lib]
 path = "../../🦀️.rs"

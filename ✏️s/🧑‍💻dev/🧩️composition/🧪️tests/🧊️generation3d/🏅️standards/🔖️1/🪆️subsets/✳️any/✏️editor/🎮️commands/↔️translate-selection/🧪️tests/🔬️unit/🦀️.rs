@@ -29,17 +29,17 @@ async fn translate_selection_persists_transform_into_flow_graph() {
 
 //#region 🛠️GumballTool
 /// 🧾️ Every applied history row that carries document operations, oldest first.
-async fn edit_rows(app: &mut context::Generation3dApp) -> Vec<semio_framework::kernel::HistoryEntry> {
+async fn edit_rows(app: &mut context::Generation3dAppFixture) -> Vec<semio_framework::kernel::HistoryEntry> {
     let mut rows: Vec<semio_framework::kernel::HistoryEntry> = semio_framework_plugin::PluginApp::history_snapshot(app).await.expect("history").upserts.into_iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).collect();
     rows.sort_by_key(|entry| entry.seq);
     rows
 }
 
 /// 🎚️ One gumball tick exactly as the live `World3dHost` sends it (`phase` stream / commit / abort, the owning window).
-async fn tick(app: &mut context::Generation3dApp, args: serde_json::Value) {
+async fn tick(app: &mut context::Generation3dAppFixture, args: serde_json::Value) {
     let action_meta = semio_framework_plugin::artifact_app_laws::meta("local");
     let args: semio_framework_value::DslValue = args.into();
-    app.handle_action("translateSelection", Some(&args), &action_meta).await.expect("translateSelection admitted");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "translateSelection", Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("translateSelection admitted");
     context::settle(app).await;
 }
 
@@ -75,7 +75,7 @@ async fn a_streamed_gumball_drag_is_one_edit_and_an_abort_is_zero_trace() {
     let mut app = app().await;
     let before = edit_rows(&mut app).await.len();
     let rows_before = semio_framework_plugin::PluginApp::history_snapshot(&mut *app).await.expect("history").upserts.len();
-    let committed = |app: &context::Generation3dApp| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
+    let committed = |app: &context::Generation3dAppFixture| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
     for (dx, phase) in [(1.0, "stream"), (2.0, "stream"), (0.5, "commit")] {
         tick(&mut app, serde_json::json!({ "nodeIds": ["extrude"], "dx": dx, "dy": 0.0, "dz": 0.0, "phase": phase, "windowId": "preview-1" })).await;
         if phase == "stream" {
@@ -151,7 +151,7 @@ fn an_open_gesture_previews_exactly_what_its_release_commits() {
 async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🛠️gumball-live-protocol.json")).expect("the protocol fixture parses");
-    let offset_of = |app: &context::Generation3dApp| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
+    let offset_of = |app: &context::Generation3dAppFixture| crate::gumball_param_vector(&context::snapshot(app).host_snapshot, "extrude__gumball_translate", "offset", [0.0; 3]);
     let mut consumed = 0;
     for case in fixture["cases"].as_array().expect("cases").iter().filter(|case| case.get("guest").is_some()) {
         let name = case["name"].as_str().expect("name");
@@ -162,7 +162,7 @@ async fn the_world3d_gumball_live_protocol_lands_as_its_guest_edits() {
             args["ids"] = serde_json::json!(["extrude"]);
             let args: semio_framework_value::DslValue = args.into();
             let action = dispatch["action"].as_str().expect("action");
-            app.handle_action(action, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap_or_else(|fault| panic!("{name}: {action} is admitted from the host's wire args: {fault:?}"));
+            semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{name}: {action} is admitted from the host's wire args: {fault:?}"));
             context::settle(&mut app).await;
         }
         let offset: Vec<f64> = case["guest"]["offset"].as_array().expect("offset").iter().map(|value| value.as_f64().expect("number")).collect();

@@ -1,9 +1,21 @@
 //! 🧰️ Standalone projections of one inference kind: each reads the model graph through its driver and takes the one table, for tests, oracles and one-shot callers that want a single kind without a session.
 
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, try_infer_selected};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::{ModelInference, curtain_layout::CurtainLayout, diagnostics::Diagnostic, element_solids::ElementSolid, opening_frames::OpeningFrame, plan_linework::PlanLinework, quantities::ModelQuantities, ramp_runs::RampRun, spaces::SpaceRoom, stair_runs::StairRun, storey_levels::StoreyLevel, view_linework::ViewLinework, wall_layout::WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ModelQuantities;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 
 /// 🪞️ The layout of every curtain wall (the `CurtainLayout` nodes of the model graph).
 pub fn compute_curtain_layout(snapshot: &ModelSnapshot) -> BTreeMap<String, CurtainLayout> {

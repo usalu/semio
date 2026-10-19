@@ -24,7 +24,7 @@
     {
       "id": "subset-fixture-mirror",
       "scope": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run",
-      "path": "🧫️fixtures/🧬️mutations/🚀️start-run",
+      "path": "🧪️tests/🧫️fixtures/🧬️mutations/🚀️start-run",
       "owner": "🧬️schema/🧬️mutations/🚀️start-run",
       "form": "fixture-mirror",
       "expectedKindId": "members-of-schema"
@@ -32,7 +32,7 @@
     {
       "id": "subset-fixture-vector",
       "scope": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
-      "path": "🧫️fixtures/➕insert-track",
+      "path": "🧪️tests/🧫️fixtures/➕insert-track",
       "owner": "🧬️schema/🧬️mutations/➕insert-track",
       "form": "fixture-vector",
       "expectedKindId": "members-of-fixtures"
@@ -40,15 +40,15 @@
     {
       "id": "subset-fixture-scenario-vector",
       "scope": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
-      "path": "🧫️fixtures/🩹️patch-snapshot-applied",
-      "owner": "🧬️schema/🧬️mutations/🩹️patch-snapshot",
+      "path": "🧪️tests/🧫️fixtures/🌗️change-gamma-applied",
+      "owner": "🧬️schema/🧬️mutations/🌗️change-gamma",
       "form": "fixture-scenario-vector",
       "expectedKindId": "members-of-fixtures"
     },
     {
       "id": "window-config-vector-scenario",
       "scope": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config",
-      "path": "🧫️fixtures/🎨️set-vector-style/✅️set-vector",
+      "path": "🧪️tests/🧫️fixtures/🎨️set-vector-style/✅️set-vector",
       "owner": "🧬️schema/🧬️mutations/🎨️set-vector-style",
       "form": "fixture-vector-scenario",
       "expectedKindId": "members-of-members-of-fixtures"

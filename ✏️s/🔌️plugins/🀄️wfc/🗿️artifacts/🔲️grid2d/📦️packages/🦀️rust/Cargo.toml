@@ -53,7 +53,6 @@ semio-s-plugin-wfc-engine = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-ui = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-styling = { workspace = true }
 semio-s-wfc-sqlite-bitmap = { workspace = true }
@@ -63,6 +62,7 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mu
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-plugin-wfc-engine-oracle = { path = "../../../../⚙️engine/🧿️oracle/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-s-wfc-sqlite-bitmap = { workspace = true, features = ["testing"] }

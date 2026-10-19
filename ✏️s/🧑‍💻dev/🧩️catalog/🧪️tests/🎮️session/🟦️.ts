@@ -1,6 +1,6 @@
-import type { GeneratorPreviewProgressControlV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts";
-import { atTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { GeneratorPreviewProgressControlV1 } from "@semio-tech/repo-lib/authoring";
+import { atTestLevel } from "@semio-tech/process/test-budget";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -15,8 +15,8 @@ import {
   playgroundSessionsRootV1,
   playgroundSessionViteAlias,
 } from "@semio-tech/framework-os-dev/activation";
-import { readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { PLAYGROUND_SESSION_ARTIFACT_KEY, renderPlaygroundSessionTypeScript, stagePlaygroundSession } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
+import { readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
+import { PLAYGROUND_SESSION_ARTIFACT_KEY, renderPlaygroundSessionTypeScript, stagePlaygroundSession } from "@semio-tech/plugin-registry/playground/session";
 
 type Fixture = {
   readonly schemaVersion: 1;
@@ -159,8 +159,8 @@ describe("playground session output ownership", () => {
 });
 
  test("the actual owning session preview passes the strict normalization progress receiver", async () => {
-  const lib = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"), ts = await import("typescript"), esbuild = await import("esbuild"), { loadCatalogTaxonomy } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { generatorPreviewExecution } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts"), { generatorPreviewResourceLimits } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🛠️generator-commands/🟦️.ts"), progress = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts"), normalization = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧾️plan-parsing/🟦️.ts");
-  const source = (await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️support/🏗️source-services/🟦️.ts")).normalizationEngineDeclarations(join(lib, "🧹️normalization")), syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), names = ["assertGeneratorPreviewTarget", "invokeGeneratorPreview"], functions = names.map(name => syntax.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === name)?.getText(syntax));
+  const lib = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"), ts = await import("typescript"), esbuild = await import("esbuild"), { loadCatalogTaxonomy } = await import("@semio-tech/repo-lib/inventory"), { generatorPreviewExecution } = await import("@semio-tech/repo-lib/inventory"), { generatorPreviewResourceLimits } = await import("@semio-tech/repo-lib/inventory"), progress = await import("@semio-tech/repo-lib/authoring"), normalization = await import("@semio-tech/repo-lib/inventory");
+  const source = (await import("@semio-tech/repo-lib/inventory")).normalizationEngineDeclarations(join(lib, "🧹️normalization")), syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), names = ["assertGeneratorPreviewTarget", "invokeGeneratorPreview"], functions = names.map(name => syntax.statements.find(statement => ts.isFunctionDeclaration(statement) && statement.name?.text === name)?.getText(syntax));
   expect(functions.every(Boolean)).toBe(true);
   const code = functions.join("\n") + "\nreturn invokeGeneratorPreview;", contract = loadCatalogTaxonomy().generatorContracts["s-playground-session"]!, declaration = readFileSync(join(workspace, contract.ownerPath!, "📋️project.json"), "utf8"), target = JSON.parse(declaration).targets[contract.previewTarget!.slice(contract.previewTarget!.lastIndexOf(":") + 1)], controller = new AbortController(), outputs = snapshotFile(absolute(fixture.default.sourcePath));
   for (const javascript of [ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, (await esbuild.transform(code, { loader: "ts", target: "es2022" })).code]) {

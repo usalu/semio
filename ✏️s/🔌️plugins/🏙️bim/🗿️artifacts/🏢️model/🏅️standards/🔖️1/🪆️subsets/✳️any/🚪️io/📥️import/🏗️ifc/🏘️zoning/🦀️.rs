@@ -3,12 +3,13 @@
 //! space is the material its `Semio_Authoring` names, else the material of the same name that `Pset_SpaceCoveringRequirements` names. A file that was not exported by this model brings no
 //! density, so its zones start without occupancy; a covering that names no known material is reported, not invented.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, single_values};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Zone};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
@@ -53,7 +54,7 @@ fn finishes(i: &mut Import<'_>) {
 }
 
 fn free(i: &Import<'_>, candidate: &str) -> bool {
-    crate::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, candidate).is_none()
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, candidate).is_none()
 }
 
 fn zones(i: &mut Import<'_>) {

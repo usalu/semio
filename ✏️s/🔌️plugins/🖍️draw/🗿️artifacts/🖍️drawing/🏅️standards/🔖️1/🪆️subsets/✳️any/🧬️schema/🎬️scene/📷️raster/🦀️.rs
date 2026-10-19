@@ -15,7 +15,7 @@ impl RetireOwned for RasterSceneAsset {
 pub enum RasterSceneContent {Path {segments:Vec<PathSegment>,fill_rule:FillRule,fill:Option<FillStyle>,stroke:Option<StrokeStyle>},Pixels(Arc<RasterImage>),Image{asset:String,width:f64,height:f64}}
 impl RetireOwned for RasterSceneContent {
  fn retirement(self)->Box<dyn RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};match self{Self::Path{segments,fill_rule:_,fill,stroke}=>sequence(vec![deferred(segments),deferred(fill),deferred(stroke)]),Self::Pixels(image)=>RasterLease(image).retirement(),Self::Image{asset,..}=>asset.retirement()}}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};match self{Self::Path{segments,fill,stroke,..}=>sequence_birth_bytes(&[deferred_birth_bytes_for(segments),deferred_birth_bytes_for(fill),deferred_birth_bytes_for(stroke)]),Self::Pixels(_)=>Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<RasterImage>>()),Self::Image{asset,..}=>asset.retirement_birth_bytes()}}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};match self{Self::Path{segments,fill,stroke,..}=>sequence_birth_bytes(&[deferred_birth_bytes_for(segments),deferred_birth_bytes_for(fill),deferred_birth_bytes_for(stroke)]),Self::Pixels(_)=>Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<RasterImage>>()),Self::Image{asset,..}=>asset.retirement_birth_bytes()}}
  fn controlled_retirement_supported()->bool{true}
 }
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]

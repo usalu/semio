@@ -1,26 +1,26 @@
-use crate::standards::v1::subsets::any::io::export::ifc::projection::quote;
-use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::quote;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, schema_of, Cell};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, schema_of, Cell};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::energy::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document_in, rows, string};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::energy::{thermal_report, KELVIN, SPACE_SET};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document_in, rows, string};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -151,7 +151,7 @@ const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tes
 #[test]
 fn the_committed_files_are_the_current_export() {
     let model = energy();
-    for (name, export) in [("energy-2x3.ifc", crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model)), ("energy-4.ifc", crate::standards::v1::subsets::any::io::export::ifc::export_ifc4(&model))] {
+    for (name, export) in [("energy-2x3.ifc", semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model)), ("energy-4.ifc", semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc4(&model))] {
         let (bytes, _) = export.expect("the export");
         let path = format!("{FIXTURES}/{name}");
         if std::env::var("BIM_BLESS").is_ok() {

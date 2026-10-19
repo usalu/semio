@@ -1,7 +1,7 @@
-use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::{sweep};
-use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::{QUANTITY_SET, SWEEP_SET};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, count, document, number_of, property_sets, quantity_of, real, rows, string, tags, target, text_of};
-use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::sweep;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::{QUANTITY_SET, SWEEP_SET};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{attic, count, document, number_of, property_sets, quantity_of, real, rows, string, tags, target, text_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, WallSide};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
@@ -97,7 +97,7 @@ fn a_sweep_is_contained_in_the_storey_of_its_wall_and_has_the_material_of_its_re
 fn a_sweep_whose_host_wall_is_gone_is_skipped_with_a_note() {
     let mut model = attic();
     model.walls.remove("w-rail");
-    let (document, notes) = crate::standards::v1::subsets::any::io::export::ifc::model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the model exports");
+    let (document, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(!tags(&document, "IFCMEMBER").contains(&"ws-rail".to_string()));
     assert!(notes.iter().any(|note| note.contains("ws-rail")), "{notes:?}");
 }

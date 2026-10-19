@@ -18,14 +18,17 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Stairs>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{direction, point};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairLanding, StairRun, StairWinder};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::direction;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairLanding, StairRun, StairWinder};
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
 #[cfg(test)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{RiserKind, Stair, StairFlight, StringerKind};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{RiserKind, StairFlight, StringerKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::mesh::{extrude, extrude_loops, prism_between, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};
@@ -258,7 +261,7 @@ pub fn stair_geometry(stair: &Stair, own: &StoreyLevel, target: Option<&StoreyLe
 pub fn stair_solid(stair: &Stair, run: &StairRun) -> ElementSolid {
     let mut builder = SolidBuilder::new(SolidFamily::Stair);
     let built = parts_of(stair, run);
-    builder.add(parts::STEP, "", 0, &built.treads).add(parts::RISER, "", 0, &built.risers).add(parts::STRINGER, "", 0, &built.stringers).add(parts::LANDING, "", 0, &built.landings);
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::STEP, "", 0, &built.treads).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::RISER, "", 0, &built.risers).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::STRINGER, "", 0, &built.stringers).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LANDING, "", 0, &built.landings);
     builder.build()
 }
 

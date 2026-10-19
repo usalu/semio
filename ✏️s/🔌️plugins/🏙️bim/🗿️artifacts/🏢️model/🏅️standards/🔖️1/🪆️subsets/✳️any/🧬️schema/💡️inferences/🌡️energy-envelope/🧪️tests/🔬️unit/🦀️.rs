@@ -1,18 +1,19 @@
 //! 🧪️ The energy envelope of a closed room, a two-room house and a basement, and the aggregates, against closed-form values (ISO 6946 resistances, areas by orientation, the GEG coefficient).
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, Vec3};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, Vec3};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::spaces::{holds, inside, interior_point, obstacles_of, Obstacle, SpaceRoom, SpaceStatus, StoreyRooms};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::{holds, inside, interior_point, obstacles_of, Obstacle, SpaceRoom, SpaceStatus, StoreyRooms};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 #[allow(unused_imports)]
 use semio_framework_2d::booleans::BooleanOperation;
 #[allow(unused_imports)]
@@ -28,11 +29,16 @@ use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Building, Layer, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Rgb, Site, Slab, SlabType, Space, SpaceBoundary, Storey, TopConstraint, Wall, WallType, WindowType, Zone}, diff::{Entry, ModelDiff, patches::SpaceConditionsPatch}};
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, inferences::ModelInference};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSpace, SurfaceKind, EnvelopeSurface, Boundary, EnergyCode, GROUND_FACTOR, BRIDGE_ALLOWANCE};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Rgb, SpaceBoundary, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Building, Material, Opening, Site, Slab, SlabType, Space, Storey, Wall, WallType, WindowType, Zone};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::SpaceConditionsPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 fn near(left: f64, right: f64) -> bool {
@@ -93,7 +99,7 @@ fn rectangle(snapshot: &mut ModelSnapshot, storey: &str, width: f64, depth: f64)
 }
 
 fn window(snapshot: &mut ModelSnapshot, host: &str, offset: f64) {
-    snapshot.openings.insert("o-win".into(), Opening { host: host.into(), kind: crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
+    snapshot.openings.insert("o-win".into(), Opening { host: host.into(), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
 }
 
 fn room() -> ModelSnapshot {
@@ -287,7 +293,7 @@ fn spaces_without_conditions_are_reported_once_when_others_state_them() {
     let mut snapshot = two_rooms(Some(20.0));
     snapshot.space_conditions.remove("sp-b");
     let inference = infer(&snapshot);
-    let found: Vec<_> = inference.diagnostics.iter().filter(|finding| finding.code == crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::EnergyConditionsMissing).collect();
+    let found: Vec<_> = inference.diagnostics.iter().filter(|finding| finding.code == semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::EnergyConditionsMissing).collect();
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].elements, ["sp-b"]);
     assert!(found[0].text("en").is_some() && found[0].text("de").is_some());
@@ -296,7 +302,7 @@ fn spaces_without_conditions_are_reported_once_when_others_state_them() {
 #[test]
 fn the_diagnostics_name_the_surfaces_without_thermal_data_in_both_languages() {
     let inference = infer(&room());
-    let found: Vec<_> = inference.diagnostics.iter().filter(|finding| finding.code == crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::EnergyThermalMissing).collect();
+    let found: Vec<_> = inference.diagnostics.iter().filter(|finding| finding.code == semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::EnergyThermalMissing).collect();
     assert_eq!(found.len(), 1, "{found:?}");
     assert!(found[0].text("en").expect("en").contains("no thermal data") && found[0].text("de").expect("de").contains("keine thermischen Daten"));
 }

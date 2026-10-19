@@ -1,11 +1,16 @@
 //! 📋️ The schedule rows of the entity table: how an authored schedule reads off the snapshot as text (columns `name, type, net_area*`, sort `length desc, name`, filters `length >= 6; usage empty`, grouping `storey`),
 //! how an edited text becomes a `set-schedule` mutation, and what a new schedule is: the preset a library row names (`parent` is its key), the wall schedule for any other.
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::entities::{parse_flag, parse_text, partial, variant, Created, FieldRow};
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::{columns_text, filters_text, keys_text, parse_columns, parse_filters, parse_groups, parse_sorts, sorts_text};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Phase, ScheduleCategory}};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{parse_flag, parse_text, partial, variant};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::{columns_text, filters_text, keys_text, parse_columns, parse_filters, parse_groups, parse_sorts, sorts_text};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleCategory};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule;
 
 fn parse_category(text: &str) -> Option<ScheduleCategory> {
     ScheduleCategory::from_token(text)
@@ -19,7 +24,7 @@ fn phases(text: &str) -> Option<Vec<Phase>> {
     text.split(',').map(str::trim).filter(|part| !part.is_empty()).map(|part| variant(part, &[Phase::Existing, Phase::New, Phase::Demolished, Phase::Temporary])).collect()
 }
 
-fn categories(_: &ModelSnapshot, _: &crate::editor::bim::terminology::BimLabels) -> Vec<(String, String)> {
+fn categories(_: &ModelSnapshot, _: &semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels) -> Vec<(String, String)> {
     ScheduleCategory::ALL.into_iter().map(|category| (category.token().to_string(), category.token().to_string())).collect()
 }
 
@@ -27,7 +32,7 @@ fn categories(_: &ModelSnapshot, _: &crate::editor::bim::terminology::BimLabels)
 pub static SCHEDULE_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.schedules.get(id).map(|row| row.name.clone()), parse_text => set_schedule::SetSchedule),
     field!("category", field_category, Text, |s, id| s.schedules.get(id).map(|row| row.category.token().to_string()), choices: categories, parse_category => set_schedule::SetSchedule),
-    field!("columns", field_columns, LongText, |s, id| s.schedules.get(id).map(|row| columns_text(&row.columns)), |s, id, value| partial::<crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule, _>(id, "columns", &parse_columns(value, &s.schedules.get(id)?.columns)?).map(ModelMutation::SetSchedule)),
+    field!("columns", field_columns, LongText, |s, id| s.schedules.get(id).map(|row| columns_text(&row.columns)), |s, id, value| partial::<semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule, _>(id, "columns", &parse_columns(value, &s.schedules.get(id)?.columns)?).map(ModelMutation::SetSchedule)),
     field!("sort", field_sort, Text, |s, id| s.schedules.get(id).map(|row| sorts_text(&row.sort)), parse_sorts => set_schedule::SetSchedule),
     field!("filter", field_filter, LongText, |s, id| s.schedules.get(id).map(|row| filters_text(&row.filter)), parse_filters => set_schedule::SetSchedule),
     field!("group", field_group, Text, |s, id| s.schedules.get(id).map(|row| keys_text(row.group.iter().map(|group| &group.key))), parse_groups => set_schedule::SetSchedule),
@@ -38,6 +43,6 @@ pub static SCHEDULE_FIELDS: &[FieldRow] = &[
 
 /// 📋️ A new schedule: the preset named by `parent`, else the wall schedule.
 pub fn create_schedule(_: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
-    let schedule = crate::editor::bim::modes::edit::windows::schedule::edit::created(parent, name);
-    Ok(ModelMutation::CreateSchedule(crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule { id: id.into(), schedule }))
+    let schedule = semio_s_artifact_bim_model_ramp_runs::editor::bim::modes::edit::windows::schedule::edit::created(parent, name);
+    Ok(ModelMutation::CreateSchedule(semio_s_artifact_bim_model_mut_any_102::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule { id: id.into(), schedule }))
 }

@@ -11,7 +11,10 @@ use semio_framework_value::{DslValue, FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{ActionDescriptor, FRAMEWORK_PANEL_TAB_HISTORY_ID, InputState, Rect, Theme};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_HISTORY_ID};
+use semio_framework_ui_wgpu_input::InputState;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎚️chrome-state/🧬️component/🦀️.rs"]
 mod staged_chrome_state__component;

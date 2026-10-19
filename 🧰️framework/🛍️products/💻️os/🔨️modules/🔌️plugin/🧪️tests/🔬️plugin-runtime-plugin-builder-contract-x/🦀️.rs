@@ -161,8 +161,8 @@ impl Drop for TestRawLeaseCursor {
 pub struct TestAppCommandInputs {
     pub raw_wire: TestRawLease,
     pub window_config: Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
-    pub interaction_state: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionState>,
-    pub interaction_hover: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionHoverState>,
+    pub interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>,
+    pub interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>,
     pub instance_operation_owner: semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle,
     pub output_chunks: ArtifactOutputChunks,
 }
@@ -395,7 +395,7 @@ pub fn test_app_command_spec<const RETAINED: bool, const TOOLS: u8>(request: Art
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
-        residual: Some(TestAppCommandInputs { raw_wire: TestRawLease(request.raw_wire), window_config: request.window_config, interaction_state: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
+        residual: Some(TestAppCommandInputs { raw_wire: TestRawLease(request.raw_wire), window_config: request.window_config, interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
         metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, retained: request.retained, authoring_seed: request.authoring_seed }),
         command: Some(request.command),
         snapshot: Some(request.snapshot),

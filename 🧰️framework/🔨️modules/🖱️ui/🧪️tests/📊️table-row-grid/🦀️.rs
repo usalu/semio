@@ -9,18 +9,18 @@
 //!
 //! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/📊️table-row-grid/🔣️.json`; the editable row's cell rects are also solved by taffy.
 
-use crate::wgpu::accessibility::{accessibility_projection, row_accessibility_action};
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::chrome::UiDriverDrag;
-use crate::wgpu::draw_types::{DrawList, KIND_GLYPH};
-use crate::wgpu::events::{AccessibilityUiEvent, EventRouter, PointerButton, UiCommand, UiEvent};
-use crate::wgpu::layout::{table_actions_width, table_column_rect, tree_row_action_rect, TreeRowMetrics};
-use crate::wgpu::mounted_layout::layout_tree_now;
-use crate::wgpu::paint::{paint_node_step_with_driver, RetainedNodePaintCursor, RetainedNodePaintStep};
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::theme::Theme;
-use crate::wgpu::tree::{UiDocumentTree, UiTree};
+use semio_framework_ui_wgpu_hosting::accessibility::{accessibility_projection, row_accessibility_action};
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_framework_ui_draw_contract::{DrawList, KIND_GLYPH};
+use semio_framework_ui_wgpu_events::{AccessibilityUiEvent, EventRouter, PointerButton, UiCommand, UiEvent};
+use semio_framework_ui_wgpu_layout::layout::{table_actions_width, table_column_rect, tree_row_action_rect, TreeRowMetrics};
+use semio_framework_ui_wgpu_mounted_layout::layout_tree_now;
+use semio_framework_ui_wgpu_paint::{paint_node_step_with_driver, RetainedNodePaintCursor, RetainedNodePaintStep};
+use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_retained_tree::tree::{UiDocumentTree, UiTree};
 use serde_json::Value;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision};
 

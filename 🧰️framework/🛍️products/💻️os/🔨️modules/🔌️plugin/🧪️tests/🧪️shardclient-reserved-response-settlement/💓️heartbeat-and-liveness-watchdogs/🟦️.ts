@@ -1,6 +1,6 @@
 /** 💓️ The heartbeat, liveness and shared array buffer heartbeat tests. */
-import { loadActorShardClientFixture, loadClientSegmentedDownloadSchema, loadClientSegmentedDownloadFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { loadActorShardClientFixture, loadClientSegmentedDownloadSchema, loadClientSegmentedDownloadFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { flushAdmission, shardClientInternals } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { ShardClientSettlementTestKit, ShardJspiScope } from "../🧰️settlement-test-kit/🟦️.ts";
 
@@ -145,14 +145,14 @@ export function registerHeartbeatAndLivenessTests(kit: ShardClientSettlementTest
     });
 
     it("serves the shard worker from the schema-owned distribution route, not a transliteration of it", async () => {
-      const { SHARD_WORKER_URL } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
-      const { MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY } = await import("../../../📇️registry/📦️deployment/🟦️.ts");
+      const { SHARD_WORKER_URL } = await import("@semio-tech/framework-actor/shard-runtime");
+      const { MODULE_PLUGIN_ROUTE, MODULE_SHARD_DIRECTORY } = await import("@semio-tech/plugin-registry/deployment");
       const { SHARD_WORKER_FILE } = await import("../../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts");
       expect(SHARD_WORKER_URL).toBe(`${MODULE_PLUGIN_ROUTE}/${MODULE_SHARD_DIRECTORY}/${SHARD_WORKER_FILE}`);
       // 🩺️ Every browser-side spawner must use THAT url. A private ASCII transliteration
       // (`/plugin-modules/_shard/…`) is answered by Vite's SPA fallback with `text/html`, which a
       // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
-      const { readModuleTreeSource } = await import("../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts");
+      const { readModuleTreeSource } = await import("@semio-tech/framework-compiler-ts/syntax/module-tree");
       for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts"]) {
         const source = readModuleTreeSource(new URL(spawner, testSource.url));
         expect(source, spawner).not.toContain("/plugin-modules/_shard/");

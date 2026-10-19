@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import {readModuleTreeSource} from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import {resolve,dirname} from "node:path";
 import Parser from "web-tree-sitter";
 /** 🤝️ Startup admits the actual borrowed channel only after its original phased machine returns. */

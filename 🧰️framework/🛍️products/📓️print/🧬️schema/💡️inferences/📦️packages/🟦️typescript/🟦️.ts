@@ -10,6 +10,7 @@ export * from "@semio-tech/print/schema/snapshot/chart";
 export * from "../../📐scale/🟦️.ts";
 export * from "../../🔢format/🟦️.ts";
 export * from "../../🧮transform/🟦️.ts";
+export * from "../../🧮transform/🎛️layer-inference/🟦️.ts";
 export * from "../../✒️mark/🟦️.ts";
 export * from "../../✒️mark/🪜️curves-linear-and-step/🟦️.ts";
 export * from "../../✒️mark/🌀️curves-basis-and-bundle/🟦️.ts";

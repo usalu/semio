@@ -38,5 +38,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "devDependencies": {
+    "ajv": "8.20.0"
+  }
 }

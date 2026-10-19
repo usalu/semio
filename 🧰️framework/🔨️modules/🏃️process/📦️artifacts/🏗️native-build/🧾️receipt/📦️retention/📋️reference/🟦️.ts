@@ -1,7 +1,7 @@
 import {isAbsolute,resolve} from "node:path";
 import {readScriptProcessJsonV1} from "../../../../../🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import schemaDocument from "./🧬️schema/🔣️.json";
+import schemaDocument from "./🧬️schema/🔣️.json" with { type: "json" };
 export interface CompletedCargoPublicationReferenceV1{readonly version:1;readonly mode:"prototype"|"release";readonly kind:"component"|"emitter";readonly pass:string;readonly receiptSha256:string;readonly indexSha256:string;readonly originalArtifact:Readonly<{path:string;sha256:string;byteLength:number}>|null}
 const schema=structuredClone(schemaDocument);
 /** 📋️ Reads complete packet reference DATA; only a genuine publication reader can give it custody. */

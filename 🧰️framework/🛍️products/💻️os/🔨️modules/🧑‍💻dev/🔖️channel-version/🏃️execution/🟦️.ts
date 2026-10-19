@@ -2,7 +2,7 @@
 
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { channelVersionCensus, writeChannelVersionConsumers } from "../🔍️census/🟦️.ts";
 import { loadChannelVersionSourceV1 } from "../🟦️.ts";
@@ -25,7 +25,7 @@ export class ChannelVersionScript extends BundleScript {
       return;
     }
     if (verb !== "generate" && verb !== "check") throw Error("usage: channel-version <generate [--guest]|check>");
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = findWorkspaceRoot();
     const source = loadChannelVersionSourceV1(repoRoot);
     if (verb === "generate") {
       const { written, refused } = writeChannelVersionConsumers(source, { guest: rest.includes("--guest"), writeText: (path, text) => writeFileSync(join(repoRoot, path), text) });

@@ -18,6 +18,6 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-os-playbook-contract = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-locale = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 

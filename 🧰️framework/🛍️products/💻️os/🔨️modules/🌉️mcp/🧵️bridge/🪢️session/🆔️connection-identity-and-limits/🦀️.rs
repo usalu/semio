@@ -14,7 +14,7 @@ impl std::fmt::Display for ShellConnectionId {
     }
 }
 
-pub(super) struct ConnectionEntry {
+pub(crate) struct ConnectionEntry {
     pub generation: u64,
     pub outbox: Arc<BridgeOutbox>,
     /// 🚩️ The flags this shell declared in its own `Hello`. `relay_app_commands` is what
@@ -34,7 +34,7 @@ pub(super) struct ConnectionEntry {
     /// [`BRIDGE_AGENT_INBOX_MAX_ITEMS`]. Read-once: `take_agent_messages` drains it, so the
     /// `semio://ui/agent-messages` resource the agent polls never replays a turn it already read
     /// and never grows without bound if no agent is polling.
-    pub(super) agent_inbox: std::collections::VecDeque<AgentInboxMessage>,
+    pub(crate) agent_inbox: std::collections::VecDeque<AgentInboxMessage>,
 }
 
 /// 💬️ One human turn waiting for the connected agent to read it.
@@ -55,24 +55,24 @@ pub(crate) const BRIDGE_OUTBOX_MAX_BYTES: usize = 1_048_576;
 
 pub(crate) const BRIDGE_BROADCAST_MAX_RECIPIENTS: usize = 64;
 
-pub(super) const BRIDGE_BROADCAST_MAX_BYTES: usize = BRIDGE_OUTBOX_MAX_BYTES * BRIDGE_BROADCAST_MAX_RECIPIENTS;
+pub(crate) const BRIDGE_BROADCAST_MAX_BYTES: usize = BRIDGE_OUTBOX_MAX_BYTES * BRIDGE_BROADCAST_MAX_RECIPIENTS;
 
 pub(crate) const BRIDGE_OUTBOX_PAGE_BYTES: usize = 16_384;
 
 pub(crate) const BRIDGE_OUTBOX_MAX_PAGES: usize = BRIDGE_OUTBOX_MAX_BYTES.div_ceil(BRIDGE_OUTBOX_PAGE_BYTES);
 
-pub(super) const BRIDGE_BROADCAST_MAX_PENDING: usize = 64;
+pub(crate) const BRIDGE_BROADCAST_MAX_PENDING: usize = 64;
 
-pub(super) const BRIDGE_RETIREMENT_MAX_PENDING: usize = 256;
+pub(crate) const BRIDGE_RETIREMENT_MAX_PENDING: usize = 256;
 
-pub(super) const BRIDGE_ASYNC_RETRY_MS: u64 = 1;
+pub(crate) const BRIDGE_ASYNC_RETRY_MS: u64 = 1;
 
 #[derive(Clone, Copy)]
-pub(super) struct BridgeRetirementGrant {
+pub(crate) struct BridgeRetirementGrant {
     pub generation: u64,
 }
 
-pub(super) struct BridgeRetirementCursor {
+pub(crate) struct BridgeRetirementCursor {
     pub(crate) pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES],
     pub page: usize,
 }

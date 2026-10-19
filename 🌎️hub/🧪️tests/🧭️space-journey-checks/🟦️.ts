@@ -2,17 +2,17 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
 import { directoryCommandRequestJson, parseDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { isAbsolute, join } from "node:path";
 import type { DirectoryCommand } from "@semio-tech/framework/directory/schema";
-import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCmd } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { readHubDirectorySource } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";

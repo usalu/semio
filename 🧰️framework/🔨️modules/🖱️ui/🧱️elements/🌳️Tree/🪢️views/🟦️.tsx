@@ -1,5 +1,5 @@
 import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
-import type { TreeWindowRowExtent } from "@semio-tech/framework";
+import type { TreeWindowRowExtent } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import * as React from "react";
 import { TreeContext } from "../📏️row-alignment/🟦️.tsx";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -14,7 +14,7 @@ import { TreeItem } from "../🍃️item/🟦️.tsx";
 import { HelperRow, getTreeItemLabel } from "../📄️row/🟦️.tsx";
 import { TreeContent } from "../🌲️branch/🟦️.tsx";
 import { TreeSection } from "../🌱️section/🟦️.tsx";
-import type { TreeFilesProps } from "../🟦️.tsx";
+import type { TreeFilesProps } from "../🧩️props/🟦️.ts";
 
 /** 🌿️ Hoisted data-tree item row (stable component type across Tree re-renders). */
 const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { readonly item: TreeDataItem; readonly section: TreeDataSection; readonly path: readonly string[]; readonly isLastItem: boolean; readonly windowRowIndex?: number; readonly windowRowTotal?: number; readonly windowRowExtent?: TreeWindowRowExtent }): React.ReactElement {

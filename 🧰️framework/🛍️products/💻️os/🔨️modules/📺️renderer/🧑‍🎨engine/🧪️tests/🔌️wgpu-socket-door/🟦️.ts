@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { WGPU_SOCKET_POLL_MAX_MESSAGES, WGPU_SOCKET_QUEUE_MAX_MESSAGES, WGPU_SOCKET_SEND_MAX_BYTES, createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
+import { WGPU_SOCKET_POLL_MAX_MESSAGES, WGPU_SOCKET_QUEUE_MAX_MESSAGES, WGPU_SOCKET_SEND_MAX_BYTES, createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 
 /** 🔌️ The PAGE half of packet W15e's DUPLEX socket door, tested where it runs. The Rust half's
  * own laws (wire codec, the bounded `SocketLane`) live beside it in this case's `🦀️.rs`; what only this suite can prove is that the

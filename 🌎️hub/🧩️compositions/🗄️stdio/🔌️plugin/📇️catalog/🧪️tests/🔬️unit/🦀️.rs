@@ -86,13 +86,13 @@ fn assembling_the_component_parses_every_artifact_definition_at_most_once() {
 }
 
 /// ⏪️ The stdio component assembly publishes the `s.stdio.registry` shared schema documents, so the runtime input reader
-/// resolves the store's per-scope documents (a kit `pin` through `os/store/link/schema.json`).
+/// resolves the store's per-scope documents (a kit `pin` through `framework/schema/artifact-reference/link/schema.json`).
 #[cfg(feature = "component-app-assembly")]
 #[test]
 fn the_runtime_registry_resolves_the_store_link_scope_after_assembly() {
     crate::plugin::plugin().expect("stdio plugin assembly");
     let bind = include_str!("../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/🪢️bind-representation/🧬️schema/🔣️.json");
-    let inputs = semio_framework::mutation_input_defs(bind, &semio_framework::registered_input_schema_document).expect("the kit pin reads through the os.store.link scope");
+    let inputs = semio_framework::mutation_input_defs(bind, &semio_framework::registered_input_schema_document).expect("the kit pin reads through the framework.schema.artifact-reference.link scope");
     assert!(inputs.iter().any(|input| input.key() == "pin"), "{inputs:?}");
 }
 

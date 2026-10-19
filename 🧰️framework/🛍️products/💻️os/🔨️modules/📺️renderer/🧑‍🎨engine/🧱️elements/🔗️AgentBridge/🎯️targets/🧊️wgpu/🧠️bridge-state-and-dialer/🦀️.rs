@@ -1,0 +1,541 @@
+//! 🧠️ Bridge state and dialer: the bridge status, presence, approvals, conversation entries and state, the inbound shell command decoder, the socket and dial states, the dialer and the agent label. See [`super`].
+
+use super::*;
+
+//#region 🔖️State
+/// 🚦️ Connection status, one-for-one with React's `AgentBridgeStatus` string union; React carries
+/// the incompatible pair beside the status as `versionMismatch`, this twin carries it inside.
+/// `Unavailable` and `Incompatible` are terminal for one config: nothing is dialled again until a
+/// different config arrives.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentBridgeStatus {
+    #[default]
+    Disabled,
+    Connecting,
+    Open,
+    Reconnecting,
+    Closed,
+    Unavailable,
+    Incompatible(AgentBridgeVersionMismatch),
+}
+
+/// 🤝️ Both bridge versions of an incompatible pair — React's `AgentBridgeVersionMismatch`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AgentBridgeVersionMismatch {
+    pub gateway: u16,
+    pub shell: u16,
+}
+
+impl AgentBridgeStatus {
+    /// 🛑️ Whether this config is given up on.
+    pub fn is_terminal(self) -> bool {
+        matches!(self, AgentBridgeStatus::Unavailable | AgentBridgeStatus::Incompatible(_))
+    }
+}
+
+/// 🤖️ What the agent is doing right now, as the last `agentPresence` frame reported it.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AgentBridgePresence {
+    pub active: bool,
+    pub label: String,
+    pub invocation_id: Option<String>,
+}
+
+/// ⏸️ One parked capability request awaiting a human decision.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PendingAgentApproval {
+    pub approval_id: String,
+    pub summary: String,
+    pub requested_at_ms: f64,
+}
+
+/// 🛠️ How far one tool invocation in the conversation has got.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AgentToolCallState {
+    Running,
+    Cancelling,
+    Ok,
+    Failed,
+}
+
+/// ⏸️ How far one capability request in the conversation has got.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AgentApprovalState {
+    Pending,
+    Resolved,
+    /// 🪦️ The gateway took the request back before anyone here decided it.
+    Withdrawn(ApprovalWithdrawal),
+}
+
+/// 💬️ One entry of the live agent conversation, exactly as the bridge reported it — the wgpu twin of
+/// React's `AgentConversationEntry`. `UserMessage` is a turn this shell itself sent, echoed the
+/// moment the frame is queued so the panel is never behind the human's own typing; every other kind
+/// comes from a real `GatewayToShell` frame. Nothing is synthesised from a guess: a tool call with no
+/// result yet simply stays [`AgentToolCallState::Running`]. A cancellation request moves it to
+/// [`AgentToolCallState::Cancelling`] until the gateway's real result settles it; cooperative
+/// cancellation never invents a terminal state in this shell.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AgentConversationEntry {
+    UserMessage { id: String, text: String },
+    ToolCall { id: String, tool_name: String, arguments: String, state: AgentToolCallState, summary: Option<String> },
+    Approval { id: String, summary: String, state: AgentApprovalState, decision: Option<ApprovalDecision> },
+    AgentMessage { id: String, text: String, state: AgentReplyState },
+}
+
+impl AgentConversationEntry {
+    pub fn id(&self) -> &str {
+        match self {
+            AgentConversationEntry::UserMessage { id, .. } | AgentConversationEntry::ToolCall { id, .. } | AgentConversationEntry::Approval { id, .. } | AgentConversationEntry::AgentMessage { id, .. } => id,
+        }
+    }
+}
+
+/// 💬️ Whether the agent's turn is still arriving. One-for-one with React's
+/// `"streaming" | "complete"` on its `agentMessage` entry: the gateway's own `complete` flag decides
+/// it, so the panel never has to guess from timing.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentReplyState {
+    #[default]
+    Streaming,
+    Complete,
+}
+
+/// ✂️ How many conversation entries the panel retains, one-for-one with React's
+/// `AGENT_CONVERSATION_MAX_ENTRIES`. The bridge is a live view, not an archive: an agent running for
+/// hours must not grow this list without bound, and the oldest entries are the least useful to keep.
+pub const AGENT_CONVERSATION_MAX_ENTRIES: usize = 200;
+
+/// 🌉️ The whole consumer: frames in, presence/approvals/conversation out, decisions back. Holds no
+/// socket and no timer, so it is `Send`, unit-testable, and identical on the browser and native builds.
+#[derive(Clone, Debug, Default)]
+pub struct AgentBridgeState {
+    pub status: AgentBridgeStatus,
+    pub presence: AgentBridgePresence,
+    pub pending_approvals: Vec<PendingAgentApproval>,
+    pub conversation: Vec<AgentConversationEntry>,
+    pub last_error: Option<String>,
+    pub reconnect_attempt: u32,
+    /// 🔢️ Dials in a row that closed or timed out before any `Welcome`.
+    pub unanswered: u32,
+    next_message_ordinal: u64,
+    pub(super) outbox: Vec<ShellToGateway>,
+    inbound_shell_commands: Vec<InboundShellCommand>,
+}
+
+/// 🎛️ One inbound `ShellCommand` this shell can carry out on its own chrome, already decoded off
+/// the wire. The gateway's `ui_focus`/`ui_reveal` are the whole live surface today
+/// (`🌉️mcp/🖥️ui/🦀️.rs`): `ui_reveal` sends `setPanelVisible` and then `setPanelPath`, and the PATH's
+/// last segment is the address that matters — the shell SSOT's four-anchor vocabulary is narrower
+/// than either dock's, so both renderers resolve the tab's real home themselves rather than
+/// believing the requested anchor (the React twin does the same through `findPanelTabInDock`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InboundShellCommand {
+    FocusWindow {
+        seq: u64,
+        window_id: Option<String>,
+    },
+    RevealPanelTab {
+        seq: u64,
+        tab_id: String,
+    },
+    /// 👁️ `setPanelVisible` alone carries no tab, so it is acknowledged and applied as a no-op: the
+    /// `setPanelPath` that always follows it is what actually opens the anchor.
+    Acknowledge {
+        seq: u64,
+    },
+}
+
+impl InboundShellCommand {
+    pub fn seq(&self) -> u64 {
+        match self {
+            InboundShellCommand::FocusWindow { seq, .. } | InboundShellCommand::RevealPanelTab { seq, .. } | InboundShellCommand::Acknowledge { seq } => *seq,
+        }
+    }
+}
+
+/// 🔎️ Decodes one `ShellCommand` JSON payload into the chrome action this shell can perform.
+/// `Err` carries the reason the gateway is told, so a verb this renderer has no chrome for is
+/// refused BY NAME instead of behind one blanket "no reducer twin" that hid `ui_focus` and
+/// `ui_reveal` — both of which this shell has always been able to honour.
+pub fn decode_inbound_shell_command(seq: u64, command: &[u8]) -> Result<InboundShellCommand, String> {
+    let value: serde_json::Value = serde_json::from_slice(command).map_err(|error| format!("malformed ShellCommand JSON: {error}"))?;
+    match value.get("type").and_then(serde_json::Value::as_str) {
+        Some("focusWindow") => Ok(InboundShellCommand::FocusWindow { seq, window_id: value.get("windowId").and_then(serde_json::Value::as_str).map(str::to_string) }),
+        Some("setPanelPath") => match value.get("path").and_then(serde_json::Value::as_array).and_then(|path| path.last()).and_then(serde_json::Value::as_str) {
+            Some(tab_id) if !tab_id.is_empty() => Ok(InboundShellCommand::RevealPanelTab { seq, tab_id: tab_id.to_string() }),
+            _ => Err("setPanelPath carried no panel tab id to reveal".to_string()),
+        },
+        Some("setPanelVisible") => Ok(InboundShellCommand::Acknowledge { seq }),
+        Some(other) => Err(format!("this shell has no chrome for the `{other}` shell command")),
+        None => Err("ShellCommand carried no `type`".to_string()),
+    }
+}
+
+impl AgentBridgeState {
+    /// 🔌️ The socket is dialling — `connecting` the first time, `reconnecting` after a drop.
+    pub fn note_connecting(&mut self) {
+        self.status = if self.reconnect_attempt > 0 { AgentBridgeStatus::Reconnecting } else { AgentBridgeStatus::Connecting };
+    }
+
+    /// 👋️ The socket opened: queue the `Hello` frame the gateway answers with `Welcome`.
+    pub fn note_socket_opened(&mut self, shell_session_id: impl Into<String>, principal_actor: impl Into<String>, flags: BridgeFlags) {
+        self.outbox.push(ShellToGateway::Hello { bridge_version: BRIDGE_VERSION, shell_kind: ShellKind::for_this_target(), shell_session_id: shell_session_id.into(), principal_actor: principal_actor.into(), flags });
+    }
+
+    /// 📤️ Takes every inbound chrome command the host has not applied yet. The host applies each
+    /// one and then calls [`AgentBridgeState::settle_shell_command`] — an acknowledgement is only
+    /// honest AFTER the chrome moved, which is exactly what distinguishes this from the React
+    /// twin's earlier mirror-only reduce (it answered `ok` while nothing on screen changed).
+    pub fn take_inbound_shell_commands(&mut self) -> Vec<InboundShellCommand> {
+        std::mem::take(&mut self.inbound_shell_commands)
+    }
+
+    /// ✅️ Acknowledges one applied inbound command back to the gateway.
+    pub fn settle_shell_command(&mut self, seq: u64, ok: bool, fault: Option<String>) {
+        self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok, fault });
+    }
+
+    /// 🔌️ The socket closed: the next dial is a reconnect, and presence can no longer be trusted. A
+    /// close before any `Welcome` counts as unanswered, and the [`BRIDGE_UNANSWERED_ATTEMPTS`]th one
+    /// makes the config [`AgentBridgeStatus::Unavailable`]; a terminal status is never left here.
+    pub fn note_socket_closed(&mut self) {
+        self.presence = AgentBridgePresence::default();
+        if self.status.is_terminal() {
+            return;
+        }
+        if matches!(self.status, AgentBridgeStatus::Connecting | AgentBridgeStatus::Reconnecting) {
+            self.unanswered = self.unanswered.saturating_add(1);
+        }
+        self.reconnect_attempt = self.reconnect_attempt.saturating_add(1);
+        self.status = if self.unanswered >= BRIDGE_UNANSWERED_ATTEMPTS { AgentBridgeStatus::Unavailable } else { AgentBridgeStatus::Reconnecting };
+    }
+
+    /// ⏱️ How long to wait before the next dial.
+    pub fn reconnect_delay_ms(&self) -> f64 {
+        reconnect_delay_ms(self.reconnect_attempt)
+    }
+
+    /// 📥️ Applies one decoded inbound frame. `shellCommand`/`appCommand` are acknowledged with a
+    /// refusal rather than silently dropped: the wgpu shell has no `ShellState` reducer twin, so
+    /// claiming `ok` would lie to the gateway.
+    pub fn apply_frame(&mut self, frame: GatewayToShell, now_ms: f64) {
+        match frame {
+            GatewayToShell::Welcome { bridge_version, .. } if bridge_version != BRIDGE_VERSION => {
+                self.status = AgentBridgeStatus::Incompatible(AgentBridgeVersionMismatch { gateway: bridge_version, shell: BRIDGE_VERSION });
+            }
+            GatewayToShell::Welcome { .. } => {
+                self.reconnect_attempt = 0;
+                self.unanswered = 0;
+                self.status = AgentBridgeStatus::Open;
+                self.last_error = None;
+            }
+            GatewayToShell::Refused { reason: BridgeRefusal::Version, gateway_version } => {
+                self.status = AgentBridgeStatus::Incompatible(AgentBridgeVersionMismatch { gateway: gateway_version, shell: BRIDGE_VERSION });
+            }
+            GatewayToShell::Refused { reason: BridgeRefusal::Capacity, .. } => {
+                self.status = AgentBridgeStatus::Unavailable;
+            }
+            GatewayToShell::ShellCommand { seq, command } => match decode_inbound_shell_command(seq, &command) {
+                Ok(inbound) => self.inbound_shell_commands.push(inbound),
+                Err(fault) => self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok: false, fault: Some(fault) }),
+            },
+            GatewayToShell::AppCommand { .. } => {}
+            GatewayToShell::ApprovalRequested { approval_id, summary } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                self.pending_approvals.push(PendingAgentApproval { approval_id: approval_id.clone(), summary: summary.clone(), requested_at_ms: now_ms });
+                self.append_conversation(AgentConversationEntry::Approval { id: approval_id, summary, state: AgentApprovalState::Pending, decision: None });
+            }
+            GatewayToShell::ApprovalResolved { approval_id, decision } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                self.resolve_conversation_approval(&approval_id, decision);
+            }
+            GatewayToShell::ApprovalWithdrawn { approval_id, reason } => {
+                self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+                if let Some(AgentConversationEntry::Approval { state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == approval_id) {
+                    if matches!(state, AgentApprovalState::Pending) {
+                        *state = AgentApprovalState::Withdrawn(reason);
+                    }
+                }
+            }
+            GatewayToShell::AgentPresence { active, label, invocation_id } => {
+                self.presence = AgentBridgePresence { active, label, invocation_id };
+            }
+            GatewayToShell::Pong => {}
+            GatewayToShell::Bye { reason } => {
+                self.last_error = (!reason.is_empty()).then_some(reason);
+                self.status = AgentBridgeStatus::Closed;
+            }
+            GatewayToShell::AgentToolCall { invocation_id, tool_name, arguments } => {
+                self.append_conversation(AgentConversationEntry::ToolCall { id: invocation_id, tool_name, arguments, state: AgentToolCallState::Running, summary: None });
+            }
+            GatewayToShell::AgentToolResult { invocation_id, ok, summary, .. } => {
+                self.settle_conversation_tool_call(&invocation_id, ok, summary);
+            }
+            GatewayToShell::AgentReply { reply_id, text, complete, .. } => {
+                self.append_conversation_reply_chunk(reply_id, text, complete);
+            }
+        }
+    }
+
+    /// ➕️ Appends one chunk of an agent turn, or extends the row that already carries this
+    /// `reply_id` — the wgpu twin of React's append/extend pair (`🔗️AgentBridge/🟦️.tsx:671`). A
+    /// chunk whose row has already been trimmed off the tail opens a new row rather than being
+    /// dropped, so a long turn stays visible instead of vanishing mid-sentence.
+    fn append_conversation_reply_chunk(&mut self, reply_id: String, text: String, complete: bool) {
+        let state = if complete { AgentReplyState::Complete } else { AgentReplyState::Streaming };
+        if let Some(AgentConversationEntry::AgentMessage { text: slot, state: slot_state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == reply_id) {
+            slot.push_str(&text);
+            *slot_state = state;
+            return;
+        }
+        self.append_conversation(AgentConversationEntry::AgentMessage { id: reply_id, text, state });
+    }
+
+    /// ➕️ Appends one entry and trims to [`AGENT_CONVERSATION_MAX_ENTRIES`], oldest first.
+    fn append_conversation(&mut self, entry: AgentConversationEntry) {
+        self.conversation.push(entry);
+        if self.conversation.len() > AGENT_CONVERSATION_MAX_ENTRIES {
+            self.conversation.remove(0);
+        }
+    }
+
+    /// 🔁️ Turns the running tool call with this `invocation_id` into its own result, in place — a
+    /// result whose call has already been trimmed off the tail records nothing rather than opening a
+    /// second, call-less row.
+    fn settle_conversation_tool_call(&mut self, invocation_id: &str, ok: bool, summary: String) {
+        let Some(AgentConversationEntry::ToolCall { state, summary: slot, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == invocation_id) else { return };
+        *state = if ok { AgentToolCallState::Ok } else { AgentToolCallState::Failed };
+        *slot = Some(summary);
+    }
+
+    /// 🔁️ Marks the pending approval with this id resolved, in place, carrying the decision.
+    fn resolve_conversation_approval(&mut self, approval_id: &str, resolved: ApprovalDecision) {
+        let Some(AgentConversationEntry::Approval { state, decision, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == approval_id) else { return };
+        *state = AgentApprovalState::Resolved;
+        *decision = Some(resolved);
+    }
+
+    /// 📥️ [`Self::apply_frame`] straight off the bytes one socket message carried; a fault is
+    /// recorded in `last_error` rather than thrown, matching the hook's own `onmessage` catch.
+    pub fn apply_encoded_frame(&mut self, bytes: &[u8], now_ms: f64) -> Result<(), BridgeFrameFault> {
+        match GatewayToShell::decode(bytes) {
+            Ok(frame) => {
+                self.apply_frame(frame, now_ms);
+                Ok(())
+            }
+            Err(fault) => {
+                self.last_error = Some(format!("failed to decode bridge frame: {fault:?}"));
+                Err(fault)
+            }
+        }
+    }
+
+    /// ✅️ The human decided: queue the `Approval` frame and drop the request from the modal, the
+    /// exact pair `resolveApproval` performs.
+    pub fn resolve_approval(&mut self, approval_id: &str, decision: ApprovalDecision, note: Option<String>) {
+        self.outbox.push(ShellToGateway::Approval { approval_id: approval_id.to_string(), decision, note });
+        self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
+        self.resolve_conversation_approval(approval_id, decision);
+    }
+
+    /// 💬️ Sends one human turn to the connected agent and echoes it into the conversation at once —
+    /// React's `sendAgentMessage`. Blank text queues nothing and records nothing; the id is minted
+    /// from the shell session plus an ordinal, so the echo and the frame name the same turn.
+    pub fn send_agent_message(&mut self, shell_session_id: &str, text: &str) -> bool {
+        let trimmed = text.trim();
+        if trimmed.is_empty() {
+            return false;
+        }
+        let message_id = format!("msg_{shell_session_id}_{}", self.next_message_ordinal);
+        self.next_message_ordinal = self.next_message_ordinal.saturating_add(1);
+        self.outbox.push(ShellToGateway::AgentMessage { message_id: message_id.clone(), text: trimmed.to_string() });
+        self.append_conversation(AgentConversationEntry::UserMessage { id: message_id, text: trimmed.to_string() });
+        true
+    }
+
+    /// 🛑️ Asks the open gateway to cancel the exact invocation the conversation reported. The
+    /// optimistic state says only that the request left; the gateway's later `AgentToolResult`
+    /// remains the sole terminal authority. This intentionally mirrors React's sender contract:
+    /// any non-empty id can be sent while open, while only a matching running row changes state.
+    pub fn cancel_tool_call(&mut self, invocation_id: &str) -> bool {
+        if invocation_id.is_empty() || !matches!(self.status, AgentBridgeStatus::Open) {
+            return false;
+        }
+        self.outbox.push(ShellToGateway::AgentCancel { invocation_id: invocation_id.to_string() });
+        if let Some(AgentConversationEntry::ToolCall { state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == invocation_id) {
+            if matches!(state, AgentToolCallState::Running) {
+                *state = AgentToolCallState::Cancelling;
+            }
+        }
+        true
+    }
+
+    /// 💓️ Keep-alive frame the transport schedules every [`PING_INTERVAL_MS`].
+    pub fn queue_ping(&mut self) {
+        self.outbox.push(ShellToGateway::Ping);
+    }
+
+    /// 👋️ Farewell frame sent best-effort before the socket closes.
+    pub fn queue_bye(&mut self) {
+        self.outbox.push(ShellToGateway::Bye);
+    }
+
+    /// 📤️ Drains everything queued for the transport to write.
+    pub fn take_outbox(&mut self) -> Vec<ShellToGateway> {
+        std::mem::take(&mut self.outbox)
+    }
+
+    /// 📤️ [`Self::take_outbox`] already encoded — what a byte-oriented transport wants.
+    pub fn take_outbox_encoded(&mut self) -> Vec<Vec<u8>> {
+        self.take_outbox().iter().map(ShellToGateway::encode).collect()
+    }
+
+    pub fn outbox_len(&self) -> usize {
+        self.outbox.len()
+    }
+
+    /// 🔔️ Whether the approvals modal must be showing, the sole condition React's dialog opens on.
+    pub fn has_pending_approvals(&self) -> bool {
+        !self.pending_approvals.is_empty()
+    }
+}
+//#endregion 🔖️State
+
+//#region 🔖️Dialer
+/// 🔌️ What the transport holds right now, as the dialer needs to see it. Deliberately NOT
+/// `AgentBridgeStatus`: that one is the human-facing status React renders (`disabled` while no
+/// config exists at all), this one is the socket's own readiness.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentBridgeSocketState {
+    /// 🕳️ Nothing dialled — either never, or the previous socket was retired.
+    #[default]
+    Absent,
+    Connecting,
+    Open,
+    Closed,
+}
+
+/// 🎬️ One finite turn the transport executes. Every one of them is bounded work; none of them
+/// blocks, and `Wait` carries the instant the next dial is due so a caller can report it.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AgentBridgeDialTurn {
+    /// 😴️ Nothing to do this turn.
+    Idle,
+    /// 🔌️ Open a socket at this url with these EXACT ordered subprotocols.
+    Dial { url: String, protocols: [String; 2] },
+    /// 👋️ The socket just reached `open`: announce this shell.
+    Announce,
+    /// 💓️ Keep-alive due.
+    Ping,
+    /// 🧯️ The socket died; retire it before the next dial.
+    Retire,
+    /// ⏱️ A reconnect is armed for this instant.
+    Wait { until_ms: f64 },
+}
+
+/// ⏱️ The transport-free half of React's `useAgentBridge` effect: WHEN to dial, when to announce,
+/// when to ping, and when to back off. Holding it apart from any socket is what makes the whole
+/// reconnect ladder testable on the target the renderer suite runs on, and what lets the browser
+/// door and the native `tokio-tungstenite` half share one policy instead of two that drift.
+#[derive(Clone, Debug, Default)]
+pub struct AgentBridgeDialer {
+    pub(super) config: Option<AgentBridgeConfig>,
+    reconnect_at_ms: Option<f64>,
+    next_ping_ms: Option<f64>,
+    handshake_deadline_ms: Option<f64>,
+    announced: bool,
+}
+
+impl AgentBridgeDialer {
+    /// 🔗️ Installs (or clears) the config. A NEW config retires whatever was dialled and restarts
+    /// the ladder from zero — React re-runs the whole effect on a `config.url`/`admissionProof`
+    /// change, which is the same thing.
+    pub fn set_config(&mut self, config: Option<AgentBridgeConfig>, state: &mut AgentBridgeState) -> bool {
+        if self.config == config {
+            return false;
+        }
+        self.config = config;
+        self.reconnect_at_ms = None;
+        self.next_ping_ms = None;
+        self.handshake_deadline_ms = None;
+        self.announced = false;
+        state.reconnect_attempt = 0;
+        state.unanswered = 0;
+        state.status = if self.config.is_some() { AgentBridgeStatus::Connecting } else { AgentBridgeStatus::Disabled };
+        true
+    }
+
+    pub fn config(&self) -> Option<&AgentBridgeConfig> {
+        self.config.as_ref()
+    }
+
+    pub fn is_armed(&self) -> bool {
+        self.config.is_some()
+    }
+
+    /// 🎬️ One turn. The order is React's own: a given-up config retires its socket and dials
+    /// nothing, a dead socket or one that outlived the handshake deadline is retired and its backoff
+    /// armed, an armed backoff is respected, an absent socket is dialled, a freshly opened one is
+    /// announced exactly once, and only a settled open socket pings.
+    pub fn turn(&mut self, state: &mut AgentBridgeState, socket: AgentBridgeSocketState, now_ms: f64) -> AgentBridgeDialTurn {
+        let Some(config) = self.config.clone() else {
+            state.status = AgentBridgeStatus::Disabled;
+            return AgentBridgeDialTurn::Idle;
+        };
+        if state.status.is_terminal() {
+            self.reconnect_at_ms = None;
+            self.next_ping_ms = None;
+            self.handshake_deadline_ms = None;
+            return if matches!(socket, AgentBridgeSocketState::Absent) { AgentBridgeDialTurn::Idle } else { AgentBridgeDialTurn::Retire };
+        }
+        if state.status == AgentBridgeStatus::Open {
+            self.handshake_deadline_ms = None;
+        }
+        let unanswered = self.handshake_deadline_ms.is_some_and(|due| now_ms >= due) && matches!(socket, AgentBridgeSocketState::Connecting | AgentBridgeSocketState::Open);
+        if matches!(socket, AgentBridgeSocketState::Closed) || unanswered {
+            self.announced = false;
+            self.next_ping_ms = None;
+            self.handshake_deadline_ms = None;
+            state.note_socket_closed();
+            self.reconnect_at_ms = (!state.status.is_terminal()).then(|| now_ms + state.reconnect_delay_ms());
+            return AgentBridgeDialTurn::Retire;
+        }
+        if matches!(socket, AgentBridgeSocketState::Absent) {
+            if let Some(until_ms) = self.reconnect_at_ms {
+                if now_ms < until_ms {
+                    state.status = AgentBridgeStatus::Reconnecting;
+                    return AgentBridgeDialTurn::Wait { until_ms };
+                }
+                self.reconnect_at_ms = None;
+            }
+            self.announced = false;
+            self.handshake_deadline_ms = Some(now_ms + BRIDGE_HANDSHAKE_DEADLINE_MS);
+            state.note_connecting();
+            return AgentBridgeDialTurn::Dial { protocols: bridge_protocols(&config), url: config.url.clone() };
+        }
+        if matches!(socket, AgentBridgeSocketState::Connecting) {
+            state.note_connecting();
+            return AgentBridgeDialTurn::Idle;
+        }
+        if !self.announced {
+            self.announced = true;
+            self.next_ping_ms = Some(now_ms + PING_INTERVAL_MS);
+            return AgentBridgeDialTurn::Announce;
+        }
+        if self.next_ping_ms.is_some_and(|due| now_ms >= due) {
+            self.next_ping_ms = Some(now_ms + PING_INTERVAL_MS);
+            return AgentBridgeDialTurn::Ping;
+        }
+        AgentBridgeDialTurn::Idle
+    }
+}
+//#endregion 🔖️Dialer
+
+//#region 🌐️Labels
+/// 🌐️ This element's own framework-owned copy, resolved without a default language — the same
+/// `LocalizedLabel::native(en, de)` shape `👥️PresenceBar`'s wgpu twin uses, standing in for the
+/// React side's `registerUiTranslationBundles` bundle under `os.agent.*`.
+pub fn agent_label(english: &'static str, german: &'static str, locale: Locale) -> String {
+    LocalizedLabel::native(english, german).resolve(Terminology::ALL[0], locale).to_string()
+}
+//#endregion 🌐️Labels

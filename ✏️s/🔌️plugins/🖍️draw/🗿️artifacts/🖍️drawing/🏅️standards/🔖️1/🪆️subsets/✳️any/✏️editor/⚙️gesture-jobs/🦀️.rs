@@ -171,11 +171,16 @@ impl DrawingGestureOperationJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl DrawingGestureOperationJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         let turn = self.turn(context);
         self.outcomes.lend(turn, context)
     }
+}
+
+impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outcomes.borrow_outcome(descriptor)
@@ -188,53 +193,55 @@ impl semio_framework_job::InteractiveJob for DrawingGestureOperationJob {
         }
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
-        let pending=|copied_items,released_bytes|semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items,released_bytes,..Default::default()}};
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if !self.outcomes.terminal_is_empty() {
-            return self.outcomes.close_job_step(grant);
-        }
-        if let Some(rejected) = self.pending_completion_rejection.as_mut() {
-            if let Ok(emit) = rejected.emit.as_mut() {
-                match emit.close_child_one(grant) {
-                    Ok(Some(semio_framework_plugin::PluginLifecycleStep::Progress(progress) | semio_framework_plugin::PluginLifecycleStep::Complete(progress))) => return semio_framework_job::InteractiveJobCloseStep::Pending { progress },
-                    Ok(Some(semio_framework_plugin::PluginLifecycleStep::Blocked { .. } | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. })) => return semio_framework_job::InteractiveJobCloseStep::Blocked,
-                    Ok(None) => {}
-                    Err(_) => return semio_framework_job::InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: Default::default() },
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
+            let pending=|copied_items,released_bytes|semio_framework_job::InteractiveJobCloseStep::Pending {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items,released_bytes,..Default::default()}};
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            if !self.outcomes.terminal_is_empty() {
+                return self.outcomes.close_job_step(grant);
+            }
+            if let Some(rejected) = self.pending_completion_rejection.as_mut() {
+                if let Ok(emit) = rejected.emit.as_mut() {
+                    match emit.close_child_one(grant) {
+                        Ok(Some(semio_framework_plugin::PluginLifecycleStep::Progress(progress) | semio_framework_plugin::PluginLifecycleStep::Complete(progress))) => return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress }),
+                        Ok(Some(semio_framework_plugin::PluginLifecycleStep::Blocked { .. } | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. })) => return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked),
+                        Ok(None) => {}
+                        Err(_) => return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "interactive job close refused")),
+                    }
                 }
+                if maximum_items == 0 {
+                    return Ok(pending(0,0));
+                }
+                self.pending_completion_rejection = None;
+                return Ok(pending(1,0));
             }
             if maximum_items == 0 {
-                return pending(0,0);
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
-            self.pending_completion_rejection = None;
-            return pending(1,0);
-        }
-        if maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if let Some(input) = self.raw_input.as_mut() {
-            let step = input.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,..grant});
-            if input.terminal_is_empty() {
-                self.raw_input = None;
+            if let Some(input) = self.raw_input.as_mut() {
+                let step = input.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,..grant})?;
+                if input.terminal_is_empty() {
+                    self.raw_input = None;
+                }
+                return Ok(match step {
+                    semio_framework_job::InteractiveJobCloseStep::Complete {progress} => semio_framework_job::InteractiveJobCloseStep::Pending {progress},
+                    other => other,
+                });
             }
-            return match step {
-                semio_framework_job::InteractiveJobCloseStep::Complete {progress} => semio_framework_job::InteractiveJobCloseStep::Pending {progress},
-                other => other,
-            };
-        }
-        if self.payload.take().is_some() {
-            return pending(1,0);
-        }
-        if let Some(decoder)=self.decoder.as_mut() {
-            let bytes=decoder.raw.capacity();
-            if bytes>maximum_bytes {return pending(0,0);}
-            drop(std::mem::take(&mut decoder.raw));self.decoder=None;
-            return pending(1,bytes);
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()}
+            if self.payload.take().is_some() {
+                return Ok(pending(1,0));
+            }
+            if let Some(decoder)=self.decoder.as_mut() {
+                let bytes=decoder.raw.capacity();
+                if bytes>maximum_bytes {return Ok(pending(0,0));}
+                drop(std::mem::take(&mut decoder.raw));self.decoder=None;
+                return Ok(pending(1,bytes));
+            }
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()})
+        })
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(self.close_demands(0)?.copy_bytes)}

@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-instores",
+ "crates": ["semio-framework-plugin-instance-app", "semio-framework-plugin-store-stage-laws"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-framework-plugin-instance-app"]},
+ "note": "HDR-4: instance-app store stage laws to their own crate"
+}

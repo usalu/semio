@@ -1,8 +1,8 @@
 import {lstatSync} from "node:fs";
 import {dirname,isAbsolute,relative,resolve,sep,join} from "node:path";
-import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{acquireNativeStorageV1,type NativeStoragePortV1,type NativeStorageReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type{NativeStoragePolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
+import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{acquireNativeStorageV1,type NativeStoragePortV1,type NativeStorageReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 

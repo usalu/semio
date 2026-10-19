@@ -1,6 +1,6 @@
 /** 🧮️ Concrete row-position and consumed-bit backing for semantic relational owners. */
 import {ValueError,sqliteOperation,type SqliteOperation,type SqliteDatabaseOptions,type SqliteTable,type SqliteRow,type SqliteValue} from "../../🟦️.ts";
-import {artifactSqliteCheckpoint} from "../🟦️.ts";
+import {artifactSqliteCheckpoint} from "../🚦️checkpoint/🟦️.ts";
 import {ArtifactSqliteTableIndex} from "../🗂️table/🟦️.ts";
 
 function invalid(reason:string):never{throw new ValueError("invalidValue","Artifact SQLite row index "+reason)}

@@ -4,6 +4,7 @@ import {resolve} from "node:path";
 import {readFileSync} from "node:fs";
 import { receiveScriptProcessInvocation } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class CompositionScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -31,7 +32,7 @@ class JackGraphScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("jack-graph-check accepts no arguments");
     const { resolve } = await import("node:path");
-    const { runRepositoryCommand } = await import("../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts");
+    const { runRepositoryCommand } = await import("../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts");
     const suite = resolve(import.meta.dir, "🔱️trinity/🪆️graph/🧪️tests/🟦️.ts");
     const budget = { version: 1 as const, maximumElapsedMilliseconds: 120000, output: { maximumBytes: 134217728, maximumLines: 65536 } };
     await runRepositoryCommand(this.invocation, process.execPath, ["x", "tsc", suite, "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck"], this.repoRoot, "specific-jack-graph:source", budget);
@@ -88,5 +89,11 @@ class McpClientEndToEndScript extends BundleScript {
     if(flag>=0){if(!selected)throw Error("Selected MCP workspace required");await run(join(this.repoRoot,selected),phase);}else await withMcpClientWorkspaceV1(this.invocation,phase,run);
   }
 }
-const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript);
+/** 🪁️ `typecheck` — every TypeScript source of `✏️s/` (all plugins, modules and the dev layer) against the compiler in one program (`../tsconfig.json`), so no plugin package needs a `tsconfig.json` of its own. */
+class TypecheckScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control: createIssuedResourceControlV1(this.invocation, "typecheck:entry", 0), cwd: this.root, project: "../tsconfig.json", owner: "s:typescript", args, timeoutMs: 1_800_000 });
+  }
+}
+const router = new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("composition-check", CompositionScript).register("mcp-client-e2e", McpClientEndToEndScript).register("source-check", SourceScript).register("catalog-check", CatalogScript).register("catalog-publication",CatalogPublicationScript).register("catalog-publication-test",CatalogPublicationTestScript).register("jack-graph-check", JackGraphScript).register("playground-session", PlaygroundSessionScript).register("typecheck", TypecheckScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

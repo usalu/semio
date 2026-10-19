@@ -1,5 +1,5 @@
 import type { PluginCatalog } from "@semio-tech/framework";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import type { PluginCatalogAdmissionV1, PluginCatalogRowV1, PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
 export const PLUGIN_CATALOG_POLICY_V1 = Object.freeze(schema["x-semio-admission"]);
 const idPattern = new RegExp(schema.$defs.PluginCatalogIdV1.pattern, "u");

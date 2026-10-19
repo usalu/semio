@@ -1,9 +1,11 @@
 //! 🧰️ The fixtures the schedule tests share: the committed IFC house (seven walls on two storeys in three phases, three windows, two doors, a void, two rooms) and the helpers that build a schedule over it.
 
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
-use crate::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-use crate::standards::v1::subsets::any::schema::inferences::schedules::{ScheduleRow, ScheduleTable};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{ScheduleRow, ScheduleTable};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey};
 use protocol::Inference;
 
 const HOUSE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
@@ -16,7 +18,7 @@ pub fn house() -> ModelSnapshot {
 /// 🏠️ The house with every preset of the library as a schedule `sch-<key>`.
 pub fn scheduled() -> ModelSnapshot {
     let mut snapshot = house();
-    for key in crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::PRESETS {
+    for key in semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::PRESETS {
         snapshot.schedules.insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
     }
     snapshot
@@ -41,7 +43,7 @@ pub fn table_of(snapshot: &ModelSnapshot, schedule: Schedule) -> ScheduleTable {
 
 /// 🧾️ The item rows of a table.
 pub fn items(table: &ScheduleTable) -> Vec<&ScheduleRow> {
-    table.rows.iter().filter(|row| row.kind == crate::standards::v1::subsets::any::schema::inferences::schedules::RowKind::Item).collect()
+    table.rows.iter().filter(|row| row.kind == semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::RowKind::Item).collect()
 }
 
 /// 🔤️ The text shown in column `index` of every item row.

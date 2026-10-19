@@ -6,7 +6,7 @@ use store::ErasedSnapshotRetirement as _;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 #[cfg(test)] use semio_framework_value::{ValueRefusalKind};
 use std::mem::ManuallyDrop;
-use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,shared::SharedControlledRetirement}};
+use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,arc_custody::SharedControlledRetirement}};
 use std::sync::Arc;
 
 //#region 🪪️ImmutableRoot

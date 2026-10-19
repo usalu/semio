@@ -112,7 +112,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &semio_framework_ui::wgpu::World3dScene {
+        &semio_framework_ui_declaration::ui::World3dScene {
             status_json,
             fit_json: Some(fit_json),
             domain_id: Some(if marks.components.active() { semio_s_artifact_procedural_3d_editor_selection::DOMAIN } else { GENERATION_3D_INTERACTION_DOMAIN }.into()),
@@ -141,7 +141,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
 
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
-    semio_framework_ui::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
+    semio_framework_ui_declaration::ui::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
 }
 
 

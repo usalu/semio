@@ -1,0 +1,13 @@
+{
+ "name": "wfcj",
+ "crates": [
+  "semio-framework-action-bus",
+  "semio-framework-job",
+  "semio-framework-plugin",
+  "semio-framework-plugin-instance-dispatch",
+  "semio-framework-plugin-instance-typed-ops",
+  "semio-framework-plugin-retained-command",
+  "semio-s-plugin-wfc-engine-job"
+ ],
+ "note": "every crate owning a file this port rewrote"
+}

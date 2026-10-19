@@ -63,7 +63,7 @@ func moveCommand(factory EngineFactory, config *Config) *Command {
 				}
 				result = move.ToolIntegrate(source.Path, sectionName, targetFile, parentSection)
 				if result.Error == "" {
-					absSource := filepath.Join(workspace.RootDir, source.Path)
+					absSource := filepath.Join(workspace.GetRootDir(), source.Path)
 					os.Remove(absSource)
 					ticketspkg.RemoveAgentsDocsEntry(source.Path)
 				}

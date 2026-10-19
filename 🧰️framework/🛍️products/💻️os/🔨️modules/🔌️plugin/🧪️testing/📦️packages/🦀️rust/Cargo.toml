@@ -28,6 +28,7 @@ semio-framework-plugin-plugin-program = { path = "../../../🏗️builder/🔌�
 semio-framework-plugin-extension = { path = "../../../🧩️extension/📦️packages/🦀️rust" }
 semio-framework-plugin-builder = { path = "../../../🏗️builder/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../../🧵️instance/📦️packages/🦀️rust" }
+semio-framework-plugin-document-media = { path = "../../../🗃️document/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-2d-compute = { path = "../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

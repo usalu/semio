@@ -1,5 +1,5 @@
 import { dirname, posix, relative, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import type { RustModuleNode } from "../🌳️module-tree/🟦️.ts";
 
 /** 🧭️ Repo-relative path between two absolute paths, always with forward slashes. */

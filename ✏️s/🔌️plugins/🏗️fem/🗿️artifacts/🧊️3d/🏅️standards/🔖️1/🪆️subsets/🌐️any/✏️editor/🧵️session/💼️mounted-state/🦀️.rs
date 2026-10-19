@@ -122,7 +122,7 @@ impl MountedState {
         }
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    pub(super) fn close_step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
         let maximum_bytes = grant.maximum_release_bytes;
         match self.close_lane {
             0 => {
@@ -177,7 +177,7 @@ impl MountedState {
             }
             3 => {
                 if let Some(numerical) = self.numerical.as_mut() {
-                    let (terminal, items, bytes) = numerical.close_step(grant);
+                    let (terminal, items, bytes) = numerical.close_step(cx, grant);
                     if !terminal {
                         return session_pending(items, bytes);
                     }

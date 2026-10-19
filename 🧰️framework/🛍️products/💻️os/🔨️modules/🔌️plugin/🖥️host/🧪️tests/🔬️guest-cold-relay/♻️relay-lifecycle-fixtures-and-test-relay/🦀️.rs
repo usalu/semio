@@ -87,7 +87,7 @@ async fn retained_pool_future_retries_saturation_once_and_terminalizes_shutdown(
     );
     maximum_rejected_job.begin_close();
     for _ in 0..semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES.saturating_add(3) {
-        if matches!(maximum_rejected_job.close_step(test_relay_drive_policy()), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
+        if matches!(semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| maximum_rejected_job.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {
             break;
         }
     }
@@ -133,7 +133,7 @@ fn admit_test_relay(relay: GuestColdRelayJob, params: semio_framework_job_worker
 async fn test_relay_step(session: &mut semio_framework_job_worker::WorkerJobSession<GuestColdRelayJob>, _pool: &WorkerPool) -> TestRelayOutcome {
     let grant = test_relay_drive_policy();
     if matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-        let _ = session.close_step(grant);
+        let _ = semio_framework_job::close_with_self_funded_context(grant, |cx| session.close_step(cx)).expect("original fixture close turn");
         return TestRelayOutcome::Yield;
     }
     let GuestRelayStep::Checked(mut checked, _receipt) = step_guest_relay_owner(session, grant) else { return TestRelayOutcome::Yield };

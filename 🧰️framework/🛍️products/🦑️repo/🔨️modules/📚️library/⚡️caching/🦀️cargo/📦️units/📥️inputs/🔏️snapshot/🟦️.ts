@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import publicSchema from"./🧬️schema/🔣️.json";
 const schema=structuredClone(publicSchema);
 export interface RustUnitSourceSnapshotRowV1{readonly path:string;readonly digest:string;readonly bytes:number}

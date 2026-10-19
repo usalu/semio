@@ -14,6 +14,7 @@
     "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute",
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
+    "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
@@ -93,11 +94,10 @@
     "../🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
     "../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
@@ -150,6 +150,12 @@
     "nx@23.2.0": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@iarna/toml": "2.2.5",
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/repo-lib": "workspace:*",
+    "@semio-tech/ui-styling": "workspace:*",
+    "@types/node": "^22.19.6",
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
   }
 }

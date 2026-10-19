@@ -12,10 +12,10 @@ pub const SCENE_INTENT_ID_BYTES: usize = 256;
 /// state (`marqueeModeFromModifiers`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:900`).
 #[derive(Clone, Copy)]
 pub enum SceneIntentEvent {
-    PointerDown { x: f32, y: f32, button: i16, modifiers: ui_wgpu::wgpu::EventModifiers },
-    PointerUp { x: f32, y: f32, button: i16, modifiers: ui_wgpu::wgpu::EventModifiers },
-    PointerMove { x: f32, y: f32, modifiers: ui_wgpu::wgpu::EventModifiers },
-    Scroll { x: f32, y: f32, delta_y: f32, modifiers: ui_wgpu::wgpu::EventModifiers },
+    PointerDown { x: f32, y: f32, button: i16, modifiers: semio_framework_ui_wgpu_events::EventModifiers },
+    PointerUp { x: f32, y: f32, button: i16, modifiers: semio_framework_ui_wgpu_events::EventModifiers },
+    PointerMove { x: f32, y: f32, modifiers: semio_framework_ui_wgpu_events::EventModifiers },
+    Scroll { x: f32, y: f32, delta_y: f32, modifiers: semio_framework_ui_wgpu_events::EventModifiers },
 }
 
 pub struct SceneInteractionIntent {
@@ -26,10 +26,10 @@ pub struct SceneInteractionIntent {
     pub window_id: String,
     pub host_id: String,
     pub node: NodeId,
-    pub kind: ui_wgpu::wgpu::SurfaceKind,
+    pub kind: semio_framework_ui_declaration::ui::SurfaceKind,
     pub rect: Rect,
     pub event: SceneIntentEvent,
-    pub driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    pub driver_drag: semio_framework_ui_wgpu_layout::chrome::UiDriverDrag,
     pub ink_job: Option<semio_framework_os_renderer_wgpu_scene_ink::InkInteractionJob>,
     pub retiring: bool,
 }
@@ -57,16 +57,16 @@ impl SceneIntentQueue {
         window_id: &str,
         host_id: &str,
         node: NodeId,
-        kind: ui_wgpu::wgpu::SurfaceKind,
+        kind: semio_framework_ui_declaration::ui::SurfaceKind,
         rect: Rect,
         event: SceneIntentEvent,
-        driver_drag: ui_wgpu::wgpu::UiDriverDrag,
-    ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        driver_drag: semio_framework_ui_wgpu_layout::chrome::UiDriverDrag,
+    ) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
         if window_id.len() > SCENE_INTENT_ID_BYTES || host_id.len() > SCENE_INTENT_ID_BYTES {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
         }
         if self.len == SCENE_INTENT_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
         }
         let generation = self.next_generation;
         self.next_generation = self.next_generation.wrapping_add(1).max(1);
@@ -132,7 +132,7 @@ impl SceneIntentQueue {
         self.len == 0 && self.retiring.is_none()
     }
 
-    pub fn blocks_presented_candidate(&self, engine: &ui_wgpu::wgpu::Ui, witness: u64) -> bool {
+    pub fn blocks_presented_candidate(&self, engine: &semio_framework_ui_wgpu_engine::Ui, witness: u64) -> bool {
         let blocks = |intent: &SceneInteractionIntent| {
             engine.candidate_is_sealed_for(&intent.window_id, witness) && engine.tree_revision(&intent.window_id) == Some(intent.tree_revision) && engine.surface_generation(&intent.window_id) == Some(intent.surface_generation)
         };
@@ -167,8 +167,8 @@ impl SceneInteractionIntent {
 
 pub static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new(Default::default);
 
-pub fn apply_presented_scene_caret(window_id: &str, caret: ui_wgpu::wgpu::UiPresentedCaret) -> bool {
-    if caret.source != ui_wgpu::wgpu::UiCaretSource::Scene {
+pub fn apply_presented_scene_caret(window_id: &str, caret: semio_framework_ui_wgpu_engine_surface::UiPresentedCaret) -> bool {
+    if caret.source != semio_framework_ui_wgpu_engine_surface::UiCaretSource::Scene {
         return false;
     }
     let scene = UI_ENGINE.with(|cell| {
@@ -187,33 +187,33 @@ pub fn apply_presented_scene_caret(window_id: &str, caret: ui_wgpu::wgpu::UiPres
 /// 📋️ Writes to the OS clipboard via `ui_wgpu::wgpu::host` — the one indirection this module's own tests
 /// swap for a mock (`MOCK_CLIPBOARD_WRITES`), so `cargo test` never touches a real display/clipboard.
 #[cfg(all(not(any(test, feature = "testkit")),target_arch="wasm32"))]
-pub fn write_os_clipboard(text: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+pub fn write_os_clipboard(text: &str, _input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     #[cfg(target_arch = "wasm32")]
     {
         let text = text.to_string();
         semio_framework_async::browser::spawn_local(async move {
-            ui_wgpu::wgpu::clipboard_write_text(&text).await;
+            semio_framework_ui_wgpu_hosting::host::clipboard_write_text(&text).await;
         });
     }
 }
 
 #[cfg(any(test, feature = "testkit"))]
-pub fn write_os_clipboard(text: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+pub fn write_os_clipboard(text: &str, _input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().push(text.to_string()));
 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-struct ClipboardInvocationInput { original:semio_framework_job::OriginalCallerSourceLoan,source:ui_wgpu::wgpu::ClipboardIntentSource,recipient:ui_wgpu::wgpu::ClipboardIntentRecipient,slot:u8,generation:u64 }
+struct ClipboardInvocationInput { original:semio_framework_job::OriginalCallerSourceLoan,source:semio_framework_ui_wgpu_input::ClipboardIntentSource,recipient:semio_framework_ui_wgpu_input::ClipboardIntentRecipient,slot:u8,generation:u64 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
 struct MountedClipboardIo {
     invocation:ClipboardInvocationInput,
-    initializer:ui_wgpu::wgpu::ClipboardIoJobInitializer,
+    initializer:semio_framework_ui_wgpu_hosting::host::ClipboardIoJobInitializer,
     pub params:Option<semio_framework_job_worker_authority::BatchJobParams>,
     parameter_cancel:Option<semio_framework_async::CancelTokenRetirement>,
-    preparation:Option<semio_framework_job_worker::WorkerJobSessionPreparation<ui_wgpu::wgpu::ClipboardIoJob>>,
-    session:Option<semio_framework_job_worker::WorkerJobSession<ui_wgpu::wgpu::ClipboardIoJob>>,
-    pub outcome:Option<semio_framework_job_worker::WorkerJobOutcome<ui_wgpu::wgpu::ClipboardIoJob>>,
+    preparation:Option<semio_framework_job_worker::WorkerJobSessionPreparation<semio_framework_ui_wgpu_hosting::host::ClipboardIoJob>>,
+    session:Option<semio_framework_job_worker::WorkerJobSession<semio_framework_ui_wgpu_hosting::host::ClipboardIoJob>>,
+    pub outcome:Option<semio_framework_job_worker::WorkerJobOutcome<semio_framework_ui_wgpu_hosting::host::ClipboardIoJob>>,
     pub copied:Option<String>,
     delivered:bool,
     closing:bool,
@@ -235,33 +235,33 @@ fn clipboard_demand_failure(error:semio_framework_job_worker::WorkerJobDemandErr
 fn clipboard_alias_failure(error:semio_framework_async::CancelTokenRetirementError)->semio_framework_job::OriginalTurnFailure{match error{semio_framework_async::CancelTokenRetirementError::Refused(error)=>error.into(),semio_framework_async::CancelTokenRetirementError::Blocked(_)=>clipboard_refusal("clipboard original cancellation alias remains borrowed")}}
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-pub fn validate_clipboard_source(source:ui_wgpu::wgpu::ClipboardIntentSource,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if source.operation!=cx.operation()||source.generation!=cx.generation()||!cx.original_source_epoch().is_some_and(|epoch|epoch>=source.epoch){return Err(clipboard_refusal("clipboard intent requires its actual initiating source and authenticated incoming epoch"))}Ok(())}
+pub fn validate_clipboard_source(source:semio_framework_ui_wgpu_input::ClipboardIntentSource,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if source.operation!=cx.operation()||source.generation!=cx.generation()||!cx.original_source_epoch().is_some_and(|epoch|epoch>=source.epoch){return Err(clipboard_refusal("clipboard intent requires its actual initiating source and authenticated incoming epoch"))}Ok(())}
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-pub fn submit_clipboard_io(source:&mut Option<ui_wgpu::wgpu::OriginalClipboardIntent>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub fn submit_clipboard_io(source:&mut Option<semio_framework_ui_wgpu_input::OriginalClipboardIntent>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let Some(intent)=source.as_ref()else{return Ok(true)};validate_clipboard_source(intent.source,cx)?;
     MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.is_none()&&slot.generation<u64::MAX)else{return Ok(false)};
         let grant=cx.retained_grant();let bytes=std::mem::size_of::<MountedClipboardIo>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)};
         let parent=cx.original_source_parent()?;let Some(original)=parent.admit_loan(cx)?else{return Ok(false)};
         let intent=source.take().expect("admitted original clipboard intent");let invocation:ClipboardInvocationInput=ClipboardInvocationInput{original,source:intent.source,recipient:intent.recipient,slot:index as u8,generation:slot.generation+1};
-        let initializer=match intent.text{Some(text)=>ui_wgpu::wgpu::ClipboardIoJobInitializer::write(text),None=>ui_wgpu::wgpu::ClipboardIoJobInitializer::read()};
+        let initializer=match intent.text{Some(text)=>semio_framework_ui_wgpu_hosting::host::ClipboardIoJobInitializer::write(text),None=>semio_framework_ui_wgpu_hosting::host::ClipboardIoJobInitializer::read()};
         slot.generation=invocation.generation;slot.mounted=Some(MountedClipboardIo{invocation,initializer,params:None,parameter_cancel:None,preparation:None,session:None,outcome:None,copied:None,delivered:false,closing:false});
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_bytes:bytes,..Default::default()})?;Ok(true)
     })
 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-pub fn deliver_clipboard_recipient(recipient:&ui_wgpu::wgpu::ClipboardIntentRecipient,result:Result<Option<ui_wgpu::wgpu::ClipboardContent>,ui_wgpu::wgpu::BoundedActionFault>,input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>){
+pub fn deliver_clipboard_recipient(recipient:&semio_framework_ui_wgpu_input::ClipboardIntentRecipient,result:Result<Option<semio_framework_ui_wgpu_hosting::host::ClipboardContent>,semio_framework_ui_action::BoundedActionFault>,input:&mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>){
     match recipient {
-        ui_wgpu::wgpu::ClipboardIntentRecipient::Write(_)=>if let Err(fault)=result{input.record_action_fault(fault)},
-        ui_wgpu::wgpu::ClipboardIntentRecipient::Window(window)=>match result{Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text)))=>UI_ENGINE.with(|cell|{let mut engine=cell.borrow_mut();let commands=engine.dispatch_event(window,ui_wgpu::wgpu::UiEvent::Paste{text});engine.enqueue_async_commands(commands)}),Err(fault)=>input.record_action_fault(fault),_=>{}},
-        ui_wgpu::wgpu::ClipboardIntentRecipient::Text{slot,generation}=>complete_pending_native_text_editor_clipboard(PendingNativeTextEditorClipboardToken{slot:*slot,generation:*generation},result),
-        ui_wgpu::wgpu::ClipboardIntentRecipient::Ink{slot,generation}=>complete_pending_native_ink_clipboard(PendingNativeInkClipboardToken{slot:*slot,generation:*generation},result),
+        semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Write(_)=>if let Err(fault)=result{input.record_action_fault(fault)},
+        semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Window(window)=>match result{Ok(Some(semio_framework_ui_wgpu_hosting::host::ClipboardContent::Text(text)))=>UI_ENGINE.with(|cell|{let mut engine=cell.borrow_mut();let commands=engine.dispatch_event(window,semio_framework_ui_wgpu_events::UiEvent::Paste{text});engine.enqueue_async_commands(commands)}),Err(fault)=>input.record_action_fault(fault),_=>{}},
+        semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Text{slot,generation}=>complete_pending_native_text_editor_clipboard(PendingNativeTextEditorClipboardToken{slot:*slot,generation:*generation},result),
+        semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Ink{slot,generation}=>complete_pending_native_ink_clipboard(PendingNativeInkClipboardToken{slot:*slot,generation:*generation},result),
     }
 }
 
 #[cfg(all(not(target_arch="wasm32"),not(any(test, feature = "testkit"))))]
-pub fn pump_clipboard_io_one(input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>,cleanup:bool)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub fn pump_clipboard_io_one(input:&mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,cx:&mut semio_framework_job::StepContext<'_>,cleanup:bool)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     use semio_framework_job::{InteractiveJob};
 use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_worker_authority::{WorkerJobInitializer};
     MOUNTED_CLIPBOARD_IO.with(|cell|{let mut slots=cell.borrow_mut();let Some((index,slot))=slots.iter_mut().enumerate().find(|(_,slot)|slot.mounted.as_ref().is_some_and(|owner|owner.invocation.source.operation==cx.operation()&&owner.invocation.source.generation==cx.generation()))else{return Ok(false)};
@@ -274,8 +274,8 @@ use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_
             if !owner.initializer.partial_terminal_is_empty(){let demand=owner.initializer.partial_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|unsafe{owner.initializer.close_partial_step(std::ptr::null_mut(),grant)})?;return Ok(true)}
             if owner.params.is_some(){if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);let params=owner.params.take().unwrap();owner.parameter_cancel=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(true)}
             if let Some(cancel)=owner.parameter_cancel.as_mut(){let step=cancel.return_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(clipboard_alias_failure)?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if cancel.terminal_is_empty(){owner.parameter_cancel=None;}return Ok(true)}
-            let release=match &owner.invocation.recipient{ui_wgpu::wgpu::ClipboardIntentRecipient::Write(window)|ui_wgpu::wgpu::ClipboardIntentRecipient::Window(window)=>window.capacity(),_=>0}+owner.copied.as_ref().map_or(0,String::capacity);
-            if release>0{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth<2||grant.maximum_release_bytes<release{return Ok(true)}drop(std::mem::replace(&mut owner.invocation.recipient,ui_wgpu::wgpu::ClipboardIntentRecipient::Write(String::new())));drop(owner.copied.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}
+            let release=match &owner.invocation.recipient{semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Write(window)|semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Window(window)=>window.capacity(),_=>0}+owner.copied.as_ref().map_or(0,String::capacity);
+            if release>0{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth<2||grant.maximum_release_bytes<release{return Ok(true)}drop(std::mem::replace(&mut owner.invocation.recipient,semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Write(String::new())));drop(owner.copied.take());cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}
             if !owner.invocation.original.terminal_is_empty(){let parent=cx.original_source_parent()?;let _=owner.invocation.original.close_step(parent,cx)?;return Ok(true)}
             if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);slot.mounted=None;return Ok(true)
         }
@@ -293,20 +293,20 @@ use semio_framework_job_worker::{WorkerJobPoll as Poll};use semio_framework_job_
         if !owner.delivered{
             let Some(view)=outcome.outcome()?else{let original=owner.outcome.take().unwrap();if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard yielding original outcome refused resumption"))}return Ok(true)};
             let result=match &view{semio_framework_job::JobOutcomeView::Yield{..}=>{let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_some(){return Ok(true)}let original=owner.outcome.take().unwrap();if let Err(original)=original.resume(){owner.outcome=Some(original);return Err(clipboard_refusal("clipboard acknowledged yield refused original resumption"))}return Ok(true)},semio_framework_job::JobOutcomeView::Complete{..}=>{
-                match ui_wgpu::wgpu::ClipboardIoJob::read_candidate(&view){Some(ui_wgpu::wgpu::ClipboardContentBorrow::Text(text))=>{
+                match semio_framework_ui_wgpu_hosting::host::ClipboardIoJob::read_candidate(&view){Some(semio_framework_ui_wgpu_hosting::host::ClipboardContentBorrow::Text(text))=>{
                     let grant=cx.retained_grant();if owner.copied.is_none(){if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<text.len(){return Ok(true)}let copied=String::with_capacity(text.len());let capacity=copied.capacity();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);owner.copied=Some(copied);return Ok(true)}
-                    let copied=owner.copied.as_mut().unwrap();if copied.len()<text.len(){let grant=cx.retained_grant();let mut end=(copied.len()+grant.maximum_copy_bytes).min(text.len());while !text.is_char_boundary(end){end-=1}let bytes=end-copied.len();if grant.maximum_items==0||grant.maximum_depth==0||bytes==0{return Ok(true)}copied.push_str(&text[copied.len()..end]);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(owner.copied.take().unwrap())))},Some(ui_wgpu::wgpu::ClipboardContentBorrow::ImageRgba8{..})=>Err(ui_wgpu::wgpu::BoundedActionFault::Structure),None=>Ok(None)}},_=>Err(ui_wgpu::wgpu::BoundedActionFault::Structure)};
+                    let copied=owner.copied.as_mut().unwrap();if copied.len()<text.len(){let grant=cx.retained_grant();let mut end=(copied.len()+grant.maximum_copy_bytes).min(text.len());while !text.is_char_boundary(end){end-=1}let bytes=end-copied.len();if grant.maximum_items==0||grant.maximum_depth==0||bytes==0{return Ok(true)}copied.push_str(&text[copied.len()..end]);cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)}Ok(Some(semio_framework_ui_wgpu_hosting::host::ClipboardContent::Text(owner.copied.take().unwrap())))},Some(semio_framework_ui_wgpu_hosting::host::ClipboardContentBorrow::ImageRgba8{..})=>Err(semio_framework_ui_action::BoundedActionFault::Structure),None=>Ok(None)}},_=>Err(semio_framework_ui_action::BoundedActionFault::Structure)};
             if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(true)}deliver_clipboard_recipient(&owner.invocation.recipient,result,input);owner.delivered=true;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
         }
         let step=outcome.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if outcome.outcome_descriptor().is_none(){owner.outcome.take().unwrap().begin_close();owner.closing=true;}Ok(true)
     })
 }
 
-pub fn write_owned_os_clipboard(text:String,input:&mut ui_wgpu::wgpu::InputState<ActionDescriptor>){
+pub fn write_owned_os_clipboard(text:String,input:&mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>){
     #[cfg(any(any(test, feature = "testkit"),target_arch="wasm32"))]
     write_os_clipboard(&text,input);
     #[cfg(all(not(any(test, feature = "testkit")),not(target_arch="wasm32")))]
-    input.retain_original_clipboard_intent(ui_wgpu::wgpu::ClipboardIntentRecipient::Write(String::new()),Some(text)).unwrap_or_else(|_|panic!("clipboard write retained source admission is required"));
+    input.retain_original_clipboard_intent(semio_framework_ui_wgpu_input::ClipboardIntentRecipient::Write(String::new()),Some(text)).unwrap_or_else(|_|panic!("clipboard write retained source admission is required"));
 }
 
 #[cfg(any(test, feature = "testkit"))]

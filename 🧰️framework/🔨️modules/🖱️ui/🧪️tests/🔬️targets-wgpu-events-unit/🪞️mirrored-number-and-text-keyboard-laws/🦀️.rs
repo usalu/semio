@@ -32,7 +32,7 @@ fn named_bound(value: f64, refusal: &str) -> ui_contract::UiNumberBound {
 /// rows React's `uiNumberFieldKey` answers.
 #[test]
 fn every_field_key_row_names_the_law_key_the_shared_corpus_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     let rows = fixture["fieldKeys"].as_array().expect("field key rows");
     assert!(!rows.is_empty(), "the corpus declares field keys");
     for row in rows {
@@ -56,7 +56,7 @@ fn every_field_key_row_names_the_law_key_the_shared_corpus_declares() {
 /// as the physical key the retained canvas receives: the stepper reports the law's value — the rows React's `Stepper` answers.
 #[test]
 fn stepper_keys_answer_the_shared_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️number-controls/🔣️.json")).expect("number-controls fixture");
     let mut asked = 0;
     for row in fixture["keys"].as_array().expect("key rows") {
         let number = |field: &str| row[field].as_f64();
@@ -211,7 +211,7 @@ fn draft_field(kind: &str, value: &str) -> UiNode {
 /// nothing — the rows React's text fields answer.
 #[test]
 fn text_fields_answer_the_shared_text_keyboard_law_rows() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/🧫️text-controls/🔣️.json")).expect("text-controls fixture");
     let rows = fixture["keys"].as_array().expect("key rows");
     assert!(rows.len() >= 15, "single-line, multi-line and number rows");
     for row in rows {
@@ -273,10 +273,10 @@ fn a_multi_line_draft_commits_whole_and_shows_the_carets_line() {
     router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "two".into() });
     let edit = tree.node(field).and_then(|node| node.state.edit.clone()).expect("an open draft");
     assert_eq!((edit.text.as_str(), edit.caret), ("one\ntwo", 7));
-    assert_eq!(crate::wgpu::paint::text_line_view(&edit.text, Some(edit.caret)), ("two", 3), "the caret's line and its place in it");
-    assert_eq!(crate::wgpu::paint::text_line_view(&edit.text, Some(2)), ("one", 2));
-    assert_eq!(crate::wgpu::paint::text_line_view(&edit.text, None), ("one", 0), "without a caret the first line");
-    assert_eq!(crate::wgpu::paint::text_line_view("", Some(0)), ("", 0));
+    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, Some(edit.caret)), ("two", 3), "the caret's line and its place in it");
+    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, Some(2)), ("one", 2));
+    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view(&edit.text, None), ("one", 0), "without a caret the first line");
+    assert_eq!(semio_framework_ui_wgpu_paint::text_line_view("", Some(0)), ("", 0));
     let blurred = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 90.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(dispatched_values(&blurred), vec![DslValue::Object(vec![("value".into(), DslValue::String("one\ntwo".into()))])], "leaving the field commits every line");
 }

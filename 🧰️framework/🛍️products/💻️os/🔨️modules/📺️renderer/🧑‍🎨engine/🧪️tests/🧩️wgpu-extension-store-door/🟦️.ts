@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import fixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json";
-import { createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
+import fixture from "@semio-tech/plugin-extension-store/installation/testing/fixtures.json";
+import { createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 
 const answer = async (request: unknown): Promise<Record<string, unknown>> => JSON.parse(await createWgpuPageHostIo()(JSON.stringify(request), null)) as Record<string, unknown>;
 

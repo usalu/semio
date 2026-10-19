@@ -3,7 +3,7 @@ import {lstat,open} from "node:fs/promises";
 import {resolve,relative,isAbsolute,sep,parse,join} from "node:path";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 const protocol=Object.freeze({...schema.definitions.Protocol.const}),requestSchema=structuredClone(schema.definitions.Request);
 export interface CargoSourceReadRequestV1 {readonly version:1;readonly root:string;readonly maximumBytes:number;readonly remainingFiles:number;readonly expectedBytes:number|null}
 function identity(a:BigIntStats,b:BigIntStats):boolean{return a.dev===b.dev&&a.ino===b.ino&&a.mode===b.mode&&a.nlink===b.nlink&&a.size===b.size&&a.mtimeNs===b.mtimeNs&&a.ctimeNs===b.ctimeNs;}

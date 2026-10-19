@@ -45,8 +45,8 @@ async fn renders_node_graph_scene() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = app.render("trinity.jack.play.main", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("node-graph"));
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.main", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
+    assert!(node.contains("node-graph"));
 
     app.close(cx);
 
@@ -62,8 +62,7 @@ async fn renders_jack_editor() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = app.render("trinity.jack.play.editor", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(json.contains("text-editor"));
     // 🚚️ The buffer rides an out-of-doc payload lane, never the projected doc spine — read the
     // assembled scene the way a render host does.
@@ -112,8 +111,7 @@ async fn node_graph_select_updates_selection_and_document_tree() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
-    let tree = app.render("trinity.jack.play.artifact", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("project semantic UI test tree");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.artifact", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     assert!(json.contains(&node_id));
     // 🕹️ Rows carry no `selected` flag of their own any more: the tree binds the framework-owned
     // `"ast"` interaction domain and the host paints the selection from the interaction state — so
@@ -148,8 +146,7 @@ async fn editor_scene_has_tokens_and_diagnostics() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = app.render("trinity.jack.play.editor", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert!(scene.tokens_json.is_some_and(|tokens| !tokens.is_empty()));
     assert!(scene.diagnostics_json.is_some());
@@ -175,8 +172,7 @@ async fn text_edit_puts_the_query_into_the_document() {
         .await
         .expect("edit");
     drive_query_ownership_operations(&mut app,cx).await.expect("edit completes");
-    let node = app.render("trinity.jack.play.editor", None, &editor).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", &editor, cx).await.expect("render");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene");
     assert_eq!(scene.buffer, "MATCH (a:Piece) RETURN a.name");
     assert_eq!(app.snapshot().expect("projection").query, "MATCH (a:Piece) RETURN a.name", "the typed query is document content, not a window's config");
@@ -189,9 +185,8 @@ async fn text_edit_puts_the_query_into_the_document() {
 }
 
 /// 🔎️ The query the jack editor window shows (its text-editor scene buffer).
-async fn jack_query(app: &mut JackTestApp, editor: &ViewModel) -> String {
-    let node = app.render("trinity.jack.play.editor", None, editor).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
+async fn jack_query(app: &mut JackTestApp, editor: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> String {
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", editor, cx).await.expect("render");
     artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&json).expect("text-editor scene").buffer
 }
 
@@ -212,7 +207,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
     let meta_of = || semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") };
-    let before = jack_query(&mut app, &editor).await;
+    let before = jack_query(&mut app, &editor, cx).await;
     let edits = app.edit_transactions().len();
     let mut now = 50_000;
     for (index, text) in run.texts.iter().enumerate() {
@@ -223,7 +218,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
         drive_query_ownership_operations(&mut app,cx).await.unwrap_or_else(|error| panic!("keystroke {index} did not publish: {error}"));
         artifact_app_laws::drain_maintenance_pressure(&mut app.app,cx);
     }
-    assert_eq!(jack_query(&mut app, &editor).await, run.expected, "the query window shows the open run");
+    assert_eq!(jack_query(&mut app, &editor, cx).await, run.expected, "the query window shows the open run");
     assert_eq!((app.snapshot().expect("projection").query.clone(), app.edit_transactions().len()), (before.clone(), edits), "nothing lands while the run is open");
     app.set_tool_clock_ms(Some(now + 750));
     let commit = semio_framework_value::DslValue::Object(vec![(semio_framework_plugin::TYPING_BUFFER_ARG.into(), semio_framework_value::DslValue::String("trinity.jack.query".into())), (semio_framework_plugin::TYPING_COMMIT_ARG.into(), semio_framework_value::DslValue::String("idle".into()))]);
@@ -237,7 +232,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
         let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.app,verb,None,&meta_of(),&mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx,jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy().close).await.unwrap_or_else(|fault| panic!("{verb} admission: {fault:?}"));
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("{verb} settles: {fault:?}"));
         drive_query_ownership_operations(&mut app,cx).await.unwrap_or_else(|error| panic!("{verb} publishes: {error}"));
-        assert_eq!(&jack_query(&mut app, &editor).await, expected, "one {verb} moves the whole run");
+        assert_eq!(&jack_query(&mut app, &editor, cx).await, expected, "one {verb} moves the whole run");
     }
 
     app.close(cx);

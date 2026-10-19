@@ -1,5 +1,5 @@
 /** 🖼️ The raster envelope caller retained sources and their route, mutation, loop restoration and rejected output identity checks. */
-import { toolJobRasterEnvelopeCallerRetainedExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🖼️caller-retained-media/🟦️.ts";
+import { toolJobRasterEnvelopeCallerRetainedExact } from "@semio-tech/repo-lib/laws";
 
 /** 🧬 Builds the raster codec and editor sources. */
 export function rasterEnvelopeSourceFixtures() {

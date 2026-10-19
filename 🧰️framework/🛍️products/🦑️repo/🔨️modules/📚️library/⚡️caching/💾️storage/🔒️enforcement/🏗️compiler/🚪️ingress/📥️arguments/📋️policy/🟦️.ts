@@ -1,6 +1,6 @@
 import {admitRepositoryCargoForwardingV1} from "../📤️forwarding/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 📋️ Names the exact configuration and writer paths already issued to the Cargo caller. */
 export interface RepositoryCargoStorageArgumentsV1{readonly version:1;readonly compilerConfiguration:string;readonly buildDirectory:string;readonly targetDirectory:string}

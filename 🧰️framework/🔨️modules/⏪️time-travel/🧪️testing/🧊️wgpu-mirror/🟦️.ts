@@ -1,8 +1,7 @@
 /** 🧊️ The wgpu shell's accessibility mirror and the band words it announces. */
-import { evalSafe, waitUntil } from "../📄️page/🟦️.ts";
-import { markToken } from "../🧱️chrome/🟦️.ts";
+import { evalSafe, markToken, waitUntil } from "../🔬️probe/🟦️.ts";
 import { page } from "../🧠️state/🟦️.ts";
-import type { Band } from "../🎗️band/🟦️.ts";
+import type { Band } from "../🎗️band/📋️readout/🟦️.ts";
 
 //#region 🔖️Wgpu
 

@@ -1,11 +1,14 @@
 //! 🧰️ Shared checks of the bundled examples: strict decode, schema validation by the third-party jsonschema library, text and pack
 //! round trips, referential integrity, inference sanity, and the replay of a whole example through the mutation API.
 
-use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, ModelMutation, KINDS};
-use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
-use crate::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, parse_dsl, print_dsl};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, OpeningKind, TopConstraint}};
-use crate::standards::v1::subsets::any::schema::inferences::{diagnostics::Severity, spaces::SpaceStatus};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, ModelMutation, KINDS};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot as pack;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, parse_dsl, print_dsl};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, TopConstraint};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Severity;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use protocol::Inference;
 use std::path::{Path, PathBuf};
 
@@ -136,7 +139,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     for (id, wall) in &model.walls {
         need(format!("walls/{id}/wall_type"), model.wall_types.contains_key(&wall.wall_type));
         need(format!("walls/{id}/top"), top_storey(&wall.top).is_none_or(|storey| model.storeys.contains_key(storey)));
-        for target in crate::standards::v1::subsets::any::schema::authored::references::targets_of(wall) {
+        for target in semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::targets_of(wall) {
             need(format!("walls/{id}/attach/{target}"), model.roofs.contains_key(target) || model.slabs.contains_key(target) || model.ceilings.contains_key(target));
         }
     }
@@ -148,11 +151,11 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         need(format!("curtain_walls/{id}/top"), top_storey(&curtain.top).is_none_or(|storey| model.storeys.contains_key(storey)));
         need(format!("curtain_walls/{id}/curtain_wall_type"), model.curtain_wall_types.contains_key(&curtain.curtain_wall_type));
     }
-    let panel_ok = |panel: &crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel| match panel {
-        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass | crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Empty => true,
-        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Solid { material } => model.materials.contains_key(material),
-        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Door { door_type } => model.door_types.contains_key(door_type),
-        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Window { window_type } => model.window_types.contains_key(window_type),
+    let panel_ok = |panel: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel| match panel {
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass | semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Empty => true,
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Solid { material } => model.materials.contains_key(material),
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Door { door_type } => model.door_types.contains_key(door_type),
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Window { window_type } => model.window_types.contains_key(window_type),
     };
     for (id, kind) in &model.curtain_wall_types {
         need(format!("curtain_wall_types/{id}/panel_material"), model.materials.contains_key(&kind.panel_material));
@@ -231,34 +234,34 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         }
     }
     for (id, system) in &model.classification_systems {
-        need(format!("classification_systems/{id}/entries"), crate::standards::v1::subsets::any::schema::snapshot::entries_problem(&system.entries).is_none());
+        need(format!("classification_systems/{id}/entries"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entries_problem(&system.entries).is_none());
     }
     for (id, template) in &model.property_templates {
-        need(format!("property_templates/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::template_problem(&template.name, &template.applies_to, &template.properties).is_none());
+        need(format!("property_templates/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::template_problem(&template.name, &template.applies_to, &template.properties).is_none());
     }
     for (id, view) in &model.views {
-        need(format!("views/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::view_problem(model, id, view).is_none());
+        need(format!("views/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::view_problem(model, id, view).is_none());
     }
     for (id, row) in &model.sheets {
-        need(format!("sheets/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::sheet_problem(model, id, row).is_none());
+        need(format!("sheets/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::sheet_problem(model, id, row).is_none());
     }
     for (id, row) in &model.viewports {
-        need(format!("viewports/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::viewport_problem(model, id, row).is_none());
+        need(format!("viewports/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::viewport_problem(model, id, row).is_none());
     }
     for (id, row) in &model.sheet_revisions {
-        need(format!("sheet_revisions/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::revision_problem(model, id, row).is_none());
+        need(format!("sheet_revisions/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::revision_problem(model, id, row).is_none());
     }
     for (id, row) in &model.clash_sets {
-        need(format!("clash_sets/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::clash_set_problem(model, id, row).is_none());
+        need(format!("clash_sets/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::clash_set_problem(model, id, row).is_none());
     }
     for (id, row) in &model.rules {
-        need(format!("rules/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::rule_problem(model, id, row).is_none());
+        need(format!("rules/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::rule_problem(model, id, row).is_none());
     }
     for (id, row) in &model.issues {
-        need(format!("issues/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::issue_problem(model, id, row).is_none());
+        need(format!("issues/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::issue_problem(model, id, row).is_none());
     }
     for (id, row) in &model.issue_comments {
-        need(format!("issue_comments/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::comment_problem(model, id, row).is_none());
+        need(format!("issue_comments/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::comment_problem(model, id, row).is_none());
     }
     let present = |id: &str| owned(&id.to_string()) || model.grids.contains_key(id);
     for (id, row) in &model.dimensions {
@@ -282,28 +285,28 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     }
     for (key, row) in &model.family_parameters {
         need(format!("family_parameters/{key}/family"), model.families.contains_key(&row.family));
-        need(format!("family_parameters/{key}/key"), key == &crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, &row.name));
-        need(format!("family_parameters/{key}/value"), crate::standards::v1::subsets::any::schema::authored::formula::references(&row.value).iter().all(|name| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name))));
+        need(format!("family_parameters/{key}/key"), key == &semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, &row.name));
+        need(format!("family_parameters/{key}/value"), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(&row.value).iter().all(|name| model.family_parameters.contains_key(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name))));
     }
     for (id, row) in &model.family_solids {
         need(format!("family_solids/{id}/family"), model.families.contains_key(&row.family));
-        need(format!("family_solids/{id}/formulas"), crate::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).iter().all(|(_, text)| crate::standards::v1::subsets::any::schema::authored::formula::references(text).iter().all(|name| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name)))));
+        need(format!("family_solids/{id}/formulas"), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).iter().all(|(_, text)| semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::references(text).iter().all(|name| model.family_parameters.contains_key(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name)))));
     }
     for (id, row) in &model.components {
-        need(format!("components/{id}/family"), model.families.get(&row.family).is_some_and(|family| family.category != crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile));
+        need(format!("components/{id}/family"), model.families.get(&row.family).is_some_and(|family| family.category != semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile));
         need(format!("components/{id}/host"), row.host.as_ref().is_none_or(|wall| model.walls.get(wall).is_some_and(|host| host.storey == row.storey)));
     }
     for (key, row) in &model.component_overrides {
         let family = model.components.get(&row.component).map(|component| component.family.as_str());
         need(format!("component_overrides/{key}/component"), family.is_some());
-        need(format!("component_overrides/{key}/key"), key == &crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.component, &row.name));
-        need(format!("component_overrides/{key}/parameter"), family.is_some_and(|family| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, &row.name))));
-        need(format!("component_overrides/{key}/value"), crate::standards::v1::subsets::any::schema::authored::formula::is_canonical(&row.value));
+        need(format!("component_overrides/{key}/key"), key == &semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.component, &row.name));
+        need(format!("component_overrides/{key}/parameter"), family.is_some_and(|family| model.family_parameters.contains_key(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, &row.name))));
+        need(format!("component_overrides/{key}/value"), semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::is_canonical(&row.value));
     }
     for (id, row) in &model.mep_elements {
         need(format!("mep_elements/{id}/path"), row.path.len() >= 2 && row.path.windows(2).all(|pair| (pair[0].x - pair[1].x).hypot(pair[0].y - pair[1].y).hypot(pair[0].z - pair[1].z) > 1e-9));
     }
-    let profile_ok = |profile: &crate::standards::v1::subsets::any::schema::snapshot::Profile| crate::standards::v1::subsets::any::schema::inferences::families::family_of_profile(profile).is_none_or(|family| model.families.get(family).is_some_and(|row| row.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile));
+    let profile_ok = |profile: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of_profile(profile).is_none_or(|family| model.families.get(family).is_some_and(|row| row.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile));
     for (id, kind) in &model.column_types {
         need(format!("column_types/{id}/profile"), profile_ok(&kind.profile));
     }
@@ -314,7 +317,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         for storey in &schedule.storeys {
             need(format!("schedules/{id}/storeys"), model.storeys.contains_key(storey));
         }
-        need(format!("schedules/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem(schedule).is_none());
+        need(format!("schedules/{id}/definition"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem(schedule).is_none());
     }
     let mut levels = std::collections::BTreeSet::new();
     for (id, storey) in &model.storeys {
@@ -376,13 +379,13 @@ pub fn infer(model: &ModelSnapshot) -> ModelInference {
 
 /// 📋️ A schedule table is consistent with its definition: it has a total row exactly when a column is summed and a row was listed, and every summed column of the total row is the sum of the rows the table lists (the items
 /// when itemized, else the collapsed rows of the outermost level).
-fn schedules_add_up(id: &str, schedule: &crate::standards::v1::subsets::any::schema::snapshot::Schedule, table: &crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable) {
-    use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
+fn schedules_add_up(id: &str, schedule: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Schedule, table: &semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable) {
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
     assert_eq!(table.keys, schedule.columns.iter().map(|column| column.key.clone()).collect::<Vec<_>>(), "schedule {id} keeps its columns");
     let total = table.rows.iter().find(|row| row.kind == RowKind::Total);
     assert_eq!(total.is_some(), table.items > 0 && schedule.columns.iter().any(|column| column.total), "schedule {id} has a total row exactly when something is summed");
     let Some(total) = total else { return };
-    let listed = |row: &&crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleRow| if schedule.itemize { row.kind == RowKind::Item } else { row.kind == RowKind::Group && row.level == 0 };
+    let listed = |row: &&semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleRow| if schedule.itemize { row.kind == RowKind::Item } else { row.kind == RowKind::Group && row.level == 0 };
     for (index, column) in schedule.columns.iter().enumerate().filter(|(_, column)| column.total) {
         let sum: f64 = table.rows.iter().filter(listed).filter_map(|row| if let ScheduleCell::Number { value } = row.cells[index] { Some(value) } else { None }).sum();
         match total.cells[index] {
@@ -531,7 +534,7 @@ pub fn replay_derived(model: &ModelSnapshot, derivations: &str) -> Replay {
         }
         if kind == "create-family" && KINDS.contains(&"set-family-parameter") {
             for family in model.families.keys() {
-                for row in crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order(model, family) {
+                for row in semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order(model, family) {
                     let quoted = |text: &String| semio_framework_pack_json::to_json_string(text);
                     state = apply_json(&state, &format!("{{\"mutation\":\"setFamilyParameter\",\"family\":{},\"name\":{},\"kind\":{},\"value\":{}}}", quoted(&row.family), quoted(&row.name), semio_framework_pack_json::to_json_string(&row.kind), quoted(&row.value)));
                     applied += 1;
@@ -592,9 +595,10 @@ pub fn assert_replay_derived(name: &str, model: &ModelSnapshot, derivations: &st
 /// 🖼️ Asserts the authored views of `model` are the ones the `createView` command makes for each of its buildings (the plan of every storey, the ceiling plan of every storey with ceilings, the four elevations, the section, the camera)
 /// plus the second section, the first one turned a quarter, so the examples show exactly what a person gets by asking the editor for views.
 pub fn assert_views_are_the_commands(name: &str, model: &ModelSnapshot) {
-    use crate::editor::bim::commands::create_view::{extents, handle, CreateView, MARGIN};
-    use crate::editor::bim::fixture::support::{ctx, run};
-    use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewPlane};
+    use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_view::{extents, handle, CreateView, MARGIN};
+    use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, run};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, ViewPlane};
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
     let bare = ModelSnapshot { views: Default::default(), ..model.clone() };
     let made = |kind: &str, parent: &str| -> Vec<View> {
         let mut context = ctx(&[]);

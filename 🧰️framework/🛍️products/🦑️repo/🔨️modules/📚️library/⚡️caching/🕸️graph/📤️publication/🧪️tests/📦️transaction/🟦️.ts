@@ -1,11 +1,11 @@
 import{createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
-import {fileURLToPath} from "node:url";
-import {captureOwnedCommandResultV1} from "./../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {fileURLToPath,pathToFileURL} from "node:url";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 import * as fs from"node:fs";
 import{syncBuiltinESMExports}from"node:module";
 import {test,expect,spyOn} from "bun:test";
-import {mkdtemp,rm,readFile,lstat,writeFile} from "node:fs/promises";
+import {mkdtemp,rm,readFile,lstat,writeFile,cp} from "node:fs/promises";
 import {join} from "node:path";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
@@ -16,8 +16,8 @@ import * as publication from "../../🟦️.ts";
 import {build} from "esbuild";
 import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "./../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "./../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type{OwnedCommandCaptureV1}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
+import type{OwnedCommandCaptureV1}from"@semio-tech/process/execution";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "./../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 
 const files=fixture.files.map((row):publication.GraphPublicationFileV1=>{const name=row.name;if(name!=="project-graph.json"&&name!=="source-maps.json"&&name!=="file-map.json")throw Error("Closed publication fixture file required");return{name,value:row.value};});
@@ -34,7 +34,7 @@ async function verifyStageRollback(original:ScriptInvocation,host:RepositoryCach
 
 export async function withGraphPublicationNodeV1(original:ScriptInvocation,host:RepositoryCacheStoreV1,parent:ResourceLeaseControl,body:(run:(mode:string)=>Promise<OwnedCommandCaptureV1>,directory:string)=>Promise<void>){
  const directory=await mkdtemp(join(host.root,"pc-")),compiled=await mkdtemp(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"pt-")),bundle=join(compiled,"child.mjs"),control=createRequestedIssuedResourceControlV1(parent,fixture.phaseMilliseconds);
- try{await build({entryPoints:[fileURLToPath(new URL("./📜️script.ts",import.meta.url))],outfile:bundle,bundle:true,platform:"node",format:"esm",external:["bun:sqlite"],define:{"import.meta.semioFrozenAuthorizers":"true"},banner:{js:'import{createRequire as semioCreateRequire}from"node:module";const require=semioCreateRequire(import.meta.url);'}});const run=(mode:string)=>captureOwnedCommandResultV1("node",[bundle,mode,directory],process.cwd(),{control,env:scriptInvocationEnvironment(original,host.environment),output:{maximumBytes:1048576,maximumLines:1024}});
+ try{await build({entryPoints:[fileURLToPath(new URL("./📜️script.ts",import.meta.url))],outfile:bundle,bundle:true,platform:"node",format:"esm",external:["bun:sqlite"],define:{"import.meta.semioFrozenAuthorizers":"true"},plugins:[{name:"original-source-urls",setup(builder){builder.onLoad({filter:/\.(?:ts|mjs)$/},async args=>{const text=await readFile(args.path,"utf8");return args.path.includes("/node_modules/")||!text.includes("import.meta.url")?undefined:{contents:text.replaceAll("import.meta.url",JSON.stringify(pathToFileURL(args.path).href)),loader:args.path.endsWith(".ts")?"ts":"js"};});}}],banner:{js:'import{createRequire as semioCreateRequire}from"node:module";const require=semioCreateRequire(import.meta.url);'}});const run=(mode:string)=>captureOwnedCommandResultV1("node",[bundle,mode,directory],process.cwd(),{control,env:scriptInvocationEnvironment(original,host.environment),output:{maximumBytes:1048576,maximumLines:1024}});
  await body(run,directory); }finally{await rm(directory,{recursive:true,force:true});await rm(compiled,{recursive:true,force:true});}
 }
 async function verifyCrashes(original:ScriptInvocation,host:RepositoryCacheStoreV1,parent:ResourceLeaseControl){return withGraphPublicationNodeV1(original,host,parent,async(run,directory)=>{ for(const phase of fixture.crashes){const seed=await run("seed");expect(seed.status,seed.stderr).toBe(0);expect(seed.signal).toBe(null);const crash=await run("crash:"+phase);expect(crash.status,crash.stderr).toBe(73);expect(crash.signal).toBe(null);const dirty=JSON.parse(await readFile(join(directory,"publication.json"),"utf8"));expect(dirty.phase).toBe(phase==="committed"?"committed":phase==="staged"||phase==="renamed"?"publishing":"preparing");const recovery=await run("recover");expect(recovery.status,recovery.stderr).toBe(0);expect(recovery.signal).toBe(null);const actual=JSON.parse(recovery.stdout.trim().split("\n").at(-1)!);expect(actual.files).toEqual(files.map(row=>phase==="committed"?row.value:{accepted:row.name}));expect(actual.journal).toBe(phase==="committed"?"committed":null);}

@@ -1,6 +1,6 @@
 /** 📯 Typed-operation completion drain, delivery, ceilings and retired instances. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
-import type { TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
+import type { TurnOutcome } from "@semio-tech/framework-kernel";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
 
 export async function registerTypedOperationCompletionTests(vitest: PluginRuntimeVitest, dependencies: PluginRuntimeDependencies): Promise<void> {
@@ -245,7 +245,7 @@ export async function registerTypedOperationCompletionTests(vitest: PluginRuntim
   });
 
   it("packs completion-result.fault the same way the guest decodes it", async () => {
-    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/extension-result-fault-pack.json");
+    const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures/extension-result-fault-pack.json");
     const packed = encodePackValue(fixture.fault);
     expect(() => JSON.parse(new TextDecoder().decode(packed))).toThrow();
     const decoded = decodePackValue(packed) as { code: string; message: string };

@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-renderer-wgpu/plugin-bridge/contributions-and-effects` entry: explicit re-exports of the source module that owns each member. */
+export { WGPU_CONTRIBUTIONS_SLIM_VIEW, shellFrameAnswersACaller, wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuSetContributionsCommand, wgpuSlimContributionsView } from "../../../../🐚️plugin-bridge/🎛️contributions-and-effects/🟦️.ts";

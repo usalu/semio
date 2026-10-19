@@ -59,7 +59,7 @@
     },
     {
       "find": "@semio-tech/infinite-world-r3f",
-      "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx"
+      "replacement": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx"
     },
     {
       "find": "@semio-tech/framework-renderer-react",

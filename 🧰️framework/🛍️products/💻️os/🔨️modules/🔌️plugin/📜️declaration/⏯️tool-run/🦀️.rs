@@ -157,7 +157,7 @@ pub struct OriginalToolRunJobPortRetirement{
 impl OriginalToolRunJobPortRetirement{
     /// 📏️ Borrows the exact original lease or captured native queue frontier.
     pub fn demands(&self)->Result<RetirementDemand,ValueError>{
-        if let Some(port)=self.source.as_ref(){if Arc::weak_count(&port.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:if Arc::strong_count(&port.inner)==1{semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<ToolRunJobPortState>()}else{0},depth:1,..Default::default()});}
+        if let Some(port)=self.source.as_ref(){if Arc::weak_count(&port.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:if Arc::strong_count(&port.inner)==1{semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<ToolRunJobPortState>()}else{0},depth:1,..Default::default()});}
         if let Some(effects)=self.effects.as_ref(){if !effects.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port final effects require native retirement"));}return Ok(RetirementDemand{copy_bytes:0,release_bytes:effects.capacity().checked_mul(size_of::<Effect>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool port queue extent overflow"))?,depth:1,..Default::default()});}
         Ok(Default::default())
     }

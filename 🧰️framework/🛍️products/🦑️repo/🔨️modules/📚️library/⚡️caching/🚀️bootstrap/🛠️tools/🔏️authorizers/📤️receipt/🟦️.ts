@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {lstatSync,readFileSync,writeSync as writeNxAuthorizerReceiptDiagnosticV1} from "node:fs";
 import {dirname,join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {compileJsonSchemaSubset,validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset,validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🔏️ Actual compiled bytes and their frozen source census belong to one release toolkit. */
 export interface NxAuthorizerReceiptV1 {readonly version:1;readonly mode:"release";readonly sourceSha256:string;readonly entry:"semio-authorizers.mjs";readonly outputs:readonly {readonly path:"semio-authorizers.mjs";readonly sha256:string}[];}

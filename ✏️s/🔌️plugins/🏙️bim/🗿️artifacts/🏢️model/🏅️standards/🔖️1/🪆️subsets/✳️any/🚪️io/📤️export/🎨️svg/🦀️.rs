@@ -6,19 +6,14 @@
 //! The tree is the typed SVG model of the `s.stdio.svg` artifact and the text is written by the XML writer of `s.stdio.xml`, both behind [`codec`].
 //! 📎 https://www.w3.org/TR/SVG11/
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec;
-pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path;
-pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style;
-pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet;
-pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path;
 
 
 /// 🪪️ The SVG 1.1 dialect this leaf writes.
@@ -28,31 +23,31 @@ const NAMESPACE: &str = "http://www.w3.org/2000/svg";
 
 /// 🎨️ The SVG document of `model` from already inferred view drawings.
 pub fn views_to_svg(model: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework>) -> Result<String, String> {
-    let layout = sheet::layout(model, drawings);
+    let layout = semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::layout(model, drawings);
     let title = if model.project.name.is_empty() { "BIM model" } else { model.project.name.as_str() };
-    let (width, height) = (path::snap(layout.width), path::snap(layout.height));
-    let mut common = codec::CommonAttrs::new().with_class("sheet");
+    let (width, height) = (semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::snap(layout.width), semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::snap(layout.height));
+    let mut common = semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::CommonAttrs::new().with_class("sheet");
     common.extra_attrs = vec![codec::attr("version", "1.1"), codec::attr("data-unit", "mm")];
     let mut children = vec![
         codec::element("title", vec![], vec![codec::text(title)]),
         codec::element("desc", vec![], vec![codec::text(&format!("Views of {title}, one group per view (plan, ceiling plan, section, elevation) at the scale of the view, paper millimetres."))]),
         codec::element("style", vec![], vec![codec::text(&style::sheet())]),
     ];
-    children.extend(layout.slots.iter().map(|slot| drawing::view_group(model, slot, &drawings[&slot.view].lines)));
-    let root = codec::SvgElement::Svg {
+    children.extend(layout.slots.iter().map(|slot| semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::view_group(model, slot, &drawings[&slot.view].lines)));
+    let root = semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::SvgElement::Svg {
         common,
-        view_box: Some(codec::ViewBox { min_x: 0.0, min_y: 0.0, width, height }),
+        view_box: Some(semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::ViewBox { min_x: 0.0, min_y: 0.0, width, height }),
         width: Some(format!("{width}mm")),
         height: Some(format!("{height}mm")),
         xmlns: Some(NAMESPACE.into()),
         children,
     };
-    codec::document_text(&root)
+    semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::document_text(&root)
 }
 
 /// 🎨️ The SVG text of the views of `model`.
 pub fn export_svg(model: &ModelSnapshot) -> Result<String, String> {
-    inference::try_with_inference(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| views_to_svg(model, &inferred.view_linework)).map_err(|error| error.to_string())?
 }
 
 //#region 🔖️Serializer

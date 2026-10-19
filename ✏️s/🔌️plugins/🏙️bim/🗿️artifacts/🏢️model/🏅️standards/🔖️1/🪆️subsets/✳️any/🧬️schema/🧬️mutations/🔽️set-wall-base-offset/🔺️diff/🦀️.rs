@@ -1,7 +1,10 @@
 //! 🔺️ Diff constructor for `SetWallBaseOffset`: a one-field wall patch. The resolved base, top and height are inferred, never written.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallBaseOffset, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

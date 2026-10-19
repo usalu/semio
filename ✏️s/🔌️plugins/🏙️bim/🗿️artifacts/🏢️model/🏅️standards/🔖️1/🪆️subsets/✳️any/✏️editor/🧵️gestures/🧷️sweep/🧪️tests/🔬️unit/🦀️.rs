@@ -1,23 +1,24 @@
-use crate::editor::bim::marks::Style;
-use crate::editor::bim::entities::wall_sweeps::baseboard;
-use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::Profile, snapshot::WallSide};
-use crate::editor::bim::gestures::session::{Step, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Style;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::baseboard;
+use semio_s_artifact_bim_model_mut_any_186::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, WallSide};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Step, TYPE_MISSING};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Mark, Preview};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSweep};
-use crate::editor::bim::gestures::sweep::*;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSweep};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::sweep::nearest_wall;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
 
 fn created(step: &Step) -> &CreateWallSweep {
     match step.mutations.as_slice() {
@@ -89,6 +90,6 @@ async fn a_sweep_written_by_the_tool_is_inferred_with_a_length() {
     let mut rig = Rig::plan("sweep", room());
     rig.down(2.0, 0.05);
     let id = rig.snapshot.wall_sweeps.keys().next().cloned().expect("a sweep");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone());
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone());
     assert!(inference.quantities.elements.get(&id).is_some_and(|row| row.length > 0.0));
 }

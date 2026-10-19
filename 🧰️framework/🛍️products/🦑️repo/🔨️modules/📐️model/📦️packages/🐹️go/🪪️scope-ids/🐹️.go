@@ -25,17 +25,17 @@ func ScopeToFiles(scope workspace.Scope, bundles []Bundle) ([]string, error) {
 	var err error
 	switch scope.Kind {
 	case workspace.ScopeRepo:
-		files, err = workspace.GlobByExtension(workspace.RootDir, "**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
+		files, err = workspace.GlobByExtension(workspace.GetRootDir(), "**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
 	case workspace.ScopeTechnology:
 		for _, proj := range bundles {
 			if proj.Name == scope.TechnologyName {
-				files, err = workspace.GlobByExtension(workspace.RootDir, proj.Root+"/**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
+				files, err = workspace.GlobByExtension(workspace.GetRootDir(), proj.Root+"/**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
 				break
 			}
 		}
 	case workspace.ScopeFolder:
 		if scope.FilePath != "" {
-			files, err = workspace.GlobByExtension(workspace.RootDir, scope.FilePath+"**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
+			files, err = workspace.GlobByExtension(workspace.GetRootDir(), scope.FilePath+"**/*", []string{"ts", "tsx", "py", "cs", "go", "rs"}, ignorePatterns, true)
 		}
 	case workspace.ScopeFile, workspace.ScopeSection, workspace.ScopeDefinition:
 		if scope.FilePath != "" {

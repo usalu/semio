@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
 use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &DeleteFamilySolid, base: &ModelSnapshot) -> Vec<Op>
 where

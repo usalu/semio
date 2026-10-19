@@ -32,8 +32,8 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
             async fn dispatch(app: &mut SequenceApp, command: SequenceCommand, view: &ViewModel) -> Result<(usize, usize, usize), String> {
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 83, view_state: Some(view.clone()), ..artifact_app_laws::meta("sequence-window-ownership") };
-                app.dispatch_typed(command, &meta).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let lanes = (
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count(),
@@ -42,13 +42,11 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 Ok(lanes)
             }
             async fn graph_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_framework_plugin::NodeGraphScene, String> {
-                let tree = app.render(SEQUENCE_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
-                let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_MAIN, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
             async fn script_scene(app: &mut SequenceApp, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
-                let tree = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, view).await.map_err(|error| format!("{error:?}"))?;
-                let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, SEQUENCE_PLAY_BODY_SCRIPT, view, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene_with_lanes(&json).map_err(str::to_string)
             }
 
@@ -101,7 +99,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Sequence window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&script_left).map_err(|error| format!("{error:?}"))?.ok_or("Sequence transient owner missing after reload")?;
                 if cleared.get::<SequenceScriptWindowTransientOwner>() != Some(&SequenceScriptWindowTransient::default()) { return Err("Sequence transient survived same-byte reload".into()); }
                 for context in [&main_left, &main_right] {

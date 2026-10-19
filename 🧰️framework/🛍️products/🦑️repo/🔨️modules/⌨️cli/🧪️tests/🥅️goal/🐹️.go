@@ -82,6 +82,7 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 }
 
 func TestGoalList(t *testing.T) {
+	withExhaustiveRepo(t)
 	result := ToolGoalList()
 
 	if result.Error != "" {
@@ -105,6 +106,7 @@ func TestGoalList(t *testing.T) {
 }
 
 func TestGoalsMcpResource(t *testing.T) {
+	withExhaustiveRepo(t)
 	req := ReadResourceRequest{}
 	req.Params.URI = "repo://goals"
 	contents, err := handleGoalsResource(context.Background(), req)
@@ -132,7 +134,7 @@ func TestGoalsMcpResource(t *testing.T) {
 		t.Fatalf("ListGoals failed: %v", err)
 	}
 	if len(goals) == 0 {
-		t.Skip("no goals seeded in repo; cannot assert content")
+		t.Fatal("the fixture repository seeds goals")
 	}
 	for _, g := range goals {
 		if !strings.Contains(text.Text, g.Title) {

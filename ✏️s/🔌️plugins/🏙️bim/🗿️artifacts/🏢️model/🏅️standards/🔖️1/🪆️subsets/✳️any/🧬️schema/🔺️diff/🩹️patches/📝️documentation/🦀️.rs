@@ -1,7 +1,8 @@
 //! 📝️ Sparse patches of the documentation records: dimensions, tags, text notes, leaders, annotation styles, sheets, viewports, sheet revisions, views and schedules.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
-use crate::standards::v1::subsets::any::schema::diff::algebra::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`Dimension`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

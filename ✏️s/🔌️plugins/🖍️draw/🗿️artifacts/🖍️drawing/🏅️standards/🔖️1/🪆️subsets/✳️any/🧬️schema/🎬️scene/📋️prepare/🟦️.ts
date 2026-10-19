@@ -1,14 +1,13 @@
-import {parseDrawingFontFamily,type DrawingFontFamily} from "../../📝️text/🔤️family/🟦️.ts";
+import { parseDrawingFontFamily } from "../../📝️text/🔤️family/🟦️.ts";
 /** 📋️ Complete authored documents become private typed preparation plans under work grants. */
 import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import type {DrawingArtifact,DrawingLayerNode,DrawingPathSegment} from "../../🟦️.ts";
 import {DRAWING_BLEND_MODES,drawingDrawingArtifactGuardRefusal} from "../../🟦️.ts";
 import {drawingTransformToMatrix} from "../../🧮️geometry/↗️affine/🟦️.ts";
-import type {RasterSceneAsset,RasterSceneGroup,RasterSceneNode,RasterSceneInput,RasterSceneContent} from "../📷️raster/🟦️.ts";
+import type { RasterSceneAsset, RasterSceneGroup, RasterSceneNode, RasterSceneInput } from "../📷️raster/🟦️.ts";
 import {RasterSceneJob,type RasterSceneProgress} from "../📷️raster/🟦️.ts";
 import type {PixelImage} from "@semio-tech/framework/pixels/editing";
-import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
-import type {Fill,Color} from "../../🎨️fill/🟦️.ts";
+import type { Fill, Color } from "../../🎨️fill/🖌️paint-model/🟦️.ts";
 import type {PathSegment} from "@semio-tech/framework/2d";
 import {DocumentBooleanJob,type DocumentBooleanLimits,type DocumentBooleanProgress} from "../🔀️booleans/🟦️.ts";
 import {DocumentTraceJob,type DocumentTraceLimits,type DocumentTraceProgress} from "../🔍️trace/🟦️.ts";
@@ -17,13 +16,13 @@ import {DocumentTextJob} from "../🔤️text/🟦️.ts";
 import {loadBuiltinUnicodeSource} from "@semio-tech/framework/2d/text/font/shape/unicode";
 import {loadBuiltinFontSources,FONT_CATALOG_DEFAULT_FAMILY,type FontByteSource,type FontByteProvider} from "@semio-tech/framework/2d/text/font/catalog";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
+import type { Paint, DocumentSceneContent, DocumentSceneNode, DocumentScenePlan, Matrix } from "../🗺️plan-model/🟦️.ts";
 /** 👁️ Actual roots and assets supply scene work without a fabricated complete document. */
 export type DrawingSceneSource=Pick<DrawingArtifact,"layers"|"assets">&{rootVisible?:(index:number)=>boolean};
 export type DocumentSceneRetirement=WorkRetirement;
 export type DocumentVectorRetirement=WorkRetirement;
 export type DocumentSceneRetirementProgress=WorkRetirementProgress;
 export type DocumentVectorRetirementProgress=WorkRetirementProgress;
-type Paint={fillRule:"nonzero"|"evenodd";fill:Fill|null;stroke:PathRasterStroke|null};
 export type DocumentSceneViewport=Omit<RasterSceneInput,"assets"|"nodes">;
 export type DocumentAlgorithmLimits={booleans:DocumentBooleanLimits;trace:DocumentTraceLimits;maxWork:number};
 export type DocumentRasterProgress={phase:"preparing"|"tracing"|"text"|"algorithms"|"resolving"|"raster"|"complete";preparation:DocumentSceneProgress;tracing:DocumentTraceProgress|null;resolution:DocumentBooleanProgress|null;raster:RasterSceneProgress|null;nodes:number;work:number;done:boolean};
@@ -117,17 +116,9 @@ export class DocumentRasterJob{
 export async function rasterizeDocument(document:DrawingArtifact,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,resolutionLimits:DocumentAlgorithmLimits,options:DocumentRasterOptions={}):Promise<PixelImage>{
  const check=()=>{if(options.signal?.aborted)cancel();};check();const job=new DocumentRasterJob(document,limits,viewport,resolutionLimits);return completeSceneProducer(job,options,check);
 }
-export type DocumentSceneContent=({kind:"path";segments:PathSegment[]}&Paint)|({kind:"glyphs";content:string;x:number;y:number;size:number;fontFamily:DrawingFontFamily;segments:PathSegment[]}&Paint)|Extract<RasterSceneContent,{kind:"image"}>|{kind:"group";children:string[];isolation:boolean}|({kind:"text";content:string;x:number;y:number;size:number;fontFamily:DrawingFontFamily}&Paint)|({kind:"boolean";operation:"union"|"difference"|"intersection"|"xor";children:string[];referenceTransform:Matrix}&Paint)|({kind:"trace";source:string;threshold:number;simplifyEpsilon:number}&Paint);
-export type DocumentSceneNode=Omit<RasterSceneNode,"content"|"groups">&{sourcePath:number[];lockedAncestors:number;groups:RasterSceneGroup[];content:DocumentSceneContent};
-export type DocumentScenePlan={assets:RasterSceneAsset[];nodes:DocumentSceneNode[]};
-/** 🧭️ Validate at most 32 authored indices and the exact unsigned lock-mask width. */
-export function validateSceneSourceAddress(node:{readonly sourcePath:readonly number[];readonly lockedAncestors:number}):void{
- const path=node.sourcePath,locks=node.lockedAncestors;if(!Array.isArray(path)||path.length<1||path.length>32||!path.every(index=>Number.isSafeInteger(index)&&index>=0&&index<=65535)||!Number.isSafeInteger(locks)||locks<0||locks>=2**path.length)throw Error("Invalid scene source ancestry");
-}
 export type DocumentSceneLimits={maxNodes:number;maxDepth:number;maxSegments:number;maxReferences:number;maxSourceBytes:number};
 export type DocumentSceneProgress={phase:"assets"|"layers"|"paint"|"geometry"|"references"|"validation"|"cycles"|"complete";layers:number;assets:number;segments:number;references:number;sourceBytes:number;work:number;done:boolean};
 export type DocumentSceneOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:DocumentSceneProgress)=>void};
-type Matrix=[number,number,number,number,number,number];
 type Frame={path:number[];lockedAncestors:number;layers:readonly DrawingLayerNode[];at:number;matrix:Matrix;visible:boolean;groups:RasterSceneGroup[]};
 const identity:Matrix=[1,0,0,1,0,0];
 function fail(message:string):never{throw new drawingDrawingArtifactGuardRefusal("$scene",message);}

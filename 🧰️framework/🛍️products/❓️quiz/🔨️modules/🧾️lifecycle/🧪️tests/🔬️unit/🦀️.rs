@@ -3,122 +3,10 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
+use semio_framework_quiz_tests_support::lifecycle::{ALICE, BOB, RUN, REVISION, REVISED, catalog, quizzes, id, fold, step, registered, perfect, command_start_at, command_start, play_perfect_at, play_perfect, replay};
 use crate::challenge::CLOCK_LEAD;
-use crate::sheet::tests::{quiz, text};
-use quiz_schema::{Badge, BadgeRule, ClassificationAnswer, Introduction, MatchingAnswer, SheetTask, SortingAnswer, Task, TaskKind, CHALLENGES, DEFAULT_LIMITS, MAX_TIMESTAMP};
-
-pub(crate) const ALICE: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-pub(crate) const BOB: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-pub(crate) const RUN: &str = "0123456789abcdef0123456789abcdef";
-pub(crate) const REVISION: &str = "1111111111111111111111111111111111111111111111111111111111111111";
-pub(crate) const REVISED: &str = "2222222222222222222222222222222222222222222222222222222222222222";
-
-pub(crate) fn catalog() -> Catalog {
-    let badge = |id: &str, rule: BadgeRule| Badge { id: id.to_string(), emoji: "🏅".to_string(), label: text(id), description: text(id), rule };
-    Catalog {
-        json_schema: None,
-        schema: "semio.quiz.catalog/v1".to_string(),
-        id: "architecture".to_string(),
-        title: text("Architecture"),
-        short: None,
-        introduction: Introduction { title: text("Welcome"), paragraphs: vec![text("Hello")] },
-        quizzes: vec!["energy/🔣️.json".to_string()],
-        badges: vec![badge("perfect-energy", BadgeRule::PerfectQuiz { quiz: "energy".to_string(), challenge: None }), badge("sorter", BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None, challenge: None }), badge("done", BadgeRule::CompletedQuizzes {})],
-    }
-}
-
-pub(crate) fn quizzes(revision: &str) -> BTreeMap<Slug, LoadedQuiz> {
-    BTreeMap::from([("energy".to_string(), LoadedQuiz { quiz: quiz(), revision: revision.to_string() })])
-}
-
-pub(crate) fn id(seed: u8) -> Id {
-    format!("{seed:032x}")
-}
-
-pub(crate) fn fold(state: &mut LearnerState, decision: &Decision) -> Vec<Event> {
-    let Decision::Events(events) = decision else { return Vec::new() };
-    for event in events {
-        evolve_learner(state, event);
-    }
-    events.clone()
-}
-
-pub(crate) fn step(state: &mut LearnerState, command: &Command, context: &LearnerContext<'_>) -> Vec<Event> {
-    let decision = decide_learner(state, command, context);
-    fold(state, &decision)
-}
-
-pub(crate) fn registered(learner: &str, at: Timestamp) -> LearnerState {
-    let mut state = empty_learner_state(learner);
-    evolve_learner(&mut state, &Event::LearnerRegistered { learner: learner.to_string(), identity: Identity::Pseudonym { handle: learner[..4].to_string() }, at });
-    state
-}
-
-pub(crate) fn perfect(quiz: &Quiz, sheet_task: &SheetTask) -> Answer {
-    let task = quiz.tasks.iter().find(|task| task.id() == sheet_task.id());
-    match (task, sheet_task) {
-        (Some(Task::Classification(task)), SheetTask::Classification(sheet)) => Answer::Classification(ClassificationAnswer { assignments: sheet.items.iter().filter_map(|item| task.items.iter().find(|candidate| candidate.id == item.id).map(|candidate| (item.id.clone(), candidate.category.clone()))).collect() }),
-        (Some(Task::Sorting(task)), SheetTask::Sorting(sheet)) => {
-            let mut order: Vec<(usize, &quiz_schema::SortingItem)> = task.items.iter().enumerate().filter(|(_, item)| sheet.items.iter().any(|presented| presented.id == item.id)).collect();
-            order.sort_by(|a, b| a.1.value.total_cmp(&b.1.value).then(a.0.cmp(&b.0)));
-            Answer::Sorting(SortingAnswer { order: order.iter().map(|(_, item)| item.id.clone()).collect(), guesses: sheet.keys.is_none().then(|| order.iter().map(|(_, item)| (item.id.clone(), item.value)).collect()) })
-        }
-        (Some(Task::Matching(task)), SheetTask::Matching(sheet)) => {
-            let value = |item: &quiz_schema::SheetItem, dimension: &str| task.items.iter().find(|candidate| candidate.id == item.id)?.values.get(dimension).copied();
-            let hidden = sheet.dimensions.iter().any(|dimension| dimension.cards.is_none());
-            let guesses = sheet.dimensions.iter().map(|dimension| (dimension.id.clone(), sheet.items.iter().filter_map(|item| Some((item.id.clone(), value(item, &dimension.id)?))).collect())).collect();
-            let assignments = sheet
-                .dimensions
-                .iter()
-                .map(|dimension| {
-                    let (deck, mut used) = (dimension.cards.as_deref().unwrap_or_default(), BTreeSet::new());
-                    let cards = sheet
-                        .items
-                        .iter()
-                        .filter_map(|item| {
-                            let value = value(item, &dimension.id)?;
-                            let card = (0..deck.len()).find(|&card| deck[card] == value && !used.contains(&card))?;
-                            used.insert(card);
-                            Some((item.id.clone(), card))
-                        })
-                        .collect();
-                    (dimension.id.clone(), cards)
-                })
-                .collect();
-            Answer::Matching(if hidden { MatchingAnswer { assignments: None, guesses: Some(guesses) } } else { MatchingAnswer { assignments: Some(assignments), guesses: None } })
-        }
-        _ => Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: None }),
-    }
-}
-
-pub(crate) fn command_start_at(learner: &str, run: &str, challenge: Challenge, at: Timestamp) -> Command {
-    Command::StartRun { id: id(1), learner: learner.to_string(), run: run.to_string(), quiz: "energy".to_string(), challenge, at }
-}
-
-pub(crate) fn command_start(learner: &str, run: &str, at: Timestamp) -> Command {
-    command_start_at(learner, run, Challenge::Medium, at)
-}
-
-pub(crate) fn play_perfect_at(state: &mut LearnerState, run: &str, challenge: Challenge, quizzes: &BTreeMap<Slug, LoadedQuiz>, catalog: &Catalog, now: Timestamp) -> Vec<Event> {
-    let context = LearnerContext { now, catalog, quizzes, limits: &DEFAULT_LIMITS };
-    let learner = state.learner.clone();
-    let mut events = step(state, &command_start_at(&learner, run, challenge, context.now), &context);
-    let current = &quizzes["energy"].quiz;
-    let sheet = sheet_of(current, run_seed(run), challenge);
-    for task in &sheet.tasks {
-        if task.seconds().is_some() {
-            events.extend(step(state, &Command::OpenTask { id: id(4), learner: learner.clone(), run: run.to_string(), task: task.id().clone(), at: now }, &context));
-        }
-        let command = Command::RecordAnswer { id: id(2), learner: learner.clone(), run: run.to_string(), task: task.id().clone(), answer: perfect(current, task), at: now };
-        events.extend(step(state, &command, &context));
-    }
-    events.extend(step(state, &Command::SubmitRun { id: id(3), learner, run: run.to_string() }, &context));
-    events
-}
-
-pub(crate) fn play_perfect(state: &mut LearnerState, run: &str, quizzes: &BTreeMap<Slug, LoadedQuiz>, catalog: &Catalog, now: Timestamp) -> Vec<Event> {
-    play_perfect_at(state, run, Challenge::Medium, quizzes, catalog, now)
-}
+use semio_framework_quiz_tests_support::sheet::quiz;
+use quiz_schema::{BadgeRule, SheetTask, SortingAnswer, TaskKind, CHALLENGES, DEFAULT_LIMITS, MAX_TIMESTAMP};
 
 #[test]
 fn start_run_follows_the_decision_table() {
@@ -461,33 +349,6 @@ fn evolve_ignores_foreign_facts_and_takes_the_latest_identity() {
     evolve_learner(&mut state, &Event::TaskOpened { learner: ALICE.to_string(), run: RUN.to_string(), task: "power".to_string(), at: 8 });
     assert_eq!(state.runs[0].opened, BTreeMap::from([("power".to_string(), 8)]));
 }
-
-pub(crate) fn replay(vectors: &serde_json::Value, sequence: &serde_json::Value) -> (Vec<Decision>, LearnerState, BTreeMap<Slug, LoadedQuiz>) {
-    use quiz_schema::testkit::{entries, typed};
-    let catalog: Catalog = typed(&vectors["catalog"]);
-    let quizzes: Vec<Quiz> = entries(&vectors["quizzes"]).iter().map(typed).collect();
-    let mut revisions: BTreeMap<Slug, String> = typed(&vectors["revisions"]);
-    let loaded = |revisions: &BTreeMap<Slug, String>| quizzes.iter().map(|quiz| (quiz.id.clone(), LoadedQuiz { quiz: quiz.clone(), revision: revisions.get(&quiz.id).cloned().unwrap_or_default() })).collect::<BTreeMap<_, _>>();
-    let limits: Limits = typed(sequence.get("limits").unwrap_or(&vectors["limits"]));
-    let mut state = empty_learner_state(sequence["learner"].as_str().unwrap_or_default());
-    for event in entries(&sequence["given"]) {
-        evolve_learner(&mut state, &typed(event));
-    }
-    let mut decisions = Vec::new();
-    for step in entries(&sequence["steps"]) {
-        if let Some(changed) = step.get("revisions") {
-            revisions.extend(typed::<BTreeMap<Slug, String>>(changed));
-        }
-        let quizzes = loaded(&revisions);
-        let context = LearnerContext { now: step["now"].as_u64().unwrap_or_default(), catalog: &catalog, quizzes: &quizzes, limits: &limits };
-        let decision = decide_learner(&state, &typed(&step["command"]), &context);
-        fold(&mut state, &decision);
-        decisions.push(decision);
-    }
-    let quizzes = loaded(&revisions);
-    (decisions, state, quizzes)
-}
-
 
 #[test]
 fn a_handle_registers_its_first_claim_and_refuses_every_later_one() {

@@ -1,6 +1,6 @@
 import{posix,win32}from"node:path";
-import{readBuildMode}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{readBuildMode}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policy from"./🔣️policy.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📍️ Pure directory projections never issue physical compiler storage authority. */

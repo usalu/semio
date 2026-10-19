@@ -6,7 +6,9 @@ import { DragHandle } from "../../🧱️DragHandle/🟦️.tsx";
 import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
 import { Action } from "../../⚡️ActionGroup/🟦️.tsx";
 import { DisabledReasonHint } from "../../💡️ChromeControlHint/🟦️.tsx";
-import { treeHeaderActionsClassName } from "../🎨️chrome/🟦️.tsx";
+
+/** ⚡️ Layout of the section header action cluster. */
+const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 
 export type TreeActionPlacement = "row" | "menu";
 

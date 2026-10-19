@@ -56,7 +56,7 @@ wasm-bindgen = "0.2.106"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-ui_wgpu ={ path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

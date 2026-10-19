@@ -1,6 +1,6 @@
 # import NoteBlockNode, NoteImageAssetEntry from "../🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔗️.graphql"
 type NoteSnapshot {
   schema: String!
   id: String!

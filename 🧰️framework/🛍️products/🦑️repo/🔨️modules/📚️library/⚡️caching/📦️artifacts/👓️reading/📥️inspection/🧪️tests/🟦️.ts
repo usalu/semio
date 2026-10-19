@@ -5,7 +5,7 @@ import ts from "typescript";
 import {readFile,open,mkdir,mkdtemp,writeFile,symlink,rm} from "node:fs/promises";
 import {join} from "node:path";
 import {createHash} from "node:crypto";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
 import {constants} from "node:fs";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import corpus from "./🔣️.json" with {type:"json"};

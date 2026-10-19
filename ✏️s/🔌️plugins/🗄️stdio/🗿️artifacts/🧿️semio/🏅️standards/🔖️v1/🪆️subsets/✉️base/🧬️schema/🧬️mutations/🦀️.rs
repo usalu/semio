@@ -27,7 +27,7 @@
 
 use {semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::set_sample_rate;
 use {semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation, semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot};
 use crate::schema::diff::SemioDiff;
 use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
@@ -178,7 +178,7 @@ pub fn demo_mutation_cases() -> Vec<SemioMutation> {
         SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(semio_s_artifact_stdio_semio_animation::schema::mutations::remove_timeline::RemoveTimeline { index: 99 }) }),
         SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(semio_s_artifact_stdio_semio_presentation::schema::mutations::remove_slide::RemoveSlide { index: 99 }) }),
         SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(semio_s_artifact_stdio_semio_text_mutations::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
-        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(semio_s_artifact_stdio_semio_table_mutations::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
+        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
         SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
             mutation: SemioGraphMutation::DeleteNode(semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode { id: semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId::new("absent") }),
         }),

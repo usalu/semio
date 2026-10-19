@@ -28,8 +28,8 @@ fn text_editor_focus_transfers_only_on_primary_presses_outside_its_mounted_targe
     }
     assert!(!blur_focused_text_editor_for_pointer(Some(&target), true, 0));
     assert!(blur_focused_text_editor_for_pointer(None, true, 0));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(!apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("x".into()), &Default::default(), &mut input));
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(!apply_focused_text_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("x".into()), &Default::default(), &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     install_fixture_text_editor_focus(window, target.window_generation, node, &target.host_id);
     let mut successor = target.clone();
@@ -57,7 +57,7 @@ fn accepted_node_graph_note_caret_arms_resets_and_retires_with_its_exact_scene()
             .to_string(),
         ),
         capabilities_json: Some(serde_json::json!({ "engine": "flow" }).to_string()),
-        ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
+        ..semio_framework_ui_declaration::ui::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
     });
     let node = seed_scene_window_with(window, UiNode::ComponentScene(scene.clone()));
     present_seeded_scene_window(window);
@@ -74,9 +74,9 @@ fn accepted_node_graph_note_caret_arms_resets_and_retires_with_its_exact_scene()
     assert!(FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.target.same_component_host(&target))));
     assert!(UI_ENGINE.with(|cell| cell.borrow().window_next_clock_deadline(window)).and_then(|(_, deadline)| deadline).is_some(), "accepted note editing owns one cadence deadline");
 
-    assert!(apply_focused_node_graph_note_key(&ui_wgpu::wgpu::KeyAction::Char("!".into()), &Default::default()), "an edit reaches only the focused accepted Flow host and resets its phase");
+    assert!(apply_focused_node_graph_note_key(&semio_framework_ui_wgpu_input::KeyAction::Char("!".into()), &Default::default()), "an edit reaches only the focused accepted Flow host and resets its phase");
     assert!(semio_framework_os_renderer_wgpu_engine_graph::node_graph::component_scene_has_editable_caret(&retained_scene));
-    assert!(apply_focused_node_graph_note_key(&ui_wgpu::wgpu::KeyAction::Enter, &Default::default()), "commit is consumed by the focused note");
+    assert!(apply_focused_node_graph_note_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &Default::default()), "commit is consumed by the focused note");
     assert!(FOCUSED_NODE_GRAPH_CARET.with(|cell| cell.borrow().is_none()));
     assert!(!semio_framework_os_renderer_wgpu_engine_graph::node_graph::component_scene_has_editable_caret(&retained_scene));
     assert_eq!(UI_ENGINE.with(|cell| cell.borrow().window_next_clock_deadline(window)).and_then(|(_, deadline)| deadline), None, "committing the note cancels the cadence wake");
@@ -122,7 +122,7 @@ fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier(
         last_sync_pump_ms: 0.0,
     };
     {
-        let mut key = Box::pin(runtime.handle_key(ui_wgpu::wgpu::KeyAction::Space(true), Default::default()));
+        let mut key = Box::pin(runtime.handle_key(semio_framework_ui_wgpu_input::KeyAction::Space(true), Default::default()));
         assert!(key.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())).is_ready());
     }
     assert!(!runtime.space_pressed);
@@ -133,7 +133,7 @@ fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier(
     assert!(blur_focused_text_editor_for_pointer(None, true, 0));
     for pressed in [true, false] {
         {
-            let mut key = Box::pin(runtime.handle_key(ui_wgpu::wgpu::KeyAction::Space(pressed), Default::default()));
+            let mut key = Box::pin(runtime.handle_key(semio_framework_ui_wgpu_input::KeyAction::Space(pressed), Default::default()));
             assert!(key.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())).is_ready());
         }
         assert_eq!(runtime.space_pressed, pressed);
@@ -168,10 +168,10 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
     });
     install_fixture_text_editor_focus(window, target.window_generation, node, &target.host_id);
     MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().clear());
-    let chord = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let chord = semio_framework_ui_wgpu_input::PointerModifiers { ctrl: true, ..Default::default() };
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
-    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("c".into()), &chord, &mut input));
+    assert!(apply_focused_text_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("c".into()), &chord, &mut input));
     assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), ["b"]);
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "copy publishes no guest action");
 
@@ -189,12 +189,12 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
     assert_eq!(textbox.label.as_deref(), Some("Editor"));
     assert_eq!(textbox.value_text.as_deref(), paste["expect"]["text"].as_str());
     assert!(textbox.focusable && textbox.actionable && textbox.focused && textbox.editable && textbox.multiline && textbox.rect.is_some());
-    assert!(dispatch_accessibility_event(window, target.window_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Value("日本".into()), &mut input).is_some());
+    assert!(dispatch_accessibility_event(window, target.window_generation, textbox.node_id, &textbox.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Value("日本".into()), &mut input).is_some());
     let actions = collect_text_editor_actions_accepted(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
     assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "日本");
 
-    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &chord, &mut input));
+    assert!(apply_focused_text_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("a".into()), &chord, &mut input));
     let actions = collect_text_editor_actions_accepted(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
     assert_eq!(actions[0].controller_id, "ctrl");
@@ -203,14 +203,14 @@ fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepte
     assert!(commit.get("text").is_none());
     assert_eq!(actions[1].controller_id, "ctrl");
     assert_eq!(serde_json::to_value(actions[1].args.as_ref().unwrap()).unwrap(), serde_json::json!({ "surfaceId": target.surface_id, "start": 0, "end": 6 }));
-    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("x".into()), &chord, &mut input));
+    assert!(apply_focused_text_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("x".into()), &chord, &mut input));
     assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), ["b", "日本"]);
     let actions = collect_text_editor_actions_accepted(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
     assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "");
 
     MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = Some("clipboard".into()));
-    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("v".into()), &chord, &mut input));
+    assert!(apply_focused_text_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("v".into()), &chord, &mut input));
     let actions = collect_text_editor_actions_accepted(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
     assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "clipboard");

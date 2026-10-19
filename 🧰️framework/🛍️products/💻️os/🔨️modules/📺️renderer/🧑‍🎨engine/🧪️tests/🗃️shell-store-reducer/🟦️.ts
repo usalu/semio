@@ -15,7 +15,7 @@ import { interactionSchema } from "../../../../../../../🔨️modules/🕹️in
 import type { InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import type { TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { describe, expect, it } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { initialShellState, mergeRecordPreservingIdentity, type ShellAction, shellReducer, shellStateUnchanged, type PluginPanelStatus, type PluginManifest, type PluginWasmHandle, TutorialRecorder, type ShellPresencePeer, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";

@@ -12,12 +12,13 @@
 //! An opening with an authored reveal wears its reveal material on the jambs, the head and the sill between the front face and the reveal depth; the layers are split at that depth,
 //! and the faces of the cut inside the reveal become their own group (`reveal`), so the volume of the wall does not change.
 
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{point, segment_of};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace, TriMesh};
 use semio_framework_geometry::Point;
@@ -161,7 +162,7 @@ fn split_by(mesh: &TriMesh, chosen: impl Fn([[f64; 3]; 3]) -> bool) -> (TriMesh,
 pub fn wall_solid(snapshot: &ModelSnapshot, wall: &Wall, layout: &WallLayout, cuts: &[Cut]) -> ElementSolid {
     let mut builder = SolidBuilder::new(SolidFamily::Wall);
     let layers = snapshot.wall_types.get(&wall.wall_type).map_or(&[][..], |kind| &kind.layers[..]);
-    let (axis, total) = (seg(&wall.axis), layout.offset_left + layout.offset_right);
+    let (axis, total) = (segment_of(&wall.axis), layout.offset_left + layout.offset_right);
     let Some(ends) = face_ends(layout, &wall.axis) else { return builder.build() };
     if layout.height <= EPS || layout.length <= EPS || total <= EPS || layout.layer_offsets.len() != layers.len() + 1 {
         return builder.build();
@@ -190,16 +191,16 @@ pub fn wall_solid(snapshot: &ModelSnapshot, wall: &Wall, layout: &WallLayout, cu
             let mesh = extrude_between_faces(&face(layout, extent, ls, le, &notches, &holes), &face(layout, extent, rs, re, &notches, &holes), &left_curve, &right_curve, length, layout.base_z, CHORD_TOLERANCE);
             let owners: Vec<&Cut> = revealing.iter().copied().filter(|cut| inside_reveal(cut, layout, upper, lower)).collect();
             if owners.is_empty() {
-                builder.add(parts::LAYER, &layer.material, index as u32, &mesh);
+                builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LAYER, &layer.material, index as u32, &mesh);
                 continue;
             }
             let mut rest = mesh;
             for cut in owners {
                 let (jambs, others) = split_by(&rest, |corners| on_hole(cut, layout, &axis, corners));
-                builder.add(parts::REVEAL, &cut.material, index as u32, &jambs);
+                builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::REVEAL, &cut.material, index as u32, &jambs);
                 rest = others;
             }
-            builder.add(parts::LAYER, &layer.material, index as u32, &rest);
+            builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LAYER, &layer.material, index as u32, &rest);
         }
     }
     builder.build()

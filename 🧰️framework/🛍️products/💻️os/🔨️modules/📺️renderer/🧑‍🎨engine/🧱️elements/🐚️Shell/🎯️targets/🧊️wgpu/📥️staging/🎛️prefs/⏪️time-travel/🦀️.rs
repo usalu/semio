@@ -308,7 +308,7 @@ pub fn history_reprojection_band_plan(status: &HistoryReprojectionStatus, contro
 impl PrefsState {
     /// 🗣️ The axes this shell's band copy resolves on: its locale and the UI driver's label tier.
     pub fn band_tongue(&self, chrome: &ChromeState) -> BandTongue {
-        BandTongue { locale: self.active_locale(), beginner: chrome.chrome_build.driver.label_tier == ui_wgpu::wgpu::UiDriverLabelTier::Beginner }
+        BandTongue { locale: self.active_locale(), beginner: chrome.chrome_build.driver.label_tier == semio_framework_ui_wgpu_layout::chrome::UiDriverLabelTier::Beginner }
     }
 
     /// 📐️ This frame's band, localized and with each chorded button's inline badge.

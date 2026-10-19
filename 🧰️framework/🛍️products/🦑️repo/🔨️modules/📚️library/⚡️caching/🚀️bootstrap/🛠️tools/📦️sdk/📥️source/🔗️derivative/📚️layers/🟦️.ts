@@ -1,4 +1,4 @@
-import{compileJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import sourceSchema from"../🧬️schema/🔣️.json"with{type:"json"};
 const contract=compileJsonSchemaSubset(schema.definitions.Path),parallel=schema.definitions.Policy.const.maximumParallelOperations;

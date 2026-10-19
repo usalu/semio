@@ -13,11 +13,7 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
-                    }
+                    
                     #[path = "."]
                     pub mod diff {
                         #[path = "."]
@@ -26,12 +22,10 @@ pub mod standards {
                             pub mod building_elements;
                         }
                     }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod mutations {
                         #[path = "."]
                         pub mod family_rules {
-                            pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::*;
                             #[cfg(test)]
                             #[path = "../../../../../🧬️mutations/🔩️family-rules/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
@@ -50,7 +44,6 @@ pub mod editor {
         pub mod gestures {
             #[path = "."]
             pub mod plane {
-                pub use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::*;
                 #[cfg(test)]
                 #[path = "../../../../../../✏️editor/🧵️gestures/📐️plane/🧪️tests/🔬️unit/🦀️.rs"]
                 pub mod tests;

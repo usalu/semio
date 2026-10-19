@@ -11,14 +11,15 @@
 //!   exposes every fenestration to the weather; a curtain wall is a host surface with a massless construction carrying one fenestration of its whole area (U, g-value and mullion share of its type), one behind a partition and surfaces without thermal data are not written;
 //! * the loads and set points of the conditions become people, lighting, equipment, a thermostat and an ideal loads system; a schedule name becomes a constant or a weekday window.
 
-use crate::standards::v1::subsets::any::io::export::energy::library::{Library, Profile, ScheduleBook};
-use crate::standards::v1::subsets::any::io::export::energy::pairs::{self, Face, Part};
-use crate::standards::v1::subsets::any::io::export::energy::target::{AdjacencyPair, EnergyModel, EquipmentGain, Fenestration, IdealLoadsSystem, LightingGain, OutsideBoundary, PeopleGain, Site, Space, Surface, SurfaceClass, ThermalEnclosure, Thermostat, Zone};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::FarSide;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::energy::library::{Library, Profile, ScheduleBook};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs::{Face, Part};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::{AdjacencyPair, EnergyModel, EquipmentGain, Fenestration, IdealLoadsSystem, LightingGain, OutsideBoundary, PeopleGain, Site, Space, Surface, SurfaceClass, ThermalEnclosure, Thermostat, Zone};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::FarSide;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Layer};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 use std::collections::BTreeMap;
@@ -88,7 +89,7 @@ impl Build {
     }
 }
 
-fn building_of<'a>(snapshot: &'a ModelSnapshot, storey: &str) -> Option<(&'a str, &'a crate::standards::v1::subsets::any::schema::snapshot::Building)> {
+fn building_of<'a>(snapshot: &'a ModelSnapshot, storey: &str) -> Option<(&'a str, &'a semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building)> {
     let storey = snapshot.storeys.get(storey)?;
     snapshot.buildings.get_key_value(&storey.building).map(|(id, building)| (id.as_str(), building))
 }
@@ -302,7 +303,7 @@ fn surfaces(build: &mut Build, snapshot: &ModelSnapshot, inferred: &ModelInferen
                 SurfaceKind::Ceiling => Part::Ceiling,
                 _ => Part::Wall,
             };
-            let centre = pairs::centre_of(&vertices);
+            let centre = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs::centre_of(&vertices);
             let model = build.model()?;
             model.surfaces.push(Surface { id, name: surface.id.clone(), zone_id, class: class_of(surface), vertices_m: vertices, construction_id, outside_boundary_condition: outside_of(surface.boundary), sun_exposed: exterior, wind_exposed: exterior, multiplier: 1 });
             let index = model.surfaces.len() - 1;
@@ -378,7 +379,7 @@ fn partners(build: &mut Build, _snapshot: &ModelSnapshot, _inferred: &ModelInfer
     let faces: Vec<Face> = build.faces.iter().map(|(_, face)| face.clone()).collect();
     let mut paired = vec![false; faces.len()];
     let mut links: Vec<(usize, usize)> = Vec::new();
-    for (low, high) in pairs::pair(&faces) {
+    for (low, high) in semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs::pair(&faces) {
         paired[low] = true;
         paired[high] = true;
         links.push((build.faces[low].0, build.faces[high].0));

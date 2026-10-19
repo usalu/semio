@@ -4,7 +4,7 @@ import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "j
 import { type ValidateFunction } from "ajv";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { type BuiltNode, type Component, type UiNodeRecord, type UiSnapshot, type ActionBinding, type LayoutSpec } from "@semio-tech/framework";
 import { UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, uiNodeToTreePanelConfig, interpretUiNode } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";

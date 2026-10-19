@@ -34,9 +34,9 @@ type CodebaseContext struct {
 // 📝️NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
 // 🆕️NewCodebaseContext creates and returns a new CodebaseContext instance.
 func NewCodebaseContext() *CodebaseContext {
-	rootURI := "file://" + workspace.NormalizePath(workspace.RootDir)
+	rootURI := "file://" + workspace.NormalizePath(workspace.GetRootDir())
 	return &CodebaseContext{
-		RootDir: workspace.RootDir,
+		RootDir: workspace.GetRootDir(),
 		RootURI: rootURI,
 	}
 }

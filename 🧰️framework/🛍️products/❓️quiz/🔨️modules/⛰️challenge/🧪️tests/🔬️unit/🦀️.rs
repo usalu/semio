@@ -3,7 +3,7 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::sheet::tests::{classification, matching, quantity, sorting, text};
+use semio_framework_quiz_tests_support::sheet::{classification, matching, quantity, sorting, text};
 use quiz_schema::{Category, ClassificationAnswer, ClassificationItem, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SortingAnswer, CHALLENGES, MAX_TIMESTAMP};
 use std::collections::BTreeMap;
 use Verdict::{Over, Reversed, Under};

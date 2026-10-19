@@ -17,7 +17,7 @@ impl PublicationClaim {
 }
 impl PublicationClaimHandle {
  pub fn same_original(left:&Self,right:&Self)->bool { Arc::ptr_eq(&left.inner,&right.inner) }
- pub fn frame_bytes()->usize { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<PublicationClaim>() }
+ pub fn frame_bytes()->usize { semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PublicationClaim>() }
  pub fn has_returned_alias(&self)->bool { !self.inner.returned.load(Ordering::Acquire).is_null() }
  fn drain_returned_alias(&self)->bool {
   let pointer=self.inner.returned.swap(std::ptr::null_mut(),Ordering::AcqRel);

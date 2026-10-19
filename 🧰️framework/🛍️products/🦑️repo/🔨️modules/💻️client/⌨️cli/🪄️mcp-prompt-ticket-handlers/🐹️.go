@@ -88,19 +88,6 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	return toolResultToMCP(result)
 }
 
-func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	scope, ok, err := getStringArg(args, "scope")
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		scope = "compose"
-	}
-	result := ToolFix(scope)
-	return toolResultToMCP(result)
-}
-
 // 📜️policyCheck holds the data fields for a policyCheck record.
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)

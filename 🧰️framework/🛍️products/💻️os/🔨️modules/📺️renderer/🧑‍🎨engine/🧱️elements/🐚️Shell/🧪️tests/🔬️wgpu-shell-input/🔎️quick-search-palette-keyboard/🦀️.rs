@@ -2,8 +2,8 @@
 
 //#region 🔎️QuickSearchPaletteKeyboard
 /// ⌨️ `mod+p`, as the browser delivers it.
-fn palette_chord() -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
-    (ui_wgpu::wgpu::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false })
+fn palette_chord() -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
+    (semio_framework_ui_wgpu_input::KeyAction::Char("p".into()), PointerModifiers { shift: false, ctrl: true, alt: false, meta: false })
 }
 
 /// ⚖️ LAW: the shell's own overlay query fields are CHROME, not content.
@@ -38,7 +38,7 @@ fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
     assert_eq!(input.focused_id.as_deref(), Some("ui.search.input"), "and focuses its query field");
 
     for key in ["D", "e"] {
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char(key.into()), &PointerModifiers::default(), &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char(key.into()), &PointerModifiers::default(), &mut input);
     }
     assert_eq!(shell.commands.search_query, "De", "plain keys type into the palette's query");
 
@@ -47,9 +47,9 @@ fn the_palette_chord_toggles_and_never_types_itself_into_the_query() {
     assert!(!shell.commands.search_open);
     assert_eq!(input.focused_id, None, "and hands focus back to the canvas");
     assert_eq!(shell.commands.search_query, "De", "unactivated dismissal preserves React's owned query without appending a literal `p`");
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("x".into()), &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("x".into()), &PointerModifiers::default(), &mut input);
     assert_eq!(shell.commands.search_query, "De", "closed palette state does not consume ordinary typing");
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("p".into()), &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("p".into()), &PointerModifiers::default(), &mut input);
     assert_eq!(shell.commands.search_query, "De", "the chord's character never leaks into a closed retained query");
 }
 
@@ -64,7 +64,7 @@ fn escape_closes_the_palette_rather_than_committing_its_query_field() {
     PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
     assert_eq!(shell.input.overlay_state, OverlayState::Search);
 
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("escape routes");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("escape routes");
     assert_eq!(shell.input.overlay_state, OverlayState::None, "escape closes the topmost overlay");
     assert_eq!(input.focused_id, None);
 }

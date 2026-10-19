@@ -1,4 +1,4 @@
-import{registerBuildTestLawV1}from"../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{resolve}from"node:path";
@@ -8,9 +8,9 @@ import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🧫️fixtures/🔣️.json";
 import{readNativeCallerAuthorityV1,nativeCallerPhaseV1}from"../🟦️.ts";
-import{readNativeFixedWindowsSystemV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🟦️.ts";
+import{readNativeFixedWindowsSystemV1}from"@semio-tech/process/artifacts/native-build/storage/fixed/system";
 import*as routing from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 const library=resolve(import.meta.dir,"../../../../.."),source=(path:string)=>ts.createSourceFile(path,readFileSync(resolve(library,path),"utf8"),ts.ScriptTarget.Latest,true),functions=(tree:ts.SourceFile,names:readonly string[])=>tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&names.includes(node.name?.text??"")).map(node=>node.getText(tree).replace(/^export /u,"")).join("\n"),load=(code:string,bindings:Record<string,unknown>)=>new Function(...Object.keys(bindings),ts.transpileModule(code,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS,esModuleInterop:true}}).outputText)(...Object.values(bindings)),json=(path:string)=>JSON.parse(readFileSync(resolve(library,path),"utf8"));
 const actualFacts=Object.freeze({version:1 as const,windows:"D:\\窓𐐀",system:"D:\\窓𐐀\\System32"}),nativeOwner="⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",build="🏗️build/📥️caller/🟦️.ts",nx="⚡️caching/📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts",buildSchema=json("🏗️build/🧬️schema/📥️caller.json"),authoringSchema=json("🏗️build/🧬️schema/📥️authoring.json"),nxSchema=json("⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json");
 

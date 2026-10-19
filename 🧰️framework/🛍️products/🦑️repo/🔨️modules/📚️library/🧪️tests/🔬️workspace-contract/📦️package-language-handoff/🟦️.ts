@@ -11,7 +11,7 @@ import { validateTaxonomy, canonicalPrimaryFilenameForKind } from "../../../🔍
 import { partitionNextestExecutionFilters } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, readScriptPolicy, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { fixedFilenameContractIdsForPath } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
-import { pathEmojiStatuteFindings } from "../../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { normalizationEngineDeclarations } from "../../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { readToml } from "../🏗️shared-fixtures/🟦️.ts";
 import { contractRoot } from "../🏗️shared-fixtures/🟦️.ts";

@@ -10,9 +10,18 @@ fn field_types(input: &DeriveInput) -> Vec<&Type> {
     }
 }
 
+/// 🧭️ Whether a field type uses the parameter itself, not only as the base of an associated-type projection (`P::Item`, `<P as Trait>::Item`).
+fn type_mentions_directly(ty: &Type, ident: &syn::Ident) -> bool {
+    use quote::ToTokens;
+    let text = ty.to_token_stream().to_string();
+    let name = ident.to_string();
+    let stripped = text.replace(&format!("{name} ::"), " ").replace(&format!("< {name} as"), " ");
+    stripped.split(|character: char| !(character.is_alphanumeric() || character == '_')).any(|word| word == name)
+}
+
 fn bounded_generics(input: &DeriveInput, bound: TokenStream) -> Generics {
     let mut generics = input.generics.clone();
-    for parameter in input.generics.type_params().filter(|parameter|field_types(input).into_iter().any(|ty|type_mentions_ident(ty,&parameter.ident))) {
+    for parameter in input.generics.type_params().filter(|parameter|field_types(input).into_iter().any(|ty|type_mentions_directly(ty,&parameter.ident))) {
         let ident=&parameter.ident;
         generics.make_where_clause().predicates.push(parse_quote!(#ident: #bound));
     }

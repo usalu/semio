@@ -27,7 +27,9 @@ use semio_framework_os_renderer_wgpu_test_support::shell_source;
 use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, WindowLayout, WindowStackCorner};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowStackCorner};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-shell-chrome-parity/🦀️.rs"]
 mod shell_chrome_parity_tests;

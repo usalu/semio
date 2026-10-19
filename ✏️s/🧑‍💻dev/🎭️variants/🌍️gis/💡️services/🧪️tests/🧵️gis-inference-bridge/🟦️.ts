@@ -1,5 +1,5 @@
-import { playgroundNativeHostArtifactV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
-import { parsePlaygroundsForCrate } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
+import { playgroundNativeHostArtifactV1 } from "@semio-tech/repo-lib/dev";
+import { parsePlaygroundsForCrate } from "@semio-tech/plugin-registry/playground/discovery";
 /** 🧪️ MCP ↔ hub GIS Map inference bridge conformance (ticket `26/09/02/COMPLETE-SEMIO-END-TO-END`,
  * lane `fable-mcp-inference-bridge`).
  *
@@ -23,9 +23,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "@semio-tech/gis-gismap-js/inference/mcp/testing/oracle";
 import { isValidJsonSchema2020_12 } from "@semio-tech/framework-os-mcp/schema-validation";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "@semio-tech/framework-os-mcp";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const hostManifest="🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml";
 const host=parsePlaygroundsForCrate(resolve(repoRoot,hostManifest),"gis",hostManifest.slice(0,-"/Cargo.toml".length),repoRoot).find(row=>row.variant==="gis2d")?.mcpHost;
 const selected=playgroundNativeHostArtifactV1(repoRoot,host,"prototype");

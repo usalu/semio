@@ -11,13 +11,13 @@ pub struct SetSampleRate {
     pub sample_rate: u32,
 }
 
-impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for SetSampleRate {
+impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for SetSampleRate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-rate", kind: "set-sample-rate", record: "SetSampleRate" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

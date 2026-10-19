@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import type { InputKind } from "@semio-tech/framework";
+import type { InputKind } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { uiTextInputKey, uiTextInputKeyOf, type TextInputKey, type TextInputKeyAction } from "../../🧩️component/🟦️.ts";
 
 type Fixture = { readonly keys: readonly { readonly case: string; readonly kind: InputKind; readonly key: TextInputKey; readonly primary: boolean; readonly shift: boolean; readonly alt: boolean; readonly action: TextInputKeyAction | null }[] };

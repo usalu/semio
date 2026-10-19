@@ -1,4 +1,4 @@
-import schema from "./🔣️.json";
+import schema from "./🔣️.json" with { type: "json" };
 import type { ComponentProfileV1, ComponentReceiptV1 } from "../../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 
 /** 🏷️ The schema tag every component receipt carries (`ComponentReceiptV1.schema`). */

@@ -9,7 +9,7 @@ import { BufferGeometry, Float32BufferAttribute, Int8BufferAttribute, Uint8Buffe
 import { toTrianglesDrawMode } from "three/addons/utils/BufferGeometryUtils.js";
 import { polygonMeshFromPrepared, polygonMeshFromObj, polygonMeshFromPly, mergePreparedMeshes, meshFormatDiagnostics, exportSourceChannels, applyGltfSceneToHost, materialFieldsForExport, gltfMaterialSurface, preparedGltfChannels, gltfImportAdmission, restoreGltfAuthoredAttributes } from "../🟦️.ts";
 import { parseGltfDocument } from "@semio-tech/stdio-gltf/standards/2.0/subsets/any/io/text/snapshot/json";
-import {binary64,binary64Value} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts";
+import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import type { FlowHostSnapshot, NeuralDictionary } from "@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/snapshot";
 import type { MeshAttribute } from "@semio-tech/framework/mesh/polygon";
 const old = new URL("../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/", import.meta.url);

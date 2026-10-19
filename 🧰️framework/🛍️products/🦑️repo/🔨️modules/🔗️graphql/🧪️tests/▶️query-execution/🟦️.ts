@@ -367,7 +367,7 @@ function sources(records: Row): Row {
   };
 
   return {
-    node: () => null,
+    node: (args: Row) => { const clean = String(args.id).replace(/[\uFE0E\uFE0F]/gu, ""); const found = (records.bundles ?? []).find((bundle: Row) => bundleId(bundle).replace(/[\uFE0E\uFE0F]/gu, "") === clean); return found === undefined ? null : bundleSource(found); },
     repo: () => repoSource,
     technologies: (args: Row) => [...technologies].sort((left, right) => (left.name < right.name ? -1 : left.name > right.name ? 1 : 0)).filter((technology) => matchesFilter(technology.name, args.filter) || matchesFilter(technologyId(technology), args.filter)).map(technologySource),
     bundles: (args: Row) => (records.bundles ?? []).filter((bundle: Row) => matchesFilter(bundle.name, args.filter)).map(bundleSource),

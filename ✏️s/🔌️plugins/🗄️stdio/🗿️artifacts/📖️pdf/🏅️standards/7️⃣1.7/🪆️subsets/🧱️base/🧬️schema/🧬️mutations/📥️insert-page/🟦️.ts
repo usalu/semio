@@ -4,9 +4,10 @@ import type { PdfAction, PdfActionKind, PdfDestination, PdfDestinationFit, PdfFi
 import type { PdfAnnotation, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfMarkupAnnotation } from '../../📸️snapshot/📌️annotation/🟦️.ts';
 import type { PdfAnnotationKind } from '../../📸️snapshot/📌️annotation/🏷️kind/🟦️.ts';
 import type { PdfColorSpace, PdfFunction } from '../../📸️snapshot/🌈️color/🟦️.ts';
-import type { PdfDate } from '../../📸️snapshot/📇️metadata/🟦️.ts';
+import type { PdfDate } from "../../📸️snapshot/📆️date/🟦️.ts";
 import type { PdfInlineImage, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString } from '../../📸️snapshot/🖋️content/🟦️.ts';
-import type { PdfLineCap, PdfLineJoin, PdfTransparencyGroup } from '../../📸️snapshot/🖼️resource/🎚️state/🟦️.ts';
+import type { PdfTransparencyGroup } from "../../📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfLineCap, PdfLineJoin } from "../../📸️snapshot/🖊️line-style/🟦️.ts";
 import type { PdfPage } from '../../📸️snapshot/📄️document/🟦️.ts';
 export interface InsertPageMutation {
   mutation: 'insertPage';

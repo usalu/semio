@@ -227,7 +227,7 @@ impl DocumentState {
         let mut sections: Vec<UiTreeSectionNode> = Vec::new();
         for kind in session.app.window_kinds.iter() {
             let label = kind.label.resolve(terminology, locale).to_string();
-            let mut items = if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
+            let mut items = if kind.surface_kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d {
                 world_projection_template_rows(&semio_framework::child_element_id(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &[kind.id.as_str(), "projection"]), &kind.id, 0, &mut 0)
             } else {
                 Vec::new()

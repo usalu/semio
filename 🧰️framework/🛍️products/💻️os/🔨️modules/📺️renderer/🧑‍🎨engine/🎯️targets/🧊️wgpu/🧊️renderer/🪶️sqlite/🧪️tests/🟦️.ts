@@ -8,12 +8,12 @@ import fixture from "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/�
 import identityFixture from "../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧊️renderer/🪶️sqlite/🪪️identity/🔣️.json";
 import { storeNativeIdentitySchema as identitySchema } from "../../../../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
 import { ioBindingsFixture as bindingFixture, ioBindingsSchema as bindingSchema, ioBindingsCatalogFixture as catalogFixture, ioBindingsCatalogSchema as catalogSchema } from "../../../../../../../🚪️io/🧪️tests/🧫️fixtures/🟦️.ts";
-import componentReceiptSchema from "../../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json";
+import componentReceiptSchema from "@semio-tech/framework-plugin/describe/component-receipt/schema.json";
 import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json";
 import {catalogBindingKey,proposeCatalogBindings,type ArtifactCatalogBinding} from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🟦️.ts";
 import {SOCKET_PROBE_NATIVE_DIALECT,socketProbeToSqliteDatabase as project,socketProbeFromSqliteDatabase as restore} from "../🟦️.ts";
-import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
-import { retainedCloneWireSchemaUrl } from "../../../../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "@semio-tech/framework-sqlite-snapshot-rs/index";
+import { retainedCloneWireSchemaUrl } from "@semio-tech/value-rs/testing/fixtures";
 const large=fixture.large.unit.repeat(fixture.large.repetitions);
 test("native_socket_sqlite_snapshot_original_catalog_declarations_preserve_owner_and_capability",()=>{
  const validate=new Ajv({strict:true,allErrors:true}).addMetaSchema(draft07MetaSchema).addSchema(componentReceiptSchema).compile(catalogSchema);

@@ -1,5 +1,5 @@
 import {cp} from "node:fs/promises";
-import {withBuildTestInvocationV1} from "../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {withNxGraphFixtureV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/📥️store/🟦️.ts";
 /** 🔏️ Graph seal laws over `./🧫️fixtures/🔣️.json`: a seal written for a fixture workspace holds exactly while nothing Nx could read for
  * its graph changed (each scenario mutates one thing), every seal satisfies `../🧬️schema/🔣️.json` (Ajv), and the stamped directories are

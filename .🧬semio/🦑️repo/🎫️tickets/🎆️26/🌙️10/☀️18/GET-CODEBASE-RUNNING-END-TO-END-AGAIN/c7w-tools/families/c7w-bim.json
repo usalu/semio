@@ -1,0 +1,20 @@
+{
+ "name": "c7w-bim",
+ "crates": [
+  "semio-s-artifact-bim-model-diff",
+  "semio-s-artifact-bim-model-tests-2"
+ ],
+ "features": {
+  "semio-s-artifact-bim-model-diff": [
+   "testkit"
+  ]
+ },
+ "base": {
+  "rev": "overlay",
+  "crates": [
+   "semio-s-artifact-bim-model-diff",
+   "semio-s-artifact-bim-model-tests-2"
+  ]
+ },
+ "note": "bim library patches"
+}

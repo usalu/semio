@@ -1,6 +1,6 @@
-import {readScriptProcessJsonV1} from "../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import type {RepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withArtifactStorageOperationV1} from "../../📦️artifacts/💾️storage/🟦️.ts";
 import type {RepositoryArtifactRequestV1} from "../../📦️artifacts/👓️reading/🟦️.ts";

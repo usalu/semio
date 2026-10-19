@@ -20,15 +20,16 @@
 //! Oracle: `🖱️ui/🧪️tests/🧫️fixtures/🎯️retained-hit-targets/🔣️.json`; its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🎯️retained-hit-targets/🟦️.ts`.
 
-use super::{HitKind, HitTarget, InputState};
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{SurfaceKind, UiComponentSceneNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use crate::wgpu::draw_types::{DrawList, IconAtlas};
-use crate::wgpu::engine::{Ui, UiFrameStep, UiLayoutStep};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::Label;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiNode, UiPresence, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_wgpu_engine::Ui;
+use semio_framework_ui_wgpu_engine_surface::{UiFrameStep, UiLayoutStep};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_hosting::scene_slots::{SceneHost, ScenePaintCursor, ScenePaintStep, SceneSlot};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_locale::Label;
 use serde_json::Value;
 
 fn law() -> Value {
@@ -46,7 +47,7 @@ impl SceneHost for LawSceneHost {
             Ok(false) => return ScenePaintStep::Pending,
             Err(_) => return ScenePaintStep::Fault,
         }
-        draw.push_rounded([slot.rect.x, slot.rect.y, slot.rect.w, slot.rect.h], crate::wgpu::theme::Theme::default().accent, 0.0);
+        draw.push_rounded([slot.rect.x, slot.rect.y, slot.rect.w, slot.rect.h], semio_framework_ui_theme::Theme::default().accent, 0.0);
         cursor.finish()
     }
 }

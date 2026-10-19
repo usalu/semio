@@ -1,5 +1,5 @@
 /** 🧬️ Sequence artifact schema — every field with its state class. */
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface SequenceArtifact {
   /** @state artifact */ schema: string;

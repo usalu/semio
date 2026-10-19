@@ -1,7 +1,7 @@
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { matchesFixture, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { contentDigestOf, testEvidenceProblems, installEvidenceFile, loadOracleRegistry, publishTestEvidence, subsetCoordinate, testCacheDir, verifyFixture } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { runProbe } from "../../../📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { runProbe } from "@semio-tech/repo-lib/process";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";

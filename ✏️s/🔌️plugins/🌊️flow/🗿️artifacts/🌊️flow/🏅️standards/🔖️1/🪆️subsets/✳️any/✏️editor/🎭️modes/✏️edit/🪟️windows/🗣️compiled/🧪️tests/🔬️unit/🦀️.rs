@@ -22,8 +22,7 @@ use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 #[allow(unused_imports)]
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-#[allow(unused_imports)]
-use ui_wgpu::wgpu::TextEditorScene;
+#[allow(unused_imports)] use semio_framework_ui_declaration::ui::TextEditorScene;
 use crate::editor::flow::modes::edit::windows::compiled::*;
 use crate::editor::flow::unit_tests::context::{flow_app, render as render_body};
 

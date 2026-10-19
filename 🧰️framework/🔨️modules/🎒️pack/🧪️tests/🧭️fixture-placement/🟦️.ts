@@ -10,7 +10,7 @@ function files(root:string):string[]{return readdirSync(root,{withFileTypes:true
 
 test("Pack and Replication examples belong strictly to neutral tests",()=>{
  const actual=owners.flatMap(owner=>files(join(modules,owner))).filter(path=>path.split(/[\\/]/).includes("🧫️fixtures"));
- const independent=glob.sync(owners.map(owner=>`${owner}/**/🧫️fixtures/**/*`),{cwd:modules,absolute:true,onlyFiles:true});
+ const independent=glob.sync(owners.map(owner=>`${owner}/**/🧫️fixtures/**/*`),{cwd:modules,absolute:true,onlyFiles:true,followSymbolicLinks:false});
  expect(actual.map(path=>relative(modules,path)).sort()).toEqual(independent.map(path=>relative(modules,path)).sort());
  expect(actual.length).toBeGreaterThan(0);
  const invalid=actual.filter(path=>{const targets=fixtureFacadeTargets(path);return targets===undefined||!targets.every(target=>target.split(/[\\/]/).includes("🧪️tests"));}).filter(path=>{const parts=relative(modules,path).split(/[\\/]/),fixtures=parts.indexOf("🧫️fixtures"),tests=parts.indexOf("🧪️tests");return tests<0||tests>=fixtures||parts.slice(0,fixtures).some(part=>["📦️packages","🎯️targets","🧩️implementations"].includes(part));});

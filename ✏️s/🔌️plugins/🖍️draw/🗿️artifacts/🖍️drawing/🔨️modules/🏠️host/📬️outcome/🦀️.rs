@@ -85,11 +85,11 @@ impl DrawingJobOutcomes {
     }
 
     /// 🔁️ Maps one paid publication close receipt onto the job close protocol; completion is the job's own terminal witness.
-    pub fn close_job_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        match self.publication.close_step(grant) {
+    pub fn close_job_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+        Ok(match self.publication.close_step(grant) {
             Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        }
+            Err(error) => return Err(error),
+        })
     }
 }
 

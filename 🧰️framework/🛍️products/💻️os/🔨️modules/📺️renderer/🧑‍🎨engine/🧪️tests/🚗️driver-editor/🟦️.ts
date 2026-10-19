@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { driverDisplayLabel } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");

@@ -1,28 +1,35 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::views::unique_name;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::views::unique_name;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{id_taken, kind_of, ordered_storeys, EntityKind, ENTITIES};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{id_taken, kind_of, ENTITIES};
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{select_effect, IdMint};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{select_effect, IdMint};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::create_entity::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, german, run};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_entity::{handle, CreateEntity, creatable};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, german, run};
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();
@@ -63,7 +70,7 @@ async fn every_new_entity_gets_an_id_no_collection_holds() {
     let snapshot = demo();
     let emit = create("wall", "", "A", &[], false).expect("creates");
     let ModelMutation::CreateWall(payload) = &emit.artifact_mutations[0] else { panic!("a wall is created") };
-    assert!(!crate::editor::bim::entities::id_taken(&snapshot, &payload.id));
+    assert!(!semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken(&snapshot, &payload.id));
 }
 
 #[semio_framework_async_macros::async_test]

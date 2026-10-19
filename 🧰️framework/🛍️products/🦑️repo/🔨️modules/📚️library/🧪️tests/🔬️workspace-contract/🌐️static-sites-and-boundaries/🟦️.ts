@@ -1,15 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { playgroundStaticSiteBuildOptions } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundStaticSiteBuildOptions } from "@semio-tech/ui-styling/builder/vite";
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, playgroundDevPort, playgroundPlayViteDefine } from "../../../🎮️playground/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 describe("playground static sites", () => {
-  test("PLAYGROUND_PORTS keeps cad and dag on distinct reserved dev ports", () => {
-    expect(playgroundDevPort("cad")).toBe(6020);
-    expect(playgroundDevPort("dag")).toBe(6017);
+  test("PLAYGROUND_PORTS keeps storybook, projektetage and the architecture quiz on distinct reserved dev ports", () => {
+    expect(playgroundDevPort("storybook")).toBe(6010);
+    expect(playgroundDevPort("projektetage")).toBe(6050);
+    expect(playgroundDevPort("architecture-quiz")).toBe(6061);
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
   });
 
@@ -71,7 +72,7 @@ describe("package boundary guards", () => {
   });
 
   test("legacy package aliases are absent from source imports", () => {
-    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️workspace-contract/🟦️.ts"], {
+    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🧬semio/**", "--glob", "!**/🔬️workspace-contract/**"], {
       cwd: repoRoot,
       encoding: "utf8",
     });
@@ -83,8 +84,9 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🟦️.tsx");
-    const indexSource = readFileSync(indexPath, "utf8");
+    const hostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react");
+    const hostFiles = [join(hostRoot, "🟦️.tsx"), ...readdirSync(hostRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((entry) => ["🟦️.ts", "🟦️.tsx"].map((name) => join(hostRoot, entry.name, name)).filter(existsSync))];
+    const indexSource = hostFiles.map((path) => readFileSync(path, "utf8")).join("\n");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");
   });

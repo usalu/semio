@@ -1,17 +1,18 @@
-use crate::editor::bim::entities::{kind_of, FieldRow};
-use crate::editor::bim::entities::energy::{EnvelopeFacts, facts, summary};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::fixture::support::demo;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::energy::{EnvelopeFacts, facts, summary};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::demo;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
 
 fn with(snapshot: ModelSnapshot, kind: &str, id: &str, parent: &str) -> ModelSnapshot {
     let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn office() -> ModelSnapshot {
@@ -26,7 +27,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 fn surface(kind: SurfaceKind, boundary: Boundary, area: f64) -> EnvelopeSurface {
@@ -126,7 +127,7 @@ async fn the_facts_add_up_the_exterior_envelope_and_the_glazing_share_of_the_fac
     assert_eq!(facts.envelope_area, 37.0, "exterior wall, window and the ground floor; the neighbour and the adiabatic ceiling do not count");
     assert_eq!(facts.glazing_area, 5.0);
     assert!((facts.glazing_ratio - 0.2).abs() < 1e-12, "5 of the 25 square metres of exterior facade");
-    assert_eq!(crate::editor::bim::entities::energy::facts(&EnvelopeSpace::default()), EnvelopeFacts::default());
+    assert_eq!(semio_s_artifact_bim_model_entities::editor::bim::entities::energy::facts(&EnvelopeSpace::default()), EnvelopeFacts::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -158,7 +159,7 @@ async fn an_open_boundary_and_findings_show_rows_only_when_there_are_some() {
     let mut inference = with_inference(None, &snapshot, Clone::clone);
     let mut space = envelope();
     space.open_length = 1.25;
-    space.issues.push(crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnergyIssue { code: crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnergyCode::OpenBoundary, element: "sp-office".into(), detail: "1.25".into() });
+    space.issues.push(semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnergyIssue { code: semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnergyCode::OpenBoundary, element: "sp-office".into(), detail: "1.25".into() });
     inference.energy_envelopes.insert("sp-office".into(), space);
     assert_eq!(read("space", "open_length", &snapshot, &inference, "sp-office").as_deref(), Some("1.25"));
     assert_eq!(read("space", "envelope_findings", &snapshot, &inference, "sp-office").as_deref(), Some("1"));

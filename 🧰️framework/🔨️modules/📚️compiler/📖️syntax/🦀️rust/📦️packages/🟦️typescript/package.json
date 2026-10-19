@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "exports": {
-    ".": "./🟦️.ts"
+    ".": "./🟦️.ts",
+    "./generation/testing": "./📤️generation/🧪️testing/🟦️.ts",
+    "./index.json": "./🔣️json/🟦️.ts",
+    "./paths": "./📁️paths/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/compiler-syntax-rust-ts:test",

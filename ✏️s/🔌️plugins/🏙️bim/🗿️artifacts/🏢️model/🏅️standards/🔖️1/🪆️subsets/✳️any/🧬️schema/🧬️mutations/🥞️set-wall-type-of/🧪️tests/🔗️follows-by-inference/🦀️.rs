@@ -1,9 +1,9 @@
 //! 🔗️ `set-wall-type-of` / `follows-by-inference`: the `wall-layout` inference follows the type. The thickness is the sum of its layers,
 //! so the thickness and the volume change with it while the plan extent and the height stay.
 
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_type_of::SetWallTypeOf;
+use semio_s_artifact_bim_model_mut_any_22::standards::v1::subsets::any::schema::mutations::set_wall_type_of::SetWallTypeOf;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_test_fixtures::fixture_text;
 

@@ -250,7 +250,7 @@ func TestSystemPolicy(t *testing.T) {
 		}
 	})
 	t.Run("derivation equals the language-agnostic fixture", func(t *testing.T) {
-		data, err := os.ReadFile("../../📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/🧫️fixtures/📝️derived-config/🔣️.json")
+		data, err := os.ReadFile(moduleFixturePath("..", "..", "📚️library", "⚡️caching", "📦️artifacts", "📝️derived-config", "🧪️tests", "🧫️fixtures", "📝️derived-config", "🔣️.json"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -411,7 +411,7 @@ func TestExhaustivePolicyGroupsGraphQL(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy groups graphql test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	query := `{ policies { id name groups { name description scopes kinds { id } groups { name kinds { id } } } } }`
 	result, err := executor.Execute(context.Background(), query, nil)
 	if err != nil {

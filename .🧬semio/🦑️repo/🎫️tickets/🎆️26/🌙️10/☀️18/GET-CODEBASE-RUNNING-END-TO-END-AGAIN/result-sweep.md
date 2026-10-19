@@ -1,0 +1,28 @@
+# Result sweep (external cache and ticket `🗑️generated` deletion)
+
+## Verdict
+- The only repo code that deletes ticket `🗑️generated` folders of OPEN tickets was the workspace cleaner (`🧼️workspace-cleanup`, run by `bun ./📜️script.ts clean` / the `clean` skill). By design it removed them unless a live test lease existed (`cleanTicketGeneratedOutputRemovals`, `allowedOpenTicket` in `cleanProjectRemovals` / `cleanRemovePath`, oversized-ignored files kind `ticket-generated`). That is fixed (below).
+- The `.cache/b/*/fixed.dmg` deletion at 02:08 is NOT explained by `clean` or `cache-prune` in their current form, and the trigger is not proven. Evidence:
+  - 02:07:27 `.cache/b/d` held `fixed.dmg`, `image.json`, `m` and was mounted (`m/j/...` readable). 02:08:47 `hdiutil info` showed none of the `.cache/b` images attached; `d g l o p t` directories all had mtime 02:08 (an entry unlinked), `image.json` and `m` untouched. `c` (sqlite store) untouched.
+  - The only `bun repo` process in any Claude transcript (coordinator + 278 subagents, 02:00-02:09) was `deps`' `bun repo dependencies sync --all` (02:07:50-02:08:42, ENOENT on `l/fixed.dmg`). Its own `rm -rf` loop only touches `.cache/b/d/m/j/<unready generation>/`. No transcript ran `clean`, `cache-prune`, `hdiutil` or any `rm` on `.cache/b`.
+  - Codex fleet stopped at 01:07 (all rollouts end `turn_aborted` 23:07:31Z). No crontab, no user launchd job with a calendar trigger (only GoogleUpdater), no scheduled-tasks entry, `.cursor/hooks.json` empty, git hooks only reset commit templates / call `micro-commit reset`. No `.agents` automation.
+  - `clean` cannot reach the images: `git ls-files -o -i --directory` reports `.cache/` as one collapsed directory (so the >100 MiB file rule never lists `fixed.dmg`), and `.cache/b/*` has been a protected managed-storage prefix since 7c8af563c74 (10-14). The process-killing and `build`/`dist` sweeping parts of the older cleaner (the 09-22/23 symptoms) were already removed in 4dab415ed90.
+  - The storage layer's own retirement removes the whole directory with the receipt first (`removeSettledNativeImageV1`: unlink `image.json`, unlink backing, rmdir) so it also does not produce "`fixed.dmg` gone, `image.json` kept".
+  - Observed pattern (six backing files unlinked, receipts kept, mounts gone, within one minute, same minute as the 02:08 deps run) therefore points at something outside the repo's cleaners. Unverifiable now: unified log has no entries, `fseventsd` needs root. Memory notes list the same ~02:07 minute on 09-23. The Cursor app writes `~/.cursor/projects/.agent-data-cleanup-2026-10-18` at 02:03 (its own housekeeping, scoped to `~/.cursor`).
+- To catch it next time (not done, needs root / system change): `sudo fs_usage -w -f filesys | grep -E 'fixed\.dmg|generated'` running from 01:50, or `log stream --predicate 'process == "hdiutil"'`.
+
+## Fix (repo root cause: cleanup is storage-blind and open-ticket-blind)
+All in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/`:
+- `🛡️protection/🟦️.ts`: new `CLEAN_NATIVE_IMAGE_BACKING_NAMES`, `cleanIsNativeImagePath` (a `fixed.dmg|img|vhd` file, an `image.json`+backing directory, its `m` mount or the directory itself, wherever it lives, including orphan/retired images outside any budget partition) and `cleanOpenTicketGeneratedOutputProtection` (candidate is, lies inside, or contains a generated-output directory of a non-closed, missing or malformed ticket). Wired into `cleanRemovalProtection` and `cleanProjectRemovals` (applies to `empty-folders`, `marker-only-folders`, normal clean).
+- `🗑️removal/🟦️.ts`: `cleanRemovePath` refuses both before any deletion (the cargo-incremental branch skips only the descendant scan). Images are retired only through the storage layer; `clean` keeps delegating cache bounding to `cache-prune` and deletes nothing under managed partitions.
+- `🔍️candidate-discovery/🟦️.ts`: `cleanTicketGeneratedOutputRemovals` only proposes generated folders of CLOSED tickets; `cleanOversizedIgnoredRemovals` skips images and open-ticket generated output.
+- Net behaviour: `🗑️generated` of an open ticket is removed only by the ticket owner (`ticket_close` flow), `clean` removes it only after `status: closed`.
+
+## Test
+- New: `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🏪️managed-storage-protection/🟦️.ts` with language-agnostic fixture `…/🧪️tests/🧫️fixtures/🏪️clean-managed-storage/🔣️.json` (tickets open/missing/malformed/closed, nested generated dir, two 200 MiB sparse images: one managed partition `.cache/b/d`, one orphan). It runs the real `runWorkspaceClean` (dry and applied) on a synthetic workspace and compares disk state with a third-party oracle (Ajv strict schema on the manifest, same technique as the ticket-protection contract). Second test drives the candidate gates directly.
+- Run: `bun test ./🧰️framework/…/🏪️managed-storage-protection/🟦️.ts` -> 2 pass, 37 expects. With the discovery/removal changes reverted the direct-gate test fails (`Expected: false` for the open ticket's generated dir), so it is load-bearing.
+- Regression: `🎫️ticket-protection`, `🧼️workspace-cleanup-stray-processes`, `🦀️incremental-targets` tests pass (9 pass). The only failure is the pre-existing `Windows checkout ticket paths` test (timeout 15 s + 494 over-length paths under the monolith-split ticket tools), unrelated to this change.
+
+## Not done / open
+- Root trigger of the 02:08 image removal is not identified (see evidence); no system crontab/launchd was changed.
+- Nothing was run against the real workspace (`clean` not executed). No `package.json`, `bun.lock` or cargo touched. No `[DEBUG]` logs added.

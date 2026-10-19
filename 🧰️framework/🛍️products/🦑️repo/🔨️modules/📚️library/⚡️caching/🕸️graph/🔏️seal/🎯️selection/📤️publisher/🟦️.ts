@@ -1,6 +1,6 @@
 import graphCacheSchema from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧬️schema/🔣️.json" with {type:"json"};
 import {withNxGraphAuxiliaryCapacityV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
-import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withGraphPublicationLeaseV1,type GraphPublicationLeaseV1} from "../../../📤️publication/🟦️.ts";
 import {createHash,randomUUID} from "node:crypto";
 import {lstat,readFile,writeFile,rename,rm,realpath,mkdir} from "node:fs/promises";

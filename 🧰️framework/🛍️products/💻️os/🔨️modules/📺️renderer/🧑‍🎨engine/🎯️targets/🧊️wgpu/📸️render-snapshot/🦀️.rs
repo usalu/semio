@@ -4,9 +4,9 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use ui_render::{CursorRequest, ImeDirective};
-use ui_wgpu::wgpu::SemioCursor;
+use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
 use semio_framework_job::{StepContext,OriginalTurnFailure};
-use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::{RetireOwned,shared::SharedControlledRetirement}};
+use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::{RetireOwned,arc_custody::SharedControlledRetirement}};
 use std::mem::ManuallyDrop;
 fn close_shared(owner:&mut SharedControlledRetirement<RenderSnapshot>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=semio_framework_value::RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(cx.retained_grant().maximum_copy_bytes)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?};let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}
 
@@ -126,7 +126,7 @@ impl RenderSnapshotSink {
         let Ok(mut displaced)=self.original_displaced.try_lock()else{return Ok(false)};
         if let Some(owner)=displaced.as_mut(){if !owner.terminal_is_empty(){close_shared(owner,cx)?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*displaced=None;return Ok(false)}
         let Ok(mut incoming)=self.original_incoming.try_lock()else{return Ok(false)};
-        if incoming.is_none(){return Ok(true)}if incoming.as_ref().unwrap().revision==0{let revision=self.next_revision().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original snapshot revision exhausted"))?;incoming.as_mut().unwrap().revision=revision;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let capacity=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<RenderSnapshot>();if grant.maximum_capacity_bytes<capacity{return Ok(false)}
+        if incoming.is_none(){return Ok(true)}if incoming.as_ref().unwrap().revision==0{let revision=self.next_revision().ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original snapshot revision exhausted"))?;incoming.as_mut().unwrap().revision=revision;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let capacity=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<RenderSnapshot>();if grant.maximum_capacity_bytes<capacity{return Ok(false)}
         let Ok(mut current)=self.current.try_lock()else{return Ok(false)};let original=Arc::new(incoming.take().unwrap());let previous=current.replace(original);if let Some(previous)=previous{*displaced=Some(SharedControlledRetirement::lease(previous))}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;Ok(false)
     }
     /// 📥️ A completed presentation donates its same media vector into the preborn publication slot.

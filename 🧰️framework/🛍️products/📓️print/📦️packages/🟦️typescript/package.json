@@ -27,7 +27,8 @@
     "./testing/chart-specification": "./🧪️testing/📜️chart-specification/🟦️.ts",
     "./testing/inferred-layer-pipeline": "./🧪️testing/🧮️inferred-layer-pipeline/🟦️.ts",
     "./testing/render-scene": "./🧪️testing/🎬️render-scene/🟦️.ts",
-    "./testing/render-scene/legend": "./🧪️testing/🎬️render-scene/🧭️legend/🟦️.ts"
+    "./testing/render-scene/legend": "./🧪️testing/🎬️render-scene/🧭️legend/🟦️.ts",
+    "./artifacts": "./📦️artifacts/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

@@ -1,19 +1,22 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::bim_window_action;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::bim_window_action;
 #[allow(unused_imports)]
-use crate::render::world::{mesh_data, overview_orbit, world_bounds};
+use semio_s_artifact_bim_model_tests_5::render::world::{mesh_data, overview_orbit, world_bounds};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::message;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyIssue, FamilySolidMesh, FamilyValue, IssueOwner};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, IssueOwner};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::SolidShape;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::{FamilySolidMesh, FamilyValue};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidShape;
 #[allow(unused_imports)]
 use semio_framework_plugin::TableCell;
 #[allow(unused_imports)]
@@ -28,6 +31,7 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use crate::editor::bim::modes::edit::windows::family::{text, row};
 use crate::editor::bim::modes::edit::windows::family::*;
+use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -66,7 +70,7 @@ fn the_table_lists_the_family_its_parameters_with_values_and_its_solids_with_one
     let text = json(&rows);
     let snapshot = model();
     let parameters = snapshot.family_parameters.values().filter(|row| row.family == "fam-table").count();
-    let slots: usize = snapshot.family_solids.values().filter(|row| row.family == "fam-table").map(|row| crate::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).len()).sum();
+    let slots: usize = snapshot.family_solids.values().filter(|row| row.family == "fam-table").map(|row| semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).len()).sum();
     let solids = snapshot.family_solids.values().filter(|row| row.family == "fam-table").count();
     assert_eq!(rows.len(), 1 + (parameters + 1) + (solids + slots + 1), "family, parameters and the add row, solids with their slots and the add row");
     for expected in ["1600 mm", "Dining table", "\"m-oak\"", "height - top_thickness", "width > 1.4 m", "15°", "Furniture", "s-top#height", "Cuboid", "Revolution"] {
@@ -94,10 +98,10 @@ fn every_formula_input_names_the_command_the_part_the_operation_and_the_key() {
 #[test]
 fn the_buttons_add_every_kind_and_shape_cycle_a_kind_remove_and_turn_a_revolution() {
     let text = json(&rows_of("fam-table", &BimLabels::NATIVE_EN));
-    for kind in edit::KINDS {
+    for kind in semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::KINDS {
         assert!(text.contains(&format!("\"op\":\"add\",\"key\":\"{kind:?}\"")) || text.contains(&format!("\"key\":\"{kind:?}\"")), "{kind:?}");
     }
-    for token in edit::SHAPES {
+    for token in semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::SHAPES {
         assert!(text.contains(&format!("\"key\":\"{token}\"")), "{token}");
     }
     assert!(text.contains("\"op\":\"remove\"") && text.contains("\"op\":\"kind\"") && text.contains("\"op\":\"axis\""));

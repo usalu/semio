@@ -6,7 +6,7 @@ const corpus = JSON.parse(readFileSync(new URL("../../../../../../../../../🔨�
 import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {cargoDepInfoSourcesV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import {cargoDepInfoSourcesV1} from "@semio-tech/process/native-build";
 import {withRepositoryCompilerStoreV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 
  test("genuine rustc dep-info independently confirms neutral Source closure membership",async()=>{

@@ -28,15 +28,14 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 use crate::editor::equation::{EquationCommand, EquationPlayApp, MATH_PLAY_BODY_GRAPH};
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, EditorApp, PluginApp, ViewModel, ViewWindowInstance};
 
-                async fn render(app: &mut MathApp, view: &ViewModel) -> Result<semio_framework_os_kernel::Viewport2d, String> {
-                    let tree = app.render(MATH_PLAY_BODY_GRAPH, None, view).await.map_err(|error| format!("{error:?}"))?;
-                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                async fn render(app: &mut MathApp, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_os_kernel::Viewport2d, String> {
+                    let json = artifact_app_laws::render_registered_fixture_app(app, MATH_PLAY_BODY_GRAPH, view, cx).await.map_err(|error| format!("{error:?}"))?;
                     let scene = artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::NodeGraphScene>(&json).map_err(str::to_string)?;
                     scene.viewport.ok_or_else(|| "Equation graph render omitted viewport".into())
                 }
 
-                async fn drain(app: &mut MathApp) -> Result<usize, String> {
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("Equation window publication failed: {error:?}"))?;
+                async fn drain(app: &mut MathApp, cx: &mut semio_framework_job::StepContext<'_>) -> Result<usize, String> {
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("Equation window publication failed: {error:?}"))?;
                     Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
@@ -46,8 +45,9 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: EquationGraphWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut scope = artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {
@@ -58,12 +58,12 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                         let camera: EquationCamera = serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| error.to_string())?;
                         app.dispatch_typed(
                             EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
+                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()
                         )
                             .await
                             .map_err(|error| format!("{error:?}"))?;
                     }
-                    if drain(&mut app).await? != 2 {
+                    if drain(&mut app, scope.cx()).await? != 2 {
                         return Err("Equation did not publish one config receipt per exact window".into());
                     }
                     if app.snapshot().map_err(|error| format!("{error:?}"))? != document {
@@ -73,8 +73,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     if app_config.pack != app_config_after.pack || app_config.spr != app_config_after.spr {
                         return Err("Equation window config changed app config".into());
                     }
-                    let left_viewport = render(&mut app, &left).await?;
-                    let right_viewport = render(&mut app, &right).await?;
+                    let left_viewport = render(&mut app, &left, scope.cx()).await?;
+                    let right_viewport = render(&mut app, &right, scope.cx()).await?;
                     for (viewport, expected) in [(&left_viewport, &fixture["cases"][1]["expected"][left_id]["camera"]), (&right_viewport, &fixture["cases"][1]["expected"][right_id]["camera"])] {
                         if viewport.x != expected["x"].as_f64().unwrap() || viewport.y != expected["y"].as_f64().unwrap() || viewport.zoom != expected["zoom"].as_f64().unwrap() {
                             return Err(format!("Equation exact window rendered the wrong viewport: {viewport:?}"));
@@ -92,8 +92,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
                     }
-                    let reopened_left = render(&mut reopened, &left).await?;
-                    let reopened_right = render(&mut reopened, &right).await?;
+                    let reopened_left = render(&mut reopened, &left, scope.cx()).await?;
+                    let reopened_right = render(&mut reopened, &right, scope.cx()).await?;
                     if reopened_left.x != left_viewport.x
                         || reopened_left.y != left_viewport.y
                         || reopened_left.zoom != left_viewport.zoom
@@ -109,8 +109,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 if let Err(error) = &outcome {
                     eprintln!("Equation exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 outcome.expect("Equation exact-window config publication and persistence");
             })
         })

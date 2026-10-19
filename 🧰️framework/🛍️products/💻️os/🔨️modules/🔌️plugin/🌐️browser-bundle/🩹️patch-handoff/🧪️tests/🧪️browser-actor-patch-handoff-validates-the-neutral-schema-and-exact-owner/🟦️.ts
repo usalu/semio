@@ -1,10 +1,10 @@
-import * as ModuleUnderTest from "../../../../../../../../🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework/browser-bundle/patch-handoff";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../../../🔨️modules/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "browserActorUiPatchOwnerMatchesV1" | "captureBrowserActorUiPatchV1" | "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework/browser-bundle/patch-handoff"), "browserActorUiPatchOwnerMatchesV1" | "captureBrowserActorUiPatchV1" | "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1">, source: TestSource): Promise<void> {
   const { browserActorUiPatchOwnerMatchesV1, captureBrowserActorUiPatchV1, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 } = dependencies;
 
   const { expect, it } = vitest;

@@ -20,7 +20,11 @@ def main():
                 pass
     os.makedirs(G + "/logs", exist_ok=True)
     os.makedirs(G + "/artifacts", exist_ok=True)
-    env = dict(os.environ, SEMIO_TEST_ARTIFACT_DIR=G + "/artifacts", NO_COLOR="1", SEMIO_REPO_ROOT=ROOT)
+    ART = "/private/tmp/claude-501/-Users-ueli-Documents-semio/214979e9-1d0c-472f-865a-73fad9fbbf95/scratchpad/ta"
+    if os.environ.get("TST2_ART") == "ticket": ART = C + "/🗑️generated/ta"
+    os.makedirs(ART, exist_ok=True)
+    wire = subprocess.run(["bun", C + "/tst2-tools/envwire.ts"], cwd=ROOT, capture_output=True, text=True).stdout
+    env = dict(os.environ, SEMIO_TEST_ARTIFACT_DIR=ART, NO_COLOR="1", SEMIO_REPO_ROOT=ROOT, SEMIO_SCRIPT_PROCESS_INVOCATION=wire, SEMIO_TICKET_DIR=C, SEMIO_BUILD_MODE="prototype")
     t0 = time.time()
     n = 0
     for f in files:
@@ -30,8 +34,9 @@ def main():
             break
         s = time.time()
         try:
-            p = subprocess.run(["bun", "test", "--timeout", tmo, "./" + f], cwd=ROOT, env=env, capture_output=True, text=True, timeout=cap)
-            txt = (p.stdout or "") + (p.stderr or "")
+            extra = ["--tsconfig-override", "/private/tmp/claude-501/-Users-ueli-Documents-semio/214979e9-1d0c-472f-865a-73fad9fbbf95/scratchpad/hoist/tsconfig.json"] if os.environ.get("TST2_HOIST") == "1" else []
+            p = subprocess.run(["bun", "test"] + extra + ["--timeout", tmo, "./" + f], cwd=ROOT, env=env, capture_output=True, timeout=cap)
+            txt = (p.stdout or b"").decode("utf-8", "replace") + (p.stderr or b"").decode("utf-8", "replace")
             rc = p.returncode
         except subprocess.TimeoutExpired as e:
             txt = ((e.stdout or b"").decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")) + ((e.stderr or b"").decode("utf-8", "replace") if isinstance(e.stderr, bytes) else (e.stderr or "")) + "\n[runner] HARD CAP"

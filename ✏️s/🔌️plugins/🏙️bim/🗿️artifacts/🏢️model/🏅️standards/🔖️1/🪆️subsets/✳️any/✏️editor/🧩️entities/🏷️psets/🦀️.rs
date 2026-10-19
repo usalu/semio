@@ -2,12 +2,20 @@
 //! `set-classification-system` mutation, what a new template or system is, and the kinds a template applies to as text. The definitions of a template and the entry table of a system are edited by the
 //! `editTemplate` and `editClassification` commands, row by row; the classification browser assigns codes.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::editor::bim::entities::{properties};
-use crate::editor::bim::entities::{partial, Created, FieldRow, InferredRow};
-use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch}, snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate, TemplateTarget}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::partial;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, InferredRow};
+use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::ClassificationSystemPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TemplateTarget;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system;
+use semio_s_artifact_bim_model_mut_any_40::standards::v1::subsets::any::schema::mutations::set_property_template;
 
 //#region 🔖️Targets
 /// 🎯️ The kinds a template applies to as comma separated kebab-case names.
@@ -56,7 +64,7 @@ pub static CLASSIFICATION_SYSTEM_FIELDS: &[FieldRow] = &[
 
 //#region 🔖️Inferred
 /// 🏷️ How many holders a template reaches: the holders with an effective property it defines.
-pub fn template_holders(inference: &crate::standards::v1::subsets::any::schema::inferences::ModelInference, id: &str) -> usize {
+pub fn template_holders(inference: &semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference, id: &str) -> usize {
     inference.effective_properties.values().filter(|effective| effective.values.values().any(|set| set.values().any(|value| value.template.as_deref() == Some(id)))).count()
 }
 
@@ -81,12 +89,12 @@ pub static CLASSIFICATION_SYSTEM_INFERRED: &[InferredRow] = &[
 //#region 🔖️Create
 /// 🏷️ A new property set template: named, applying to nothing yet, with no definition.
 pub fn create_property_template(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreatePropertyTemplate(crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate { id: id.into(), template: PropertyTemplate { name: name.into(), applies_to: Vec::new(), properties: Vec::new() } }))
+    Ok(ModelMutation::CreatePropertyTemplate(semio_s_artifact_bim_model_mut_any_108::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate { id: id.into(), template: PropertyTemplate { name: name.into(), applies_to: Vec::new(), properties: Vec::new() } }))
 }
 
 /// 🗂️ A new classification system: named, with no edition, no source and an empty entry table.
 pub fn create_classification_system(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateClassificationSystem(crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem { id: id.into(), system: ClassificationSystem { name: name.into(), edition: String::new(), source: None, entries: Vec::new() } }))
+    Ok(ModelMutation::CreateClassificationSystem(semio_s_artifact_bim_model_mut_any_148::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem { id: id.into(), system: ClassificationSystem { name: name.into(), edition: String::new(), source: None, entries: Vec::new() } }))
 }
 //#endregion 🔖️Create
 

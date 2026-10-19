@@ -1,10 +1,9 @@
-import type { DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "../../../../🟦️";
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import { type SpaceArtifactCreationCatalogV1 as HubSpaceArtifactCreationCatalogV1, SPACE_ARTIFACT_CREATION_CATALOG_MAX_BYTES, type SpaceArtifactCreationStatusV1 as HubSpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES, sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "../../../📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts";
 import { spaceArtifactCreationPollDelayV1, spaceArtifactCreationUnreachableV1 } from "../🌱️creation-polling/🟦️.ts";
-import { spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations } from "../🛑️session-teardown/🟦️.ts";
+import { type SpaceArtifactCreationOperationV1, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations } from "../🛑️session-teardown/🟦️.ts";
 import { post } from "../🧾️document-state/🟦️.ts";
 import { directoryWorkerEpoch, hubSessionFetch } from "../🔐️hub-session/🟦️.ts";
 import { type ExecutionTargetReadControl, readBoundedExecutionTargetBody } from "../📥️execution-target-read/🟦️.ts";
@@ -20,32 +19,10 @@ import { SOCKET_GRANT_REQUEST_TIMEOUT_MS } from "../⚙️constants/🟦️.ts";
  * caller believes it issued must never vanish without a receipt. */
 export const DIRECTORY_COMMAND_TRANSPORT_CAPACITY = 64;
 
-/** 🆔️ One retained command operation. `request` is sealed once and re-sent byte-identically by
- * every transient retry — a retry that changed a single byte would be a different command to the
- * hub's digest-keyed idempotency store. `sessionEpoch`/`workerEpoch` suppress delivery after an
- * identity or worker replacement; such a request may later be explicitly resolved, never auto-replayed. */
-export type DirectoryCommandTransportOperationV1 = {
-  readonly request: DirectoryCommandRequestV1;
-  readonly abort: AbortController;
-  readonly sessionEpoch: number;
-  readonly workerEpoch: number;
-  settled: boolean;
-};
-
 const SPACE_ARTIFACT_CREATION_CAPACITY = 8;
 const SPACE_ARTIFACT_CREATION_CATALOG_CAPACITY = 8;
 const SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS = 10_000;
 
-export type SpaceArtifactCreationOperationV1 = {
-  readonly request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>;
-  readonly abort: AbortController;
-  readonly workerEpoch: number;
-  lastAnsweredAtMs: number;
-  polls: number;
-  cancelRequested: boolean;
-  cancelSent: boolean;
-  latest: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>;
-};
 export let spaceArtifactCreationTestFetch: ((path: string, init: RequestInit, signal: AbortSignal) => Promise<FetchTimeoutResponse>) | null = null;
 /** 🧪️ Assigns `spaceArtifactCreationTestFetch` for the test seam, because an imported binding cannot be assigned outside its declaring module. */
 export function setSpaceArtifactCreationTestFetch(value: typeof spaceArtifactCreationTestFetch): void {

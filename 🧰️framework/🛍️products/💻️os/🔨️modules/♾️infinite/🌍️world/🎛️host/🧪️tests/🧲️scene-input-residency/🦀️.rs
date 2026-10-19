@@ -6,7 +6,9 @@ use semio_framework_os_infinite_world_bridge::sync_world3d_scene_document_lanes;
 use semio_framework_os_infinite_world_interaction::{apply_reference_image_bytes, world3d_catalogue_drop_origin, world3d_end_relocate_drag, world3d_update_catalogue_drop_preview, world3d_update_relocate_drag};
 use semio_framework_os_infinite_world_host::World3dState;
 use semio_framework_test_fixtures::fixture_text;
-use ui_wgpu::wgpu::{Camera3d, CameraProjection3d, OrbitController, Rect, Rgba, Vec3};
+use ui_scene::math::{Camera3d, CameraProjection3d, OrbitController, Vec3};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
 use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
 
@@ -35,15 +37,15 @@ fn point(value: &serde_json::Value) -> [f64; 3] {
     [values[0].as_f64().expect("x"), values[1].as_f64().expect("y"), values[2].as_f64().expect("z")]
 }
 
-fn scene(references: serde_json::Value) -> ui_wgpu::wgpu::World3dScene {
-    let mut scene = ui_wgpu::wgpu::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+fn scene(references: serde_json::Value) -> semio_framework_ui_declaration::ui::World3dScene {
+    let mut scene = semio_framework_ui_declaration::ui::World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
     scene.references_json = Some(references.to_string());
     scene
 }
 
 fn pointer_for(state: &World3dState, world: [f64; 3]) -> (f32, f32) {
     let camera = state.camera.orbit.to_camera();
-    let local = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, state.session.bounds.w, state.session.bounds.h), Vec3::new(world[0] as f32, world[1] as f32, world[2] as f32), state.session.bounds.w, state.session.bounds.h).expect("point projects into the fixture camera");
+    let local = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, state.session.bounds.w, state.session.bounds.h), Vec3::new(world[0] as f32, world[1] as f32, world[2] as f32), state.session.bounds.w, state.session.bounds.h).expect("point projects into the fixture camera");
     (state.session.bounds.x + local[0], state.session.bounds.y + local[1])
 }
 
@@ -72,8 +74,8 @@ fn pointer_relocate_and_catalogue_drop_honor_the_document_snap_boolean() {
         target: Vec3::ZERO,
         up: Vec3::new(0.0, 1.0, 0.0),
         fov_y: 45.0_f32.to_radians(),
-        near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
-        far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
+        near: ui_scene::math::WORLD_ORBIT_CAMERA_NEAR,
+        far: ui_scene::math::WORLD_ORBIT_CAMERA_MIN_FAR,
         projection: CameraProjection3d::Orthographic,
         zoom: 20.0,
     });

@@ -33,7 +33,8 @@ semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }

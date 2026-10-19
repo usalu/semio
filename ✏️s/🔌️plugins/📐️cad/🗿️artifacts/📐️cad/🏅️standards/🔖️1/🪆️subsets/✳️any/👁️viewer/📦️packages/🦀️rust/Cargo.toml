@@ -28,7 +28,7 @@ semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
 semio-s-artifact-cad-cad-play = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
-ui_wgpu = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework = { workspace = true }

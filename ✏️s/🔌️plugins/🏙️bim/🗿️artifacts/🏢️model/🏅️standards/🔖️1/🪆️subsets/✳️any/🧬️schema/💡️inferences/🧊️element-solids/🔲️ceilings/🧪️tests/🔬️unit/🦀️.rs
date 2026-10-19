@@ -1,12 +1,17 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, Slope};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::{self, Vertex};
 #[allow(unused_imports)]
@@ -17,12 +22,12 @@ use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::{span, underside_at, fall_of, ceiling_layers, thickness};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -71,7 +76,7 @@ async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
 #[semio_framework_async_macros::async_test]
 async fn the_span_and_the_underside_follow_the_same_plane() {
     let snapshot = case((*CASE)).snapshot;
-    let levels = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot);
+    let levels = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot);
     let (holed, sloped) = (&snapshot.ceilings["c-holed"], &snapshot.ceilings["c-sloped"]);
     assert_eq!(span(&snapshot, holed, &levels["st-ground"]), (2.7 - 0.0625, 2.7));
     assert!(close(2.7 - 0.0625, underside_at(&snapshot, holed, &levels["st-ground"], Point2 { x: 1.0, y: 1.0 }).expect("under the board"), 1e-12));

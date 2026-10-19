@@ -56,11 +56,8 @@ impl<T: Topology + Clone + Send> WfcRestore<T> {
     /// 🤝️ Closes the lent payload turn by turn from the next step's own wallet before decoding resumes.
     pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         let publication = self.publication.as_mut().expect("a delivered wfc restore publication is staged");
-        let step = publication.close_step(context.retained_grant());
+        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
         context.consume_retained(step.progress())?;
-        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
-            return Err(ValueError::literal(kind, "wfc restore publication close was refused").with_retained_progress(progress));
-        }
         if publication.terminal_is_empty() {
             self.publication = None;
         }
@@ -86,8 +83,9 @@ impl<T: Topology + Clone + Send> WfcRestore<T> {
     }
 }
 
-impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+impl<T: Topology + Clone + Send> WfcRestore<T> {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
             return self.retire_delivered_publication(context);
         }
@@ -111,6 +109,10 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             WfcRestoreRun::Complete => JobOutcomeBorrow::admit_complete(context, None, None),
         }
     }
+}
+
+impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -128,73 +130,75 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.begin_close();
-        let demand = match self.close_demands() {
-            Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        }
-        let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(grant);
-            if publication.terminal_is_empty() {
-                self.publication = None;
-            }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            self.begin_close();
+            let demand = match self.close_demands() {
+                Ok(demand) => demand,
+                Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
             };
-        }
-        if let Some(restored) = self.restored.as_mut() {
-            let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            let step = restored.close_step(child);
-            if restored.terminal_is_empty() {
-                self.restored = None;
-                return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } };
+            if self.terminal_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
             }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
-            };
-        }
-        if self.bytes.capacity() != 0 {
-            let released_bytes = self.bytes.capacity();
-            self.bytes = Vec::new();
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } };
-        }
-        macro_rules! pop_owner {
-            ($owners:expr) => {
-                if $owners.pop().is_some() {
-                    return InteractiveJobCloseStep::Pending { progress: one };
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            if let Some(publication) = self.publication.as_mut() {
+                let step = publication.close_step(grant)?;
+                if publication.terminal_is_empty() {
+                    self.publication = None;
                 }
-            };
-        }
-        pop_owner!(self.fixed);
-        if let Some(domains) = self.initial_domains.as_mut() {
-            pop_owner!(domains);
-            self.initial_domains = None;
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        pop_owner!(self.domains);
-        pop_owner!(self.domain_words);
-        pop_owner!(self.trail);
-        pop_owner!(self.decisions);
-        pop_owner!(self.observed);
-        pop_owner!(self.domain_counts);
-        pop_owner!(self.weight_sums);
-        pop_owner!(self.weighted_log_sums);
-        pop_owner!(self.revisions);
-        pop_owner!(self.queued_marks);
-        if self.entropy_heap.pop().is_some() || self.header.take().is_some() || self.model.take().is_some() || self.topology.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+                return Ok(match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            if let Some(restored) = self.restored.as_mut() {
+                let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                let step = cx.with_retained_loan(child, |same| restored.close_step(same))?;
+                if restored.terminal_is_empty() {
+                    self.restored = None;
+                    return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                }
+                return Ok(match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            if self.bytes.capacity() != 0 {
+                let released_bytes = self.bytes.capacity();
+                self.bytes = Vec::new();
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
+            }
+            macro_rules! pop_owner {
+                ($owners:expr) => {
+                    if $owners.pop().is_some() {
+                        return Ok(InteractiveJobCloseStep::Pending { progress: one });
+                    }
+                };
+            }
+            pop_owner!(self.fixed);
+            if let Some(domains) = self.initial_domains.as_mut() {
+                pop_owner!(domains);
+                self.initial_domains = None;
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            pop_owner!(self.domains);
+            pop_owner!(self.domain_words);
+            pop_owner!(self.trail);
+            pop_owner!(self.decisions);
+            pop_owner!(self.observed);
+            pop_owner!(self.domain_counts);
+            pop_owner!(self.weight_sums);
+            pop_owner!(self.weighted_log_sums);
+            pop_owner!(self.revisions);
+            pop_owner!(self.queued_marks);
+            if self.entropy_heap.pop().is_some() || self.header.take().is_some() || self.model.take().is_some() || self.topology.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

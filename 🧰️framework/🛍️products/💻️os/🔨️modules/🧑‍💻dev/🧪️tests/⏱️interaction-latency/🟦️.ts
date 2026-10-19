@@ -22,7 +22,7 @@ import { cpus, loadavg } from "node:os";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Browser, Locator, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 import { awaitBeacon, dismissIntroduction, kindOf, windowIds } from "../🧮️program-matrix/🟦️.ts";

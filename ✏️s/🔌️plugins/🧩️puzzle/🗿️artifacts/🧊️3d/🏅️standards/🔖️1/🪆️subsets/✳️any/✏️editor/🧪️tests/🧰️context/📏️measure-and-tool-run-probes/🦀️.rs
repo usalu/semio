@@ -63,7 +63,8 @@ pub const FILL_RUN_TURNS: usize = 262_144;
 pub async fn tool_run_action(app: &mut Puzzle3dApp, action: &str, args: Value) -> Value {
     app.ensure_window(main::WINDOW_KIND_ID);
     let action_meta = ActionMeta { view_state: Some(app.window_view(main::WINDOW_KIND_ID)), ..app.meta("local") };
-    let result = app.handle_action(action, Some(&semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let (raw, cx) = app.parts();
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(semio_framework_pack_json::to_dsl_value(&args)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     semio_framework_pack_json::from_dsl_value(&result.output)
 }
 

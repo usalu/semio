@@ -15,7 +15,7 @@ import {
 import { type Component, type UiNodeRecord } from "@semio-tech/framework";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
-import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";
 import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";

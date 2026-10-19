@@ -61,8 +61,7 @@ import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from 
 import { type TreeWindowContextValue } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { LocalDocumentOwnerRegistryV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
-import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState, localProgramsV1, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { EMPTY_SHELL_DEFAULTS, EMPTY_SHELL_LOCKS, type FrameworkOsDefaults, isEphemeralShellBrand, resolveBootExampleId, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { type ExtraWindowInstance } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
@@ -92,13 +91,16 @@ import { isPluginInstanceRetiredV1, leftoverInspectionPanelHash, type PluginWasm
 import { createShellRouteLedgerV1 } from "../🧭️route-ledger/🟦️.ts";
 import type { PluginCatalog } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
-import { resolveRequiredHostApps, type InstalledServicePresentationV1 } from "../🪪️host-bootstrap/🟦️.tsx";
+import { resolveRequiredHostApps } from "../🪪️host-bootstrap/🟦️.tsx";
+import type { InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
+import type { ReactNode } from "react";
 import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
 import { OPERATION_SETTLE_RING_SLOTS, OPERATION_SETTLE_WAITER_SLOTS, OPERATION_SETTLE_WATCHDOG_MS, operationSettleKeyV1 } from "../🏁️operation-settle/🟦️.ts";
 import { createBuiltNodeStoreCacheV1, logUnlessRetiredV1, requiredHostPanelLeafId, type SpawnedRefreshSlotV1 } from "../🧱️built-node-stores/🟦️.ts";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type { ShellState } from "../../🐚️Shell/🗃️state-shapes/🟦️.ts";
 import type { SpaceArtifactCreationCatalogAuthorityV1 } from "../🧾️space-artifact-creation/🟦️.ts";
+import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 type ShellEffectOwnerForward = {
   presentation: ShellDialogOriginV1 | null;
@@ -151,7 +153,7 @@ export type FrameworkOsShellInnerProps = {
   readonly plugins: readonly PluginRegistryEntry[];
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly backboneWorkerFactory?: () => Worker;
-  readonly documentServices?: readonly InstalledServicePresentationV1[];
+  readonly documentServices?: readonly InstalledServicePresentationV1<ReactNode>[];
   readonly hostPorts?: ShellHostPortsV1;
   readonly appId?: string;
   readonly appRole?: AppRole;

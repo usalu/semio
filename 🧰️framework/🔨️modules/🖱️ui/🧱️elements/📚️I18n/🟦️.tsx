@@ -5,7 +5,7 @@
 // #endregion Header
 
 // #region Adapters
-import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework";
+import { type ShellLocale, type ShellTerminology } from "@semio-tech/framework/manifest/generated/ui-axes";
 // #endregion Adapters
 
 // #region I18n

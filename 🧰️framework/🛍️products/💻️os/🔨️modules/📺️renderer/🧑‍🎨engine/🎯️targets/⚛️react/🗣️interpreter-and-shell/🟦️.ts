@@ -6,7 +6,7 @@ import { interpretUiNode, InterpretedUiNode } from "../../../🧱️elements/�
 import { UiNodeView } from "../../../🧱️elements/🗣️Interpreter/🧱️node-tree/🟦️.tsx";
 import { UiPresenceOverlayContext, usePresenceOverlayEntry, type UiPresenceOverlayEntry, type UiPresenceOverlayValue } from "../../../🧱️elements/🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 import { registerElementHostsV1 } from "../../../🧱️elements/🪢️ElementHosts/🟦️.ts";
-import { type SpawnedAppEntry, type SpacePanelState, type FrameworkOsBootOptions, type FrameworkOsBootExecution } from "../../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { type FrameworkOsBootOptions, type FrameworkOsBootExecution } from "../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import { uiInspectorMixedPlaceholder, type PluginPanelStatus, type PluginSupervisorState } from "../../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 import { type FrameworkOsLocks, type ResolvedShellLocks, resolveShellLocks, mergeShellLockSources, type FrameworkOsDefaults, resolveShellDefaults, resolveBootExampleId, shouldReplayIntroductionOnLoad, shouldPersistIntroductionSeen, isEphemeralShellBrand, clearDurableShellStorage } from "../../../🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { type ShellPresencePeer, type PeerInteractionDomain, type PeerInteractionRoster, derivePeerInteractionByDomain, peerIdsSelecting, peerIdsHovering } from "../../../🧱️elements/🐚️Shell/👥️peer-interaction/🟦️.ts";
@@ -18,7 +18,7 @@ import { NOTE_WORLD_NAVIGATION_ACTION_ID, buildNoteShellCommandAction, isShellOw
 import { encodeEffectActionInvocation, encodeEffectCommandInvocation } from "../../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
 import { dispatchOpenedFiles, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, type RequestMediaFramesArgs, requestMediaFramesSourceV1, runMediaFramesV1 } from "../../../🧱️elements/🛠️ShellHelpers/🎞️media-import/🟦️.ts";
 import { type ShellRoute, parseShellRoute, pluginAvailabilityRouteV1, type PluginAvailabilityRouteV1, pluginShouldReceiveContributions, pluginShouldEstablishSession, appBreadcrumb, resolveAppBreadcrumb, resolveArtifactByAppId, appWindowLabel, retitleWindowLayoutNode, resolveFrameworkLayoutSeed, classifyWindowLayoutChange, flattenPanelTabLeaves, panelTabDefinitionToNode, panelAnchorForGroup, integrateAppSettingsPanelTabsIntoFrameworkBranch, partitionFrameworkHistoryPanelTab, spawnedWindowChromeForKind } from "../../../🧱️elements/🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
-import { studioPanelFocusingSpawned, viewStateWithSpacePanel } from "../../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
+import { studioPanelFocusingSpawned, viewStateWithSpacePanel, type SpawnedAppEntry, type SpacePanelState } from "../../../🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { uiIntentToActionDescriptor, resolveUtilities, resolveUtilityNodes, uiNodeToTreePanelConfig } from "../../../🧱️elements/🛠️ShellHelpers/🌳️tree-windows/🟦️.tsx";
 import { type SelectionUtilityOptions } from "../../../🧱️elements/🛠️ShellHelpers/🪟️window-panes/🪛️utility-bar-options/🟦️.tsx";
 import { synthesizeLocalizedLabel, resolveManifestLabel, shellLabel, shellTabIcon, syncShellLabelLocale, shellTerminologyLabel } from "../../../🧱️elements/🛠️ShellHelpers/🏷️labels/🟦️.tsx";
@@ -33,11 +33,11 @@ import { actionCategoryId, actionCategories, buildActionCategoryTree, type Windo
 import { preserveJsonIdentity, mergeRecordPreservingIdentity, type UiRefreshCache, introductionTargetsWindow, buildActiveUtilityByWindowId, buildUiRefreshRequest, applyUiRefreshResponseToCache } from "../../../🧱️elements/🛠️ShellHelpers/🔄️ui-refresh/🟦️.ts";
 import { AUTO_CHECKIN_IDLE_MS, AUTO_CHECKIN_EDIT_THRESHOLD, AutoCheckinScheduler, canCheckIn, type SyncPillState, computeSyncPillState, syncPillText } from "../../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { bootFrameworkOs } from "../../../🧱️elements/🐚️Shell/🟦️.tsx";
-import { ShellFaultBoundary } from "../../../🧱️elements/🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../../🧱️elements/🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { SetWindowTitleContext, SetWindowIconContext, TutorialRecorder, type FrameworkOsShellProps, FrameworkOsShell, shellActorId, canonicalSurfaceId, reloadRetainsActiveApp, directoryCommandFromAction, mintDirectoryCommandRequestId, retainDirectoryCommandResult, DIRECTORY_COMMAND_RESULT_SLOTS, type DirectoryCommandResultSlotV1, type DirectoryCommandReceiptV1 } from "../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { type PluginDispatchHintV1, type PluginOperationCompletion, type PluginWasmHandle, loadPluginModule, adaptPluginHandle, fetchDescriptorManifest, resolveDescriptorBeforeRuntime, applyUiPatchToRetained, decodeWirePatchOps, serializeCommandIngressForActor, serializePerActor } from "../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { createDemandFrameScheduler } from "@semio-tech/framework/canvas/react-renderer";
-import { createGraphSession, type FlowWasmSession, createFlowSession, type EditorWasmSession, createEditorSession, type RasterWasmSession, createRasterSession, type MapWasmSession, createMapSession, type TerrainWasmSession, createTerrainSession, type Board2dWasmSession, type AppSurfaceSessionFactory, BoardSessionFactoryContext, createWasmModuleLoader, registerWasmBindingsV1, type WasmBindingsV1, resolveAppSurfaceSessionFactory, isFlowGraphScene } from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { createGraphSession, type FlowWasmSession, createFlowSession, type EditorWasmSession, createEditorSession, type RasterWasmSession, createRasterSession, type MapWasmSession, createMapSession, type TerrainWasmSession, createTerrainSession, BoardSessionFactoryContext, registerWasmBindingsV1, type WasmBindingsV1, resolveAppSurfaceSessionFactory, isFlowGraphScene } from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { type UISearchItem, UISearch, type UIFindItem, type UIFindContextValue, UIFindProvider, useUIFind, useUIFindSafe, UIFind } from "../../../🧱️elements/🔎️ShellSearch/🟦️.tsx";
 import { SyncAttachCard } from "../../../🧱️elements/🔄️ShellSync/🟦️.tsx";
 import { sortUtilityNodes, UTILITY_CATEGORIES, UTILITY_CATEGORY_ICON_ID, groupUtilityNodesByCategory, dedupeUtilityNodesById, type UtilityRibbonSegment, buildUtilityRibbonSegments, reconcileUtilityPath, findPressedUtilityLeafId, findUtilityGroupPath, UtilityTree } from "../../../🧱️elements/🎛️UtilityTree/🟦️.tsx";
@@ -188,10 +188,7 @@ export {
   createMapSession,
   type TerrainWasmSession,
   createTerrainSession,
-  type Board2dWasmSession,
-  type AppSurfaceSessionFactory,
   BoardSessionFactoryContext,
-  createWasmModuleLoader,
   registerWasmBindingsV1,
   type WasmBindingsV1,
   resolveAppSurfaceSessionFactory,

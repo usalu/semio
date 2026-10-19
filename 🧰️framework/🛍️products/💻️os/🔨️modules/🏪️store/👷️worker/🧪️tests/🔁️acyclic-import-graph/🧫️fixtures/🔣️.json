@@ -1,0 +1,9 @@
+{
+  "cases": [
+    { "id": "value-only-pair", "files": { "a.ts": "import { b } from \"./b.ts\";\nexport const a = b;\n", "b.ts": "import { a } from \"./a.ts\";\nexport const b = a;\n" }, "cycles": [["a.ts", "b.ts"]] },
+    { "id": "type-only-back-edge", "files": { "state.ts": "import type { Owner } from \"./owner.ts\";\nexport type State = { owner: Owner | null };\n", "owner.ts": "import type { State } from \"./state.ts\";\nexport class Owner { constructor(readonly state: State) {} }\n" }, "cycles": [["owner.ts", "state.ts"]] },
+    { "id": "slot-augmentation-is-acyclic", "files": { "state.ts": "export interface Slots {}\nexport type State = { owner: Slots[\"owner\"] | null };\n", "owner.ts": "import type { State } from \"./state.ts\";\ndeclare module \"./state.ts\" { interface Slots { owner: Owner } }\nexport class Owner { constructor(readonly state: State) {} }\n" }, "cycles": [] },
+    { "id": "triangle-with-dynamic-edge", "files": { "a.ts": "import \"./b.ts\";\n", "b.ts": "import \"./c.ts\";\n", "c.ts": "export const load = () => import(\"./a.ts\");\n" }, "cycles": [["a.ts", "b.ts", "c.ts"]] },
+    { "id": "diamond-without-cycle", "files": { "top.ts": "import \"./left.ts\";\nimport \"./right.ts\";\n", "left.ts": "import \"./base.ts\";\n", "right.ts": "import \"./base.ts\";\n", "base.ts": "export const base = 1;\n" }, "cycles": [] }
+  ]
+}

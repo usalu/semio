@@ -1,29 +1,14 @@
-import {frameworkOsEngineDeliveriesV1,frameworkOsEnginePackageNameV1,frameworkOsEngineFacetV1} from "./📥️artifacts/🕸️engines/🟦️.ts";
-import {managedWasmPackagesVitePluginV1} from "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
-import {flowBrowserDeliveryV1} from "../../../../📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
-import {runtimeAssetDeliveries} from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {frameworkOsViteArtifactPathsV1} from "./📥️artifacts/🟦️.ts";
-import { canonicalWasmBuildVitePlugin } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
-import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { viteCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
+import type { ShellBrand } from "@semio-tech/framework";
+import type { OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 import type { AssetDeliveryProviderV1, AssetDeliveryDeclarationV1 } from "../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
-import type { ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly (Omit<PlaygroundEntry,"assets"> & { readonly assets: readonly AssetDeliveryDeclarationV1[] })[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined };
-import { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { BUILD_BUDGET_MS as _semioProcessGraphAnchor } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
-import type { ShellBrand } from "@semio-tech/framework";
-import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1, type ModuleDirectory } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
-import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
+import { readGeneratedCatalogProjection as _semioCatalogGraphAnchor } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { semioLocalHubSessionVitePlugin, semioDescriptorRouteGuardVitePlugin, semioServiceWorkerScopeVitePlugin } from "../../🔌️vite-plugins/🟦️.ts";
 import { devStreamMuxServer } from "../../🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts";
 import { semioProductionTestBoundaryVitePlugin } from "../../🔌️vite-plugins/🚧️production-test-boundary/🟦️.ts";
@@ -33,34 +18,24 @@ import { semioBlobVitePlugin } from "../../🔌️vite-plugins/🫧️blob-vite-
 import { semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
 import { semioAgentCredentialInstallVitePlugin } from "../../🔌️vite-plugins/🔐️agent-credential-install/🟦️.ts";
-import { packageAssetDeliveries } from "../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📦️package-assets/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog as _semioPlaygroundGraphAnchor } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
 
-import { developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../♻️activation/🟦️.ts";
-import { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../🚚️distribution/🔌️components/🟦️.ts";
-import { DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName } from "../../🚚️distribution/🟦️.ts";
+export type FrameworkOsDevBuildInventoryV1 = { readonly plugins: readonly DeployedRegistryEntryV1[]; readonly extensions: readonly DeployedRegistryEntryV1[]; readonly playgrounds: readonly (Omit<PlaygroundEntry,"assets"> & { readonly assets: readonly AssetDeliveryDeclarationV1[] })[]; readonly moduleDirectories: readonly ModuleDirectory[]; readonly assetProviders: readonly AssetDeliveryProviderV1[]; readonly defaultVariant?: string;readonly browserHost?:()=>Readonly<{moduleRoot:string;activationRoot:string;extensionsRoot:string}>|undefined };
+
+/** 📦️ Config-shaped graph: the heavy build owners load once, at config-resolve time, through one opaque dynamic import (esbuild does not follow a computed specifier),
+ * so Vite's native config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
+const loadBuildOwners = (): Promise<typeof import("./🏭️build-owners/🟦️.ts")> => import(new URL("./🏭️build-owners/🟦️.ts", import.meta.url).href);
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const playDir = path.resolve(configDir, "../..");
 const repoRoot = path.resolve(playDir, "../../../../..");
 /** 🏗️ Builds a neutral shell using entry points and brands supplied by its owner. */
 export function createFrameworkOsDevConfig(options: { readonly inventory: FrameworkOsDevBuildInventoryV1; readonly brands: readonly ShellBrand[]; readonly browserEntry: string;readonly browserSessionFactories:readonly Readonly<{module:string;engine:string}>[] }) {
-const sourceEngineFacet=frameworkOsEngineFacetV1(options.browserSessionFactories);
-return defineOwnedBuildConfigFactory(async ({ command, mode }): Promise<OwnedBuildConfig> => {
+return async ({ command, mode }: { readonly command: "build" | "serve"; readonly mode: string }): Promise<OwnedBuildConfig> => {
 const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = options.inventory;
-
-/** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
- * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
-const { playgroundFlowWasmDevStubPlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs', '🟦️.ts'].join("/"));
-const { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host', '🟦️.ts'].join("/"));
-const { semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html', '🟦️.ts'].join("/"));
-const { semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
-const { semioAssetsVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets', '🟦️.ts'].join("/"));
-const { semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve', '🟦️.ts'].join("/"));
-const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
-const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
+const { frameworkOsEngineDeliveriesV1, frameworkOsEnginePackageNameV1, frameworkOsEngineFacetV1, frameworkOsViteArtifactPathsV1, managedWasmPackagesVitePluginV1, flowBrowserDeliveryV1, runtimeAssetDeliveries, repositoryCachePartitionRootDataV1, canonicalWasmBuildVitePlugin, builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt, buildModePolicy, readBuildMode, viteCacheDirectory, createAssetBuildPluginsV1, resolveAssetDeliveryModeV1, requirePlaygroundVariant, resolveShellBrandById, uiReactBuildPlugin, uiTailwindBuildPlugins, PREVIEW2_VENDOR_RELATIVE, packageAssetDeliveries, productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents, DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin, semioExtensionStoreVitePlugin } = await loadBuildOwners();
+const sourceEngineFacet=frameworkOsEngineFacetV1(options.browserSessionFactories);
 void _semioPlaygroundGraphAnchor;
-void _semioProcessGraphAnchor;
+void _semioCatalogGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
@@ -147,7 +122,7 @@ return {
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
-    ...semioViteBuild(undefined, readBuildMode(mode)),
+    ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))),
     outDir: path.join(playDir, DISTRIBUTION_LAYOUT.directory, buildMode),
     assetsDir: DISTRIBUTION_LAYOUT.bundles,
     emptyOutDir: false,
@@ -164,7 +139,7 @@ return {
       { find: /^@semio-tech\/assets$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
       { find: /^@semio-tech\/ui-styling$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
       { find: /^@semio-tech\/canvas-react-renderer$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework-renderer-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework-renderer-wgpu$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📚️library/🟦️.ts") },
       { find: /^@semio-tech\/framework$/u, replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
@@ -277,7 +252,7 @@ return {
     "import.meta.env.VITE_S_DATA_DIR": JSON.stringify(process.env.S_DATA_DIR ?? ""),
   },
 };
-});
+};
 
 }
 

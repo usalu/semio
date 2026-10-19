@@ -10,7 +10,7 @@ use super::*;
 /// off serde together.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 pub struct Tree {
     pub neurons: Vec<Neuron>,
     pub synapses: Vec<Synapse>,
@@ -19,13 +19,13 @@ pub struct Tree {
 /// 🔵️ Neuron instance bound to a kind. `serde` is TEST-ONLY — see `Tree`'s docstring above.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 pub struct Neuron {
     pub id: String,
     pub kind: String,
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     pub params: Dictionary,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
     pub tree: Option<Box<Tree>>,
 }
 
@@ -64,15 +64,15 @@ fn default_to_port() -> String {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct Synapse {
     pub id: String,
     pub from: String,
     pub to: String,
-    #[cfg_attr(test, serde(default = "default_from_port"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default = "default_from_port"))]
     pub from_port: String,
-    #[cfg_attr(test, serde(default = "default_to_port"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default = "default_to_port"))]
     pub to_port: String,
 }
 

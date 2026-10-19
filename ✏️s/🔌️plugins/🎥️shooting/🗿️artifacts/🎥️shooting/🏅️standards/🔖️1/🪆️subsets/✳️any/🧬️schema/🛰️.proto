@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.shooting.shooting.artifact;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Shooting artifact schema — every field with its state class.
 
@@ -20,7 +20,7 @@ message ShootingArtifact {
   // @state artifact
   string active_asset_id = 7;
   // @state artifact
-  optional semio.os.store.ArtifactChild emblem = 8;
+  optional semio.framework.schema.artifact_child.ArtifactChild emblem = 8;
 }
 
 message ShootingCamera {

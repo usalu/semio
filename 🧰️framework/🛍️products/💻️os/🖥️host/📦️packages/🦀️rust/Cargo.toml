@@ -39,7 +39,7 @@ semio-framework-os-host-media-raster = { path = "../../🖼️media-export-raste
 semio-framework-os-host-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
 semio-framework-os-host-space = { path = "../../../🔨️modules/🪐️space/📦️packages/🦀️rust" }
 semio-framework-os-host-workflow = { path = "../../🔀️workflow/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 # 🚪️ `semio-framework-3d` dependency REMOVED (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS
 # wave IO1): the only references to it in this crate were `register_solid_exporter`/`register_solid_importer`
 # and their supporting registry (`//#region SolidMediaExport`, `🖥️host/🦀️.rs`), deleted this same

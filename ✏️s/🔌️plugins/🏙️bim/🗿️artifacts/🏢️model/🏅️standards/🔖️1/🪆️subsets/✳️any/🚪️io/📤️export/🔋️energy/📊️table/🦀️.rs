@@ -4,9 +4,9 @@
 //! 📎 ../../🧾️json/🦀️.rs
 
 use crate::standards::v1::subsets::any::io::export::energy::build::selection;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{totals_of, Boundary, Climate, EnergyScope, EnergyTotals, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{totals_of, Boundary, Climate, EnergyScope, EnergyTotals, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🧾️ The area and heat loss `sum(U * A)` of the surfaces of one space that share a kind, a boundary, a neighbour and a sector.

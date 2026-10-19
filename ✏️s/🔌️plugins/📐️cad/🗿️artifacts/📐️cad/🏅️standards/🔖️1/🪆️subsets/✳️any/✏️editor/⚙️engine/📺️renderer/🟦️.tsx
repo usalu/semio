@@ -55,6 +55,7 @@ import {
   replShouldRepeatInteractionOnSpace,
   replUserFacingSuggestionDetail
 } from "./🧾️repl-model/🟦️.tsx";
+import type { RendererTestDependencies } from "./🎒️test-dependencies/🟦️.ts";
 
 export {
   bindScenePreviewKernel,
@@ -186,103 +187,6 @@ export type { SpatialComputeMode } from "../🗿️artifact/📨️interaction-m
 // #region 🧪️Tests
 const __cadRendererTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __cadRendererTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
-
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx`. */
-export type RendererTestDependencies = {
-  readonly CAD_WORLD_FORWARD: typeof CAD_WORLD_FORWARD;
-  readonly CAD_WORLD_UP: typeof CAD_WORLD_UP;
-  readonly COMMITTED_MESH_FACE_OPACITY: typeof COMMITTED_MESH_FACE_OPACITY;
-  readonly Model: typeof Model;
-  readonly PreviewItem: typeof PreviewItem;
-  readonly SpatialPickTargetNode: typeof SpatialPickTargetNode;
-  readonly THREE: typeof THREE;
-  readonly TessellatedCommitMesh: typeof TessellatedCommitMesh;
-  readonly WINDOW_SEARCH_USER: typeof WINDOW_SEARCH_USER;
-  readonly __cadRendererTestKernel: typeof __cadRendererTestKernel;
-  readonly __cadRendererTestRuntime: typeof __cadRendererTestRuntime;
-  readonly applyCadWorldCoordinateSystem: typeof applyCadWorldCoordinateSystem;
-  readonly applyModelDiff: typeof applyModelDiff;
-  readonly buildGeometryObjectIndex: typeof buildGeometryObjectIndex;
-  readonly buildInteractionReplEngagement: typeof buildInteractionReplEngagement;
-  readonly buildInteractionReplSearch: typeof buildInteractionReplSearch;
-  readonly buildPlanarFaceMeshTransfer: typeof buildPlanarFaceMeshTransfer;
-  readonly canvasHoverKeyForSelectionTarget: typeof canvasHoverKeyForSelectionTarget;
-  readonly collectGeometryEdgeSegments: typeof collectGeometryEdgeSegments;
-  readonly createSolidTypologyStyleResolver: typeof createSolidTypologyStyleResolver;
-  readonly createSpatialPickEvent: typeof createSpatialPickEvent;
-  readonly createSpatialPickTargets: typeof createSpatialPickTargets;
-  readonly createTypologyStyledMaterial: typeof createTypologyStyledMaterial;
-  readonly defaultInteractionReplChromeState: typeof defaultInteractionReplChromeState;
-  readonly defaultInteractionSpatialViewTheme: typeof defaultInteractionSpatialViewTheme;
-  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
-  readonly defaultSpatialPrimitiveToggles: typeof defaultSpatialPrimitiveToggles;
-  readonly defaultSpatialTypologyTogglesForModelDefinition: typeof defaultSpatialTypologyTogglesForModelDefinition;
-  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
-  readonly ensureTypologyObjectFromCreateDiff: typeof ensureTypologyObjectFromCreateDiff;
-  readonly filterCommittedMeshesForModelDefinition: typeof filterCommittedMeshesForModelDefinition;
-  readonly filterFootprintBoxPreviewDisplayItems: typeof filterFootprintBoxPreviewDisplayItems;
-  readonly filterSpatialPickTargets: typeof filterSpatialPickTargets;
-  readonly filterSpatialPickTargetsForActiveView: typeof filterSpatialPickTargetsForActiveView;
-  readonly filterSpatialPickTargetsForEntityFlags: typeof filterSpatialPickTargetsForEntityFlags;
-  readonly filterSpatialPickTargetsForPrimitiveToggles: typeof filterSpatialPickTargetsForPrimitiveToggles;
-  readonly filterSpatialPickTargetsForTypologyToggles: typeof filterSpatialPickTargetsForTypologyToggles;
-  readonly geometryBuckets: typeof geometryBuckets;
-  readonly geometryEntityNurbsPoles: typeof geometryEntityNurbsPoles;
-  readonly geometryEntityWireSegments: typeof geometryEntityWireSegments;
-  readonly historyEntryArchivesBoxFootprint: typeof historyEntryArchivesBoxFootprint;
-  readonly interactionSpatialGroundPickPlaneEnabled: typeof interactionSpatialGroundPickPlaneEnabled;
-  readonly isRenderableMeshTransfer: typeof isRenderableMeshTransfer;
-  readonly kernelGeometry: typeof kernelGeometry;
-  readonly listFactoryFaceMeshesForModelDefinition: typeof listFactoryFaceMeshesForModelDefinition;
-  readonly listStatDefinitionsForModelDefinition: typeof listStatDefinitionsForModelDefinition;
-  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
-  readonly mergeInteractionSpatial: typeof mergeInteractionSpatial;
-  readonly modelDefinitionPickTargetKinds: typeof modelDefinitionPickTargetKinds;
-  readonly modelDefinitionTypologyIds: typeof modelDefinitionTypologyIds;
-  readonly nurbsPolesFromEdge: typeof nurbsPolesFromEdge;
-  readonly pinnedPickTargetKeys: typeof pinnedPickTargetKeys;
-  readonly preciseSpatialKernelMath: typeof preciseSpatialKernelMath;
-  readonly projectRayToVerticalZLine: typeof projectRayToVerticalZLine;
-  readonly projectRayToYzPlaneAtX: typeof projectRayToYzPlaneAtX;
-  readonly pruneSelectionTargetsForEntityFlags: typeof pruneSelectionTargetsForEntityFlags;
-  readonly reactHostPort: typeof reactHostPort;
-  readonly replDisplayedSelectionTargets: typeof replDisplayedSelectionTargets;
-  readonly replFilterSuggestions: typeof replFilterSuggestions;
-  readonly replHostGeometryPickingEnabled: typeof replHostGeometryPickingEnabled;
-  readonly replInteractionIdOnSpace: typeof replInteractionIdOnSpace;
-  readonly replIsQueryTypingTarget: typeof replIsQueryTypingTarget;
-  readonly replMergeSelectionPickInView: typeof replMergeSelectionPickInView;
-  readonly replNormalizeActionText: typeof replNormalizeActionText;
-  readonly replRendererSelectionTargets: typeof replRendererSelectionTargets;
-  readonly replShouldRepeatInteractionOnSpace: typeof replShouldRepeatInteractionOnSpace;
-  readonly replUserFacingSuggestionDetail: typeof replUserFacingSuggestionDetail;
-  readonly resetSpatialSceneColorCache: typeof resetSpatialSceneColorCache;
-  readonly resolveCommittedMeshMaterialProps: typeof resolveCommittedMeshMaterialProps;
-  readonly resolveSpatialEntityFlags: typeof resolveSpatialEntityFlags;
-  readonly resolveSpatialPickTargetsToRender: typeof resolveSpatialPickTargetsToRender;
-  readonly resolveSpatialSceneVisibility: typeof resolveSpatialSceneVisibility;
-  readonly resolveTypologyStyle: typeof resolveTypologyStyle;
-  readonly revealedObjectIdsFromPickKeys: typeof revealedObjectIdsFromPickKeys;
-  readonly solidRef: typeof solidRef;
-  readonly spatialAutoFitShouldRun: typeof spatialAutoFitShouldRun;
-  readonly spatialHoverKeyAliases: typeof spatialHoverKeyAliases;
-  readonly spatialHoverKeysMatch: typeof spatialHoverKeysMatch;
-  readonly spatialPickKindTogglesFromTypologyFilteredTargets: typeof spatialPickKindTogglesFromTypologyFilteredTargets;
-  readonly spatialPickTargetKey: typeof spatialPickTargetKey;
-  readonly spatialSceneColors: typeof spatialSceneColors;
-  readonly spatialSceneKindTogglesForModelDefinition: typeof spatialSceneKindTogglesForModelDefinition;
-  readonly spatialSelectionTarget: typeof spatialSelectionTarget;
-  readonly spatialToggleCheckboxState: typeof spatialToggleCheckboxState;
-  readonly spatialToggleGroupFill: typeof spatialToggleGroupFill;
-  readonly spatialToggleGroupState: typeof spatialToggleGroupState;
-  readonly spatialTypologyToggleLabel: typeof spatialTypologyToggleLabel;
-  readonly statDefinitionAppliesToScope: typeof statDefinitionAppliesToScope;
-  readonly transformGumballMatrixDiff: typeof transformGumballMatrixDiff;
-  readonly typologyStyleCacheKey: typeof typologyStyleCacheKey;
-  readonly typologyStyleToMaterialProps: typeof typologyStyleToMaterialProps;
-  readonly uiDataLabel: typeof uiDataLabel;
-  readonly visibleSolidRefsForModelDefinition: typeof visibleSolidRefsForModelDefinition;
-};
 
 if (import.meta.vitest) {
   const testDependencies: RendererTestDependencies = { CAD_WORLD_FORWARD, CAD_WORLD_UP, COMMITTED_MESH_FACE_OPACITY, Model, PreviewItem, SpatialPickTargetNode, THREE, TessellatedCommitMesh, WINDOW_SEARCH_USER, __cadRendererTestKernel, __cadRendererTestRuntime, applyCadWorldCoordinateSystem, applyModelDiff, buildGeometryObjectIndex, buildInteractionReplEngagement, buildInteractionReplSearch, buildPlanarFaceMeshTransfer, canvasHoverKeyForSelectionTarget, collectGeometryEdgeSegments, createSolidTypologyStyleResolver, createSpatialPickEvent, createSpatialPickTargets, createTypologyStyledMaterial, defaultInteractionReplChromeState, defaultInteractionSpatialViewTheme, defaultModelDefinitionId, defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition, emptyMeshTransfer, ensureTypologyObjectFromCreateDiff, filterCommittedMeshesForModelDefinition, filterFootprintBoxPreviewDisplayItems, filterSpatialPickTargets, filterSpatialPickTargetsForActiveView, filterSpatialPickTargetsForEntityFlags, filterSpatialPickTargetsForPrimitiveToggles, filterSpatialPickTargetsForTypologyToggles, geometryBuckets, geometryEntityNurbsPoles, geometryEntityWireSegments, historyEntryArchivesBoxFootprint, interactionSpatialGroundPickPlaneEnabled, isRenderableMeshTransfer, kernelGeometry, listFactoryFaceMeshesForModelDefinition, listStatDefinitionsForModelDefinition, loadSpatialInteraction, mergeInteractionSpatial, modelDefinitionPickTargetKinds, modelDefinitionTypologyIds, nurbsPolesFromEdge, pinnedPickTargetKeys, preciseSpatialKernelMath, projectRayToVerticalZLine, projectRayToYzPlaneAtX, pruneSelectionTargetsForEntityFlags, reactHostPort, replDisplayedSelectionTargets, replFilterSuggestions, replHostGeometryPickingEnabled, replInteractionIdOnSpace, replIsQueryTypingTarget, replMergeSelectionPickInView, replNormalizeActionText, replRendererSelectionTargets, replShouldRepeatInteractionOnSpace, replUserFacingSuggestionDetail, resetSpatialSceneColorCache, resolveCommittedMeshMaterialProps, resolveSpatialEntityFlags, resolveSpatialPickTargetsToRender, resolveSpatialSceneVisibility, resolveTypologyStyle, revealedObjectIdsFromPickKeys, solidRef, spatialAutoFitShouldRun, spatialHoverKeyAliases, spatialHoverKeysMatch, spatialPickKindTogglesFromTypologyFilteredTargets, spatialPickTargetKey, spatialSceneColors, spatialSceneKindTogglesForModelDefinition, spatialSelectionTarget, spatialToggleCheckboxState, spatialToggleGroupFill, spatialToggleGroupState, spatialTypologyToggleLabel, statDefinitionAppliesToScope, transformGumballMatrixDiff, typologyStyleCacheKey, typologyStyleToMaterialProps, uiDataLabel, visibleSolidRefsForModelDefinition };

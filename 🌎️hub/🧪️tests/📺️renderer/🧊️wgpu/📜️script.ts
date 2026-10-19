@@ -3,7 +3,7 @@ import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "..
 import {scriptCompilerAdmissionControlV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {type ResourceLeaseControl} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
-import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {configuredExactCargoLawPolicyV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { spawnSync } from "node:child_process";
@@ -13,15 +13,13 @@ import { join } from "node:path";
 import { runOwnedCommand } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readProcessOwnerContextV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { packageTestBudgetMs } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withBuiltLocalHubHostV1,withLocalHubHostTaskV1,startLocalHub,waitForReadiness } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { runHubCollaborationCli } from "./🤝️collaboration/🟦️.ts";
-import { nativeRuntimeDirectory } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🟦️.ts";
+import { nativeRuntimeDirectory } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/⌨️native-entrypoint/📦️modules/🟦️.ts";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const crateName = "semio-framework-os-renderer-wgpu";
 /** 🔑️ One hub principal a live law signs in as, and the environment prefix that names it
  * (`<prefix>_EMAIL`, `<prefix>_PASSWORD`). */
@@ -52,7 +50,7 @@ function stageNativeRuntime(variant: string, profile: "prototype" | "release"): 
 
 /** 🧪️ Runs one ignored live law of this crate, exactly, under the crate's exhaustive budget. */
 async function runLiveLaw(invocation:ScriptInvocation,control:ResourceLeaseControl,law:string,env:Record<string,string>):Promise<void>{
- await runRepositoryExactCargoLaws({invocation,control,preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:configuredExactCargoLawPolicyV1(),cwd:repoRoot,env:{...process.env,...env},groups:[{package:crateName,target:{kind:"lib"},laws:[law]}]});
+ await runAdmittedExactCargoLawsV1({invocation,control,policy:configuredExactCargoLawPolicyV1(),cwd:repoRoot,env:{...process.env,...env},groups:[{package:crateName,target:{kind:"lib"},laws:[law]}]});
 }
 
 /** 🤝️ Drives the wgpu shell's whole hub lane against a live hub through its own native

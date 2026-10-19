@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1, runRepositoryCargoLintV1 as runCargoLintV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoLintV1 as runCargoLintV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📜️ `@semio-tech/framework-raster` — the one semio offscreen-rasterization crate: cargo test and clippy gates. */
 

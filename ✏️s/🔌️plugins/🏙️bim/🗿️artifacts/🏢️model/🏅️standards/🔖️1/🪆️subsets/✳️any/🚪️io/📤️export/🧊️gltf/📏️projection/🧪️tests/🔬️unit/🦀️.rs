@@ -1,14 +1,13 @@
-use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::gltf::projection::*;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection::{project, through};
 use crate::standards::v1::subsets::any::io::export::gltf::scene::y_up;
-use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::{house, read};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 
-fn build(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> (GltfModel, Vec<String>) {
-    inference::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
+fn build(snapshot: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> (GltfModel, Vec<String>) {
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
 }
 
 #[test]
@@ -59,7 +58,7 @@ fn through_applies_the_rotation_before_the_translation() {
 
 #[test]
 fn an_empty_scene_reports_zero_bounds() {
-    let report = project(&build(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default()).0);
+    let report = project(&build(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default()).0);
     assert_eq!((report.nodes, report.triangles, report.min, report.max), (0, 0, [0.0; 3], [0.0; 3]));
 }
 

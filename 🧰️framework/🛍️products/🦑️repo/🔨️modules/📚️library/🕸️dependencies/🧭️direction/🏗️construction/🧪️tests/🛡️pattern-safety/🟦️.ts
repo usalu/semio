@@ -7,7 +7,7 @@ import type {DependencyPolicyTaxonomy} from "../../../🚀️bootstrap/🟦️.t
 import fixture from "./🧫️fixtures/🔣️.json";
 
 const safeRegex=createRequire(import.meta.url)("safe-regex") as (expression:string)=>boolean;
-const taxonomy=JSON.parse(readFileSync(new URL("../../../../../🔣️taxonomy.json",import.meta.url),"utf8")) as DependencyPolicyTaxonomy&{forbiddenPathSegments:readonly string[]};
+const taxonomy=JSON.parse(readFileSync(new URL("../../../../../🔣️taxonomy.json",import.meta.url),"utf8")) as DependencyPolicyTaxonomy&{forbiddenPathSegments:readonly string[];bannedNameStems:readonly string[];bannedNameStemExemptions:{subsetDirectories:readonly string[]};subsetsDirName:string};
 const packages=fixture.owners.map(row=>({...row,...authoredPackageExportAuthority(row.owner,{exports:{".":"./🟦️.ts"}})}));
 const policy=buildDependencyDirectionPolicy({taxonomy,plugins:[],workspacePackages:packages,nodeBuiltins:builtinModules});
 const matches=(patterns:string|readonly string[]|undefined,path:string):boolean=>typeof patterns==="string"?new RegExp(patterns,"u").test(path):(patterns??[]).some(pattern=>new RegExp(pattern,"u").test(path));

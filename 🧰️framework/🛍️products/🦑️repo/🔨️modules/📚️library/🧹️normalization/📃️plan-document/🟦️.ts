@@ -1,4 +1,4 @@
-import { type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { type UnknownRecord } from "@semio-tech/schema-validator-ts";
 import { normalizeRelative, splitLeadingEmoji } from "../🛣️path/🟦️.ts";
 import { sha256 } from "../📁️input/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";

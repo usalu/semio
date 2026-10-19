@@ -1,4 +1,4 @@
-//! 🔀️ Routed IO runs and SQLite snapshot controls under original native authorities, with the shipped-fleet owner law.
+//! 🔀️ Routed IO runs and SQLite snapshot controls under original native authorities.
 
 use super::{NATIVE_MAXIMUM_BYTES, original_grant};
 use semio_framework_os_kernel::io::io_mechanism::{IoRunControl, io_run_with_snapshot_control};
@@ -7,9 +7,6 @@ use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSna
 use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::{ErasedSnapshotRetirement as _, NativeDecodeControl, NativeEncodeControl};
-
-/// 🚢️ The language-agnostic shipped-fleet SQLite owner law (authored natural texts and exact domain rows), owned by stdio and shared with its TypeScript twin, so that a composition test reads it through this crate and never through a stdio fixture path.
-pub const SHIPPED_FLEET_SQLITE_OWNERS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json");
 
 /// 🗄️ Runs `operation` under a SQLite snapshot control whose caller installed the original retirement recipient, then closes it.
 pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, operation: impl FnOnce(&mut SqliteSnapshotControl<'_>) -> T) -> T {

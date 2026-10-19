@@ -695,6 +695,52 @@ impl RepoContext for RecordingContext {
         }
     }
 
+    fn fix(&self, scope: Option<&str>) -> Result<FixResult, ContextError> {
+        self.record("fix", Json::Array(vec![scope.map_or(Json::Null, |text| Json::String(text.to_string()))]));
+        let mut records = self.records.borrow_mut();
+        let statutes = records.statutes.clone();
+        let Some(result) = records.analyze.as_mut() else { return Ok(FixResult { fixed: 0, remaining: 0, breachs: Some(Vec::new()) }) };
+        let in_scope = |breach: &Breach| scope.is_none_or(|prefix| breach.scope.starts_with(prefix));
+        let mut kept = Vec::new();
+        let mut remaining = Vec::new();
+        let mut fixed = 0i64;
+        let mut priorities = PriorityCount::default();
+        let mut autofixable = 0i64;
+        for breach in result.breachs.take().unwrap_or_default() {
+            let mut meta = statute_meta_of(&breach.kind, &statutes);
+            if let Some(priority) = breach.lint_priority {
+                meta.priority = priority;
+            }
+            if let Some(flag) = breach.lint_autofixable {
+                meta.autofixable = flag;
+            }
+            if in_scope(&breach) && meta.autofixable {
+                fixed += 1;
+                continue;
+            }
+            match meta.priority {
+                BreachPriority::High => priorities.high += 1,
+                BreachPriority::Medium => priorities.medium += 1,
+                BreachPriority::Low => priorities.low += 1,
+            }
+            if meta.autofixable {
+                autofixable += 1;
+            }
+            if in_scope(&breach) {
+                remaining.push(breach.clone());
+            }
+            kept.push(breach);
+        }
+        let total = kept.len() as i64;
+        result.breachs = Some(kept);
+        if let Some(metrics) = result.metrics.as_mut() {
+            metrics.total = total;
+            metrics.autofixable = autofixable;
+            metrics.by_priority = Some(priorities);
+        }
+        Ok(FixResult { fixed, remaining: remaining.len() as i64, breachs: Some(remaining) })
+    }
+
     fn sync_management(&self) -> Result<bool, ContextError> {
         self.record("sync.management", Json::Null);
         Ok(true)

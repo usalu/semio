@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/board-parsing` entry: explicit re-exports of the source module that owns each member. */
+export { board2dCameraActionArgs, board2dGranularityById, board2dHoverActionArgs, board2dStatusJson, board2dSuggestionMenuItems, board2dSuggestionMenuOwnsWindow, latestBoard2dHoverId, parseBoard2dAreaBrushSize, parseBoard2dSuggestionMenu, parseBoard2dTransformFlags, parseBoardCatalogueDragPayload } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🔬️board-parsing/🟦️.ts";
+export type { Board2dStatus, Board2dSuggestionCandidate, Board2dSuggestionMenu } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🔬️board-parsing/🟦️.ts";

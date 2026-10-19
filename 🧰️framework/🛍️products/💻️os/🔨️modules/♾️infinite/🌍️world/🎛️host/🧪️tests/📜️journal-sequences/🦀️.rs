@@ -8,7 +8,10 @@ use semio_framework_os_infinite_world_scene::TerrainMeshOracleData;
 use semio_framework_os_infinite_world_bridge::world_navigation_snapshot;
 use semio_framework_os_infinite_world_interaction::{enqueue_world3d_event, store_mesh, world3d_hover_clear_is_owed, world3d_hover_is_published, world3d_interaction_front_generation, world3d_pointer_move_folds};
 use semio_framework_os_infinite_world_host::{step_world3d_interaction, World3dState};
-use ui_wgpu::wgpu::{ActionDescriptor, CameraProjection3d, Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, Rect, SceneDraw3d};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{CameraProjection3d, Instance3d, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneDraw3d};
+use semio_framework_ui_wgpu_input::PointerModifiers;
+use semio_framework_ui_theme::geometry::Rect;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -22,7 +25,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
     Box::leak(joined.into_boxed_str())
 }
 
-pub(crate) fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -58,7 +61,7 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         colors: (data.colors.len() / 4) as u32,
     surface_uvs:[0;4],tangents:0,};
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
     let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
     assert!(progress.fits(grant));
     allocate_oracle_mesh(token);
@@ -84,10 +87,10 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
     }
     for value in data.uvs.as_chunks::<2>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
     }
     for value in data.colors.as_chunks::<4>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
     }
     mesh3d_seal(token).expect("oracle mesh publication")
 }
@@ -112,7 +115,7 @@ pub(crate) fn with_world_step_context<T>(fuel: u64, step: impl FnOnce(&mut semio
 
 fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
     loop {
-        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
         let step=mesh3d_allocate_step(token,grant).unwrap();
         assert!(step.progress.fits(grant));
         if step.complete{break}
@@ -165,7 +168,7 @@ fn journey_state() -> World3dState {
 /// 🏁️ Drives every queued intent — and the camera settle the drained queue owes — to idle, answering
 /// with the ORDERED action ids published along the way.
 fn journal(state: &mut World3dState) -> Vec<String> {
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut published = Vec::new();
     let mut turns = 0;
     while let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) {

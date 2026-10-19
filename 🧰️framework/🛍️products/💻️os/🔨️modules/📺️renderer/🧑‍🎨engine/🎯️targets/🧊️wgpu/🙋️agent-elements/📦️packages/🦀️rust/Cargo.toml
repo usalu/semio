@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-doors = { path = "../../../🛂️doors/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-media-slots = { path = "../../../🎥️media-slots/📦️packages/🦀️rust" }

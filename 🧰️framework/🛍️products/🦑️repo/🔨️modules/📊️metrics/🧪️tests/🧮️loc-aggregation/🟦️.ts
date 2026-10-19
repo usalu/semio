@@ -7,7 +7,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { countUnifiedLocForFile } from "../../../📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts";
+import { countUnifiedLocForFile } from "@semio-tech/repo-lib/inventory";
 import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 

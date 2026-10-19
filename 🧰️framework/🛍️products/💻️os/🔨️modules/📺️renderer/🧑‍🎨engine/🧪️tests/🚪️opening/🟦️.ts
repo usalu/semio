@@ -10,8 +10,8 @@ import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDoc
 import openPlanFixture from "../../../../../🧪️tests/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🚪️open-artifact/🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
-import { createFrameworkOsHostPortsV1 } from "../../../../🧑‍💻dev/🪝️host-ports/🟦️.ts";
+import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 
 const documentAccess = createFrameworkOsHostPortsV1().documentAccess;
 

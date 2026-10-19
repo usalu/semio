@@ -1,4 +1,4 @@
-import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 /** 🗂️ Names closed graph fact namespaces in the authored fixed partition. */
 export function repositoryBuildGraphDataDirectoryV1(workspace:string,namespace:"build-input-closures"|"build-lock-closures"|"inference"|"admission"):string;
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -37,8 +37,8 @@ export function registerBuildGraphOptionalHandleV1(close:()=>void):void;
 export function buildGraphOptionalRetirementDueV1(usedBytes:number,availableBytes:number):boolean;
 /** 🧹️ Defers optional pressure recovery when original exclusive image custody is unavailable. */
 /** 🚪️ Requests closed optional cache recovery before mandatory graph publication. */
-export function prepareBuildGraphOptionalHeadroomV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<boolean>;
-export function maintainBuildGraphOptionalCachesV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<boolean>;
+export function prepareBuildGraphOptionalHeadroomV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("@semio-tech/process/leases").ResourceLeaseControl,request:Readonly<{minimumAvailableBytes:number}>):Promise<boolean>;
+export function maintainBuildGraphOptionalCachesV1(image:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts").RepositoryCacheStoreV1["image"],control:import("@semio-tech/process/leases").ResourceLeaseControl):Promise<boolean>;
 
 /** 🧭️ Maps all admitted namespace identities into a fixed writer catalog. */
 export function buildGraphWriterResourceV1(workspace:string,kind:"selection"|"dataset",identity:string):string;

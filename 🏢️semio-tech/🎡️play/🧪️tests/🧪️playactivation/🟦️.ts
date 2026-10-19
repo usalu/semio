@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runtimeComponentClosure } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
+import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
@@ -38,7 +38,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const from = (target: string, pattern: RegExp) => project.targets[target].dependsOn.flatMap((entry: string) => pattern.exec(entry)?.[1] ?? []).sort();
       expect(from("activate-prototype", /^@semio-tech\/framework-os-dev:activate-(.+)-react-prototype$/)).toEqual(lanes);
       expect(from("prepare-prototype", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-prototype$/)).toEqual(lanes);
-      expect(from("catalog-release", /^@semio-tech\/framework-os-dev:prepare-(.+)-react-release$/)).toEqual(lanes);
+      expect(project.targets["catalog-release"]).toBeUndefined();
     });
   });
 

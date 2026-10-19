@@ -2,7 +2,10 @@
 //! wall type, panel override or space finish still names is refused as `mutation.target-referenced`.
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial;
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, Layer, ModelSnapshot}, diff::{Entry, ModelDiff}};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainPanel, Layer};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn layered(layers: &[Layer], id: &str) -> bool {

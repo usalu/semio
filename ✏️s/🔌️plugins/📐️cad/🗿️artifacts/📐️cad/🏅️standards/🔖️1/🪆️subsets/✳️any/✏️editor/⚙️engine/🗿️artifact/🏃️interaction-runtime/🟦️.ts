@@ -703,5 +703,12 @@ export class InteractionRuntime {
 export function createInteractionRuntime(spec: InteractionSpec, opts: InteractionRuntimeOptions): InteractionRuntime {
   return new InteractionRuntime(compileInteraction(spec), opts);
 }
+
+/** ⎋️ Hard-aborts the active interaction session when `capabilities.canCancel`. */
+export function abortActiveInteractionSession(rt: InteractionRuntime): boolean {
+  if (!rt.getSnapshot().capabilities.canCancel) return false;
+  rt.cancel();
+  return true;
+}
 // #endregion 📜️Interaction
 // #endregion 📦️📄️document

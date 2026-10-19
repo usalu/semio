@@ -1,6 +1,7 @@
 //! 🧗️ `create-stair` payload. Brings a stair run onto a storey; risers and treads are never stored, they are inferred from the storey levels and the top constraint.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Stair}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Stair};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateStair {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateStair
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateStair> + From<crate::standards::v1::subsets::any::schema::mutations::delete_stair::DeleteStair>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateStair> + From<semio_s_artifact_bim_model_mut_any_80::standards::v1::subsets::any::schema::mutations::delete_stair::DeleteStair>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "stair", kind: "create-stair", record: "CreateStair" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

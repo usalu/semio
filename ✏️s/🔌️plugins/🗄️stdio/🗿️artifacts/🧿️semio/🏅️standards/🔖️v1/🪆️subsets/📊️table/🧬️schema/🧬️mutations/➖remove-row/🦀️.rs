@@ -1,6 +1,7 @@
 //! ➖️ `remove-row` — takes one row out of the sequence, addressed by BASE-state index.
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
@@ -11,13 +12,13 @@ pub struct RemoveRow {
     pub index: usize,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for RemoveRow {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for RemoveRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "row", kind: "remove-row", record: "RemovedRow" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

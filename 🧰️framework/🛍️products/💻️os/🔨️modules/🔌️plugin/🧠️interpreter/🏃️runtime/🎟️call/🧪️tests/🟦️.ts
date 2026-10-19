@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
-import { turnJobArgumentsFixtureUrl } from "../../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { turnJobArgumentsFixtureUrl } from "@semio-tech/framework-actor/testing/fixtures";
 /** 🎟️ Core guest calls require actual physical source custody independently from VM authorization. */
 test("owned original guest call borrows actual Core and retains unpaid machine",async()=>{const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{expect(db.query("SELECT ?1+?2 AS vm,?3=0 AS denied").get(1,1,law.copyCuts[0])).toEqual({vm:law.expectedVm,denied:1})}finally{db.close()}const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");for(const name of["begin_original_call_step","advance_original_call_step","take_original_call_result_step","close_original_call_step","validate_context(cx)","OriginalGuestExecutionBudget"])expect(source).toContain(name);expect(source).not.toContain("StepContext::new");expect(source).not.toContain("instantiate_actor(");expect(source).not.toContain("resume_owned_operation_observed");});
 

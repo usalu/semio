@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, scriptInvocationBudget, runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
@@ -34,7 +34,8 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments.length === 1 && ["original-command-control","original-exact-preparation-control","original-default-preparation-control"].includes(segments[0]!)) {
-      const sources = ["🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts"];
+      const sources = ["🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🧪️tests/📥️invocation/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/📥️capture/📥️invocation/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/🟦️.ts", "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🧪️tests/📥️original-control/🟦️.ts", "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📤️fractional/🟦️.ts"];
+      sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧪️tests/🟦️.ts");
       if(segments[0]!=="original-command-control")sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🛠️preparation/🧪️tests/🟦️.ts");
       if(segments[0]==="original-default-preparation-control")sources.push("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧪️tests/📥️original-control/🟦️.ts","🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️stream/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🎛️preparation/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧪️tests/🎛️control/🟦️.ts");
       await runRepositoryCommand(this.invocation,process.execPath,["test",...sources.map(source=>join(this.repoRoot,source)),"--timeout","60000"],this.repoRoot,"repository-"+segments[0],{version:1,maximumElapsedMilliseconds:60000,output:{maximumBytes:67108864,maximumLines:65536}},{env:repoTestArtifactEnvironment(this.repoRoot,segments[0]!)});
@@ -344,8 +345,8 @@ class TestScript extends BundleScript {
     }
     if (segments[0] === "parser-projection") {
       if (segments.length !== 1) throw new Error("Expected test parser-projection");
-      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧪️tests/🎯️ajv-oracle/🟦️.ts");
-      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      const suites = ["🎯️ajv-oracle", "🧩️split-leaves", "🧩️rendered-forms", "🫥️nullable-fields", "🧷️generic-types"].map((suite) => join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧪️tests", suite, "🟦️.ts"));
+      await runRepositoryTestCommand(process.execPath, ["test", ...suites], { cwd: this.repoRoot, budgetMs: 240_000 });
       return;
     }
     if (segments[0] === "package-body-policy") {
@@ -406,6 +407,24 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Expected test crate-tree");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "norm-definition-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test norm-definition-ownership");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️norm-definition-ownership/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "norm-definition-ownership"), budgetMs: 45_000 });
+      return;
+    }
+    if (segments[0] === "cad-presence-retirement") {
+      if (segments.length !== 1) throw new Error("Expected test cad-presence-retirement");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "cad-presence-retirement"), budgetMs: 180_000 });
+      return;
+    }
+    if (segments[0] === "launch-catalog") {
+      if (segments.length !== 1) throw new Error("Expected test launch-catalog");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚀️launch-catalog/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 180_000 });
       return;
     }
     if (segments[0] === "lib-wiring-budget") {

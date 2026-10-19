@@ -1,4 +1,4 @@
-import {componentPackageReceiptSource} from "../../../../🔌️plugin/📥️receipt/🟦️.ts";
+import {componentPackageReceiptSource} from "@semio-tech/framework-plugin/receipt";
 /** 🫀️ The plugin-load liveness accounting: what counts as progress, who it counts for, and why a
  * slow-but-moving load may not be failed as dead.
  *
@@ -9,8 +9,8 @@ import {componentPackageReceiptSource} from "../../../../🔌️plugin/📥️re
  * 30002 ms with no progress for 30000 ms` — an idle window they were never idle in. */
 
 import { describe, expect, it, beforeEach } from "vitest";
-import { fetchDescriptorManifest, fetchPackageDescriptor } from "../../../../../../../🔨️modules/🎠️kernel/🛂️descriptor-admission/🟦️.ts";
-import { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { fetchDescriptorManifest, fetchPackageDescriptor } from "@semio-tech/framework-kernel";
+import { SHARD_LIVENESS_POLICY } from "@semio-tech/framework-actor/liveness";
 import {
   beginPluginLoadV1,
   endPluginLoadV1,

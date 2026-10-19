@@ -28,12 +28,13 @@ pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_fl
 
 /// 🧹️ Releases the existing fixture execution owners through their bounded close authority.
 pub(crate) fn retire_execution_owners() {
-    use semio_framework_plugin::{ExtensionResourceOwner, PluginCloseStep};
+    use semio_framework_plugin::{ExtensionResourceOwner, PluginLifecycleStep};
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut geometry = GEOMETRY_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     if let Some(owner) = geometry.as_mut() {
         owner.begin_close();
         for _ in 0..1_000_000 {
-            if owner.close_step(8, 4096).expect("geometry fixture owner closure") == PluginCloseStep::Complete && owner.terminal_is_empty() { break; }
+            if matches!(owner.close_step(scope.cx()).expect("geometry fixture owner closure"), PluginLifecycleStep::Complete(_)) && owner.terminal_is_empty() { break; }
         }
         assert!(owner.terminal_is_empty(), "geometry fixture owner must retire before release");
         geometry.take();
@@ -42,7 +43,7 @@ pub(crate) fn retire_execution_owners() {
     if let Some(owner) = math.as_mut() {
         owner.begin_close();
         for _ in 0..1_000_000 {
-            if owner.close_step(8, 4096).expect("math fixture owner closure") == PluginCloseStep::Complete && owner.terminal_is_empty() { break; }
+            if matches!(owner.close_step(scope.cx()).expect("math fixture owner closure"), PluginLifecycleStep::Complete(_)) && owner.terminal_is_empty() { break; }
         }
         assert!(owner.terminal_is_empty(), "math fixture owner must retire before release");
         math.take();
@@ -120,11 +121,11 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
 /// routes — they publish the wave they continue into the addressed preview window's transient — so a
 /// fixture that answered them with a viewless meta would be modelling a shell that does not exist and
 /// would fault `targeted window transient capture requires an exact ViewModel roster`.
-pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta) -> SettledExtensionInvocations {
+pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> SettledExtensionInvocations {
     settle_extension_invocations(app, receiver, action_meta, &mut |pending| {
         let outcome = serve(pending);
         outcome
-    })
+    }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
     .await
     .expect("in-process brep extension round trip")
 }
@@ -132,15 +133,15 @@ pub async fn settle<P: PluginApp>(app: &mut P, receiver: u32, action_meta: &Acti
 /// 🏛️ Redispatches one `Effect::DispatchAction` naming an app COMMAND exactly the way
 /// `makeEffectDispatchOne` (`🛠️ShellHelpers/🟦️.tsx`) does: through the typed command channel with the
 /// shell's own live view attached, never the scoped action channel.
-pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), Fault> {
-    use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};
+pub async fn dispatch_effect_command<P: PluginApp>(app: &mut P, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    use semio_framework::manifest::{CommandAddress, CommandOwnerAddress};
     let arguments = match args {
-        Some(semio_framework_value::DslValue::Object(entries)) => entries.iter().cloned().collect(),
-        _ => std::collections::BTreeMap::new(),
+        Some(arguments @ semio_framework_value::DslValue::Object(_)) => Some(arguments.clone()),
+        _ => None,
     };
     let app_id = app.app_id().await.to_string();
-    let invocation = CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() }, arguments };
-    app.handle_command(&invocation, None, action_meta).await.map(|_| ())
+    let address = CommandAddress { owner: CommandOwnerAddress::App { plugin_id: String::new(), app_id }, command_id: command_id.to_string() };
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_command(app, &address, arguments, None, action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map(|_| ()).map_err(|failure| Fault::from(format!("{failure:?}")))
 }
 
 /// 🧾️ What one driven `previewEval` run did: the hops it dispatched (and to which windows), the
@@ -161,7 +162,7 @@ pub struct PreviewRunReceipt {
 /// `PluginApp::handle_action`, every hop the run's port hands the host redispatched as the typed command
 /// the shell sends, every extension invocation answered by `serve`. Stops once nothing is owed, pending
 /// or outstanding and the run rests in a terminal or complete state.
-pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel, initial: &[semio_framework_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>) -> PreviewRunReceipt {
+pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_framework_plugin::ViewModel, initial: &[semio_framework_plugin::Effect], serve: &mut dyn FnMut(&PendingExtensionInvocation) -> Result<Vec<u8>, Fault>, cx: &mut semio_framework_job::StepContext<'_>) -> PreviewRunReceipt {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     use semio_framework_plugin::Effect;
     let action_meta = ActionMeta { view_state: Some(shell_view.clone()), ..meta("local") };
@@ -170,9 +171,9 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
     for _ in 0..100_000 {
         effects.extend(app.pending_effects(Some(shell_view)).await);
         if app.has_pending_typed_operations() {
-            effects.extend(settle_registered_typed_operation(app, action_meta.instance_id).await.expect("the run's driver turns settle").effects);
+            effects.extend(settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("the run's driver turns settle").effects);
         }
-        let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve).await.expect("in-process extension round trip");
+        let settled = settle_extension_invocations(app, action_meta.instance_id, &action_meta, serve, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("in-process extension round trip");
         receipt.answered += settled.answered;
         effects.extend(settled.effects);
         let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut effects)
@@ -189,7 +190,7 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
         for (action, args) in dispatches {
             if semio_framework_plugin::is_tool_run_action_id(&action) {
                 receipt.run_actions.push(action.clone());
-                app.handle_action(&action, args.as_ref(), &action_meta).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
+                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(app, &action, args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} dispatch: {fault:?}"));
                 continue;
             }
             if action == "flowEvalTick" {
@@ -197,8 +198,8 @@ pub async fn drive_preview_run<P: PluginApp>(app: &mut P, shell_view: &semio_fra
                 receipt.hop_windows.push(args.as_ref().and_then(|args| args.get("windowId")).and_then(semio_framework_value::DslValue::as_str).unwrap_or_default().to_string());
             }
             receipt.releases += usize::from(action == "flowEvalRelease");
-            dispatch_effect_command(app, &action, args.as_ref(), &action_meta).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
-            let hop = settle_registered_typed_operation(app, action_meta.instance_id).await.expect("retained publication");
+            dispatch_effect_command(app, &action, args.as_ref(), &action_meta, cx).await.unwrap_or_else(|fault| panic!("the shell redispatches the run's {action} hop: {fault:?}"));
+            let hop = settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("retained publication");
             assert!(!hop.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the run's {action} hop faulted in the retained job ladder: args={args:?}");
             effects.extend(hop.effects);
         }

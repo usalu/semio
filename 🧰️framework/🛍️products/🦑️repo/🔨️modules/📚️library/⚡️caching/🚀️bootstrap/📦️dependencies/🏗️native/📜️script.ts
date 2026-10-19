@@ -12,7 +12,7 @@ import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️ca
 import {repositoryCargoPreparationStorageV1,withRepositoryCargoPreparationV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
-import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
+import { wasmBindgenVersion } from "../../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import {runNativeDependencyToolV1,runPreparedCargoDependencyPairV1,type NativeDependencyToolRunnerV1 } from "../🟦️.ts";
 
 export type DependencyToolRunner=NativeDependencyToolRunnerV1;

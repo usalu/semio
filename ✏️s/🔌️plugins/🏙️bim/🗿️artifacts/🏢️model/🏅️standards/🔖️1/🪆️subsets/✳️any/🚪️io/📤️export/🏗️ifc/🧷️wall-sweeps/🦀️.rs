@@ -3,17 +3,18 @@
 //! `Semio_WallSweep` set with the authored record (host, side, height, inset, material, profile as JSON), so an import merges them back into one sweep; the base quantities of a run are its share of the quantity row.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcmember.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::data::{number};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::number;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 use crate::standards::v1::subsets::any::io::export::ifc::walls::describe;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, rf, text, typed, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity, StoreyRef};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::{runs, section_area, section_of};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of;
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{fraction, WallLayout};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Wall, WallSide, WallSweep};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, int, rf, text, typed, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity, StoreyRef};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::{runs, section_area, section_of};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{fraction, WallLayout};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, WallSide};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Wall, WallSweep};
 use semio_framework_geometry::Point;
 
 /// 🧷️ The property set that records the authored wall sweep on each of its runs.

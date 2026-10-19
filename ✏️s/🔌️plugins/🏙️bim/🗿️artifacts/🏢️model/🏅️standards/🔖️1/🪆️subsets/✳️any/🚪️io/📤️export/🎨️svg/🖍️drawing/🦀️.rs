@@ -2,13 +2,13 @@
 //! primitive a `path` or `text` that names its style class, what it depicts and the model element it belongs to.
 //! 📎 https://www.w3.org/TR/SVG11/struct.html#Groups
 
-use crate::standards::v1::subsets::any::io::export::svg::codec::{attr, element, text, CommonAttrs, SvgElement, TransformOp};
-use crate::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
-use crate::standards::v1::subsets::any::io::export::svg::sheet::{Slot, TITLE_BAND};
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
-use crate::standards::v1::subsets::any::schema::inferences::mep;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanText};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::{attr, element, text};
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, SvgElement, TransformOp};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::{Slot, TITLE_BAND};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanText};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 /// 🔑️ An XML id built from a prefix and a model id: characters outside `[A-Za-z0-9_.-]` become `_`.
 pub fn xml_id(prefix: &str, raw: &str) -> String {
@@ -40,7 +40,7 @@ pub fn tint(model: &ModelSnapshot, element: &str, kind: PlanKind) -> Option<(&'s
         PlanKind::MepAxis | PlanKind::MepDrop | PlanKind::ComponentConnector => "stroke",
         _ => return None,
     };
-    let colour = model.mep_elements.get(element).map(|row| mep::colour(row.system)).or_else(|| model.components.get(element).and_then(|row| row.system).map(mep::colour))?;
+    let colour = model.mep_elements.get(element).map(|row| semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::colour(row.system)).or_else(|| model.components.get(element).and_then(|row| row.system).map(semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::colour))?;
     Some((property, colour))
 }
 

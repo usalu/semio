@@ -15,19 +15,9 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
-                    }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
+                    
                     #[path = "."]
                     pub mod mutations {
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement;
-                        pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry;
-                        pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify;
-                        pub use semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements;
                         #[path = "../../🦀️.rs"]
                         pub mod trim_extend_wall;
                     }

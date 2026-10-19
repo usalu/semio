@@ -34,6 +34,9 @@
     { "id": "extract", "source": "mutation { extract(sourceFile: \"repo/go/main.go\", sourceSection: \"Trailer\", targetFile: \"repo/go/trailer.go\") { path name } }" },
     { "id": "integrate", "source": "mutation { integrate(source: \"repo/go/trailer.go\", targetSection: \"Header\", targetFile: \"repo/go/main.go\") { path name } }" },
     { "id": "sync-management", "source": "mutation { syncManagement }" },
+    { "id": "fix-scope", "source": "mutation { fix(scope: \"repo/go\") { fixed remaining breachs { id priority autofixable } } }" },
+    { "id": "fix-all", "source": "mutation { fix { fixed remaining breachs { id } } }" },
+    { "id": "fix-nothing-left", "source": "mutation { fix { fixed remaining } }" },
     { "id": "goal-delete-via-variables", "source": "mutation Close($id: String!) { goalClose(input: { id: $id, summary: \"closed by variable\" }) { id status summary: id } }", "variables": { "id": "rust-executor" } }
   ]
 }

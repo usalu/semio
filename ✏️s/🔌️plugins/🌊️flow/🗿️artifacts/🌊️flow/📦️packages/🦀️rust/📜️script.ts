@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 /** 📦️ flow flow Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { strict as assert } from "node:assert";
@@ -24,7 +24,7 @@ if (segments[0] === "flow-window-ownership") {
       const { testFlowWindowOwnershipOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🟦️.ts");
       testFlowWindowOwnershipOracle();
       if (segments[1] === "check" || segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
         const mode = segments[1] === "check" ? ["check", "--tests"] : ["test", "--lib", "flow_window_ownership_", "--", "--nocapture"];
         await runCargo([mode[0]!, "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.repoRoot);
       }
@@ -43,7 +43,7 @@ class SourceTestScript extends BundleScript {
 class ChildIdentityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -71,7 +71,7 @@ class ChildIdentityCheckScript extends BundleScript {
 class ChildEditCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [
         {
           package: "semio-s-artifact-flow-flow",
           target: { kind: "lib" },
@@ -187,7 +187,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await this.oracle();
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-s-artifact-flow-flow", target: { kind: "lib" }, laws: ["retained_add_widget_factory_is_exact_child_only_and_legacy_closed", "retained_add_widget_dispatches_one_acknowledged_child_group_and_retires"] }] });
     console.log(`Flow retained addWidget native laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }

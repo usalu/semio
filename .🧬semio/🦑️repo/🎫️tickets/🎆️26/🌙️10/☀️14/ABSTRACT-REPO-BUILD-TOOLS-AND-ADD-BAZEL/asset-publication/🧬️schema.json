@@ -23,8 +23,8 @@
         },
         "facts": {
           "type": "array",
-          "minItems": 7,
-          "maxItems": 7,
+          "minItems": 8,
+          "maxItems": 8,
           "items": {
             "type": "object",
             "required": [
@@ -38,6 +38,7 @@
                   "dependencies",
                   "diagnostics",
                   "graph",
+                  "nx",
                   "products",
                   "rust",
                   "tools",
@@ -330,6 +331,7 @@
             "dependencies",
             "diagnostics",
             "graph",
+            "nx",
             "products",
             "rust",
             "tools",
@@ -390,6 +392,7 @@
               "dependencies",
               "diagnostics",
               "graph",
+              "nx",
               "products",
               "rust",
               "tools",
@@ -717,6 +720,7 @@
             "diagnostics",
             "graph",
             "leases",
+            "nx",
             "products",
             "rust",
             "tools"
@@ -832,6 +836,7 @@
             "diagnostics",
             "graph",
             "leases",
+            "nx",
             "products",
             "rust",
             "tools"
@@ -1233,6 +1238,7 @@
                 "diagnostics",
                 "graph",
                 "leases",
+                "nx",
                 "products",
                 "rust",
                 "tools"

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "bun:test";
 
-import { REFERENCE_IMAGE_DECODED_BYTE_CAPACITY, REFERENCE_IMAGE_READBACK_BYTE_CAPACITY, referenceImageSourceDimensions, referenceImageStripRows, referenceImageTargetSize } from "../../🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts";
+import { REFERENCE_IMAGE_DECODED_BYTE_CAPACITY, REFERENCE_IMAGE_READBACK_BYTE_CAPACITY, referenceImageSourceDimensions, referenceImageStripRows, referenceImageTargetSize } from "@semio-tech/framework-renderer-wgpu/reference-image-decode";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🖼️reference-image-decode/🔣️.json", import.meta.url), "utf8"));
 
 describe("reference image decode ownership", () => {

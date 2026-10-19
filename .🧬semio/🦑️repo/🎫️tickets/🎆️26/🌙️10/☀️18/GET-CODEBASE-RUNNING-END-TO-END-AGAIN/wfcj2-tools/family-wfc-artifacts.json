@@ -1,0 +1,12 @@
+{
+ "name": "wfcj2",
+ "crates": [
+  "semio-s-artifact-wfc-grid2d",
+  "semio-s-artifact-wfc-grid3d",
+  "semio-s-artifact-wfc-bitmap",
+  "semio-s-artifact-wfc-2d",
+  "semio-s-artifact-wfc-3d",
+  "semio-s-plugin-wfc-engine"
+ ],
+ "note": "artifact crates whose test files were ported to a borrowed-ledger step context"
+}

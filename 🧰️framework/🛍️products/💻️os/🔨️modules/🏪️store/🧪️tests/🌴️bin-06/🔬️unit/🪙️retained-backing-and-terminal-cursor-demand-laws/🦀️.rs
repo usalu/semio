@@ -310,8 +310,8 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
     struct TerminalDisposer<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactStoreOwnedDisposer<DemoSnapshot, DemoMutation> for TerminalDisposer<N> {
         fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
-        fn terminal_is_empty(&self, _: &semio_framework_os_store_engine::lifted_store::ArtifactStore<DemoSnapshot, DemoMutation>) -> bool { true }
-        fn demands(&self, _: &semio_framework_os_store_engine::lifted_store::ArtifactStore<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
+        fn terminal_is_empty(&self, _: &dyn semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>) -> bool { true }
+        fn demands(&self, _: &dyn semio_framework_os_store_engine_owners::lifted_store::ArtifactStoreCloseHost<DemoSnapshot, DemoMutation>, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn close_uninstalled_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
         fn uninstalled_demands(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
         fn uninstalled_terminal_is_empty(&self) -> bool { true }

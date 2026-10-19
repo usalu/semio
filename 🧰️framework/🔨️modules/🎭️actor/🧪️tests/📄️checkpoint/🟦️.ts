@@ -7,7 +7,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {readFileSync} from "node:fs";
-import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("actor checkpoint preserves state and progress through paid original descriptor acknowledgement",()=>{
  const fixture=JSON.parse(readFileSync(new URL("./🔣️.json",import.meta.url),"utf8"));
 expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.url))).toBe(false); const grant=new Ajv({strict:true}).compile(grantSchema);for(const value of [fixture.originalGrant,fixture.destinationCloseGrant])expect(grant(value)).toBe(true);

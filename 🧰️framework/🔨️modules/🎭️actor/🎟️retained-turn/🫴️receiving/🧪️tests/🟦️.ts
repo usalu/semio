@@ -5,7 +5,7 @@ import{resolveOriginalTurnInputSource}from"../../🔎️source/🟦️.ts";
 import{test,expect}from"bun:test";import{Database}from"bun:sqlite";
 import fixture from "./🧫️fixtures/🔣️.json";
 import policy from "../../📃️policy/🧪️tests/🧫️fixtures/🔣️.json";
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("original actor issued receipts conserve every axis and authorize only genuine next epochs",()=>{
  const validate=semioSchemaAjvV1().compile(grantSchema);for(const grant of [policy.input.grant,...fixture.remaining])expect(validate(grant)).toBe(true);expect(fixture.epochAuthorizer).toBe("scheduler.mailbox-or-original-continuation.checked-next-epoch");
  const database=new Database(":memory:");try{let grant=policy.input.grant;for(const [index,spent]of fixture.spent.entries()){const remaining=database.query("SELECT ?-? AS maximumItems,?-? AS maximumCopyBytes,?-? AS maximumCapacityBytes,?-? AS maximumReleaseBytes,? AS maximumDepth").get(grant.maximumItems,spent.copiedItems,grant.maximumCopyBytes,spent.copiedBytes,grant.maximumCapacityBytes,spent.retainedCapacityBytes,grant.maximumReleaseBytes,spent.releasedBytes,grant.maximumDepth);expect(remaining).toEqual(fixture.remaining[index]);grant=fixture.remaining[index]!;}expect(database.query("SELECT ?+1 AS epoch").get(fixture.zeroSpend.firstEpoch)).toEqual({epoch:fixture.zeroSpend.secondEpoch});expect(database.query("SELECT ?<>? AS stale").get(fixture.zeroSpend.firstEpoch,fixture.zeroSpend.secondEpoch)).toEqual({stale:1});}finally{database.close();}

@@ -9,7 +9,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { argControl, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
+import { argControl, type ActionArgDef } from "../../../../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
+import { type DialogDefinition } from "../../../../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 import { Slider, Stepper, ToggleGroup, UIDialog, type UIDialogFieldBinding } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";

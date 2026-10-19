@@ -1,8 +1,0 @@
-🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🐕️pet-walk/🧭️cast-and-choices
-🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🐕️pet-walk/🧰️pet-kit
-🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🐕️pet-walk/🪜️mischief-ladder-and-phone
-🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🎒️hall-learner
-🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🎭️abusive-script
-🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/📊️settings-and-measurements
-🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🖥️proctor-process
-🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🚚️transport

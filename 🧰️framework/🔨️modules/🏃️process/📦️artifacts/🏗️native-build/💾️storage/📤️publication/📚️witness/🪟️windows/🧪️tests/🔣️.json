@@ -1297,7 +1297,7 @@
       }
     },
     "expected": {
-      "witnessSha256": "0e6f1670e079dcb43b9626d552f4c0247bb1185eebdd096fd7e3bdcb54a60e82",
+      "witnessSha256": "2061504eae3bc376eeab9101d38126b5637b45f563bf8e597169924bf87e7bf2",
       "windowsSha256": "06f57b8737dbcb5cd3cdbab2c6a7e39f4b99865f0714344c52a79096ff555cea",
       "definitions": [
         "Protocol",
@@ -1374,20 +1374,20 @@
         "ServicePreparationCase": "527337544877867b2627d4f1e51758ee0109e6eb24dbd139f81ea4ac43425cf0",
         "ServicePreparationRequest": "aa54a1c6b2858c0b9bb7b7b62557f004eee5f9660916544962d3d2d71b2d0ae3",
         "PreparedParentWorkerReceipt": "1f0f82347cfc21e4ab5f3779f22c82e198db0aa16ea2cf2b433b06c2dba638a6",
-        "LogicalObservationPolicy": "ac354bc326d70a2625f93978eced89e67718ddc4be13eef65741126931b41eb9",
+        "LogicalObservationPolicy": "244215dccb6924d34f4125651da212011b221481f010b4f1e3fd11eafe7d6d23",
         "LogicalObservationBudget": "54c58db47ffd38efee309a16c9959bd64c53f1e0580cae3140952f9508d46332",
         "LogicalObservationCase": "151b1786bacfa1b568feb56a3fa0bb6f242abb6445ec5ce7729a3734b301828d",
         "LogicalObservationCases": "f23e6fcc3854c233d24716b39f64d84f563b5e3bb84328d28fba0bd2cabeaf84",
-        "LogicalObservation": "d94215a6501420c7bab430945b2c8faa803fe1584ae022c1aec5f9960637d05e",
+        "LogicalObservation": "a5b3481c4a82299c6911bc9b0980911d428f9b9b3e6eca4499340d7da9aa432c",
         "LogicalObservationMetadataCase": "ca768c33a4c109d1120bdd68c33849f48d4c63dca79e6d537991ebad1a66d4d6",
         "LogicalObservationMetadataCases": "beeffd946293306273d846ea9d76f2225f9fcd4c9df6a5deee3a497c21e3d38f",
         "LogicalObservationMode": "f5d06b19ed7e7298b707908c5266af6e69fe5b81559e11ff178d2159f267dec2",
-        "LogicalObservationFaultCase": "42e04ca8a1cf4314785eaf3f978b1b4e96a936b64331d9d16faae88d0e954d35",
-        "LogicalObservationFaultCases": "edfdd84f403d10225472d32bf1567aca214589ca30fc32e9588741d67d0bd53e",
+        "LogicalObservationFaultCase": "f8e77acc4fa1b0f0372b94f31896af9cbebc0226e845b55dea8d9f282090ec33",
+        "LogicalObservationFaultCases": "e5bff89f390ffced5fae94666afdc2c9aba9d5a0e93f215cc479ec4cf9889135",
         "LogicalEntryBoundRefusalPolicy": "e4cdfdccf8bc0eaa0474b945642f2878fb6f456ba422f36e23c02987f48f673f",
-        "LogicalEntryBoundRefusal": "2a7e87d0b27949ce41a8f59631a06dfb94cc1f0329a526008b3fcf6d7ffe680e",
+        "LogicalEntryBoundRefusal": "ad127e3338f73debf56b9f7c5d35125850ce33ee86bc758b6a9c7b912a9c9938",
         "LogicalEntryBoundCase": "c60cea26285f45415fb9f064c6085296f3eb4540dc266c14106b0f7231312374",
-        "LogicalEntryBoundCases": "76f5a54a732d263917318c482e5b2ef7f0f366371c2ddeaf583b00c8fa202c55"
+        "LogicalEntryBoundCases": "1009ec5d1be303279293e9b7b22e67f92faf8e15374bb12abdf9a39194b6ffb5"
       }
     }
   },

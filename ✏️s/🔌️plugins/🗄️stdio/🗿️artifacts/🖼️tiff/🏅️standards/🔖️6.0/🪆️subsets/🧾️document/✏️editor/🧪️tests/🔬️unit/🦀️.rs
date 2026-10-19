@@ -195,7 +195,7 @@ fn cancelled_retained_tiled_paint_discards_revision_without_publication() {
     let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "tiff-paint-region-row", .. }));
     work.begin_close();
-    assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
+    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
     assert!(work.terminal_is_empty());
     assert_eq!(snapshot, tiled_editor_snapshot());
 }

@@ -1,14 +1,14 @@
 /** 🧩️ Semantic benchmark browser owner. */
 
-import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 
 import { BenchBudgetDefinition, benchWebSkippedRow } from "../📋️plan/🟦️.ts";
 

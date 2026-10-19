@@ -22,7 +22,7 @@
     {
       "argv": [
         "--plan-maintenance",
-        "graph",
+        "nx",
         "native-assets-protected-1.json"
       ],
       "override": null,
@@ -73,7 +73,7 @@
     {
       "argv": [
         "--plan-maintenance",
-        "graph",
+        "nx",
         "native-assets-protected-0.json"
       ],
       "override": null,
@@ -82,7 +82,7 @@
     {
       "argv": [
         "--plan-maintenance",
-        "graph",
+        "nx",
         "native-assets-protected-1.json",
         "extra"
       ],
@@ -260,7 +260,7 @@
     {
       "argv": [
         "--service-roster",
-        "graph",
+        "nx",
         "native-assets-protected-1.json"
       ],
       "override": null,
@@ -346,7 +346,7 @@
     {
       "argv": [
         "--plan-maintenance-streamed",
-        "graph",
+        "nx",
         "native-assets-protected-1.json"
       ],
       "override": null,

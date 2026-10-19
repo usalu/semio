@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import { resolve } from "node:path";
 import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
 import schema from "../🧪️testing/📥️source/🧬️schema/🔣️.json";

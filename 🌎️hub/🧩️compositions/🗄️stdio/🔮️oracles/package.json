@@ -12,9 +12,12 @@
     "test-type-ownership": "bun --cwd \"../../../..\" repo run @semio-tech/hub-stdio-test-oracle:test-type-ownership"
   },
   "devDependencies": {
+    "@iarna/toml": "2.2.5",
     "@semio-tech/compiler-syntax-rust-ts": "workspace:*",
     "@semio-tech/process": "workspace:*",
+    "@semio-tech/repo-lib": "workspace:*",
     "@semio-tech/schema-validator-ts": "workspace:*",
-    "@semio-tech/repo-test": "workspace:*"
+    "@semio-tech/repo-test": "workspace:*",
+    "ajv": "8.20.0"
   }
 }

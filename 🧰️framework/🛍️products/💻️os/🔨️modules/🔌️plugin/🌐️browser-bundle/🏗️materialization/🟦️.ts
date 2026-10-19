@@ -12,7 +12,7 @@ import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "..
 import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { resolveWorkspaceBin, runNodeBinStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { resolveWorkspaceBin, runNodeBinStatus } from "@semio-tech/process/execution";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import type { PluginWebMaterializeContext } from "./🧾️contract/🟦️.ts";
 import { optimizePluginCoreModules, optimizePluginCoreModulesAsync } from "./🪶️wasm-opt/🟦️.ts";

@@ -1,31 +1,20 @@
-import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
 /** 🧩️ Semantic parity execution owner. */
 
-import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
-import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER, playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 
 import { ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer } from "../🌐️server-pool/🟦️.ts";
 

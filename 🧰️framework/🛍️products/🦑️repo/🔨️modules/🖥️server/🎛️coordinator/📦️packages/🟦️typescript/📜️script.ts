@@ -2,9 +2,9 @@
 import{createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {withNextStorageV1} from "../../🏗️builder/💾️storage/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
+import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1 } from "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import storageSchema from "../../🏗️builder/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { createRequire } from "node:module";
@@ -12,17 +12,12 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 /** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
 import { join, relative } from "node:path";
 import {writeFile} from "node:fs/promises";
-import type { BundleLinter } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { defineLint } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../../../📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts";
-import { devToolingEnv } from "../../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../📚️library/🗂️workspaces/🟦️.ts";
-import { goLevelTestArgs } from "../../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
-import { runBunx } from "../../../../📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runCanonicalGoTests } from "../../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
-import { runVitest } from "../../../../📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { defineLint, dependencyBoundaryBreachesForBundleDir } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { devToolingEnv, runRepoScriptMain } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import { goLevelTestArgs, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationEnvironment, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();

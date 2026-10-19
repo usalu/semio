@@ -1,5 +1,6 @@
 //! 🦴️ Authored create-load-case semantic leaf.
-use crate::standards::v1::subsets::any::schema::{snapshot::{LoadCase, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{LoadCase, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

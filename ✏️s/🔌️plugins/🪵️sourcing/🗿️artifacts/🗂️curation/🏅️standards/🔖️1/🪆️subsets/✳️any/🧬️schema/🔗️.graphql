@@ -1,4 +1,4 @@
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # 🧬️ Curation artifact schema — every field with its state class.
 
 union GeometryRecipe =

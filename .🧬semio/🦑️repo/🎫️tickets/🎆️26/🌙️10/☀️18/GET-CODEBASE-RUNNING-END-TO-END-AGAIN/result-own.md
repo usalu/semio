@@ -1,0 +1,39 @@
+# Result own: nested image attach (`-owners on`) and the next nested-storage blocker
+
+Status: tasks 1-3 done and verified. Nested attach now works on the real `graph` image. Task 4 (`bun repo run` reaches task execution) is NOT reached: pool creation advances past the attach and dies on a new, deeper blocker (below). No package.json/bun.lock edit, no cargo, no git-modifying command, no sub-agents.
+
+## 1. Attach arguments (schema-declared, all three sites)
+Root of `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage` (S):
+- `S/🧬️schema/🔣️.json` `ImageProtocol.const`: new `attachArguments` = `["-nobrowse","-noautoopen","-owners","on"]`, `mountProgram` = `/sbin/mount`, `mountWithoutOwnersFlag` = `noowners`.
+- New `S/🍎️image/👤️owners/🟦️.ts`: `nativeImageAttachArgumentsV1(root,image)` (the only builder of the `hdiutil attach` list), `nativeImageHostMountV1` / `nativeImageHostMountOfV1` (innermost hosting mount from `mount` output), `requireNativeImageHostOwnersV1`.
+- The three literal lists now call the builder: `S/🧹️cleanup/🎛️command/🟦️.ts` (activation) and `S/📤️publication/🎛️owner/🟦️.ts` (body attach, cleanup attach). No test pinned the old literal args (grep over the framework tree: no other `noautoopen` site).
+
+## 2. Persistent opener detects a noowners parent
+In `captureNativeImageBodyCommandV1(...,"activate")` (used by `openPersistentNativeImageV1` for fresh and inactive nested images), when the image has a parent scope the opener runs `/sbin/mount` under the owned control and `requireNativeImageHostOwnersV1` refuses before any attach with: "Nested Native image cannot attach inside the parent mounted without owners at <mount>; once, while no process uses it, run `/usr/bin/hdiutil detach <mount>` and rerun `bun repo`, which re-attaches the parent canonically with owners on". Refusal (not an in-process remount) because the parent is pinned by the very invocation that is opening the child, so no exclusive maintenance window exists at that point. Not added to the publication detach/attach cycle (parent unknown there; an already-attached child implies its parent was owners-on when it was attached).
+
+## 3. Live partitions remounted
+- `.cache/b/g/m` and `.cache/b/p/m`: checked quiescent (`lsof +f -- <m>` empty; their lease files `83ad7e5b…`/`2d3fc7ad…` (sha256 of `native-fixed-image:<dir>`) held by no process; the concurrent `bun repo cargo`/`dependencies sync` hold only `o`,`d`,`t`,rust leases). `hdiutil detach` both. `bun repo show projects` re-attached `g` and `mount` shows it WITHOUT `noowners` (`apfs, local, nodev, nosuid, journaled, nobrowse`). `p` is detached and re-attaches (owners on) at the next open that uses products.
+- Not touched: `.cache/b/d` and `.cache/b/t` (deps sync / cargo running), `.cache/b/l`, `.cache/b/o`, and `.🧬semio/🦑️repo/⚡️cache/rust/fixed/m` (a `bun repo cargo` run was active; it is still `noowners`). If anything nests under rust, remount it once when no cargo runs: `lsof +f -- <m>` empty, then `hdiutil detach <m>`, then any `bun repo` command.
+
+## Tests
+- New `S/🍎️image/👤️owners/🧪️tests/🟦️.ts` + corpus `🔣️.json` (language-agnostic: attach args, mount-table samples incl. a mount point with spaces and parentheses, expected host/owners): `bun test` 3/3 pass. The darwin scenario (guarded `skipIf` non-darwin) creates a 96 MB parent UDIF/APFS image, attaches it with the schema args (owners on) and a second one with default args (noowners), asserts the parser agrees with the third-party oracle (`diskutil info -plist` `GlobalPermissionsEnabled`), asserts the refusal names `hdiutil detach <mount>`, then creates a 24 MB child image INSIDE the owners-on parent and attaches it with `nativeImageAttachArgumentsV1`, then detaches everything in `finally` (verified: no leftover mounts/images/dirs). Scratch dir: `mkdtemp` under `$TMPDIR`.
+- `bun build --no-bundle` on the three edited TS files OK; `tsc` over the 4 files: 0 errors in them.
+- Pre-existing, unchanged: store `📦️child` test 9/9 pass; headroom real-image test still fails with "Nested persistent image requires actual parent scope" (test constructs a nested image without the parent API; unrelated to attach).
+
+## 4. Pool creation: attach fixed, next blocker found
+Probe (`C/lq-tools/probe.ts prepare 0 240`, i.e. the real `prepareNxGraphCacheStorageV1` on the real `graph` image, the exact function `bun repo run` calls first):
+- Before: `hdiutil attach` "Permission denied" (lq). Now: queued EX granted, `nx/cache/fixed.dmg` (0.9 GB) created, attached at `g/m/nx/cache/m` WITHOUT noowners, receipt written. Then fails after 4.9 s: `Error: Exact original parent child allocation required` (thrown by `readNativeStorageMountedChildV1`, `S/🟦️.ts:220`).
+- Cause: `parent.recheck()` of a persistent parent (`createPersistentImage.physical` -> `verifyPersistentManagedChildrenV1`, `S/🧹️cleanup/🎛️command/🟦️.ts`) requires every mounted descendant to be a parent-funded child: a `compiler-state` allocation row with `child` (and `namespace` for non-direct children) in the parent journal `g/m/storage-events.jsonl`, plus the `<claim><allocationId>` sidecar. `openNxGraphCacheStoreV1` (`🔌️nx/📦️graph/🟦️.ts`) opens the pool through the UNFUNDED maintenance-child path (`withRepositoryCacheStoreChildStorageV1`), so the journal only holds g's own `artifact-publication` row and the check fails as soon as the pool is mounted. `withNativePlatformFundedChildStorageV1` (the funded path; needs `NativeStorageChildFundingV1` = policy, invocation, owner, metadataBytes, policySha256) has no production caller (only tests under `cargo/📦️units/🏗️compiler/💾️state/🧪️tests`), i.e. the Nx pool was never provisioned end to end.
+- Failure mode to know: the failed birth leaves `g/m/nx/cache/m` MOUNTED, which makes every later open of `g` (any `bun repo` command) fail with the same error. I cleaned it twice by hand (`hdiutil detach .cache/b/g/m/nx/cache/m`, `rm -rf .cache/b/g/m/nx/cache`); the graph is clean now (`mount` shows only `g/m`). Any further real attempt to create the pool must be followed by that cleanup until the funding is fixed.
+- I did not run `bun repo run @teaching/architecture-quiz:check` for real: it needs the project graph first (the earlier `show projects` queue was interrupted by someone after 24 min, and `dependencies sync` still holds the dependencies queue), and it would hit the same failure while poisoning `g` for every concurrent process. The probe is the verified evidence.
+
+## Recommended next step (new executor)
+Provision the Nx pool as a funded child of `graph`: charge it from the graph allocation as a `compiler-state` allocation with `child` request + `namespace` (`nx`), create it via `withNativePlatformFundedChildStorageV1` from `openNxGraphCacheStoreV1`, and make failed-birth cleanup detach the child before rolling back. Alternative: make the Nx pool a top-level partition (like `p`/`g`) so no nested verification applies. Re-run `probe.ts prepare` as the acceptance check, then the real `bun repo run`.
+
+## Files
+Created: `S/🍎️image/👤️owners/🟦️.ts`, `S/🍎️image/👤️owners/🧪️tests/🟦️.ts`, `S/🍎️image/👤️owners/🧪️tests/🔣️.json`, `C/own-tools/tsconfig.json` (input, kept).
+Changed: `S/🧬️schema/🔣️.json`, `S/🧹️cleanup/🎛️command/🟦️.ts`, `S/📤️publication/🎛️owner/🟦️.ts`; memory note `project-native-cache-images-apfs-and-recovery.md` (appended).
+Temporary probe logs removed; no `[DEBUG]` code added.
+
+## Addendum: repo-wide attach-site scan
+A whole-repo scan for `-nobrowse` (run before my edits) found only the two source files above plus stale bundled `semio-authorizers.mjs` copies under `.🧬semio/🦑️repo/⚡️cache/tools/nx/*/`. Those contain an older `hdiutil attach` without owners, but their source text exists nowhere in the framework tree (`Original fixed image identity changed` has no source hit), so they are obsolete generated tool-cache output, not a live attach site.

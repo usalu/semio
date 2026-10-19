@@ -2,7 +2,7 @@ import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";

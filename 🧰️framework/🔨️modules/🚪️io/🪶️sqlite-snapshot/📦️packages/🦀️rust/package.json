@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./artifact": "./🧩️artifact/🟦️.ts",
+    "./index": "./🟦️.ts"
+  },
   "bundleKind": "library",
   "scripts": {
     "test-refusal": "bun --cwd \"../../../../../..\" repo run @semio-tech/framework-sqlite-snapshot-rs:test-refusal",

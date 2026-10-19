@@ -13,7 +13,7 @@ async fn document_text_round_trips_authoritative_metadata_messages_conflicts_and
     let mutation_ids = stable_mutation_ids_for_edit(&edit).await.expect("stable operation identity");
     let timestamp = edit.mutation_meta.first().expect("metadata timestamp").timestamp;
     let document_id = ArtifactId(store.envelope().id.clone());
-    store.0.envelope.conflicts.push(semio_framework_os_spr::Conflict {
+    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict {
         id: semio_framework_os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &timestamp).await,
         kind,
         status: semio_framework_os_spr::ConflictStatus::Open,
@@ -167,7 +167,7 @@ async fn persisted_conflict_requires_a_global_owned_operation_index() {
     let mut messages = store.envelope().edit_messages.last().expect("outcome message").messages.clone();
     messages[0].op_index = Some(1);
     let document_id = ArtifactId(store.envelope().id.clone());
-    store.0.envelope.conflicts.push(semio_framework_os_spr::Conflict {
+    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict {
         id: semio_framework_os_spr::ConflictId::new(&kind, &document_id, &mutation_ids, &timestamp).await,
         kind,
         status: semio_framework_os_spr::ConflictStatus::Open,
@@ -212,7 +212,7 @@ async fn quarantined_accept_is_atomic_when_a_later_envelope_remains_fatal() {
     let timestamp = HybridLogicalTimestamp::new(9, 300);
     let mutation_ids = vec![clean.mutation_id.clone(), fatal.mutation_id.clone()];
     let conflict_id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(document_id.to_string()), &mutation_ids, &timestamp).await;
-    store.0.envelope.conflicts.push(semio_framework_os_spr::Conflict {
+    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict {
         id: conflict_id.clone(),
         kind,
         status: semio_framework_os_spr::ConflictStatus::Open,
@@ -336,7 +336,7 @@ async fn spr_round_trip_preserves_edit_messages_and_conflicts() {
     let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
     let artifact_id = ArtifactId(store.envelope().id.clone());
     let conflict_id = semio_framework_os_spr::ConflictId::new(&kind, &artifact_id, &mutation_ids, &timestamp).await;
-    store.0.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: conflict_id, kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: messages.clone(), actors, timestamp });
+    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: conflict_id, kind, status: semio_framework_os_spr::ConflictStatus::Open, messages: messages.clone(), actors, timestamp });
 
     let pack = initial.encode_pack();
     let spr = print_document_spr(store.envelope()).await.expect("outcome history encodes");

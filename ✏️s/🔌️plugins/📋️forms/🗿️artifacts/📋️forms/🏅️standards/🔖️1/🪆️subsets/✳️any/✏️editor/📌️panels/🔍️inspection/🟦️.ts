@@ -1,4 +1,4 @@
-import type { FormStep } from "../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormStep } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 import type { FormsInspection } from "./🧬️schema/🟦️.ts";
 
 /** 🎛️ Ordered property vocabulary for built-in and contributed questions. */

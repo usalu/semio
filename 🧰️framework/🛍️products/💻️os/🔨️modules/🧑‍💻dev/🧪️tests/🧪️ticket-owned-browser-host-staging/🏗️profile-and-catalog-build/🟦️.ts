@@ -7,7 +7,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
   const { describe, expect, it } = vitest;
   const { itLong } = createTestKit(vitest, dependencies, source);
 
-  type PluginBuildTargetV1 = import("../../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginBuildTargetV1;
+  type PluginBuildTargetV1 = import("@semio-tech/plugin-registry/discovery").PluginBuildTargetV1;
 
   //#region 🔖️T-P8-tests
   describe("WASI component profile policy", () => {
@@ -29,7 +29,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
       for (const row of fixture.artifactPaths) expect(pluginWasmArtifactPath(repoRoot, row.packageName, row.profile, "/target")).toBe(join("/target", row.expectedRelativePath));
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
       expect(manifest.profile).toBeUndefined();
-      const {renderCargoProfileConfigurationV1}=await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts");
+      const {renderCargoProfileConfigurationV1}=await import("@semio-tech/repo-lib/cargo");
       for(const mode of ["prototype","release"] as const){const rendered=renderCargoProfileConfigurationV1({version:1,mode,target:"wasm32-wasip2",producer:"wasm-component",operation:"build"},"Cargo.toml","repository"),parsed=toml.parse(rendered.selectors.join("\n")) as {profile:Record<string,Record<string,unknown>>};expect(parsed.profile[mode]!["opt-level"]).toBe(mode==="release"?"s":1);expect(rendered.plan.profile).toBe(mode);}
     });
   });

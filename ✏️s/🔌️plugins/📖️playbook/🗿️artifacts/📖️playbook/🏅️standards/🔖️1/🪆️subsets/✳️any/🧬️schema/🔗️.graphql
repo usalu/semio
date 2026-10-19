@@ -1,5 +1,5 @@
 # 🪪️ PlaybookArtifact imports the canonical OS Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 type PlaybookArtifact {
   schema: String!
   id: String!

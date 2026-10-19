@@ -1,5 +1,6 @@
 /** 🧩️ Semantic parity probe owner. */
 
+import { createHash } from "node:crypto";
 import { ParityDump, ParityNode, ParityRect, ParityRenderer, StructuralResult, compareParityStructural, dumpReactStructure, dumpWgpuStructure, parityNormalizeText } from "../🏗️structure/🟦️.ts";
 
 
@@ -124,7 +125,7 @@ function stateProbeNodeValue(node: ParityNode): string {
 
 function stateProbeSnapshot(dump: ParityDump): ProbeStateSnapshot {
   const serialized = dump.nodes.map(stateProbeNodeValue).sort().join("\n");
-  return { digest: Bun.hash(serialized).toString(16), nodeCount: dump.nodes.length };
+  return { digest: createHash("sha256").update(serialized).digest("hex"), nodeCount: dump.nodes.length };
 }
 
 function stateProbeChangedPaths(before: ParityDump, after: ParityDump): string[] {

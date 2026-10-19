@@ -31,6 +31,7 @@ semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/�
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
+semio-framework-os-store-composition = { path = "../../../../🧩️composition/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-document = { path = "../../../../🧾️document/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }

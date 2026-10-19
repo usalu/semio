@@ -1,13 +1,13 @@
 /** 📥️ Nodes: module exporting `RustUnitDescriptorNodeV2`, `RustUnitDescriptorNodeArtifactV2`, `RustUnitDescriptorGraphV2`, `captureRustUnitDescriptorNodeV2` and more. */
 import{types}from"node:util";
 import{createHash}from"node:crypto";
-import{compileJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{captureRustUnitGraphInputsV1,iterateRustUnitPlansV1,rustUnitGraphLimitsV1}from"../../📋️plan/🕸️graph/🟦️.ts";
-import{isRustUnitPathV1}from"../../🧬️definition/🟦️.ts";
-import{planRustUnitsV1,type RustUnitV1,type RustUnitPlanV1}from"../../🟦️.ts";
-import{captureRustUnitPlanV1}from"../../📋️plan/🟦️.ts";
+import{isRustUnitPathV1,type RustUnitV1}from"../../🧬️definition/🟦️.ts";
+import{planRustUnitsV1}from"../../🟦️.ts";
+import{captureRustUnitPlanV1,type RustUnitPlanV1}from"../../📋️plan/🟦️.ts";
 import{canonicalRustUnitJsonV1}from"../../📋️plan/🔏️identity/🟦️.ts";
 import planSchema from"../../📋️plan/🧬️schema/🔣️.json";
 import unitSchema from"../../🧬️schema/🔣️.json";

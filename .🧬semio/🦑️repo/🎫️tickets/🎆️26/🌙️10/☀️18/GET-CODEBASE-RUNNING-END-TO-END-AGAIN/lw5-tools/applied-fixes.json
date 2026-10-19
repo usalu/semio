@@ -1,0 +1,2421 @@
+{
+ "fixes": [
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts",
+   "replacement": "@semio-tech/framework-compiler-ts/syntax/module-tree"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+   "replacement": "@semio-tech/process/leases"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🎚️config/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+   "replacement": "@semio-tech/ui-react/build-tooling"
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
+   "specifier": "../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "replacement": "@semio-tech/ui-react"
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
+   "specifier": "../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "to": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "replacement": "@semio-tech/ui-react"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📇️catalog/📣️publisher/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🟦️.ts",
+   "specifier": "../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts",
+   "replacement": "@semio-tech/framework/value/refusal"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️artifact-commands/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🏃️commands/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts",
+   "replacement": "@semio-tech/process/budget"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
+   "replacement": "@semio-tech/process/compiler-capacity"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+   "replacement": "@semio-tech/process/test-budget"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎬️host-activation/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "replacement": "@semio-tech/plugin-registry/catalog"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts",
+   "replacement": "@semio-tech/process/test-budget"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+   "replacement": "@semio-tech/process/routing"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/📖️projection/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "replacement": "@semio-tech/plugin-registry/catalog"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️.ts",
+   "replacement": "@semio-tech/plugin-registry/catalog"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
+   "replacement": "@semio-tech/framework-renderer-react"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/🌀️procedural-formats/🗿️artifact-surface/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts",
+   "to": "🧰️framework/📦️packages/🟦️typescript/🌱️value/🔢️ieee754/🟦️.ts",
+   "replacement": "@semio-tech/framework/value/ieee754"
+  }
+ ],
+ "skipped": [
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🧪️tests/🏛️shell-brand/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellFooter/🟦️.tsx",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellFooter/🟦️.tsx",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-♻️mit-bestand-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes shellFooterNavbarItem",
+   "names": [
+    "shellFooterNavbarItem"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes parseAgentBridgeOffer,sameAgentBridgeOffer,AgentBridgeConfig",
+   "names": [
+    "parseAgentBridgeOffer",
+    "sameAgentBridgeOffer",
+    "AgentBridgeConfig"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes parseAgentBridgeOffer,sameAgentBridgeOffer,AgentBridgeConfig",
+   "names": [
+    "parseAgentBridgeOffer",
+    "sameAgentBridgeOffer",
+    "AgentBridgeConfig"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧪️tests/🧫️fixtures/🖱️pointer-gestures.json",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes default",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎬️host-activation/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes resolveFrameworkOsCatalogConfigurationV1",
+   "names": [
+    "resolveFrameworkOsCatalogConfigurationV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os",
+    "no-cross-package-relative-@semio-tech/framework-os-kernel",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os",
+   "reason": "no existing export entry exposes resolveFrameworkOsCatalogConfigurationV1",
+   "names": [
+    "resolveFrameworkOsCatalogConfigurationV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "specifier": "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os-dev",
+    "no-cross-technology-♻️mit-bestand-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+   "reason": "no existing export entry exposes createFrameworkOsHostPortsV1",
+   "names": [
+    "createFrameworkOsHostPortsV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧪️multi-shell-harness/🟦️.tsx",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os-dev",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+   "reason": "no existing export entry exposes createFrameworkOsHostPortsV1",
+   "names": [
+    "createFrameworkOsHostPortsV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🚀️entry/⚛️react/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-os-dev",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev",
+   "reason": "no existing export entry exposes createFrameworkOsHostPortsV1",
+   "names": [
+    "createFrameworkOsHostPortsV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes browserArtifactVitePlugin",
+   "names": [
+    "browserArtifactVitePlugin"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes pluginComponentBridgeSource",
+   "names": [
+    "pluginComponentBridgeSource"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes rewriteJcoComponentAssetUrls,rewriteJcoAsyncResultLifting",
+   "names": [
+    "rewriteJcoComponentAssetUrls",
+    "rewriteJcoAsyncResultLifting"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes shardWorkerSource",
+   "names": [
+    "shardWorkerSource"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes PLUGIN_HOST_SHIM_FILE,GUESTSLIM_FONT_RELATIVE,SHARD_WORKER_FILE,PluginWebMaterializeContext",
+   "names": [
+    "PLUGIN_HOST_SHIM_FILE",
+    "GUESTSLIM_FONT_RELATIVE",
+    "SHARD_WORKER_FILE",
+    "PluginWebMaterializeContext"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes ensurePreview2ShimVendorAt",
+   "names": [
+    "ensurePreview2ShimVendorAt"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes hostShimSource",
+   "names": [
+    "hostShimSource"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes rewritePreview2ShimImports,transpilePluginComponentAsync",
+   "names": [
+    "rewritePreview2ShimImports",
+    "transpilePluginComponentAsync"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes readArtifactBytesV1,fileDigest",
+   "names": [
+    "readArtifactBytesV1",
+    "fileDigest",
+    "artifactFiles"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes PREVIEW2_VENDOR_RELATIVE,rewritePreview2ShimImportSource",
+   "names": [
+    "PREVIEW2_VENDOR_RELATIVE",
+    "rewritePreview2ShimImportSource"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes ACTOR_COMPONENT_EXPORTS,assertActorComponentExports,finalizePluginDescriptor,PLUGIN_DESCRIPTOR_PROBE_SOURCE",
+   "names": [
+    "ACTOR_COMPONENT_EXPORTS",
+    "assertActorComponentExports",
+    "finalizePluginDescriptor",
+    "PLUGIN_DESCRIPTOR_PROBE_SOURCE"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes ensureWasmTarget",
+   "names": [
+    "ensureWasmTarget"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes buildComponentClosureV1",
+   "names": [
+    "buildComponentClosureV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes pluginFileDigest",
+   "names": [
+    "pluginFileDigest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes withComponentModelV1",
+   "names": [
+    "withComponentModelV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-plugin",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
+   "reason": "no existing export entry exposes COMPONENT_RECEIPT_FILE,COMPONENT_RECEIPT_MAX_BYTES",
+   "names": [
+    "COMPONENT_RECEIPT_FILE",
+    "COMPONENT_RECEIPT_MAX_BYTES"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎚️config/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-renderer-react"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react",
+   "reason": "no existing export entry exposes default",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/framework-renderer-wgpu",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu",
+   "reason": "no existing export entry exposes createCompletedWgpuConfigurationV1",
+   "names": [
+    "createCompletedWgpuConfigurationV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/nx-bootstrap-tools",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools",
+   "reason": "no existing export entry exposes withRepositoryRustToolchainV1",
+   "names": [
+    "withRepositoryRustToolchainV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes PLAYGROUND_ASSET_PROVIDERS_V1",
+   "names": [
+    "PLAYGROUND_ASSET_PROVIDERS_V1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes MODULE_EXTENSION_ROUTE,MODULE_PLUGIN_ROUTE",
+   "names": [
+    "MODULE_EXTENSION_ROUTE",
+    "MODULE_PLUGIN_ROUTE"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧵️gis-inference-bridge/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes parsePlaygroundsForCrate",
+   "names": [
+    "parsePlaygroundsForCrate"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📜️script.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "specifier": "../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🔁️rebuild/📜️script.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts",
+   "specifier": "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes GuestFrameworkCheckScript,RebuildAllScript,printRebuildPlanV1",
+   "names": [
+    "GuestFrameworkCheckScript",
+    "RebuildAllScript",
+    "printRebuildPlanV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🔁️rebuild/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🧬️schema/🔣️.json",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🧬️schema/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes default",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🔁️rebuild/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes printRebuildPlanV1",
+   "names": [
+    "printRebuildPlanV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes registryModuleDirectories",
+   "names": [
+    "registryModuleDirectories",
+    "filterProjectedPluginRegistry",
+    "readGeneratedCatalogProjection"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes MODULE_BRIDGE_FILE,MODULE_SHARD_DIRECTORY,MODULE_HOT_SWAP_FILE,MODULE_PLUGIN_ROUTE,MODULE_EXTENSION_ROUTE,moduleDirectoryName,moduleIdForDirectoryName,moduleRoutePath",
+   "names": [
+    "MODULE_BRIDGE_FILE",
+    "MODULE_SHARD_DIRECTORY",
+    "MODULE_HOT_SWAP_FILE",
+    "MODULE_PLUGIN_ROUTE",
+    "MODULE_EXTENSION_ROUTE",
+    "moduleDirectoryName",
+    "moduleIdForDirectoryName",
+    "moduleRoutePath"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes generatePluginRegistry,DeployedRegistryEntryV1",
+   "names": [
+    "generatePluginRegistry",
+    "DeployedRegistryEntryV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🏗️builder/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes PLAYGROUND_ASSET_PROVIDERS_V1",
+   "names": [
+    "PLAYGROUND_ASSET_PROVIDERS_V1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readGeneratedCatalogProjection",
+   "names": [
+    "readGeneratedCatalogProjection"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes CatalogBuildSourceV1",
+   "names": [
+    "CatalogBuildSourceV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes parseCatalogContributionV1,parseCatalogPublicationV1",
+   "names": [
+    "parseCatalogContributionV1",
+    "parseCatalogPublicationV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readNativeCatalogV1",
+   "names": [
+    "readNativeCatalogV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎬️host-activation/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes requirePlaygroundVariant",
+   "names": [
+    "requirePlaygroundVariant"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎬️host-activation/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes buildPlaygroundSession",
+   "names": [
+    "buildPlaygroundSession"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎬️host-activation/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readGeneratedCatalogProjection",
+   "names": [
+    "readGeneratedCatalogProjection"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes PLAYGROUND_SESSION_ARTIFACT_KEY,renderPlaygroundSessionTypeScript,stagePlaygroundSession",
+   "names": [
+    "PLAYGROUND_SESSION_ARTIFACT_KEY",
+    "renderPlaygroundSessionTypeScript",
+    "stagePlaygroundSession"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readGeneratedCatalogProjection",
+   "names": [
+    "readGeneratedCatalogProjection"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/📖️projection/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readGeneratedCatalogProjection,projectedHostPluginFilter",
+   "names": [
+    "readGeneratedCatalogProjection",
+    "projectedHostPluginFilter"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/📚️navbar-example-audits/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/📚️navbar-example-audits/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes auditNavbarExamplePickerCoverage,auditNavbarExampleArtifactPayload",
+   "names": [
+    "auditNavbarExamplePickerCoverage",
+    "auditNavbarExampleArtifactPayload"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🔎️source-audit/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🔎️source-audit/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes auditPluginCatalogSources",
+   "names": [
+    "auditPluginCatalogSources"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes readGeneratedCatalogProjection",
+   "names": [
+    "readGeneratedCatalogProjection"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🪪️plugin-identity/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes registryModuleDirectories",
+   "names": [
+    "registryModuleDirectories"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🪪️plugin-identity/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes componentLibraryManifestV1",
+   "names": [
+    "componentLibraryManifestV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🪪️plugin-identity/🟦️.ts",
+   "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/plugin-registry",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+   "reason": "no existing export entry exposes parseComponentPackageId,DeployedRegistryEntryV1",
+   "names": [
+    "parseComponentPackageId",
+    "DeployedRegistryEntryV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes viteCacheDirectory",
+   "names": [
+    "viteCacheDirectory"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runViteBunxDev",
+   "names": [
+    "runViteBunxDev"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🏗️build/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🏗️build/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runViteBuild",
+   "names": [
+    "runViteBuild"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes playgroundDevPortString,playgroundPortEnv",
+   "names": [
+    "playgroundDevPortString",
+    "playgroundPortEnv"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes viteCacheDirectory",
+   "names": [
+    "viteCacheDirectory"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes canonicalWasmBuildVitePlugin",
+   "names": [
+    "canonicalWasmBuildVitePlugin"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repositoryCachePartitionRootDataV1",
+   "names": [
+    "repositoryCachePartitionRootDataV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repoCacheDirectory",
+   "names": [
+    "repoCacheDirectory"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes buildViteArtifact",
+   "names": [
+    "buildViteArtifact"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/📦️site/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repositoryCachePartitionRootV1",
+   "names": [
+    "repositoryCachePartitionRootV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes closeServiceSession,openServiceSession,publishServiceReady,readServiceSession",
+   "names": [
+    "closeServiceSession",
+    "openServiceSession",
+    "publishServiceReady",
+    "readServiceSession"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes serveVite",
+   "names": [
+    "serveVite"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repositoryCachePartitionRootV1",
+   "names": [
+    "repositoryCachePartitionRootV1"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-♻️mit-bestand-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes playwrightTestTimeoutMs",
+   "names": [
+    "playwrightTestTimeoutMs"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes readServiceSession,waitForServiceReady",
+   "names": [
+    "readServiceSession",
+    "waitForServiceReady"
+   ]
+  },
+  {
+   "from": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "specifier": "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repoCacheDirectory",
+   "names": [
+    "repoCacheDirectory"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runBun",
+   "names": [
+    "runBun"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🌊️flow/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1",
+   "names": [
+    "runRepositoryExactCargoLaws",
+    "configuredRepositoryCargoPreparationPolicyV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📇️catalog/📣️publisher/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryCommand",
+   "names": [
+    "runRepositoryCommand"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes buildRepositoryCargoArtifacts",
+   "names": [
+    "buildRepositoryCargoArtifacts"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes NativeScript",
+   "names": [
+    "NativeScript"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryCommand",
+   "names": [
+    "runRepositoryCommand"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1",
+   "names": [
+    "runRepositoryExactCargoLaws",
+    "configuredRepositoryCargoPreparationPolicyV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repositoryCargoNetworkV1",
+   "names": [
+    "repositoryCargoNetworkV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧵️gis-inference-bridge/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes playgroundNativeHostArtifactV1",
+   "names": [
+    "playgroundNativeHostArtifactV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧵️gis-inference-bridge/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧷️untrusted-content/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes toolJobFemLiveVisualPublicationExact",
+   "names": [
+    "toolJobFemLiveVisualPublicationExact"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes toolJobFemNumericalMicrocursorExact",
+   "names": [
+    "toolJobFemNumericalMicrocursorExact"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCmd",
+   "names": [
+    "runCmd"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes policyReadModuleTreeSource",
+   "names": [
+    "policyReadModuleTreeSource",
+    "policyReadFileSafe"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes NativeScript",
+   "names": [
+    "NativeScript"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryCommand",
+   "names": [
+    "runRepositoryCommand"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCmd",
+   "names": [
+    "runCmd"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📋️forms/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes buildRepositoryWasmWebV1",
+   "names": [
+    "buildRepositoryWasmWebV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1",
+   "names": [
+    "runRepositoryExactCargoLaws",
+    "configuredRepositoryCargoPreparationPolicyV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": [
+    "runCargo"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepoScriptMain",
+   "names": [
+    "runRepoScriptMain"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes BundleLinter",
+   "names": [
+    "BundleLinter",
+    "defineLint"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes dependencyBoundaryBreachesForBundleDir",
+   "names": [
+    "dependencyBoundaryBreachesForBundleDir"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCmd",
+   "names": [
+    "runCmd"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "specifier": "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes withRepositoryToolingStoreV1",
+   "names": [
+    "withRepositoryToolingStoreV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes nativeCallerPhaseV1",
+   "names": [
+    "nativeCallerPhaseV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes readBuildGraphV1,resolveBuildInputsV1,BuildGraphV1",
+   "names": [
+    "readBuildGraphV1",
+    "resolveBuildInputsV1",
+    "BuildGraphV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️pin.json",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes default",
+   "names": [
+    "default"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes cargoWorkspaceForManifest",
+   "names": [
+    "cargoWorkspaceForManifest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes RepositoryCacheStoreV1",
+   "names": [
+    "RepositoryCacheStoreV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCmd",
+   "names": [
+    "runCmd"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runViteBunxDev",
+   "names": [
+    "runViteBunxDev"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes withRepositoryCacheStoreV1",
+   "names": [
+    "withRepositoryCacheStoreV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes withRepositoryArtifactV1,withRepositoryArtifactTaskV1",
+   "names": [
+    "withRepositoryArtifactV1",
+    "withRepositoryArtifactTaskV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes withArtifactScratchV1,withArtifactDestinationTaskV1",
+   "names": [
+    "withArtifactScratchV1",
+    "withArtifactDestinationTaskV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes readNativeCallerAuthorityV1",
+   "names": [
+    "readNativeCallerAuthorityV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes stageRepositoryArtifacts,withRepositoryArtifactDestinationV1",
+   "names": [
+    "stageRepositoryArtifacts",
+    "withRepositoryArtifactDestinationV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes withJavascriptDependencyReadStorageV1",
+   "names": [
+    "withJavascriptDependencyReadStorageV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes describeDevPortOccupant,devServerUrl,isDevPortInUse",
+   "names": [
+    "describeDevPortOccupant",
+    "devServerUrl",
+    "isDevPortInUse"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes frameworkOsLockedPrefsEnv",
+   "names": [
+    "frameworkOsLockedPrefsEnv"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes wgpuDevPlayUrl",
+   "names": [
+    "wgpuDevPlayUrl"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes loadFrameworkOsPlaygroundCatalog",
+   "names": [
+    "loadFrameworkOsPlaygroundCatalog"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runBunxStatus",
+   "names": [
+    "runBunxStatus"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes spawnDaemon,SpawnDaemonHandle",
+   "names": [
+    "spawnDaemon",
+    "SpawnDaemonHandle"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runProbe",
+   "names": [
+    "runProbe"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes repositoryCargoNetworkV1",
+   "names": [
+    "repositoryCargoNetworkV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes daemonBudgetOpts,runCmd,runCmdStatus,runNodeBinStatus,cargoProfileDir,semioBuildMode,semioReleaseEnv",
+   "names": [
+    "daemonBudgetOpts",
+    "runCmd",
+    "runCmdStatus",
+    "runNodeBinStatus",
+    "cargoProfileDir",
+    "semioBuildMode",
+    "semioReleaseEnv"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getRepoMetaDir",
+   "names": [
+    "getRepoMetaDir"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🌐️browser-host/🏗️staging/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": [
+    "runVitest"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🧪️tests/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes cacheInternals,libraryBootstrap",
+   "names": [
+    "cacheInternals",
+    "libraryBootstrap"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes GeneratorPreviewProgressControlV1",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🛠️generator-commands/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🛠️generator-commands/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️support/🏗️source-services/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️support/🏗️source-services/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧾️plan-parsing/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧾️plan-parsing/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "namespace/side-effect/dynamic use without exact entry",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🧩️integration/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🪪️plugin-identity/🟦️.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib",
+    "no-cross-technology-✏️s-to-🧰️framework"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes getWorkspaceRoot",
+   "names": [
+    "getWorkspaceRoot"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1",
+   "names": [
+    "runRepositoryExactCargoLaws",
+    "configuredRepositoryCargoPreparationPolicyV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1",
+   "names": [
+    "runRepositoryExactCargoLaws",
+    "configuredRepositoryCargoPreparationPolicyV1"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCargo",
+   "names": [
+    "runCargo"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runCmd",
+   "names": [
+    "runCmd"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🪐️space/📦️packages/🟦️typescript/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "specifier": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runVitest",
+   "names": "*"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📜️script.ts",
+   "to": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "specifier": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/repo-lib"
+   ],
+   "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
+   "reason": "no existing export entry exposes runRepositoryCommand",
+   "names": [
+    "runRepositoryCommand"
+   ]
+  },
+  {
+   "from": "✏️s/🧪️tests/🎭️storybook-end-to-end/🟦️.ts",
+   "to": "✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
+   "specifier": "../../🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/s-dev-catalog-ts"
+   ],
+   "owner": "✏️s/🧑‍💻dev/🧩️catalog",
+   "reason": "no existing export entry exposes PLUGIN_HOST_CONFIGS",
+   "names": [
+    "PLUGIN_HOST_CONFIGS"
+   ]
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/stdio-composition-test/🟦️.d.ts",
+   "to": "@semio-tech/stdio-docx",
+   "specifier": "@semio-tech/stdio-docx",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/stdio-docx"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🗄️stdio/🟦️.ts",
+   "to": "@semio-tech/stdio-docx",
+   "specifier": "@semio-tech/stdio-docx",
+   "rules": [
+    "no-cross-package-relative-@semio-tech/stdio-docx"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧱️capture/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧱️capture/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🌐️interfaces/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🌐️interfaces/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/💰️bytes/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/💰️bytes/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔢️unsigned/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧪️tests/🏘️plugin-composition/📏️layout-drawing/🪶️sqlite/🟦️.ts",
+   "to": "🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔺️diff/🔣️.json",
+   "specifier": "../../../../../🌎️hub/🧩️compositions/📏️layout/🖊️drawing/🧪️tests/🪶️sqlite/🧫️fixtures/🧾️dictionary/🔺️diff/🔣️.json",
+   "rules": [
+    "no-cross-package-relative-os-hub-ts",
+    "no-cross-technology-✏️s-to-🌎️hub"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  },
+  {
+   "from": "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts",
+   "to": "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb",
+   "specifier": "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb?url",
+   "rules": [
+    "no-cross-technology-✏️s-to-♻️mit-bestand"
+   ],
+   "owner": null,
+   "reason": "target not owned by any workspace package"
+  }
+ ]
+}

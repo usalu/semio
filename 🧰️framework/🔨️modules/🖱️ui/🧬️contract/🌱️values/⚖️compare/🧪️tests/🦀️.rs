@@ -1,7 +1,9 @@
-use super::*;
+use semio_framework_ui_contract_values::compare_protocol::*;
+use semio_framework_ui_contract_values::*;
+use semio_framework_ui_contract_values::testkit::*;
 use semio_framework_test_fixtures::fixture_text;
 use std::mem::size_of;
-fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../../⚖️compare/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 #[test]
 fn retained_component_compare_frame_storage_matches_exact_bounded_domains() {
     let fixture = fixture();

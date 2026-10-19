@@ -11,6 +11,7 @@
   "topology": {
     "packagesDirectory": "📦️packages",
     "targetsDirectory": "🎯️targets",
+    "fixturesDirectory": "🧫️fixtures",
     "packageLanguageDirectories": [
       "🦀️rust",
       "🟦️typescript",
@@ -262,6 +263,14 @@
     {
       "path": "🧰️assets/🖼️logo/🖼️.png",
       "content": "png-fixture"
+    },
+    {
+      "path": "🧰️languages/🐹️go/🧫️fixtures/🗄️sample.go",
+      "content": "package sample\n"
+    },
+    {
+      "path": "🧰️languages/🟦️typescript/🧫️fixtures/📚️nested/🟦️sample.ts",
+      "content": "export const sample = 1;\n"
     }
   ],
   "expectedFindings": [

@@ -1,10 +1,10 @@
 import{receiveScriptProcessInvocation,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,requireIssuedScriptInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStorageReservationV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import{resourceLeasePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{resourceLeasePathV1}from"@semio-tech/process/leases";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{observeToolingHeadroomV1,isToolingHeadroomRefusalV1,type ToolingHeadroomRefusalV1,withToolingHeadroomRecoveryV1}from"../🟦️.ts";
 import{mkdtemp,mkdir,writeFile,rm,statfs}from"node:fs/promises";
 import{join}from"node:path";

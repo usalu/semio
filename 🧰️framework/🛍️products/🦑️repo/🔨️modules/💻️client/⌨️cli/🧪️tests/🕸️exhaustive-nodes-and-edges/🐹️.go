@@ -18,7 +18,7 @@ func TestExhaustiveNodesAndEdgesQuick(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges quick test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 	query := `{
 		tickets {
@@ -134,7 +134,7 @@ func TestExhaustiveNodesAndEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 
 	query := `{

@@ -6,7 +6,7 @@
 //! synthesized once (fixed minimal-but-schema-shaped constants) when building a package from
 //! scratch, while decoded packages preserve their logical XML documents.
 
-use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_vocabulary::refusal::PptxError;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::pptx_part_is_xml;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxParagraph;
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::PptxPresentation;

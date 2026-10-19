@@ -1,6 +1,7 @@
 //! 🗒️ `create-text-note` payload. Brings a free text onto a storey plan at a position, rotated and set in an annotation style.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, TextNote}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TextNote};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateTextNote {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateTextNote
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateTextNote> + From<crate::standards::v1::subsets::any::schema::mutations::delete_text_note::DeleteTextNote>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateTextNote> + From<semio_s_artifact_bim_model_mut_any_97::standards::v1::subsets::any::schema::mutations::delete_text_note::DeleteTextNote>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "text-note", kind: "create-text-note", record: "CreateTextNote" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

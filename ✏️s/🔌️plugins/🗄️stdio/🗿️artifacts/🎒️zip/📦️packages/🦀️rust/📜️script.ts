@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 
 if (process.argv[2] === "retained-opc-check") {
   const root = join(import.meta.dir, "../../📦️opc/🧬️retained/🧪️tests/🧫️fixtures");

@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv from "ajv";
 
-import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
 
 const testSourceDirectory = fileURLToPath(new URL("../🧫️fixtures/🌊️actor-import", import.meta.url));
 

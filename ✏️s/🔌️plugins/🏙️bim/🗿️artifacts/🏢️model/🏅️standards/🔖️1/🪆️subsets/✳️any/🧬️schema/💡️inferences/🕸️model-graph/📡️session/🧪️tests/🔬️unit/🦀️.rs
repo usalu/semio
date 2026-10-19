@@ -1,17 +1,22 @@
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::InferenceError;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_computed;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_computed;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::projection::{apply, project, rebuild_diagnostics, retract};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::projection::{apply, project, rebuild_diagnostics, retract};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode, ModelValue, READS};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode, ModelValue, READS};
 #[allow(unused_imports)]
 use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::session::*;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2}, diff::{Entry, ModelDiff, patches::{ProjectPatch, StoreyPatch, WallPatch}}};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::session::ModelInferenceSession;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{ProjectPatch, StoreyPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;

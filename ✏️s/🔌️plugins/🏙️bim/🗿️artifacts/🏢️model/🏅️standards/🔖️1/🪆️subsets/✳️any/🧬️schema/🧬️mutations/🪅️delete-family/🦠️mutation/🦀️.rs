@@ -1,6 +1,7 @@
 //! 🪅️ `delete-family` payload. Removes a family with its parameters and solids; refused while a column type, beam type, curtain wall or railing uses it as a profile.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,7 +13,7 @@ pub struct DeleteFamily {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteFamily
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteFamily> + From<crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily> + From<crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid> + From<crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteFamily> + From<crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily> + From<semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid> + From<semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter> + semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "family", kind: "delete-family", record: "DeleteFamily" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

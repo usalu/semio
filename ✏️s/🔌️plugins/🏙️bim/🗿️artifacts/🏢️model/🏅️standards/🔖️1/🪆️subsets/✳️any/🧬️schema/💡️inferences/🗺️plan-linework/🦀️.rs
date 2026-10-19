@@ -17,18 +17,18 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Floor_plan>.
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;

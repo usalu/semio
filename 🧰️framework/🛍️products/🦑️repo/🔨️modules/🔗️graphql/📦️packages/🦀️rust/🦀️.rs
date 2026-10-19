@@ -13,7 +13,7 @@ use semio_framework_repo_graphql_schema::{NamedType, ObjectType, TypeRef};
 use semio_framework_repo_identity::{emoji_text, entity, flat};
 use semio_framework_repo_model::{
     derive_technology_kind, AnalyzeMetrics, AnalyzeResult, Breach, BreachPriority, Bundle, BundleKind, Checkpoint, Contributor, ContributorAddInput, ContributorContributionsStorage, ContributorLink,
-    Definition, DefinitionKind, Draft, DraftCreateInput, File, FilterInput, Folder, FolderKind, Goal, GoalChangeInput, GoalCloseInput, GoalCreateInput, GoalDates, GoalDeleteInput,
+    Definition, DefinitionKind, Draft, DraftCreateInput, File, FilterInput, FixResult, Folder, FolderKind, Goal, GoalChangeInput, GoalCloseInput, GoalCreateInput, GoalDates, GoalDeleteInput,
     GoalManagementData, GoalReopenInput, GoalStatus, Interaction, InteractionFile, InteractionResource, Policy, PriorityCount, Range, Section, Statute, StatuteMeta, Technology, Territory, Ticket,
     TicketAgent, TicketChangeInput, TicketCloseInput, TicketDeleteInput, TicketManagementData, TicketOpenInput, TicketReopenInput, TicketStatus, Todo, TodoChangeInput, TodoCreateInput,
 };

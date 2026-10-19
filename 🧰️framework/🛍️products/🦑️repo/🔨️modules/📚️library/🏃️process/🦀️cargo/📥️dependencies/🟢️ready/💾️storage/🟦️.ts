@@ -1,20 +1,20 @@
 import {cargoRegistryReadSelectionV1} from "../📋️selection/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
-import {requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import continuationSchema from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json";
 import {createHash,randomBytes} from "node:crypto";
 import {mkdir,writeFile,rename,rm,lstat} from "node:fs/promises";
 import {dirname,join,relative,resolve,isAbsolute,sep} from "node:path";
-import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {acquireQueuedResourceLease,checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {repositoryRustToolchainIdentityV1} from "../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts";
 import {cargoRegistryReadyPathV1,cargoRegistryReadyResolutionV1,type CargoRegistryReadyResolutionV1} from "../🟦️.ts";
-import type {RepositoryCargoInputsV1} from "../../🟦️.ts";
+import type {RepositoryCargoInputsV1} from "../../📋️contract/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const protocol=schema.definitions.Protocol.const,hash=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 interface ReadyInput {readonly path:string;readonly digest:string|null;readonly bytes:number}

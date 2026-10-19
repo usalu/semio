@@ -7,7 +7,8 @@
     "dictionary",
     "metadataCopy",
     "frontiers",
-    "grant"
+    "grant",
+    "receiving"
   ],
   "additionalProperties": false,
   "properties": {
@@ -72,6 +73,43 @@
         },
         "depth": {
           "const": 64
+        }
+      }
+    },
+    "receiving": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "engine",
+        "steps",
+        "turn",
+        "corpus"
+      ],
+      "properties": {
+        "owner": {
+          "const": "RetainedHistoryDecode"
+        },
+        "engine": {
+          "const": "RetainedHistorySourceDecode"
+        },
+        "steps": {
+          "const": [
+            "Blocked",
+            "Progress",
+            "Ready",
+            "Fault",
+            "Closed"
+          ]
+        },
+        "turn": {
+          "const": [
+            "should_yield",
+            "is_cancelled"
+          ]
+        },
+        "corpus": {
+          "const": "🗂️file/🧪️tests/🧫️fixtures/🔣️.json"
         }
       }
     }

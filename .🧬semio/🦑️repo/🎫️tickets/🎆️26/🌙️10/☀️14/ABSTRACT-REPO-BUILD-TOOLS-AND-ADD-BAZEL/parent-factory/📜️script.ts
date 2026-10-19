@@ -14,7 +14,7 @@ import type{NativeFixedPlatformOptionsV1}from"../../../../../../../../🧰️fra
 import{readNativeImageRetirementFileV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import{withOwnedCommandChannelV1,readOwnedCommandChannelLineV1,writeOwnedCommandChannelV1,captureOwnedCommandResultV1,type OwnedCommandChannelV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import fixture from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📥️parent/🔣️.json";
+import fixture from"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🧪️tests/📥️parent/🔣️.json";
 import nativeSchema from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json";
 import captureSchema from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🧬️schema/🔣️.json";
 import workerFixture from"./worker.fixture.json";

@@ -31,13 +31,14 @@ export function toolJobPuzzleReservedRoutesExact(source: string, host: string, j
       region.includes("JobTurn::Cancelled") &&
       region.includes("JobTurn::Prepare(std::mem::take(&mut self.") &&
       region.indexOf("JobTurn::Prepare(") < region.indexOf("completion.complete(") &&
-      region.includes("fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>") &&
+      region.includes("fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>") &&
+      region.includes("self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)") &&
       region.includes("self.outbox.phase(cx)?") &&
       region.includes("self.outbox.settle(") &&
       region.includes("self.outbox.borrow_outcome(descriptor)") &&
       region.includes("fn begin_close(&mut self)") &&
-      region.includes("fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> ") &&
-      region.includes("InteractiveJobCloseStep") &&
+      region.includes("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>") &&
+      region.includes("semio_framework_job::close_original_granted_step(cx,|grant|") &&
       region.includes("crate::puzzle_job::job_close_step(") &&
       region.includes("fn terminal_is_empty(&self) -> bool")
     );

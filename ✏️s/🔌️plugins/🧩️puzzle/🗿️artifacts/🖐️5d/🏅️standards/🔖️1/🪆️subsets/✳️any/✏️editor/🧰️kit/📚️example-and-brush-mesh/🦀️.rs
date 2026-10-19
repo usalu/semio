@@ -167,7 +167,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         if self.before.is_none() {
@@ -325,6 +326,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dSetActiveExampleStage::Complete => Err(Fault::from("puzzle5d-set-active-example-complete-repolled")),
             Puzzle5dSetActiveExampleStage::Closing => Err(Fault::from("puzzle5d-set-active-example-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -332,8 +336,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dSetActiveExampleWorkOwners { mutations: std::mem::take(&mut self.mutations), before: std::mem::take(&mut self.before) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -434,7 +440,8 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         match self.stage {
@@ -471,6 +478,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle5dRegisterBrushMeshStage::Complete => Err(Fault::from("puzzle5d-register-brush-mesh-complete-repolled")),
             Puzzle5dRegisterBrushMeshStage::Closing => Err(Fault::from("puzzle5d-register-brush-mesh-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -478,8 +488,10 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle5dRegisterBrushMeshWorkOwners { positions: std::mem::take(&mut self.positions), indices: std::mem::take(&mut self.indices) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

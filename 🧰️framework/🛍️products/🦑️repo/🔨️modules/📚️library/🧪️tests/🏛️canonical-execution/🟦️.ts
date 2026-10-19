@@ -5,7 +5,8 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { parse as parseToml, stringify as stringifyToml } from "@iarna/toml";
 import ts from "typescript";
-import { canonicalArchitectureEnvironment, cargoDirectories } from "../../⚡️caching/🦀️cargo/🟦️.ts";
+import { canonicalArchitectureEnvironment } from "../../⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoDirectories } from "../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import { orchestratorBudgetOpts } from "../../🏃️process/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../..");

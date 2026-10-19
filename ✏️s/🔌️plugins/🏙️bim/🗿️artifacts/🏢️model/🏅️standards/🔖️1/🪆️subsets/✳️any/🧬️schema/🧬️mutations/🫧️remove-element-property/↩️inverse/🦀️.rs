@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty;
 use crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &RemoveElementProperty, base: &ModelSnapshot) -> Vec<Op>
 where

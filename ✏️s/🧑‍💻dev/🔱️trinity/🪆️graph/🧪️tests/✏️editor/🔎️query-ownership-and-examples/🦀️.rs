@@ -32,8 +32,7 @@ async fn query_ownership_runtime_publishes_transient_result_without_document_edi
         if generation != 1 || app.ephemeral_snapshot().await.transient_generation != before {
             return Err("query result did not publish exactly once to only the results-window transient".into());
         }
-        let tree = app.render("trinity.jack.play.results", None, &results).await.map_err(|error| format!("{error:?}"))?;
-        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.results", &results, cx).await.map_err(|error| format!("{error:?}"))?;
         if !rendered.contains(&expected_name) {
             return Err("query result table did not contain the document's matching Piece".into());
         }
@@ -133,8 +132,7 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     let document = app.snapshot().expect("document after the query edit");
     assert_eq!(document.query, left_query, "the typed query is the document's");
     for context in [&editor_left, &editor_right] {
-        let tree = app.render("trinity.jack.play.editor", None, context).await.expect("editor render");
-        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("editor projection");
+        let rendered = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.editor", context, cx).await.expect("editor render");
         let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::TextEditorScene>(&rendered).expect("editor scene");
         assert_eq!(scene.buffer, left_query, "every editor window shows the document's one query");
     }
@@ -162,8 +160,8 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
     drop(left_snapshot);
     drop(right_snapshot);
     for context in [&results_left, &results_right] {
-        let tree = app.render("trinity.jack.play.results", None, context).await.expect("result render");
-        assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
+        let tree = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.results", context, cx).await.expect("result render");
+        assert!(tree.contains("table"));
     }
 
     let reloaded = <jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");

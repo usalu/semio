@@ -1,22 +1,17 @@
 #!/usr/bin/env bun
-import {repositoryCargoNetworkV1} from "./../../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { repositoryCargoNetworkV1, runDeclaredRustBuildV1, runRepositoryCargoTestExecutableV1, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode,buildModeEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { createIssuedResourceControlV1,scriptInvocationEnvironment,receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
-import {runOwnedBuildChildInvocationV1} from "../../../📚️library/🏗️build/📥️caller/📤️child/🟦️.ts";
+import { runOwnedBuildChildInvocationV1 } from "../../../📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 /** ⚙️ Builds, installs and tests the `semio-framework-repo-dashboard` crate and execs its `semio` binary (owned build route for `repo/dashboard/rs`). */
 import {join,relative} from "node:path";
-import {runRepositoryCargoTestExecutableV1} from "../../../📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
+import { mkdir, readFile } from "node:fs/promises";
+import { projectDashboardLaunch, ticketLaunchCommands, launchParameterArguments, type LaunchDocument } from "../../🌳️command-tree/🚀️launch/🟦️.ts";
 import { captureDashboardSources, installedDashboard, installDashboard, staleDashboard, launchDashboard, withInstalledDashboardV1, type DashboardExecutionOptions } from "../../📦️installation/🟦️.ts";
-import {runRepositoryCargoTests} from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {devToolingEnv} from "../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
-import {repoTestArtifactEnvironment} from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
-import {runCmd} from "../../../📚️library/🏃️process/🟦️.ts";
+import { devToolingEnv, repoTestArtifactEnvironment, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -42,10 +37,18 @@ class LaunchScript extends BundleScript {
       process.exitCode=await launchDashboard(this.repoRoot,["run",command.id,...launchParameterArguments(command,process.env)],dashboardOptions(this.invocation,this.repoRoot));return;
     }
     if(action!=="generate"&&action!=="check")throw new Error(`Unknown dashboard launch action ${action}`);
-    const output=join(this.repoRoot,".vscode/launch.json"),current=JSON.parse(await readFile(output,"utf8"));
+    const {readLaunchSeed,writeLaunchSeed,writeLaunchCatalog,checkLaunchCatalog}=await import("../../../📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts");
+    const current=readLaunchSeed(this.repoRoot) as unknown as LaunchDocument;
     const projected=projectDashboardLaunch(current,commands,ticket);
-    if(action==="check"&&JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
-    if(action==="generate")await writeFile(output,JSON.stringify(projected,null,2)+"\n");
+    if(action==="check"){
+      if(JSON.stringify(current)!==JSON.stringify(projected))throw new Error("Dashboard launch projection is stale");
+      const problems=checkLaunchCatalog(this.repoRoot);
+      if(problems.length)throw new Error(`Launch catalog is stale: ${problems.slice(0,5).join("; ")}`);
+      return;
+    }
+    writeLaunchSeed(this.repoRoot,projected as unknown as Parameters<typeof writeLaunchSeed>[1]);
+    const {problems}=writeLaunchCatalog(this.repoRoot);
+    if(problems.length)throw new Error(`Launch catalog is invalid: ${problems.slice(0,5).join("; ")}`);
   }
 }
 

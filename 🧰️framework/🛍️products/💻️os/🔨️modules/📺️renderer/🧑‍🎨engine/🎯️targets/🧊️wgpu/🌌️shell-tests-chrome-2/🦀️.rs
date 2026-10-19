@@ -23,7 +23,12 @@ use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Rect, Theme, WindowLayout, WindowMeasure, WindowStackCorner};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowMeasure, WindowStackCorner};
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🛰️Dock/🧪️tests/🔬️wgpu-shell-bound/🦀️.rs"]

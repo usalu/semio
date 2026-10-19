@@ -1,20 +1,17 @@
-import type { SocketGrantReceiptV1, DocumentSocketGrantReceiptV1, HubSessionPortResponseV1, CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1, BackboneWorkerResponse, DirectoryStreamMessage } from "../../../../🟦️";
+import type { SocketGrantReceiptV1, DocumentSocketGrantReceiptV1, HubSessionPortResponseV1, CanonicalDirectoryEventPageV1, DirectoryEventPageAckV1, BackboneWorkerResponse, DirectoryStreamMessage, DirectoryAcknowledgedStream, DirectoryAdministrationPhaseV1 } from "../../../../🟦️";
 import { type DirectorySessionAuthorityV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES } from "@semio-tech/framework/directory/schema/session-authority-v1";
 import { type FetchTimeoutResponse, fetchWithTimeout } from "@semio-tech/framework";
 import { parseDirectorySessionAuthorityJsonV1 } from "@semio-tech/framework/directory/io/text/session-authority-v1";
 import { HUB_SESSION_CAPABILITY_PATTERN_V1, parseHubSessionPortRequestV1, parseSocketGrantReceiptV1, DirectoryClient, createSocketGrantIssuerV1, HUB_RECONNECT_MIN_MS, DirectoryHttpError, DirectoryCommandError } from "../../../../🟦️";
-import type { DocumentOpenPlanV1, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1 } from "@semio-tech/framework/directory/schema";
+import type { DocumentOpenPlanV1, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectorySpaceAdministrationPageV1, DirectoryCommandOutcomeV1 } from "@semio-tech/framework/directory/schema";
 import { DIRECTORY_PREFERENCE_PAGE_PATH_V1 } from "@semio-tech/framework/directory/schema";
 import { directoryStreamWakeV1 } from "@semio-tech/framework/directory";
 import { directoryCommandErrorIsTransient } from "@semio-tech/framework/directory/schema";
 import { artifacts, documentServices, post } from "../🧾️document-state/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { type ExecutionTargetReadControl, emitExecutionTargetStatus, readBoundedExecutionTargetBody, readExecutionTargetJson } from "../📥️execution-target-read/🟦️.ts";
-import { artifactBootstrapFailure, closeArtifactRuntime, directoryCommandOperations, directoryCommandQueue, scopedDirectoryStreams, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations } from "../🛑️session-teardown/🟦️.ts";
+import { type DirectoryCommandTransportOperationV1, artifactBootstrapFailure, closeArtifactRuntime, directoryCommandOperations, directoryCommandQueue, scopedDirectoryStreams, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations } from "../🛑️session-teardown/🟦️.ts";
 import { SOCKET_GRANT_REQUEST_TIMEOUT_MS } from "../⚙️constants/🟦️.ts";
-import type { DirectoryBootstrapOwner, DirectoryBootstrapTransition } from "../🧭️directory-bootstrap/🟦️.ts";
-import type { DirectoryCommandTransportOperationV1 } from "../📇️space-artifact-creation/🟦️.ts";
-import type { DirectoryAdministrationOperationV1 } from "../🛡️directory-administration/🟦️.ts";
 
 const SOCKET_GRANT_REQUEST_LIMIT = 256;
 const DOCUMENT_OPEN_RESPONSE_MAX_BYTES = 64 * 1024;
@@ -303,6 +300,17 @@ export function setDirectorySessionEpoch(value: typeof directorySessionEpoch): v
 
 export let directoryWorkerEpoch = 0;
 
+export type DirectoryBootstrapTransition = { readonly kind: "fetch"; readonly after: number } | { readonly kind: "live"; readonly since: number };
+
+export type DirectoryBootstrapOwner = {
+  readonly machine: DirectoryEventPageBootstrapV1;
+  readonly client: DirectoryClient;
+  readonly abort: AbortController;
+  stream: DirectoryAcknowledgedStream | null;
+  retry: ReturnType<typeof setTimeout> | null;
+  fetching: boolean;
+};
+
 /** 🧭️ Sole browser-worker owner of the fetch → retained Home ACK → live cursor. */
 export class DirectoryEventPageBootstrapV1 {
   readonly bootstrapEpoch: number;
@@ -580,6 +588,27 @@ export async function flushDirectoryQueue(): Promise<void> {
  * indeterminate transport becomes `failed` ("unknown outcome / refresh required"), because only an
  * exact server receipt may advance the pane. */
 const DIRECTORY_ADMINISTRATION_CAPACITY = 1;
+
+export type DirectoryAdministrationOperationV1 = {
+  readonly operationEpoch: number;
+  readonly spaceId: string;
+  readonly sessionEpoch: number;
+  readonly workerEpoch: number;
+  abort: AbortController;
+  phase: DirectoryAdministrationPhaseV1;
+  canonicalJson: string | null;
+  page: DirectorySpaceAdministrationPageV1 | null;
+  pageRead: AbortController | null;
+  receiptSha256: string | null;
+  outcome: DirectoryCommandOutcomeV1 | null;
+  inviteToken: string | null;
+  inviteCapabilityStatus: "available" | "copying" | "failed" | null;
+  inviteTransferEpoch: number | null;
+  nextInviteTransferEpoch: number;
+  requestId: string | null;
+  authorPage: boolean;
+  closed: boolean;
+};
 
 export let directoryAdministration: DirectoryAdministrationOperationV1 | null = null;
 /** 🧪️ Assigns `directoryAdministration` for the test seam, because an imported binding cannot be assigned outside its declaring module. */

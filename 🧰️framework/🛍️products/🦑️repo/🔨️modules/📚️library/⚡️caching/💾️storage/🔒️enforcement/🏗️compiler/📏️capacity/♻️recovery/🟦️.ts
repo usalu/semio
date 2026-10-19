@@ -4,11 +4,11 @@ import{repositoryCompilerLayoutV1}from"../../📍️layout/🟦️.ts";
 import{requireCompilerWriterCustodyV1}from"../🟦️.ts";
 import{lstat,mkdtemp,rm,statfs}from"node:fs/promises";
 import{join}from"node:path";
-import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import{checkScriptInvocation,type ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{readBuildMode,type BuildMode}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{readBuildMode,type BuildMode}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 /** ♻️ Reclaims only finalized compact units under the retained real writer without queueing behind a caller's own readers. */
 export async function recoverCompactCompilerHeadroomV1(workspace:string,mode:BuildMode,original:ScriptInvocation,control:ResourceLeaseControl,storage:NativeStorageReservationV1):Promise<void>{

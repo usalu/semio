@@ -1,5 +1,5 @@
 /** 🧩️ S deployment explicitly composes neutral registry, S guests and Hub catalog owners. */
-import { composeRebuildPlansV1, readRebuildPlanV1, type RebuildPlanV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts";
+import { composeRebuildPlansV1, readRebuildPlanV1, type RebuildPlanV1 } from "@semio-tech/plugin-registry/rebuild";
 import { fileURLToPath } from "node:url";
 
 /** 🧊️ S owns its guest checks and staging operations. */

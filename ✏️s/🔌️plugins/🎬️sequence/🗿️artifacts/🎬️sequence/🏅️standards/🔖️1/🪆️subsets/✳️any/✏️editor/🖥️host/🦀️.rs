@@ -11,7 +11,7 @@ use semio_framework_plugin::DslValue;
 use imperative_engine::{Executor, Path, RunResult, Step, imperative_catalogue_json, imperative_module_registry};
 use semio_framework_graph_manifest::PropertyBag;
 use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceStep, SlotRef, StepParams};
-use crate::editor::sequence::base::{SequenceCoreError, dag_camera_from_sequence, sequence_camera_from_dag};
+use crate::editor::sequence::editor_vocabulary::{SequenceCoreError, dag_camera_from_sequence, sequence_camera_from_dag};
 
 //#region 🔖️Host
 const SEQUENCE_DAG_COMPONENT_WIDTH: f64 = 200.0;

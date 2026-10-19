@@ -1,15 +1,18 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::data::PARENTS_SET;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::PARENTS_SET;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::projection::*;
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, testkit::house};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::{report, projection};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::house;
 
 const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house");
 
@@ -88,7 +91,7 @@ fn read_notated(name: &str) -> Vec<u8> {
 
 #[test]
 fn the_report_lists_every_annotation_with_its_kind_printed_text_curves_literals_and_total() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::notated;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::notated;
     let report = projection(&notated());
     assert_eq!(report.counts["IfcAnnotation"], 15);
     assert_eq!(report.counts["IfcTextLiteralWithExtent"], 14);
@@ -105,7 +108,7 @@ fn the_report_lists_every_annotation_with_its_kind_printed_text_curves_literals_
 
 #[test]
 fn the_committed_notated_file_is_the_current_export() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::notated;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::notated;
     let (bytes, _) = export_ifc2x3(&notated()).expect("the room exports");
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::create_dir_all(NOTATED_DIR).expect("the fixture directory");
@@ -116,7 +119,7 @@ fn the_committed_notated_file_is_the_current_export() {
 
 #[test]
 fn the_notated_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::notated;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::notated;
     let oracle: serde_json::Value = serde_json::from_slice(&read_notated("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&notated()).to_json()).unwrap();
     assert_eq!(oracle["schema"], ours["schema"]);
@@ -143,7 +146,7 @@ fn read_ceilings(name: &str) -> Vec<u8> {
 
 #[test]
 fn the_report_counts_the_coverings_and_measures_only_the_flat_ceilings_with_straight_edges() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
     let report = projection(&ceilings());
     assert_eq!((report.counts["IfcCovering"], report.counts["IfcCoveringType"]), (4, 3));
     assert_eq!(report.containment["st-ground"], ["c-curved", "c-diagonal-slope", "c-holed", "c-sloped"]);
@@ -153,7 +156,7 @@ fn the_report_counts_the_coverings_and_measures_only_the_flat_ceilings_with_stra
 
 #[test]
 fn the_committed_ceilings_file_is_the_current_export() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
     let (bytes, notes) = export_ifc2x3(&ceilings()).expect("the ceilings export");
     assert!(notes.is_empty(), "{notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
@@ -164,7 +167,7 @@ fn the_committed_ceilings_file_is_the_current_export() {
 
 #[test]
 fn the_ceilings_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::ceilings;
     let oracle: serde_json::Value = serde_json::from_slice(&read_ceilings("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&ceilings()).to_json()).expect("the report parses");
     assert_eq!(oracle["schema"], ours["schema"]);
@@ -185,7 +188,7 @@ fn read_psets(name: &str) -> Vec<u8> {
 
 #[test]
 fn the_report_lists_the_systems_with_their_parents_the_attached_codes_and_the_typed_type_properties() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::psets;
     let report = projection(&psets());
     let din = &report.classifications.systems["DIN 276|2018-12"];
     assert_eq!(din.source, "https://www.din.de");
@@ -206,7 +209,7 @@ fn the_report_lists_the_systems_with_their_parents_the_attached_codes_and_the_ty
 
 #[test]
 fn the_json_form_of_the_classification_and_type_property_tables_parses() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::psets;
     let parsed: serde_json::Value = serde_json::from_str(&projection(&psets()).to_json()).expect("valid JSON");
     assert_eq!(parsed["classifications"]["systems"]["DIN 276|2018-12"]["entries"][1], "330|Exterior walls|300");
     assert_eq!(parsed["classifications"]["attached"]["dr-180"][0], "DIN 276|2018-12|300");
@@ -217,7 +220,7 @@ fn the_json_form_of_the_classification_and_type_property_tables_parses() {
 
 #[test]
 fn the_committed_psets_file_is_the_current_export() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::psets;
     let (bytes, notes) = export_ifc2x3(&psets()).expect("the psets model exports");
     assert!(notes.is_empty(), "{notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
@@ -229,7 +232,7 @@ fn the_committed_psets_file_is_the_current_export() {
 
 #[test]
 fn the_psets_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::testkit::psets;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::psets;
     let oracle: serde_json::Value = serde_json::from_slice(&read_psets("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&psets()).to_json()).expect("the report parses");
     assert_eq!(oracle["schema"], ours["schema"]);

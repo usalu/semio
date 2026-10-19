@@ -618,7 +618,7 @@ fn production_reachability_fixture_and_hostile_source_census_reject_the_old_rout
     let host = read_source("../../🖥️host/🏃️runtime/🟨️.js");
     let browser = read_source("../../🌐️browser/🏃️runtime/🟨️.js");
     let package_publication = read_source("../../🌐️browser/📦️publication/🟦️.ts");
-    let package_build = read_source("../../../🫀️core/📦️packages/🦀️rust/📜️script.ts");
+    let package_build = read_source("../../../🎁️browser-package/📦️packages/🦀️rust/📜️script.ts");
     let production_loader = read_source("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx");
     for symbol in ["vcsCheckpoint", "vcsFault", "vcsRetryCheckpoint"] {
         assert!(schema.contains(symbol));

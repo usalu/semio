@@ -1,7 +1,7 @@
 //! 🪜️ `set-site` / `raises-the-absolute-levels`: inference level. The site elevation is a datum of the parametric chain: changing it moves the
 //! absolute elevation of every storey it carries by the same amount (`storey-levels`) and leaves the building-relative elevations alone.
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::mutations::kit::{self, Case};
 use protocol::Mutation;
 

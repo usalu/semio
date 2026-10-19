@@ -177,7 +177,7 @@ fn initial_projection_template_seeds_the_actual_delivered_camera_before_fit() {
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let mut state = World3dState::new("surface-template".into(), "controller".into());
-    let spec = ui_wgpu::wgpu::default_projection_spec();
+    let spec = ui_scene::math::default_projection_spec();
     assert!(!apply_world3d_initial_projection_seed(&mut state.session, &mut state.camera, &mut state.scene, &mut state.bridge, spec), "a template never races ahead of the delivered camera lease");
 
     drive_scene_bridge(&mut state, &camera_framing_scene(&fixture, "perspective", true, None), viewport);
@@ -461,7 +461,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
     assert_eq!(interaction_id, "extrude@solid");
 
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("camera target projects");
     let hit = pick_instance_at(&state.session, &state.camera, &state.scene, screen[0], screen[1], bounds);
     assert_eq!(hit.as_deref(), Some(instance_id.as_str()), "the bridged geometry is what a world pick actually hits");
     let select = pick_select_action(&state.session, &state.camera, &state.selection, &state.interaction, &state.scene, screen[0], screen[1], bounds, false, false).expect("pick emits an action");

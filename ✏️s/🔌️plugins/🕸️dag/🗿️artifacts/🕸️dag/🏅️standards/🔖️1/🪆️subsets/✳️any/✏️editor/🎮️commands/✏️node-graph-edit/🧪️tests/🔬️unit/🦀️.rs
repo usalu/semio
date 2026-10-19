@@ -75,9 +75,9 @@ async fn send(app: &mut DagApp, verb: &str, args: serde_json::Value) {
     let action_meta = meta("local");
     let aborting = args.get("abort").is_some();
     let args: semio_framework_value::DslValue = args.into();
-    app.handle_action(verb, Some(&args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} admitted: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb} admitted: {fault:?}"));
     if !aborting {
-        settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the dispatch settles");
+        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the dispatch settles");
     }
 }
 
@@ -129,7 +129,7 @@ async fn a_node_drag_record_is_one_transaction_of_one_relative_move() {
     assert!(rows[0].op_lines.iter().all(|line| line.starts_with("dragNodes")), "{:?}", rows[0].op_lines);
     assert_eq!(english(&rows[0]), "Drag 2 nodes by (40, -12.5)");
     assert_eq!(german(&rows[0]), "2 Knoten um (40; -12,5) ziehen");
-    settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     for (id, base) in ids.iter().zip(&bases) {
         assert_eq!(position(&app, id), *base, "one undo restores the drag");
     }
@@ -204,7 +204,7 @@ async fn the_inspector_patches_are_absolute_leaves() {
 
 async fn history_edit(app: &mut DagApp, verb: &str, args: serde_json::Value) {
     let args: semio_framework_value::DslValue = args.into();
-    let result = app.handle_action(verb, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -217,7 +217,7 @@ async fn pump_time_travel(app: &mut DagApp, done: impl Fn(Option<semio_framework
         if done(time_travel_stage(app).await) {
             return;
         }
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel_stage(app).await);

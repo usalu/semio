@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_column_type::DeleteColumnType;
 use crate::standards::v1::subsets::any::schema::mutations::create_column_type::CreateColumnType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateColumnType, base: &ModelSnapshot) -> Vec<Op>
 where

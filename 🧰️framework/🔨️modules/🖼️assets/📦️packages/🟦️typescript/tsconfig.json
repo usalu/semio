@@ -15,7 +15,7 @@
   "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
     "tsBuildInfoFile": "../../../../../node_modules/.cache/tsconfig.assets.tsbuildinfo",
-    "types": ["bun", "node"]
+    "types": ["bun", "node", "vitest/importMeta"]
   },
   "include": ["🟦️.ts", "📜️script.ts"]
 }

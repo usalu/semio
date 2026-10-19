@@ -22,12 +22,13 @@ import { type MutationEnvelope } from "@semio-tech/framework/replication";
 import { IDENTITY_CONFIG_SCHEMA } from "@semio-tech/framework/backbone/config-lane";
 import { type Identity, type IdentityConfigMutation, applyIdentityConfigMutation } from "@semio-tech/framework/config/mutations";
 import { type UiLocale } from "@semio-tech/ui-react";
-import { type AppSurfaceSessionFactory } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { type FrameworkOsDefaults, type ResolvedShellLocks } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
 import { SILENT_STREAM_MUX_ENDPOINT_V1, StreamMuxChannelV1, pageStreamMuxChannelV1, type StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
 import type { PluginCatalog } from "@semio-tech/framework";
-import { type InstalledServicePresentationV1 } from "../🪪️host-bootstrap/🟦️.tsx";
+import type { InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
+import type { ReactNode } from "react";
 import type { ShellHostPortsV1 } from "../🪝️host-ports/🟦️.ts";
+import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 export function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?: DocumentScope }): string | null {
   const scope = message.scope;
@@ -59,7 +60,7 @@ export function hubSessionStorageV1(): HubConnectionStorageV1 | null {
 export interface FrameworkOsShellProps {
   readonly catalog: PluginCatalog;
   readonly backboneWorkerFactory?: () => Worker;
-  readonly documentServices?: readonly InstalledServicePresentationV1[];
+  readonly documentServices?: readonly InstalledServicePresentationV1<ReactNode>[];
   readonly hostPorts?: ShellHostPortsV1;
   readonly surfaceSessionFactories?: readonly AppSurfaceSessionFactory[];
   readonly pluginFilter?: string;

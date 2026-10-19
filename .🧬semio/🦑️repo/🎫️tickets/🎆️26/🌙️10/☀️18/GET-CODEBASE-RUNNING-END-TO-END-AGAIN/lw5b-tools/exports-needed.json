@@ -1,0 +1,32 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/assets",
+   "newExportEntries": 1,
+   "importerEdges": 1
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/assets": {
+   "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts",
+    "proposedSubpath": "./abbau-aufbau/hexagonal-cut-concrete-forest-left",
+    "packageJsonEntry": {
+     "./abbau-aufbau/hexagonal-cut-concrete-forest-left": "./🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts"
+    },
+    "packageJson": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+    "placeAfter": "./metabolism/representation/capsules/j/capsule-j",
+    "symbols": [
+     "hexagonalCutConcreteForestLeftGlbUrl"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧱️block/📖️stories/🧭️coordination/🟦️.ts"
+    ],
+    "importerRewrite": "replace the relative import with `import { hexagonalCutConcreteForestLeftGlbUrl as hexagonalCutLeftGlbUrl } from \"@semio-tech/assets/abbau-aufbau/hexagonal-cut-concrete-forest-left\";`"
+   }
+  }
+ },
+ "noChange": {
+  "@semio-tech/stdio-docx": "root export stays dist-based (36 of 38 stdio artifact packages use ./dist/🟦️.js; only stdio-inventory-ts exports source). Fix is the :build materialisation, blocked by the bun.lock path drift in dependencies-needed.json."
+ }
+}

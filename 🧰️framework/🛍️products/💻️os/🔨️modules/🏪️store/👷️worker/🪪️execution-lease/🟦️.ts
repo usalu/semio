@@ -2,11 +2,11 @@ import type { DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgr
 import type { DocumentSocketGrantReceiptV1, PersistenceBinding } from "../../../../🟦️";
 import { parseDocumentSocketGrantReceiptV1, decodePackValue, packValueToExactJson, encodePackValue } from "../../../../🟦️";
 import { sameExecutionTargetV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "../../../📇️directory/🧬️schema/🔏️document-open/🟦️.ts";
-import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "../../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts";
+import { assertBrowserActorDescribeCapacityV1, verifyBrowserActorDescribeV1 } from "@semio-tech/framework-plugin/browser-bundle/describe";
 import { type AdmittedDocumentServiceDeclarationV1, DOCUMENT_SERVICE_TOPIC_V1 } from "@semio-tech/framework/inference/service";
 import type { PackValue } from "../../../../🟦️";
 import { admitDocumentServiceWireDeclarationV1 } from "@semio-tech/framework/inference/service/io";
-import type { BrowserActorChildValue } from "../../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import { requestExecutionTargetAssetV1, executionTargetRetrySleepV1 } from "../🔁️execution-target-retry/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { measureChildValue, BROWSER_ACTOR_CHILD_LIMITS } from "@semio-tech/framework/browser-bundle/child/schema";
@@ -15,10 +15,14 @@ import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/fram
 import { blake3Hex } from "@semio-tech/framework";
 import { EXECUTION_TARGET_MANIFEST_MAX_BYTES, SOCKET_GRANT_REQUEST_TIMEOUT_MS, documentExecutionTargetLeaseBrand, documentExecutionTargetLeaseMintToken } from "../⚙️constants/🟦️.ts";
 import type { DocumentBrowserActorChild, DocumentBrowserActorGrant, DocumentBrowserActorOpen } from "../🧩️actor-wire-helpers/🟦️.ts";
-import { type DocumentRenderSurfacesV1, type ExecutionTargetReadControl, assertExecutionTargetRead, emitExecutionTargetStatus, executionTargetAssetPath, executionTargetSha256Hex, parseVerifiedPackageDescriptorV1, readExecutionTargetBody, readExecutionTargetJson, receiptFreeFields } from "../📥️execution-target-read/🟦️.ts";
-import type { DocumentExecutionTargetAssetV1 } from "../🧊️cold-pair/🟦️.ts";
+import { type DocumentExecutionTargetAssetV1, type DocumentRenderSurfacesV1, type ExecutionTargetReadControl, assertExecutionTargetRead, emitExecutionTargetStatus, executionTargetAssetPath, executionTargetSha256Hex, parseVerifiedPackageDescriptorV1, readExecutionTargetBody, readExecutionTargetJson, receiptFreeFields } from "../📥️execution-target-read/🟦️.ts";
 import { hubSessionFetch } from "../🔐️hub-session/🟦️.ts";
 import type { ArtifactState } from "../🧾️document-state/🟦️.ts";
+
+/** 🪪️ This module owns the `executionTargetLease` slot of the artifact state. */
+declare module "../🧾️document-state/🟦️.ts" {
+  interface ArtifactOwnerSlots { executionTargetLease: DocumentExecutionTargetLease }
+}
 
 /** 🪪️ Private non-serializable owner of one verified execution target. Its constructor is
  * unreachable outside this module (a module-private mint token), it owns the verified component and

@@ -6,7 +6,7 @@ import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
 import Parser from "web-tree-sitter";
 import {parseArtifactRef} from "@semio-tech/schema-ts/artifact-reference";
-import vocabulary from "../../🔣️.json";
+import vocabulary from "../../🔣️.json" with { type: "json" };
 import { artifactReferenceSchema as references } from "@semio-tech/schema-ts/artifact-reference";
 import { ioOwnershipFixture as corpus } from "@semio-tech/framework/io/testing/fixtures/ownership";
 const owner=resolve(import.meta.dir,"../..");

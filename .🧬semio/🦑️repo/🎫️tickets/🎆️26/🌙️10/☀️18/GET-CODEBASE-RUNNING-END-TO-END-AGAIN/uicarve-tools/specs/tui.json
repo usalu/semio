@@ -205,12 +205,6 @@
    "tests_only": true,
    "mounts": [
     {
-     "name": "tests",
-     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs",
-     "cfg": "#[cfg(test)]",
-     "vis": ""
-    },
-    {
      "name": "text_elements",
      "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️text-elements/🦀️.rs",
      "cfg": "#[cfg(test)]",
@@ -247,6 +241,22 @@
      "vis": ""
     }
    ]
+  },
+  "unit-laws": {
+   "pkg": "semio-framework-ui-tui-unit-laws",
+   "id": "ui-tui-unit-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit",
+   "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs",
+   "desc": "semio tui unit corpus: layout, window, table, parser, theme, geometry, text, cell, ANSI, vt and widget laws",
+   "tests_only": true
+  },
+  "vt-laws": {
+   "pkg": "semio-framework-ui-tui-vt-laws",
+   "id": "ui-tui-vt-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit",
+   "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🦀️.rs",
+   "desc": "semio tui virtual terminal laws: screen sequences, history reflow, pane input and pointer, encoders and the shared corpus",
+   "tests_only": true
   },
   "host": {
    "pkg": "semio-framework-ui-tui-host",

@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `SetCurtainWallType`: a sparse curtain wall type patch of exactly the provided fields that differ. Provided grid rules, mullion
 //! sections, default panel and materials follow the create rules; a patch that changes nothing is a no-op. Every curtain wall of the type follows by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{grid_flaw, material_flaw, panel_flaw, profile_flaw, Flaw};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{grid_flaw, material_flaw, panel_flaw, profile_flaw, Flaw};
 use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn flaw_of(payload: &SetCurtainWallType, base: &ModelSnapshot) -> Option<Flaw> {

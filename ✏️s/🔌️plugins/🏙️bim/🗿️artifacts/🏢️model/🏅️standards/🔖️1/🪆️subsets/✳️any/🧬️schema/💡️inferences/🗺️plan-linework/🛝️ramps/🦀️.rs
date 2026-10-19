@@ -1,7 +1,7 @@
 //! 🛝️ Ramps in the plan: the mitred outline of the slab (arcs stay arcs), a line across the width at every end of a landing, the up arrow along the centre line, and the slope tag (percent and ratio) at its middle.
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, PlanKind, PlanStyle, PlanVertex, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, LENGTH_EPS};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, LENGTH_EPS};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 

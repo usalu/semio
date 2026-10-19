@@ -26,7 +26,7 @@ async fn rotate_selection_composes_world_axes_and_preserves_the_result_selection
     let snapshot = context::snapshot(&app);
     assert!(snapshot.host_snapshot.synapses.iter().any(|wire| wire.from == ROTATE_ID && wire.to == "extrude__gumball_rotate__gumball_translate"));
     drop(snapshot);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 
@@ -63,7 +63,7 @@ async fn an_ids_less_rotate_transforms_the_framework_owned_graph_selection() {
     assert!(projection.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == ROTATE_ID && neuron_kind == "brep.xform.rotate")));
     assert!((crate::gumball_param_number(&projection.host_snapshot, ROTATE_ID, "angle", 0.0) - std::f64::consts::FRAC_PI_4).abs() < 1e-12);
     drop(projection);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🧯️ A rotate that names nothing at all changes nothing — no neuron, no mutation, no coalesce key.

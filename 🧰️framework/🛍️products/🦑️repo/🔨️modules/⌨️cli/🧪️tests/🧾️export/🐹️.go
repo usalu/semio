@@ -66,6 +66,10 @@ func (c *testExportContext) Analyze(scope *string) (*model.AnalyzeResult, error)
 	return &model.AnalyzeResult{}, nil
 }
 
+func (c *testExportContext) Fix(scope *string) (*model.FixResult, error) {
+	return &model.FixResult{}, nil
+}
+
 func (c *testExportContext) GoalCreate(input model.GoalCreateInput) (*model.Goal, error) {
 	return nil, nil
 }

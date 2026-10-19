@@ -22,6 +22,7 @@ use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_3d::mesh::VertexId;
 use semio_framework_3d::mesh::WeldMode;
 use semio_framework_3d::mesh::MirrorAxis;
+use semio_framework_3d::mesh::MeshModelingOps;
 use semio_framework_3d::mesh::MeshModelingJob;
 use semio_framework_3d::mesh::MeshModelingStep;
 use semio_framework_3d::mesh::MeshModelingProgress;

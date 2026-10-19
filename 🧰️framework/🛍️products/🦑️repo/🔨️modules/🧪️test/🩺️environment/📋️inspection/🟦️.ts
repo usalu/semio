@@ -1,7 +1,7 @@
 import { oracleHostPython } from "../../🖥️host/🏗️materialization/🟦️.ts";
 import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { discoverTestCases, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { runProbe } from "../../../📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { runProbe } from "@semio-tech/repo-lib/process";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, relative, sep } from "node:path";
 

@@ -12,7 +12,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/trinity-jack-lsp-worker",
     environment: "node",
-    include: ["🟦️.ts", "../../🟦️.ts"],
-    coverage: { include: ["🟦️.ts", "../../🟦️.ts"] },
+    include: ["../../🧪️tests/🔖️protocol/🟦️.ts", "../../🧪️tests/📡️worker/🟦️.ts"],
+    coverage: { include: ["../../🟦️.ts", "../../🔖️protocol/🟦️.ts"] },
   },
 });

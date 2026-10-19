@@ -1,5 +1,5 @@
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../🌳️module-tree/🟦️.ts";
 import { declaredNames, hostPrivate } from "../🧪️test-closure/🟦️.ts";
 

@@ -1,0 +1,12 @@
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+import { readModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { plugin as text } from "./trace.ts";
+const base = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
+const contractRoot = join(base, "🧪️tests");
+const tests = readdirSync(contractRoot).filter((n) => n.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((n) => readModuleTreeSource(join(contractRoot, n, "🦀️.rs"))).join("\n");
+for (const t of ["self.token.child_now()", "compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel", "scope.operation"]) console.log(JSON.stringify(t), text.includes(t));
+for (const n of ["retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close", "retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document", "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work", "a_status_only_host_call_finishes_every_typed_operation_it_admitted"]) console.log(n, tests.includes(`async fn ${n}()`), tests.includes(`fn ${n}()`));
+const b = text.indexOf("async fn dispatch_typed_command_inner(");
+const order = ["self.tools.live_runtime_instance_id != Some(meta.instance_id)", "self.media.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)", "registration.latest_wins_command_disposer", "self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.tools.latest_wins_order.push(operation_id.0)"];
+console.log(order.map((o) => text.indexOf(o, b) - b).join(" "));

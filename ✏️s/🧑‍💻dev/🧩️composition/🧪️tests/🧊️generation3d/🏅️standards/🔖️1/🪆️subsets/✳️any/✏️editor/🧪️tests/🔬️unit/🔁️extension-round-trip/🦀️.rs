@@ -29,7 +29,7 @@ async fn hex_column_evaluates_end_to_end_through_the_extension_round_trip() {
     }
 
     let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded column must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
@@ -113,7 +113,7 @@ async fn host_pushed_contribution_pages_install_the_registry_the_served_chain_ne
         assert_eq!(node_eval_status(&status_json, widget_id), "ok", "{widget_id} never finished evaluating under a host-pushed registry: {status_json}");
     }
     let preview = context::render(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "a host-pushed registry must reach a painted preview, got {mesh_count}: {}", world.meshes_json);
@@ -177,12 +177,12 @@ async fn the_shell_boot_surface_burst_renders_inside_one_turn() {
         let view = if body_key == flow_window::GENERATION_3D_PLAY_BODY_MAIN { flow.clone() } else { preview.clone() };
         let started = std::time::Instant::now();
         eprintln!("[STATS] shell burst rendering {body_key}");
-        let rendered = app.render(body_key, None, &view).await;
+        let rendered = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view, app.1.cx()).await;
         let elapsed = started.elapsed();
         println!("[STATS] shell burst {body_key} ok={} elapsed_ms={}", rendered.is_ok(), elapsed.as_millis());
         assert!(elapsed < std::time::Duration::from_secs(2), "surface {body_key} took {elapsed:?} to render, more than one interactive turn can afford");
-        if let Ok(tree) = rendered {
-            semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("a rendered shell surface projects");
+        if let Ok(json) = rendered {
+            assert!(!json.is_empty(), "a rendered shell surface projects");
         }
     }
     let burst = burst.elapsed();
@@ -302,11 +302,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let faulted: serde_json::Value = owner
         .with_session_waking(|session| serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, Err(miss))).expect("preview status json"))
         .expect("the retained evaluation-session owner lends its session");
-    for _ in 0..1_000_000 {
-        if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
-            break;
-        }
-    }
+    assert!(context::close_instance_operation_owner(&mut owner), "the projection's own session owner must reach its terminal close");
     assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
     assert_eq!(faulted.get("phase").and_then(serde_json::Value::as_str), Some("faulted"), "{faulted}");
     let label = faulted.get("phaseLabel").expect("the faulted phase carries its own label pair");
@@ -460,14 +456,14 @@ async fn re_pushing_an_unchanged_closure_owes_the_settled_run_nothing() {
 
 /// 📈 The preview window's published tessellation phase.
 fn preview_phase(preview_body_json: &str) -> String {
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let status: serde_json::Value = serde_json::from_str(world.status_json.as_deref().unwrap_or("{}")).expect("preview status json");
     status.get("phase").and_then(serde_json::Value::as_str).unwrap_or("<absent>").to_string()
 }
 
 /// 🧊 How many meshes the preview window actually painted.
 fn preview_mesh_count(preview_body_json: &str) -> usize {
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(preview_body_json).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     meshes.as_array().map_or(0, Vec::len)
 }

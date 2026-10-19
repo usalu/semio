@@ -15,8 +15,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/cad-js-module-aec-building-energy",
     environment: "node",
-    include: [],
+    include: ["🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts"],
     coverage: { include: ["🟦️.ts"] },
-    includeSource: ["🟦️.ts"],
   },
 });

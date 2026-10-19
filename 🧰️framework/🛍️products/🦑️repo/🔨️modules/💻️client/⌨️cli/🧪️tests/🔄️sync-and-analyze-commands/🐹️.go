@@ -100,6 +100,7 @@ func TestExhaustiveCodebaseCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow codebase test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolCodebase()
 	if result.Error != "" {
 		t.Errorf("ToolCodebase returned error: %s", result.Error)
@@ -160,16 +161,5 @@ func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 	}
 	if ar.Breachs[0].Summary != "hello" {
 		t.Fatalf("unexpected breach: %+v", ar.Breachs[0])
-	}
-}
-
-// 🔧️#region 🎁️Fix
-func TestFixCommand(t *testing.T) {
-	result := ToolFix("compose/js")
-	if result.Error == "" {
-		t.Fatal("expected ToolFix to error now that server-side fix was removed")
-	}
-	if !strings.Contains(result.Error, "fix was removed") {
-		t.Fatalf("unexpected ToolFix error: %s", result.Error)
 	}
 }

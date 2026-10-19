@@ -7,7 +7,7 @@ import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./schema.json"with{type:"json"};
 import requestSchema from"../../🎛️operation/🧬️schema/🔣️.json"with{type:"json"};
 import*as issuance from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 const outside=AsyncLocalStorage.snapshot();
 test("graph operation neutral private lineage corpus agrees with Ajv and SQLite",()=>{expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const request=new Ajv({strict:true}).compile(requestSchema);expect(request(corpus.request)).toBe(true);for(const row of corpus.invalidRequests)expect(request(row)).toBe(false);const db=new Database(":memory:");try{db.exec("create table cases(name text primary key,accepted integer)");for(const row of corpus.cases)db.query("insert into cases values(?,?)").run(row.name,Number(row.accepted));expect(db.query("select sum(accepted) accepted,count(*) total from cases").get()).toEqual({accepted:2,total:5});}finally{db.close();}});
 test("graph operation private lineage refuses genuine foreign births with equal authored data",()=>withBuildTestInvocationV1(async root=>{
@@ -17,10 +17,10 @@ test("graph operation private lineage refuses genuine foreign births with equal 
 import{join,dirname}from"node:path";
 import{randomBytes,createHash}from"node:crypto";
 import{withRepositoryCacheStoreV1}from"../../../../📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{openNativePlatformStorageV1,retireNativePlatformStorageV1,requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import{acquireNativeStorageV1,recoverNativeStorageReservationV1,observeNativeStorageStateV1,nativeStorageRetirementPortV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{acquireResourceLease,resourceLeasePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{openNativePlatformStorageV1,retireNativePlatformStorageV1,requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform";
+import{acquireNativeStorageV1,recoverNativeStorageReservationV1,observeNativeStorageStateV1,nativeStorageRetirementPortV1}from"@semio-tech/process/artifacts/native-build/storage";
+import{acquireResourceLease,resourceLeasePathV1}from"@semio-tech/process/leases";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import{withNxGraphOperationV1,withNxGraphOperationTaskV1,requireNxGraphOperationV1,nxGraphOperationLifetimeControlV1,nxGraphOperationControlV1}from"../../🎛️operation/🟦️.ts";
 import{withNxGraphPoolAdmissionV1}from"../../🟦️.ts";
 import{nxGraphFixtureLawRunnerV1}from"../📥️store/🟦️.ts";
@@ -51,7 +51,7 @@ let changedOperationRefused=false,changedOperationEffects=0;try{await issuance.w
  }));}catch(error){expect(error).toBe(marker);throw error;}},110000);
 if(!child)test("graph operation carries real law cancellation into actual retained pool wait",()=>withBuildTestInvocationV1(async root=>{const result=await captureOwnedCommandResultV1(process.execPath,["test",import.meta.path,"--test-name-pattern=^graph operation physical child$"],process.cwd(),{control:issuance.createIssuedResourceControlV1(root,"fixture:graph-operation-child",110000),env:issuance.scriptInvocationEnvironment(root,{...process.env,SEMIO_GRAPH_OPERATION_CHILD:"wait"}),output:{maximumBytes:65536,maximumLines:512}});process.stdout.write(result.stdout);process.stderr.write(result.stderr);expect(result.status).toBe(1);expect(result.signal).toBe(null);expect(result.stdout).toContain('"settledBeforeRelease":true');expect(result.stdout).toContain('"effects":0');expect(result.stdout).toContain("Original genuinely rejects after owned image retirement");expect(result.stdout).toContain("nested writer reuse, detached child drainage and Native handle lifetime");expect(result.stdout).toContain("Exact graph operation private image retired");expect(result.stderr).not.toContain("Unhandled error between tests");}),115000);
 
-import{runOwnedCommand}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{runOwnedCommand}from"@semio-tech/process/execution";
 const rootCancelData=process.env.SEMIO_GRAPH_OPERATION_CANCEL_DATA;
 if(child==="root")test("graph operation root cancellation child",async()=>{
  const data=JSON.parse(rootCancelData??"null")as{directory:string;owner:string};if(!data||Object.keys(data).sort().join(",")!=="directory,owner"||!/^fixture:graph-root:[a-f0-9]{12}$/u.test(data.owner)||!data.directory.startsWith(join(process.cwd(),".cache/b/o/m/tmp/go-")))throw Error("Closed exact graph cancellation fixture required");

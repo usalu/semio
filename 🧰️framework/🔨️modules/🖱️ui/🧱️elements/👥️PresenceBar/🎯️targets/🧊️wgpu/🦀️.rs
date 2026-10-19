@@ -21,7 +21,8 @@
 //! own rendered nodes (`os/renderer/engine/elements/🟦️Interpreter/🟦️.tsx`), which is the
 //! mechanism this file's `UiStackNode` ids plug into.
 
-use crate::wgpu::{Label, Locale, LocalizedLabel, Terminology, UiNode, UiPresence, UiStackNode, UiTextNode};
+use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
+use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiStackNode, UiTextNode};
 
 /// 🧮️ Default visible-avatar cap before the "+N" overflow node takes over — mirrors the React twin's
 /// `PRESENCE_BAR_DEFAULT_MAX`.

@@ -1,7 +1,7 @@
 import{AsyncLocalStorage}from"node:async_hooks";
 import{availableParallelism}from"node:os";
 import{resolve}from"node:path";
-import{acquireCompilerCapacityLeaseV1,type CompilerCapacityLeaseV1,type CompilerAdmissionControl,type CompilerCapacityRequestV1,readCompilerCapacityRequestV1}from"../🟦️.ts";
+import{acquireCompilerCapacityLeaseV1,type CompilerCapacityLeaseV1,type CompilerAdmissionControl,type CompilerCapacityRequestV1,readCompilerCapacityRequestV1}from"../🎫️lease/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

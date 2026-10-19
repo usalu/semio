@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestRunHookSearchStartingIncludesDefinitions(t *testing.T) {
@@ -360,9 +361,10 @@ func TestExtractCheckpointSHAFromInput(t *testing.T) {
 		}
 	})
 	t.Run("empty falls back to git", func(t *testing.T) {
-		result := extractCheckpointSHAFromInput(nil)
-		if result == "" {
-			t.Skip("no git repo available")
+		root := withExhaustiveRepo(t)
+		want := strings.TrimSpace(string(execCommandWithTimeout(t, 30*time.Second, root, nil, "git", "rev-parse", "HEAD")))
+		if result := extractCheckpointSHAFromInput(nil); result != want {
+			t.Errorf("expected the fixture HEAD %q, got %q", want, result)
 		}
 	})
 }

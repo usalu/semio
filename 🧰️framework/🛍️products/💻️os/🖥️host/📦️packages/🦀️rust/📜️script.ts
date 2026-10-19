@@ -7,9 +7,9 @@ import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/�
 import { join, resolve } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runCargo } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { buildRepositoryWasmWebV1 } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { runCargo } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
+import { buildAdmittedWasmWebV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DocumentRetirementScript, MediaProjectionScript, PersistenceContractScript } from "./🎛️commands/🎞️media-persistence-and-retirement/🟦️.ts";
@@ -40,7 +40,7 @@ class TestScript extends BundleScript {
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
+    await buildAdmittedWasmWebV1({producer:"browser-module",invocation:this.invocation,consume:verifyProducedWasmPackageV1, control: scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0), 
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/os/host/rs",

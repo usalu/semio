@@ -24,11 +24,11 @@ async fn set_viewport_writes_config_not_operations() {
     // 🪟️ The camera lives in the MAIN window's own config, so the read has to come through the same
     // window instance the write was addressed at — an unaddressed render sees the default camera.
     let view = main_window_meta().view_state.expect("main window view");
-    let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &view).await.expect("render");
-    let semio_framework_plugin::Component::Surface(props) = &node.root.component else { panic!("semantic graph") };
-    let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
+    let scene: semio_framework_plugin::NodeGraphScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, &view, app.1.cx(), |root| {
+        let semio_framework_plugin::Component::Surface(props) = &root.component else { panic!("semantic graph") };
+        semio_framework_ui_scene::decode(props).expect("packed graph")
+    }).await.expect("render");
     assert_eq!(scene.viewport.expect("camera viewport").zoom, 2.0);
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("retire viewport graph");
 }
 
 /// 🗑️ A `delete` row removes exactly the steps it names (never an ambient selection), with every edge they hold; a row

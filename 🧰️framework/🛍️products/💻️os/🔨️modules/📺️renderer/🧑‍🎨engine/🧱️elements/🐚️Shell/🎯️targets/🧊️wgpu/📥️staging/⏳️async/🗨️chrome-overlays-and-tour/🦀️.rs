@@ -70,7 +70,7 @@ pub fn engagement_ghost_accept_on_click(ghost_rect: Rect, pointer_x: f32, pointe
 /// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
 /// on a char boundary (never a byte index) so a multi-byte label can't panic.
 #[cfg(any(test, feature = "testkit"))]
-pub fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>) -> String {
+pub fn engagement_completion_suffix(query: &str, possibles: Option<&[semio_framework_ui_declaration::layout::WindowEngagementPossible]>) -> String {
     let query = query.trim();
     if query.is_empty() {
         return String::new();

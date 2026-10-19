@@ -420,7 +420,7 @@ async fn manifest_labels_resolve_german_3d() {
 async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
@@ -433,13 +433,7 @@ async fn undo_restores_document_after_add_support() {
     let mut app = fem3d_app();
     let node_id = app.snapshot().expect("snapshot").nodes.first().map(|node| node.id.clone()).expect("the bundled example has nodes");
     let before = app.snapshot().expect("snapshot").supports.len();
-    assert_undo_redo_round_trip(
-        &mut app,
-        Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }),
-        |app| app.snapshot().expect("snapshot").supports.len(),
-        before,
-        before + 1,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    )
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::ALL.to_vec() }), |app| app.snapshot().expect("snapshot").supports.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 

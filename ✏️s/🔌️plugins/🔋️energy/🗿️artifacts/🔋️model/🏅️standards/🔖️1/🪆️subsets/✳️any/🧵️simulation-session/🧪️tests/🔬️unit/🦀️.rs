@@ -94,13 +94,13 @@ fn close(job: &mut EnergySimulationRunJob) {
             depth: job.next_close_depth_demand().expect("a locally owned run quotes its depth demand"),
         };
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match job.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty(), "a closed run job holds no owner");
                 return;
             }
             InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(grant), "a close receipt fits its own quoted grant"),
-            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("the run job close blocked or was refused"),
+            InteractiveJobCloseStep::Blocked => panic!("the run job close blocked or was refused"),
         }
     }
     panic!("the run job close never completed");
@@ -365,7 +365,7 @@ fn partial_capture_closes_one_nested_character_or_item_per_grant() {
                 assert!(progress.released_bytes <= 4);
             }
             InteractiveJobCloseStep::Complete { .. } => {}
-            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("owned partial model cannot block"),
+            InteractiveJobCloseStep::Blocked => panic!("owned partial model cannot block"),
         }
         turns += 1;
         assert!(turns < 64);

@@ -35,7 +35,13 @@ resvg = "0.45.1"
 semio-framework-2d = { workspace = true }
 serde_json = "1.0.140"
 tiny-skia = "0.11.4"
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["browser-presenter"] }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 usvg = "0.45.1"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]

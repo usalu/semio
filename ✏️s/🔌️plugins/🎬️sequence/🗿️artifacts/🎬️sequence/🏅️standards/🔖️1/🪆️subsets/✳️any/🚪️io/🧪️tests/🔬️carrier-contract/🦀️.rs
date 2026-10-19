@@ -87,7 +87,7 @@ async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral snapshot")));
         let payload = crate::standards::v1::subsets::any::io::snapshot_pack(&snapshot);
         assert_eq!(payload, <SequenceSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot));
-        let effect = crate::editor::sequence::base::reset_sequence_document_effect(&snapshot);
+        let effect = crate::editor::sequence::editor_vocabulary::reset_sequence_document_effect(&snapshot);
         let semio_framework_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
         assert_eq!(effect_pack, payload);
         assert!(!spr.is_empty());

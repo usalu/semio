@@ -2,11 +2,12 @@
 //! and becomes the `set-family`, `set-family-parameter`, `remove-family-parameter`, `create-family-solid`, `set-family-solid` or `delete-family-solid` mutation that carries exactly the change; the mutation decides
 //! whether the result stands (a formula that parses, names only existing parameters and closes no circle). The command never writes a value, a mesh or an outline.
 
-use crate::editor::bim::entities::id_taken;
-use crate::editor::bim::kit::{fault, IdMint};
-use crate::editor::bim::modes::edit::windows::family::edit::{apply, Edit};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, IdMint};
+use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::{apply, Edit};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

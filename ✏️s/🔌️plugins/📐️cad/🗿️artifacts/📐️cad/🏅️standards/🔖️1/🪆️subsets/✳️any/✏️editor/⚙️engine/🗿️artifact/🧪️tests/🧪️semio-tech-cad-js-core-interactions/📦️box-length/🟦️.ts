@@ -2,7 +2,7 @@
 import { ModelSpace, ModelSpaceJson } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
 import { interactionControlForState, interactionLengthEntryLiveDistance, interactionNumericEntryCommitEvent, interactionNumericEntryLockedValue } from "../../../../🎬️actions/🎰️interaction-state/🟦️.ts";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { ArtifactTestDependencies } from "../../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../../🎒️test-dependencies/🟦️.ts";
 import type { SolidRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import type { ModelDiff, SpatialKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { MeshTransfer, Vec3 } from "@semio-tech/framework/3d";

@@ -2,12 +2,12 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { type ExactCargoLawGroup } from "@semio-tech/process/cargo-laws";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { orderedDirectoryPublicationOracle, readHubDirectorySource } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
@@ -403,7 +403,7 @@ export class InviteRedemptionTransactionCheckScript extends BundleScript {
               ]
             : [];
     if (lawGroups.length > 0) {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: lawGroups, progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: lawGroups, progress(event) {
           console.log(`invite-redemption-transaction ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         } });
       console.log(`invite-redemption-transaction-native-receipts: ${JSON.stringify(receipts)}`);
@@ -417,7 +417,7 @@ export class DirectoryOrderedPublicationCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("directory-ordered-publication-check accepts only --native");
     const checks = orderedDirectoryPublicationOracle(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
           {
             package: "semio-hub-directory-laws",
             target: { kind: "lib" },

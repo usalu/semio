@@ -1,8 +1,8 @@
 import { OriginalBootstrapOwner } from "../../🎟️retained-turn/🏛️bootstrap/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "../🫀️liveness/🟦️.ts";
-import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
+import type { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { type HostEffectLedger, type PendingEntry, type ShardActivation, type ShardInstanceOwner, type ShardSlot, residentCapacity } from "../🔐️activation/🟦️.ts";
-import { OwnedNativeUiPatchAuthority } from "../🩹️ui-patch/🟦️.ts";
+import type { OwnedNativeUiPatchAuthority } from "../🩹️ui-patch/🟦️.ts";
 import type { CreateShardWorker, HostEffectHandler } from "../🚨️quota/🟦️.ts";
 import type { ShardClientOptions } from "../⚙️options/🟦️.ts";
 import { DEFAULT_MAX_OUTSTANDING_EFFECTS_PER_ACTOR } from "../💓️heartbeat/🟦️.ts";

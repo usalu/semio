@@ -23,7 +23,7 @@ name = "semio_framework_tool_run_presentation"
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-value-shared-issuance = { path = "../../../../../🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path = "../../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-tool-run-entities = { path = "../../../../👥️entities/📦️packages/🦀️rust" }

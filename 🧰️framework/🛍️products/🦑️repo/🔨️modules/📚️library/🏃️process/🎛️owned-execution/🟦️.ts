@@ -6,11 +6,8 @@ import {advanceScriptInvocation,checkScriptInvocation,type ScriptInvocation,type
 import {scriptInvocationEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../📦️packages/🟦️typescript/🧬️schema/🟦️.ts";
 import schema from "./📥️invocation/🧬️schema/🔣️.json";
+import type {RepositoryCommandPolicyV1,RepositoryCommandOptionsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
-/** 📋️ Declares original child time and independent bounded or explicitly ordinary output authority. */
-export type RepositoryCommandPolicyV1=Readonly<{version:1;maximumElapsedMilliseconds:number;output:Readonly<{maximumBytes:number;maximumLines:number}>|null}>;
-/** 📤️ Supplies passive transport choices without overriding original cancellation or publication. */
-export type RepositoryCommandOptionsV1=Pick<OwnedCommandOptions,"stdout"|"env"|"onLine">;
 /** 🔐️ Admits complete Repository command declarations without installing a default owner. */
 export function readRepositoryCommandPolicyV1(value:unknown):RepositoryCommandPolicyV1{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Complete repository command policy required");

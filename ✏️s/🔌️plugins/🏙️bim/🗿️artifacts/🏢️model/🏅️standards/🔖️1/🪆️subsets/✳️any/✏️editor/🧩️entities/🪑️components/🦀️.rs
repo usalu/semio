@@ -2,16 +2,25 @@
 //! `set-component` or `set-component-override` mutation, what a new component is, the pickers of the properties panel (family by category, host wall, system) and the placeable families the browser, the place tool and the
 //! `create-entity` command share. What a component shows (its volume, its issues) is read off the inference; the evaluated parameters are rows of the properties panel.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::editor::bim::entities::{container, keys, number, parse_flag, parse_number, parse_point, partial, phasing, point, rename_element, variant, Created, EntityKind, FieldRow, InferredRow};
-use crate::editor::bim::modes::edit::windows::family::edit::CATEGORIES;
-use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
-use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{container, Created};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{keys, number, parse_flag, parse_number, parse_point, partial, point, variant};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::phasing;
+use crate::editor::bim::entities::rename_element;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow, InferredRow};
+use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::CATEGORIES;
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::category_label;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
+use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepSystem, Point2};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_122::standards::v1::subsets::any::schema::mutations::delete_component;
+use semio_s_artifact_bim_model_mut_any_155::standards::v1::subsets::any::schema::mutations::set_component;
 
 /// 📏️ How far a new component stands from the previous ones of its storey, in metres.
 const ROW_PITCH: f64 = 1.0;
@@ -116,12 +125,12 @@ fn write_system(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutatio
 
 fn write_override(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
     let row = snapshot.component_overrides.get(id)?;
-    let value = formula::canonical(value).ok()?;
+    let value = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::canonical(value).ok()?;
     Some(ModelMutation::SetComponentOverride(SetComponentOverride { component: row.component.clone(), name: row.name.clone(), value }))
 }
 
 fn delete_override(id: &str) -> ModelMutation {
-    let (component, name) = formula::split_parameter_id(id).unwrap_or((id, ""));
+    let (component, name) = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::split_parameter_id(id).unwrap_or((id, ""));
     ModelMutation::RemoveComponentOverride(RemoveComponentOverride { component: component.into(), name: name.into() })
 }
 //#endregion 🔖️Parse
@@ -171,7 +180,7 @@ pub fn create_component(snapshot: &ModelSnapshot, id: &str, parent: &str, name: 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let (family, _) = placeable(snapshot).into_iter().next().ok_or("bim.create.component-family-missing")?;
     let row = snapshot.components.values().filter(|component| component.storey == storey).count() as f64;
-    Ok(ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent {
+    Ok(ModelMutation::CreateComponent(semio_s_artifact_bim_model_mut_any_154::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent {
         id: id.into(),
         component: Component { storey, family, position: Point2 { x: row * ROW_PITCH, y: 0.0 }, elevation: 0.0, rotation: 0.0, mirrored: false, host: None, system: None, name: name.into() },
     }))

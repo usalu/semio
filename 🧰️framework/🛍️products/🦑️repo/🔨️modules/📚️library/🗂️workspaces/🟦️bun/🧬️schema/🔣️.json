@@ -188,14 +188,17 @@
         "maximumManifestBytes": 8388608,
         "maximumAggregateManifestBytes": 67108864,
         "maximumTextDocuments": 16384,
-        "maximumObservationPaths": 131072,
-        "maximumObservationFacts": 262144,
+        "maximumObservationPaths": 524288,
+        "maximumObservationFacts": 1048576,
         "maximumDirectoryEntries": 65536,
-        "maximumAggregateDirectoryEntries": 262144,
+        "maximumAggregateDirectoryEntries": 1048576,
         "maximumPendingRechecks": 32,
         "maximumPathUnits": 256,
         "maximumPolicyBytes": 65536,
-        "readChunkBytes": 65536
+        "readChunkBytes": 65536,
+        "directoryReadBatch": 256,
+        "listingSettleMilliseconds": 2000,
+        "maximumListingCacheDirectories": 1048576
       }
     },
     "PhysicalObservationProtocol": {

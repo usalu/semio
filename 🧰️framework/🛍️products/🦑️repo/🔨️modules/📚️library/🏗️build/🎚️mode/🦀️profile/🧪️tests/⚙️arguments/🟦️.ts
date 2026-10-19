@@ -4,13 +4,13 @@ import{parse as parseToml}from"@iarna/toml";
 import{mkdtemp,mkdir,writeFile,readFile,readdir,lstat,rm}from"node:fs/promises";
 import{join,relative,isAbsolute,dirname}from"node:path";
 import{createCargoProfileFixtureV1}from"./📥️fixture/🟦️.ts";
-import{registerBuildTestLawV1}from"../../../../🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withRepositoryCompilerStoreV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import{scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{runOwnedCommand}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1}from"@semio-tech/process/compiler-capacity";
+import{runOwnedCommand}from"@semio-tech/process/execution";
 import{scriptInvocationEnvironment}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{readBuildMode}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 

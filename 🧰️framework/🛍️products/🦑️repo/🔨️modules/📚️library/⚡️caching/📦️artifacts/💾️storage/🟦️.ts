@@ -1,6 +1,6 @@
 import{createHash}from"node:crypto";
 import{isAbsolute,join,resolve}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 🗂️ Projects one authored source owner and intent to a finite stable publication; grants no writer custody. */
@@ -13,11 +13,11 @@ export function typeScriptArtifactLayoutV1(root:string,request:unknown):Readonly
 import{randomBytes}from"node:crypto";
 import{lstat,mkdir,rm}from"node:fs/promises";
 import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{requireIssuedScriptInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withAcceptedPhysicalCleanupV1,readAcceptedPhysicalCleanupV1,beginAcceptedPhysicalCleanupV1,checkAcceptedPhysicalCleanupV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import{readScriptProcessJsonV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import{readScriptProcessJsonV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../📋️native-orchestration/📥️invocation/🟦️.ts";
 import{withRepositoryCacheStoreConsumerV1}from"../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 

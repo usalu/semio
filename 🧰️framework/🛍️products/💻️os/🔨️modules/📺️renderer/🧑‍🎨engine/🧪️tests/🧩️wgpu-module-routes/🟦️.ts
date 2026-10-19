@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { fromPairs } from "lodash-es";
 import { resolve } from "node:path";
 import laws from "../🧫️fixtures/🧩️wgpu-module-routes/🔣️.json";
-import { wgpuBrowserMounts, type WgpuBrowserConfiguration } from "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts";
-import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY, moduleRoutePath } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { frameworkOsViteArtifactPathsV1 } from "../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import { repositoryCachePartitionRootDataV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import { RUNTIME_ASSET_CHANNELS } from "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
-import { packageAssetMounts } from "../../../../../../../🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
+import { wgpuBrowserMounts, type WgpuBrowserConfiguration } from "@semio-tech/framework-renderer-wgpu/server";
+import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
+import { frameworkOsViteArtifactPathsV1 } from "@semio-tech/framework-os-dev/builder/vite/artifacts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
+import { RUNTIME_ASSET_CHANNELS } from "@semio-tech/framework-canvas-ts/runtime-assets";
+import { packageAssetMounts } from "@semio-tech/framework-kernel";
 
 /** 🚏️ The native HTTP/cache contract additionally executes these routes under Vite. */
 describe("WGPU completed-artifact routes", () => {

@@ -1,8 +1,8 @@
 import {readNativeCallerAuthorityV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withInstalledNxFixtureV1} from "../🔒️nx/🟦️.ts";
 import {scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

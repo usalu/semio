@@ -937,8 +937,8 @@
     },
     {
       "package": "semio-framework-os-kernel-db-engine-base",
-      "manifest": "⚙️engine/🧱️base/📦️packages/🦀️rust/Cargo.toml",
-      "entry": "⚙️engine/🧱️base/🦀️.rs",
+      "manifest": "⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "⚙️engine/🧱️catalog-codec/🦀️.rs",
       "dependencies": [
         "semio-framework-async",
         "semio-framework-os-kernel",

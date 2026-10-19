@@ -1,11 +1,12 @@
 //! 🧪️ The sheet rows: papers and dates read as text, every field reads and the writable ones become the mutation that sets exactly that field, a new sheet, viewport or revision applies cleanly, and the inferred rows read off the layout.
 
-use crate::editor::bim::entities::sheets::{REVISION, SHEET, VIEWPORT, create_revision, create_sheet, create_viewport, next_mark, next_number, orientation_choices, parse_paper, scale_of, sheet_choices, view_choices};
-use crate::editor::bim::entities::EntityKind;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::{IsoSize, ModelSnapshot, Orientation, Paper, Point2};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::sheets::{REVISION, SHEET, VIEWPORT, create_revision, create_sheet, create_viewport, next_mark, next_number, orientation_choices, parse_paper, scale_of, sheet_choices, view_choices};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use protocol::Mutation;
 
 fn applied(base: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {

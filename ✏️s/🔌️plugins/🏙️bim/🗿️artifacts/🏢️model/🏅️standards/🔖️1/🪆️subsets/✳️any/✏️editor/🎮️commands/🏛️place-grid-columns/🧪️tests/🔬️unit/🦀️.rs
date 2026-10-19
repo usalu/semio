@@ -1,23 +1,30 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{snapshot::GridLine, snapshot::ModelSnapshot, snapshot::Point2, mutations::ModelMutation};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{GridLine, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{id_taken, ordered_storeys};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::IdMint;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::IdMint;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Column, Phase, TopConstraint};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, TopConstraint};
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::place_grid_columns::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, Material, MaterialCategory, Profile, Rgb};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::place_grid_columns::{handle, PlaceGridColumns, crossing, crossings};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ColumnType, Material};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MaterialCategory, Profile, Rgb};
 
 fn line(label: &str, building: &str, start: (f64, f64), end: (f64, f64)) -> GridLine {
     GridLine { building: building.into(), label: label.into(), start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }

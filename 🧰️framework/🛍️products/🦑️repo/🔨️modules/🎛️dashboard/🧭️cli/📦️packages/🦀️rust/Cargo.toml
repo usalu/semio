@@ -30,5 +30,5 @@ dashboard_wire = { path = "../../../🌀️daemon/🧵️wire/📦️packages/�
 serde_json = { workspace = true }
 
 [dev-dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
 dashboard_launch = { path = "../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }

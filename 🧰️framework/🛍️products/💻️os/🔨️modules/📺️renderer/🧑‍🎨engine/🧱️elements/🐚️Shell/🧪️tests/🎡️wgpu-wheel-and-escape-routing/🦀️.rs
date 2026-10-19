@@ -139,13 +139,13 @@ fn escape_under_an_open_picker_still_reaches_the_app_keybinding_rung() {
     let mut swallowed = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
     swallowed.input.overlay_state = OverlayState::Search;
-    semio_framework_async::block_on(PointerCtx::of(&mut swallowed).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    semio_framework_async::block_on(PointerCtx::of(&mut swallowed).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
     assert!(swallowed.chrome.transient_notice().is_none(), "🧯️ a focus-trapping dialog DOES swallow the chord, which is React's editable-target rule");
 
     let mut shell = shell_with_escape_binding();
     let mut input = InputState::<ActionDescriptor>::default();
     shell.input.overlay_state = OverlayState::Dropdown("example".into());
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("a chord never errors here");
     assert_eq!(shell.input.overlay_state, OverlayState::None, "⎋️ the picker is dismissed by the same keydown");
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⎋️ and the app's own escape binding was still resolved and addressed");
 }
@@ -170,8 +170,8 @@ fn an_unowned_app_chord_falls_through_to_the_framework_edit_verbs() {
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers { meta: true, ..PointerModifiers::default() };
 
-    assert!(shell.docs.match_app_keybinding(&ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers, &shell.chrome).is_some(), "⌨️ the app claims the chord");
-    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Char("z".into()), &modifiers, &mut input));
+    assert!(shell.docs.match_app_keybinding(&semio_framework_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &shell.chrome).is_some(), "⌨️ the app claims the chord");
+    let outcome = semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Char("z".into()), &modifiers, &mut input));
     assert_eq!(shell.chrome.transient_notice().map(|notice| notice.code.clone()), Some(Some(KEYBINDING_UNOWNED_CODE.to_string())), "⌨️ the app rung ran and found no window to address");
     assert_eq!(outcome.err().as_deref(), Some("action program missing"), "⌨️ and the framework's own undo still crossed the dispatch funnel");
 }

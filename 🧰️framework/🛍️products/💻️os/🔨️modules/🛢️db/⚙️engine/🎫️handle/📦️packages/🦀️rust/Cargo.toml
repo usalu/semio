@@ -31,7 +31,7 @@ semio-framework-os-kernel-db-artifact = { path = "../../../../🗿️artifact/�
 semio-framework-os-kernel-db-artifact-contract = { path = "../../../../🗿️artifact/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-artifact-history = { path = "../../../../🗿️artifact/📜️history/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-compact = { path = "../../../../🗜️compact/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
@@ -43,7 +43,7 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 [dev-dependencies]
 semio-framework-os-kernel-db-artifact = { path = "../../../../🗿️artifact/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-artifact-history = { path = "../../../../🗿️artifact/📜️history/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

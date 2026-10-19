@@ -1,6 +1,6 @@
-import type { DiscoveredPackage } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
-import { discoverCatalogPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import type { DiscoveredPackage } from "@semio-tech/repo-lib/inventory";
+import { discoverCatalogPackages } from "@semio-tech/repo-lib/inventory";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { TAXONOMY } from "../🔎️discovery/🟦️.ts";
 
 
@@ -25,7 +25,7 @@ export type FrameworkPackageEntry = {
 /** 🏛️ Framework-role half of the shared `discoverPackages()` walk (three-level `🎯️targets`
  * aware), flattened into a stable catalog. Plugin and framework catalogs therefore come from one
  * traversal and one vocabulary, and can never drift apart. */
-export function generateFrameworkPackageRegistry(repoRoot = getWorkspaceRoot(), packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): FrameworkPackageEntry[] {
+export function generateFrameworkPackageRegistry(repoRoot = findWorkspaceRoot(), packages: readonly DiscoveredPackage[] = discoverCatalogPackages(repoRoot, TAXONOMY)): FrameworkPackageEntry[] {
   return packages
     .filter((pkg) => pkg.role === "framework")
     .map((pkg) => ({

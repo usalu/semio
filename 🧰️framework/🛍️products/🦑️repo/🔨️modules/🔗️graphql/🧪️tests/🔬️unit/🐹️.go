@@ -8,48 +8,14 @@ import (
 	os "os"
 	exec "os/exec"
 	filepath "path/filepath"
-	runtime "runtime"
 	strings "strings"
 	testing "testing"
 	time "time"
 
 	codebase "github.com/usalu/semio/repo/codebase"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
-
-func TestMain(m *testing.M) {
-	ensureExecutor()
-	os.Exit(m.Run())
-}
-
-func findTestRepoRoot(start string) string {
-	for _, candidate := range []string{start, func() string {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			return ""
-		}
-		return filepath.Dir(file)
-	}()} {
-		dir := candidate
-		if dir == "" {
-			continue
-		}
-		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
-				return dir
-			}
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-				return dir
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return start
-}
 
 func execCommandWithTimeout(t *testing.T, timeout time.Duration, dir string, env []string, name string, args ...string) []byte {
 	t.Helper()
@@ -72,29 +38,13 @@ func execCommandWithTimeout(t *testing.T, timeout time.Duration, dir string, env
 	return output
 }
 
-func getTestExecutor(t *testing.T) *Executor {
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get cwd: %v", err)
-	}
-
-	workspace.RootDir = findTestRepoRoot(cwd)
-	ex, err := NewExecutor(workspace.RootDir)
-	if err != nil {
-		t.Fatalf("failed to create executor: %v", err)
-	}
-	return ex
-}
-
 // 🧫️statutesFixtureDir is the surviving statute fixture tree. The godfile-era
 // `repo/asset/fixture/some/folder` was deleted with the legacy tree.
 const statutesFixtureDir = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder"
 
 func readStatutesFixture(t *testing.T, folder string) string {
 	t.Helper()
-	_, thisFile, _, _ := runtime.Caller(0)
-	root := findTestRepoRoot(filepath.Dir(thisFile))
-	abs := filepath.Join(root, filepath.FromSlash(statutesFixtureDir), folder, "🟦️.tsx")
+	abs := sandbox.OriginPath("..", "..", "..", "📜️statutes", "🧪️tests", "🧫️fixtures", "📁️some", "📁️folder", folder, "🟦️.tsx")
 	content, err := os.ReadFile(abs)
 	if err != nil {
 		t.Fatalf("failed to read fixture %s: %v", abs, err)
@@ -126,14 +76,24 @@ func withMonorepoFixture(t *testing.T) string {
 	write("compose/go/main.go", fixtureSectionedGo)
 	write("repo/client/AGENTS.md", "---\nbundle:\n  emoji: ⌨️\n---\n")
 	write("repo/client/main.go", fixtureSectionedGo)
-	previous := workspace.RootDir
-	workspace.RootDir = root
+	previous := workspace.GetRootDir()
+	workspace.SetRootDir(root)
 	codebase.InvalidateTechnologyCache()
 	t.Cleanup(func() {
-		workspace.RootDir = previous
+		workspace.SetRootDir(previous)
 		codebase.InvalidateTechnologyCache()
 	})
 	return root
+}
+
+func fixtureExecutor(t *testing.T) *Executor {
+	t.Helper()
+	root := withMonorepoFixture(t)
+	built, err := NewExecutorWithContext(root, NewRepoContext(root))
+	if err != nil {
+		t.Fatalf("failed to create fixture executor: %v", err)
+	}
+	return built
 }
 
 const fixtureSectionedTypeScript = `// #region 🔖️Header
@@ -162,7 +122,7 @@ func main() {}
 
 // 🕸️#region 🎙️GraphQL
 func TestGraphQLRepoQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
+	result, err := fixtureExecutor(t).ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL returned error: %v", err)
 	}
@@ -211,7 +171,7 @@ func TestGraphQLBundlesQuery(t *testing.T) {
 }
 
 func TestGraphQLPoliciesQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { policies { id name } } }`, nil)
+	result, err := fixtureExecutor(t).ExecuteJSON(context.Background(), `{ repo { policies { id name } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL policies returned error: %v", err)
 	}
@@ -221,7 +181,7 @@ func TestGraphQLPoliciesQuery(t *testing.T) {
 }
 
 func TestGraphQLContributorsQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { contributors { id github } } }`, nil)
+	result, err := fixtureExecutor(t).ExecuteJSON(context.Background(), `{ repo { contributors { id github } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL contributors returned error: %v", err)
 	}
@@ -241,9 +201,7 @@ func TestGraphQLEffortMutationsAndQueries(t *testing.T) {
 	run("git", "config", "user.name", "Test")
 	run("git", "config", "commit.gpgsign", "false")
 	run("git", "commit", "--allow-empty", "-m", "initial")
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}

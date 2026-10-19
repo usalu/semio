@@ -10,7 +10,7 @@
       "dom-accessibility-api": ["../../../node_modules/dom-accessibility-api/dist/index.d.ts"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "../../📦️packages/🟦️typescript/🌿️ambient/**/*.d.ts"],
   "exclude": [
     "**/node_modules/**",
     "**/dist/**",

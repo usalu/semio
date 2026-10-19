@@ -1,16 +1,17 @@
-use crate::editor::bim::entities::wall_sweeps::{baseboard, create_wall_sweep, slab_choices, surface_choices};
-use crate::editor::bim::entities::FieldRow;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile, TopConstraint, WallSide};
-use crate::editor::bim::entities::{kind_holding, kind_of, storey_of};
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::{baseboard, create_wall_sweep, slab_choices, surface_choices};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, TopConstraint, WallSide};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of, storey_of};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 
 fn demo() -> ModelSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
 }
 
 fn applied(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("{mutation:?} is refused: {refusal:?}"))
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("{mutation:?} is refused: {refusal:?}"))
 }
 
 fn furnished() -> ModelSnapshot {
@@ -94,7 +95,7 @@ async fn the_profile_row_speaks_rect_circle_and_custom() {
 #[semio_framework_async_macros::async_test]
 async fn a_sweep_row_reads_its_inferred_length_area_and_volume() {
     let snapshot = with_sweep(&demo());
-    let inference = <crate::standards::v1::subsets::any::schema::inferences::ModelInference as protocol::Inference<ModelSnapshot>>::infer(&snapshot).expect("infer");
+    let inference = <semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference as protocol::Inference<ModelSnapshot>>::infer(&snapshot).expect("infer");
     let row = kind_of("wall-sweep").expect("wall sweep");
     for key in ["length", "area", "volume"] {
         let shown = row.inferred.iter().find(|row| row.key == key).and_then(|row| (row.read)(&snapshot, &inference, "sw-1"));

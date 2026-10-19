@@ -329,6 +329,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 window_config_authority,
                 window_transient_authority,
                 publication_lanes,
+                contract: Some(admission.proof.contract()),
                 session,
                 session_rejected,
                 reserved_producer: None,
@@ -429,7 +430,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         if self.pending.pending_configuration_permit.is_none(){let Some(authority)=self.admit_reserved_emit_producer("configuration-binary",meta,cx)?else{return Ok(None)};self.pending.pending_configuration_permit=Some(authority);self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));return Ok(None)}
         if self.pending.pending_configuration_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"configuration admission requires its unchanged original receiving caller").into())}
         type Completion<M>=std::sync::Mutex<Option<Result<ArtifactCommand<M>,semio_framework_job::OriginalTurnFailure>>>;
-        let bytes=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Completion<A::ConfigMutation>>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None)}
+        let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Completion<A::ConfigMutation>>();let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None)}
         let decoded=std::sync::Arc::new(std::sync::Mutex::new(None));cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}).expect("exact original configuration completion preflight remains exclusive");cx.consume_fuel(1);
         self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));
         self.pending.pending_configuration_completion=Some(semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(decoded.clone())),payload:None});

@@ -132,7 +132,7 @@ let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🏅️s
 let text=demand["schema"].as_str().unwrap();let mut accept=|_|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits{max_allocation_bytes:text.len(),..SqliteDatabaseLimits::default()});
 let payload=store::io::IoPayload::Text("semio stdio.semio.dsl v1\n".into());
 let mut native_callback=|_|true;let mut native_control=semio_framework_value::NativeDecodeControl::new(semio_s_artifact_stdio_contract::testing::NATIVE_MAXIMUM_BYTES,&mut native_callback);
-let error=native_decoding::decode::<String>(&payload,STDIO_SEMIO_DOCUMENT_SCHEMA,&mut control,|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,"authored refusal after field allocation"))},|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,"authored refusal after field allocation"))},&mut native_control).unwrap_err();
+let error=native_decoding::with_body::<String>(&payload,STDIO_SEMIO_DOCUMENT_SCHEMA,&mut control,&mut native_control,|_,native,_|{let _owned=native.copy_text(text)?;Err(ValueError::new(ValueRefusalKind::InvalidValue,"authored refusal after field allocation"))}).unwrap_err();
 assert_eq!(error.kind,ValueRefusalKind::InvalidValue);assert_eq!(error.message,"authored refusal after field allocation");
 assert_eq!(control.allocation_remaining_bytes(),0,"a failed native construction settles its actual admitted field backing");
 }

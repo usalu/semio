@@ -22,13 +22,14 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:serde"]
 
 [dependencies]
 semio-framework-job.workspace = true
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"], optional = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

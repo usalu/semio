@@ -10,7 +10,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📈️part1/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
-  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧰️common/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧰️check-builders/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
@@ -134,7 +134,7 @@ path = "📦️packages/🦀️rust"
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-iso16757-checks-common]
-path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧰️common/📦️packages/🦀️rust"
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧰️check-builders/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-iso16757-checks-part1]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📈️part1/📦️packages/🦀️rust"

@@ -1,4 +1,4 @@
-import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { type RustToken, rustFindTopLevel, rustTokenPairs, rustTokenSegments, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 
 /** 🚱️ Proves a `.join()` call chain's ROOT can never resolve to a manifest-relative path at plan
  * time — `env::temp_dir()`, an `env::var`/`env::var_os` runtime lookup (optionally routed through

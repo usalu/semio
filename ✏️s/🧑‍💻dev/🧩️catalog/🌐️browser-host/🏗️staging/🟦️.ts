@@ -1,101 +1,86 @@
-import{COMPONENT_RECEIPT_FILE,COMPONENT_RECEIPT_MAX_BYTES}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import{withRepositoryCacheStoreV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import{withJavascriptDependencyReadStorageV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
-import{withComponentModelV1}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts";
-import{readArtifactBytesV1,fileDigest}from"../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import{COMPONENT_RECEIPT_FILE,COMPONENT_RECEIPT_MAX_BYTES}from"@semio-tech/framework-plugin/describe/component-receipt";
+import { withRepositoryCacheStoreV1, withJavascriptDependencyReadStorageV1 } from "@semio-tech/repo-lib/storage";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, readNativeCallerAuthorityV1, stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts";
+import{withComponentModelV1}from"@semio-tech/framework-plugin/model/reading";
+import{readArtifactBytesV1,fileDigest}from"@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 import{captureOwnedCommandV1}from"@semio-tech/process/owned-execution";
-import{requireIssuedResourceControlInvocationV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1}from"@semio-tech/process/routing";
 import{acquireCompilerCapacityLeaseV1}from"@semio-tech/process/compiler-capacity";
 import{testBrowserHostPublicationPlanV1,testBrowserHostStageLimitsV1,readTestBrowserHostSelectedSourceV1}from"./📋️contract/🟦️.ts";
 import {buildModePolicy} from "@semio-tech/process/build-mode";
-import type {ScriptInvocation} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {registryModuleDirectories} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { type CompilerAdmissionControl } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { resolveTestLevel, atTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import type {ScriptInvocation} from "@semio-tech/process/routing";
+import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
+import {registryModuleDirectories} from "@semio-tech/plugin-registry/catalog-view";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { resolveTestLevel, atTestLevel } from "@semio-tech/process/test-budget";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 
 /** 🧩️ Semantic browser host staging owner. */
 
-import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
+import { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, finalizePluginDescriptor, PLUGIN_DESCRIPTOR_PROBE_SOURCE } from "@semio-tech/framework-plugin/browser-bundle/descriptor";
 
-import { artifactFiles } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import { artifactFiles } from "@semio-tech/framework-plugin/browser-bundle/distribution/inventory";
 
 import { closeTestBrowserHostStagingV1, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, prepareTestBrowserHostRootsV1, resolveTestBrowserHostRootsV1, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, type TestBrowserHostRootsV1, writeTestBrowserGisMaterializationReceiptV1 } from "../🟦️.ts";
 
-import { stageRepositoryArtifacts,withRepositoryArtifactDestinationV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { BundleScript, ScriptRouter } from "@semio-tech/process/routing";
+import { runScriptMain } from "@semio-tech/process/routing";
 
 import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery";
 
 
 
 import {
   ensurePreview2ShimVendorAt,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
 import {
   hostShimSource,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
 import {
   PLUGIN_HOST_SHIM_FILE,
   GUESTSLIM_FONT_RELATIVE,
   SHARD_WORKER_FILE,
   type PluginWebMaterializeContext,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
 import {
   PREVIEW2_VENDOR_RELATIVE,
   rewritePreview2ShimImportSource,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/imports";
 import {
   pluginComponentBridgeSource,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
 import {
   rewriteJcoComponentAssetUrls,
   rewriteJcoAsyncResultLifting,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/jco-module-rewrites";
 import {
   shardWorkerSource,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source";
 import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
-} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
-import { ensureWasmTarget } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { ensureWasmTarget } from "@semio-tech/framework-plugin/build/plan";
 
-import {buildComponentClosureV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import {buildComponentClosureV1} from "@semio-tech/framework-plugin/build/driver-stages";
 
 
-import { pluginFileDigest } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts";
+import { pluginFileDigest } from "@semio-tech/framework-plugin/build/descriptor";
 
 import { ensureAppleDeveloperDir } from "@semio-tech/framework-os-dev/engine/publication";
 

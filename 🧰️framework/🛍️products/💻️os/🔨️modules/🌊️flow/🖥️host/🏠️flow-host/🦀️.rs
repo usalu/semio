@@ -17,8 +17,8 @@ impl FlowWheelPlan {
 
 pub struct FlowPublicationShared<T:RetireOwned+Sync>(pub Arc<T>);
 impl<T:RetireOwned+Sync> RetireOwned for FlowPublicationShared<T> {
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.0))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>())}
+    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.0))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>())}
     fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
 
@@ -56,14 +56,14 @@ pub(super) struct FlowPublicationDisplaced {
 
 impl RetireOwned for FlowBaselineLeases {
     fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,sequence,shared::SharedControlledRetirement};
+        use semio_framework_value::retirement::{RetireOwned,sequence,arc_custody::SharedControlledRetirement};
         let snapshot:Box<dyn RetirementCursor>=match self.snapshot{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
         let channels:Box<dyn RetirementCursor>=match self.channels{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
         let current:Box<dyn RetirementCursor>=match self.current{Some(source)=>Box::new(SharedControlledRetirement::lease(source)),None=>().retirement()};
         sequence(vec![snapshot,channels,current])
     }
     fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{sequence_birth_bytes,leaf_birth_bytes,shared::shared_retirement_birth_bytes};
+        use semio_framework_value::retirement::{sequence_birth_bytes,leaf_birth_bytes,arc_custody::shared_retirement_birth_bytes};
         sequence_birth_bytes(&[if self.snapshot.is_some(){shared_retirement_birth_bytes::<TreeSnapshot>()}else{leaf_birth_bytes::<()>()},if self.channels.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()},if self.current.is_some(){shared_retirement_birth_bytes::<EvalChannels>()}else{leaf_birth_bytes::<()>()}])
     }
     fn controlled_retirement_supported()->bool{true}

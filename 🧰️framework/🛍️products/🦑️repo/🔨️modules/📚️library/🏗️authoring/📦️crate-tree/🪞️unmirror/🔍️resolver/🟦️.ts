@@ -1,8 +1,9 @@
 /** 🔍️ Module-level name resolution over the carved crates of a repository: builds the module tree of every crate from its `#[path]` mounts and resolves `use` leaves and paths through explicit imports, globs and re-exports, recording where a path crosses into another carved crate. */
 import { existsSync, readFileSync } from "node:fs";
 import { posix, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { parseRustSourceTree, type RustModuleNode, type RustSourceItem } from "../../🌳️module-tree/🟦️.ts";
+import { CycleMemo } from "../🔁️cycle-memo/🟦️.ts";
 import { leafBinding, scanSource, scanUseStatements, type ScannedSource, type UseLeaf, type UseStatement } from "../🧵️use-tree/🟦️.ts";
 
 /** 📦️ One Cargo package with a library target: its name, extern identifier, repository-relative directory and library root. */
@@ -32,6 +33,7 @@ export type ModNode = {
   readonly items: Map<string, string>;
   readonly weak: Set<string>;
   readonly uses: Bound[];
+  opaque: boolean;
 };
 
 /** 📄️ A parsed source file with the modules it hosts and its use statements. */
@@ -43,6 +45,7 @@ export function mergeRep(inner: Rep | null, outer: Rep | null, segment: string):
   return outer ? { ident: outer.ident, segs: [...outer.segs, segment], cut: outer.cut } : null;
 }
 
+const PRELUDE_WORDS = new Set(["Some", "None", "Ok", "Err", "Self", "Vec", "String", "Option", "Result", "Box", "Default", "Clone", "Copy"]);
 const KEYWORD_HEADS = new Set(["crate", "self", "super"]);
 
 /** 🏗️ The repository view the resolver works on: crates by extern identifier, file texts through an overlay and lazily built module trees. */
@@ -50,12 +53,10 @@ export class Universe {
   readonly crates = new Map<string, CrateInfo>();
   readonly files = new Map<string, FileInfo>();
   private readonly roots = new Map<string, ModNode | null>();
-  private readonly leafMemo = new Map<string, Hit[]>();
-  private readonly memberMemo = new Map<string, Hit[]>();
+  readonly cycles = new CycleMemo();
+  private readonly macroDeclarations = new Map<string, string[]>();
   private nextId = 1;
   ignoreVisibility = false;
-  private lowest = Number.POSITIVE_INFINITY;
-  private readonly depths = new Map<string, number>();
   apiLeaf: (bound: Bound) => boolean = () => false;
   cutEdge: (bound: Bound) => boolean = () => false;
   constructor(readonly repoRoot: string, readonly overlay: ReadonlyMap<string, string> = new Map()) {}
@@ -91,7 +92,7 @@ export class Universe {
   }
 
   private makeNode(crate: CrateInfo, name: string, parent: ModNode | null, file: string, visibility: string, test: boolean, region: readonly [number, number], inline = false): ModNode {
-    return { id: this.nextId++, crate, name, parent, file, visibility, test, inline, region, children: new Map(), items: new Map(), weak: new Set(), uses: [] };
+    return { id: this.nextId++, crate, name, parent, file, visibility, test, inline, region, children: new Map(), items: new Map(), weak: new Set(), uses: [], opaque: false };
   }
 
   private loadFile(path: string, fileNode: ModNode, text: string, base: string, key = path): void {
@@ -113,8 +114,16 @@ export class Universe {
     for (const item of items) {
       if (item.kind === "use" || item.kind === "impl" || item.kind === "extern-crate") continue;
       const name = item.name ?? this.customItemName(info, item);
+      if (name && item.kind === "macro") this.macroDeclarations.set(`${info.path}\u0000${name}`, [...info.source.text.slice(item.declStart, item.end).matchAll(/\b(?:static|const|fn|struct|enum|type|trait|mod)\s+([A-Za-z_]\w*)/gu)].map((match) => match[1]!));
       if (name) node.items.set(name, item.visibility === "private" ? "" : item.visibility);
-      else if (item.kind === "other") for (const word of this.macroWords(info, item)) node.weak.add(word);
+      else if (item.kind === "other") {
+        for (const word of this.macroWords(info, item)) node.weak.add(word);
+        const invoked = /^([A-Za-z_][\w:]*)!\s*[({[]/u.exec(info.source.text.slice(item.declStart, item.end))?.[1];
+        if (invoked !== undefined) {
+          node.opaque = true;
+          for (const declared of this.macroDeclarations.get(`${info.path}\u0000${invoked}`) ?? []) node.weak.add(declared);
+        }
+      }
     }
     for (const module of modules) {
       const visibility = module.visibility === "private" ? "" : module.visibility;
@@ -151,7 +160,7 @@ export class Universe {
   private macroWords(info: FileInfo, item: RustSourceItem): string[] {
     const slice = info.source.text.slice(item.declStart, item.end);
     if (!/^[A-Za-z_][\w:]*!\s*[({[]/u.test(slice)) return [];
-    return rustTokens(slice).filter((token) => token.kind === "identifier" && /^[A-Z][A-Za-z0-9_]*$/u.test(token.text)).map((token) => token.text);
+    return rustTokens(slice).filter((token) => token.kind === "identifier" && /^[A-Z][A-Za-z0-9_]*$/u.test(token.text) && !PRELUDE_WORDS.has(token.text)).map((token) => token.text);
   }
 
   private customItemName(info: FileInfo, item: RustSourceItem): string | null {
@@ -165,19 +174,20 @@ export class Universe {
     return from.crate.ident === owner.crate.ident;
   }
 
-  member(node: ModNode, name: string, from: ModNode, stack: Set<string> = new Set()): Hit[] {
-    const memo = `${node.id}\u0000${name}\u0000${from.crate.ident === node.crate.ident ? "s" : "x"}${this.ignoreVisibility ? "a" : ""}`;
-    const known = this.memberMemo.get(memo);
-    if (known) return known;
-    if (stack.has(memo)) { this.closeCycle(memo); return []; }
-    const frame = this.enter(stack, memo);
+  member(node: ModNode, name: string, from: ModNode): Hit[] {
+    const memo = `member:${node.id}\u0000${name}\u0000${from.crate.ident === node.crate.ident ? "s" : "x"}${this.ignoreVisibility ? "a" : ""}`;
+    return this.cycles.compute(memo, () => [], () => this.lookup(node, name, from));
+  }
+
+  private lookup(node: ModNode, name: string, from: ModNode): Hit[] {
     const out: Hit[] = [];
     for (const child of node.children.get(name) ?? []) if (this.visible(child.visibility, node, from)) out.push({ kind: "module", node: child, rep: null });
     const declared = node.items.get(name);
     if (declared !== undefined && this.visible(declared, node, from)) out.push({ kind: "item", node, name, rep: null });
     for (const bound of node.uses) {
       if (bound.leaf.glob || leafBinding(bound.leaf) !== name || !this.visible(bound.statement.visibility, node, from)) continue;
-      const hits = this.leafHits(bound, stack);
+      const hits = this.leafHits(bound);
+      if (!hits.length && this.externalLeaf(bound)) { out.push({ kind: "item", node, name, rep: null }); continue; }
       const cut = this.cutEdge(bound);
       out.push(...(this.apiLeaf(bound) ? hits.map((hit) => ({ ...hit, rep: null }) as Hit) : hits.map((hit) => (cut && hit.rep ? { ...hit, rep: { ...hit.rep, cut: true } } : hit) as Hit)));
     }
@@ -185,47 +195,27 @@ export class Universe {
     for (const bound of node.uses) {
       if (!bound.leaf.glob || !this.visible(bound.statement.visibility, node, from)) continue;
       const cut = this.cutEdge(bound);
-      for (const raw of this.leafHits(bound, stack)) {
+      for (const raw of this.leafHits(bound)) {
         if (raw.kind !== "module") continue;
         const target = cut && raw.rep ? { ...raw, rep: { ...raw.rep, cut: true } } : raw;
-        for (const sub of this.member(target.node, name, from, stack)) if (!shadowed.has(sub.kind)) out.push({ ...sub, rep: mergeRep(sub.rep, target.rep, name) } as Hit);
+        for (const sub of this.member(target.node, name, from)) if (!shadowed.has(sub.kind)) out.push({ ...sub, rep: mergeRep(sub.rep, target.rep, name) } as Hit);
       }
     }
     if (!out.length && node.weak.has(name)) out.push({ kind: "item", node, name, rep: null });
-    if (this.leave(stack, memo, frame)) this.memberMemo.set(memo, out);
     return out;
   }
 
-  leafHits(bound: Bound, stack: Set<string> = new Set()): Hit[] {
-    const known = this.leafMemo.get(bound.key);
-    if (known) return known;
-    const marker = `leaf:${bound.key}`;
-    if (stack.has(marker)) { this.closeCycle(marker); return []; }
-    const frame = this.enter(stack, marker);
-    const result = this.resolvePath(bound.node, bound.leaf.path, stack);
-    const hits = result ? this.completeLeaf(result, bound.leaf.path) : [];
-    if (this.leave(stack, marker, frame)) this.leafMemo.set(bound.key, hits);
-    return hits;
+  private externalLeaf(bound: Bound): boolean {
+    const head = bound.leaf.path[0];
+    const { node } = bound;
+    return head !== undefined && !KEYWORD_HEADS.has(head) && !this.crates.has(head) && !node.children.has(head) && !node.items.has(head) && !node.uses.some((other) => leafBinding(other.leaf) === head);
   }
 
-  private closeCycle(marker: string): void {
-    this.lowest = Math.min(this.lowest, this.depths.get(marker) ?? 0);
-  }
-
-  private enter(stack: Set<string>, marker: string): { depth: number; outer: number } {
-    const frame = { depth: stack.size, outer: this.lowest };
-    this.lowest = Number.POSITIVE_INFINITY;
-    stack.add(marker);
-    this.depths.set(marker, frame.depth);
-    return frame;
-  }
-
-  private leave(stack: Set<string>, marker: string, frame: { depth: number; outer: number }): boolean {
-    stack.delete(marker);
-    this.depths.delete(marker);
-    const inner = this.lowest;
-    this.lowest = inner < frame.depth ? Math.min(frame.outer, inner) : frame.outer;
-    return inner >= frame.depth;
+  leafHits(bound: Bound): Hit[] {
+    return this.cycles.compute(`leaf:${bound.key}`, () => [], () => {
+      const result = this.resolvePath(bound.node, bound.leaf.path);
+      return result ? this.completeLeaf(result, bound.leaf.path) : [];
+    });
   }
 
   private completeLeaf(result: { hits: Hit[]; consumed: number }, path: readonly string[]): Hit[] {
@@ -234,7 +224,7 @@ export class Universe {
     return result.hits.filter((hit) => hit.kind === "item").map((hit) => ({ ...hit, rep: hit.rep ? { ...hit.rep, segs: [...hit.rep.segs, ...rest] } : null }) as Hit);
   }
 
-  resolvePath(node: ModNode, path: readonly string[], stack: Set<string> = new Set()): { hits: Hit[]; consumed: number } | null {
+  resolvePath(node: ModNode, path: readonly string[]): { hits: Hit[]; consumed: number } | null {
     if (!path.length) return null;
     const head = path[0]!;
     let hits: Hit[] = [];
@@ -248,7 +238,7 @@ export class Universe {
       consumed = index;
       hits = cursor ? [{ kind: "module", node: cursor, rep: null }] : [];
     } else {
-      hits = this.member(node, head, node, stack);
+      hits = this.member(node, head, node);
       if (!hits.length && this.crates.has(head)) {
         const root = this.root(head);
         hits = root ? [{ kind: "module", node: root, rep: head === node.crate.ident ? null : { ident: head, segs: [], cut: false } }] : [];
@@ -260,13 +250,18 @@ export class Universe {
       const next: Hit[] = [];
       for (const hit of hits) {
         if (hit.kind !== "module") continue;
-        for (const sub of this.member(hit.node, segment, node, stack)) next.push({ ...sub, rep: mergeRep(sub.rep, hit.rep, segment) } as Hit);
+        for (const sub of this.member(hit.node, segment, node)) next.push({ ...sub, rep: mergeRep(sub.rep, hit.rep, segment) } as Hit);
       }
       if (!next.length) break;
       hits = next;
       consumed += 1;
     }
     return { hits, consumed };
+  }
+
+  /** 🕳️ Whether a macro invocation fills the module or a module it glob-imports, so a name the parser cannot see may still exist there. */
+  opaqueModule(node: ModNode): boolean {
+    return this.cycles.compute(`opaque:${node.id}`, () => false, () => node.opaque || node.uses.some((bound) => bound.leaf.glob && this.leafHits(bound).some((hit) => hit.kind === "module" && this.opaqueModule(hit.node))));
   }
 
   /** 👁️ Looks a name up like `member` but ignores visibility: finds items that exist but cannot be named from another crate. */

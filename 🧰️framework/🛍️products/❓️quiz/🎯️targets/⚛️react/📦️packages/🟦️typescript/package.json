@@ -8,7 +8,9 @@
   "exports": {
     ".": "./🟦️.tsx",
     "./🎨️.css": "./🎨️.css",
-    "./stylesheet": "./🎨️stylesheet/🟦️.ts"
+    "./stylesheet": "./🎨️stylesheet/🟦️.ts",
+    "./modules/run/.tsx": "./🔨️modules/▶️run/🟦️.tsx",
+    "./modules/results/.tsx": "./🔨️modules/🏁️results/🟦️.tsx"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

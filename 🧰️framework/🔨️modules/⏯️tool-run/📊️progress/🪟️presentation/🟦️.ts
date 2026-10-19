@@ -2,14 +2,8 @@
 import type { ToolRunIdentity } from "../../🟦️.ts";
 import type { ToolRunState } from "../../🚦️lifecycle/🟦️.ts";
 import type {ToolRunPresentationFields} from "./🧬️update/🟦️.ts";
-export class ToolRunPresentation<T> {
- private value:T|undefined;
- constructor(original:T){this.value=original;}
- get original(){if(!this.retained)throw Error("Original presentation has already returned");return this.value!;}
- get retained(){return this.value!==undefined;}
- capture(items:number){if(items<=0||!this.retained)return undefined;return new ToolRunPresentation(this.original);}
- close(items:number){if(items<=0||!this.retained)return 0;this.value=undefined;return 1;}
-}
+import {ToolRunPresentation} from "./📸️capture/🟦️.ts";
+export {ToolRunPresentation};
 /** 👁️ Borrows the exact presentation leaves while retaining its captured scalar envelope. */
 export class ToolRunCapturedView {
  constructor(private source:ToolRunPresentation<ToolRunPresentationFields>,private identity:ToolRunIdentity,private state:ToolRunState){}

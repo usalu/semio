@@ -36,7 +36,6 @@ semio-s-artifact-stdio-txt = { workspace = true }
 flow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin", features = ["canvas-runtime-assets"] }
 # 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20): the raw `ui::*` builder DSL (tree items

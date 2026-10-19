@@ -2,10 +2,9 @@ import { createRequestedIssuedResourceControlV1, requireIssuedResourceControlInv
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+import type { RepositoryTestCommandOptionsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 
-/** 🧪️ Supplies generic test command options without creating compiler authority. */
-export type RepositoryTestCommandOptionsV1=Readonly<{cwd?:string;env?:Readonly<Record<string,string|undefined>>;budgetMs?:number;signal?:AbortSignal;onTimeoutHint?:string;throwOnFailure?:boolean}>;
 
 /** 🦀️ Carries actual Cargo owner custody while preserving other bounded test commands. */
 export async function runRepositoryTestCommand<Command extends string>(command:Command,args:string[],...provided:Command extends "cargo"?[options:RepositoryTestCommandOptionsV1&Readonly<{invocation:ScriptInvocation;control:CompilerAdmissionControl}>]:[options?:RepositoryTestCommandOptionsV1]):Promise<void>{

@@ -17,9 +17,6 @@
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/block-js:test",
     "shared-schema": "bun --cwd \"../../../../..\" repo run @semio-tech/block-js:shared-schema"
   },
-  "dependencies": {
-    "@semio-tech/s-dev-block-ts": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "@semio-tech/framework": "workspace:*"

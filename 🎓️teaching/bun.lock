@@ -5,7 +5,13 @@
     "": {
       "name": "semio-teaching-workspace",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@iarna/toml": "2.2.5",
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/repo-lib": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*",
+        "@types/node": "^22.19.6",
+        "ajv": "8.20.0",
+        "yaml": "2.9.0"
       }
     },
     "../🧰️framework/📦️packages/🟦️typescript": {
@@ -48,11 +54,13 @@
         "@semio-tech/schema-validator-ts": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
         "@types/d3-scale": "4.0.9",
+        "@types/opentype.js": "1.3.9",
         "ajv": "8.20.0",
         "color-string": "1.9.1",
         "d3-scale": "4.0.2",
         "decimal.js": "10.6.0",
         "fast-check": "3.23.2",
+        "opentype.js": "1.3.4",
         "three": "0.182.0",
         "xstate": "^5.32.5"
       }
@@ -76,8 +84,20 @@
         "@semio-tech/schema-validator-ts": "workspace:*"
       },
       "devDependencies": {
+        "@iarna/toml": "2.2.5",
+        "@semio-tech/assets": "workspace:*",
+        "@semio-tech/framework-renderer-react": "workspace:*",
+        "@semio-tech/framework-renderer-wgpu": "workspace:*",
         "@semio-tech/process": "workspace:*",
-        "@semio-tech/schema-ts": "workspace:*"
+        "@semio-tech/repo-lib": "workspace:*",
+        "@semio-tech/schema-ts": "workspace:*",
+        "@types/graphlib": "^2.1.12",
+        "ajv": "8.20.0",
+        "jsonc-parser": "3.3.1",
+        "pathe": "2.0.3",
+        "string-argv": "0.4.0",
+        "whatwg-url": "14.2.0",
+        "yargs-parser": "21.1.1"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust": {
@@ -88,7 +108,8 @@
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
-        "@semio-tech/schema-ts": "workspace:*"
+        "@semio-tech/schema-ts": "workspace:*",
+        "ajv": "8.20.0"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🏛️ownership/🧮️compute": {
@@ -100,7 +121,8 @@
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-plugin-host-test-component",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits": {
@@ -110,7 +132,8 @@
         "@semio-tech/framework": "workspace:*"
       },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript": {
@@ -177,10 +200,27 @@
       "name": "@semio-tech/framework-os-rs",
       "version": "0.1.0"
     },
-    "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-diagnostic-ts",
+    "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/infinite-world-r3f",
+      "version": "0.1.0",
+      "dependencies": {
+        "@react-three/drei": "^10.7.7",
+        "@react-three/fiber": "^9.4.2",
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
+      },
       "devDependencies": {
-        "@semio-tech/framework": "workspace:*"
+        "@semio-tech/process": "workspace:*",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@types/three": "^0.180.0",
+        "three": "^0.182.0",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17"
       }
     },
     "../🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript": {
@@ -246,6 +286,10 @@
       },
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "@types/d3-array": "3.2.2",
+        "@types/d3-color": "3.1.3",
+        "@types/d3-hierarchy": "3.1.7",
+        "@types/d3-scale": "4.0.9",
         "d3-array": "3.2.4",
         "d3-chord": "3.0.1",
         "d3-color": "3.1.0",
@@ -316,6 +360,10 @@
         "@nxlv/python": "23.0.2",
         "nx": "23.2.0",
         "typescript": "5.9.3"
+      },
+      "devDependencies": {
+        "ajv": "8.20.0",
+        "diff": "8.0.4"
       }
     },
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript": {
@@ -323,6 +371,7 @@
       "version": "1.0.0",
       "devDependencies": {
         "@semio-tech/framework": "workspace:*",
+        "@semio-tech/nx-bootstrap-tools": "workspace:*",
         "@semio-tech/process": "workspace:*",
         "@types/node": "^22.19.6",
         "ajv": "8.20.0",
@@ -376,15 +425,10 @@
         "web-tree-sitter": "0.20.8"
       }
     },
-    "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust": {
-      "name": "@semio-tech/framework-diagnostic-rs",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/value-ts": "workspace:*"
-      },
+    "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-diagnostic-ts",
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/framework": "workspace:*"
       }
     },
     "🏛️architecture/❓️quiz/📦️packages/🟦️typescript": {
@@ -404,6 +448,17 @@
         "vite": "^7.3.1",
         "vitest": "^4.0.17",
         "yaml": "2.9.0"
+      }
+    },
+    "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-diagnostic-rs",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/value-ts": "workspace:*"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust": {
@@ -448,6 +503,9 @@
     "../🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-pack-record-ts"
     },
+    "../🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-time-travel-ts"
+    },
     "../🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-pack-record-rs",
       "version": "0.1.0",
@@ -458,9 +516,6 @@
         "@semio-tech/schema-ts": "workspace:*",
         "@semio-tech/value-ts": "workspace:*"
       }
-    },
-    "../🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-time-travel-ts"
     },
     "../🧰️framework/🔨️modules/🎒️pack/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-pack-ts",
@@ -539,7 +594,8 @@
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
         "@semio-tech/schema-ts": "workspace:*",
-        "immer": "10.1.1"
+        "immer": "10.1.1",
+        "tree-sitter-wasms": "0.1.13"
       }
     },
     "../🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust": {
@@ -561,18 +617,20 @@
         "@semio-tech/schema-validator-ts": "workspace:*"
       }
     },
-    "../🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes": {
-      "name": "@semio-tech/framework-mesh-attributes-ownership",
-      "devDependencies": {
-        "@semio-tech/process": "workspace:*"
-      }
-    },
     "../🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-time-travel-rs",
       "version": "0.1.0",
       "devDependencies": {
         "@semio-tech/framework-replication": "workspace:*",
         "@semio-tech/process": "workspace:*"
+      }
+    },
+    "../🧰️framework/🔨️modules/🏗️mesh-engine/🏛️ownership/🎨️attributes": {
+      "name": "@semio-tech/framework-mesh-attributes-ownership",
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
+        "json5": "2.2.3"
       }
     },
     "../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🟦️typescript": {
@@ -635,6 +693,7 @@
       "name": "@semio-tech/framework-replication-rs",
       "devDependencies": {
         "@semio-tech/process": "workspace:*",
+        "ajv": "8.20.0",
         "crc-32": "^1.2.2"
       }
     },
@@ -647,11 +706,11 @@
         "vitest": "^4.0.17"
       }
     },
-    "../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-pixels-ts"
-    },
     "../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-tool-run-ts"
+    },
+    "../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-pixels-ts"
     },
     "../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust": {
       "name": "semio-framework-pixels",
@@ -785,12 +844,6 @@
         "vite": "^7.3.1"
       }
     },
-    "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-canvas-ts",
-      "devDependencies": {
-        "@semio-tech/framework": "workspace:*"
-      }
-    },
     "../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-tool-run-rs",
       "version": "0.1.0",
@@ -799,6 +852,12 @@
         "@semio-tech/framework-compiler-ts": "workspace:*",
         "@semio-tech/framework-replication": "workspace:*",
         "@semio-tech/process": "workspace:*"
+      }
+    },
+    "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-canvas-ts",
+      "devDependencies": {
+        "@semio-tech/framework": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust": {
@@ -858,17 +917,17 @@
     "../🧰️framework/🔨️modules/🗺️surface/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-surface-ts"
     },
-    "../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust": {
-      "name": "@semio-tech/framework-surface-rs",
-      "devDependencies": {
-        "@semio-tech/framework-pack-record-ts": "workspace:*",
-        "@semio-tech/process": "workspace:*"
-      }
-    },
     "../🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-async",
       "version": "0.1.0",
       "devDependencies": {
+        "@semio-tech/process": "workspace:*"
+      }
+    },
+    "../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-surface-rs",
+      "devDependencies": {
+        "@semio-tech/framework-pack-record-ts": "workspace:*",
         "@semio-tech/process": "workspace:*"
       }
     },
@@ -933,6 +992,14 @@
     "../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-sqlite-snapshot-ts"
     },
+    "../🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/framework-2d-js",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/framework-pixels-ts": "workspace:*",
+        "@semio-tech/process": "workspace:*"
+      }
+    },
     "../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-sqlite-snapshot-rs",
       "version": "0.1.0",
@@ -945,14 +1012,6 @@
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/process": "workspace:*",
         "@semio-tech/schema-validator-ts": "workspace:*"
-      }
-    },
-    "../🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/framework-2d-js",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@semio-tech/framework-pixels-ts": "workspace:*",
-        "@semio-tech/process": "workspace:*"
       }
     },
     "../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🟦️typescript": {
@@ -1017,14 +1076,14 @@
         "@semio-tech/process": "workspace:*"
       }
     },
-    "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust": {
-      "name": "@semio-tech/schema-state-rs",
+    "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust": {
+      "name": "semio-framework-2d",
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
     },
-    "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust": {
-      "name": "semio-framework-2d",
+    "../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust": {
+      "name": "@semio-tech/schema-state-rs",
       "devDependencies": {
         "@semio-tech/process": "workspace:*"
       }
@@ -1210,44 +1269,27 @@
         "xstate": "^5.32.5"
       }
     },
-    "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust": {
-      "name": "@semio-tech/framework-os-kernel",
-      "devDependencies": {
-        "@semio-tech/process": "workspace:*",
-        "crc-32": "^1.2.2"
-      }
-    },
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute": {
       "name": "@semio-tech/2d-compute",
       "dependencies": {
         "@semio-tech/framework": "workspace:*"
       },
       "devDependencies": {
+        "@iarna/toml": "2.2.5",
         "@semio-tech/process": "workspace:*",
-        "@semio-tech/schema-validator-ts": "workspace:*"
+        "@semio-tech/schema-validator-ts": "workspace:*",
+        "ajv": "8.20.0",
+        "lru-cache": "11.5.3"
       }
     },
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/infinite-world-r3f",
-      "version": "0.1.0",
-      "dependencies": {
-        "@react-three/drei": "^10.7.7",
-        "@react-three/fiber": "^9.4.2",
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "@semio-tech/ui-styling": "workspace:*",
-        "react": "^19.2.3",
-        "react-dom": "^19.2.3"
-      },
+    "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-os-kernel",
       "devDependencies": {
+        "@semio-tech/framework-plugin": "workspace:*",
         "@semio-tech/process": "workspace:*",
-        "@types/react": "^19.2.8",
-        "@types/react-dom": "^19.2.3",
-        "@types/three": "^0.180.0",
-        "three": "^0.182.0",
-        "typescript": "^5.9.3",
-        "vite": "^7.3.1",
-        "vitest": "^4.0.17"
+        "@semio-tech/repo-lib": "workspace:*",
+        "ajv": "8.20.0",
+        "crc-32": "^1.2.2"
       }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
@@ -1267,22 +1309,22 @@
         "vitest": "^4.0.17"
       }
     },
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute": {
-      "name": "@semio-tech/framework-os-flow-compute-ownership",
-      "devDependencies": {
-        "@semio-tech/process": "workspace:*"
-      }
-    },
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust": {
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust": {
       "name": "@semio-tech/flow-core-build",
       "devDependencies": {
         "@semio-tech/framework-os": "workspace:*",
         "@semio-tech/process": "workspace:*"
       }
     },
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings": {
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings": {
       "name": "@semio-tech/flow-core",
       "version": "0.1.0"
+    },
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute": {
+      "name": "@semio-tech/framework-os-flow-compute-ownership",
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*"
+      }
     },
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-renderer-react",
@@ -1309,6 +1351,7 @@
         "@types/react": "^19.2.8",
         "@types/react-dom": "^19.2.3",
         "@types/three": "^0.180.0",
+        "ajv": "8.20.0",
         "pngjs": "^7.0.0",
         "three": "^0.182.0",
         "typescript": "^5.9.3",
@@ -1349,7 +1392,11 @@
         "@semio-tech/framework-os": "workspace:*"
       },
       "devDependencies": {
-        "@semio-tech/process": "workspace:*"
+        "@semio-tech/framework-os-dev": "workspace:*",
+        "@semio-tech/plugin-registry": "workspace:*",
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/repo-lib": "workspace:*",
+        "ajv": "8.20.0"
       }
     }
   },
@@ -4105,7 +4152,7 @@
       "sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw=="
     ],
     "@monogrid/gainmap-js": [
-      "@monogrid/gainmap-js@3.4.1",
+      "@monogrid/gainmap-js@3.6.0",
       "",
       {
         "dependencies": {
@@ -4115,7 +4162,7 @@
           "three": ">= 0.159.0"
         }
       },
-      "sha512-/EIVp+w3RbUel914edq4NcHnmAiG6E6rDcsg2ZXfIl9aVeeKqP+r9Jw9Ey0dER90uuhjwN7xpdSuPAMTPP19fw=="
+      "sha512-J2I9E0GZrJ5gHMFfv5gpT446qMpREru0meUsRZ87Ki1wiuxL/HpBND9YM6JqLMQTX6hMjU4z5zcVYDrbDI5aWg=="
     ],
     "@napi-rs/canvas": [
       "@napi-rs/canvas@1.0.11",
@@ -5286,229 +5333,229 @@
       "sha512-eybk3TjzzzV97Dlj5c+XrBFW57eTNhzod66y9HrBlzJ6NsCrWCp/2kaPS3K9wJmurBC0Tdw4yPjXKZqlznim3Q=="
     ],
     "@rollup/rollup-android-arm-eabi": [
-      "@rollup/rollup-android-arm-eabi@4.64.9",
+      "@rollup/rollup-android-arm-eabi@4.64.10",
       "",
       {
         "os": "android",
         "cpu": "arm"
       },
-      "sha512-qJmhckvOleXp8R+BaXiVW/S34/3M7pvN17/QcG90A74BDaSvKv8ffY+GYG+a/xU0vEoITzdMSiM7o9HZSQWbfA=="
+      "sha512-oJ9ZfVIZjSjts0ZIYA48+5T0vurE5fQfX/Liad2U52Y6EN99x/OCdjGGuKMDP6jSk2i2lY6jwwA3X0drEc4PBg=="
     ],
     "@rollup/rollup-android-arm64": [
-      "@rollup/rollup-android-arm64@4.64.9",
+      "@rollup/rollup-android-arm64@4.64.10",
       "",
       {
         "os": "android",
         "cpu": "arm64"
       },
-      "sha512-dqQgds39BNWGB2ughJ6n2LTQFXk8RAOwnXj6m387OHpygfD93QRS1ODIfpiWyAa9gsFB9l34pSqeLmA0Xk/VBw=="
+      "sha512-LylBINgYYwgHNz8OMCy5+Y0w/LEgRYE0PcAIZfEuTuLNMf0S40GSLX6SFwqZsBLplS7RIHHy4zOAbl8Y5cQEvg=="
     ],
     "@rollup/rollup-darwin-arm64": [
-      "@rollup/rollup-darwin-arm64@4.64.9",
+      "@rollup/rollup-darwin-arm64@4.64.10",
       "",
       {
         "os": "darwin",
         "cpu": "arm64"
       },
-      "sha512-scrMx4SGikOSbWknLmPD0v6OeJ1Wih3kyRLdNZnlVbBeKVWp1nRTVcpM0IxDJdc3u8UjesPHTmnX649u8cQpBw=="
+      "sha512-vbuT3VT1GBI2fAOoUJUrsHVoOg9nbrFXTM7e3DSnb9PYf4n6jZCN8v4Vo8O6x4u5B67+/c803b8BtCZe2nIeqA=="
     ],
     "@rollup/rollup-darwin-x64": [
-      "@rollup/rollup-darwin-x64@4.64.9",
+      "@rollup/rollup-darwin-x64@4.64.10",
       "",
       {
         "os": "darwin",
         "cpu": "x64"
       },
-      "sha512-fkwi2OQR+QWoViRFt08Bsca6G0e9pk/4z+JgmqHq6jSRTT0LtI27KRVK8bu++6L/CBtQ3OZePbqC3bcrwGzTqQ=="
+      "sha512-qYUp/qYvM3T4cF+VWalPl+przBUESILxi+qZ1m1MVRHpg06vS+jHaxXubjCaRpXjLJPDFdXzOZ0FABDghHOhNQ=="
     ],
     "@rollup/rollup-freebsd-arm64": [
-      "@rollup/rollup-freebsd-arm64@4.64.9",
+      "@rollup/rollup-freebsd-arm64@4.64.10",
       "",
       {
         "os": "freebsd",
         "cpu": "arm64"
       },
-      "sha512-8Apr0Khn0r2MUsDtcOMbp85fDdXsX/E+iLhO17WUjG24m3O8ChArqI0isI7CAdj9Ouq177PHtVtEUpMNE1C4Gw=="
+      "sha512-v9NRQG+JztbP4DP/0yuhSyDcEJk047lYbqeNnqIgbXITcVDjGDS7OpkW5nadSY3tJ7MY8W1qIMMqP4Q3Q8BDjQ=="
     ],
     "@rollup/rollup-freebsd-x64": [
-      "@rollup/rollup-freebsd-x64@4.64.9",
+      "@rollup/rollup-freebsd-x64@4.64.10",
       "",
       {
         "os": "freebsd",
         "cpu": "x64"
       },
-      "sha512-H+upy4DhBcBZlUsCAMyr8wR0Dg9kj8sGloVZdZ7va2heJM/5jnROxI47dtXseJjlD/VoQe6MrXhY3b5ikOq/Vw=="
+      "sha512-CHc9LBHdxhn6/NXfb9IegXCWoz5VlvcDOx9QrzZ9q+XYhFlfzwymSWJjOlZcEMMtC1zgMV7qxDe6U18AI1SG0A=="
     ],
     "@rollup/rollup-linux-arm-gnueabihf": [
-      "@rollup/rollup-linux-arm-gnueabihf@4.64.9",
+      "@rollup/rollup-linux-arm-gnueabihf@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "arm"
       },
-      "sha512-b50NS9TbAEK/b16vBoKrkeNwy+HvGBXmtBbzX4wcodWOh9dQZvRTN9rUyElIXa36QnwXhU9PAVVkZpqRzSi2Tg=="
+      "sha512-ble2WR7kWfzZFJUd3ODMGCJn1XDszptfRC0QvWc0h9/EA6MxnrQ1mvbjPZifEdgHyfHhDrwWeKeJONDITcrHSg=="
     ],
     "@rollup/rollup-linux-arm-musleabihf": [
-      "@rollup/rollup-linux-arm-musleabihf@4.64.9",
+      "@rollup/rollup-linux-arm-musleabihf@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "arm"
       },
-      "sha512-SdqcudB/FzjLESsRMgXhV+FXGtf6usxXwlMoRW7D/XS3f9CZ4T4wycRBu2h9bVl2AOaPpunoA8ftAM/MF4altQ=="
+      "sha512-DMCYegihxBMKvLpODdk4OsvIgxtHTi+Oddf1Pm3d6wMVNjcBiG2pqyXjMPy55HgG1gCdEFr9VfhB1CmvuKn1lw=="
     ],
     "@rollup/rollup-linux-arm64-gnu": [
-      "@rollup/rollup-linux-arm64-gnu@4.64.9",
+      "@rollup/rollup-linux-arm64-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "arm64"
       },
-      "sha512-dg19FFRoovN+KZ+gMHBAq4Do8PgQmBcxpuhux57OuiR0QLavfn8uPBY8CP+UO50bO+xf0tK0GlqI/jld++5E6g=="
+      "sha512-HQ6HuVH9TmhvPWIas7MA/KeAROgdwqH3REpUU6hZq47NW7m1b1QCrHgM+M3+N/B8DfMt88x1/z79ppRc9RflCQ=="
     ],
     "@rollup/rollup-linux-arm64-musl": [
-      "@rollup/rollup-linux-arm64-musl@4.64.9",
+      "@rollup/rollup-linux-arm64-musl@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "arm64"
       },
-      "sha512-+jyv5ofGmpAvtrzLjSr/e4syskeikEp5L82bUzB76auwOgK1VNVwZV/F2g1Pes9bhTznbejOefAqPglHSKYmTA=="
+      "sha512-avBhxba1DdctX0kxKkN3JWdTSg72QsxSn6FdfhZ9MkL3TTYDOXqxY1GqbC7VNttlgviK7tCe2No5btfRkFgeIg=="
     ],
     "@rollup/rollup-linux-loong64-gnu": [
-      "@rollup/rollup-linux-loong64-gnu@4.64.9",
+      "@rollup/rollup-linux-loong64-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "none"
       },
-      "sha512-MKFXxqmkzCbtNvx/vjiJdss44eRtVabhCtDWcCFD9NHGwP+YkqnM/slnEsv/3fsoq9ukTtudraAjGhptrUPCVg=="
+      "sha512-UtQMex7fiXq0W/GqcWRpy6XKqUbXgQeGKB+Bd5rJngmHzpI+3kjwpWFLAhKg02onFsIMSh+Zx0zp9JIMQ7/05A=="
     ],
     "@rollup/rollup-linux-loong64-musl": [
-      "@rollup/rollup-linux-loong64-musl@4.64.9",
+      "@rollup/rollup-linux-loong64-musl@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "none"
       },
-      "sha512-lhARcOT6n7Ni9hpQRq8LZjbuoW+G/GXaW4Jfhx2MbmjnCj9XxLMRTceJIMpiMLQVWm+qxe7oq1sYvlIGOAW34Q=="
+      "sha512-0Aum2pUsCSuOopi6oka+nR1DTj/nfvc1xjL979lvh6kXUjNa30TCX7sKFjyMsrX7bK3bNVs0FsJwQcE2HCWX1Q=="
     ],
     "@rollup/rollup-linux-ppc64-gnu": [
-      "@rollup/rollup-linux-ppc64-gnu@4.64.9",
+      "@rollup/rollup-linux-ppc64-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "ppc64"
       },
-      "sha512-oORQzGxZ1oHghJwLdwc8Ni0SY9otILAeXsWdiImTF4F5HkWJUwh5s/269PF5tYILNC1z/3RwFsrgcHPguBcb0g=="
+      "sha512-4dgsouKal3qfMFORgtNigLPt7K3HXiO6jTr7+nFJv1GWu1OkZx0kvQIXbK4sjrIGnaLBk0s80eQCQ9hPIelLrw=="
     ],
     "@rollup/rollup-linux-ppc64-musl": [
-      "@rollup/rollup-linux-ppc64-musl@4.64.9",
+      "@rollup/rollup-linux-ppc64-musl@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "ppc64"
       },
-      "sha512-J2JQHQt7oR1uutd2OSwbV2Qpb2LI5gggPolbkUwDe7vn/0dnduZ0w6EIbGnZUAw7uIKaMgfVylcH6V+Aov8kRA=="
+      "sha512-d7NE89try3jisYzBD7J9M5iwfgcrXYC4dwHEjQ3HIWBftvwch1U/cy3iZ26SthtUOyClKiu7iqYiFjQEwiOlqQ=="
     ],
     "@rollup/rollup-linux-riscv64-gnu": [
-      "@rollup/rollup-linux-riscv64-gnu@4.64.9",
+      "@rollup/rollup-linux-riscv64-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "none"
       },
-      "sha512-bWaKLrfzeQ9mOzJJxXbPgw2RH6VAaTJrb/60Tqf7YSMxubG8780Hzm7Us+D6qVW8QRGJYl4VUvVXxnRB0o9zvQ=="
+      "sha512-dqB5ChSBp91JWXxpCKAS5ZVAE38esKQvdfyqANm0lF5JPiQrXnYwgG3oVBQmuNRcQ1WHkA3j5qYLsrl2CtfhCA=="
     ],
     "@rollup/rollup-linux-riscv64-musl": [
-      "@rollup/rollup-linux-riscv64-musl@4.64.9",
+      "@rollup/rollup-linux-riscv64-musl@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "none"
       },
-      "sha512-TFJyaCB9NsvSyvVGQgTSRD9XgxsAq99ivDDkt9KAySlrNW5Obsd1kQpvoCvBCOLq+JlJTjmtroLH0wp8M8mEsA=="
+      "sha512-7GMf3vbQQslorWLmfsbi5fdt9RVnglk205XpOMFvW6UY5jE5oJc6JLieQJPHtsYlZ2EO0PtC06nY9Hz/IG8guw=="
     ],
     "@rollup/rollup-linux-s390x-gnu": [
-      "@rollup/rollup-linux-s390x-gnu@4.64.9",
+      "@rollup/rollup-linux-s390x-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "s390x"
       },
-      "sha512-DvmOM5xz/wDnUJFVjqP32ahalxn7BDuvO25bpuFOrb50AIFCCcFPN4lWWUDD1c8Ddv9sMO9SXyqtOet8G8u9cQ=="
+      "sha512-tuKbkB23DKc5LG+irPSUnZZztRHqC3CNmyxeWloueBteHB+i+1HkRCMzAE41lseLDlarybeLhqfibFitKOxKMg=="
     ],
     "@rollup/rollup-linux-x64-gnu": [
-      "@rollup/rollup-linux-x64-gnu@4.64.9",
+      "@rollup/rollup-linux-x64-gnu@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "x64"
       },
-      "sha512-aFzokHK3yE00mzAvKm/PY76OsOOTjvoTGE82Vp89iBDyD2wUBlV4ZsR2tWkRECTEFk6TC4Yc3zaEWjPqq1vstQ=="
+      "sha512-ntHtQOMw7oIshHRF1swV3vyBw+beQt9PeZ04O3D32EeDZUMoHMJuZKp4/fDllH/+xogeK0GUCONVfjjKusqKLg=="
     ],
     "@rollup/rollup-linux-x64-musl": [
-      "@rollup/rollup-linux-x64-musl@4.64.9",
+      "@rollup/rollup-linux-x64-musl@4.64.10",
       "",
       {
         "os": "linux",
         "cpu": "x64"
       },
-      "sha512-t/yMdeaaQUuNNpmT7taBmH2VvHzgT4YA/IaKVE3qVr4PYQemn/kmJkL4uG4UvTLcWXQd0MSoOa/3URYSWGmUEg=="
+      "sha512-Dlh8q8r145aYgh+N3gNIG1dz35Fz/FCxe5hs/43orDsffjP8S1P4Xz5I4FpSJsDS4LpQw1QmswZkQlUbkCldjQ=="
     ],
     "@rollup/rollup-openbsd-x64": [
-      "@rollup/rollup-openbsd-x64@4.64.9",
+      "@rollup/rollup-openbsd-x64@4.64.10",
       "",
       {
         "os": "openbsd",
         "cpu": "x64"
       },
-      "sha512-4dnxKQ8GHARyjqAU87q5UWhywZTpIbR2VWhtACdC37GD1SGszmvb3TaBFVA4n+fnDHSKMut4ZJ63hVFwgnxVtg=="
+      "sha512-VBJhHWz/55u45CWFv9OmfSRDgJDVENESgFxSAn13gIKJpTuFJbP4/7ymMZhDfeKFx1zGn1XBsLnNB7Ryy71qww=="
     ],
     "@rollup/rollup-openharmony-arm64": [
-      "@rollup/rollup-openharmony-arm64@4.64.9",
+      "@rollup/rollup-openharmony-arm64@4.64.10",
       "",
       {
         "os": "none",
         "cpu": "arm64"
       },
-      "sha512-1qdQj6IrNoR0xFvrCQHmhBXe9HMbBGNTFi+3n4jKMt2rTx4k0aeAdraZU4WDOMfL9tAwS8/TRSuquvNuPQ+Gpw=="
+      "sha512-Vjcazg+EEzUfIz+LcaxS6YtbQHo+sv0sCD+5VbwhY504bCKNW4OOreVgKq61pHT2esRQ/+AXYVPStDwxSvAOdw=="
     ],
     "@rollup/rollup-win32-arm64-msvc": [
-      "@rollup/rollup-win32-arm64-msvc@4.64.9",
+      "@rollup/rollup-win32-arm64-msvc@4.64.10",
       "",
       {
         "os": "win32",
         "cpu": "arm64"
       },
-      "sha512-yc1GSEHIYhKGN5WSaJc+eMy8bZvzcvAmflEgFh8L3xcy8dYxGmfrudyBnBFde9f6JzOa1kFqocF8BHaWybjQoA=="
+      "sha512-jJAaP4El+HWxYkM0jeJghASaFgfnluY0FRHhyHXxU6STs/nBhKMIxIMDrJEFg2ftKz6orX9WAo4diVan5NugNA=="
     ],
     "@rollup/rollup-win32-ia32-msvc": [
-      "@rollup/rollup-win32-ia32-msvc@4.64.9",
+      "@rollup/rollup-win32-ia32-msvc@4.64.10",
       "",
       {
         "os": "win32",
         "cpu": "ia32"
       },
-      "sha512-VzHGvosAkLIzrwqvSgJBPDmGFTF/yE8OtMT4H5z8pM1NA0NiPpvTYnUh+9xPd+d5oy/wqF317FmJ1I8Kk8pp0Q=="
+      "sha512-bXXdRUfRx9PaHCToKt8R/7wjDV6Tbk/hmSHK0uQBKmD3rj4jkuYndct8uGX77ZuZsePrVkQbWUgPR2jJhCTMpQ=="
     ],
     "@rollup/rollup-win32-x64-gnu": [
-      "@rollup/rollup-win32-x64-gnu@4.64.9",
+      "@rollup/rollup-win32-x64-gnu@4.64.10",
       "",
       {
         "os": "win32",
         "cpu": "x64"
       },
-      "sha512-FB77txy1PiAcJgG72nOLA6R0S3PRZahs8Spx0z2yseDUkoMmJcrQghiebJ2JHZ74cCOVlX/MYd4dUbJtJJ8fow=="
+      "sha512-57Idx+VkEOQeG6Ys6sZOBFT7FfbeyxGv9A3k1m+Lf/z2SwqT40rNWbAINzjPHSMoCCBvY7Fnb9RGZWQin/HHAw=="
     ],
     "@rollup/rollup-win32-x64-msvc": [
-      "@rollup/rollup-win32-x64-msvc@4.64.9",
+      "@rollup/rollup-win32-x64-msvc@4.64.10",
       "",
       {
         "os": "win32",
         "cpu": "x64"
       },
-      "sha512-IoIgQLpK1DbOcQf1vX+i5oe5LXypsCVb1j/mU6BLAbOGmXH4E+j4kMfgZRwPYUohVBurNyVMgIKVM5dR6xA0kA=="
+      "sha512-vrvuasIpm/xf+BpZbzgirku0WnrQZMAc+H2Ai26jzqBxYEmQQE4DdJb7h8erkJMfRRipx0ma2Cty8jJwUm9ocQ=="
     ],
     "@secretlint/config-creator": [
       "@secretlint/config-creator@10.2.2",
@@ -5659,10 +5706,10 @@
       "@semio-tech/compute-ownership-runner@workspace:../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution"
     ],
     "@semio-tech/flow-core": [
-      "@semio-tech/flow-core@workspace:../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings"
+      "@semio-tech/flow-core@workspace:../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings"
     ],
     "@semio-tech/flow-core-build": [
-      "@semio-tech/flow-core-build@workspace:../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"
+      "@semio-tech/flow-core-build@workspace:../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"
     ],
     "@semio-tech/framework": [
       "@semio-tech/framework@workspace:../🧰️framework/📦️packages/🟦️typescript"
@@ -5884,7 +5931,7 @@
       "@semio-tech/framework-ui-viewport-ts@workspace:../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript"
     ],
     "@semio-tech/infinite-world-r3f": [
-      "@semio-tech/infinite-world-r3f@workspace:../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+      "@semio-tech/infinite-world-r3f@workspace:../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
     ],
     "@semio-tech/machine": [
       "@semio-tech/machine@workspace:../🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript"
@@ -6703,6 +6750,12 @@
       "",
       {},
       "sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg=="
+    ],
+    "@types/graphlib": [
+      "@types/graphlib@2.1.12",
+      "",
+      {},
+      "sha512-abRfQWMphT2qlXwppQa+CTCtUz/GqxBeozQcMjnOFD/WOKD6sRgxkfG8vq1yagV03447BBzCYhuJ0wiNb+/r+Q=="
     ],
     "@types/hast": [
       "@types/hast@3.0.5",
@@ -9067,10 +9120,10 @@
       "sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA=="
     ],
     "diff": [
-      "diff@5.2.2",
+      "diff@8.0.4",
       "",
       {},
-      "sha512-vtcDfH3TOjP8UekytvnHH1o1P4FcUdt4eQ1Y+Abap1tk/OB2MWQvcwS2ClCd1zuIhc3JKOx6p3kod8Vfys3E+A=="
+      "sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw=="
     ],
     "dom-accessibility-api": [
       "dom-accessibility-api@0.5.16",
@@ -10850,14 +10903,10 @@
       "sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g=="
     ],
     "lru-cache": [
-      "lru-cache@6.0.0",
+      "lru-cache@11.5.3",
       "",
-      {
-        "dependencies": {
-          "yallist": "^4.0.0"
-        }
-      },
-      "sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA=="
+      {},
+      "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg=="
     ],
     "luxon": [
       "luxon@3.7.2",
@@ -12479,7 +12528,7 @@
       "sha512-nhfdr83ECBg6xtqOAJab1tbksbBAOMUltN60bU+llHVOL0e5Onm1WpAXXWXVB39L8AJFssoIhEVuy/S90MmotA=="
     ],
     "postcss": [
-      "postcss@8.5.30",
+      "postcss@8.5.31",
       "",
       {
         "dependencies": {
@@ -12488,7 +12537,7 @@
           "source-map-js": "^1.2.2"
         }
       },
-      "sha512-zkd+e9S1AQHhmaBKye9zlFHWjOwVgqXl1q3ECYy8561K7qxR2cREf/STLskulBFd78k6AOFeA+ff1TtEzk9bAA=="
+      "sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg=="
     ],
     "postcss-selector-parser": [
       "postcss-selector-parser@6.0.10",
@@ -12799,7 +12848,7 @@
       "sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw=="
     ],
     "react-resizable-panels": [
-      "react-resizable-panels@4.14.5",
+      "react-resizable-panels@4.14.6",
       "",
       {
         "peerDependencies": {
@@ -12807,7 +12856,7 @@
           "react-dom": "^18.0.0 || ^19.0.0"
         }
       },
-      "sha512-AoHgoq3sGOfciPn2ahddFrBCqsitZLse8cJIYWblvE3kQ9z39IrhdlHCjnVRrDL8XcWqvA0u/t9nLZTfWePJ5A=="
+      "sha512-YqkTuTDV1ncknnR5YN/iI8icpClippc9/10job9zJIppt2r8yUwaVfVxhzFNO+3DIxrnAwhcMMs1FdX5xt9C9A=="
     ],
     "react-use-measure": [
       "react-use-measure@2.1.7",
@@ -13105,7 +13154,7 @@
       "sha512-eTBTTqMR6uHKLgcUqpJP8ntzDI6V4LYA8negAMBEI7gkgVvOdrx6VsvS2Ym+83KhOPdLCHWJu0w7UQFJZhHKNw=="
     ],
     "rollup": [
-      "rollup@4.64.9",
+      "rollup@4.64.10",
       "",
       {
         "dependencies": {
@@ -13113,38 +13162,38 @@
         },
         "optionalDependencies": {
           "@napi-rs/lzma-linux-x64-gnu": "1.5.1",
-          "@rollup/rollup-android-arm-eabi": "4.64.9",
-          "@rollup/rollup-android-arm64": "4.64.9",
-          "@rollup/rollup-darwin-arm64": "4.64.9",
-          "@rollup/rollup-darwin-x64": "4.64.9",
-          "@rollup/rollup-freebsd-arm64": "4.64.9",
-          "@rollup/rollup-freebsd-x64": "4.64.9",
-          "@rollup/rollup-linux-arm-gnueabihf": "4.64.9",
-          "@rollup/rollup-linux-arm-musleabihf": "4.64.9",
-          "@rollup/rollup-linux-arm64-gnu": "4.64.9",
-          "@rollup/rollup-linux-arm64-musl": "4.64.9",
-          "@rollup/rollup-linux-loong64-gnu": "4.64.9",
-          "@rollup/rollup-linux-loong64-musl": "4.64.9",
-          "@rollup/rollup-linux-ppc64-gnu": "4.64.9",
-          "@rollup/rollup-linux-ppc64-musl": "4.64.9",
-          "@rollup/rollup-linux-riscv64-gnu": "4.64.9",
-          "@rollup/rollup-linux-riscv64-musl": "4.64.9",
-          "@rollup/rollup-linux-s390x-gnu": "4.64.9",
-          "@rollup/rollup-linux-x64-gnu": "4.64.9",
-          "@rollup/rollup-linux-x64-musl": "4.64.9",
-          "@rollup/rollup-openbsd-x64": "4.64.9",
-          "@rollup/rollup-openharmony-arm64": "4.64.9",
-          "@rollup/rollup-win32-arm64-msvc": "4.64.9",
-          "@rollup/rollup-win32-ia32-msvc": "4.64.9",
-          "@rollup/rollup-win32-x64-gnu": "4.64.9",
-          "@rollup/rollup-win32-x64-msvc": "4.64.9",
+          "@rollup/rollup-android-arm-eabi": "4.64.10",
+          "@rollup/rollup-android-arm64": "4.64.10",
+          "@rollup/rollup-darwin-arm64": "4.64.10",
+          "@rollup/rollup-darwin-x64": "4.64.10",
+          "@rollup/rollup-freebsd-arm64": "4.64.10",
+          "@rollup/rollup-freebsd-x64": "4.64.10",
+          "@rollup/rollup-linux-arm-gnueabihf": "4.64.10",
+          "@rollup/rollup-linux-arm-musleabihf": "4.64.10",
+          "@rollup/rollup-linux-arm64-gnu": "4.64.10",
+          "@rollup/rollup-linux-arm64-musl": "4.64.10",
+          "@rollup/rollup-linux-loong64-gnu": "4.64.10",
+          "@rollup/rollup-linux-loong64-musl": "4.64.10",
+          "@rollup/rollup-linux-ppc64-gnu": "4.64.10",
+          "@rollup/rollup-linux-ppc64-musl": "4.64.10",
+          "@rollup/rollup-linux-riscv64-gnu": "4.64.10",
+          "@rollup/rollup-linux-riscv64-musl": "4.64.10",
+          "@rollup/rollup-linux-s390x-gnu": "4.64.10",
+          "@rollup/rollup-linux-x64-gnu": "4.64.10",
+          "@rollup/rollup-linux-x64-musl": "4.64.10",
+          "@rollup/rollup-openbsd-x64": "4.64.10",
+          "@rollup/rollup-openharmony-arm64": "4.64.10",
+          "@rollup/rollup-win32-arm64-msvc": "4.64.10",
+          "@rollup/rollup-win32-ia32-msvc": "4.64.10",
+          "@rollup/rollup-win32-x64-gnu": "4.64.10",
+          "@rollup/rollup-win32-x64-msvc": "4.64.10",
           "fsevents": "~2.3.2"
         },
         "bin": {
           "rollup": "dist/bin/rollup"
         }
       },
-      "sha512-mnPSQINChN7PpT+a5CI0/+87hm/+6zxSKBK1XonrzQ0zFnglaTjhkTP2Br4yNCTcLHUEvrAfZffH57jGf+8xBQ=="
+      "sha512-8N52YH1B5JzBP+B1rkcBERG7rfRTGAM0RmUpyd76yyRfTljuG452GCNbVm6MPzs1+gXBha6Rw5/oHRFohOpfDg=="
     ],
     "router": [
       "router@2.2.0",
@@ -15730,6 +15779,16 @@
       {},
       "sha512-Vj7sf++t5pBD637NSfkxpHSMfWaeig5+DKWLhcqIYx6mWQz5hdJTGDVMQiJcw1ZYkhs7AazKDGpRVji1LJCZUQ=="
     ],
+    "hosted-git-info/lru-cache": [
+      "lru-cache@6.0.0",
+      "",
+      {
+        "dependencies": {
+          "yallist": "^4.0.0"
+        }
+      },
+      "sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA=="
+    ],
     "htmlparser2/entities": [
       "entities@7.0.1",
       "",
@@ -15813,6 +15872,12 @@
         }
       },
       "sha512-uZbew1NqdmPDTMJ8ah1y+b+9QEJrfkXFk3RcTQw3X0jW/xRUvFKsg1CfQdSYGdTbXZWExtU3J3ccxtnfw1Fi0g=="
+    ],
+    "mocha/diff": [
+      "diff@5.2.2",
+      "",
+      {},
+      "sha512-vtcDfH3TOjP8UekytvnHH1o1P4FcUdt4eQ1Y+Abap1tk/OB2MWQvcwS2ClCd1zuIhc3JKOx6p3kod8Vfys3E+A=="
     ],
     "mocha/escape-string-regexp": [
       "escape-string-regexp@4.0.0",
@@ -16665,12 +16730,6 @@
       "",
       {},
       "sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw=="
-    ],
-    "@vscode/vsce/glob/path-scurry/lru-cache": [
-      "lru-cache@11.5.3",
-      "",
-      {},
-      "sha512-U4N8FgzmWxc8k1VH8Kr6lQg18U7Fjvby6wXHVRX/ZZ7IwWbRMgrRbP0Wrb5q5NVinryp4SQampHKdvtecItxUg=="
     ],
     "glob/minimatch/brace-expansion/balanced-match": [
       "balanced-match@1.0.2",

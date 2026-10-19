@@ -1,6 +1,6 @@
 import type {ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
 import {requireIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 const policy=Object.freeze({...schema.definitions.Policy.const});
 /** ⏱️ Holds one finite, non-overlapping sampler until every accepted sample has drained. */
 export function startTelemetrySamplerV1(control:ResourceLeaseControl,sample:(control:ResourceLeaseControl)=>Promise<void>,intervalMilliseconds:number=policy.sampleMs):Readonly<{stop():Promise<void>}>{

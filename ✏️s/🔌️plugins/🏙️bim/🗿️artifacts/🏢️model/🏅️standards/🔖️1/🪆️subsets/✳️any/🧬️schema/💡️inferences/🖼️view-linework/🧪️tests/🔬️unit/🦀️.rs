@@ -1,13 +1,16 @@
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, pieces};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::{ViewLinework, hidden_lines};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
-use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, pieces};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 use semio_framework_2d::regions::Region;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily};
-use crate::standards::v1::subsets::any::schema::snapshot::{Building, Layer, LayerFunction, Material, MaterialCategory, Phase, Point2, Rgb, Site, Storey, ViewCategory, ViewCrop, ViewPlane, Wall, WallType};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, LocationLine, TopConstraint}, inferences::ModelInference};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Building, Material, Site, Storey, Wall, WallType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, LayerFunction, MaterialCategory, Phase, Point2, Rgb, ViewCategory, ViewCrop, ViewPlane};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, LocationLine, TopConstraint};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_geometry::mesh::TriMesh;
 
@@ -162,7 +165,7 @@ async fn a_plan_view_hides_categories_filters_phases_and_crops() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_camera_view_and_a_view_of_a_missing_storey_draw_nothing() {
-    let camera = View { camera: Some(crate::standards::v1::subsets::any::schema::snapshot::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }), ..View::standard("b", "Iso", ViewKind::Orthographic) };
+    let camera = View { camera: Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }), ..View::standard("b", "Iso", ViewKind::Orthographic) };
     let view = drawn(&with(room(), "v", camera), "v");
     assert!(view.lines.regions.is_empty() && view.lines.polylines.is_empty() && view.lines.texts.is_empty());
     let lost = drawn(&with(room(), "v", View::of_storey("b", "Lost", ViewKind::Plan, "nowhere")), "v");
@@ -184,13 +187,13 @@ async fn a_nearer_element_hides_the_edges_behind_it() {
     assert!(close(visible, 8.0 + 10.0), "the column's 2 x 2 outline plus the wall's outline without the 2 m behind the column on both long edges: {visible}");
     assert!(close(hidden, 2.0 * 2.0 + 0.0), "the wall's two long edges are hidden for 2 m each behind the column: {hidden}");
     assert!(faces(&seen[0]).len() == 1 && faces(&seen[1]).len() == 1, "each prism projects to one face");
-    let area = |body: &hidden_lines::Body| faces(body).iter().map(|cut| Region::new(&cut.outer, &cut.holes).area()).sum::<f64>();
+    let area = |body: &semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::Body| faces(body).iter().map(|cut| Region::new(&cut.outer, &cut.holes).area()).sum::<f64>();
     assert!(close(area(&seen[0]), 4.0) && close(area(&seen[1]), 6.0), "the faces are the exact rectangles");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn editing_one_view_computes_that_view_only() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
     let first = with(room(), "v-south", south());
     let second = with(first.clone(), "v-plan", View::of_storey("b", "Ground plan", ViewKind::Plan, "g"));
     let mut session = ModelInferenceSession::new();
@@ -198,7 +201,7 @@ async fn editing_one_view_computes_that_view_only() {
     assert_eq!(session.inference().view_linework.len(), 2);
     let mut changed = second.clone();
     changed.views.get_mut("v-south").expect("the view").scale = 50;
-    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::ViewPatch { scale: Some(50), ..Default::default() }));
+    let diff = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::ViewPatch { scale: Some(50), ..Default::default() }));
     session.update(&changed, &diff);
     let report = session.report();
     assert!(!report.gated, "a view edit touches the graph");
@@ -210,18 +213,18 @@ async fn editing_one_view_computes_that_view_only() {
 
 #[semio_framework_async_macros::async_test]
 async fn renaming_a_view_recomputes_nothing_and_moving_a_wall_redraws_the_views_that_see_it() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
     let first = with(room(), "v-south", south());
     let mut session = ModelInferenceSession::new();
     session.refresh(&first);
     let mut renamed = first.clone();
     renamed.views.get_mut("v-south").expect("the view").name = "Front".into();
-    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::ViewPatch { name: Some("Front".into()), ..Default::default() }));
+    let diff = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::ViewPatch { name: Some("Front".into()), ..Default::default() }));
     session.update(&renamed, &diff);
     assert_eq!(session.report().computed_by_kind.values().sum::<usize>(), 0, "a name is never read by the drawing: {:?}", session.report().computed_by_kind);
     let mut moved = renamed.clone();
     moved.storeys.get_mut("g").expect("the storey").height = 3.5;
-    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::storeys("g", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::StoreyPatch { height: Some(3.5), ..Default::default() }));
+    let diff = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff::storeys("g", semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry::Patched(semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch { height: Some(3.5), ..Default::default() }));
     session.update(&moved, &diff);
     assert_eq!(session.report().computed_by_kind.get("view").copied(), Some(1), "{:?}", session.report().computed_by_kind);
     assert!(close(session.inference().view_linework["v-south"].union_area_of(PlanKind::Silhouette), 6.3 * 3.5));

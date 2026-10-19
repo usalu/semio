@@ -20,7 +20,7 @@ use crate::standards::v2_0::subsets::any::{GltfAccessorSpec, GltfBuilderConstruc
 use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
 
 /// 🗂️ The committed fixture, read when a test runs: the example leaf lives in the editor crate, which a test here consumes as a dependency, so it has no host-less fallback of its own.
-static BASE_GLB: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable").into_boxed_slice()));
+static BASE_GLB: std::sync::LazyLock<&'static [u8]> = std::sync::LazyLock::new(|| Box::leak(std::fs::read(fixture_path!("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️metabolism-model/🧊️.glb")).expect("the committed fixture is readable").into_boxed_slice()));
 
 /// 🧬️ The fixture decoded through the real `.glb` container codec, as the example leaf does.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

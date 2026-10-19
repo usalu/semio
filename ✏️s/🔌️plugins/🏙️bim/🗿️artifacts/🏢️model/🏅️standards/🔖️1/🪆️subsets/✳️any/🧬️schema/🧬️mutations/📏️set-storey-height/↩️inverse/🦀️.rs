@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetStoreyHeight`: an absolute `SetStoreyHeight` back to the base height, none when the storey is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetStoreyHeight, base: &ModelSnapshot) -> Vec<Op>
 where

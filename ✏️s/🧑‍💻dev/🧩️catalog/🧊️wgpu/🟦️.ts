@@ -1,8 +1,8 @@
 import nativeCatalog from "../🤖️generated/🦀️catalog.json";
-import {readNativeCatalogV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import {readNativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 import { composeSpecificOsCatalogV1 } from "../🟦️.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../🤖️generated/🎮️playgrounds/🟦️.ts";
-import { createCompletedWgpuConfigurationV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts";
+import { createCompletedWgpuConfigurationV1 } from "@semio-tech/framework-renderer-wgpu/server/config";
 /** 🧊️ Specific standalone assembly injects only its installed generated catalog into the neutral WGPU configuration. */
 export default () => {
   const variant = process.env.SEMIO_PLUGIN, playground = PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant);

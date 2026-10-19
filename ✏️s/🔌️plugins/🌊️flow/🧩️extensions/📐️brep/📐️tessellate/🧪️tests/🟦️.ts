@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 
 test("original tessellation keeps strict business source until complete canonical handoff", () => {
-  const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv2020({ strict: true }).compile(schema);
   expect(validate(fixture)).toBe(true);

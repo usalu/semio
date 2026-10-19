@@ -2,12 +2,11 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { withRepositoryDevelopmentStateV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { withRepositoryDevelopmentStateV1 } from "@semio-tech/repo-lib/storage";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
 import { join } from "node:path";
-import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { withPublishedDevelopmentLocalHubHostV1 } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
 import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
@@ -38,7 +37,7 @@ export class TrustedCatalogBootstrapScript extends BundleScript {
     trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
     trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
     const phaseControl=exactCargoCallerControlV1(this.invocation,"hub:trusted-bootstrap",0);
-    await buildRepositoryCargoArtifacts(join(this.root,"Cargo.toml"),["--bin","os-hub"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
+    await buildAdmittedCargoArtifactsV1(join(this.root,"Cargo.toml"),["--bin","os-hub"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:phaseControl,consume:verifyCapturedCargoArtifactsV1});
     return withRepositoryDevelopmentStateV1(this.invocation,phaseControl,(state,statePhase)=>withPublishedDevelopmentLocalHubHostV1(this.invocation,statePhase,state,(host,context)=>withMaterializedTrustedCatalogBundleV1(host,context.control,selection,async(receipt,actualPhase)=>{
       await validateAndPublishTrustedStdioGisCandidate(host,actualPhase,receipt);
       console.log(`trusted-catalog-bootstrap-receipt: ${JSON.stringify(receipt)}`);

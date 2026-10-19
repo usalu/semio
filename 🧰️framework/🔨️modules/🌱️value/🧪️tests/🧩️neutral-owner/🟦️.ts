@@ -30,7 +30,7 @@ test("ordered map clone quotes preserve independent original and interrupted can
   }
 });
 test("original shared clone preserves independent original values and cancellation",()=>{
- const path=join(root,owner,"🧬️retained-clone/🔗️shared"),law=JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
+ const path=join(root,owner,"🧬️retained-clone/🔗️issuance-clone"),law=JSON.parse(readFileSync(join(path,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
  for(const text of law.texts){for(const order of law.closeOrders){
   const original={source:{text},output:{text}};
@@ -149,20 +149,21 @@ test("actual value derives build and execute with product trees absent", async (
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw new Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket artifact directory");
   const copy = mkdtempSync(join(output, "neutral-value-owner-"));
-  const members = [owner + "/✨️derive/📦️packages/🦀️rust", "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"];
-  if (existsSync(join(root, owner, "📦️packages/🦀️rust/Cargo.toml"))) members.push(owner + "/📦️packages/🦀️rust");
-  for (const source of [owner, "🧰️framework/🔨️modules/🚪️io/🔤️base64"]) {
+  const framework = "🧰️framework", relative = (path: string) => path.slice(framework.length + 1);
+  const members = [relative(owner) + "/✨️derive/📦️packages/🦀️rust", "🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"];
+  if (existsSync(join(root, owner, "📦️packages/🦀️rust/Cargo.toml"))) members.push(relative(owner) + "/📦️packages/🦀️rust");
+  for (const source of [framework + "/🔨️modules", framework + "/📦️packages"]) {
     mkdirSync(resolve(copy, source, ".."), { recursive: true });
     cpSync(join(root, source), join(copy, source), { recursive: true, filter: path => !/(?:^|[\\/])(?:dist|target|node_modules|🗑️generated)(?:[\\/]|$)/u.test(path) });
   }
-  const source = toml.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as any;
-  writeFileSync(join(copy, "Cargo.toml"), toml.stringify({ workspace: { resolver: "2", members, package: source.workspace.package, lints: source.workspace.lints, dependencies: { "semio-framework-value": { path: owner + "/📦️packages/🦀️rust" } } } }));
+  const source = toml.parse(readFileSync(join(root, framework, "Cargo.toml"), "utf8")) as any, manifest = join(copy, framework, "Cargo.toml");
+  writeFileSync(manifest, toml.stringify({ workspace: { resolver: "2", members, package: source.workspace.package, lints: source.workspace.lints, dependencies: source.workspace.dependencies } }));
   expect(existsSync(join(copy, "🧰️framework/🛍️products"))).toBe(false);
   expect(existsSync(join(copy, "✏️s"))).toBe(false);
   const cargo = { ...process.env, CARGO_TARGET_DIR: compilerStorage(process.env.CARGO_TARGET_DIR ?? join(copy, "target")), CARGO_BUILD_BUILD_DIR: compilerStorage(process.env.CARGO_BUILD_BUILD_DIR ?? join(copy, "compiler")) };
-  await runOwnedCommand("cargo", ["clean", "--offline", "--manifest-path", join(copy, "Cargo.toml"), "-p", "semio-framework-value", "-p", "semio-framework-value-derive"], copy, "value:fresh-captured-units", 120000, { env: cargo });
+  await runOwnedCommand("cargo", ["clean", "--offline", "--manifest-path", manifest, "-p", "semio-framework-value", "-p", "semio-framework-value-derive"], copy, "value:fresh-captured-units", 120000, { env: cargo });
   console.log("value:products-absent fresh-captured-units=value,value-derive thirdparty-artifacts=caller-owned");
-  await runOwnedCommand("cargo", ["test", "--offline", "--manifest-path", join(copy, "Cargo.toml"), "-p", "semio-framework-value", "-p", "semio-framework-value-derive", "--", "--nocapture"], copy, "value:products-absent", 120000, { env: cargo });
+  await runOwnedCommand("cargo", ["test", "--offline", "--manifest-path", manifest, "-p", "semio-framework-value", "-p", "semio-framework-value-derive", "--", "--nocapture"], copy, "value:products-absent", 120000, { env: cargo });
 }, 120000);
 
 test("retirement source capacity agrees with independent decimal arithmetic",async()=>{

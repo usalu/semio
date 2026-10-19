@@ -35,7 +35,7 @@ const artifactSchema = readJson(`${schemaRoot}/🔣️.json`);
 const snapshotSchema = readJson(`${schemaRoot}/📸️snapshot/🔣️.json`);
 const diffSchema = readJson(`${schemaRoot}/🔺️diff/🔣️.json`);
 const workspace = fileURLToPath(new URL("../../../../../../../../../../../../../../../../..", import.meta.url));
-const childSchema = readJson(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
+const childSchema = readJson(frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"));
 const ioSchema = readJson(frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
 
 const target = (instances: WindowInstance[], id: string, expectedKind: string): void => {

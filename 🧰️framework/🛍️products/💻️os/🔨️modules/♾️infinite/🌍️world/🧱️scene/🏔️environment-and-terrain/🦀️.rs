@@ -35,7 +35,7 @@ pub fn environment_scene_material(environment: &WorldEnvironmentRecord) -> Scene
     SceneMaterial3d { metalness: material.metalness.unwrap_or(0.0) as f32, roughness: material.roughness.unwrap_or(1.0) as f32, emissive, emissive_intensity: if emissive == [0.0; 3] { 0.0 } else { material.emissive_intensity.unwrap_or(1.0) as f32 } }
 }
 
-pub fn environment_outline_color(environment: &WorldEnvironmentRecord, theme: &ui_wgpu::wgpu::Theme) -> Option<[f32; 4]> {
+pub fn environment_outline_color(environment: &WorldEnvironmentRecord, theme: &semio_framework_ui_theme::Theme) -> Option<[f32; 4]> {
     match environment.material.as_ref().and_then(|material| material.stroke.as_deref()).map(str::trim) {
         Some(stroke) if stroke.eq_ignore_ascii_case("none") || stroke.eq_ignore_ascii_case("transparent") => None,
         Some(stroke) if !stroke.is_empty() => Some(parse_color(stroke)),
@@ -82,10 +82,10 @@ impl World3dShadowProfile {
         }
     }
 
-    pub fn render_profile(self) -> ui_wgpu::wgpu::SceneRenderProfile3d {
+    pub fn render_profile(self) -> ui_scene::math::SceneRenderProfile3d {
         match self {
-            Self::IconSvg => ui_wgpu::wgpu::SceneRenderProfile3d::SvgFlatLit,
-            Self::World | Self::IconPng | Self::Unshadowed => ui_wgpu::wgpu::SceneRenderProfile3d::RasterPbr,
+            Self::IconSvg => ui_scene::math::SceneRenderProfile3d::SvgFlatLit,
+            Self::World | Self::IconPng | Self::Unshadowed => ui_scene::math::SceneRenderProfile3d::RasterPbr,
         }
     }
 }
@@ -288,7 +288,7 @@ impl WorldTerrainMeshCursor {
     }
 
 
-    pub fn mesh_fault(fault: ui_wgpu::wgpu::Mesh3dFault) -> WorldDynamicFault { WorldDynamicFault::Mesh(fault) }
+    pub fn mesh_fault(fault: ui_scene::math::Mesh3dFault) -> WorldDynamicFault { WorldDynamicFault::Mesh(fault) }
 
     pub fn step(&mut self, source_revision: u64, terrain_revision: u64, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<(WorldTerrainMeshStep, semio_framework_value::retained_clone::RetainedCloneProgress), WorldDynamicFault> {
         if context.should_yield() || grant.maximum_items == 0 { return Ok((WorldTerrainMeshStep::Pending, Default::default())); }
@@ -301,7 +301,7 @@ impl WorldTerrainMeshCursor {
         } else { self.step_live(grant) };
         context.consume_fuel(1);
         match result {
-            Err(WorldDynamicFault::Mesh(ui_wgpu::wgpu::Mesh3dFault::Busy)) => Ok((WorldTerrainMeshStep::Pending, Default::default())),
+            Err(WorldDynamicFault::Mesh(ui_scene::math::Mesh3dFault::Busy)) => Ok((WorldTerrainMeshStep::Pending, Default::default())),
             Err(fault) if closing=>Err(fault),
             Err(fault) => { self.faulted = Some(fault); Ok((WorldTerrainMeshStep::Pending, Default::default())) }
             value => value,
@@ -374,31 +374,31 @@ impl WorldTerrainMeshCursor {
         Ok((WorldTerrainMeshStep::Pending,progress))
     }
 
-    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<ui_wgpu::wgpu::Mesh3dOwnershipStep,WorldDynamicFault> {
-        let empty=ui_wgpu::wgpu::Mesh3dOwnershipStep::default();
-        if self.terminal_is_empty() {return Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep {complete:true,..empty});}
+    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<ui_scene::math::Mesh3dOwnershipStep,WorldDynamicFault> {
+        let empty=ui_scene::math::Mesh3dOwnershipStep::default();
+        if self.terminal_is_empty() {return Ok(ui_scene::math::Mesh3dOwnershipStep {complete:true,..empty});}
         if grant.maximum_items==0 {return Ok(empty);}
         if grant.maximum_depth==0 {return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::DepthLimit));}
         match self.owner {
             WorldPlaceholderOwner::Writing(token)=>{
                 if !self.close_started {
-                    match mesh3d_abort(token) {Ok(())|Err(ui_wgpu::wgpu::Mesh3dFault::Closing)=>self.close_started=true,Err(fault)=>return Err(Self::mesh_fault(fault))}
-                    return Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()},..empty});
+                    match mesh3d_abort(token) {Ok(())|Err(ui_scene::math::Mesh3dFault::Closing)=>self.close_started=true,Err(fault)=>return Err(Self::mesh_fault(fault))}
+                    return Ok(ui_scene::math::Mesh3dOwnershipStep{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()},..empty});
                 }
                 let step=mesh3d_abort_step(token,grant).map_err(Self::mesh_fault)?;
                 if !step.progress.fits(grant) {return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
                 if step.complete {self.owner=WorldPlaceholderOwner::Empty;self.close_started=false;}
-                return Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep{complete:false,..step});
+                return Ok(ui_scene::math::Mesh3dOwnershipStep{complete:false,..step});
             }
             WorldPlaceholderOwner::Ready(lease)=>{
                 if !self.close_started {
-                    match mesh3d_begin_close(lease) {Ok(())|Err(ui_wgpu::wgpu::Mesh3dFault::Closing)=>self.close_started=true,Err(fault)=>return Err(Self::mesh_fault(fault))}
-                    return Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()},..empty});
+                    match mesh3d_begin_close(lease) {Ok(())|Err(ui_scene::math::Mesh3dFault::Closing)=>self.close_started=true,Err(fault)=>return Err(Self::mesh_fault(fault))}
+                    return Ok(ui_scene::math::Mesh3dOwnershipStep{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()},..empty});
                 }
                 let step=mesh3d_close_step(lease,grant).map_err(Self::mesh_fault)?;
                 if !step.progress.fits(grant) {return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
                 if step.complete {self.owner=WorldPlaceholderOwner::Empty;self.close_started=false;}
-                return Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep{complete:false,..step});
+                return Ok(ui_scene::math::Mesh3dOwnershipStep{complete:false,..step});
             }
             WorldPlaceholderOwner::Empty=>{}
         }
@@ -417,7 +417,7 @@ impl WorldTerrainMeshCursor {
         let progress=match step {semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};
         if !progress.fits(grant) {return Err(WorldDynamicFault::Ownership(semio_framework_value::ValueRefusalKind::InvariantViolated));}
         if owner.terminal_is_empty() {self.source_retirement=None;}
-        Ok(ui_wgpu::wgpu::Mesh3dOwnershipStep{complete:self.terminal_is_empty(),progress})
+        Ok(ui_scene::math::Mesh3dOwnershipStep{complete:self.terminal_is_empty(),progress})
     }
 
     pub fn terminal_is_empty(&self)->bool {
@@ -469,7 +469,7 @@ pub fn step_world3d_terrain_retirement(session_state: &mut WorldSessionState, te
             else if step.complete {terrain_state.terrain_build=None;result.step=WorldTerrainMeshPublicationStep::Complete;}
             else {result.step=WorldTerrainMeshPublicationStep::Pending;}
         }
-        Err(WorldDynamicFault::Mesh(ui_wgpu::wgpu::Mesh3dFault::Busy))=>result.step=WorldTerrainMeshPublicationStep::Pending,
+        Err(WorldDynamicFault::Mesh(ui_scene::math::Mesh3dFault::Busy))=>result.step=WorldTerrainMeshPublicationStep::Pending,
         Err(fault)=>result.step=WorldTerrainMeshPublicationStep::Fault(fault),
     }
     result

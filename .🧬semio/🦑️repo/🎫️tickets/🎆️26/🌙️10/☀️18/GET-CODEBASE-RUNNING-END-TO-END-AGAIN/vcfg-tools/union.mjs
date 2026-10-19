@@ -1,0 +1,15 @@
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+const require = createRequire("/Users/ueli/Documents/semio/package.json");
+const { build } = require("esbuild");
+const root = process.cwd();
+const contract = JSON.parse(readFileSync("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json", "utf8"));
+const externalize = { name: "x", setup(b) { b.onResolve({ filter: /^[^.#].*/ }, ({ path, kind }) => (kind === "entry-point" || path.startsWith("/") ? null : { external: true })); } };
+const r = await build({ entryPoints: [root + "/" + contract.entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent", absWorkingDir: root, plugins: [externalize] });
+const inputs = r.metafile.inputs;
+const skip = process.argv.slice(2);
+const closure = (m) => { const s = new Set([m]); const q = [m]; while (q.length) { const c = q.pop(); for (const i of inputs[c]?.imports ?? []) if (!i.external && !s.has(i.path) && !skip.some((x) => i.path.includes(x))) { s.add(i.path); q.push(i.path); } } return s; };
+const union = new Set();
+for (const m of contract.require) if (!skip.some((x) => m.includes(x))) for (const x of closure(m)) union.add(x);
+console.log("union", union.size);
+for (const u of union) console.log(" ", u.replace("🧰️framework/🛍️products/", "").replace("🧰️framework/","F/").split("/").slice(-4).join("/"));

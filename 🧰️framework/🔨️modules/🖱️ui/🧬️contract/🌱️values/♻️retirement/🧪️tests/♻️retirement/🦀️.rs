@@ -1,8 +1,9 @@
-use super::*;
+use semio_framework_ui_contract_values::*;
+use semio_framework_ui_contract_values::testkit::*;
 use semio_framework_test_fixtures::fixture_text;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(fixture_text!("../../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
+    serde_json::from_str(fixture_text!("../../../../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()
 }
 
 fn value_handle(value: &UiValue) -> Option<UiCollectionHandle> {

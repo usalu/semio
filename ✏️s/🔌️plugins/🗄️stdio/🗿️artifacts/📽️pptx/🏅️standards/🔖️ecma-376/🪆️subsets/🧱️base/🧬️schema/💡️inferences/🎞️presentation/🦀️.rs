@@ -1,5 +1,7 @@
 //! 🎞️ Projects PresentationML shapes from authoritative logical XML.
-use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*,refusal::PptxError};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
+use semio_s_artifact_stdio_pptx_base_vocabulary::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::{attr_val, element_children, resolve_office_document_relationship};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc;

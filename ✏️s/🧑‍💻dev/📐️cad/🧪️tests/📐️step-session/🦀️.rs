@@ -28,9 +28,8 @@ fn step_round_trip_preserves_prior_handles_and_import_claims() {
     drop_port(other);
     session.close();
 }
-fn drop_port(mut port:Box<dyn semio_framework_os_flow::geometry::GeometryPort>) {
-    port.begin_close();
-    loop { if matches!(port.close_step(1,1_048_576).unwrap(),neural_engine::ValueRetirementStep::Complete) { break; } }
+fn drop_port(port:Box<dyn semio_framework_os_flow::geometry::GeometryPort>) {
+    semio_framework_os_flow::geometry::GeometryPortRetirement::new(port).retire_cold();
 }
 #[test]
 fn step_operations_obey_retirement_and_closed_authority() {
@@ -38,7 +37,9 @@ fn step_operations_obey_retirement_and_closed_authority() {
     let handle=shape(&session);
     session.begin_close();
     assert!(invoke(&session,"exportStep",serde_json::json!({"shapes":[handle]}))["error"].as_str().unwrap().contains("session-closed"));
-    assert!(matches!(session.close_step(0,1_048_576).unwrap(),neural_engine::ValueRetirementStep::Blocked));
+    let idle=semio_framework_value::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 1_048_576, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+    assert!(matches!(session.close_step(idle).unwrap(),semio_framework_value::RetainedCloneStep::Progress(progress) if progress==Default::default()));
+    assert!(!session.terminal_is_empty());
     session.close();
     assert!(session.terminal_is_empty());
 }

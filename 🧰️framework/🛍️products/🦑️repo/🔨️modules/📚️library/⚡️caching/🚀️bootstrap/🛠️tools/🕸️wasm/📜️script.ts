@@ -13,8 +13,8 @@ import binaryenSchema from "./🧬️schema/🔣️.json";
 const binaryenManifest=binaryenSchema.definitions.Release.const;
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 export type BinaryenDistribution = { readonly platform: string; readonly architecture: string; readonly archive: string; readonly bytes: number; readonly sha256: string };
 const manifest: { version: string; release: string; platforms: BinaryenDistribution[] } = binaryenManifest;

@@ -175,7 +175,10 @@
             ]
           },
           "source": {
-            "const": "🔧️pipeline/🏭️factory/🦀️.rs"
+            "enum": [
+              "🔧️pipeline/🏭️factory/🎯️gpu-targets-and-pipeline-resources/🦀️.rs",
+              "🔧️pipeline/🏭️factory/🏗️pipeline-resources-construction/🦀️.rs"
+            ]
           },
           "symbols": {
             "type": "array",

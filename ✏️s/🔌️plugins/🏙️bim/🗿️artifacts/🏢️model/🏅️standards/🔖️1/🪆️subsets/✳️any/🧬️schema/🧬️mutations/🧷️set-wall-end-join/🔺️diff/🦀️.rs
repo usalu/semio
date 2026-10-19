@@ -2,9 +2,12 @@
 //! Restating the current preference is a no-op. Nothing derived is written: the wall layout of the wall and of the walls it touches
 //! follows by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin;
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallEndJoin, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

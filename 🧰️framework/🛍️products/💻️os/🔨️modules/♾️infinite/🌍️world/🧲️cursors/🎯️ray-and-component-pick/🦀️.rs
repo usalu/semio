@@ -65,7 +65,7 @@ impl WorldRayPickCursor {
     pub fn new(session_state: &WorldSessionState, camera_state: &WorldCameraState, generation: u64, purpose: WorldRayPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
         let camera = camera_state.orbit.to_camera();
-        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         Some(Self {
             revision: session_state.interaction_revision,
             generation,
@@ -75,7 +75,7 @@ impl WorldRayPickCursor {
             local_x,
             local_y,
             viewport,
-            view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&camera, camera_state.projection_spec, viewport.w, viewport.h),
+            view_projection: ui_scene::math::projection_spec_view_proj(&camera, camera_state.projection_spec, viewport.w, viewport.h),
             projection_spec: camera_state.projection_spec,
             draw: 0,
             instance: 0,
@@ -197,14 +197,14 @@ impl WorldRayPickCursor {
                 return WorldInteractionStep::Pending;
             }
             let index = self.primitive as u32;
-            let project = |point| ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, point, self.viewport.w, self.viewport.h);
+            let project = |point| ui_scene::math::projection_spec_project_point(self.view_projection, self.projection_spec, point, self.viewport.w, self.viewport.h);
             let point = if schema.edges > 0 {
                 mesh.edge(index).ok().and_then(|edge| {
                     let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                     let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                    let segment = ui_wgpu::wgpu::projection_spec_project_segment(self.view_projection, self.projection_spec, a, b, self.viewport.w, self.viewport.h)?;
+                    let segment = ui_scene::math::projection_spec_project_segment(self.view_projection, self.projection_spec, a, b, self.viewport.w, self.viewport.h)?;
                     let [screen_a, screen_b] = segment.screen;
-                    (ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then(|| ui_wgpu::wgpu::ray_segment_closest(self.origin, self.direction, segment.points[0], segment.points[1]).map(|closest| closest.segment_point)).flatten()
+                    (ui_scene::math::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]) <= PICK_EDGE_SCREEN_PX).then(|| ui_scene::math::ray_segment_closest(self.origin, self.direction, segment.points[0], segment.points[1]).map(|closest| closest.segment_point)).flatten()
                 })
             } else if world_mesh_component_id(mesh, Mesh3dField::VertexIds, index) != u32::MAX {
                 world_mesh_vertex(mesh, index).and_then(|point| {
@@ -333,7 +333,7 @@ impl WorldRayPickCursor {
         let object = plan.push_string(target_id).ok_or(WorldInteractionStep::Fault)?;
         let action = match self.purpose {
             WorldRayPickPurpose::Paint => {
-                let (u, v) = interpolate_mesh_uv(mesh, hit.triangle.ok_or(WorldInteractionStep::Fault)? as usize, hit.bary_u, hit.bary_v).map_err(|fault|if fault==ui_wgpu::wgpu::Mesh3dFault::Busy{WorldInteractionStep::Pending}else{WorldInteractionStep::Fault})?.ok_or(WorldInteractionStep::Fault)?;
+                let (u, v) = interpolate_mesh_uv(mesh, hit.triangle.ok_or(WorldInteractionStep::Fault)? as usize, hit.bary_u, hit.bary_v).map_err(|fault|if fault==ui_scene::math::Mesh3dFault::Busy{WorldInteractionStep::Pending}else{WorldInteractionStep::Fault})?.ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction { kind: WorldFlatActionKind::PaintAt, strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None], numbers: [u as f64, v as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] }
             }
             WorldRayPickPurpose::Surface => WorldFlatAction {
@@ -439,7 +439,7 @@ impl WorldObjectPickCursor {
     pub fn new(session_state: &WorldSessionState, camera_state: &WorldCameraState, generation: u64, purpose: WorldObjectPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
         let camera = camera_state.orbit.to_camera();
-        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: session_state.interaction_revision, generation, purpose, origin, direction, slot: 0, merge: 0, best: None, complete: false })
     }
 
@@ -616,8 +616,8 @@ impl WorldComponentPickCursor {
         }
         let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
         let camera = camera_state.orbit.to_camera();
-        let view_projection = ui_wgpu::wgpu::projection_spec_view_proj(&camera, camera_state.projection_spec, viewport.w, viewport.h);
-        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+        let view_projection = ui_scene::math::projection_spec_view_proj(&camera, camera_state.projection_spec, viewport.w, viewport.h);
+        let (origin, direction) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: session_state.interaction_revision, generation, purpose, kind, local_x, local_y, viewport, view_projection, projection_spec: camera_state.projection_spec, origin, direction, slot: 0, current: None, topology: 0, merge: 0, best: None, complete: false })
     }
 
@@ -682,7 +682,7 @@ impl WorldComponentPickCursor {
         let candidate = match self.kind {
             WorldComponentKind::Vertex => mesh.vec3(Mesh3dField::Positions, index).ok().and_then(|point| {
                 let world = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h).and_then(|screen| {
+                ui_scene::math::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h).and_then(|screen| {
                     let dx = screen[0] - self.local_x;
                     let dy = screen[1] - self.local_y;
                     let distance = (dx * dx + dy * dy).sqrt();
@@ -692,11 +692,11 @@ impl WorldComponentPickCursor {
             WorldComponentKind::Edge => mesh.edge(index).ok().and_then(|edge| {
                 let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                 let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                let segment = ui_wgpu::wgpu::projection_spec_project_segment(self.view_projection, self.projection_spec, a, b, self.viewport.w, self.viewport.h)?;
+                let segment = ui_scene::math::projection_spec_project_segment(self.view_projection, self.projection_spec, a, b, self.viewport.w, self.viewport.h)?;
                 let [screen_a, screen_b] = segment.screen;
-                let screen_distance = ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
+                let screen_distance = ui_scene::math::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
                 if screen_distance > PICK_EDGE_SCREEN_PX { return None; }
-                let closest = ui_wgpu::wgpu::ray_segment_closest(self.origin, self.direction, segment.points[0], segment.points[1])?;
+                let closest = ui_scene::math::ray_segment_closest(self.origin, self.direction, segment.points[0], segment.points[1])?;
                 let depth = closest.segment_point.sub(self.origin).dot(self.direction);
                 (depth.is_finite() && depth >= 0.0).then_some((depth, closest.distance))
             }),

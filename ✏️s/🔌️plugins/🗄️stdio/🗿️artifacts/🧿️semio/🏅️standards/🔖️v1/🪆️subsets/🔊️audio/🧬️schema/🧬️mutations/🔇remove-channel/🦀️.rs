@@ -11,13 +11,13 @@ pub struct RemoveChannel {
     pub index: usize,
 }
 
-impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for RemoveChannel {
+impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for RemoveChannel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "channel", kind: "remove-channel", record: "RemoveChannel" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

@@ -5,7 +5,7 @@ import{createHash}from"node:crypto";
 import{runBazelTasksV1}from"../../📜️script.ts";
 import{readBuildGraphV1}from"../../../../🕸️graph/🟦️.ts";
 import{createIssuedResourceControlV1,receiveScriptProcessInvocation,readIssuedScriptProcessEnvelopeV1,readScriptProcessEnvelope,scriptProcessEnvironment,withScriptProcessEnvelope,checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import type{NativeBuildCallerCapabilitiesV1}from"../../../../📥️caller/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 import{checkBazelPurposeParentV1,createBazelPurposeEnvelopeV1,type BazelPurposeContextV1}from"./🌱️birth/🟦️.ts";

@@ -4,13 +4,17 @@
 //! the other end, a result that is no axis, and a hosted opening that no longer fits the new length; an end already on the target is
 //! `mutation.no-op`.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{trim_extend, TrimFlaw, Trimmed};
-use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
-use crate::standards::v1::subsets::any::schema::mutations::placement::width_of;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, snap};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::{trim_extend, TrimFlaw, Trimmed};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::width_of;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, snap};
 use crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall;
-use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, KeyedDelta};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

@@ -5,18 +5,17 @@
 //! 🔖 `IoFidelity::Lossy`: the document keeps the findings, not the model they were found in.
 //! 📎 https://www.rfc-editor.org/rfc/rfc8259
 
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticIndex, Severity, SeverityCounts, ADJUDICATED};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, DiagnosticIndex, Severity, SeverityCounts, ADJUDICATED};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::json::codec;
 
-use crate::standards::v1::subsets::any::io::export::json::codec::{array, count, document_text, items_of, member, number, number_of, object, read_value, string, text_of};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::json::codec::{array, count, document_text, items_of, member, number, number_of, object, read_value, string, text_of};
 
 /// 🪪️ The RFC 8259 dialect this leaf writes.
 pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId::ANY };

@@ -1,5 +1,5 @@
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export const cacheScanTimingPrefixV1=schema.definitions.Protocol.const.prefix;
 /** ⏱️ Labels one of the two fresh observations without changing its custody or coverage. */
 export type CacheScanTimingPhaseV1="initial"|"recensus";

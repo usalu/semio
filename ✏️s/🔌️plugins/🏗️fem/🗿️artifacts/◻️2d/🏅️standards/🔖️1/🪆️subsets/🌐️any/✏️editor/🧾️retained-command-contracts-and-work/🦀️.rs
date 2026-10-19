@@ -173,7 +173,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
         fem2d_retained_extent(command, snapshot, interaction)
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Fem2dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Fem2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::gumball::Fem2dGumballMotion;
         if self.consumed {
             return Err(Fault::from("fem2d-retained-work-repeated"));
@@ -201,6 +202,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem
             }
             _ => fem2d_retained_reduce(command, snapshot, config, history, interaction, hover, context, operation).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 //#endregion 🧵️RetainedCommands

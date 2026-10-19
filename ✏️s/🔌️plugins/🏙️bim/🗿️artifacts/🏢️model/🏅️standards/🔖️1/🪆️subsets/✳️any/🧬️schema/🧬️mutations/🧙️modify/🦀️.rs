@@ -3,7 +3,7 @@
 //! pure curve geometry of trimming, offsetting and cutting (`cut`). Everything here is a pure function of authored parameters: the
 //! ids of copies are minted from a prefix, never from a clock or a counter, so every device derives the same diff from the same mutation.
 
-use crate::standards::v1::subsets::any::schema::snapshot::Point2;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 
 #[path = "👯️copies/🦀️.rs"]
 pub mod copies;

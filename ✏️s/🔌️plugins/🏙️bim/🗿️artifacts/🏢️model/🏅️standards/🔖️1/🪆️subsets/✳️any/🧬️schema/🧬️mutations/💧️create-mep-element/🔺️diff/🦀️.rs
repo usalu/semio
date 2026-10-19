@@ -1,17 +1,17 @@
 //! 🔺️ Diff constructor for `CreateMepElement`: one created MEP element entry. The id is free in every collection, the storey exists, every dimension of the section is a positive length and the path has at
 //! least two finite points of which no two consecutive ones coincide. The solid, the length, the volume and the clashes are inferred, never stored.
 
-use crate::standards::v1::subsets::any::schema::mutations::component_rules;
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateMepElement, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    if let Some(fault) = component_rules::mep_fault(base, &payload.mep) {
+    if let Some(fault) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules::mep_fault(base, &payload.mep) {
         return MutationOutcome::refuse(fault.code, fault.message.clone(), fault.path(Some("mep")));
     }
     MutationOutcome::new(ModelDiff::mep_elements(payload.id.clone(), Entry::Created(payload.mep.clone())))

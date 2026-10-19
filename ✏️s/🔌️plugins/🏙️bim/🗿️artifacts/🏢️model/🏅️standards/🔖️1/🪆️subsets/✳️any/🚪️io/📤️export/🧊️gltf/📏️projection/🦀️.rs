@@ -1,8 +1,8 @@
 //! 📏️ The subject's report of a glTF export, in the shape the `three` `GLTFLoader` oracle measures from the committed file: node, mesh, primitive, triangle and material counts, the
 //! element nodes per kind, the elements and triangles per storey, and the world bounds of every vertex in glTF's Y-up frame. Built from the typed document, never from the bytes.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode};
 use std::collections::BTreeMap;
 
 /// 📊️ Elements and triangles of one storey.
@@ -44,7 +44,7 @@ pub fn through(node: &GltfNode, v: [f64; 3]) -> [f64; 3] {
 }
 
 /// 🧊️ The volume a primitive encloses: the sum of the signed tetrahedra over the origin of each triangle, from the 32-bit vertices as stored.
-fn volume_of(primitive: &crate::standards::v1::subsets::any::io::export::gltf::document::GltfPrimitive) -> f64 {
+fn volume_of(primitive: &semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfPrimitive) -> f64 {
     let corner = |index: u32| {
         let at = index as usize * 3;
         [f64::from(primitive.positions[at]), f64::from(primitive.positions[at + 1]), f64::from(primitive.positions[at + 2])]

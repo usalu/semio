@@ -1,6 +1,6 @@
 #[global_allocator]
 static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-use semio_framework_ui::wgpu::PreparedRasterReservation;
+use semio_framework_ui_prepared::PreparedRasterReservation;
 use semio_framework_value::RetainedCloneGrant;
 
 #[test]

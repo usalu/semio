@@ -3,8 +3,8 @@
 //! orphaned properties and ids used twice.
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
-use crate::standards::v1::subsets::any::schema::authored::references;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, TopConstraint};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn top_storey(top: &TopConstraint) -> Option<&str> {
@@ -186,7 +186,7 @@ impl ReferenceView {
         stray.extend(placed(snapshot.tags.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.text_notes.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.leaders.iter().map(|(id, row)| (id, &row.storey)).collect()));
-        let layers = |rows: Vec<(&String, &Vec<crate::standards::v1::subsets::any::schema::snapshot::Layer>)>| rows.into_iter().map(|(id, layers)| (id.clone(), layers.iter().map(|layer| layer.material.clone()).collect::<Vec<_>>())).collect::<Vec<_>>();
+        let layers = |rows: Vec<(&String, &Vec<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer>)>| rows.into_iter().map(|(id, layers)| (id.clone(), layers.iter().map(|layer| layer.material.clone()).collect::<Vec<_>>())).collect::<Vec<_>>();
         let mut layered: BTreeMap<String, Vec<String>> = BTreeMap::new();
         layered.extend(layers(snapshot.wall_types.iter().map(|(id, kind)| (id, &kind.layers)).collect()));
         layered.extend(layers(snapshot.slab_types.iter().map(|(id, kind)| (id, &kind.layers)).collect()));
@@ -201,11 +201,11 @@ impl ReferenceView {
             named.push(use_of(id, &row.panel_material));
             named.push(use_of(id, &row.mullion_material));
         }
-        let panel_use = |id: &String, panel: &crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel| match panel {
-            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Solid { material } => Some(PanelUse { id: id.clone(), kind: "material".into(), reference: material.clone() }),
-            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Door { door_type } => Some(PanelUse { id: id.clone(), kind: "door".into(), reference: door_type.clone() }),
-            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Window { window_type } => Some(PanelUse { id: id.clone(), kind: "window".into(), reference: window_type.clone() }),
-            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass | crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Empty => None,
+        let panel_use = |id: &String, panel: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel| match panel {
+            semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Solid { material } => Some(PanelUse { id: id.clone(), kind: "material".into(), reference: material.clone() }),
+            semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Door { door_type } => Some(PanelUse { id: id.clone(), kind: "door".into(), reference: door_type.clone() }),
+            semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Window { window_type } => Some(PanelUse { id: id.clone(), kind: "window".into(), reference: window_type.clone() }),
+            semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass | semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Empty => None,
         };
         let panels: Vec<PanelUse> = snapshot.curtain_wall_types.iter().filter_map(|(id, row)| panel_use(id, &row.panel)).chain(snapshot.curtain_panel_overrides.iter().filter_map(|(id, row)| panel_use(id, &row.panel))).collect();
         named.extend(snapshot.railings.iter().map(|(id, row)| use_of(id, &row.material)));
@@ -242,7 +242,7 @@ impl ReferenceView {
             panels,
             counts,
             sweep_hosts: snapshot.wall_sweeps.iter().map(|(id, row)| (id.clone(), row.host.clone())).collect(),
-            attaches: snapshot.walls.iter().flat_map(|(id, wall)| references::targets_of(wall).into_iter().map(move |target| Attach { wall: id.clone(), target: target.to_string() })).collect(),
+            attaches: snapshot.walls.iter().flat_map(|(id, wall)| semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::targets_of(wall).into_iter().map(move |target| Attach { wall: id.clone(), target: target.to_string() })).collect(),
             attachable: snapshot.roofs.keys().chain(snapshot.slabs.keys()).chain(snapshot.ceilings.keys()).cloned().collect(),
         }
     }

@@ -36,6 +36,9 @@ export const BUILD_MODE_API = "../../../../🔨️modules/🏃️process/📦️
 export const OBSERVATION_MODULE = "🏗️build/👁️observation/🟨️.mjs";
 export const CARGO_EXECUTION_MODULE="../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🟦️.ts";
 export const CARGO_EXECUTION_SCHEMA="../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧬️schema/🔣️.json";
+export const SCRIPT_PROVIDER_LOADER_MODULE="../../../../🔨️modules/🏃️process/🔌️providers/🟦️.ts";
+export const SCRIPT_PROVIDER_DESIGNATION="🏃️process/🔌️providers/🔣️.json";
+export const SCRIPT_PROVIDER_DESIGNATION_SCHEMA="🏃️process/🔌️providers/🧬️schema/🔣️.json";
 
 /** 🏛️ Requires current real ancestors and a real leaf before an authority source is consumed. */
 export function requirePhysicalSourceV1(path) {

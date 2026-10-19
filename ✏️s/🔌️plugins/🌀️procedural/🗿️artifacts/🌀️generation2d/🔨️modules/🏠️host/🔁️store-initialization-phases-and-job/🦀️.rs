@@ -220,19 +220,14 @@ impl Generation2dStoreInitializationAuthority {
             return Ok(step.progress());
         }
         if self.closer.is_some() {
-            use semio_framework_job::InteractiveJob as _;
             let closer = self.closer.as_mut().expect("observed original envelope closer");
-            return match closer.close_step(child) {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => Ok(progress),
-                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => {
-                    if semio_framework_job::InteractiveJob::terminal_is_empty(closer) {
-                        drop(self.closer.take());
-                    }
-                    Ok(progress)
-                }
-                semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(Default::default()),
-                semio_framework_job::InteractiveJobCloseStep::Refused { kind, progress } => Err(ValueError::literal(kind, "generation2d initializer envelope close refused").with_retained_progress(progress)),
-            };
+            semio_framework_job::InteractiveJob::begin_close(closer);
+            let demand = closer.retirement_demands(child.maximum_copy_bytes)?;
+            let step = closer.close_granted(child, demand)?;
+            if closer.terminal_is_empty() {
+                drop(self.closer.take());
+            }
+            return Ok(step.progress());
         }
         if let Some(envelope) = self.envelope.take() {
             *self.closer = Some(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA, self.operation, self.generation, self.actor.clone()));

@@ -1,6 +1,6 @@
 /** 🧬️ Shooting diff schema — sparse typed delta over the artifact: ordered structural edits plus keyed field patches per list, a scene field patch and assignable scalars. */
 
-import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { parseShootingAsset, parseShootingCamera, parseShootingSavedCamera, parseShootingShot } from "../🟦️.ts";
 
 export interface ShootingDiff {

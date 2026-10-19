@@ -6,7 +6,7 @@ import {CargoGraphOperationsV1} from "./📥️planning/🟦️.ts";
 import {nativeBuildPrerequisiteOrderV1} from "./📋️prerequisites/🟦️.ts";
 import {CargoInputContinuationTransactionV1} from "../📥️inputs/🤲️continuations/🟦️.ts";
 import type {CompletedCargoCompilationViewV1} from "../🧾️receipt/📦️retention/📥️snapshot/🟦️.ts";
-import compilationSourceSchema from "../../📤️publication/📥️sources/🧬️schema/🔣️.json";
+import compilationSourceSchema from "../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1,type CargoCompilerInputsRequestV1,type CargoCompilerInputsViewV1}from"../📥️inputs/🟦️.ts";
 import {withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,scriptResourceProcessEnvironmentV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../💾️storage/🟦️.ts";

@@ -13,8 +13,8 @@ pub mod standards {
                     pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot;
                     #[path = "."]
                     pub mod diff {
-                        pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff::*;
-                        pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff::*;
+                        pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::schema::diff::*;
+                        pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::schema::diff::*;
                         #[cfg(test)]
                         #[path = "../../../🦀️.rs"]
                         pub mod handcrafted_diff_codec_tests;

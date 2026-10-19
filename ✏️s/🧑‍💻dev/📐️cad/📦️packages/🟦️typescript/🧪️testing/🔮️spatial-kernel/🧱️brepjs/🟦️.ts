@@ -3,5 +3,5 @@ export { kernelGeometry } from "../../../../../🧪️tests/🔮️spatial-kerne
 export { inlineModelSpaceFixtureJson } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧊️solid-topology-and-fixture/🟦️.ts";
 export { BrepjsKernel } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/📨️worker-and-kernel/🟦️.ts";
 export { exportModelSpaceToGlb, exportModelSpaceToObj, exportModelSpaceToStep, exportModelToStep, importStepBimToModelSpace, importStepBrepToModelSpace, importStepToModelSpace } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/📦️exchange/🟦️.ts";
-export type { BrepjsTestDependencies } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts";
+export type { BrepjsTestDependencies } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🎒️test-dependencies/🟦️.ts";
 export type { InlineModelSpaceFixtureJson } from "../../../../../🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧊️solid-topology-and-fixture/🟦️.ts";

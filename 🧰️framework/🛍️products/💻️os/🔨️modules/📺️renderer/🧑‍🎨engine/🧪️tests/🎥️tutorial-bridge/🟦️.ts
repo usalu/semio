@@ -1,6 +1,6 @@
 
 import { Matrix3, Vector2 } from "three";
-import { dagWorldToScreen } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
+import { dagWorldToScreen } from "@semio-tech/framework-os-node-graph-rs/index";
 import graphFixture from "../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json" with { type: "json" };
 import { applyPatch } from "fast-json-patch";
 import { describe, expect, it, vi } from "vitest";

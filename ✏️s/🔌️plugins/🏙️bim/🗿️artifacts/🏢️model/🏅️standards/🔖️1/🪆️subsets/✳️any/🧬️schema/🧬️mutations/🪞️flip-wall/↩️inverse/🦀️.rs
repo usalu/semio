@@ -1,9 +1,9 @@
 //! ↩️ Inverse of `FlipWall`: the concrete `FlipWall` of the same wall (flipping twice restores the axis exactly), none when the wall is
 //! absent or has no direction to flip.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
 use crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &FlipWall, base: &ModelSnapshot) -> Vec<Op>
 where

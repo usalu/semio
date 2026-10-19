@@ -18,15 +18,19 @@ use semio_framework_os_infinite_world_bridge::world3d_standard_material_for_mesh
 use semio_framework_os_infinite_world_interaction::{append_box_wireframe, append_vortex_arrow_draws, begin_world_placeholder_mesh, brush_preview_mesh_id, declare_scene_mesh_source, environment_authored_material, environment_clear_color, environment_explicit_clear_color, environment_scene_lighting, ghost_mesh_id, mark_world_dynamic_fault, preview_scale, retained_gumball_preview_model, step_world_placeholder_mesh, step_world_placeholder_mesh_batch, sync_terrain, world_interaction_active_census, world_marquee_overlay_points, WorldAuthorityState};
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_interaction::{marquee_select_action, pick_instance_at, pick_paint_hit, pick_select_action, pick_surface_at, pick_vortex_at, start_gumball_drag};
-use ui_wgpu::wgpu::{ActionDescriptor, Camera3d, camera_grid_fade_distance, CameraProjection3d, ComponentSource3d, HitKind, HitTarget, Instance3d, LineVertex3d, lod_grid_step_world, marquee_is_crossing_from_path, Mat4, Mesh3dLease, OrbitController, PointerModifiers, quat_from_basis, Rect, Rgba, SceneColorSource3d, SceneDraw3d, Theme, UiComponentSceneNode, Vec3, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, World3dPresentation, World3dPresentationClear, World3dSnapshotFault, World3dSnapshotPageKind};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{Camera3d, camera_grid_fade_distance, CameraProjection3d, ComponentSource3d, Instance3d, LineVertex3d, lod_grid_step_world, marquee_is_crossing_from_path, Mat4, Mesh3dLease, OrbitController, quat_from_basis, SceneColorSource3d, SceneDraw3d, Vec3};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_declaration::ui::{UiComponentSceneNode, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, World3dPresentation, World3dPresentationClear, World3dSnapshotFault, World3dSnapshotPageKind};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{aabb_intersects_frustum, directional_shadow_frustum_planes, frustum_planes, LineDraw3d, paint_selection_marquee, ProceduralGrid3d, SceneInstanceMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneSectionRole3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, transform_aabb};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{aabb_intersects_frustum, directional_shadow_frustum_planes, frustum_planes, LineDraw3d, ProceduralGrid3d, SceneInstanceMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneSectionRole3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, transform_aabb};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use semio_framework_ui_draw_contract::paint_selection_marquee;
 use semio_framework_tool_run::ToolRunTraceCursor;
 use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode};
-#[cfg(any(test, feature = "testkit"))]
-use ui_wgpu::wgpu::gizmo;
+#[cfg(any(test, feature = "testkit"))] use semio_framework_ui_draw_contract::gizmo;
 use serde_json::json;
 
 pub struct World3dState {

@@ -1,4 +1,4 @@
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript } from "@semio-tech/process/routing";
 import { buildStdioComposition, checkStdioComposition } from "../🏗️build/🟦️.ts";
 
 /** 📦️ Builds the Stdio composition package. */

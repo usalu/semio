@@ -1,6 +1,7 @@
 //! 🚨️ `create-clash-set` payload. Brings a new clash set into the model: side A and side B as selectors (classes, storeys, phases, element ids), the tolerance below which an overlap is no hard clash and the clearance below which two elements are a soft clash. The clashes themselves are inferred.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{ClashSet, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClashSet, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateClashSet {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateClashSet
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateClashSet> + From<crate::standards::v1::subsets::any::schema::mutations::delete_clash_set::DeleteClashSet>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateClashSet> + From<semio_s_artifact_bim_model_mut_any_118::standards::v1::subsets::any::schema::mutations::delete_clash_set::DeleteClashSet>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "clash-set", kind: "create-clash-set", record: "CreateClashSet" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

@@ -1,6 +1,7 @@
 /** 🗓️ Five distinct typed schedules with fixed hourly and weekday ownership. */
 import type {EnergyScheduleSet} from "../../../../🧬️schema/📸️snapshot/⚡️model/🟦️.ts";
-import {columns,emit,write,uint,optionalId,literal,type Reader,type Options} from "../🟦️.ts";
+import { columns, emit, write, uint, optionalId, literal } from "../🧾️row-codec/🟦️.ts";
+import type { Reader, Options } from "../🧾️row-codec/🟦️.ts";
 import type {ArtifactSqliteProjection} from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 const VALUE=columns([4]),HOUR=columns([3]),LIMITS=columns([1,2]);
 export async function projectSchedules(s:EnergyScheduleSet,p:ArtifactSqliteProjection,o:Options):Promise<void>{

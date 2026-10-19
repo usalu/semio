@@ -536,8 +536,9 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     }
 }
 
-impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.delivered {
             let step = self.publication.close_step(cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
@@ -615,6 +616,10 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
             }
         }
     }
+}
+
+impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -645,62 +650,63 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         Ok(self.close_demands(0)?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-        self.closing = true;
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
-        let demand = match self.close_demands(grant.maximum_copy_bytes) {
-            Ok(demand) => demand,
-            Err(error) => return refused(error),
-        };
-        if demand == Default::default() {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
-        }
-        if grant.maximum_depth < demand.depth {
-            return refused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preview evaluation run close exceeds its admitted depth"));
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if !self.publication.terminal_is_empty() {
-            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.publication.close_step(child) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => refused(error),
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+            self.closing = true;
+            let demand = match self.close_demands(grant.maximum_copy_bytes) {
+                Ok(demand) => demand,
+                Err(error) => return Err(error),
             };
-        }
-        if self.delivered {
-            self.delivered = false;
-            return InteractiveJobCloseStep::Pending { progress: item };
-        }
-        if !self.released {
-            let identity = self.identity;
-            let released = self.owner.with_mut::<O, _>(|held| {
-                let Some((mut sessions, link)) = held.preview_eval_parts() else { return Ok(()) };
-                if !link.owned_by(identity.id.run) {
-                    return Ok(());
-                }
-                link.port = None;
-                link.job_run = None;
-                if link.settled.is_some() {
-                    return Ok(());
-                }
-                for (window_id, _, target) in &link.windows {
-                    sessions.get_mut(*target).cancel_preview_evaluation(window_id, grant).map_err(|error| Fault::from(error.to_string()))?;
-                }
-                Ok(())
-            });
-            return match released {
-                Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => InteractiveJobCloseStep::Pending { progress: Default::default() },
-                _ => {
-                    self.released = true;
-                    InteractiveJobCloseStep::Pending { progress: item }
-                }
-            };
-        }
-        let released_bytes = std::mem::take(&mut self.source).capacity();
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } }
+            if demand == Default::default() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+            }
+            if grant.maximum_depth < demand.depth {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preview evaluation run close exceeds its admitted depth"));
+            }
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
+                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            if !self.publication.terminal_is_empty() {
+                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+                return Ok(match self.publication.close_step(child) {
+                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                    Err(error) => return Err(error),
+                });
+            }
+            if self.delivered {
+                self.delivered = false;
+                return Ok(InteractiveJobCloseStep::Pending { progress: item });
+            }
+            if !self.released {
+                let identity = self.identity;
+                let released = self.owner.with_mut::<O, _>(|held| {
+                    let Some((mut sessions, link)) = held.preview_eval_parts() else { return Ok(()) };
+                    if !link.owned_by(identity.id.run) {
+                        return Ok(());
+                    }
+                    link.port = None;
+                    link.job_run = None;
+                    if link.settled.is_some() {
+                        return Ok(());
+                    }
+                    for (window_id, _, target) in &link.windows {
+                        sessions.get_mut(*target).cancel_preview_evaluation(window_id, grant).map_err(|error| Fault::from(error.to_string()))?;
+                    }
+                    Ok(())
+                });
+                return Ok(match released {
+                    Err(fault) if fault.code.0 == "interactive-job.instance-owner-busy" => InteractiveJobCloseStep::Pending { progress: Default::default() },
+                    _ => {
+                        self.released = true;
+                        InteractiveJobCloseStep::Pending { progress: item }
+                    }
+                });
+            }
+            let released_bytes = std::mem::take(&mut self.source).capacity();
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {

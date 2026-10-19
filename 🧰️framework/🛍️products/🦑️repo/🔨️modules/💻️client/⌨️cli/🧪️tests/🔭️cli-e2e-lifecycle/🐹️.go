@@ -11,7 +11,6 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func TestExhaustiveCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
-	withTempRepo(t)
+	withExhaustiveRepo(t)
 
 	fileRel := filepath.ToSlash(filepath.Join("go", "repo", "main.go"))
 
@@ -95,7 +94,6 @@ func TestExhaustiveCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 		t.Fatalf("ticket open positional failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
 	}
 	y, m, d, slug := parseTicketOpenResult(t, openOut)
-	defer os.RemoveAll(GetTicketPath(y, m, d, slug))
 	ticketPath := fmt.Sprintf("%04d/%02d/%02d/%s", y, m, d, slug)
 
 	_, reopenOpenErr, reopenOpenCmdErr := executeCommand(
@@ -178,6 +176,7 @@ func TestExhaustiveCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
+	withExhaustiveRepo(t)
 	openOut, openErr, err := executeCommand(
 		"goal", "open",
 		"E2E Goal Title",
@@ -192,7 +191,6 @@ func TestExhaustiveCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 		t.Fatalf("goal open failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
 	}
 	goalID := parseGoalCreateID(t, openOut)
-	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
 	_, reopenOpenErr, reopenOpenCmdErr := executeCommand("goal", "reopen", goalID, "prompt", "cursor-chat", "gpt-5-mini", "--no-management")
 	if reopenOpenCmdErr == nil {
@@ -225,6 +223,7 @@ func TestExhaustiveCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
+	withExhaustiveRepo(t)
 
 	cmds := []struct {
 		name string
@@ -237,7 +236,7 @@ func TestExhaustiveCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		{"section list", []string{"list", "--only-section", "compose/js/compose.ts"}},
 		{"definition list", []string{"list", "--only-definition", "compose/js/compose.ts"}},
 		{"policy list", []string{"list", "--only-policy"}},
-		{"policy check", []string{"policy", "check", "code", "compose/js"}},
+		{"analyze", []string{"analyze", emojiText(EmojiTechnologyUser) + "compose"}},
 		{"goal list", []string{"list", "--only-goal"}},
 		{"goal tree", []string{"search", "--only-goal"}},
 		{"ticket list", []string{"list", "--only-ticket"}},
@@ -261,6 +260,7 @@ func TestExhaustiveCliJsonPureData(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow CLI JSON pure data test in short mode")
 	}
+	withExhaustiveRepo(t)
 	cmds := []struct {
 		name string
 		args []string

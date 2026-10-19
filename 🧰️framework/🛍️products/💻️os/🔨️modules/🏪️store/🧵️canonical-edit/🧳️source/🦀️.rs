@@ -4,7 +4,7 @@ use semio_framework_os_spr::Edit;
 use semio_framework_os_spr::command::{ArtifactCanonicalEditAuthority, ArtifactCanonicalEditAuthorityCursor, ArtifactCanonicalEditIdentityCursor};
 use protocol::io::text::canonical::ArtifactCanonicalEditSealCursor;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,shared::SharedControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement,arc_custody::SharedControlledRetirement},retained_clone::{RetainedCloneBinding,RetainedCloneSource,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::size_of,sync::Arc};
 pub type Text=PagedUtf8<{usize::MAX}>;
 type Identities=[Text;3];
@@ -58,7 +58,7 @@ pub struct ArtifactStoreCanonicalSource<M:RetireOwned+Sync+ArtifactCanonicalJson
 }
 impl<M:RetireOwned+Sync+ArtifactCanonicalJsonTree> ArtifactStoreCanonicalSource<M>{
  pub fn new(authority:Arc<ArtifactStoreOneItemLiveAuthority>,edit:Box<Edit<M>>)->Self{Self{pending_edit:Some(edit),pending_authority:Some(authority),edit_source:None,authority_source:None,traversal:None,edit:None,identities:None,digest:None,edit_close:None,identity_close:None,authority_close:None,phase:0,closing:false}}
- pub(super) fn source_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Box<Edit<M>>>(),capacity_bytes:size_of::<Self>()+size_of::<Edit<M>>(),depth:1,release_bytes:0}}
+ pub fn source_constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<Box<Edit<M>>>(),capacity_bytes:size_of::<Self>()+size_of::<Edit<M>>(),depth:1,release_bytes:0}}
  pub fn projections(&self,g:RetainedCloneGrant)->Result<(RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>,RetainedOwnedProjection<Edit<M>>,RetainedCloneProgress),ValueError>{let authority=self.authority_source.as_ref().ok_or_else(||refusal("canonical original authority source is absent"))?;let edit=self.edit_source.as_ref().ok_or_else(||refusal("canonical original edit source is absent"))?;let(authority,bound_authority)=authority.project_owned(0,|value|value as&dyn ArtifactCanonicalEditAuthority,g)?;let(edit,bound_edit)=edit.project_owned(0,|value|value.as_ref(),g)?;Ok((authority,edit,bound_authority.checked_add(bound_edit)?))}
  pub fn advance_original(&mut self,g:RetainedCloneGrant,d:RetirementDemand)->Result<RetainedCloneProgress,ValueError>{
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};

@@ -8,8 +8,9 @@ use std::sync::Arc;
 type Row = (String, (String, String));
 
 #[derive(Debug, Default)]
-#[cfg_attr(test, derive(Clone, PartialEq, Eq))]
-pub(super) struct OwnsRoot(Vec<Row>);
+#[cfg_attr(any(test, feature = "testkit"), derive(Clone, PartialEq, Eq))]
+#[doc(hidden)]
+pub struct OwnsRoot(Vec<Row>);
 
 impl OwnsRoot {
     pub fn get(&self, key: &str) -> Option<&(String, String)> { self.0.binary_search_by(|row| row.0.as_str().cmp(key)).ok().map(|index| &self.0[index].1) }

@@ -1,3 +1,4 @@
+use semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY;
 use super::*;
 
 #[test]
@@ -9,7 +10,7 @@ fn closing_input_reports_each_admitted_action_receipt_once() {
     for row in rows {
         batch
             .action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 128, |builder| {
-                builder.set_receipt(crate::wgpu::ActionQueueReceipt { source: crate::wgpu::action::ActionQueueReceiptSource::CanvasTextEditor,
+                builder.set_receipt(semio_framework_ui_action::ActionQueueReceipt { source: semio_framework_ui_action::ActionQueueReceiptSource::CanvasTextEditor,
                     token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(),
                     member: row["member"].as_u64().unwrap() as u8,
                     abort_correlation_on_error: row["abort"].as_bool().unwrap(),
@@ -83,12 +84,12 @@ fn hit_at_prefers_content_registered_after_scroll_region() {
 #[test]
 fn event_queue_has_fixed_credits_and_transfers_one_fifo_item() {
     let mut input = InputState::<ActionDescriptor>::default();
-    for index in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+    for index in 0..ACTION_QUEUE_ITEM_CAPACITY {
         let action = format!("event-{index}");
         input.reserve_action("controller", &action, 128).expect("reservation").publish().expect("queue credit");
     }
-    assert_eq!(input.pending_actions.len(), crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
-    for expected in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+    assert_eq!(input.pending_actions.len(), ACTION_QUEUE_ITEM_CAPACITY);
+    for expected in 0..ACTION_QUEUE_ITEM_CAPACITY {
         assert_eq!(input.take_action_step().expect("authority").expect("event").into_descriptor().expect("materialized").action, format!("event-{expected}"));
     }
     assert!(input.take_action_step().expect("authority").is_none());
@@ -108,7 +109,7 @@ fn event_queue_close_retires_one_owned_slot_per_step() {
 #[test]
 fn saturated_reservation_does_not_consume_semantic_source_and_retry_keeps_fifo() {
     let mut input = InputState::<ActionDescriptor>::default();
-    for index in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+    for index in 0..ACTION_QUEUE_ITEM_CAPACITY {
         let action = format!("event-{index}");
         input.reserve_action("controller", &action, 128).expect("reservation").publish().expect("publish");
     }
@@ -171,6 +172,5 @@ fn batch_length_step_observes_fault_then_preserves_the_complete_source_slice() {
 
 //#endregion 🔢️InputConstraints
 
-#[cfg(feature = "wgpu-engine")]
 #[path = "../🔬️targets-wgpu-input-engine-unit/🦀️.rs"]
 mod engine_tests;

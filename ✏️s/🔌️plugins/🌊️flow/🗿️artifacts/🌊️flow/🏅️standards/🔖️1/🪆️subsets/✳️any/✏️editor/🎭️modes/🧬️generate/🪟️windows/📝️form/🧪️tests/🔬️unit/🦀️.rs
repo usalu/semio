@@ -1,5 +1,5 @@
 #[allow(unused_imports)]
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_FORM;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_FORM;
 #[allow(unused_imports)]
 use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProducer;
 #[allow(unused_imports)]
@@ -7,7 +7,7 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_action, ui_value_map, ui_value_text};
+use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
 use crate::playbook::{default_value_for_block, is_block_visible, selected_generation, PlaybookBlock, PlaybookValues};
 #[allow(unused_imports)]

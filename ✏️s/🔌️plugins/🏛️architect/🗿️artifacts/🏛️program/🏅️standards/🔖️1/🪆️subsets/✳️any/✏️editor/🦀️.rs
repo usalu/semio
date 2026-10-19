@@ -68,8 +68,8 @@ use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_2d_compute::EngineHandles;
 
-pub use semio_s_artifact_architect_program_snapshot::editor::architect::base;
-pub use base::*;
+pub use semio_s_artifact_architect_program_snapshot::editor::architect::editor_vocabulary;
+pub use editor_vocabulary::*;
 
 //#region 🔧️Behavior
 pub use semio_s_artifact_architect_program_panels::editor::architect::behavior;

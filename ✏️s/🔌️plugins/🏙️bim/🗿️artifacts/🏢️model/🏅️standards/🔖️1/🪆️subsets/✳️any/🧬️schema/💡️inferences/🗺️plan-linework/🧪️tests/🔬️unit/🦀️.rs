@@ -1,28 +1,28 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -33,15 +33,16 @@ use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, OpeningKind, Phase, Point2, TopConstraint}, inferences::ModelInference};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanKind, PlanPolyline, PlanRegion, PlanStyle, storey_cut_height, PlanVertex, PlanText};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, OpeningKind, Phase, Point2, TopConstraint};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework;
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json"));
 static CURVED: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json"));
@@ -268,7 +269,7 @@ async fn plan_determinism_and_default_laws() {
 async fn a_plan_depends_on_its_own_storey_the_storeys_its_tops_target_and_the_values_it_draws() {
     let mut snapshot = house();
     snapshot.walls.get_mut("w-first-west").expect("wall").top = TopConstraint::Storey { storey: "st-ground".into(), offset: 0.5 };
-    let steps = plan::build(&snapshot, kinds::closure(kinds::PLANS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::PLANS));
     let parents = |storey: &str| steps.iter().find(|step| step.key == ModelNode::Plan(storey.into())).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents("st-ground")[0], ModelNode::Storey("st-ground".into()));
     assert_eq!(parents("st-first")[..2], [ModelNode::Storey("st-first".into()), ModelNode::Storey("st-ground".into())]);
@@ -281,7 +282,10 @@ async fn a_plan_depends_on_its_own_storey_the_storeys_its_tops_target_and_the_va
 
 #[semio_framework_async_macros::async_test]
 async fn a_height_edit_recomputes_the_plans_of_the_storeys_it_reaches_and_a_density_edit_none() {
-    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();
@@ -307,7 +311,7 @@ async fn the_plan_is_cut_at_the_height_its_storey_authors_and_at_the_convention_
     assert!(close(plans["st-ground"].cut_height, 0.5) && close(plans["st-ground"].cut_elevation, 0.5), "the ground storey authors 0.5");
     assert!(close(plans["st-first"].cut_height, 1.2) && close(plans["st-first"].cut_elevation, 3.0 + 1.2), "the first storey authors none: the convention");
     assert_eq!(compute_plan_linework(&cut_at(None)), compute_plan_linework(&house()), "no authored height is the default height");
-    assert!(close(storey_cut_height(&house(), "missing"), crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT));
+    assert!(close(storey_cut_height(&house(), "missing"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -325,7 +329,9 @@ async fn lowering_the_cut_below_a_sill_and_raising_it_above_a_door_open_and_clos
 
 #[test]
 fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
-    use crate::standards::v1::subsets::any::schema::diff::{Assigned, Entry, ModelDiff, patches::StoreyPatch};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
@@ -428,7 +434,9 @@ async fn the_ramp_primitives_have_unique_ids_and_name_their_ramp() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_ramp_edit_redraws_the_plan_of_its_storey_only() {
-    use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::RampPatch};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RampPatch;
     let snapshot = ramps();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();

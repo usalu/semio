@@ -3,9 +3,10 @@
 //! Openings follow their host by inference. Refused: an empty selection, a non-finite pivot or angle, unknown ids and elements
 //! without a placement; a zero angle is `mutation.no-op`.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::{Change, Refusal};
 use crate::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changes(payload: &RotateElements, base: &ModelSnapshot) -> Result<Change, Refusal> {
@@ -16,7 +17,7 @@ fn changes(payload: &RotateElements, base: &ModelSnapshot) -> Result<Change, Ref
     if !angle.is_finite() {
         return Err(Refusal::new(OutcomeCode::Invariant, "A rotation angle must be finite.", ["angle"]));
     }
-    let change = elements::changes(base, &payload.ids, |placement| placement.rotated(pivot, angle))?;
+    let change = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::changes(base, &payload.ids, |placement| placement.rotated(pivot, angle))?;
     if angle == 0.0 {
         return Err(Refusal::new(OutcomeCode::NoOp, "A zero angle turns nothing.", ["angle"]));
     }
@@ -24,5 +25,5 @@ fn changes(payload: &RotateElements, base: &ModelSnapshot) -> Result<Change, Ref
 }
 
 pub fn diff(payload: &RotateElements, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    elements::placed(changes(payload, base), "ids")
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placed(changes(payload, base), "ids")
 }

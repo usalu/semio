@@ -1,36 +1,36 @@
 //! 📊️ Controlled native columns and rows retain independent declarations and every typed cell.
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use crate::schema::snapshot::SemioTableSnapshot;
-use crate::schema::snapshot::SemioTableColumn;
-use crate::schema::snapshot::SemioTableRow;
 use crate::schema::snapshot::SemioTableCellKind;
 use crate::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{self as native,workspace};
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding as values;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-/// 🛬️ Counts complete cells before the same caller's actual native ownership allocation.
+/// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
 pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioTableSnapshot,ValueError>{
- let limits=control.limits();crate::io::sqlite::snapshot::admit_layout(limits)?;
- let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native input exceeds file limit"))}
- control.allocation_stage_native(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,_checkpoint|{
-  let native_before=native_control.owned_bytes();let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native_control|{
-  let result=(||->Result<SemioTableSnapshot,ValueError>{let result=match payload{
-   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,native_control)?;binary(body,native_control,limits)?},
-   store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,native_control,limits)?}
-  };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();result});(result,native_control.owned_bytes().saturating_sub(native_before))
- })?
+ crate::io::sqlite::snapshot::admit_layout(control.limits())?;
+ native::with_body(payload,STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,control,native_control,|body,decoder,limits|workspace::decode(decoder,empty,|output,decoder|match body{native::Body::Binary(body)=>binary_into(output,body,decoder,limits),native::Body::Text(body)=>document_into(output,body,decoder,limits)}))
 }
 fn kind(tag:u8)->Result<SemioTableCellKind,ValueError>{Ok(match tag{0=>SemioTableCellKind::Null,1=>SemioTableCellKind::Bool,2=>SemioTableCellKind::Int,3=>SemioTableCellKind::Float,4=>SemioTableCellKind::Str,5=>SemioTableCellKind::Bytes,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native column kind"))})}
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioTableSnapshot,ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio table native format"))}let schema=native::text(&mut reader,control)?;
- let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut columns=control.allocate_vec::<SemioTableColumn>(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let name=native::text(&mut reader,control)?;let kind=kind(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)?;columns.push(SemioTableColumn{name,kind});control.step()?;}Ok::<_,ValueError>(())})?;
- let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;let mut rows=native::Owned::new(control.allocate_vec::<SemioTableRow>(count)?);control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let count=native::length(&mut reader)?;native::entities(&mut entities,count,limits)?;if count>limits.max_rows.saturating_sub(entities){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native cells exceed remaining row limit"))}let mut cells=native::Owned::new(control.allocate_vec::<SemioValue>(count)?);control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{cells.get_mut().push(values::value_binary(&mut reader,control,limits,&mut entities)?);control.step()?;}Ok::<_,ValueError>(())})?;rows.get_mut().push(SemioTableRow{cells:cells.take()});control.step()?;}Ok::<_,ValueError>(())})?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native trailing bytes"))}Ok(SemioTableSnapshot{schema,columns,rows:rows.take()})
+/// 🧩️ Fills the retained table root from borrowed binary octets, inserting every column, row and cell before its fields.
+pub fn binary_into(output:&mut SemioTableSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+ crate::io::sqlite::snapshot::admit_binary(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio table native format"))}native::reader_text_into(&mut output.schema,&mut reader,control)?;
+ native::binary_list_into(&mut output.columns,&mut reader,control,limits,&mut entities,Default::default,|column,reader,control,_|{native::reader_text_into(&mut column.name,reader,control)?;column.kind=kind(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)?;Ok(())})?;
+ native::binary_list_into(&mut output.rows,&mut reader,control,limits,&mut entities,Default::default,|row,reader,control,entities|{
+  let count=native::length(reader)?;native::entities(entities,count,limits)?;if count>limits.max_rows.saturating_sub(*entities){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native cells exceed remaining row limit"))}row.cells=control.allocate_vec::<SemioValue>(count)?;
+  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{row.cells.push(SemioValue::Null);values::value_binary_into(row.cells.last_mut().unwrap(),reader,control,limits,entities)?;control.step()?;}Ok::<_,ValueError>(())})
+ })?;
+ if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native trailing bytes"))}Ok(())
 }
-pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<SemioTableSnapshot,ValueError>{
- crate::io::sqlite::snapshot::admit_document(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","columns","rows"],control)?;let schema=native::hex_text(fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native schema missing"))?,control)?;let mut items=native::Items::new(fields[1].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut columns=control.allocate_vec::<SemioTableColumn>(count)?;
- control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let[name,tag]=native::record(item,control)?;let tag=match tag{"n"=>0,"b"=>1,"i"=>2,"f"=>3,"s"=>4,"y"=>5,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native column kind"))};let name=native::hex_text(name,control)?;columns.push(SemioTableColumn{name,kind:kind(tag)?});control.step()?;}Ok::<_,ValueError>(())})?;
- let mut items=native::Items::new(fields[2].unwrap_or("[]"))?;let count=items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;let mut rows=native::Owned::new(control.allocate_vec::<SemioTableRow>(count)?);control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=items.next(control)?{let mut cell_items=native::Items::new(item)?;let count=cell_items.count(control,limits.max_rows)?;native::entities(&mut entities,count,limits)?;if count>limits.max_rows.saturating_sub(entities){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native cells exceed remaining row limit"))}let mut cells=native::Owned::new(control.allocate_vec::<SemioValue>(count)?);control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=cell_items.next(control)?{cells.get_mut().push(values::value_text(item,control,limits,&mut entities)?);control.step()?;}Ok::<_,ValueError>(())})?;rows.get_mut().push(SemioTableRow{cells:cells.take()});control.step()?;}Ok::<_,ValueError>(())})?;
- Ok(SemioTableSnapshot{schema,columns,rows:rows.take()})
+/// 📝️ Fills the retained table root from the borrowed document body, inserting every column, row and cell before its fields.
+pub fn document_into(output:&mut SemioTableSnapshot,body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+ crate::io::sqlite::snapshot::admit_document(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","columns","rows"],control)?;native::hex_text_into(&mut output.schema,fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native schema missing"))?,control)?;
+ native::text_list_into(&mut output.columns,fields[1].unwrap_or("[]"),control,limits,&mut entities,Default::default,|column,item,control,_|{let[name,tag]=native::record(item,control)?;let tag=match tag{"n"=>0,"b"=>1,"i"=>2,"f"=>3,"s"=>4,"y"=>5,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native column kind"))};native::hex_text_into(&mut column.name,name,control)?;column.kind=kind(tag)?;Ok(())})?;
+ native::text_list_into(&mut output.rows,fields[2].unwrap_or("[]"),control,limits,&mut entities,Default::default,|row,item,control,entities|{
+  let mut cell_items=native::Items::new(item)?;let count=cell_items.count(control,limits.max_rows)?;native::entities(entities,count,limits)?;if count>limits.max_rows.saturating_sub(*entities){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native cells exceed remaining row limit"))}row.cells=control.allocate_vec::<SemioValue>(count)?;
+  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=cell_items.next(control)?{row.cells.push(SemioValue::Null);values::value_text_into(row.cells.last_mut().unwrap(),item,control,limits,entities)?;control.step()?;}Ok::<_,ValueError>(())})
+ })
 }
+/// 🕳️ The empty typed root every native prefix starts from.
+pub fn empty()->SemioTableSnapshot{SemioTableSnapshot{schema:String::new(),columns:Vec::new(),rows:Vec::new()}}

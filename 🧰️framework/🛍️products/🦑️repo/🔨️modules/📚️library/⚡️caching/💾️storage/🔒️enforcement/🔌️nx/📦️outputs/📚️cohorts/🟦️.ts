@@ -1,5 +1,5 @@
 import{posix,win32}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 type Request={version:1;productsRoot:string;mode:"prototype"|"release";platform:"posix"|"windows"};

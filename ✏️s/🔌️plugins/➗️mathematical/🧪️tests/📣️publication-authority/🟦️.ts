@@ -1,9 +1,9 @@
-import { resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCmd } from "@semio-tech/framework/process/execution";
 
 type Lane = "Artifact" | "WindowConfig" | "HostOnly";
-type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
+type Fixture = { schema: string; owner: "EquationPlayApp"; source: string; mounted: string[]; routes: { id: string; lane: Lane }[]; laws: Record<string, boolean>; ui: { locales: ["en", "de"]; accessibleLabels: boolean; customizableUi: boolean } };
 
 const exact = (left: string[], right: string[]): boolean => JSON.stringify([...left].sort()) === JSON.stringify([...right].sort()) && new Set(left).size === left.length && new Set(right).size === right.length;
 
@@ -30,7 +30,8 @@ export async function verifyMathematicalPublicationAuthority(repoRoot: string, p
   const plugin = resolve(packageRoot, "../..");
   const authority = resolve(plugin, "🧫️fixtures/📣️publication-authority");
   const fixture = await Bun.file(resolve(authority, "🔣️.json")).json() as Fixture;
-  const source = await Bun.file(resolve(plugin, fixture.source)).text();
+  const sourceDirectory = dirname(fixture.source);
+  const source = (await Promise.all([fixture.source, ...fixture.mounted.map((mounted) => join(sourceDirectory, mounted))].map((path) => Bun.file(resolve(plugin, path)).text()))).join("\n");
   if (!oracle(fixture, source)) throw new Error("Mathematical publication-authority oracle rejected production");
   const hostileSource = [source.replace('ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },', ""), source.replace("            || request.generation != request.authority.generation()\n", ""), source.replace('.action_interactive_job("editPoints", InteractiveJobClassification::Migrated)', "")];
   if (hostileSource.some((candidate) => oracle(fixture, candidate))) throw new Error("Mathematical oracle accepted a hostile source mutation");

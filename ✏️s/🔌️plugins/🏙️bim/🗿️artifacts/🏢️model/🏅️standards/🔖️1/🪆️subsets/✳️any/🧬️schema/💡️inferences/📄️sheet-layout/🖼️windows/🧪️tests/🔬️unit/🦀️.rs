@@ -1,13 +1,13 @@
 //! 🧪️ The paper frame and the window of a viewport: sizes follow the scale to the millimetre, a crop wins over the bounds, a missing drawing leaves a minimal window.
 
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, ViewMap};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::*;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
-use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, Point2, ViewCrop, ViewKind};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, ViewMap};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{frame_of, mm_per_metre, place, WINDOW_PADDING, MIN_WINDOW};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Point2, ViewCrop, ViewKind};
 
 fn drawing(scale: u32, bounds: (f64, f64, f64, f64)) -> ViewLinework {
     let stroke = PlanPolyline { id: "l-1".into(), element: "w-1".into(), kind: PlanKind::WallOutline, style: PlanStyle::Cut, closed: false, vertices: vec![PlanVertex { x: bounds.0, y: bounds.1, bulge: 0.0 }, PlanVertex { x: bounds.2, y: bounds.3, bulge: 0.0 }] };

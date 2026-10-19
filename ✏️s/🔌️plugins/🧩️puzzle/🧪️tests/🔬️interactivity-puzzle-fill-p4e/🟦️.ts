@@ -1,5 +1,3 @@
-import { interactivityPuzzleFillP4eFailures } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
-
 /** 🧫️ A FillBuilder miniature that satisfies every P4e law surviving the tool-run conversion: cooperative preparation, fixed owners with cap/+1 evidence, resumable spatial index, danger step before a capacity fault. */
 const CLEAN = {
   precompute: `//! ⏳️ Placement session.
@@ -223,7 +221,10 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", role
 ];
 
 /** 🧪️ Mutation self-test of the surviving P4e FillBuilder laws: the clean miniature passes, every planted regression is reported, comments stay silent. Returns the executed case count. */
-export function interactivityPuzzleFillP4eSelfTests(): number {
+/** 🧪️ The P4e fill law, injected by the caller that owns it. */
+export type PuzzleFillP4eLaw = (precomputeSource: string, fillSource: string, geometrySource: string) => string[];
+
+export function interactivityPuzzleFillP4eSelfTests(interactivityPuzzleFillP4eFailures: PuzzleFillP4eLaw): number {
   const clean = interactivityPuzzleFillP4eFailures(CLEAN.precompute, CLEAN.fill, CLEAN.geometry);
   if (clean.length > 0) throw new Error(`[verify interactivity] Puzzle fill P4e clean fixture was falsely rejected: ${clean.join("; ")}`);
   for (const [name, expect, role, from, to] of CASES) {

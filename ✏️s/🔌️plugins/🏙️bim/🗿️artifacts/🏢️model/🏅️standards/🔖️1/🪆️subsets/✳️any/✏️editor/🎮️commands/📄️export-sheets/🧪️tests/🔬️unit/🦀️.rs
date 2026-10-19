@@ -1,35 +1,36 @@
 //! 🧪️ The sheet export job: bounded analysis steps then one sheet per step, the SVG of one sheet and the PDF of the set equal the writers' one-shot files, headings in the language asked for, refusals for an unknown format or sheet, cancelling.
 
-use crate::editor::bim::commands::export_model::{stem, Output};
-use crate::editor::bim::modes::edit::windows::sheet::title_labels;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::io::export::sheets;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{stem, Output};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::title_labels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 #[allow(unused_imports)]
-use crate::editor::bim::commands::export_model::{INFER_PREVIEW, NODES_PER_STEP};
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{INFER_PREVIEW, NODES_PER_STEP};
 #[allow(unused_imports)]
-use crate::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::editor::bim::{BimCommand, BimModelApp};
+use semio_s_artifact_bim_model_bim::editor::bim::{BimCommand, BimModelApp};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::sheets::{pdf::SheetsPdf, TitleLabels};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::pdf::SheetsPdf;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::TitleLabels;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::export_sheets::*;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
+use semio_s_artifact_bim_model_bim::editor::bim::commands::export_sheets::{SheetsJob, Advance, labels_of};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
 fn finished(job: &mut SheetsJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'static str>) {
@@ -54,7 +55,7 @@ fn the_pdf_job_analyses_in_bounded_steps_then_writes_a_page_per_sheet_and_equals
     assert_eq!(stages.iter().filter(|stage| **stage == "bim-sheets-page").count(), 3);
     assert_eq!((output.mime_type, output.encoding), ("application/pdf", Some(MEDIA_EXPORT_BASE64_ENCODING)));
     assert_eq!(output.filename, format!("{}-sheets.pdf", stem(&model.project.name)));
-    let bytes = sheets::sheets_pdf(&model, &inferred(&model), None, &title_labels(&BimLabels::NATIVE_EN)).expect("the one-shot file");
+    let bytes = semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::sheets_pdf(&model, &inferred(&model), None, &title_labels(&BimLabels::NATIVE_EN)).expect("the one-shot file");
     assert_eq!(output.data, semio_framework_io_base64::base64_standard_encode(&bytes));
     assert_eq!(decode_pdf(&bytes).expect("reads").pages.len(), 3);
 }
@@ -98,7 +99,7 @@ fn an_unknown_format_an_unknown_sheet_and_a_model_without_sheets_are_refused() {
     let model = house_with_sheets();
     assert_eq!(SheetsJob::new("dwg", None, None, Some(&instance)).advance(&model).expect_err("a refusal").code.0.as_str(), "bim.export.format-unknown");
     assert_eq!(SheetsJob::new("pdf", Some("sh-gone"), None, Some(&instance)).advance(&model).expect_err("a refusal").code.0.as_str(), "bim.export.sheet-missing");
-    assert_eq!(SheetsJob::new("pdf", None, None, Some(&instance)).advance(&crate::standards::v1::subsets::any::io::export::svg::testkit::house()).expect_err("a refusal").code.0.as_str(), "bim.export.sheets-none");
+    assert_eq!(SheetsJob::new("pdf", None, None, Some(&instance)).advance(&semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::house()).expect_err("a refusal").code.0.as_str(), "bim.export.sheets-none");
 }
 
 #[test]

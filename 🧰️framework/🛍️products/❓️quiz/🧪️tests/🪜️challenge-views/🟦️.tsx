@@ -28,8 +28,8 @@ import { computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { answerComplete, type Answer, type RunResult, type RunView, type Sheet, type SheetClassificationTask, type SheetMatchingTask, type SheetSortingTask } from "@semio-tech/quiz";
 import { ClassificationTaskView, SortingTaskView, formatQuantity, formatScore, initialQuizState, quizText, type QuizSession } from "@semio-tech/quiz-react";
-import { TaskView } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
-import { ResultsScreen } from "../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx";
+import { TaskView } from "@semio-tech/quiz-react/modules/run/.tsx";
+import { ResultsScreen } from "@semio-tech/quiz-react/modules/results/.tsx";
 import { en, factorOf, LAMPS, MASSES, NBSP, PLACES, sheetAt, TEMPERATURES, text } from "../🪞️challenge-views-kit/🟦️.ts";
 
 afterEach(() => {

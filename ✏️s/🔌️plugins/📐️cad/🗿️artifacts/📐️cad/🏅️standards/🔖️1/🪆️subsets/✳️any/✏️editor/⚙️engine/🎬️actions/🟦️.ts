@@ -9,23 +9,10 @@ import { ExprEnv, evalExpr } from "@semio-tech/s-spatial-kernel-ts/geometry/expr
 import { SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import { withResolvedInteractionPointsContext } from "./🧲️selection-targets/🟦️.ts";
 import { CURSOR_RAW_CTX, interactionLengthEntryForState, interactionScalarEntryForState, positiveHeightLock, positiveLengthLock, readInteractionContextVec3, SCALAR_AXIS_T_CTX, scalarEntryAxis, scalarEntryAxisBase } from "./🎰️interaction-state/🟦️.ts";
+import type { DisplayItem, DisplayModel } from "./🖼️display-model/🟦️.ts";
 
 // #region 📦️🎬️actions
 // #region 🖼️Display
-/** 🖼️ Resolved display primitive for renderer adapters. */
-export interface DisplayItem {
-  readonly kind: string;
-  readonly id: string;
-  readonly role?: string;
-  readonly params?: Record<string, unknown>;
-}
-
-/** 🖼️ Renderer-neutral snapshot slice consumed by `@semio-tech/cad-js/renderer`. */
-export interface DisplayModel {
-  readonly prompt?: string;
-  readonly items: readonly DisplayItem[];
-}
-
 /** 🖼️ Instantiates `display.states[state]` templates using current `context`. */
 export function resolveDisplay(spec: InteractionSpec, state: string, context: Record<string, unknown>, preview: SpatialPreviewKernel, model?: Model): DisplayModel {
   const env: ExprEnv = { context: model ? withResolvedInteractionPointsContext(model, context) : context, preview };
@@ -193,12 +180,6 @@ export function resolveDisplay(spec: InteractionSpec, state: string, context: Re
 // #endregion 📦️🎬️actions
 // #region 🧪️Tests
 const __actionsTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
-
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts`. */
-export type ActionsTestDependencies = {
-  readonly __actionsTestRuntime: typeof __actionsTestRuntime;
-  readonly resolveDisplay: typeof resolveDisplay;
-};
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts");

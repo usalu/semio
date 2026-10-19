@@ -10,7 +10,7 @@ pub mod retirement;
 pub use retirement::{RetireOwned,owned_retirement_birth_bytes,admit_owned_retirement};
 
 pub use retirement::turn::{advance_retirement_turn,RetirementReceipt,RetirementTurnError};
-pub use retirement::shared::{shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement};
+pub use retirement::arc_custody::{shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement};
 #[path="../../../⚠️refusal/♻️retirement/🦀️.rs"]
 mod refusal_retirement;
 artifact_retire_leaf!(RetainedCloneGrant);

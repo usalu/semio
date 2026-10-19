@@ -11,8 +11,8 @@ use crate::introspection::DumpMeshStats;
 use crate::introspection::{DumpMesh, DumpMeshInstance, DumpMeshSurface};
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
 use serde_json::Value;
-#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-use ui_wgpu::wgpu::{NodeId, UiComponentSceneNode, UiNode};
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))] use semio_framework_ui_arena::NodeId;
+#[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))] use semio_framework_ui_declaration::ui::{UiComponentSceneNode, UiNode};
 
 //#region 🔬️MeshStats
 /// 🔢️ One published-mesh array's length, or zero when the entry omits it.
@@ -105,7 +105,7 @@ pub fn mesh_stats_for_scene(scene: &UiComponentSceneNode, rect: [f32; 4]) -> Opt
 /// 🚶️ Same depth-first walk `walk_dump` runs, collecting only the `World3d` component scenes and
 /// the absolute page rect each one was laid out at — the rect a pointer probe aims with.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub fn walk_mesh_stats(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, surfaces: &mut Vec<DumpMeshSurface>) {
+pub fn walk_mesh_stats(tree: &semio_framework_ui_retained_tree::tree::UiTree, id: NodeId, origin_x: f32, origin_y: f32, surfaces: &mut Vec<DumpMeshSurface>) {
     let Some(node) = tree.node(id) else { return };
     let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
     let abs_x = origin_x + layout_x;
@@ -121,7 +121,7 @@ pub fn walk_mesh_stats(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, 
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn build_mesh_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpMeshStats {
+pub fn build_mesh_stats(engine: &semio_framework_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpMeshStats {
     let window_ids = dump_window_ids(engine);
     let named = requested.filter(|id| !id.is_empty()).map(str::to_string);
     let walked: Vec<String> = match &named {
@@ -181,7 +181,7 @@ struct DumpBoard2d {
 
 /// 🎲️ One board scene's dump row at `rect` (page CSS px) inside `window_id`.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub fn board2d_surface(surface_id: &str, window_id: &str, board: &ui_wgpu::wgpu::Board2dScene, rect: [f32; 4]) -> DumpBoard2dSurface {
+pub fn board2d_surface(surface_id: &str, window_id: &str, board: &semio_framework_ui_declaration::ui::Board2dScene, rect: [f32; 4]) -> DumpBoard2dSurface {
     let fixture = serde_json::from_str::<Value>(&board.snapshot_json).ok().filter(Value::is_object);
     let nodes = fixture.as_ref().and_then(|fixture| fixture.get("nodes")).and_then(Value::as_array);
     let positions = nodes.into_iter().flatten().filter_map(|node| Some((node.get("id")?.as_str()?.to_string(), [node.get("x")?.as_f64()?, node.get("y")?.as_f64()?]))).collect();
@@ -200,7 +200,7 @@ pub fn board2d_surface(surface_id: &str, window_id: &str, board: &ui_wgpu::wgpu:
 /// 🚶️ The same depth-first walk [`walk_mesh_stats`] runs, collecting every `Board2d` component scene of one window at
 /// the absolute page rect it was laid out at — the rect a pointer probe aims with.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub fn walk_board2d(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, origin_y: f32, window_id: &str, surfaces: &mut Vec<DumpBoard2dSurface>) {
+pub fn walk_board2d(tree: &semio_framework_ui_retained_tree::tree::UiTree, id: NodeId, origin_x: f32, origin_y: f32, window_id: &str, surfaces: &mut Vec<DumpBoard2dSurface>) {
     let Some(node) = tree.node(id) else { return };
     let (layout_x, layout_y, layout_w, layout_h) = tree.mounted_layout(id).unwrap_or((node.layout.x, node.layout.y, node.layout.width, node.layout.height));
     let abs_x = origin_x + layout_x;
@@ -217,7 +217,7 @@ pub fn walk_board2d(tree: &ui_wgpu::wgpu::UiTree, id: NodeId, origin_x: f32, ori
 
 /// 🎲️ Every live window's boards, or the one window a caller names.
 #[cfg(any(target_arch = "wasm32", any(test, feature = "testkit")))]
-pub fn build_board2d_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpBoard2d {
+pub fn build_board2d_dump(engine: &semio_framework_ui_wgpu_engine::Ui, requested: Option<&str>) -> DumpBoard2d {
     let mut surfaces = Vec::new();
     for window_id in dump_window_ids(engine).iter().filter(|live| requested.filter(|id| !id.is_empty()).is_none_or(|id| *live == id)) {
         if let Some(root) = engine.tree(window_id).and_then(|tree| tree.root.map(|root| (tree, root))) {

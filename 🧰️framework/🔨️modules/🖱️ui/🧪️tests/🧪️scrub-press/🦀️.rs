@@ -5,8 +5,9 @@
 //! click is a one-shot press. The argument names are the `🛠️tool-machine` scrub fixture's.
 
 use super::*;
-use crate::wgpu::component::ui::{UiInputNode, UiPresence, UiRingNode, UiStackNode};
-use crate::wgpu::tree::WidgetSpec;
+use semio_framework_ui_declaration::ui::{UiInputNode, UiPresence, UiRingNode, UiStackNode};
+use semio_framework_ui_retained_tree::tree::WidgetSpec;
+use semio_framework_test_fixtures::fixture_text;
 
 fn binding() -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: "setOpacity".into(), args: Some(DslValue::Object(vec![("id".into(), DslValue::String("layer-1".into()))])) }
@@ -84,12 +85,12 @@ fn up(x: f32, y: f32) -> UiEvent {
 }
 
 fn track() -> Rect {
-    slider_control_presentation(Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, crate::wgpu::theme::Theme::default().gap_standard, FlowInline::Ltr).slider.track_cell
+    slider_control_presentation(Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, semio_framework_ui_theme::Theme::default().gap_standard, FlowInline::Ltr).slider.track_cell
 }
 
 #[test]
 fn the_argument_names_are_the_tool_machine_scrub_fixtures() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️scrub-law/🔣️.json")).expect("scrub law");
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️scrub-law/🔣️.json")).expect("scrub law");
     assert_eq!((law["args"]["gesture"].as_str(), law["args"]["commit"].as_str(), law["args"]["abort"].as_str()), (Some(SCRUB_GESTURE_ARG), Some(SCRUB_COMMIT_ARG), Some(SCRUB_ABORT_ARG)));
 }
 

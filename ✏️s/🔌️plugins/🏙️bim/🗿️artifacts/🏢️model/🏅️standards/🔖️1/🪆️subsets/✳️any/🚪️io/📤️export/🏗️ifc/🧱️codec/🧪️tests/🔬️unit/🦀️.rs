@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::s
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
-use crate::standards::v1::subsets::any::io::export::ifc::codec::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::{encode_ifc4, decode_ifc4, encode_document, decode_document};
 use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance, Part21Value};
 
 fn header(schema: &str) -> Part21Header {

@@ -11,7 +11,7 @@ import{admitExactSourceExtentV1,withExactSourceReadBatchV1,readExactSourceFileV1
 import{selectedCargoLockDigest}from"../../🔒️lock/📥️read/🟨️.mjs";
 import{repositoryBuildGraphDataDirectoryV1}from"../../💾️storage/🟨️.mjs";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import schema from"../📥️read/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");

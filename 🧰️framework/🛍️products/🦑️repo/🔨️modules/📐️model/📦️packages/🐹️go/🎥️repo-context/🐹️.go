@@ -35,6 +35,7 @@ type RepoContext interface {
 	GetStatutes() []*StatuteMeta
 	GetInteractions() ([]InteractionResource, error)
 	Analyze(scope *string) (*AnalyzeResult, error)
+	Fix(scope *string) (*FixResult, error)
 	GoalCreate(input GoalCreateInput) (*Goal, error)
 	GoalChange(input GoalChangeInput) (*Goal, error)
 	GoalClose(input GoalCloseInput) (*Goal, error)

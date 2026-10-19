@@ -11,28 +11,26 @@
 //! `crate::wgpu::widgets::{...}` reaches the sibling items this needs (`WidgetContext`, `TreeSection`,
 //! `TreeItem`, the `TREE_*` layout constants, the small `tree_gutter_width`/`tree_icon_id`/
 //! `tree_row_collapsed`/`tree_draw_chevron`/`tree_draw_guides` helpers, `draw_icon`, `draw_text`,
-//! `measure_text_width`, `render_widget` — all promoted to `pub(crate)` in this same pass since they
+//! `measure_text_width`, `render_widget` — all promoted to `pub` in this same pass since they
 //! were previously `widgets`-module-private); `crate::wgpu::geometry`/`crate::wgpu::input`/`crate::wgpu::text`/
 //! `crate::wgpu::theme` are the other top-level engine mods `widgets` itself also depends on.
 
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
-use crate::wgpu::layout::tree_window_spacer_px;
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::theme::Theme;
-use crate::wgpu::widgets::{
-    draw_icon, draw_text, measure_text_width, render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TreeItem, TreeSection, WidgetContext, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT,
-    TREE_SECTION_GAP, TREE_TOGGLE_WIDTH,
-};
-use crate::wgpu::UiTreeActionPlacement;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_framework_ui_wgpu_layout::layout::tree_window_spacer_px;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_wgpu_widget_kit::{draw_icon, draw_text, measure_text_width, TreeItem, TreeSection, WidgetContext};
+use crate::{render_widget, tree_draw_chevron, tree_draw_guides, tree_gutter_width, tree_icon_id, tree_row_collapsed, TREE_ICON_SIZE, TREE_INDENT_PER_LEVEL, TREE_ROW_HEIGHT, TREE_SECTION_GAP, TREE_TOGGLE_WIDTH};
+use semio_framework_ui_declaration::ui::UiTreeActionPlacement;
 use std::collections::HashMap;
 
-pub(crate) fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
+pub fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
     let collapsed = HashMap::new();
     measure_tree_sections_width_state(sections, atlas, theme, &collapsed, 0)
 }
 
-pub(crate) fn measure_tree_sections_width_state<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+pub fn measure_tree_sections_width_state<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
     let mut max_w = 0.0f32;
     for section in sections {
         let section_key = format!("section.{}", section.id);
@@ -50,7 +48,7 @@ pub(crate) fn measure_tree_sections_width_state<E>(sections: &[TreeSection<E>], 
     max_w.max(120.0)
 }
 
-pub(crate) fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+pub fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut FontAtlas, theme: &Theme, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
     if item.dimmed {
         return 0.0;
     }
@@ -77,7 +75,7 @@ pub(crate) fn measure_tree_item_width<E>(item: &TreeItem<E>, atlas: &mut FontAtl
     w
 }
 
-pub(crate) fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
+pub fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
     let collapsed = HashMap::new();
     measure_tree_sections_state(sections, &collapsed)
 }
@@ -89,7 +87,7 @@ fn tree_item_expandable<E>(item: &TreeItem<E>) -> bool {
     !item.children.is_empty() || item.window.is_some_and(|window| window.total > 0)
 }
 
-pub(crate) fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashMap<String, bool>) -> f32 {
+pub fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashMap<String, bool>) -> f32 {
     let mut height = 0.0;
     for section in sections {
         height += TREE_ROW_HEIGHT;
@@ -108,7 +106,7 @@ pub(crate) fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collap
     height
 }
 
-pub(crate) fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
+pub fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
     if item.dimmed {
         return 0.0;
     }
@@ -126,7 +124,7 @@ pub(crate) fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMa
     height
 }
 
-pub(crate) fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &[String], highlighted_ids: &[String], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &[String], highlighted_ids: &[String], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let mut y = bounds.y;
     for section in sections {
         let section_key = format!("section.{}", section.id);
@@ -148,13 +146,13 @@ pub(crate) fn render_tree<E: Clone>(sections: &[TreeSection<E>], selected_ids: &
     }
 }
 
-pub(crate) fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bounds: Rect, y: f32, collapsed: bool, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bounds: Rect, y: f32, collapsed: bool, ctx: &mut WidgetContext<'_, E>) {
     let row = Rect::new(bounds.x, y, bounds.w, TREE_ROW_HEIGHT);
     let gutter_w = TREE_TOGGLE_WIDTH;
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
     let content = Rect::new(row.x + gutter_w, row.y, row.w - gutter_w, row.h);
     let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
-    tree_draw_chevron(ctx, chevron, gutter, crate::wgpu::chrome::ICON_TINY);
+    tree_draw_chevron(ctx, chevron, gutter, semio_framework_ui_wgpu_layout::chrome::ICON_TINY);
     ctx.input.register_hit(HitTarget { rect: gutter, event: None, control_id: Some(format!("section.chevron.{}", section.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     if let Some(label) = &section.label {
         let text_color = if collapsed { ctx.theme.text_muted } else { ctx.theme.text_element };
@@ -166,7 +164,7 @@ pub(crate) fn render_tree_section_header<E: Clone>(section: &TreeSection<E>, bou
     }
 }
 
-pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>, depth: u32, selected_ids: &[String], highlighted_ids: &[String], is_last_at_level: &[bool]) -> f32 {
+pub fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>, depth: u32, selected_ids: &[String], highlighted_ids: &[String], is_last_at_level: &[bool]) -> f32 {
     if item.dimmed {
         return 0.0;
     }
@@ -187,7 +185,7 @@ pub(crate) fn render_tree_item<E: Clone>(item: &TreeItem<E>, bounds: Rect, ctx: 
     if expandable {
         let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
         let chevron_rect = Rect::new(gutter.x + depth as f32 * TREE_INDENT_PER_LEVEL, gutter.y, TREE_TOGGLE_WIDTH, gutter.h);
-        tree_draw_chevron(ctx, chevron, chevron_rect, crate::wgpu::chrome::SIZE_TINY);
+        tree_draw_chevron(ctx, chevron, chevron_rect, semio_framework_ui_wgpu_layout::chrome::SIZE_TINY);
         ctx.input.register_hit(HitTarget { rect: chevron_rect, event: None, control_id: Some(format!("tree.chevron.{}", item.id)), kind: HitKind::TreeItem, drag_axis: None, drag_data: None });
     }
     if selected {

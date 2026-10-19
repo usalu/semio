@@ -6,7 +6,7 @@ import { captureOwnedCommandV1 } from "@semio-tech/process/owned-execution";
 import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
@@ -14,11 +14,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runNestedCargoPackageAdapter } from "../../../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
+import { runNestedCargoPackageAdapter } from "@semio-tech/repo-lib/authoring";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
 
 //#region 🔎️ScalarWireSource
@@ -43,7 +41,7 @@ export class PackSingleOwnerSourceScript extends BundleScript {
 export class CanonicalArchitectureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("canonical-architecture accepts no arguments");
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-os-kernel",
         target: { kind: "lib", name: "semio_framework_os_kernel" },
         laws: [
@@ -95,19 +93,19 @@ export class CommandTransportSourceTestScript extends BundleScript {
 
 /** 🪪️ Keeps all original CLI and SPR I/O laws beside actual retained caller-context laws. */
 export class CommandTransportNativeTestScript extends BundleScript {
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-pack-tools"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-spr-cli"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runRepositoryCargoTests(["semio-framework-os-spr"], this.repoRoot, this.invocation, ["--lib","-E","test(io::native::tests::)","--no-fail-fast"]);}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_)","--no-fail-fast"]);await runAdmittedCargoPackageTestsV1(["semio-framework-os-pack-tools"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runAdmittedCargoPackageTestsV1(["semio-framework-os-spr-cli"], this.repoRoot, this.invocation, ["--lib","-E","test(tests::)","--no-fail-fast"]);await runAdmittedCargoPackageTestsV1(["semio-framework-os-spr"], this.repoRoot, this.invocation, ["--lib","-E","test(io::native::tests::)","--no-fail-fast"]);}
 }
 
 export class ListRecordNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-list-record-boundaries accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--no-fail-fast","list_record_"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-list-record-boundaries accepts no arguments");await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--no-fail-fast","list_record_"]);}
 }
 
 export class ComposedPackSchemaTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-composed-pack-schema accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","composed_pack_schema_tests::"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-composed-pack-schema accepts no arguments");await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","composed_pack_schema_tests::"]);}
 }
 
 export class IeeePayloadNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","ieee_payload_"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-native accepts no arguments");await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","ieee_payload_"]);}
 }
 
 export class IeeePayloadSourceTestScript extends BundleScript {
@@ -118,7 +116,7 @@ export class IeeePayloadSourceTestScript extends BundleScript {
 export class IntrinsicRetirementNativeTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-intrinsic-retirement-native accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_intrinsic_retirement_full_system_requests_and_release","--no-fail-fast"]);
+  await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_intrinsic_retirement_full_system_requests_and_release","--no-fail-fast"]);
  }
 }
 
@@ -126,7 +124,7 @@ export class IntrinsicRetirementNativeTestScript extends BundleScript {
 export class BorrowedKeyIndexNativeTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-borrowed-key-index-native accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_borrowed_key_index_full_requests_and_same_caller_are_admitted","--no-fail-fast"]);
+  await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_borrowed_key_index_full_requests_and_same_caller_are_admitted","--no-fail-fast"]);
  }
 }
 
@@ -188,7 +186,7 @@ export class ArtifactKindNativeScript extends BundleScript {
     
      
     
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,progress: event => console.log(`[artifact-kind] ${event.stage}`),groups: [{ package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["artifact_kind_id_follows_owner_neutral_corpus"] }]});
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,progress: event => console.log(`[artifact-kind] ${event.stage}`),groups: [{ package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["artifact_kind_id_follows_owner_neutral_corpus"] }]});
     
 
  }
@@ -203,7 +201,7 @@ export class ReturnedReadCustodyScript extends BundleScript {
   for(const row of fixture.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);
   const artifactDir=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactDir)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
   
-  const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.repoRoot,...exactCargoStageEnvironments(),progress:event=>{},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});
+  const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.repoRoot,...exactCargoStageEnvironments(),progress:event=>{},groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});
  }
 }
 

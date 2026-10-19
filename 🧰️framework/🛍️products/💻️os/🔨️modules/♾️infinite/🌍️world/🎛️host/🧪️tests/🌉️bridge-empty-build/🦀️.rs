@@ -6,7 +6,8 @@ use semio_framework_os_infinite_world_bridge::{begin_world3d_dynamic_retirement,
 use semio_framework_os_infinite_world_interaction::step_world3d_draw_rebuild;
 use semio_framework_os_infinite_world_host::{apply_runtime_draw_flags, step_world3d_dynamic_retirement, step_world3d_scene_bridge, step_world3d_snapshot, sync_world3d_state, world3d_dynamic_retirement_terminal_is_empty, World3dState};
 use semio_framework_test_fixtures::fixture_text;
-use ui_wgpu::wgpu::{Rect, SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.

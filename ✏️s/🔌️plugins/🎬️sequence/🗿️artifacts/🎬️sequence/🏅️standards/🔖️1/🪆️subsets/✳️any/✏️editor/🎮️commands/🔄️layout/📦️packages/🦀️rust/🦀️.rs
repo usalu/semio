@@ -58,7 +58,7 @@ pub mod editor {
             }
         }
         pub use semio_s_artifact_sequence_sequence_inferences::editor::sequence::terminology;
-        pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::base;
+        pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::editor_vocabulary;
         pub use semio_s_artifact_sequence_sequence_tests::editor::sequence::host;
         #[path = "."]
         pub mod commands {

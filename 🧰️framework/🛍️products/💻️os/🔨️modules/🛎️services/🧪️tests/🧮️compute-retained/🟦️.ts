@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import {existsSync,readFileSync} from "node:fs";
-import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import {readModuleTreeSource,readSourceFamilySource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import {spawnSync} from "node:child_process";
 import {fileURLToPath} from "node:url";
 import Ajv2020 from "ajv/dist/2020";
@@ -51,7 +51,7 @@ test("Services compute examples have no exclusive testing-law wrapper",()=>{expe
 
 
 test("Compute mounted step receives the original supplied five-axis policy",()=>{
- const services=readModuleTreeSource(new URL("🦀️.rs",base),{crates:false}),job=read("../../../../🔨️modules/🧵️job/👷️worker/🦀️.rs");
+ const services=readModuleTreeSource(new URL("🦀️.rs",base),{crates:false}),job=readSourceFamilySource(new URL("../../../../🔨️modules/🧵️job/👷️worker",base));
  expect(job.includes("lane: Lane,retained:RetainedCloneGrant")).toBe(true);expect(services).toContain("completion.session.pump_one(&self.pool, lane, retained)");expect(services).toContain("take_checked_out_retained_step_receipt()");expect(services).toContain("retained_recipient.record_progress(progress)");expect(services).toContain("let retained=retained_recipient.remaining_grant()?;");
  const db=new Database(":memory:");try{const row=db.query("SELECT ? AS maximumItems, ? AS maximumCopyBytes, ? AS maximumCapacityBytes, ? AS maximumReleaseBytes, ? AS maximumDepth").get(law.callerGrant.maximumItems,law.callerGrant.maximumCopyBytes,law.callerGrant.maximumCapacityBytes,law.callerGrant.maximumReleaseBytes,law.callerGrant.maximumDepth);expect(row).toEqual(law.callerGrant);}finally{db.close();}
  expect(services).not.toContain("pump_one(&next_pool, lane)");

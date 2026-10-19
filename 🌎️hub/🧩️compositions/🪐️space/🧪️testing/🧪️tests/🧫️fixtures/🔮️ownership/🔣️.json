@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "core": "✏️s/🔌️plugins/🪐️space/🫀️core",
+  "core": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents",
   "host": "🧰️framework/🛍️products/💻️os/🖥️host",
   "hub": "🌎️hub/🧩️compositions/🪐️space",
   "owner": "🌎️hub/🧩️compositions/🪐️space/🧪️testing",
-  "lowerRust": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🦀️.rs",
-  "lowerTypescript": "✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🟦️.ts",
+  "lowerRust": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📄️documents/🦀️.rs",
+  "lowerTypescript": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📄️documents/🟦️.ts",
   "examples": [
     {
       "id": "draw",

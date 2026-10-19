@@ -1,5 +1,5 @@
 import "../../../🧵️retained-command/🧬️context/🧪️tests/🟦️.ts";
-import "../../../../🏪️store/🔗️read/🪞️projection/🧪️tests/🟦️.ts";
+import "@semio-tech/framework-os";
 import {test,expect} from 'bun:test';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';

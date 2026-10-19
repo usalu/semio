@@ -4,23 +4,11 @@
   "additionalProperties": false,
   "required": [
     "path",
-    "beforeSha256",
-    "afterSha256",
-    "thirdpartyPinsSha256",
     "entries",
     "facadeCallerPresent"
   ],
   "properties": {
     "path": {
-      "type": "string"
-    },
-    "beforeSha256": {
-      "type": "string"
-    },
-    "afterSha256": {
-      "type": "string"
-    },
-    "thirdpartyPinsSha256": {
       "type": "string"
     },
     "entries": {

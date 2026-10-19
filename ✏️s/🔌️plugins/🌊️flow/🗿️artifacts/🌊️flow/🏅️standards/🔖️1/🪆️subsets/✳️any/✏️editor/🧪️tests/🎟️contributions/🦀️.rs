@@ -23,9 +23,9 @@ use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::{flow_play_labels, FlowPlayLabels};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_SCENE_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
 #[allow(unused_imports)]
 use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, flow_removal_leaves, focus_selection_camera, seed_host_catalogue, value_fault};
 #[allow(unused_imports)]
@@ -170,12 +170,12 @@ fn flow_contributions_retires_only_its_original_alias_before_terminal_work(){
         let source=shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|Ok(owner as *mut _ as usize)).unwrap();
         let mut work=FlowContributionsWork::new(shared.clone());work.begin_close();
         let incoming=grant(policy);let denied=RetainedCloneGrant{maximum_items:0,..incoming};
-        assert!(matches!(work.close_step(denied),semio_framework_job::InteractiveJobCloseStep::Blocked));
+        assert!(matches!(semio_framework_job::close_with_self_funded_context(denied, |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Blocked));
         assert!(work.instance_owner.is_some()&&work.instance_retirement.is_none());
         for turn in 0..128{
             if work.terminal_is_empty(){break}
             assert!(turn<127,"original contribution alias must reach terminal");
-            match work.close_step(incoming){semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(incoming));assert_eq!(progress.retained_capacity_bytes,0);assert_eq!(progress.released_bytes,0);},other=>panic!("original nonfinal alias close refused: {other:?}")}
+            match semio_framework_job::close_with_self_funded_context(incoming, |cx| work.close_step(cx)).expect("original fixture close turn"){semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(incoming));assert_eq!(progress.retained_capacity_bytes,0);assert_eq!(progress.released_bytes,0);},other=>panic!("original nonfinal alias close refused: {other:?}")}
         }
         assert!(work.terminal_is_empty());assert_eq!(work.terminal_frame_release_bytes(),Some(std::mem::size_of::<FlowContributionsWork>()));
         shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|{assert_eq!(owner as *mut _ as usize,source);assert!(!owner.closing&&owner.eval_session.is_some());Ok(())}).unwrap();

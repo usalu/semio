@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "⏱️frame-latency", "🔣️.json"), "utf8"));

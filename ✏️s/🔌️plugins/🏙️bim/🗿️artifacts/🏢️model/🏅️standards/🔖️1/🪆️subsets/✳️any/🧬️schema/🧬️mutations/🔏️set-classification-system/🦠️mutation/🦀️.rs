@@ -1,6 +1,10 @@
 //! 🔏️ `set-classification-system` payload. Sets any of a classification system's name, edition, source and entry table (an assigned null removes the source); absent fields stay untouched and the entry table replaces the whole table.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch, ModelDiff}, snapshot::{ClassificationItem, ModelSnapshot}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::ClassificationSystemPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

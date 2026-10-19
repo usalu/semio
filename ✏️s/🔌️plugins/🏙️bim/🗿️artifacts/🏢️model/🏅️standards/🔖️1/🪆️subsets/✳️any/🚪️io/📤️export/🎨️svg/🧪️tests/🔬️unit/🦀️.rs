@@ -1,29 +1,29 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework::io_schema::IoPayload;
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use crate::standards::v1::subsets::any::io::export::svg::*;
-use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags, HOUSE_DIR};
-use crate::standards::v1::subsets::any::io::io;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::SVG_DIALECT;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::{sheet, style};
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags, HOUSE_DIR};
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::io;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_svg_export_between_the_bim_and_the_svg_dialect() {
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == SVG_DIALECT).expect("the SVG entry");
-    assert_eq!((entry.from, entry.direction), (crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
+    assert_eq!((entry.from, entry.direction), (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
     assert_eq!((SVG_DIALECT.artifact_kind, SVG_DIALECT.standard.0), ("s.stdio.svg", "1.1"));
 }
 
@@ -32,7 +32,7 @@ fn the_export_entry_turns_a_packed_model_into_svg_text() {
     let model = house();
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == SVG_DIALECT).expect("the SVG entry");
-    let produced = (entry.run)(&IoPayload::Binary(pack::encode(&model))).expect("the entry runs");
+    let produced = (entry.run)(&IoPayload::Binary(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::binary::snapshot::encode(&model))).expect("the entry runs");
     assert_eq!(produced.value, IoPayload::Text(svg(&model)));
     assert!(produced.diagnostics.is_empty());
 }
@@ -50,7 +50,7 @@ fn the_document_is_well_formed_svg_1_1_with_a_viewbox_that_fits_the_sheet_in_mil
     assert_eq!(root.attribute("width"), Some(format!("{}mm", view[2]).as_str()));
     assert_eq!(root.attribute("height"), Some(format!("{}mm", view[3]).as_str()));
     assert_eq!((root.attribute("data-unit"), root.attribute("class")), (Some("mm"), Some("sheet")));
-    let sheet = sheet::layout(&model, &compute_view_linework(&model));
+    let sheet = semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::layout(&model, &compute_view_linework(&model));
     assert!((view[2] - sheet.width).abs() < 1e-3 && (view[3] - sheet.height).abs() < 1e-3);
 }
 
@@ -59,7 +59,7 @@ fn there_is_one_group_per_drawn_view_with_an_id_a_label_a_kind_a_scale_and_the_p
     let model = house();
     let found = tags(&svg(&model));
     let groups: Vec<_> = found.iter().filter(|tag| tag.name == "g" && tag.has_class("view")).collect();
-    let drawn: Vec<_> = model.views.iter().filter(|(_, view)| sheet::is_drawn(view.kind)).collect();
+    let drawn: Vec<_> = model.views.iter().filter(|(_, view)| semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::is_drawn(view.kind)).collect();
     assert_eq!(groups.len(), drawn.len());
     assert!(drawn.len() > model.storeys.len(), "the sheet carries the sections and elevations besides the plans");
     for group in &groups {
@@ -127,10 +127,10 @@ fn a_section_draws_its_cut_as_poche_and_an_elevation_draws_edges_and_datums_but_
 #[test]
 fn a_model_without_views_exports_an_empty_sheet_and_a_view_at_another_scale_gets_a_bigger_slot() {
     let mut model = house();
-    let at_100 = sheet::layout(&model, &compute_view_linework(&model));
+    let at_100 = semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::layout(&model, &compute_view_linework(&model));
     model.views.get_mut("v-plan-st-ground").expect("the ground plan").scale = 50;
-    let at_50 = sheet::layout(&model, &compute_view_linework(&model));
-    let slot = |layout: &sheet::Layout| layout.slots.iter().find(|slot| slot.view == "v-plan-st-ground").cloned().expect("the slot");
+    let at_50 = semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::layout(&model, &compute_view_linework(&model));
+    let slot = |layout: &semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::Layout| layout.slots.iter().find(|slot| slot.view == "v-plan-st-ground").cloned().expect("the slot");
     assert!(slot(&at_50).width > slot(&at_100).width && slot(&at_50).height > slot(&at_100).height);
     assert_eq!(slot(&at_50).frame.mm, 20.0);
     assert!(tags(&svg(&model)).iter().any(|tag| tag.attribute("data-view") == Some("v-plan-st-ground") && tag.attribute("data-scale") == Some("50")));
@@ -174,7 +174,7 @@ fn the_committed_house_file_is_the_current_export() {
 
 #[test]
 fn the_committed_notated_file_is_the_current_export() {
-    use crate::standards::v1::subsets::any::io::export::svg::testkit::{notated, read_notated, NOTATED_DIR};
+    use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{notated, read_notated, NOTATED_DIR};
     let text = svg(&notated());
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::create_dir_all(NOTATED_DIR).expect("the fixture directory");
@@ -185,7 +185,7 @@ fn the_committed_notated_file_is_the_current_export() {
 
 #[test]
 fn a_plan_with_annotations_gets_an_annotation_layer_and_a_plan_without_gets_none() {
-    use crate::standards::v1::subsets::any::io::export::svg::testkit::notated;
+    use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::notated;
     assert!(tags(&svg(&house())).iter().all(|tag| !tag.has_class("annotations")), "the house has no annotations and no annotation layer");
     let found = tags(&svg(&notated()));
     let at = found.iter().position(|tag| tag.name == "g" && tag.has_class("annotations")).expect("the annotated storey has the layer");

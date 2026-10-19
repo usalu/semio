@@ -27,10 +27,10 @@ pub fn context_menu_action_kind_str(kind: semio_framework::ActionKind) -> String
 /// synthesizes (`menu.group.more`) is the one group id outside the closed 20-id ribbon-parent taxonomy,
 /// so resolving through the taxonomy alone rendered it with an EMPTY label. Its React twin resolves the
 /// same id through `ui.contextMenu.more` (`🛠️ShellHelpers/🟦️.tsx`'s `contextMenuGroupLabel`).
-pub fn shell_context_menu_item_from_spec(spec: ui_wgpu::wgpu::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
-    let ui_wgpu::wgpu::ContextMenuItemSpec { id, label, icon, shortcut, disabled, reason, separator, checked, destructive, action, args, children, .. } = spec;
-    let is_group_row = id.starts_with(ui_wgpu::wgpu::CONTEXT_MENU_GROUP_ID_PREFIX);
-    let label = ui_wgpu::wgpu::context_menu_group_label(&id, is_de).map(str::to_string).or(label);
+pub fn shell_context_menu_item_from_spec(spec: semio_framework_ui_declaration::ui::ContextMenuItemSpec, controller_id: &str, is_de: bool) -> ContextMenuItem {
+    let semio_framework_ui_declaration::ui::ContextMenuItemSpec { id, label, icon, shortcut, disabled, reason, separator, checked, destructive, action, args, children, .. } = spec;
+    let is_group_row = id.starts_with(semio_framework_ui_declaration::ui::CONTEXT_MENU_GROUP_ID_PREFIX);
+    let label = semio_framework_ui_declaration::ui::context_menu_group_label(&id, is_de).map(str::to_string).or(label);
     let icon = icon.or_else(|| is_group_row.then(|| "folder".to_string()));
     ContextMenuItem {
         id,

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
@@ -17,7 +17,7 @@ test("all actual schema closure and JSON syntax laws execute with products, S an
       const destination = resolve(workspace, path);
       mkdirSync(resolve(destination, ".."), { recursive: true });
       cpSync(resolve(root, path), destination, { recursive: true, dereference: false, filter: path => {
-        if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path);
+        if (basename(path) === "node_modules") return false; if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path);
         return true;
       } });
     }

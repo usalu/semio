@@ -367,7 +367,7 @@ func writeSparseTicketArtifact(t *testing.T, path string, size int64) {
 
 // 🛟️ TestTicketGeneratedOutputRetention checks the language-neutral generated-only lifecycle boundary.
 func TestTicketGeneratedOutputRetention(t *testing.T) {
-	data, err := os.ReadFile(filepath.Join(GetRootDir(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/🧪️tests/🧫️fixtures/🔓️open-close-reopen-lifecycle/🔓️lifecycle.json"))
+	data, err := os.ReadFile(moduleFixturePath("..", "..", "🎫️tickets", "🧪️tests", "🧫️fixtures", "🔓️open-close-reopen-lifecycle", "🔓️lifecycle.json"))
 	if err != nil { t.Fatal(err) }
 	var fixture struct { Purge struct { Retention []struct { Path string; Bytes int64; Retained bool } } }
 	if err := json.Unmarshal(data, &fixture); err != nil { t.Fatal(err) }

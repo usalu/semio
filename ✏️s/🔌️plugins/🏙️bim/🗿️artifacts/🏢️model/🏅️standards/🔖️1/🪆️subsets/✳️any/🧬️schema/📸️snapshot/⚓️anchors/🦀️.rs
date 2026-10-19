@@ -1,7 +1,7 @@
 //! ⚓️ The vocabulary of what an annotation is attached to: which element an anchor names, the element a tag reads, and the free points an annotation carries.
 //! Pure and base-free: whether the named elements exist is decided by the leaves and by the diagnostics, never here.
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::{AnnotationAnchor, Point2};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnnotationAnchor, Point2};
 use crate::standards::v1::subsets::any::schema::snapshot::entities::{Dimension, Leader, TextNote};
 
 impl Dimension {

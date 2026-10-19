@@ -6,7 +6,7 @@ use super::*;
 
 //#region ShellInput
 impl<'ctx> SessionCtx<'ctx> {
-    pub fn retained_keyboard_focus(&self) -> Option<(String, ui_wgpu::wgpu::NodeId)> {
+    pub fn retained_keyboard_focus(&self) -> Option<(String, semio_framework_ui_arena::NodeId)> {
         let surface = self.chrome.chrome_build.focused_retained_surface.as_ref()?;
         let owner = window_pane_owner(surface).unwrap_or(surface);
         if !self.retained_surface_is_panel(surface) && self.windows.active_window_id.as_deref() != Some(owner) {

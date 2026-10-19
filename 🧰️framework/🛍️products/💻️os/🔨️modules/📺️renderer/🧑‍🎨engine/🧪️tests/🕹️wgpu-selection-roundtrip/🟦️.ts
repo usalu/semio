@@ -14,10 +14,11 @@
  * `🖼️wire-turn/🟦️.ts` (`leftoverShellInvocationFrames`) is written for.
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-selection-roundtrip-2026-09-15.md`. */
 import { describe, expect, it } from "vitest";
-import { reservedVerbAnswerFixture as fixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { reservedVerbAnswerFixture as fixture } from "@semio-tech/framework-actor/testing/fixtures";
 import { encodeAppFrame, encodePackValue } from "../../../../../🟦️.ts";
-import type { WireVariant } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
-import { shellFrameAnswersACaller, wgpuInvocationFromFrames } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import type { WireVariant } from "@semio-tech/framework-actor/wire-turn";
+import { shellFrameAnswersACaller } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/contributions-and-effects";
+import { wgpuInvocationFromFrames } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
 
 type InvocationLike = { readonly replySequence: number; readonly output: unknown; readonly uiScope: unknown };
 

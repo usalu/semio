@@ -11,7 +11,7 @@ fn terrain_visibility_requires_the_complete_family_marker() {
 
 fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
     loop {
-        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
         let step=mesh3d_allocate_step(token,grant).unwrap();
         assert!(step.progress.fits(grant));
         if step.complete{break}
@@ -20,7 +20,7 @@ fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
 
 fn close_oracle_mesh(lease:Mesh3dLease) {
     loop {
-        let demand=ui_wgpu::wgpu::mesh3d_close_demands(lease,4096).unwrap();
+        let demand=ui_scene::math::mesh3d_close_demands(lease,4096).unwrap();
         let grant=world_mesh_ownership_grant(4096,demand.capacity_bytes,demand.release_bytes,demand.depth);
         let step=mesh3d_close_step(lease,grant).unwrap();
         assert!(step.progress.fits(grant));
@@ -32,7 +32,7 @@ fn face_overlay_test_mesh_with_faces(generation: u64, revision: u64, face_ids: &
     let triangles = u32::try_from(face_ids.len()).expect("fixture triangle count");
     let vertices = triangles * 3;
     let schema = Mesh3dSchema { vertices, indices: vertices, face_ids: triangles, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 ,surface_uvs:[0;4],tangents:0,};
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
     let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("face overlay fixture claim");
     assert!(progress.fits(grant));
     allocate_oracle_mesh(token);
@@ -223,7 +223,7 @@ fn world_vortex_and_reference_pick_cursors_resume_revalidate_and_close() {
     }
     assert_eq!(vortex_cursor.best.map(|(token, _)| token), Some(vortex));
     let mut plan = vortex_cursor.finish_plan(&state.session, &state.selection, &state.interaction, 8).expect("vortex plan").expect("vortex hit");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 1);
@@ -267,7 +267,7 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
         local_y: 0.0,
         viewport: Rect { x: 0.0, y: 0.0, w: 100.0, h: 100.0 },
         view_projection: Mat4::identity(),
-        projection_spec: ui_wgpu::wgpu::default_projection_spec(),
+        projection_spec: ui_scene::math::default_projection_spec(),
         origin: Vec3::new(0.0, 0.0, 2.0),
         direction: Vec3::new(0.0, 0.0, -1.0),
         slot: object.slot,
@@ -287,7 +287,7 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
     assert_eq!(with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)), WorldInteractionStep::Pending);
     assert_eq!(with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 10, context)), WorldInteractionStep::Complete);
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).expect("component plan").expect("component hit");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     assert_eq!(take_actions(&mut input).len(), 1);
 
@@ -314,7 +314,7 @@ fn a_right_gesture_publishes_nothing_while_it_runs() {
     state.session.interaction_revision = 4;
     state.interaction.interaction_objects.revision = 4;
     state.selection.hovered_vortex_id = Some("vortex".into());
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 4;
     authority.queue.push(WorldInteractionIntent::pointer_button(0.0, 0.0, true, 2, &PointerModifiers::default())).unwrap();
@@ -349,7 +349,7 @@ fn an_intent_aimed_outside_the_surface_retires_instead_of_faulting_the_frame() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.session.bounds = Rect { x: 536.0, y: 54.0, w: 1061.0, h: 913.0 };
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut authority = WorldInteractionAuthority::default();
     authority.next_generation = 2;
     authority.queue.push(WorldInteractionIntent::pointer_move(534.4, 500.0, -34.0, -453.0, false, 0, &PointerModifiers::default())).unwrap();
@@ -406,7 +406,7 @@ fn world_marquee_click_retires_points_before_exact_release_retry() {
     up.generation = 2;
     state.authority.interaction_authority.as_mut().unwrap().queue.push(down).unwrap();
     state.authority.interaction_authority.as_mut().unwrap().queue.push(up).unwrap();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Complete);
     assert_eq!(state.authority.interaction_authority.as_ref().unwrap().marquee.as_ref().map(|gesture| gesture.len), Some(1));
     assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
@@ -436,7 +436,7 @@ fn world_marquee_pages_build_one_target_per_grant_and_publish_atomically_fifo() 
     let mut gesture = WorldMarqueeGesture::new(6, 7, [0.0, 0.0]);
     assert!(gesture.push([100.0, 100.0]));
     let mut job = WorldMarqueePublishJob::new(8, gesture, results, false, false);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     loop {
         turns += 1;
@@ -471,12 +471,12 @@ fn world_marquee_page_claim_saturation_preserves_all_results_for_exact_retry() {
     let mut gesture = WorldMarqueeGesture::new(6, 7, [0.0, 0.0]);
     assert!(gesture.push([100.0, 100.0]));
     let mut job = WorldMarqueePublishJob::new(8, gesture, results, false, false);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut blockers = Vec::new();
     while let Ok(claim) = input.claim_action(1) {
         blockers.push(claim);
     }
-    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 8, &mut input, context)), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)));
+    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.interaction, 8, &mut input, context)), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits)));
     assert!(job.prepared.is_none());
     assert_eq!(job.results.lens[0], 1);
     input.release_action_claim(blockers.pop().expect("retry claim")).expect("release retry claim");
@@ -561,7 +561,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
     let viewport = render_pick_viewport(&state.session);
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
     let mesh = state.scene.meshes.get("mesh").unwrap();
-    let projected: Vec<_> = (0..3).map(|index| ui_wgpu::wgpu::project_point(view_projection, world_mesh_vertex(*mesh, index).unwrap(), viewport.w, viewport.h).unwrap()).collect();
+    let projected: Vec<_> = (0..3).map(|index| ui_scene::math::project_point(view_projection, world_mesh_vertex(*mesh, index).unwrap(), viewport.w, viewport.h).unwrap()).collect();
     let min_x = projected.iter().map(|point| point[0]).fold(f32::INFINITY, f32::min);
     let max_x = projected.iter().map(|point| point[0]).fold(f32::NEG_INFINITY, f32::max);
     let min_y = projected.iter().map(|point| point[1]).fold(f32::INFINITY, f32::min);
@@ -570,7 +570,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
     for points in cases {
         let crossing = marquee_is_crossing_from_path(&points, false);
         let (meshes, draws) = scene_geometry(&state.scene);
-        let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing);
+        let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing);
         let retained = world_marquee_cursor_ids(&state, &points);
         assert_eq!(retained, legacy, "points={points:?}");
     }
@@ -582,7 +582,7 @@ fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
     let points = [[0.0, 0.0], [400.0, 400.0]];
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
     let (meshes, draws) = scene_geometry(&state.scene);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), 400.0, 400.0, &points, true, false);
+    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), 400.0, 400.0, &points, true, false);
     let retained = world_marquee_cursor_ids(&state, &points);
     assert_eq!(retained, legacy);
     assert_eq!(retained.len(), WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
@@ -596,7 +596,7 @@ fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
     let view_projection = state.camera.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 0.0], [400.0, 400.0], [0.0, 400.0]];
     let (meshes, draws) = scene_geometry(&state.scene);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
+    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
     assert_eq!(world_marquee_cursor_ids(&state, &points), legacy);
 
     let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 7, points[0]);
@@ -656,7 +656,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
     for granularity in ["vertex", "edge", "face"] {
         state.selection.granularity = granularity.into();
         let (meshes, draws) = scene_geometry(&state.scene);
-        let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
+        let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, ui_scene::math::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
         legacy.sort_unstable();
         assert!(!legacy.is_empty(), "the oracle must answer a component census, not an empty one: granularity={granularity}");
         assert_eq!(world_component_marquee_cursor_ids(&state, &points), legacy, "granularity={granularity}");
@@ -676,7 +676,7 @@ fn world_component_marquee_publish_preserves_shared_merge_and_exact_targets() {
     let mut gesture = WorldMarqueeGesture::new(state.session.interaction_revision, 7, [0.0, 0.0]);
     assert!(gesture.push([400.0, 400.0]));
     let mut job = WorldComponentMarqueePublishJob::new(8, gesture, results, WorldComponentKind::Vertex, true, false);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     loop {
         turns += 1;

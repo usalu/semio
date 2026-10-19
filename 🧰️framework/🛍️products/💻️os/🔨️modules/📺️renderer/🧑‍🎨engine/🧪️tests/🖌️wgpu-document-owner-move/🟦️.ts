@@ -16,10 +16,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
-import { parseRetainedCloneGrant } from "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts";
-import { retainedCloneWireSchema as grantSchema } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { parseRetainedCloneGrant } from "@semio-tech/value-ts/retained-clone/wire";
+import { retainedCloneWireSchema as grantSchema } from "@semio-tech/value-ts/retained-clone/wire/schema";
 import laws from "../🧫️fixtures/🖌️wgpu-document-owner-move/🔣️.json";
-import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

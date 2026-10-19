@@ -8,7 +8,7 @@ import { nxChildEnvironment } from "../../🚀️bootstrap/📜️script.ts";
 /** 🛑️ Exercises the actual coordinator after malformed process snapshots with controlled child processes. */
 export async function testNxCoordinator(root: string): Promise<void> {
   const require = createRequire(import.meta.url), ts = require("typescript"), cache = join(import.meta.dir, "../..");
-  const fixture = JSON.parse(readFileSync(join(cache, "🧫️fixtures/🛑️cancellation.json"), "utf8"));
+  const fixture = JSON.parse(readFileSync(join(cache, "🧪️tests/🧫️fixtures/🛑️cancellation.json"), "utf8"));
   const source = ts.createSourceFile("nx.ts", readFileSync(join(cache, "🚀️bootstrap/📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const coordinator = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "NxScript");
   const code = ts.transpileModule(coordinator.getText(source).replace(/^export /, ""), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;

@@ -1,14 +1,14 @@
 use super::*;
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::theme::Theme;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::Theme;
 
 fn single_window_layout(window_kind_id: &str) -> WindowLayout {
-    crate::wgpu::even_window_layout(&[window_kind_id.to_string()])
+    semio_framework_ui_declaration::layout::even_window_layout(&[window_kind_id.to_string()])
 }
 
 fn run_layout(shell: &mut Shell) {
     let root = shell.tree().root.expect("set_window_layout must produce a root");
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(shell.tree_mut(), root, Theme::default(), 400.0, 400.0), "layout pass");
+    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(shell.tree_mut(), root, Theme::default(), 400.0, 400.0), "layout pass");
 }
 
 fn count_nodes(tree: &UiTree, id: NodeId) -> usize {
@@ -48,10 +48,10 @@ fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
-    let down = shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+    let down = shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
     assert!(down.is_empty(), "press alone must not activate a tab");
 
-    let up = shell.dispatch(&UiEvent::PointerUp { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+    let up = shell.dispatch(&UiEvent::PointerUp { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(up, vec![ShellEvent::TabActivated { window_id: "app.viewport".into() }]);
 }
 
@@ -61,8 +61,8 @@ fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab()
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
-    shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
-    let up = shell.dispatch(&UiEvent::PointerUp { x: -50.0, y: -50.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+    shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
+    let up = shell.dispatch(&UiEvent::PointerUp { x: -50.0, y: -50.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
     assert!(up.is_empty(), "releasing outside every hit target must not activate a tab");
 }
 

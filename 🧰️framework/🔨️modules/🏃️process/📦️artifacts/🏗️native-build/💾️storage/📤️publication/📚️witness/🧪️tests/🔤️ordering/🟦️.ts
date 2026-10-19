@@ -13,8 +13,8 @@ test("publication witness name pages preserve Python UTF8 order with bounded cac
  const text=readFileSync(new URL("../../🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("witness.ts",text,ts.ScriptTarget.Latest,true),enumerators:ts.ArrowFunction[]=[],comparators:ts.VariableDeclaration[]=[];
  for(const statement of tree.statements)if(ts.isVariableStatement(statement))for(const node of statement.declarationList.declarations)if(ts.isIdentifier(node.name)&&node.name.text==="compare")comparators.push(node);
  const scan=(node:ts.Node):void=>{if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.name.text==="enumerate"&&node.initializer&&ts.isArrowFunction(node.initializer))enumerators.push(node.initializer);ts.forEachChild(node,scan);};scan(tree);
- expect(enumerators.length).toBe(1);expect(comparators.length).toBe(1);
- const body=enumerators[0]!.body;if(!ts.isBlock(body))throw Error("Actual directory enumerator body required");
+ const entryGuard="paths.join(current,entry.name).length>policy.maximumPathUnits",owners=enumerators.filter(node=>node.getText(tree).includes(entryGuard));expect(owners.length).toBe(1);expect(comparators.length).toBe(1);
+ const body=owners[0]!.body;if(!ts.isBlock(body))throw Error("Actual directory enumerator body required");
  const setup=body.statements.slice(0,body.statements.findIndex(ts.isWhileStatement)).filter(ts.isVariableStatement).map(node=>node.getText(tree)).join("\n"),loops:ts.ForStatement[]=[];
  const find=(node:ts.Node):void=>{if(ts.isForStatement(node)&&ts.isBlock(node.statement)&&node.statement.statements.some(child=>ts.isIfStatement(child)&&child.expression.getText(tree).includes("paths.join(current,entry.name).length>policy.maximumPathUnits")))loops.push(node);ts.forEachChild(node,find);};find(body);
  expect(loops.length).toBe(1);const loop=loops[0]!.statement;if(!ts.isBlock(loop))throw Error("Actual bounded entry loop required");

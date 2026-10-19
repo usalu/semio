@@ -1,6 +1,6 @@
 /** 🎟️ Kernel-issued inputs preserve original remaining currencies and canonical retained events. */
 import{test,expect}from"bun:test";import Ajv from"ajv";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";import schema from"../🧬️schema/🔣️.json";import fixture from"./🧫️fixtures/🔣️.json";
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("original Kernel preserves refused raw call before local receiving failure",()=>{
  const valid=new Ajv({strict:true}).compile(schema);expect(valid(fixture)).toBe(true);expect(valid({...fixture,rawRefusalForwardedBeforeLocalError:false})).toBe(false);const db=new Database(":memory:");try{db.run("CREATE TABLE raw_receiving(items INTEGER,copy INTEGER,capacity INTEGER,released INTEGER)");db.query("INSERT INTO raw_receiving VALUES(?,?,?,?)").run(...fixture.refusedCall.rawSpent);expect(db.query("SELECT items,copy,capacity,released,items>? AS refused FROM raw_receiving").get(fixture.original[0]!)).toEqual({items:10,copy:7,capacity:80,released:0,refused:1});expect(fixture.refusedCall.claimedRemaining).toBeNull();expect(fixture.refusedCall.continuation).toBe(false)}finally{db.close()}
 });

@@ -68,6 +68,8 @@ impl MaintenanceStageGrants {
 /// chain.
 pub struct Puzzle3dApp {
     raw: Option<Box<Puzzle3dRawApp>>,
+    /// 🎟️ The fixture's ONE original caller scope: every call that needs a `cx` threads it through [`Puzzle3dApp::parts`], and the scope pays the caller's terminal retirement after the paid app close.
+    scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope,
     /// 🪪️ The instance identity this scene_snapshot bound ([`next_fixture_instance_id`]) and therefore the receiver
     /// `take_typed_operation_result_page` answers for and the key of its session registry slot.
     pub instance_id: u32,
@@ -103,6 +105,11 @@ impl std::ops::DerefMut for Puzzle3dApp {
 }
 
 impl Puzzle3dApp {
+    /// 🎟️ The raw app together with the fixture's original caller context — disjoint borrows, so a call reads `let (raw, cx) = app.parts();`.
+    pub fn parts(&mut self) -> (&mut Puzzle3dRawApp, &mut semio_framework_plugin::StepContext<'static>) {
+        (self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness"), self.scope.cx())
+    }
+
     /// 🪟️ Registers one window instance in the scene_snapshot's live roster, exactly as the shell's own
     /// `sessionWindowInstances` grows the moment a pane is opened or split. Idempotent.
     fn ensure_window(&mut self, window_id: &str) {
@@ -169,10 +176,10 @@ impl Puzzle3dApp {
     /// stale stage.
     pub fn measure_maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginLifecycleStep, Fault> {
         let stage = self.next_maintenance_stage();
-        let raw = self.raw.as_deref_mut().expect("scene_snapshot app was already consumed by close_witness");
+        let (raw, cx) = self.parts();
         let demand = PluginApp::maintenance_retirement_demands(raw, maximum_bytes).map_err(|error| Fault::from(error.into_message()))?;
         let grant = semio_s_plugin_puzzle_jobs::testing::funded_turn(demand, maximum_items);
-        let step = PluginApp::maintenance_step(raw, grant);
+        let step = PluginApp::maintenance_step(raw, cx, grant).map_err(|failure| Fault::from(format!("{failure:?}")));
         self.maintenance.record(stage, grant, &step);
         step
     }
@@ -185,34 +192,18 @@ impl Puzzle3dApp {
     }
 }
 
-/// 🧹️ Drives `app` through the real `PluginApp` close state machine, one item and one envelope page
-/// per turn exactly as a host actor tick does, and returns the terminal-empty witness or the fault
-/// that stopped it. Bounded only as a runaway guard: this app carries five stores plus its retained
-/// tool operations, which outgrows `context::close_registered_fixture_app`'s own 64-turn cap.
-fn drain_close(app: &mut Puzzle3dRawApp) -> Result<bool, Fault> {
-    let mut blocked_on = None;
-    for _ in 0..1_048_576 {
-        if app.close_terminal_is_empty() {
-            return Ok(true);
-        }
-        let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match PluginApp::close_step(app, grant)? {
-            semio_framework_plugin::PluginLifecycleStep::Complete(_) => break,
-            semio_framework_plugin::PluginLifecycleStep::Blocked { reason } | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { reason } => blocked_on = Some(reason),
-            semio_framework_plugin::PluginLifecycleStep::Progress(_) => {}
-        }
-    }
-    if app.close_terminal_is_empty() {
-        return Ok(true);
-    }
-    // 🧷️ A close that ends non-terminal because an owner is BLOCKED is not "the machine reported
-    // complete too early" — it is a live lease the caller still holds (a captured window transient
-    // snapshot is the usual one: `capture` hands out a read of the partition's own store). Naming that
-    // reason is the difference between a diagnosable failure and a bare `false` after a million spins.
-    match blocked_on {
-        Some(reason) => Err(Fault::from(format!("close drained non-terminal while blocked on {reason}"))),
-        None => Ok(false),
+/// 🧯️ Projects a fixture dispatch failure onto the diagnostic `Fault` the drivers' callers assert on: the original fault when that is the primary, else the complete debug form.
+pub fn fault_of(failure: semio_framework_job::OriginalTurnFailure) -> Fault {
+    failure.primary_fault().cloned().unwrap_or_else(|| Fault::from(format!("{failure:?}")))
+}
+
+/// 🧹️ Drives `app` through the real `PluginApp` close state machine with the fixture's original caller, one grant
+/// quoted from the owner per turn exactly as a host actor tick does, and returns the terminal-empty witness or the
+/// fault that stopped it. Bounded by the caller's own opportunity (`maximum_turns`), never by a local spin cap.
+fn drain_close(app: &mut Puzzle3dRawApp, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<bool, Fault> {
+    match artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, cx) {
+        Ok(_) => Ok(app.close_terminal_is_empty()),
+        Err(failure) => Err(Fault::from(format!("close drained non-terminal: {failure:?}"))),
     }
 }
 
@@ -221,7 +212,7 @@ fn drain_close(app: &mut Puzzle3dRawApp) -> Result<bool, Fault> {
 /// fault; `Ok(false)` means the machine reported `Complete` without reaching terminal-empty ownership.
 pub fn close_witness(mut app: Puzzle3dApp) -> Result<bool, Fault> {
     let mut raw = app.raw.take().expect("scene_snapshot app was already consumed by close_witness");
-    match drain_close(&mut raw) {
+    match drain_close(&mut raw, app.scope.cx()) {
         Ok(true) => Ok(true),
         other => {
             std::mem::forget(raw);
@@ -236,7 +227,7 @@ impl Drop for Puzzle3dApp {
         let Some(mut raw) = self.raw.take() else {
             return;
         };
-        if !matches!(drain_close(&mut raw), Ok(true)) {
+        if !matches!(drain_close(&mut raw, self.scope.cx()), Ok(true)) {
             std::mem::forget(raw);
         }
     }
@@ -268,12 +259,14 @@ fn puzzle3d_action_registry() -> semio_framework_plugin::AppActionRegistry {
 }
 
 pub async fn app() -> Puzzle3dApp {
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = puzzle3d_action_registry();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity).await);
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
+    artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    Puzzle3dApp { raw: Some(Box::new(app)), instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
+    Puzzle3dApp { raw: Some(Box::new(app)), scope, instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
 }
 
 /// 🖌️ Host-session utility activation without minting a typed operation or running `settle`.
@@ -337,7 +330,8 @@ pub async fn settle_with_items(app: &mut Puzzle3dApp, maximum_items: usize) -> P
 pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mut Puzzle3dSettled) {
     settled.turns += 1;
     app.measure_maintenance_step(maximum_items, SETTLE_TURN_BYTES).expect("maintenance step drives the mounted operation's worker and retirement stages");
-    app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one typed operation publication unit");
+    let (raw, cx) = app.parts();
+    raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
     if let Some(page) = app.take_typed_operation_result_page(instance_id) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));

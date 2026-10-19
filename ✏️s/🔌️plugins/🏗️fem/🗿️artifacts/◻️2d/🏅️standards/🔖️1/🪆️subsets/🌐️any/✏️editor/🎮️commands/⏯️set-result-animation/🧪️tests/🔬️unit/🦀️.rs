@@ -19,7 +19,7 @@ fn animation(command: SetResultAnimation) -> Fem2dCommand {
 /// 🔁️ Drives the publication the dispatch opened all the way into the window-config store, the way
 /// the plugin host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem2dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own

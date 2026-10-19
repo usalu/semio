@@ -1,10 +1,10 @@
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
-use crate::editor::bim::gestures::typed::*;
-use crate::editor::bim::gestures::plane::{axis_ends, signed_area};
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{model, room, Rig};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::{Entry, parse, point_of, resolve, INVALID};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_ends, signed_area};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{model, room, Rig};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
@@ -90,7 +90,7 @@ async fn the_arc_wall_takes_its_start_end_and_a_point_on_the_arc() {
     }
     let step = rig.typed("2, -1");
     let [ModelMutation::CreateWall(created)] = step.mutations.as_slice() else { panic!("one arc wall, got {:?}", step.mutations) };
-    assert!(matches!(created.wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { bulge, .. } if (bulge - 0.5).abs() < 1e-9), "a 4 m chord with a 1 m sagitta bulges by 0.5");
+    assert!(matches!(created.wall.axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { bulge, .. } if (bulge - 0.5).abs() < 1e-9), "a 4 m chord with a 1 m sagitta bulges by 0.5");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -216,10 +216,10 @@ async fn a_line_that_names_no_point_is_refused_and_leaves_the_gesture_alone() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_typed_point_on_the_world_and_the_section_surface_is_a_click_there_too() {
-    let mut world = Rig::on("column", model(), crate::editor::bim::gestures::session::Surface::World { storey: "st-ground".into() });
+    let mut world = Rig::on("column", model(), semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface::World { storey: "st-ground".into() });
     world.typed("1, 2");
     assert_eq!(world.snapshot.columns.len(), 1);
-    let mut section = Rig::on("select", room(), crate::editor::bim::gestures::session::Surface::Section { start: [0.0, 0.0], end: [8.0, 0.0] });
+    let mut section = Rig::on("select", room(), semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface::Section { start: [0.0, 0.0], end: [8.0, 0.0] });
     let step = section.typed("4, 3");
     assert!(step.refused.is_none(), "a section takes distance along the line and height");
 }
@@ -241,7 +241,7 @@ async fn the_lines_the_third_party_oracle_resolved_resolve_to_the_same_points() 
 }
 
 fn step_delta(name: &str) -> [f64; 2] {
-    use crate::editor::bim::commands::cursor_keys::*;
+    use semio_s_artifact_bim_model_gestures::editor::bim::commands::cursor_keys::*;
     match name {
         "left" => CursorLeft::DELTA,
         "right" => CursorRight::DELTA,

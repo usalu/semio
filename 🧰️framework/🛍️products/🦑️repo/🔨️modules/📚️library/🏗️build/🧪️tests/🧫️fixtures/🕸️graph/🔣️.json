@@ -3701,6 +3701,8 @@
     ],
     "projection": [
       "🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs",
       "🏗️build/🧬️schema/📥️pin.json",
       "🏗️build/🧬️schema/📥️engine.json"
     ],

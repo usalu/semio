@@ -5,16 +5,21 @@
 #![cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{ComponentSource3d, Instance3d, Mat4, mesh3d_begin_close, mesh3d_close_step, mesh3d_terminal_is_empty, Mesh3dLease, Mesh3dSchema, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, ray_aabb_slab, Rect, Rgba, SceneColorSource3d, SceneDraw3d, SceneRasterIdentity, SceneRasterLease, SceneRasterPool, Theme, Vec3, World3dPresentation, World3dSnapshotFault};
+use ui_scene::math::{ComponentSource3d, Instance3d, Mat4, mesh3d_begin_close, mesh3d_close_step, mesh3d_terminal_is_empty, Mesh3dLease, Mesh3dSchema, ray_aabb_slab, SceneColorSource3d, SceneDraw3d, Vec3};
+use semio_framework_ui_wgpu_input::PointerModifiers;
+use semio_framework_ui_prepared::{PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_raster_owner::{SceneRasterIdentity, SceneRasterLease, SceneRasterPool};
+use semio_framework_ui_declaration::ui::{World3dPresentation, World3dSnapshotFault};
 use serde::Deserialize;
 use std::ops::{Index, IndexMut};
 use std::sync::{LazyLock, Mutex};
 use std::mem::MaybeUninit;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{SceneAuthoredMaterial3d, SceneInstanceMaterial3d};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneAuthoredMaterial3d, SceneInstanceMaterial3d};
 use semio_framework_tool_run::{TOOL_RUN_TRACE_PAGE_BYTES_MAX, ToolRunCodecError, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict};
-use ui_wgpu::wgpu::kernel_3d_scene::Mesh3dResourceLoan as WorldNativeMeshLoan;
+use ui_scene::math::Mesh3dResourceLoan as WorldNativeMeshLoan;
 use semio_framework_ui_contract::UiRevision as WorldNativeUiRevision;
 use serde_json::json;
 use ui_styling::metrics::tool_run;

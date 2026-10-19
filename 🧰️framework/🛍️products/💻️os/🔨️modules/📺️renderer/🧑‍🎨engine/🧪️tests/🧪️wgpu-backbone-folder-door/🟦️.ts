@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { backboneFolderHop, createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
+import { backboneFolderHop, createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 
 /** 🗃️ The PAGE half of the browser wgpu shell's folder door, over the language-neutral corpus
  * `🧫️fixtures/🧫️wgpu-backbone-folder-door` that the Rust half (`🐚️Shell/🧪️tests/🧪️wgpu-local-folders`) reads too: every

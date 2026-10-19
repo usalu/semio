@@ -31,18 +31,18 @@ use std::sync::Arc;
 use std::sync::Mutex;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::OnceLock;
-use ui_wgpu::wgpu::Rect;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::draw_text;
-use ui_wgpu::wgpu::TextFace;
-use ui_wgpu::wgpu::Theme;
-use ui_wgpu::wgpu::UiDriverDrag;
-use ui_wgpu::wgpu::ActionDescriptor;
-use ui_wgpu::wgpu::PreparedRasterProducer;
-use ui_wgpu::wgpu::PreparedRasterRejected;
-use ui_wgpu::wgpu::PreparedRasterReservation;
-use ui_wgpu::wgpu::SurfaceKind;
-use ui_wgpu::wgpu::UiComponentSceneNode;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_wgpu_widget_kit::draw_text;
+use semio_framework_ui_text::TextFace;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_prepared::PreparedRasterProducer;
+use semio_framework_ui_prepared::PreparedRasterRejected;
+use semio_framework_ui_prepared::PreparedRasterReservation;
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
 
 //#region SceneRuntime
 /// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)`, or in a target that enables the `isolated` feature of
@@ -258,7 +258,7 @@ pub fn retire_scene_identity(owner: &crate::element_contracts::ScenePointerTarge
     if !scene_surface_retirement_can_admit() {
         return false;
     }
-    if owner.kind == ui_wgpu::wgpu::SurfaceKind::TiledMap {
+    if owner.kind == semio_framework_ui_declaration::ui::SurfaceKind::TiledMap {
         #[cfg(test)]
         let before = SCENE_STATE.with(|cell| {
             cell.borrow()
@@ -269,7 +269,7 @@ pub fn retire_scene_identity(owner: &crate::element_contracts::ScenePointerTarge
         #[cfg(test)]
         eprintln!("[TRACE] scene retirement map host={} before={before:?} exact-interaction={_interaction}", owner.host_id);
     }
-    if owner.kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d {
+    if owner.kind == semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d {
         request_canvas_pointer_gesture_cancel_for_host(&owner.host_id);
     }
     let retired = SCENE_STATE.with(|cell| {

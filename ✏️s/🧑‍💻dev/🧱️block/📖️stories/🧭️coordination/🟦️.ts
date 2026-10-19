@@ -33,7 +33,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { UiComponentSceneNode } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import type { UiComponentSceneNode } from "@semio-tech/framework-renderer-react";
 import { resolveMeshAsset } from "@semio-tech/assets/mesh";
 import { MESH_DELIVERY_CATALOG } from "@semio-tech/assets/mesh/catalog";
 import { block2dConcreteForestLeftDsl as block2dLeftDsl } from "@semio-tech/block-2d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest";
@@ -42,7 +42,7 @@ import { block3dConcreteForestLeftDsl as block3dLeftDsl } from "@semio-tech/bloc
 import { block3dNakaginCapsuleDsl as block3dNakaginDsl } from "@semio-tech/block-3d/examples/nakagin-capsule/assets/nakagin-capsule";
 import { block5dConcreteForestLeftDsl as block5dLeftDsl } from "@semio-tech/block-5d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest";
 import { block5dNakaginCapsuleDsl as block5dNakaginDsl } from "@semio-tech/block-5d/examples/nakagin-capsule/assets/nakagin-capsule";
-import hexagonalCutLeftGlbUrl from "../../../../../♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb?url";
+import { hexagonalCutConcreteForestLeftGlbUrl as hexagonalCutLeftGlbUrl } from "@semio-tech/assets/abbau-aufbau/hexagonal-cut-concrete-forest-left";
 import { capsuleJGlbUrl } from "@semio-tech/assets/metabolism/representation/capsules/j/capsule-j";
 
 //#region 🔖️Model
@@ -384,7 +384,7 @@ export function blockStoryActionArgs(args: unknown): Record<string, unknown> {
  * — mirroring `../puzzle/3d/World.stories.tsx`'s `STORY_REFERENCE_URL_OVERRIDES` for reference-plane images.
  */
 const BLOCK_STORY_MESH_SOURCES: Readonly<Record<string, string>> = {
-  "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb": hexagonalCutLeftGlbUrl,
+  "🧰️framework/🔨️modules/🖼️assets/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb": hexagonalCutLeftGlbUrl,
   "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb": capsuleJGlbUrl,
 };
 

@@ -1,0 +1,167 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/puzzle-2d",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/puzzle-3d-ts",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/puzzle-3d-rs",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/puzzle-js",
+   "newExportEntries": 3,
+   "importerEdges": 3
+  },
+  {
+   "package": "@semio-tech/puzzle-wasm",
+   "newExportEntries": 1,
+   "importerEdges": 3
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/puzzle-2d": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/concrete-forest/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx"
+    ]
+   },
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/nakagin-capsule-tower/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx"
+    ]
+   }
+  },
+  "@semio-tech/puzzle-3d-ts": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/concrete-forest/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx"
+    ]
+   },
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/nakagin-capsule-tower/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx"
+    ]
+   }
+  },
+  "@semio-tech/puzzle-3d-rs": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/concrete-forest/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx"
+    ]
+   },
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/nakagin-capsule-tower/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx"
+    ]
+   }
+  },
+  "@semio-tech/puzzle-js": {
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/concrete-forest/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx"
+    ]
+   },
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️nakagin-capsule-tower/🖼️assets/🏢️tower/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/nakagin-capsule-tower/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx"
+    ]
+   },
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🗣️.dsl.semio",
+    "proposedSubpath": "./examples/capsule-dream/dsl",
+    "symbols": [
+     "default (?raw text)"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx"
+    ]
+   }
+  },
+  "@semio-tech/puzzle-wasm": {
+   "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js": {
+    "targetFile": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.js",
+    "proposedSubpath": "(declare the built wasm package as a dependency of the dev composition project, or expose `.`)",
+    "symbols": [
+     "BoardSession",
+     "default"
+    ],
+    "importers": [
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-fixtures/🧪️.story.tsx",
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-world/🧪️.story.tsx",
+     "✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-timeline/🧪️.story.tsx"
+    ]
+   }
+  }
+ },
+ "removals": [
+  {
+   "package": "@semio-tech/framework-os",
+   "exportKey": "./modules/store/child/schema",
+   "glueFile": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts",
+   "reason": "ArtifactChild schema and parser are owned by the neutral schema module; the glue has no importer left",
+   "replacement": "@semio-tech/framework/schema/artifact-reference"
+  },
+  {
+   "package": "@semio-tech/framework-os",
+   "exportKey": "./modules/store/link/schema",
+   "glueFile": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts",
+   "reason": "ArtifactLink schema and parser are owned by the neutral schema module; the glue has no importer left",
+   "replacement": "@semio-tech/framework/schema/artifact-reference"
+  },
+  {
+   "package": "@semio-tech/framework-os",
+   "exportKey": "./modules/store/blob/schema",
+   "glueFile": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/📦️blob/🧬️schema/🟦️.ts",
+   "reason": "BlobRef schema and parser are owned by the neutral schema module; the glue has no importer left",
+   "replacement": "@semio-tech/framework/schema/artifact-reference"
+  }
+ ]
+}

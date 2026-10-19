@@ -11,12 +11,12 @@
   "entries": [
     {
       "url": "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb",
-      "source": "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb",
+      "source": "🧰️framework/🔨️modules/🖼️assets/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb",
       "path": "🏚️abbau-aufbau/👈️hexagonal-cut-concrete-forest-left.glb"
     },
     {
       "url": "/mesh/🧊️hexagonal-cut-concrete-forest-right.glb",
-      "source": "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/▶️hexagonal-cut-concrete-forest-right.glb",
+      "source": "🧰️framework/🔨️modules/🖼️assets/🏚️abbau-aufbau/▶️hexagonal-cut-concrete-forest-right.glb",
       "path": "🏚️abbau-aufbau/👉️hexagonal-cut-concrete-forest-right.glb"
     },
     {

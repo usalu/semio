@@ -3,8 +3,9 @@
 //! drawing can be made without a pointer. Moving the cursor writes nothing: the tool shows its marks at the cursor in the window transient, as it does for a pointer move.
 
 use crate::editor::bim::gestures::run_cursor;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 /// 📏️ The metres of one fine step of the keyboard cursor.

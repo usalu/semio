@@ -51,7 +51,7 @@ func TestFolderPolicyEmptyFolder(t *testing.T) {
 }
 
 func TestPathEmojiStatutesLanguageNeutralFixture(t *testing.T) {
-	fixturePath := filepath.Join("..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "🔏️path-emoji-statutes", "🔣️.json")
+	fixturePath := moduleFixturePath("..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "🔏️path-emoji-statutes", "🔣️.json")
 	data, err := os.ReadFile(fixturePath)
 	if err != nil {
 		t.Fatalf("read shared path emoji fixture: %v", err)

@@ -3,18 +3,17 @@
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { checkResourceLeaseControl } from "@semio-tech/process/leases";
-import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { withExactCargoLawOutputV1, type ExactCargoLawOutputTaskV1 } from "@semio-tech/process/testing/cargo/exact";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
-import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { readStableBuildFile } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { repoCacheDirectory, runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "@semio-tech/repo-lib/cargo";
+import { readStableBuildFile } from "@semio-tech/repo-lib/build";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { assertObservationExpectation, type ObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";

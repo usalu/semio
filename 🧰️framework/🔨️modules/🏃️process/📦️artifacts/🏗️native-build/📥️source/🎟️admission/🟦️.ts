@@ -9,7 +9,7 @@ import type {CargoCompilationGraphV1,CargoCompilationUnitV1} from "../../🕸️
 import {actualCargoCompilerPlanningPortV1,captureCargoCompilationGraphV1} from "../../🕸️units/📥️capture/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../💾️storage/🟦️.ts";
 import {readPhysicalCargoSourceV1,type CargoSourceReadRequestV1} from "./📖️read/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export interface CargoSourceBoundaryPolicyV1 {readonly version:1;readonly maxSourceBytes:number;readonly maxSourceFiles:number;readonly maxActiveLines:number}
 export interface CargoSourceAdmissionPortV1 {cfg(unit:CargoCompilationUnitV1,control:ResourceLeaseControl):Promise<readonly string[]>;read(path:string,control:ResourceLeaseControl,request:CargoSourceReadRequestV1):Promise<Uint8Array|null>}
 /** 🔌️ Observes actual compiler cfg and no-follow source bytes without executing a compilation unit. */

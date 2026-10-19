@@ -3,9 +3,10 @@
 //! owns the window configuration (storey and viewport) and its chrome (storey picker); the camera and the storey verbs travel the retained
 //! window-config route declared by the viewer root.
 
-use crate::render::plan::scene;
-use crate::viewer::bim::terminology::BimViewerLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_plan_linework::render::plan::scene;
+use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
@@ -44,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🗺️ Pure `ModelSnapshot × ModelInference × window configuration × selected element ids -> Canvas2d surface` of the plan of the configured storey.
 pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimViewerPlanWindowConfig, selected: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let plan = crate::render::plan_storey(snapshot, &config.storey).and_then(|storey| inference.plan_linework.get(&storey));
+    let plan = semio_s_artifact_bim_model_tests_5::render::plan_storey(snapshot, &config.storey).and_then(|storey| inference.plan_linework.get(&storey));
     scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene(plan, &config.viewport, config.framed, selected))
 }
 //#endregion 🔖️Render
@@ -52,11 +53,11 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &con
 //#region 🔖️Measures
 /// 🎚️ The window chrome: the storey picker.
 pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerPlanWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor) -> Vec<WindowMeasure> {
-    let items = crate::render::storeys(snapshot).into_iter().map(|row| MeasureSelectItem { id: format!("{MEASURE_STOREY}-{}", row.id), value: row.id, label: row.name }).collect();
+    let items = semio_s_artifact_bim_model_tests_5::render::storeys(snapshot).into_iter().map(|row| MeasureSelectItem { id: format!("{MEASURE_STOREY}-{}", row.id), value: row.id, label: row.name }).collect();
     vec![WindowMeasure::Select {
         id: MEASURE_STOREY.into(),
         label: Some(labels.storey.into()),
-        value: crate::render::plan_storey(snapshot, &config.storey).unwrap_or_default(),
+        value: semio_s_artifact_bim_model_tests_5::render::plan_storey(snapshot, &config.storey).unwrap_or_default(),
         items,
         on_change: action("setPlanStorey", None),
     }]

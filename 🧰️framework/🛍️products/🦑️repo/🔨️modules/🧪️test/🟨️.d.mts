@@ -1,4 +1,4 @@
-import type{BuildInferenceContextV1,BuildDependencyContextV1,BuildInferencePluginV1,GeneratedNodesV1,BuildInferenceEdgeV1}from"../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+import type { BuildInferenceContextV1, BuildDependencyContextV1, BuildInferencePluginV1, GeneratedNodesV1, BuildInferenceEdgeV1 } from "@semio-tech/repo-lib/build/inference";
 /** 🧪️ Dynamic inference DATA stays unknown until its firstparty consumer validates it. */
 export function testBuildInferenceDirectoryV1(workspace:string):string;
 export function createDependencies(options:Readonly<Record<string,unknown>>,context:BuildDependencyContextV1):Promise<readonly BuildInferenceEdgeV1[]>;

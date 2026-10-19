@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.writer.writer.artifact;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 message WriterArtifact {
   string schema = 1;
@@ -8,5 +8,5 @@ message WriterArtifact {
   string language_id = 3;
   string uri = 4;
   string text = 5;
-  semio.os.store.ArtifactChild document = 6;
+  semio.framework.schema.artifact_child.ArtifactChild document = 6;
 }

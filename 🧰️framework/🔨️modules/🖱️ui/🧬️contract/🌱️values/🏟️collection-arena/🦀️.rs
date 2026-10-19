@@ -3,30 +3,30 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum UiCollectionKind {
+pub enum UiCollectionKind {
     List,
     Map,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct UiCollectionHandle {
-    pub(super) slot: usize,
-    pub(super) epoch: u64,
+pub struct UiCollectionHandle {
+    pub slot: usize,
+    pub epoch: u64,
     pub(super) kind: UiCollectionKind,
 }
 
 #[derive(Debug)]
 #[expect(clippy::large_enum_variant, reason = "Arena page slots include the bounded map key inline so moving a page needs no separate key allocation.")]
-pub(super) enum UiPageValue {
+pub enum UiPageValue {
     List(UiValue),
     Map(UiText, UiValue),
 }
 
 #[derive(Debug)]
-pub(super) struct UiPageSlot {
+pub struct UiPageSlot {
     pub(super) epoch: u64,
-    pub(super) next: usize,
-    pub(super) value: Option<UiPageValue>,
+    pub next: usize,
+    pub value: Option<UiPageValue>,
 }
 
 impl Default for UiPageSlot {
@@ -36,22 +36,22 @@ impl Default for UiPageSlot {
 }
 
 #[derive(Debug)]
-pub(super) struct UiCollectionSlot {
+pub struct UiCollectionSlot {
     pub(super) epoch: u64,
     pub(super) kind: UiCollectionKind,
-    pub(super) head: usize,
+    pub head: usize,
     pub(super) tail: usize,
-    pub(super) aliases: u64,
+    pub aliases: u64,
     pub(super) items: usize,
     pub(super) bytes: usize,
     pub(super) occupied: bool,
-    pub(super) retiring: bool,
+    pub retiring: bool,
     pub(super) retirement_parent: Option<UiCollectionHandle>,
     pub(super) retirement_cursor: Option<UiCollectionHandle>,
     pub(super) retirement_previous: usize,
     pub(super) retirement_next: usize,
-    pub(super) retirement_queued: bool,
-    pub(super) retirement_claimed: bool,
+    pub retirement_queued: bool,
+    pub retirement_claimed: bool,
 }
 
 pub const UI_VALUE_AGGREGATE_BYTES: usize = UI_VALUE_AGGREGATE_ITEMS * size_of::<UiPageSlot>() + UI_VALUE_ADMISSION_SLOTS * size_of::<UiCollectionSlot>();
@@ -78,13 +78,13 @@ impl Default for UiCollectionSlot {
     }
 }
 
-pub(super) struct UiValueArena {
-    pub(super) pages: Box<[UiPageSlot]>,
+pub struct UiValueArena {
+    pub pages: Box<[UiPageSlot]>,
     pub(super) collections: Box<[UiCollectionSlot]>,
     pub(super) free_pages: Box<[usize]>,
-    pub(super) free_page_count: usize,
+    pub free_page_count: usize,
     free_collections: Box<[usize]>,
-    pub(super) free_collection_count: usize,
+    pub free_collection_count: usize,
     pub(super) retirement_head: usize,
     pub(super) retirement_tail: usize,
     pub(super) retirement_len: usize,
@@ -116,7 +116,7 @@ impl Default for UiValueArena {
     }
 }
 
-pub(super) static UI_VALUE_ARENA: LazyLock<Mutex<UiValueArena>> = LazyLock::new(|| Mutex::new(UiValueArena::default()));
+pub static UI_VALUE_ARENA: LazyLock<Mutex<UiValueArena>> = LazyLock::new(|| Mutex::new(UiValueArena::default()));
 
 pub const fn resident_static_backing_bytes() -> usize {
     size_of::<LazyLock<Mutex<UiValueArena>>>()
@@ -128,7 +128,7 @@ pub const fn resident_static_backing_bytes() -> usize {
 /// ☣️ Runs `f` on the process-global value arena. A poisoned lock is recovered AND cleared: the arena's fixed slots keep their
 /// authority through a panic, so every later `try_lock` (retirement, copy, compare) admits the arena again instead of refusing it
 /// as poisoned forever.
-pub(super) fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
+pub fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
     let mut arena = UI_VALUE_ARENA.lock().unwrap_or_else(|poisoned| {
         UI_VALUE_ARENA.clear_poison();
         poisoned.into_inner()
@@ -137,7 +137,7 @@ pub(super) fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> 
 }
 
 impl UiValueArena {
-    pub(super) fn reserve_collection(&mut self, kind: UiCollectionKind) -> Option<UiCollectionHandle> {
+    pub fn reserve_collection(&mut self, kind: UiCollectionKind) -> Option<UiCollectionHandle> {
         let bytes = size_of::<UiCollectionSlot>();
         let next_bytes = self.bytes.checked_add(bytes)?;
         if self.free_collection_count == 0 || next_bytes > UI_VALUE_AGGREGATE_BYTES {
@@ -157,13 +157,13 @@ impl UiValueArena {
         (slot.occupied && slot.epoch == handle.epoch && slot.kind == handle.kind).then_some(slot)
     }
 
-    pub(super) fn collection(&self, handle: UiCollectionHandle) -> Option<&UiCollectionSlot> {
+    pub fn collection(&self, handle: UiCollectionHandle) -> Option<&UiCollectionSlot> {
         let slot = self.collections.get(handle.slot)?;
         (slot.occupied && slot.epoch == handle.epoch && slot.kind == handle.kind).then_some(slot)
     }
 
     #[expect(clippy::result_large_err, reason = "Rejected arena admission returns the exact page and its retained value credits without allocating.")]
-    pub(super) fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue> {
+    pub fn try_push_page(&mut self, handle: UiCollectionHandle, value: UiPageValue) -> Result<(), UiPageValue> {
         let bytes = size_of::<UiPageSlot>();
         let Some(free_page_count) = self.free_page_count.checked_sub(1) else { return Err(value) };
         let page = self.free_pages[free_page_count];

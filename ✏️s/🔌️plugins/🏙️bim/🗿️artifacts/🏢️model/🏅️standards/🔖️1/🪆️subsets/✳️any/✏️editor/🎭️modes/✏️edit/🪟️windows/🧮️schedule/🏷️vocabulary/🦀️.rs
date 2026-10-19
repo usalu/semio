@@ -1,12 +1,12 @@
 //! 🏷️ The words of a schedule in a locale: the heading of a key (with its unit), the name of a category and of a comparison, and the localized text of a cell whose value is a stable token (kind, phase, swing, leaves).
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleCell;
-use crate::standards::v1::subsets::any::schema::snapshot::{Phase, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey, ScheduleOp};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleCell;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey, ScheduleOp};
 
 /// 🏷️ The name of a built-in field.
 pub fn field_label(labels: &BimLabels, field: ScheduleField) -> String {
-    use ScheduleField::*;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleField::*;
     let label = match field {
         Id => labels.sf_id,
         Name => labels.sf_name,
@@ -70,7 +70,7 @@ pub fn heading(labels: &BimLabels, column: &ScheduleColumn) -> String {
 
 /// 🏷️ The name of a category.
 pub fn category_label(labels: &BimLabels, category: ScheduleCategory) -> String {
-    use ScheduleCategory::*;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleCategory::*;
     let label = match category {
         Wall => labels.sc_wall,
         CurtainWall => labels.sc_curtain_wall,
@@ -122,7 +122,7 @@ pub fn cell_text(labels: &BimLabels, key: &ScheduleKey, cell: &ScheduleCell) -> 
     let ScheduleCell::Text { value } = cell else { return cell.display() };
     let ScheduleKey::Field { field } = key else { return value.clone() };
     match (field, value.as_str()) {
-        (ScheduleField::Kind, token) => crate::editor::bim::entities::kind_of(entity_kind(token)).map_or_else(|| token.to_string(), |row| (row.label)(labels).as_str().to_string()),
+        (ScheduleField::Kind, token) => semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(entity_kind(token)).map_or_else(|| token.to_string(), |row| (row.label)(labels).as_str().to_string()),
         (ScheduleField::Phase, "existing") => labels.sv_existing.as_str().to_string(),
         (ScheduleField::Phase, "new") => labels.sv_new.as_str().to_string(),
         (ScheduleField::Phase, "demolished") => labels.sv_demolished.as_str().to_string(),

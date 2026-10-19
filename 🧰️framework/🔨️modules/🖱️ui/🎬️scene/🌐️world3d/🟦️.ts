@@ -1,5 +1,5 @@
 import type { World3dAnnotationLayer, World3dScalarField, World3dModellingOptions } from "../📏️world3d-modelling/🟦️.ts";
-import type { SceneLaneRef } from "../🛤️lanes/🟦️.ts";
+import type { SceneLaneRef } from "../🚚️lane-contract/🟦️.ts";
 
 export type SceneViewportMask3d = "rectangle" | "ellipse";
 

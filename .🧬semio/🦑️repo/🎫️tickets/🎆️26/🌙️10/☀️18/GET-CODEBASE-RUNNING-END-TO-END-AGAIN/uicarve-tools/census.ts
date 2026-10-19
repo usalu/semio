@@ -31,6 +31,6 @@ for (const [label, feats] of sets) for (const test of [false, true]) {
     const files = inputs.length, bytes = inputs.reduce((s, i) => s + i.bytes, 0), lines = inputs.reduce((s, i) => s + i.activeLines, 0);
     const ratio = +Math.max(files / limits.files, bytes / limits.bytes, lines / limits.lines).toFixed(3);
     console.log(JSON.stringify({label, test, files, bytes, lines, limits, ratio}));
-    if (listLabel === label + (test ? ":test" : "")) writeFileSync(resolve(process.cwd(), `list-${label}${test ? "-test" : ""}.tsv`), inputs.map(i => `${i.activeLines}\t${i.bytes}\t${i.path}`).join("\n"));
+    if (listLabel === label + (test ? ":test" : "")) writeFileSync(resolve(import.meta.dir, `lists/list-${label}${test ? "-test" : ""}.tsv`), inputs.map(i => `${i.activeLines}\t${i.bytes}\t${i.path}`).join("\n"));
   } catch (e) { console.log(JSON.stringify({label, test, error: String((e as Error).message ?? e).slice(0, 300)})); }
 }

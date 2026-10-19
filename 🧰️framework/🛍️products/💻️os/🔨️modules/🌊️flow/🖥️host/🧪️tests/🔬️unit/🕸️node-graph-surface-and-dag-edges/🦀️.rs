@@ -29,16 +29,16 @@ fn a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operat
 
     let fixture = FlowHostSnapshot::default();
     let extras = flow_backed_node_graph_extras(&fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
-    let scene = ui_wgpu::wgpu::NodeGraphScene {
+    let scene = semio_framework_ui_declaration::ui::NodeGraphScene {
         editable: Some(true),
         capabilities_json: extras.capabilities_json,
         lod_json: extras.lod_json,
         host_snapshot_json: extras.host_snapshot_json,
         eval_json: extras.eval_json,
         status_json: extras.status_json,
-        ..ui_wgpu::wgpu::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
+        ..semio_framework_ui_declaration::ui::NodeGraphScene::base(Vec::new(), Vec::new(), semio_framework_os_kernel::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 })
     };
-    let props = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
+    let props = semio_framework_ui_declaration::ui::encode_surface_doc(ui_contract::SurfaceKind::NodeGraph, &scene).expect("a node-graph surface must fit the fixed admission with 500 operators registered");
     let surface_bytes = props.doc.bytes.as_slice().len();
     println!("[STATS] node-graph surface with {registered} registered operators: surface={surface_bytes} B of {} B, app catalogue={catalogue_bytes} B", ui_contract::UI_FIXED_BYTES);
     assert!(surface_bytes < ui_contract::UI_FIXED_BYTES, "surface is {surface_bytes} B, over the {} B fixed admission", ui_contract::UI_FIXED_BYTES);

@@ -7,6 +7,8 @@ import {requireIssuedResourceControlV1,requireAcceptedPhysicalCleanupDescendantV
 import type {AcceptedPhysicalCleanupV1} from "../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statfsSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
+import {checkResourceLeaseControl,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
+export {checkResourceLeaseControl,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
 import { setTimeout as delay } from "node:timers/promises";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
 import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
@@ -14,8 +16,6 @@ import {compileJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦�
 
 const retirementSchema=queueSchema.definitions.RetirementPolicy,custodySchema=queueSchema.definitions.ClaimCustodyPolicy,retentionSchema=queueSchema.definitions.ClaimRetentionPolicy,boundedContract=compileJsonSchemaSubset(boundedSchema);
 
-export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
-export type LeaseWait = ResourceAccess & { readonly elapsedMs: number };
 export type LeaseOptions = ResourceAccess & {
   readonly directory: string;
   readonly signal: AbortSignal;
@@ -24,30 +24,6 @@ export type LeaseOptions = ResourceAccess & {
   readonly control?: ResourceLeaseControl;
   readonly maximumDatabaseBytes?: number;
 };
-/** 🎛️ Preserves an admitted caller's existing signal, deadline and awaited wait transitions. */
-export interface ResourceLeaseControl {
-  readonly signal: AbortSignal;
-  remainingMilliseconds(): number | null;
-  publish(progress: LeaseWait): void | Promise<void>;
-  yieldContinuation(): Promise<void>;
-}
-
-/** ⏳️ Refuses expired caller authority without replacing its cancellation signal. */
-export function checkResourceLeaseControl(control: ResourceLeaseControl): number | null {
-  if (!control || !(control.signal instanceof AbortSignal) || typeof control.remainingMilliseconds !== "function" || typeof control.publish !== "function" || typeof control.yieldContinuation !== "function") throw Error("Complete resource admission control required");
-  control.signal.throwIfAborted();
-  const remaining = control.remainingMilliseconds();
-  if (remaining !== null && (!Number.isFinite(remaining) || remaining <= 0)) throw Error("Original compiler admission deadline exhausted");
-  return remaining;
-}
-
-/** 📏️ Checks the complete resolved materialized path in both portable string measures. */
-export function requireMaterializedPathV1(path: string): string {
-  const absolute = resolve(path);
-  if (absolute.includes("\0") || absolute.length > 256 || [...absolute].length > 256) throw Error("Materialized absolute path exceeds 256 characters");
-  return absolute;
-}
-
 /** 🗃️ Admits the actual database, every SQLite sidecar and optional queue ticket before any mkdir. */
 export function resourceLeasePathV1(directory: string, resource: string, ticket?: string): string {
   const path = requireMaterializedPathV1(join(resolve(directory), createHash("sha256").update(resource).digest("hex") + ".sqlite"));
@@ -230,7 +206,7 @@ async function acquireUngatedResourceLease(options: LeaseOptions,started:number,
         await waitProgress(options, progress, started,cleanup);
         nextProgress = elapsedMs + 1000;
       }
-      await delay(Math.max(1, Math.min(40, remaining(options, started,cleanup))), undefined, { signal: options.signal });
+      await delay(Math.max(1, Math.min(40, remaining(options, started,cleanup))), undefined, { signal: options.signal }).catch(error=>{options.signal.throwIfAborted();throw error;});
       remaining(options, started,cleanup);
     }
   } catch(error){failed=true;failure=error;throw error;} finally { if (!acquired) finishResourceLeaseCleanupV1(failed,failure,[()=>{try{database.close();}catch(error){onUnclosed?.(database);throw error;}}]); }
@@ -373,7 +349,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
         await waitProgress(options, progress, started);
         nextProgress = elapsedMs + 15_000;
       }
-      await delay(Math.max(1, Math.min(250, remaining(options, started))), undefined, { signal: options.signal });
+      await delay(Math.max(1, Math.min(250, remaining(options, started))), undefined, { signal: options.signal }).catch(error=>{options.signal.throwIfAborted();throw error;});
       remaining(options, started);
     }
   } catch (error) {

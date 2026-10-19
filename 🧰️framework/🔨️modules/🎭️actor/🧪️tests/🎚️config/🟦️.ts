@@ -17,12 +17,12 @@ export default {
     root: testRoot,
     name: "@semio-tech/framework-actor",
     environment: "node",
-    // 🩹️ `include` MUST stay empty: these are in-source (`import.meta.vitest`) suites, collected via
+    // 🩹️ `include` lists standalone suites only and MUST NOT name in-source files: those are in-source (`import.meta.vitest`) suites, collected via
     // `includeSource`. Listing the same files in BOTH keys makes vitest collect each one twice, which
     // reported 58 tests for 29 real ones and doubled this package's run time. Add new in-source files
     // to `includeSource`/`coverage.include` only — a file absent from `includeSource` does not run at
     // all while the suite still reports green.
-    include: [],
+    include: ["../../📮️shard-client/🩹️ui-patch/🧪️tests/🟦️.ts", "../../📮️shard-client/🧪️tests/🔌️ui-composition/🟦️.ts"],
     coverage: { include: ["../../📮️shard-client/🟦️.ts", "../../📮️shard-client/*/🟦️.ts", "../../📬️mailbox/🟦️.ts", "../../📥️cold-pair/🟦️.ts", "../../🧵️turn-scheduler/🟦️.ts", "../../🖼️wire-turn/🟦️.ts"] },
     includeSource: [
       "../../📮️shard-client/🟦️.ts",

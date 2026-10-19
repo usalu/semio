@@ -1,5 +1,5 @@
 /** 📝 Text editor host, selection retirement and span edits. */
-import { editorTextInputFixture as textInputFixture } from "../../../../../../../🔨️modules/✍️editor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { editorTextInputFixture as textInputFixture } from "@semio-tech/framework-editor-rs/testing/fixtures";
 import editorDeliveryFixture from "../../🧱️elements/✏️TextEditor/🧪️tests/🧫️fixtures/📮️delivery/🔣️.json";
 import { act as reactAct, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";

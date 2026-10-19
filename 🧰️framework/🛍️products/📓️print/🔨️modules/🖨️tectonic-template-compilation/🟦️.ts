@@ -10,10 +10,7 @@ import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/proc
 import{withPrintStorageTaskV1,type PrintExecutionV1,type PrintStorageTaskV1}from"../../📦️artifacts/🎛️operation/🟦️.ts";
 import{printArtifactLayoutV1,printScratchOwnerV1}from"../../📦️artifacts/🟦️.ts";
 import{withPreparedPrintMaterialV1,readPrintMaterialFileV1}from"../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
-import{withArtifactScratchV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import{readNativeCallerAuthorityV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1, type ArtifactDestinationV1, type ArtifactDestinationContextV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, withRepositoryArtifactV1, withRepositoryArtifactTaskV1, type RepositoryArtifactV1, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import{stagePrintSources,printCompilerName,type StagedPrintSourcesV1}from"../📥️source-staging/🟦️.ts";
 import{printDocuments,printDocument,printLibrarySources,printSourceDateEpoch}from"./📇️catalog/🟦️.ts";
 import{printCompilationIntentV1,type PrintDocumentIntentV1,type PrintProbeIntentV1,type PrintCompilationIntentV1}from"./📋️intent/🟦️.ts";

@@ -1,5 +1,5 @@
 # 🧬️ Presentation durable diff: a field patch of the working source, a positional tile row delta.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import FigureTileFrame, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
 type PresentationDiff {
   schema: String @state(class: ARTIFACT)

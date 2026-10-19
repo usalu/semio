@@ -519,7 +519,14 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
                 let fuel = cx.fuel_remaining();
-                let step = work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:&self.snapshot_read,operation}, config, history, interaction, hover, context: self.context.as_deref(), operation }, cx)?;
+                let input = ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(snapshot), snapshot_read:ArtifactCommandSnapshotRead{original:&self.snapshot_read,operation}, config, history, interaction, hover, context: self.context.as_deref(), operation };
+                let demand = work.work_demands(&input, cx.retained_grant().maximum_copy_bytes)?;
+                if !cx.retained_work_can_enter(demand) {
+                    if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand) { self.fault(b"retained command normal-work demand exceeds its original funding"); return Ok(None); }
+                    cx.consume_fuel(1);
+                    return Ok(None);
+                }
+                let step = work.step(&input, cx)?;
                 if cx.retained_progress() == before { Self::metadata(cx)?; }
                 if cx.fuel_remaining() == fuel { cx.consume_fuel(1); }
                 match step {

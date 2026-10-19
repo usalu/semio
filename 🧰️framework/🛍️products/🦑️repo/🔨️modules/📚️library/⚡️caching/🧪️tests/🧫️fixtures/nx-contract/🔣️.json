@@ -265,7 +265,7 @@
       "output": "{projectRoot}/pkg"
     },
     {
-      "project": "semio-framework-os-flow-core",
+      "project": "semio-framework-os-flow-browser-package",
       "output": "{projectRoot}/../../🕸️bindings"
     }
   ],
@@ -514,7 +514,7 @@
       ]
     },
     {
-      "project": "semio-framework-os-flow-core",
+      "project": "semio-framework-os-flow-browser-package",
       "directory": "🕸️bindings",
       "outputs": [
         "{projectRoot}/../../🕸️bindings",

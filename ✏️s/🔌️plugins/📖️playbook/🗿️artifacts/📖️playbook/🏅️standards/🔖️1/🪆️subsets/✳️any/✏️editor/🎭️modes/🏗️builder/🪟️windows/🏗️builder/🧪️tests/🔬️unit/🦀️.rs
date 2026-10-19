@@ -39,9 +39,10 @@ async fn render_builder_palette_includes_topic_contributed_block_kinds() {
 #[semio_framework_async_macros::async_test]
 async fn render_builder_emits_playbook_list_component_scene() {
     let mut app = playbook_app().await;
-    let tree = app.render(BODY_BUILDER, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("builder surface");
-    let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
-    let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
+    let scene: semio_framework_ui_scene::BlockListScene = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, BODY_BUILDER, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| {
+        let semio_framework_ui_contract::Component::Surface(props) = &root.component else { panic!("builder must render a semantic surface") };
+        semio_framework_ui_scene::decode(props).expect("block-list payload")
+    }).await.expect("builder surface");
     let expected = live_spec(&app).await;
     assert_eq!(scene.steps.len(),expected.steps.len());
     for (actual,expected) in scene.steps.iter().zip(&expected.steps) {

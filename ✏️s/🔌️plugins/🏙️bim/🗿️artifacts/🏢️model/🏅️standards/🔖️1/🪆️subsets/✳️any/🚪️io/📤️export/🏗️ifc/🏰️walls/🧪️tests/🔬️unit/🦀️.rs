@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::export::ifc::walls::{wall, filling};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::{wall, filling};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
 
 #[test]
 fn every_wall_is_written_with_its_id_as_tag_and_straight_unjoined_walls_are_standard_case() {
@@ -97,14 +97,14 @@ fn openings_reduce_the_net_wall_quantities() {
 }
 
 //#region 🔖️Wall depth
-use crate::standards::v1::subsets::any::io::export::ifc::walls::{envelope, ATTACH_SET, REVEAL_SET};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, location, number_of, property_sets, text_of};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::{envelope, ATTACH_SET, REVEAL_SET};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{attic, location, number_of, property_sets, text_of};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Opening;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
-fn layout(model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str) -> crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout {
-    inference::try_with_inference(None, model, |inferred| inferred.wall_layout[id].clone()).expect("the model infers")
+fn layout(model: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str) -> semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout {
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred.wall_layout[id].clone()).expect("the model infers")
 }
 
 fn body_type(document: &Part21Document, args: &[Part21Value]) -> Option<String> {
@@ -165,7 +165,7 @@ fn every_attach_is_an_ifc_rel_connects_elements_from_the_wall_to_its_target() {
 fn an_opening_in_a_wall_on_a_slope_is_placed_at_the_inferred_sill() {
     let mut model = attic();
     model.openings.insert("o-slope".into(), Opening { host: "w-base".into(), kind: OpeningKind::Window { window_type: "win-1".into() }, offset: 4.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, name: String::new(), reveal_depth: None, reveal_material: None });
-    let (expected, base) = inference::try_with_inference(None, &model, |inferred| (inferred.opening_frames["o-slope"].local.origin.z, inferred.wall_layout["w-base"].base_at(4.0) - inferred.storey_levels[&model.walls["w-base"].storey].elevation)).expect("the model infers");
+    let (expected, base) = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| (inferred.opening_frames["o-slope"].local.origin.z, inferred.wall_layout["w-base"].base_at(4.0) - inferred.storey_levels[&model.walls["w-base"].storey].elevation)).expect("the model infers");
     let document = document(&model);
     let (_, args) = rows(&document, "IFCOPENINGELEMENT").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some("o-slope")).expect("the opening element");
     let at = location(&document, args).expect("a location");
@@ -189,13 +189,14 @@ fn a_reveal_is_written_as_a_set_and_sets_the_filling_back_from_the_front_face() 
 fn the_attic_export_is_deterministic_and_skips_nothing() {
     let model = attic();
     assert_eq!(document(&model), document(&model));
-    let (_, notes) = crate::standards::v1::subsets::any::io::export::ifc::model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the attic exports");
+    let (_, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the attic exports");
     assert!(notes.is_empty(), "{notes:?}");
 }
 //#endregion 🔖️Wall depth
 
 //#region 🔖️Committed attic
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, projection::projection};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
 
 const ATTIC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🧗️wall-depth");
 

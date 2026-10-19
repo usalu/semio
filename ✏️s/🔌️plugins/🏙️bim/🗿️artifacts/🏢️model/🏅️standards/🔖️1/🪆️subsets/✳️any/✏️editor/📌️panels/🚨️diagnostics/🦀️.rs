@@ -2,12 +2,13 @@
 //! (clash, reference, opening, ...), and a row is one finding with its message in the locale of the view. Opening or closing a severity group is the severity filter; the host keeps the open state per view, so the filter is customised by
 //! the author and survives a repaint. Activating a finding selects the elements it names in the framework `elements` domain, which the plan, the 3D view and the outliner share (`selectFindings`).
 
-use crate::editor::bim::entities::{kind_holding, kind_of};
-use crate::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::bim::panels::outliner::{item, leaf};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;

@@ -1,29 +1,8 @@
-import type { DirectoryAdministrationPhaseV1, DirectoryCommand } from "../../../../🟦️";
-import type { DirectorySpaceAdministrationPageV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
+import type { DirectoryCommand } from "../../../../🟦️";
+import type { DirectoryCommandReceiptV1, DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
 import { directoryAdministrationCommandAllowedV1, sealDirectoryCommandRequestV1, directoryCommandRequestJson } from "@semio-tech/framework/directory/io/text";
 import { completeDirectoryAdministrationDeletion, directoryAdministration, directoryAdministrationPageTermination, directoryClient, directoryCommandErrorCode, directoryRejectionStatus, liveDirectoryAdministration, loadDirectoryAdministrationPage, postDirectoryAdministrationState, terminateDirectoryAdministration } from "../🔐️hub-session/🟦️.ts";
 import { post } from "../🧾️document-state/🟦️.ts";
-
-export type DirectoryAdministrationOperationV1 = {
-  readonly operationEpoch: number;
-  readonly spaceId: string;
-  readonly sessionEpoch: number;
-  readonly workerEpoch: number;
-  abort: AbortController;
-  phase: DirectoryAdministrationPhaseV1;
-  canonicalJson: string | null;
-  page: DirectorySpaceAdministrationPageV1 | null;
-  pageRead: AbortController | null;
-  receiptSha256: string | null;
-  outcome: DirectoryCommandOutcomeV1 | null;
-  inviteToken: string | null;
-  inviteCapabilityStatus: "available" | "copying" | "failed" | null;
-  inviteTransferEpoch: number | null;
-  nextInviteTransferEpoch: number;
-  requestId: string | null;
-  authorPage: boolean;
-  closed: boolean;
-};
 
 /** ⛔️ Confirms deletion only after the exact space page is missing. A surviving page is not success. */
 async function confirmDirectoryAdministrationDeletion(operationEpoch: number, receipt: DirectoryCommandReceiptV1): Promise<void> {

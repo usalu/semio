@@ -3,7 +3,7 @@ use crate::{Backbones, BackboneMessage};
 use semio_framework_value::ErasedSnapshotRetirement;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::shared::shared_retirement_allocation_bytes};
+use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::arc_custody::shared_retirement_allocation_bytes};
 use std::mem::ManuallyDrop;
 
 type Wake = std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>;

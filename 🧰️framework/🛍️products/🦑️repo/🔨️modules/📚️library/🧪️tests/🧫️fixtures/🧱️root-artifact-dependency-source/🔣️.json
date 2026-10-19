@@ -42,7 +42,7 @@
         "runNestedCargoPackageAdapter"
       ],
       "consumers": [
-        "📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🏭️generate/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/🧪️source-and-native-tests/🟦️.ts"
       ]
     },
@@ -73,7 +73,7 @@
         "runDependencyVerification"
       ],
       "consumers": [
-        "📜️script.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts"
       ]
     }

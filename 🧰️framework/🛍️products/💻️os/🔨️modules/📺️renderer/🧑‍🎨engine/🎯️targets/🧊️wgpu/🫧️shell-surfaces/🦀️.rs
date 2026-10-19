@@ -15,7 +15,10 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::{ActionDescriptor, PointerModifiers, Rect, Theme};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::PointerModifiers;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🫧️surfaces/🧬️component/🦀️.rs"]
 mod staged_surfaces__component;

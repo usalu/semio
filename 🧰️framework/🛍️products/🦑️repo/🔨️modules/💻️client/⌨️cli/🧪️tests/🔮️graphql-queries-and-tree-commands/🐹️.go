@@ -18,7 +18,7 @@ import (
 
 // 🕸️#region 🎙️GraphQL
 func TestGraphQLRepoQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
+	result, err := newExecutorFor(t, withMonorepoFixture(t)).ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL returned error: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestGraphQLBundlesQuery(t *testing.T) {
 }
 
 func TestGraphQLPoliciesQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { policies { id name } } }`, nil)
+	result, err := newExecutorFor(t, withMonorepoFixture(t)).ExecuteJSON(context.Background(), `{ repo { policies { id name } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL policies returned error: %v", err)
 	}
@@ -52,6 +52,7 @@ func TestExhaustiveGraphQLTicketsQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow graphql tickets query test in short mode")
 	}
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	result, err := executor.ExecuteJSON(context.Background(), `{ repo { tickets { id slug status } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL tickets returned error: %v", err)
@@ -65,7 +66,8 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "compose/go/main.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -75,7 +77,7 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 }
 
 func TestGraphQLContributorsQuery(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { contributors { id github } } }`, nil)
+	result, err := newExecutorFor(t, withExhaustiveRepo(t)).ExecuteJSON(context.Background(), `{ repo { contributors { id github } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL contributors returned error: %v", err)
 	}
@@ -84,13 +86,16 @@ func TestGraphQLContributorsQuery(t *testing.T) {
 	}
 }
 
-func TestGraphQLFixMutationIsRemoved(t *testing.T) {
-	_, err := executor.ExecuteJSON(context.Background(), `mutation { fix(scope: "repo/go/main_test.go") { fixed remaining } }`, nil)
-	if err == nil {
-		t.Fatal("expected the removed fix mutation to be rejected")
+func TestGraphQLFixMutationIsServed(t *testing.T) {
+	executor := newExecutorFor(t, withMonorepoFixture(t))
+	result, err := executor.ExecuteJSON(context.Background(), `mutation { fix(scope: "compose/go/main.go") { fixed remaining } }`, nil)
+	if err != nil {
+		t.Fatalf("fix mutation failed: %v", err)
 	}
-	if !strings.Contains(err.Error(), `unknown field "fix"`) {
-		t.Errorf("expected an unknown field error for fix, got: %v", err)
+	for _, field := range []string{`"fixed"`, `"remaining"`} {
+		if !strings.Contains(result, field) {
+			t.Errorf("expected the fix result to contain %s, got: %s", field, result)
+		}
 	}
 }
 
@@ -111,12 +116,13 @@ func TestExhaustiveTreeCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
+	withExhaustiveRepo(t)
 
 	output, err := executeTreeCommand("search", "compose/go")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻️compose") {
+	if !strings.Contains(withoutSelectors(output), "💻compose") {
 		t.Errorf("repo tree compose/go missing compose.go, got:\n%s", output)
 	}
 	if strings.Contains(output, "├️─️─️ ") || strings.Contains(output, "└️─️─️ ") {
@@ -144,7 +150,7 @@ func TestExhaustiveTreeCommands(t *testing.T) {
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻️compose") {
+	if !strings.Contains(withoutSelectors(output), "💻compose") {
 		t.Errorf("file tree missing compose.go")
 	}
 	if !strings.Contains(output, "- [") {

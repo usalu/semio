@@ -46,7 +46,7 @@ pub mod standards {
                                     pub mod v1_4 {
                                         #[path = "."]
                                         pub mod base {
-                                            #[path = "../../../../../../../📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
+                                            #[path = "../../../../../../../📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️pdf-page-text/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }

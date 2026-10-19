@@ -1,11 +1,10 @@
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { readNativeCallerAuthorityV1, stageRepositoryArtifacts, withRepositoryArtifactDestinationV1, repositoryCargoPreparationStorageV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {admitCargoSelectionV1,type CargoSourceBoundaryPolicyV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import { withRepositoryCompilerStoreV1, withRepositoryCacheStoreV1, type RepositoryCacheStoreV1, preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{rendererWasmPublicationV1}from"./📦️publication/🟦️.ts";
-import{withRepositoryCacheStoreV1,type RepositoryCacheStoreV1}from"../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import type {NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type {NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import { receiveScriptProcessInvocation,requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, compilerAdmissionBudgetV1, acquireCompilerCapacityLeaseV1, type CompilerAdmissionControl } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -16,14 +15,10 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { createHash, randomUUID } from "node:crypto";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { stageRepositoryArtifacts,withRepositoryArtifactDestinationV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { prepareCargoWorkspaceInvocation } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { preparedBinaryen } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
+import { prepareCargoWorkspaceInvocation } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 
-import { cargoDirectories } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoDirectories, repoCacheDirectory } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 export interface TrunkRendererObservationV1 {
   readonly version:1; readonly kind:"wgpu-trunk"; readonly profile:string; readonly manifest:string; readonly outputDirectory:string; readonly builtAtMs:number; readonly observedAtMs:number;

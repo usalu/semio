@@ -8,8 +8,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
-import { flowAddWidgetArgs, nodeGraphEditRows } from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { flowAddWidgetArgs, nodeGraphEditRows } from "@semio-tech/framework-os-node-graph-rs/index";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = resolve(engineRoot, "../../../../../..");

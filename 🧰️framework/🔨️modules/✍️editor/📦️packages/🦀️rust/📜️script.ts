@@ -1,13 +1,11 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {verifyProducedWasmPackageV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {verifyProducedWasmPackageV1, buildAdmittedWasmWebV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {buildRepositoryWasmWebV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
 
@@ -16,7 +14,7 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 
 class WasmScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
+    await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),
       rsDir: this.root,
       componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/editor/rs",

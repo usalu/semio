@@ -4,7 +4,7 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {specificCatalogPublicationV1} from "../🟦️.ts";
 import {composeSpecificOsCatalogV1} from "../../🟦️.ts";
-import {readGeneratedCatalogProjection} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import {readGeneratedCatalogProjection} from "@semio-tech/plugin-registry/catalog-view";
 import {parse as parseJsonc} from "jsonc-parser";
 test("the actual S consumer admits only its explicit owner publication",()=>{
  const request=specificCatalogPublicationV1(path=>readFileSync(new URL(path,new URL("../../../../../",import.meta.url)),"utf8")),root=fileURLToPath(new URL("../../🤖️generated/",import.meta.url)),projection=readGeneratedCatalogProjection(root);
@@ -20,7 +20,7 @@ test("the exact canonical publication routes survive both launch sources",()=>{
 });
 
 import {catalogBuildContributionV1} from "../🟦️.ts";
-import {cacheInternals,libraryBootstrap} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+import { cacheInternals, libraryBootstrap } from "@semio-tech/repo-lib/build/inference";
 test("the actual Nx session producer binds S authority and explicit installed inventory",async()=>{
  await libraryBootstrap;
  const workspace=fileURLToPath(new URL("../../../../../",import.meta.url)),root=fileURLToPath(new URL("../../🤖️generated/",import.meta.url)),sources=JSON.parse(readFileSync(new URL("🗂️sources.json",new URL("../../🤖️generated/",import.meta.url)),"utf8")),manifests=sources.map((row:{cratePath:string})=>row.cratePath+"/Cargo.toml");

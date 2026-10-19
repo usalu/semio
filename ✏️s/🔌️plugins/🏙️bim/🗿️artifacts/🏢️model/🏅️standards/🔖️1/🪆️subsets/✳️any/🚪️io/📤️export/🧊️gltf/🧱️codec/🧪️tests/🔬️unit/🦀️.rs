@@ -2,14 +2,16 @@
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
-use crate::standards::v1::subsets::any::io::export::gltf::codec::*;
+use semio_s_artifact_stdio_gltf_model_snapshot_root::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::{GltfDocument, GltfBuffer, GltfScene, GltfSourceForm};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::codec::{encode, decode};
 
-fn snapshot(bytes: Vec<u8>) -> Snapshot {
-    let mut document = Document::default();
-    document.buffers.push(Buffer { byte_length: bytes.len(), uri: None, name: None, extensions: None, extras: None });
-    document.scenes.push(Scene { nodes: Vec::new(), name: Some("s".into()), extensions: None, extras: None });
+fn snapshot(bytes: Vec<u8>) -> GltfSnapshot {
+    let mut document = GltfDocument::default();
+    document.buffers.push(GltfBuffer { byte_length: bytes.len(), uri: None, name: None, extensions: None, extras: None });
+    document.scenes.push(GltfScene { nodes: Vec::new(), name: Some("s".into()), extensions: None, extras: None });
     document.scene = Some(0);
-    Snapshot { document, buffers: vec![bytes], source_form: SourceForm::Glb, ..Snapshot::default() }
+    GltfSnapshot { document, buffers: vec![bytes], source_form: GltfSourceForm::Glb, ..GltfSnapshot::default() }
 }
 
 #[test]
@@ -24,7 +26,7 @@ fn a_snapshot_round_trips_through_the_container_with_its_first_buffer_as_binary_
 
 #[test]
 fn a_snapshot_without_a_buffer_writes_no_binary_chunk_and_chunks_are_padded_to_four_bytes() {
-    let bytes = encode(&Snapshot::default()).expect("the empty snapshot encodes");
+    let bytes = encode(&GltfSnapshot::default()).expect("the empty snapshot encodes");
     assert_eq!(bytes.len() % 4, 0);
     assert!(decode(&bytes).expect("decodes").buffers.is_empty());
     let odd = encode(&snapshot(vec![9; 7])).expect("encodes");

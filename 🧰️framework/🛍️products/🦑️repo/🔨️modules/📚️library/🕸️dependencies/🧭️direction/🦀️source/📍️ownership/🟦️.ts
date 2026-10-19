@@ -1,8 +1,8 @@
-import {requireRecord,requireString,requireStringArray,requireExactKeys} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {requireRecord,requireString,requireStringArray,requireExactKeys} from "@semio-tech/schema-validator-ts";
 import {inspectRustBindingFacts,rustExternProviders,type RustBindingFacts} from "../🔗️binding/🟦️.ts";
 import { projectCargoProviderManifest } from "../../../../🔍️discovery/🚚️cargo-provider/🟦️.ts";
 import { rustModuleScopeProof, type RustModuleGraph } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
-import { rustTokens, rustTokenPairs, rustIdentifierSymbol, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens, rustTokenPairs, rustIdentifierSymbol, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 import {rustSourceTargets,rustSourceTargetProblem,type RustSourceInputInventory} from "../🟦️.ts";
 
 export const COMPUTE_OWNERSHIP_CONTRACT_PATH="🧰️framework/🔨️modules/◻️2d/🧮️compute/📏️ownership/🔣️.json";

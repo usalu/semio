@@ -10,7 +10,7 @@ mod handback;
 pub use handback::{UiArenaHandback,UiArenaHandbacks};
 
 
-static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS> = UiArenaHandbacks::new();
+pub static UI_VALUE_HANDBACKS: UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS> = UiArenaHandbacks::new();
 
 pub(super) fn hand_back_value(handle: UiCollectionHandle) {
     UI_VALUE_HANDBACKS.record(handle.slot, UiArenaHandback::ReleaseAlias);
@@ -158,7 +158,7 @@ impl Drop for UiValueRetirement {
 
 //#region 🧵️ArenaTraversal
 impl UiValueArena {
-    pub(super) fn release_exact_handle(&mut self, handle: UiCollectionHandle) -> Result<Option<UiCollectionHandle>, &'static str> {
+    pub fn release_exact_handle(&mut self, handle: UiCollectionHandle) -> Result<Option<UiCollectionHandle>, &'static str> {
         let collection = self.collection_mut(handle).ok_or("stale UI value owner")?;
         if collection.retiring || collection.aliases == 0 {
             return Err("UI value owner already released");
@@ -211,7 +211,7 @@ impl UiValueArena {
         self.retirement_len -= 1;
     }
 
-    fn advance_exact_root(&mut self, root: UiCollectionHandle, maximum_bytes: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>) -> Result<UiValueRetirementStep, &'static str> {
+    pub fn advance_exact_root(&mut self, root: UiCollectionHandle, maximum_bytes: usize, handbacks: &UiArenaHandbacks<UI_VALUE_ADMISSION_SLOTS, UI_VALUE_HANDBACK_WORDS>) -> Result<UiValueRetirementStep, &'static str> {
         let Some(collection) = self.collection(root) else { return Ok(UiValueRetirementStep { complete: true, ..UiValueRetirementStep::default() }) };
         if !collection.retiring || !(collection.retirement_queued || collection.retirement_claimed) {
             return Err("UI value root has no final-owner authority");
@@ -355,11 +355,3 @@ pub fn close_ui_value_page_with_grant(maximum_items: usize, maximum_bytes: usize
     arena.advance_retirement_queue(maximum_bytes)
 }
 
-//#region 🧪️ExactOwnerLaws
-#[cfg(test)]
-#[path = "📋️list/🧪️tests/📋️list/🦀️.rs"]
-mod fixed_list_tests;
-#[cfg(test)]
-#[path = "🧪️tests/♻️retirement/🦀️.rs"]
-mod tests;
-//#endregion 🧪️ExactOwnerLaws

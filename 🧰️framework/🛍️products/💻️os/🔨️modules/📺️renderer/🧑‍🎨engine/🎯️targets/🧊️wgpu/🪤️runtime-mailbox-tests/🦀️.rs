@@ -42,7 +42,13 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, IconAtlas, InputState, Mesh3dField, PointerModifiers, SceneRasterDescriptor, SceneRasterPool, SceneRasterProfile, Theme};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
+use ui_scene::math::Mesh3dField;
+use semio_framework_ui_raster_owner::{SceneRasterDescriptor, SceneRasterPool, SceneRasterProfile};
+use semio_framework_ui_theme::Theme;
 
 #[path = "../../../🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs"]
 mod async_boundary_tests;

@@ -1,17 +1,19 @@
-use crate::standards::v1::subsets::any::io::export::ifc::writer::V;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, flag, int, label, opt_text, refs, rf, text, typed, unset, Schema};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, flag, int, label, opt_text, refs, rf, text, typed, unset, Schema};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, Layer, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, Profile};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::data::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, psets, real, rows, string, target};
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{property_value, PARENTS_SET, parent_key};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, psets, real, rows, string, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
 use semio_s_artifact_stdio_contract::part21::Part21Document;
-use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue;
 
 #[test]
 fn property_values_map_every_kind_to_its_ifc_measure() {
@@ -184,7 +186,7 @@ fn a_holder_outside_the_export_a_system_outside_the_library_and_a_code_outside_t
     let mut model = psets();
     model.classifications.insert("ghost".into(), [("cs-din-276".to_string(), "300".to_string())].into());
     model.classifications.insert("w-east".into(), [("cs-missing".to_string(), "1".to_string()), ("cs-din-276".to_string(), "999".to_string())].into());
-    let (document, notes) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("the model exports");
+    let (document, notes) = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("the model exports");
     assert!(notes.iter().any(|note| note.starts_with("classification ghost: the holder")), "{notes:?}");
     assert!(notes.iter().any(|note| note.starts_with("classification w-east: the system cs-missing")), "{notes:?}");
     assert!(notes.iter().any(|note| note.starts_with("classification w-east: the code 999")), "{notes:?}");

@@ -10,10 +10,10 @@ import{captureRustUnitDescriptorCatalogSnapshotV2,captureRustUnitDescriptorCatal
 import{rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorGraphV2}from'../../../🕸️nodes/🟦️.ts';
 import{withRustUnitDescriptorNamespaceV2,requireRustUnitDescriptorExclusiveV2}from'../../../🔒️namespace/🟦️.ts';
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts';
-import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from'../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts';
+import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts';
 import{finishResourceLeaseCleanupV1}from'../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/♻️retirement/🟦️.ts';
-import{requireNativeStoragePathV1}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts';
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from'../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts';
+import{requireNativeStoragePathV1}from'../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts';
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from'../../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts';
 
 /** 🗄️ Uses only repository-owned row, statement and lifetime ports around system SQLite. */
 interface CatalogDatabase{exec(sql:string):void;read(sql:string,...values:(string|number)[]):Record<string,unknown>|undefined;run(sql:string,...values:(string|number)[]):number;rows(sql:string,...values:(string|number)[]):readonly Record<string,unknown>[];close():Promise<void>}

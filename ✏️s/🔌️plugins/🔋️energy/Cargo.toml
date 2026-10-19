@@ -1,6 +1,6 @@
 cargo-features = [ "trim-paths" ]
 
-# 🔋️ Energy plugin workspace: the simulation engine module crates and the plugin's extension crates. The model
+# 🔋️ Energy plugin workspace: the simulation engine module crates; extensions (`🧩️extensions/*`) are removable child workspaces. The model
 # artifact keeps its own workspace (`🗿️artifacts/🔋️model`), and `🏭️bridge` its own.
 [workspace]
 resolver = "2"
@@ -61,7 +61,6 @@ members = [
   "🔨️modules/⚡️simulation/⚙️engine/🪭️fans/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/📦️packages/🦀️rust",
-  "🧩️extensions/🌦️epw/📦️packages/🦀️rust",
 ]
 exclude = [ "**/🏭️bridge/**", "**/👽️guest/**", "**/🔮️oracles/**", "🗿️artifacts/**" ]
 
@@ -99,9 +98,6 @@ path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/�
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-epw]
-path = "../🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-plugin-energy-engine-air-exchange]
 path = "🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/📦️packages/🦀️rust"
@@ -267,9 +263,6 @@ path = "🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/📦️pack
 
 [workspace.dependencies.semio-s-plugin-energy-engine-zone-hvac]
 path = "🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-plugin-energy-epw]
-path = "🧩️extensions/🌦️epw/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde]
 version = "1.0.228"

@@ -29,7 +29,8 @@ mod file_watcher {
 #[path = "../🔬️native-io-unit"]
 mod native_io {
     pub use semio_framework_os_services::testkit::native_io::*;
-    use semio_framework_job::{InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
+    use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, RetainedCloneGrant, RetainedCloneProgress};
+    use semio_framework_job_worker::OriginalWorkerFixtureCaller;
     use semio_framework_value::RetirementDemand;
     use std::path::PathBuf;
 

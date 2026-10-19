@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "vitest";
 import { frameWorldProjectionPose, worldCurvilinearUnproject, worldProjectionGoalMatrix, worldProjectionOrientationLook, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
-import { testViewport3dProjectionValues } from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/📐️projection/🟦️.ts";
+import { testViewport3dProjectionValues } from "@semio-tech/framework-ui-viewport-rs/testing/projection";
 import { parseCameraState, world3dFitProjectionContent } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";
 import { uiViewportProjectionFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 

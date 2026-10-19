@@ -1,7 +1,7 @@
 /** 🎬️ Owned vector plans and node-indexed painted caches publish as one completed scene. */
 import {PaintedPathPrepareJob,PaintedRegionsCloseJob,type PaintedPathRegions} from "../🟦️.ts";
 import {ScenePlanCloseJob} from "../../🧹️retire/🟦️.ts";
-import type {DocumentScenePlan} from "../../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan } from "../../🗺️plan-model/🟦️.ts";
 import {segmentBounds} from "../../../🧮️geometry/🟦️.ts";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";
 type Point=readonly[number,number];type Bounds=[number,number,number,number];

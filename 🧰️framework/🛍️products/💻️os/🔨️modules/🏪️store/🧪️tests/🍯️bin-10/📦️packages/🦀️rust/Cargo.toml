@@ -56,6 +56,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-pack-json-retained-schema = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-replication = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

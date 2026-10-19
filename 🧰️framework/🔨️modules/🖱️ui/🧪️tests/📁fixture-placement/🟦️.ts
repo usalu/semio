@@ -15,7 +15,7 @@ const parts = (file: string): string[] => file.split(/[\\/]/u);
 
 test("UI testing example folders belong beneath actual tests folders", () => {
   const actual = files.filter(file => parts(file).includes("🧫️fixtures")).sort();
-  const oracle = glob.sync("**/🧫️fixtures/**/*", { cwd: ui, absolute: true, onlyFiles: true }).map(file => resolve(file)).sort();
+  const oracle = glob.sync("**/🧫️fixtures/**/*", { cwd: ui, absolute: true, onlyFiles: true, followSymbolicLinks: false }).map(file => resolve(file)).sort();
   expect(actual).toEqual(oracle);
   expect(actual.length).toBeGreaterThan(400);
   for (const file of actual) {

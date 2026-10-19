@@ -14,7 +14,7 @@ use super::*;
 pub struct AgentConversation {
     pub bridge: BridgeSlot,
     pub label: String,
-    next_invocation: AtomicU64,
+    pub(crate) next_invocation: AtomicU64,
 }
 
 impl AgentConversation {

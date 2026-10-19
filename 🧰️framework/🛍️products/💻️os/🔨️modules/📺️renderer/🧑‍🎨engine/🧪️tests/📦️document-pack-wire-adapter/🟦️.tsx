@@ -1,7 +1,7 @@
 /** 📦 PluginRuntime documentPack and transaction wire adapter. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
 import { loadChannelMediaExportWireFixture } from "../../../../📡️spr/🧪️tests/🧫️fixtures/🟦️.ts";
-import type { TurnOutcome } from "../../../../../../../🔨️modules/🎠️kernel/📡️turn-outcome-broadcast/🟦️.ts";
+import type { TurnOutcome } from "@semio-tech/framework-kernel";
 import { type PluginRuntimeVitest, type PluginRuntimeDependencies, type PluginRuntimeSource } from "../🛠️plugin-runtime-helpers/🟦️.tsx";
 
 export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntimeVitest, dependencies: PluginRuntimeDependencies, source: PluginRuntimeSource): Promise<void> {

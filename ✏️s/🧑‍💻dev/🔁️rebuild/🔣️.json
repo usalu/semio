@@ -58,7 +58,7 @@
       "command": [
         "repo",
         "run",
-        "semio-framework-os-flow-core:wasm"
+        "semio-framework-os-flow-browser-package:wasm"
       ]
     }
   ],

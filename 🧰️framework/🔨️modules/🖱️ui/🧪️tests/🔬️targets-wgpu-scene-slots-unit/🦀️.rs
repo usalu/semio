@@ -1,7 +1,7 @@
 use super::*;
-use crate::wgpu::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
-use crate::wgpu::theme::Theme;
-use crate::wgpu::Label;
+use semio_framework_ui_declaration::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_locale::Label;
 
 fn text(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })
@@ -51,7 +51,7 @@ fn layout(node: &UiNode) -> UiTree {
     let mut tree = UiTree::new();
     tree.apply_tree(node);
     let root = tree.root.unwrap();
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 400.0, 400.0), "layout pass");
+    assert!(semio_framework_ui_wgpu_mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 400.0, 400.0), "layout pass");
     tree
 }
 

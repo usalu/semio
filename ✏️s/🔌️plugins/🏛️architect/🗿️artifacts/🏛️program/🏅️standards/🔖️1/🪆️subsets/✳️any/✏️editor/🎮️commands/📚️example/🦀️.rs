@@ -2,7 +2,7 @@
 
 pub mod set_active_example {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
-    use crate::editor::architect::base::reset_document_effect;
+    use crate::editor::architect::editor_vocabulary::reset_document_effect;
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::snapshot::{sample_plugin, ProgramSnapshot};
     

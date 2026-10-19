@@ -17,9 +17,9 @@
 use crate::agent_bridge::{agent_label, AgentBridgePresence, AgentBridgeStatus};
 use crate::agent_presence::{agent_presence_color, agent_presence_text, agent_presence_tone, AGENT_PRESENCE_DOT_PX, AGENT_PRESENCE_GAP_PX};
 use semio_framework_ui_locale::Locale;
-use ui_wgpu::wgpu::Rect;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::Theme;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_theme::Theme;
 
 //#region 🔖️AgentChatPanel
 /// 🆔️ The chat panel tab this element fills — `framework.chat` on the React side.

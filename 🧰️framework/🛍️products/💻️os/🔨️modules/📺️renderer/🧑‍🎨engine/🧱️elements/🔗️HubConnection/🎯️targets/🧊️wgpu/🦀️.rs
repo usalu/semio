@@ -30,16 +30,16 @@ use semio_framework_os_kernel::os_directory::DirectorySpaceRole;
 use semio_framework_value::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::component::ui::UiState;
-use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_declaration::ui::UiState;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::Locale;
-use ui_wgpu::wgpu::UiButtonNode;
-use ui_wgpu::wgpu::UiInputNode;
-use ui_wgpu::wgpu::UiNode;
-use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::UiStackNode;
-use ui_wgpu::wgpu::UiTextNode;
+use semio_framework_ui_declaration::ui::UiButtonNode;
+use semio_framework_ui_declaration::ui::UiInputNode;
+use semio_framework_ui_declaration::ui::UiNode;
+use semio_framework_ui_declaration::ui::UiPresence;
+use semio_framework_ui_declaration::ui::UiStackNode;
+use semio_framework_ui_declaration::ui::UiTextNode;
 
 //#region 🆔️SurfaceIds
 /// 🆔️ The panel leaf id the shell registers and routes `/hub` to. Byte-identical to the React

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.cache/tsconfig.s.tsbuildinfo",
+    "noEmit": true,
+    "paths": {
+      "@semio-tech/puzzle-wasm": ["../🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/pkg/semio_puzzle.d.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/out/**",
+    "**/coverage/**",
+    "**/next-env.d.ts",
+    "**/target/**",
+    "**/🎯️target/**",
+    "**/🗑️generated/**",
+    "**/🤖️generated/**",
+    "**/⚡️cache/**",
+    "**/🕸️bindings/**",
+    "**/🔌️plugin-modules/**",
+    "**/🧩️extension-modules/**",
+    "**/📺️renderer-modules/**",
+    "**/🌐️browser-bundles/**",
+    "**/🧫️fixtures/📁️some/**"
+  ]
+}

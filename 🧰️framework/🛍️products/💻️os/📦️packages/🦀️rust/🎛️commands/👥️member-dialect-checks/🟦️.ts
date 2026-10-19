@@ -6,8 +6,8 @@ import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
 
@@ -40,7 +40,7 @@ export class MemberDialectSourceScript extends BundleScript {
     if (segments.length) throw new Error("test-member-dialect-source accepts no arguments");
     const { testMemberDialectFixture } = await import("../../../../🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts");
     testMemberDialectFixture();
-    const { testFixtureProjectionRetirement } = await import("../../../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
+    const { testFixtureProjectionRetirement } = await import("@semio-tech/framework-plugin/testing/fixture-projection");
     testFixtureProjectionRetirement();
   }
 }
@@ -65,11 +65,11 @@ export class MemberDialectCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { testMemberDialectFixture } = await import("../../../../🔨️modules/🏪️store/🧪️tests/🗣️member-dialect/🟦️.ts");
     testMemberDialectFixture();
-    const { testFixtureProjectionRetirement } = await import("../../../../🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts");
+    const { testFixtureProjectionRetirement } = await import("@semio-tech/framework-plugin/testing/fixture-projection");
     testFixtureProjectionRetirement();
     const { testOwnedDocumentClosureOracle } = await import("../../../../🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts");
     testOwnedDocumentClosureOracle();
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: segments, groups: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), cargoArgs: segments, groups: [
         {
           package: "semio-framework-schema",
           target: { kind: "lib" },

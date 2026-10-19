@@ -1,0 +1,95 @@
+{
+ "name": "c7w-rend",
+ "crates": [
+  "semio-framework-os-renderer-wgpu-kernel-protocol",
+  "semio-framework-os-renderer-wgpu-program-bridge",
+  "semio-framework-os-renderer-wgpu-frame-presentation",
+  "semio-framework-os-renderer-wgpu-scene-ink",
+  "semio-framework-os-renderer-wgpu-ui-engine",
+  "semio-framework-os-renderer-wgpu-kernel-pool",
+  "semio-framework-os-renderer-wgpu-scene-canvas2d",
+  "semio-framework-os-renderer-wgpu-asset-decode",
+  "semio-framework-os-renderer-wgpu-agent-elements",
+  "semio-framework-os-renderer-wgpu-host-winit",
+  "semio-framework-os-renderer-wgpu-dock",
+  "semio-framework-os-renderer-wgpu-engine-graph",
+  "semio-framework-os-renderer-wgpu-runtime-mailbox",
+  "semio-framework-os-renderer-wgpu-shell-pointer",
+  "semio-framework-os-renderer-wgpu-engine-text",
+  "semio-framework-os-renderer-wgpu-shell-actions",
+  "semio-framework-os-renderer-wgpu-scene-state",
+  "semio-framework-os-renderer-wgpu-engine-registry",
+  "semio-framework-os-renderer-wgpu-ui-engine-dump",
+  "semio-framework-os-renderer-wgpu-engine-attach"
+ ],
+ "features": {
+  "semio-framework-os-renderer-wgpu-kernel-protocol": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-program-bridge": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-scene-ink": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-ui-engine": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-kernel-pool": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-host-winit": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-dock": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-engine-graph": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-runtime-mailbox": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-shell-pointer": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-scene-state": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-engine-registry": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-ui-engine-dump": [
+   "testkit"
+  ],
+  "semio-framework-os-renderer-wgpu-engine-attach": [
+   "testkit"
+  ]
+ },
+ "base": {
+  "rev": "overlay",
+  "crates": [
+   "semio-framework-os-renderer-wgpu-kernel-protocol",
+   "semio-framework-os-renderer-wgpu-program-bridge",
+   "semio-framework-os-renderer-wgpu-frame-presentation",
+   "semio-framework-os-renderer-wgpu-scene-ink",
+   "semio-framework-os-renderer-wgpu-ui-engine",
+   "semio-framework-os-renderer-wgpu-kernel-pool",
+   "semio-framework-os-renderer-wgpu-scene-canvas2d",
+   "semio-framework-os-renderer-wgpu-asset-decode",
+   "semio-framework-os-renderer-wgpu-agent-elements",
+   "semio-framework-os-renderer-wgpu-host-winit",
+   "semio-framework-os-renderer-wgpu-dock",
+   "semio-framework-os-renderer-wgpu-engine-graph",
+   "semio-framework-os-renderer-wgpu-runtime-mailbox",
+   "semio-framework-os-renderer-wgpu-shell-pointer",
+   "semio-framework-os-renderer-wgpu-engine-text",
+   "semio-framework-os-renderer-wgpu-shell-actions",
+   "semio-framework-os-renderer-wgpu-scene-state",
+   "semio-framework-os-renderer-wgpu-engine-registry",
+   "semio-framework-os-renderer-wgpu-ui-engine-dump",
+   "semio-framework-os-renderer-wgpu-engine-attach"
+  ]
+ },
+ "note": "renderer wgpu crates P04-P07"
+}

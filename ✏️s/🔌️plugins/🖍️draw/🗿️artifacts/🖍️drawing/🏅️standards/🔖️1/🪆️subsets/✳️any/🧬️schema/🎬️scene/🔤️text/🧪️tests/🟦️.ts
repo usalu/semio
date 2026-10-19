@@ -15,7 +15,7 @@ import {prepareDocumentVector} from "../../📋️prepare/🟦️.ts";
 import vectorRows from "../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json";
 import {binary64} from "@semio-tech/framework/value/ieee754";
 import {exportDrawingPng} from "../../../../✏️editor/🎮️commands/📤️export-document/🟦️.ts";
-import type {DocumentScenePlan} from "../../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan } from "../../🗺️plan-model/🟦️.ts";
 import {preparedSceneNodes} from "../../👁️view/🟦️.ts";
 import {PreparedScenePickJob} from "../../🎨️paint/📋️prepare/🎯️query/🟦️.ts";
 import {ScenePaintJob,PreparedSceneCloseJob} from "../../🎨️paint/📋️prepare/🟦️.ts";

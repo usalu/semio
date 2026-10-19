@@ -8,14 +8,16 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Baluster>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, extents_of, point};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{edge_path, railing_meshes, stations_of, RailPoint, RailSpec};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::slabs::top_plane;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairLanding, StairRun, StairWinder};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{HostSide, ModelSnapshot, Railing, RailingHost, Ramp, Slab};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, extents_of};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::{edge_path, railing_meshes, stations_of, RailPoint, RailSpec};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs::top_plane;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairLanding, StairRun, StairWinder};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{HostSide, RailingHost};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Railing, Ramp, Slab};
 use semio_framework_geometry::loops;
 use semio_framework_value::DslValue;
 use std::f64::consts::PI;
@@ -186,7 +188,7 @@ pub fn hosted_solid(railing: &Railing, host: Option<&Host<'_>>) -> ElementSolid 
     if let (Some(spec), Some(host)) = (railing.host.as_ref(), host) {
         if let Ok(paths) = host_paths(railing, spec, host) {
             let (posts, rails) = railing_meshes(&paths, &spec_of(railing));
-            builder.add(parts::POST, &railing.material, 0, &posts).add(parts::RAIL, &railing.material, 0, &rails);
+            builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::POST, &railing.material, 0, &posts).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::RAIL, &railing.material, 0, &rails);
         }
     }
     builder.build()

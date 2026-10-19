@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 semio-hub-space-foundation = { workspace = true }
 semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }
 semio-framework-os = { workspace = true }

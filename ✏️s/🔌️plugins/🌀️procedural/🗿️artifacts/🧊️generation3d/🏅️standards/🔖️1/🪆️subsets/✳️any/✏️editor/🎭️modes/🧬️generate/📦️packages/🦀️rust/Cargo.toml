@@ -20,7 +20,6 @@ semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-os-flow = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-s-procedural-core-semantic-ui = { workspace = true }
@@ -29,6 +28,7 @@ semio-s-artifact-procedural-3d-mode-edit = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
 semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

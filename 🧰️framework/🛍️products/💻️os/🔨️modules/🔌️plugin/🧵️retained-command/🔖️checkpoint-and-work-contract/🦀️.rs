@@ -166,8 +166,9 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
         0
     }
     fn extent(&self, command: &A::Command, snapshot: &A::Snapshot, interaction: &protocol::InteractionState, context: Option<&ArtifactOwnedToolJobContext<A>>) -> Option<usize>;
+    /// 🚪️ Quotes the normal-work entry demand the host checks against the caller's remaining retained grant before calling [`Self::step`]; a work that declares nothing needs its entry item and one nesting level, and its actual effects are held to the grant by their receipts.
     fn work_demands(&self, _input: &ArtifactCommandInputs<'_, A>, _maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
-        Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "artifact command normal-work demand is undeclared"))
+        Ok(RetirementDemand { depth: 1, ..Default::default() })
     }
     fn step(&mut self, input: &ArtifactCommandInputs<'_, A>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<A>, semio_framework_job::OriginalTurnFailure>;
     fn checkpoint_byte(&self, _index: usize) -> Option<u8> { None }

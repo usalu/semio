@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-store-stage-laws"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion laws of the plugin store lifecycle: the original disposer body and its final box release share the neutral close corpus."
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin-decl-views = { path = "../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-reactor-app = { path = "../../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-extension = { path = "../../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+
+[dev-dependencies]
+semio-framework-trace = { workspace = true }
+serde_json = "1.0.140"
+

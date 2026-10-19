@@ -3,7 +3,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { activate, boot, clickRowAction, dialog, faultsSince, openSessions, pageWindowedTables, signIn, submitDialog, waitNamedRow, type Human, type Session } from "../👥️two-human/🔑️sessions/🟦️.ts";

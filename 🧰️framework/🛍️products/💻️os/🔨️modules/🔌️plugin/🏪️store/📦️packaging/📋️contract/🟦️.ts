@@ -1,6 +1,6 @@
 import {readComponentModelIntentV1,componentModelDirectoryKeyV1} from "../../../📦️model/📋️contract/🟦️.ts";
-import type {RepositoryArtifactRequestV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
-import policy from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import type { RepositoryArtifactRequestV1 } from "@semio-tech/repo-lib/artifacts";
+import { artifactsStorageSchema as policy } from "@semio-tech/repo-lib/artifacts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {isAbsolute,join,resolve} from "node:path";
 /** 📦️ Selects an extension package publication as finite DATA without reader or writer authority. */

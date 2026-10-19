@@ -125,11 +125,13 @@ impl<A: RasterWorkApp> ArtifactCommandWork<A> for MaskFromSelectionWork {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) { if let Some(encoder)=self.encoding.as_mut() {encoder.cancel();} }
-    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {
-        if self.terminal_is_empty() {return semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()};}
-        if grant.maximum_items==0||grant.maximum_depth==0 {return semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()};}
-        self.candidate=None;self.encoding=None;
-        semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if self.terminal_is_empty() {return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()});}
+            if grant.maximum_items==0||grant.maximum_depth==0 {return Ok(semio_framework_job::InteractiveJobCloseStep::Pending {progress:Default::default()});}
+            self.candidate=None;self.encoding=None;
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:1,..Default::default()}})
+        })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError> {Ok(0)}
     fn next_close_capacity_byte_demand(&self,_maximum_copy_bytes:usize)->Result<usize,semio_framework_value::ValueError> {Ok(0)}

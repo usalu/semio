@@ -47,6 +47,8 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -1,5 +1,4 @@
-import { interactivityPuzzleFillTraceFailures } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
-import { PUZZLE_FILL_TOOL_RUN_FIXTURE, puzzleFillToolRunFixtureWith } from "../🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
+import { PUZZLE_FILL_TOOL_RUN_FIXTURE, puzzleFillToolRunFixtureWith, type PuzzleFillSourcesLaw } from "../🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
 
 const CASES: readonly (readonly [name: string, expect: "report" | "silent", edits: Parameters<typeof puzzleFillToolRunFixtureWith>[1]])[] = [
   ["candidate-page-producer", "report", [["fill", "    retirement: FillBuilderRetirementCursor,", "    retirement: FillBuilderRetirementCursor,\n    candidate_page: [Option<String>; 8],"]]],
@@ -17,7 +16,7 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
 ];
 
 /** 🧪️ Mutation self-test of the puzzle fill trace law: the clean tool-run fixture passes, every planted diagnostic page, reveal cutoff or missing trace mount is reported, and prose stays silent. Returns the executed case count. */
-export function interactivityPuzzleFillTraceSelfTests(): number {
+export function interactivityPuzzleFillTraceSelfTests(interactivityPuzzleFillTraceFailures: PuzzleFillSourcesLaw): number {
   const clean = interactivityPuzzleFillTraceFailures(PUZZLE_FILL_TOOL_RUN_FIXTURE);
   if (clean.length > 0) throw new Error(`[verify interactivity] Puzzle fill trace clean fixture was falsely rejected: ${clean.join("; ")}`);
   for (const [name, expect, edits] of CASES) {

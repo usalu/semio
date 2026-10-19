@@ -4,7 +4,9 @@
 //! no element: a wall's phase is the fixed `Phase` enum), so the list replaces as one field.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo;
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Patch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn sound(names: &[String]) -> bool {

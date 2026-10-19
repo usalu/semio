@@ -45,7 +45,7 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-space-space-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-space-space-schema = { path = "../../../📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../../../../../../../🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../../../🫀️catalog-documents/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

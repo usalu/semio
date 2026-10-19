@@ -6,10 +6,10 @@ import {isAbsolute,join,relative,resolve,sep} from "node:path";
 import {compileNxAuthorizerSnapshotV1,readNxAuthorizerSnapshotV1} from "./📦️snapshot/🟦️.ts";
 import snapshotPolicy from "./📦️snapshot/🔣️policy.json";
 import {withRepositoryCacheStoreV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {receiveScriptProcessInvocation,checkScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {withResourceLeases} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {withResourceLeases} from "@semio-tech/process/leases";
 const hash=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 await receiveScriptProcessInvocation(process.env,async original=>{
  const[command,workspace,snapshotPath,snapshotDigest,output,...rest]=process.argv.slice(2);

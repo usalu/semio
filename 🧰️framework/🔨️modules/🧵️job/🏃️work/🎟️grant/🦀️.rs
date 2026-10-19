@@ -1,6 +1,5 @@
-//! 🎟️ Caller-funded retained work has independent currencies and exact cumulative receipts.
+//! 🎟️ Caller-funded retained work has independent currencies and exact cumulative receipts; a step context quotes them over its own remaining retained grant ([`crate::StepContext::retained_work_can_enter`]).
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},RetirementDemand,ValueError,ValueRefusalKind};
-pub const NO_RETAINED_WORK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
 #[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub struct RetainedWorkBudget{items:usize,copy:usize,capacity:usize,release:usize,depth:usize,used_items:usize,used_copy:usize,used_capacity:usize,used_release:usize}
 impl RetainedWorkBudget{

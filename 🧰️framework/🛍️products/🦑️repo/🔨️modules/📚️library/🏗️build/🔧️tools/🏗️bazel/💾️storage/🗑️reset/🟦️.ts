@@ -1,14 +1,15 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{constants,type BigIntStats}from"node:fs";
 import{lstat,open,opendir,unlink,rmdir}from"node:fs/promises";
 import{join,dirname}from"node:path";
-import{withRepositoryCacheStoreMaintenanceV1,withRepositoryCacheStoreMaintenanceTaskV1,requireRepositoryCacheStoreMaintenanceV1,type RepositoryCacheStoreV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{withRepositoryCacheStoreQueuedMaintenanceV1,withRepositoryCacheStoreMaintenanceTaskV1,requireRepositoryCacheStoreMaintenanceV1,type RepositoryCacheStoreV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{repositoryCacheOrdinaryMaintenanceV1}from"../../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import{readOwnedBuildInvocationV1}from"../../../../📥️caller/🟦️.ts";
 import{invalidateBuildGraphV1}from"../../../../🕸️graph/🟦️.ts";
 import{checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const policy=schema.definitions.Policy.const;
 export type BazelResetInventoryV1=Readonly<{version:1;device:number;entries:readonly Readonly<{path:string;kind:"directory"|"missing"|"symlink"|"file"|"other";device:number}>[]}>;
@@ -28,8 +29,8 @@ async function clearNamespaces(root:string,invocation:ScriptInvocation,phaseCont
  let removed=0;for(const row of rows.sort((a,b)=>b.path.length-a.path.length)){check();requireNativeStoragePathV1(store.root,dirname(row.path));const now=await lstat(row.path,{bigint:true});check();if(now.dev!==row.facts.dev||now.ino!==row.facts.ino||now.isDirectory()!==row.facts.isDirectory()||now.isSymbolicLink()!==row.facts.isSymbolicLink()||!now.isDirectory()&&(now.size!==row.facts.size||now.mtimeNs!==row.facts.mtimeNs))throw Error("Original Bazel reset entry changed");if(now.isDirectory())await rmdir(row.path);else await unlink(row.path);check();if(++removed%policy.continuationEntries===0){await advanceScriptInvocation(invocation,"build:reset-bazel-cache","running");check();}}
  await store.recheck();check();
 }
-/** ♻️ Admits graph namespace and whole products image before any public reset mutation. */
+/** ♻️ Admits graph namespace and queues for the whole products image behind concurrent invocations before any public reset mutation. */
 export async function resetBazelBuildStateV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);const caller=readOwnedBuildInvocationV1(root,invocation,["reset"]);if(caller.tool!=="bazel")throw Error("Original Bazel reset caller required");checkScriptInvocation(invocation);
- await invalidateBuildGraphV1(root,invocation,phaseControl,graphPhase=>withRepositoryCacheStoreMaintenanceV1(root,"products",invocation,graphPhase,(store,actualPhase)=>withRepositoryCacheStoreMaintenanceTaskV1(store,root,"products",()=>clearNamespaces(root,invocation,actualPhase,store))));checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
+ await invalidateBuildGraphV1(root,invocation,phaseControl,graphPhase=>withRepositoryCacheStoreQueuedMaintenanceV1(root,"products",invocation,graphPhase,repositoryCacheOrdinaryMaintenanceV1(),(store,actualPhase)=>withRepositoryCacheStoreMaintenanceTaskV1(store,root,"products",()=>clearNamespaces(root,invocation,actualPhase,store))));checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);
 }

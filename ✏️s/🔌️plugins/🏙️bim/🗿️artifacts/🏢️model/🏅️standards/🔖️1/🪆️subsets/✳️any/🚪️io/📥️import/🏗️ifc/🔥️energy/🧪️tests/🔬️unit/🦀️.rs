@@ -1,20 +1,20 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number, type_authoring};
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::data::{label, number, type_authoring};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{refs, text};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{refs, text};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, set_of, single_values};
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, set_of, single_values};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::energy::{CONDITIONS_ROW, DERIVED_ROW, SPACE_SET};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::energy::{CONDITIONS_ROW, DERIVED_ROW, SPACE_SET};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::io::import::ifc::energy::{celsius};
-use crate::standards::v1::subsets::any::io::import::ifc::energy::*;
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4, model_to_part21, Schema};
-use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::energy::celsius;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4, model_to_part21};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
@@ -105,7 +105,7 @@ fn a_foreign_space_gives_its_set_points_from_the_standard_set_in_kelvin_or_celsi
             instance.entities[0].1[0] = Part21Value::Str("Unrelated".into());
         }
     }
-    let (back, _) = import_ifc2x3(&crate::standards::v1::subsets::any::io::export::ifc::codec::encode_document(foreign).expect("encodes")).expect("imports");
+    let (back, _) = import_ifc2x3(&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_document(foreign).expect("encodes")).expect("imports");
     let model = energy();
     let (id, own) = model.space_conditions.iter().find(|(id, conditions)| conditions.heating_setpoint.is_some() && back.spaces.contains_key(*id)).expect("a heated space");
     let read = back.space_conditions.get(id).expect("conditions from the standard set");

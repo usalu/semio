@@ -21,7 +21,3 @@ pub mod pane;
 pub use palette::{color_256, Palette};
 pub use parser::VtParser;
 pub use screen::{CellPoint, Match, Modes, VtScreen};
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

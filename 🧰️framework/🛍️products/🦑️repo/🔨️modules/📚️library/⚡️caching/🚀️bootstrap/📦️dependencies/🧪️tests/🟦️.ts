@@ -78,8 +78,8 @@ test("ordinary graphs run independently while Nx source watchers use the daemon"
 });
 
 test("selects portable pinned Bun archives and extracts the same bytes as fflate", () => {
-  const bunOwner = resolve(owner, "../🛠️tools/🟦️bun"), bunManifest = JSON.parse(readFileSync(join(bunOwner, "🔣️.json"), "utf8"));
-  expect(new Ajv({ strict: true }).validate(JSON.parse(readFileSync(join(bunOwner, "🧬️schema/🔣️.json"), "utf8")), bunManifest)).toBe(true);
+  const bunOwner = resolve(owner, "../🛠️tools/🟦️bun"), bunSchema = JSON.parse(readFileSync(join(bunOwner, "🧬️schema/🔣️.json"), "utf8")), bunManifest = bunSchema.definitions.Release.const;
+  expect(new Ajv({ strict: true }).validate(bunSchema, bunManifest)).toBe(true);
   for (const platform of ["win32", "darwin", "linux"]) for (const arch of ["x64", "arm64"]) for (const musl of platform === "linux" ? [false, true] : [false]) {
     const distribution = bunDistribution("1.3.14", platform, arch, musl);
     const member = distribution.archive.slice(0, -4) + (platform === "win32" ? "/bun.exe" : "/bun");
@@ -173,7 +173,7 @@ test("automatic watcher callbacks register only after initial preparation and ho
 test("Nx producers and watchers inherit the pinned Bun runtime on every host", async () => {
   const bootstrap=await import("../../📜️script.ts"),{win32,posix}=await import("node:path");
   expect(bootstrap.pinnedNxRuntimeEnvironment).toBeFunction();
-  const rows=JSON.parse(readFileSync(resolve(owner,"../🛠️tools/🟦️bun/🧫️fixtures/🌿️environment/🔣️.json"),"utf8")).cases;
+  const rows=JSON.parse(readFileSync(resolve(owner,"../🛠️tools/🟦️bun/🧪️tests/🧫️fixtures/🌿️environment/🔣️.json"),"utf8")).cases;
   const source=createSourceFile("bootstrap.ts",readFileSync(resolve(owner,"../📜️script.ts"),"utf8"),ScriptTarget.Latest),operation=source.statements.find(statement=>isFunctionDeclaration(statement)&&statement.name?.text==="pinnedNxRuntimeEnvironment")!;
   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"pinned-bun-env-")),module=join(directory,"environment.mjs");
   await build({stdin:{contents:'import {win32,posix} from "node:path";\n'+operation.getText(source),loader:"ts"},outfile:module,platform:"node",format:"esm"});

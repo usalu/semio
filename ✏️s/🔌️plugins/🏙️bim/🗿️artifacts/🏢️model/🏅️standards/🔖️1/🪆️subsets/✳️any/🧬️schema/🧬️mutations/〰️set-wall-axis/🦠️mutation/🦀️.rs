@@ -1,6 +1,8 @@
 //! 〰️ `set-wall-axis` payload. Replaces a wall's axis, a line or an arc by bulge; this is how a wall is moved, stretched, curved or straightened. Hosted openings are untouched, their placement is inferred.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,0 +1,1 @@
+Bun.plugin({ name:"t", setup(build){ console.log("[DEBUG] setup"); build.onResolve({filter:/.*/}, a=>{ if(a.path==="jsonc-parser"){console.log("[DEBUG] hit",a.path,a.importer);} return undefined;}); } });

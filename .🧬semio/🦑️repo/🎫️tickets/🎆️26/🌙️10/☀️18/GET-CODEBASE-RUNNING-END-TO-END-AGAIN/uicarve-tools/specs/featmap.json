@@ -1,0 +1,6 @@
+{
+ "tui-terminal": {"terminal": ["native"]},
+ "tui-bindgen": {"host": ["bindgen"]},
+ "wgpu-engine": {"ext:semio_framework_ui_prepared": ["browser-presenter"]},
+ "testkit": {"engine": ["testkit"], "ext:semio_framework_ui_prepared": ["browser-presenter"]}
+}

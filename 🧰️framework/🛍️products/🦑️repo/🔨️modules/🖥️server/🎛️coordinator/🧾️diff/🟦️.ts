@@ -9,10 +9,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseDiffIngestRequest } from "../🧬️schema/🟦️.ts";
 // #endregion 🔌️Adapters
 
-import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "@semio-tech/framework/products/repo/modules/server/library/persistence";
-import { requireAuth, isAuthError } from "@semio-tech/framework/products/repo/modules/server/library/authentication";
-import { publishEvent } from "@semio-tech/framework/products/repo/modules/server/library/event";
-import { parseUnifiedDiff, buildScopesForFile } from "@semio-tech/framework/products/repo/modules/server/library/source-index";
+import { replaceScopes, upsertClaim, listConflicts, replaceWarnings, newId, type Warning, type Scope } from "../../📚️library/🗄️persistence/🟦️.ts";
+import { requireAuth, isAuthError } from "../../📚️library/🔐️authentication/🟦️.ts";
+import { publishEvent } from "../../📚️library/📡️event/🟦️.ts";
+import { parseUnifiedDiff, buildScopesForFile } from "../../📚️library/🔎️source-index/🟦️.ts";
 import { readFileSync } from "fs";
 import { join } from "path";
 

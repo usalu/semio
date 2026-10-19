@@ -12,7 +12,9 @@ use semio_framework_os_renderer_wgpu_host_base::{app_now_ms, frame_latency, log_
 use semio_framework_os_renderer_wgpu_host_plumbing::input_wire;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use ui_wgpu::wgpu::{ActionDescriptor, InputState, KeyAction, PointerModifiers, Theme};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::Theme;
 
 #[path = "../🧊️renderer/🛎️frame-actions/🦀️.rs"]
 mod frame_actions;

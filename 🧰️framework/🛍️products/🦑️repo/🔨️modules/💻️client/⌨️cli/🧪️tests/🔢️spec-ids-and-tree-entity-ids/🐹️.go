@@ -10,7 +10,6 @@ package client
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 )
@@ -193,8 +192,7 @@ func TestExhaustiveMonorepoTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
@@ -296,8 +294,7 @@ func TestExhaustiveGoalTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	goalsNode := tree.Children[2]
 	for _, c := range goalsNode.Children {
@@ -331,8 +328,7 @@ func TestExhaustiveContributorTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
@@ -358,8 +354,7 @@ func TestExhaustiveCheckpointTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {

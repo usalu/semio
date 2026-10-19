@@ -2,7 +2,7 @@ import type {BuildGraphV1,BuildTargetV1} from "../../🕸️graph/🟦️.ts";
 import {resolveBuildTargetV1} from "../../🕸️graph/🟦️.ts";
 import {buildPatternV1,selectBuildProjectsV1} from "../🟦️.ts";
 import {checkScriptInvocation,advanceScriptInvocation,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 🎯️ Declares one finite prerequisite walk under an explicit compiler intent. */
 export interface BuildPrerequisiteRequestV1{readonly version:1;readonly tasks:readonly string[];readonly mode:"prototype"|"release";readonly excludeDependencies:boolean;readonly maximumTasks:number;}

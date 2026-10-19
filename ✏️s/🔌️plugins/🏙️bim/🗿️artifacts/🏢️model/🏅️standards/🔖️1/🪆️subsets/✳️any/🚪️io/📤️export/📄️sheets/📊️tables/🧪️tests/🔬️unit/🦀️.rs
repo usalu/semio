@@ -1,14 +1,14 @@
 //! 🧪️ The export tables of the room: every sheet is listed with its clip windows, the title block texts carry the authored fields, and the PDF table lists one page per sheet in print order.
 
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::sheets::tables::*;
-use crate::standards::v1::subsets::any::io::export::sheets::layouts;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{inferred, labels, room};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::tables::{svg_table_json, pdf_table_json};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::layouts;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{inferred, labels, room};
 
 #[test]
 fn the_svg_table_lists_every_sheet_with_its_windows_and_title_texts() {

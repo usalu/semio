@@ -3,11 +3,11 @@
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { devToolingEnv } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import { runArtifactRustPackageMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runAssemblyChecks } from "../../🧪️tests/📦️assembly/🟦️.ts";
 /** 🗑️ Compiles the general assembly in a regular-file workspace with the concrete fleet absent. */
 class DeletionProofScript extends BundleScript {

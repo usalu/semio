@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckAdmittedProjectV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
@@ -433,7 +433,7 @@ class TestScript extends BundleScript {
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckAdmittedProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

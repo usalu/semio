@@ -64,7 +64,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
     panic!("Drawing fixture envelope retirement did not reach terminal")
 }
 
-pub(super) fn admit_drawing_envelope(app: &mut DrawingApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+pub(super) fn admit_drawing_envelope(app: &mut DrawingAppFixture, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Drawing live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -73,14 +73,14 @@ pub(super) fn admit_drawing_envelope(app: &mut DrawingApp, wire: &[u8]) -> semio
         let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Drawing envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Drawing envelope page admission failed: {fault:?}"));
     }
-    assert!(app.seal_artifact_envelope_ingress(handle).expect("Drawing envelope seal"));
+    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("Drawing envelope seal"));
     handle
 }
 
-pub(super) fn drive_drawing_load(app: &mut DrawingApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+pub(super) fn drive_drawing_load(app: &mut DrawingAppFixture, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Drawing maintenance turn");
-        let poll = app.advance_artifact_envelope_load(handle).expect("Drawing load advancement");
+        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Drawing maintenance turn");
+        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Drawing load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
@@ -130,10 +130,10 @@ async fn drawing_live_initializer_candidate_container_commit_ack_cancel_stale_pr
         let base_id = app.snapshot().expect("Drawing last-valid snapshot").id;
         let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
         for _ in 0..turns {
-            app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded Drawing staged maintenance");
+            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("bounded Drawing staged maintenance");
         }
         let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
-        assert!(app.advance_artifact_envelope_load(stale).is_err(), "stale staged handle cannot consume the exact operation owner");
+        assert!(app.0.advance_artifact_envelope_load(stale, app.1.cx()).is_err(), "stale staged handle cannot consume the exact operation owner");
         app.cancel_artifact_envelope_load(handle).expect("exact Drawing staged cancellation");
         assert!(matches!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled));
         assert_eq!(app.artifact_generation_now(), base_generation);

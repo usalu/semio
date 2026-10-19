@@ -6,19 +6,17 @@
 //! IFC4 files also give their property set templates (the project library), their classification chains, window and door operations and material categories.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
-use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema, IFC_DIALECT};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, instance as inference};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::IFC_DIALECT;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames;
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader;
 #[path = "🏛️spatial/🦀️.rs"]
 pub mod spatial;
 #[path = "🧬️data/🦀️.rs"]
@@ -52,8 +50,8 @@ pub mod circulation;
 #[path = "🧗️attach/🦀️.rs"]
 pub mod attach;
 
-use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::Doc;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc;
 
 /// 🏗️ The import under construction: the indexed document, the model being filled and what is known about each imported entity.
 pub struct Import<'a> {
@@ -125,7 +123,7 @@ impl<'a> Import<'a> {
 pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<(ModelSnapshot, Vec<String>), String> {
     let mut import = Import::new(schema, Doc::new(document));
     spatial::read(&mut import);
-    import.levels = inference::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
+    import.levels = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe::<{ semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;
     data::read_materials(&mut import);
     data::read_types(&mut import);
     walls::read(&mut import);
@@ -150,12 +148,12 @@ pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_contrac
 
 /// 📥️ Imports IFC 2x3 file bytes into a model plus one note per entity class or item that was not imported.
 pub fn import_ifc2x3(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), String> {
-    import_document(Schema::Ifc2x3, &codec::decode_document(bytes)?)
+    import_document(Schema::Ifc2x3, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_document(bytes)?)
 }
 
 /// 📥️ Imports IFC4 file bytes into a model plus one note per entity class or item that was not imported.
 pub fn import_ifc4(bytes: &[u8]) -> Result<(ModelSnapshot, Vec<String>), String> {
-    import_document(Schema::Ifc4, &codec::decode_ifc4(bytes)?)
+    import_document(Schema::Ifc4, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(bytes)?)
 }
 //#endregion 🔖️Entry
 

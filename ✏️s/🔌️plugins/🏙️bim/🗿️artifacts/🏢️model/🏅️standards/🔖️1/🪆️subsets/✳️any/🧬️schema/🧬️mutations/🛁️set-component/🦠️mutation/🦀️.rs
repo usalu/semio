@@ -1,6 +1,10 @@
 //! 🛁️ `set-component` payload. Sets exactly the provided fields of a component: storey, family, position, elevation, rotation, mirror flag, host wall (set or cleared), system (set or cleared) and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ComponentPatch, ModelDiff}, snapshot::{MepSystem, ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::ComponentPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepSystem, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

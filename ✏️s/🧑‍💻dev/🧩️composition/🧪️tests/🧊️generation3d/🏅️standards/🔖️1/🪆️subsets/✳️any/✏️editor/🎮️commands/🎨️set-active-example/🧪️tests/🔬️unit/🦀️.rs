@@ -10,7 +10,7 @@ use crate::editor_domain::editor_laws::context;
 async fn set_active_example_via_string_action_loads_fixture() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("set example");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_FILLET }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("set example");
     context::settle(&mut app).await;
     let projection = context::snapshot(&app);
     assert!(projection.host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).contains("fillet") || matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind.contains("fillet") || neuron_kind.contains("box"))));

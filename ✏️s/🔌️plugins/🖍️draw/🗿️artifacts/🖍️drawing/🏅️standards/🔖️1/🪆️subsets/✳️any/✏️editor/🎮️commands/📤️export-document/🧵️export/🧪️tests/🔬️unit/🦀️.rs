@@ -28,11 +28,13 @@ async fn original_export_read_returns_under_exact_physical_grants(){
    for axis in corpus["readReturn"]["exportConsumer"]["denied"].as_array().unwrap(){
     let axis=axis.as_str().unwrap();let mut denied=grant;
     match axis{"items"=>denied.maximum_items=0,"copy" if demand.copy_bytes>0=>denied.maximum_copy_bytes=demand.copy_bytes-1,"capacity" if demand.capacity_bytes>0=>denied.maximum_capacity_bytes=demand.capacity_bytes-1,"release" if demand.release_bytes>0=>denied.maximum_release_bytes=demand.release_bytes-1,"depth" if demand.depth>0=>denied.maximum_depth=demand.depth-1,_=>continue}
-    let(step,event)=observe(||work.close_step(denied));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
-    assert!(matches!(step,InteractiveJobCloseStep::Blocked|InteractiveJobCloseStep::Refused(_))||matches!(step,InteractiveJobCloseStep::Pending{progress}if progress==Default::default()));
+    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+    let(step,event)=observe(||self_funded.turn(denied, |cx| work.close_step(cx)).expect("original fixture close turn"));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
+    assert!(matches!(step,InteractiveJobCloseStep::Blocked)||matches!(step,InteractiveJobCloseStep::Pending{progress}if progress==Default::default()));
     if let Some(read)=work.read.as_ref(){assert_eq!(read.get()as*const DrawingSnapshot,pointer);}
    }
-   let(step,event)=observe(||work.close_step(grant));let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,other=>panic!("Original export refused exact grant: {other:?}")};
+   let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+   let(step,event)=observe(||self_funded.turn(grant, |cx| work.close_step(cx)).expect("original fixture close turn"));let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,other=>panic!("Original export refused exact grant: {other:?}")};
    assert!(progress.fits(grant));assert!(!event.overflowed);assert_eq!(event.requested_bytes,progress.retained_capacity_bytes);assert_eq!(event.released_bytes,progress.released_bytes);requested+=event.requested_bytes;released+=event.released_bytes;
   }
   assert!(saw_read&&work.terminal_is_empty());for _ in 0..100000{if returned.is_none()&&issuer.returned_snapshot_read_count()==0{break;}pump_returns(&mut issuer,&mut returned);}assert!(returned.is_none()&&issuer.returned_snapshot_read_count()==0);let(_,event)=observe(||drop(work));assert_eq!((event.requested_bytes,event.released_bytes),(0,0));

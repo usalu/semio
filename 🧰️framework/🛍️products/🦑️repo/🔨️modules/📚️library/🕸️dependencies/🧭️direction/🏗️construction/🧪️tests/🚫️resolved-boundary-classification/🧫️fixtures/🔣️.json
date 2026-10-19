@@ -1,0 +1,571 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "builtin-util",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "util",
+      "forbidden": false,
+      "dependencyTypes": [
+        "core"
+      ]
+    },
+    {
+      "id": "builtin-zlib",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "zlib",
+      "forbidden": false,
+      "dependencyTypes": [
+        "core"
+      ]
+    },
+    {
+      "id": "builtin-prefixed",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "node:util",
+      "forbidden": false,
+      "dependencyTypes": [
+        "core"
+      ]
+    },
+    {
+      "id": "builtin-subpath",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "util/types",
+      "forbidden": false,
+      "dependencyTypes": [
+        "core"
+      ]
+    },
+    {
+      "id": "unresolved-npm-specifier",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "@dnd-kit/core",
+      "forbidden": false,
+      "dependencyTypes": [
+        "unknown"
+      ]
+    },
+    {
+      "id": "unresolved-runtime-specifier",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "bun:test",
+      "forbidden": false,
+      "dependencyTypes": [
+        "unknown"
+      ]
+    },
+    {
+      "id": "resolved-core-directory-same-name",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🫀️core/🟦️.ts",
+      "forbidden": true,
+      "dependencyTypes": [
+        "local"
+      ]
+    },
+    {
+      "id": "resolved-nested-core-directory",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🧱️core/🕸️bindings/flow_core.js",
+      "forbidden": true,
+      "dependencyTypes": [
+        "local"
+      ]
+    },
+    {
+      "id": "subset-base-directory",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "base-outside-subsets",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🧱️base/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "base-nested-in-subset",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧱️base/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "base-grandchild-of-subsets",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🔰️basic/🧱️base/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "core-inside-base-subset",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/⚙️core/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "base-file-in-subset-tree",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🔰️basic/base.ts",
+      "forbidden": true
+    },
+    {
+      "id": "top-level-base",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "♻️mit-bestand/🧱️base/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "compound-core-name",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🕸️graph-core/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "compound-base-name",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🗃️database/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "util-directory",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🧰️utils/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "shared-file",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🧩️x/shared.ts",
+      "forbidden": true
+    },
+    {
+      "id": "core-under-targets-directory",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🎯️targets/⚙️core/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "core-under-cargo-target",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🧩️x/target/debug/core/x.rs",
+      "forbidden": false
+    },
+    {
+      "id": "core-under-wasm-pkg",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🧩️x/pkg/core/x.js",
+      "forbidden": false
+    },
+    {
+      "id": "store-util-package",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/util@1.0.0/node_modules/util/index.js",
+      "forbidden": false
+    },
+    {
+      "id": "source-outside-roots",
+      "rule": "no-core-path",
+      "from": "compose/client/x.ts",
+      "to": "🧰️framework/🧰️utils/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "store-react",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/react@19.3.1/node_modules/react/index.js",
+      "forbidden": false
+    },
+    {
+      "id": "store-react-dom-client",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/react-dom@19.3.1+peer/node_modules/react-dom/client.js",
+      "forbidden": false
+    },
+    {
+      "id": "linked-react",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "node_modules/react/index.js",
+      "forbidden": false
+    },
+    {
+      "id": "store-vitest",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/vitest@3.0.0/node_modules/vitest/dist/index.js",
+      "forbidden": false
+    },
+    {
+      "id": "bun-test",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "bun:test",
+      "forbidden": false
+    },
+    {
+      "id": "node-builtin",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "util",
+      "forbidden": false,
+      "dependencyTypes": [
+        "core"
+      ]
+    },
+    {
+      "id": "store-three",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/three@0.170.0/node_modules/three/build/three.module.js",
+      "forbidden": true
+    },
+    {
+      "id": "linked-three",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "node_modules/three/build/three.module.js",
+      "forbidden": true
+    },
+    {
+      "id": "store-react-wrong-leaf",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": ".cache/b/d/m/j/4151d2262cb4a4e7a25a/node_modules/.bun/react@19.3.1/node_modules/three/index.js",
+      "forbidden": true
+    },
+    {
+      "id": "bun-sqlite",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "bun:sqlite",
+      "forbidden": true
+    },
+    {
+      "id": "os-shell-package",
+      "rule": "renderer-hosts-only-ui",
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx",
+      "to": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "cycle-module-to-own-in-source-test",
+      "rule": "no-circular",
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧪️actorbytepage-matches-shared-vectors/🟦️.ts",
+      "forbidden": false,
+      "circular": true
+    },
+    {
+      "id": "cycle-own-in-source-test-to-module",
+      "rule": "no-circular",
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🧪️tests/🧪️actorbytepage-matches-shared-vectors/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "forbidden": false,
+      "circular": true
+    },
+    {
+      "id": "cycle-between-production-modules",
+      "rule": "no-circular",
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+      "forbidden": true,
+      "circular": true
+    },
+    {
+      "id": "acyclic-edge-between-production-modules",
+      "rule": "no-circular",
+      "from": "🧰️framework/🔨️modules/🎭️actor/📃️page/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+      "forbidden": false,
+      "circular": false
+    },
+    {
+      "id": "ui-script-composition-root-may-use-process",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-vite-builder-entry-may-use-process",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-runtime-module-must-not-use-process",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-runtime-module-may-use-ui",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-transient-module-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🫧️transient/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-transient-package-entry-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🫧️transient/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-value-module-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-schema-validator-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-assets-package-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-generated-contract-types-are-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🪪️manifest/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-foundation-action-argument-resolution-is-allowed",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧩️action-argument-resolution/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-facade-barrel-is-not-foundation",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-manifest-behavior-is-not-foundation",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-actor-is-not-foundation",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-kernel-is-not-foundation",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-test-may-use-test-support-module",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-story-may-use-test-support-corpus",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/📖️stories/🧪️.story.tsx",
+      "to": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-test-support-from-test-source-is-allowed",
+      "rule": "ui-runtime-no-test-support",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-test-support-from-story-source-is-allowed",
+      "rule": "ui-runtime-no-test-support",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/📖️stories/🧪️.story.tsx",
+      "to": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-test-support-from-runtime-source-is-forbidden",
+      "rule": "ui-runtime-no-test-support",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-test-support-corpus-from-runtime-source-is-forbidden",
+      "rule": "ui-runtime-no-test-support",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "ui-foundation-from-runtime-source-is-not-test-support",
+      "rule": "ui-runtime-no-test-support",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🫧️transient/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "ui-test-may-not-use-unlisted-framework-module",
+      "rule": "ui-no-framework-packages",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧭️native-command/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "foundation-runtime-source-must-not-use-process",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "forbidden": true
+    },
+    {
+      "id": "foundation-runtime-source-may-use-another-foundation-module",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/🪃️continuation/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "foundation-runtime-source-may-use-ui",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "foundation-script-composition-root-may-use-process",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🌱️value/📜️script.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "foundation-builder-tooling-may-use-framework-facade",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🖼️assets/🎨️icons/🏗️builder/📽️projection/🟦️.ts",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🪪️identity/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "foundation-test-may-use-process",
+      "rule": "ui-foundation-closure",
+      "from": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "forbidden": false
+    },
+    {
+      "id": "vendored-preview2-shim-common-is-exempt",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🪞️preview2-shim/common.js",
+      "forbidden": false,
+      "dependencyTypes": [
+        "local"
+      ]
+    },
+    {
+      "id": "same-file-name-elsewhere-is-not-exempt",
+      "rule": "no-core-path",
+      "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🏭️generator/📜️script.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-host/🪞️other-shim/common.js",
+      "forbidden": true,
+      "dependencyTypes": [
+        "local"
+      ]
+    },
+    {
+      "id": "state-deep-relative-store-import-is-forbidden",
+      "rule": "no-state-outside-os",
+      "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/👷️worker/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+      "forbidden": true,
+      "dependencyTypes": [
+        "local"
+      ]
+    },
+    {
+      "id": "state-public-workspace-alias-store-import-is-allowed",
+      "rule": "no-state-outside-os",
+      "from": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/👷️worker/🟦️.ts",
+      "to": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+      "forbidden": false,
+      "dependencyTypes": [
+        "local",
+        "aliased-workspace"
+      ]
+    }
+  ],
+  "filesystemLaw": {
+    "directories": [
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🏭️generator",
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🔰️basic/🧱️base",
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/⚙️core",
+      "✏️s/🔌️plugins/🗄️stdio/🧱️base",
+      "🧰️framework/🔨️modules/🗃️database"
+    ],
+    "files": [
+      "🧰️framework/🔨️modules/🗃️database/utils.ts"
+    ],
+    "breaches": [
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🔰️basic/🧱️base",
+      "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/⚙️core",
+      "✏️s/🔌️plugins/🗄️stdio/🧱️base",
+      "🧰️framework/🔨️modules/🗃️database/utils.ts"
+    ]
+  }
+}

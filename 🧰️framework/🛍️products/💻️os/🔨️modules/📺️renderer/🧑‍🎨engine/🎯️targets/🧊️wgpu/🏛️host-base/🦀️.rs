@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
-use ui_wgpu::wgpu::Theme;
+use semio_framework_ui_theme::Theme;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -585,8 +585,8 @@ pub fn boot_locks() -> WgpuBootLocks {
 
 /// 👁️✏️ The boot-resolved role, contract freeze §5 — `"viewer"`/`"editor"`, anything else is
 /// `ChromeRole::from_boot_env`'s own `editor` fallback.
-pub fn boot_app_role() -> ui_wgpu::wgpu::component::role_chrome::ChromeRole {
-    BOOT_DESCRIPTOR.with(|cell| ui_wgpu::wgpu::component::role_chrome::ChromeRole::from_boot_env(Some(cell.borrow().app_role.as_str())))
+pub fn boot_app_role() -> semio_framework_ui_declaration::role_chrome::ChromeRole {
+    BOOT_DESCRIPTOR.with(|cell| semio_framework_ui_declaration::role_chrome::ChromeRole::from_boot_env(Some(cell.borrow().app_role.as_str())))
 }
 //#endregion 🧭️BootDescriptor
 

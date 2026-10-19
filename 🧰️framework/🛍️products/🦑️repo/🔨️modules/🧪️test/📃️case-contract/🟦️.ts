@@ -8,8 +8,8 @@ import { parseFeature, type ParsedFeature } from "@semio-tech/framework/test/ghe
 import { type Implementation } from "@semio-tech/framework/test/adapter";
 import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
-import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "../../📚️library/🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { type BreachRecord } from "@semio-tech/repo-lib/policy";
+import { mutationCatalogSourceOwner, mutationOwnerRelativePath } from "@semio-tech/repo-lib/inventory";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { testAdapterFilenames, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { type DiscoveredCase } from "../🧭️case-discovery/🟦️.ts";

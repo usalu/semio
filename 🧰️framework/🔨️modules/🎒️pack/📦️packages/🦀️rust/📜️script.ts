@@ -2,10 +2,6 @@
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {buildRepositoryCargoArtifacts} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import {configuredExactCargoLawPolicyV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
@@ -15,7 +11,7 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 /** 🖥️ `semio-framework-pack` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { resolve } from "node:path";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoTestsV1 as runCargoTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter,scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -34,7 +30,7 @@ class TestScript extends BundleScript {
       if (segments[0] === "original-owned-wire-native") {
         const left = this.invocation.control.remainingMilliseconds();
         if (left === null || left <= 0) throw Error("Original owned wire exhausted before native admission");
-        await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }]});
+        await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }]});
       }
       return;
     }
@@ -104,7 +100,7 @@ class SchemaStorageNativeScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
+    await buildAdmittedCargoArtifactsV1(`${this.root}/Cargo.toml`, segments, this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 

@@ -1,5 +1,6 @@
 import { type FetchTimeoutResponse, fetchWithTimeout } from "@semio-tech/framework";
 import type { PersistenceBinding } from "../../../../🟦️";
+import type { FolderCanonicalBootstrapMirrorOwner } from "./🏷️mirror-owner/🟦️.ts";
 import type { WireArtifactBootstrap } from "@semio-tech/framework-replication";
 import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES } from "../../../../🟦️";
 import type { StreamMuxEndpointV1 } from "@semio-tech/framework/io/stream-mux";
@@ -19,13 +20,6 @@ export type BinaryFetchTimeoutResponse = FetchTimeoutResponse & { arrayBuffer():
 function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, documentId: string): string {
   return `${FOLDER_ENDPOINT_PATH}?uri=${encodeURIComponent(`folder://${binding.path}`)}&documentId=${encodeURIComponent(documentId)}`;
 }
-
-export type FolderCanonicalBootstrapMirrorOwner = Readonly<{
-  binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>;
-  documentId: string;
-  epoch: number;
-  capability: string;
-}>;
 
 export async function reserveFolderCanonicalBootstrapMirror(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, bootstrap: WireArtifactBootstrap): Promise<FolderCanonicalBootstrapMirrorOwner> {
   const identity = { binding, documentId: state.config.documentId };

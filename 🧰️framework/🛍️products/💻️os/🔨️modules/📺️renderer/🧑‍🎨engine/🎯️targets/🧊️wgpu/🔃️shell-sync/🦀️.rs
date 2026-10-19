@@ -28,7 +28,8 @@ use semio_framework_ui_locale::Label;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use store_sync::sync::{ArtifactDocumentKey, ArtifactEvent, ArtifactHost, ArtifactMailboxSender, ArtifactSyncStatus, DocumentLinkStatus, PersistenceBinding, RemoteState};
-use ui_wgpu::wgpu::{ActionDescriptor, UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔃️sync/🧬️component/🦀️.rs"]
 mod staged_sync__component;

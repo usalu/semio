@@ -1,12 +1,12 @@
 use std::f64::consts::FRAC_PI_2;
-use crate::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::snapshot::entities::View;
-use crate::standards::v1::subsets::any::schema::snapshot::validity::DEFAULT_CUT_HEIGHT;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::View;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::validity::DEFAULT_CUT_HEIGHT;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::values::DetailLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::views::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{Building, Storey};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::DetailLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::views::{view_problem, MAX_VIEW_SCALE, view_cut_height, DEFAULT_CEILING_CUT_HEIGHT};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Building, Storey};
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();

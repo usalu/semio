@@ -1,14 +1,14 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.kit.artifact;
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message SemioKitArtifact {
   string schema = 1;
   repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitType types = 2;
   repeated semio.s.stdio.semio.v1.kit.snapshot.SemioKitDesign designs = 3;
-  repeated semio.os.store.ArtifactChild objects = 4;
-  repeated semio.os.store.ArtifactChild models = 5;
-  semio.os.store.ArtifactChild properties = 6;
-  repeated semio.os.store.ArtifactLink representations = 7;
+  repeated semio.framework.schema.artifact_child.ArtifactChild objects = 4;
+  repeated semio.framework.schema.artifact_child.ArtifactChild models = 5;
+  semio.framework.schema.artifact_child.ArtifactChild properties = 6;
+  repeated semio.framework.schema.artifact_link.ArtifactLink representations = 7;
 }

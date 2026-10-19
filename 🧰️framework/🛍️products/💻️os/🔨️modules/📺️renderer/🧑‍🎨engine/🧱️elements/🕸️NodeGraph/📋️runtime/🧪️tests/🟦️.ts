@@ -1,5 +1,5 @@
 import{frameworkOsEngineDeliveriesV1}from"../../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
-import{managedWasmPackagesVitePluginV1}from"../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
+import{managedWasmPackagesVitePluginV1}from"@semio-tech/ui-styling/builder/vite/wasm/delivery";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import{Database}from"bun:sqlite";

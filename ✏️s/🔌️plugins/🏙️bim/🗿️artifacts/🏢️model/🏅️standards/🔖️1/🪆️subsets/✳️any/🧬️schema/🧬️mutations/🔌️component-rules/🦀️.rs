@@ -1,10 +1,11 @@
 //! 🔌️ The rules every component and MEP leaf shares: what makes a component, a component override and an MEP element valid in a base. Pure, computed from the authored records and the text of their formulas
 //! only (through the family rules), never from an inference. A leaf prefixes the field of the [`Fault`] with the record name on create (`["component", "family"]`) and uses it as is on set (`["family"]`).
 
-use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::family_rules::{self, Fault};
-use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::Fault;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepShape, Point3};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn finite(values: &[f64]) -> bool {
@@ -87,11 +88,11 @@ pub fn override_cycle_fault(base: &ModelSnapshot, component: &str, family: &str,
         .values()
         .filter(|row| row.family == family)
         .map(|row| {
-            let value = base.component_overrides.get(&family_rules::parameter_key(component, &row.name)).map_or(row.value.as_str(), |over| over.value.as_str());
-            (row.name.clone(), family_rules::references(value))
+            let value = base.component_overrides.get(&semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(component, &row.name)).map_or(row.value.as_str(), |over| over.value.as_str());
+            (row.name.clone(), semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::references(value))
         })
         .collect();
-    graph.insert(name.to_string(), family_rules::references(text));
+    graph.insert(name.to_string(), semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::references(text));
     let plan = semio_framework_expression::plan(&graph);
     plan.cycles.iter().find(|members| members.iter().any(|member| member == name)).map(|members| Fault::invalid(format!("The formula would make {} depend on each other in a circle.", members.join(", ")), "value"))
 }
@@ -102,11 +103,11 @@ pub fn override_fault(base: &ModelSnapshot, component: &str, name: &str, text: &
     let Some(row) = base.components.get(component) else {
         return Some(Fault::missing("Component", component, "component"));
     };
-    if !base.family_parameters.contains_key(&family_rules::parameter_key(&row.family, name)) {
+    if !base.family_parameters.contains_key(&semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(&row.family, name)) {
         return Some(Fault::missing("Parameter", name, "name"));
     }
-    family_rules::formula_fault(text, "value")
-        .or_else(|| family_rules::reference_fault(base, &row.family, text, "value"))
+    semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::formula_fault(text, "value")
+        .or_else(|| semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::reference_fault(base, &row.family, text, "value"))
         .or_else(|| override_cycle_fault(base, component, &row.family, name, text))
 }
 
@@ -114,10 +115,10 @@ pub fn override_fault(base: &ModelSnapshot, component: &str, name: &str, text: &
 pub fn family_swap_fault(base: &ModelSnapshot, component: &str, family: &str) -> Option<Fault> {
     let overrides: Vec<_> = base.component_overrides.values().filter(|row| row.component == component).collect();
     for row in &overrides {
-        if !base.family_parameters.contains_key(&family_rules::parameter_key(family, &row.name)) {
+        if !base.family_parameters.contains_key(&semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(family, &row.name)) {
             return Some(Fault::invalid(format!("Override \"{}\" of component \"{component}\" names no parameter of family \"{family}\"; remove it first.", row.name), "family"));
         }
-        if let Some(fault) = family_rules::reference_fault(base, family, &row.value, "family") {
+        if let Some(fault) = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::reference_fault(base, family, &row.value, "family") {
             return Some(Fault::invalid(format!("Override \"{}\" of component \"{component}\" cannot be evaluated in family \"{family}\": {}", row.name, fault.message), "family"));
         }
     }
@@ -127,7 +128,7 @@ pub fn family_swap_fault(base: &ModelSnapshot, component: &str, family: &str) ->
         .filter(|row| row.family == family)
         .map(|row| {
             let value = overrides.iter().find(|over| over.name == row.name).map_or(row.value.as_str(), |over| over.value.as_str());
-            (row.name.clone(), family_rules::references(value))
+            (row.name.clone(), semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::references(value))
         })
         .collect();
     let plan = semio_framework_expression::plan(&graph);

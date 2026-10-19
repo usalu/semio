@@ -1,4 +1,4 @@
-import{withBuildTestInvocationV1}from"../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import {createHash} from "node:crypto";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
@@ -19,7 +19,7 @@ import cacheConfigurationSchema from "../../../💾️storage/🔒️enforcement
 import storagePolicy from "../../../💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
 import repositoryPolicy from "../../../🔣️policy.json" with {type:"json"};
 import repositorySchema from "../../../🧬️schema/🔣️.json" with {type:"json"};
-import {ordinaryNativeStoragePortV1,type NativeStoragePortV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {ordinaryNativeStoragePortV1,type NativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
 const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifacts)throw Error("Original artifact directory required");
 const original=()=>({signal:new AbortController().signal,remainingMilliseconds:()=>20000,publish:async()=>{},yieldContinuation:async()=>{}});

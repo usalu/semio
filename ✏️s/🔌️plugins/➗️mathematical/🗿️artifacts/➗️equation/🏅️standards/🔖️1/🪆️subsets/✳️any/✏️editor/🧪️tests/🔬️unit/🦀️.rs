@@ -36,7 +36,7 @@ use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::Editor;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::NoConfig;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `EquationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
@@ -71,16 +71,17 @@ use semio_framework_plugin::NoConfig;
     /// every document verb is classified `Migrated`: an unbound wrapper answers every typed dispatch
     /// `interactive-job.live-instance: typed command … does not belong to the mounted live app instance`.
     pub async fn math_app_with_registry() -> OwnedMathApp {
-        let mut app = new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let scope = OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        OwnedMathApp(app)
+        OwnedMathApp(app, scope)
     }
 
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does — on a
     /// mounted app `dispatch_typed` only QUEUES the operation, so a test reading `app.snapshot()`
     /// straight afterwards would observe the pre-dispatch document.
-    pub async fn settle(app: &mut MathApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+    pub async fn settle(app: &mut OwnedMathApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
     }
 
     /// 🔚 A mounted app that RETIRES ITSELF. A live `ArtifactStore` asserts in `Drop`
@@ -89,12 +90,14 @@ use semio_framework_plugin::NoConfig;
     /// law to remember a trailing `close(&mut app)` — which is what makes a law that fails an
     /// assertion report ITS failure instead of a close panic. Skipped while unwinding, where the
     /// original panic is the report worth keeping. Derefs to the bare app for every read and dispatch.
-    pub struct OwnedMathApp(MathApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// scope pays the caller's terminal retirement after the paid app close.
+    pub struct OwnedMathApp(pub MathApp, pub OriginalFixtureScope);
 
     impl OwnedMathApp {
         /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -119,16 +122,14 @@ use semio_framework_plugin::NoConfig;
         }
     }
     
-    pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+    pub async fn dispatch(app: &mut OwnedMathApp, command: EquationCommand) -> InvocationResult {
+        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
     
-    pub async fn render(app: &mut MathApp, body_key: &str) -> String {
-        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
-        // `Debug` gives every test caller here the same "does the render mention X" substring check.
-        format!("{:?}", app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render"))
+    pub async fn render(app: &mut OwnedMathApp, body_key: &str) -> String {
+        render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render")
     }
 }
 
@@ -265,10 +266,10 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
     assert_eq!(uninterrupted_output, replayed_output, "the DslValue-encoded mutation output must observe exact replay output");
 
     let mut cancelled_before = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
-    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Blocked);
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| cancelled_before.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
     cancelled_before.begin_close();
-    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
-    assert_eq!(cancelled_before.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| cancelled_before.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| cancelled_before.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     let mut cancelled_after = EquationRetainedCommandWork::new("nodeGraphEdit", identity, extent);
     assert!(matches!(
         cancelled_after
@@ -277,14 +278,14 @@ async fn retained_interruption_replay_aba_cancel_and_repeated_close_are_exact() 
         ArtifactCommandWorkStep::Progress { .. }
     ));
     cancelled_after.begin_close();
-    assert_eq!(cancelled_after.close_step(close_grant(0)), InteractiveJobCloseStep::Pending { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(0), |cx| cancelled_after.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Pending { progress: Default::default() });
     while !cancelled_after.terminal_is_empty() {
         let grant = close_grant(1);
-        let step = cancelled_after.close_step(grant);
+        let step = semio_framework_job::close_with_self_funded_context(grant, |cx| cancelled_after.close_step(cx)).expect("original fixture close turn");
         assert!(step.progress().fits(grant) && matches!(step, InteractiveJobCloseStep::Pending { .. }));
     }
-    assert_eq!(cancelled_after.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
-    assert_eq!(cancelled_after.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| cancelled_after.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| cancelled_after.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
 }
 
 /// ⏱️ The runtime's own step law over the maximum document: `StepOverrunLedger` records any turn past
@@ -326,7 +327,7 @@ async fn retained_maximum_microturns_stay_below_eight_milliseconds() {
     work.begin_close();
     while !work.terminal_is_empty() {
         let started = std::time::Instant::now();
-        assert!(matches!(work.close_step(close_grant(1)), InteractiveJobCloseStep::Pending { .. }));
+        assert!(matches!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| work.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Pending { .. }));
         admit(started.elapsed(), "close");
     }
 }

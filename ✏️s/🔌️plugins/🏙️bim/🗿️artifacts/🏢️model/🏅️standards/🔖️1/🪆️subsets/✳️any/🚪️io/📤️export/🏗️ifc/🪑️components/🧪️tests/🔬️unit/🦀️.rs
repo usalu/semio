@@ -1,26 +1,28 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, FamilyParameter, FamilySolid};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{FamilyParameter, FamilySolid};
 #[allow(unused_imports)]
 use semio_framework_geometry::mesh::TriMesh;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::components::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, quantity, rows, string, tags, target};
-use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components::QUANTITY_SET;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, quantity, rows, string, tags, target};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 #[test]
@@ -128,7 +130,7 @@ fn a_segment_carries_the_centre_line_the_quantities_and_the_record() {
     let record = semio_framework_pack_json::to_json_string(&model.mep_elements["mep-supply"]);
     let text = semio_s_artifact_stdio_contract::part21::write_part21(&document);
     assert!(text.contains(&record.replace('\'', "''")));
-    let back: crate::standards::v1::subsets::any::schema::snapshot::MepElement = from_json_str(&record, JsonMemberPolicy::Reject).expect("the record decodes");
+    let back: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement = from_json_str(&record, JsonMemberPolicy::Reject).expect("the record decodes");
     assert_eq!(back, model.mep_elements["mep-supply"]);
 }
 
@@ -165,8 +167,8 @@ fn every_service_in_use_is_one_system_that_groups_its_segments_and_terminals() {
 #[test]
 fn products_are_contained_in_their_storey_and_the_export_is_deterministic() {
     let model = components();
-    let (first, _) = crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model).expect("the export");
-    let (second, _) = crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model).expect("the second export");
+    let (first, _) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model).expect("the export");
+    let (second, _) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model).expect("the second export");
     assert_eq!(first, second);
     let document = document(&model);
     let contained: Vec<(String, Vec<String>)> = rows(&document, "IFCRELCONTAINEDINSPATIALSTRUCTURE")
@@ -188,7 +190,7 @@ fn a_component_of_a_missing_family_is_noted_and_not_written() {
     model.families.remove("fam-pillar");
     model.family_parameters.retain(|_, row| row.family != "fam-pillar");
     model.family_solids.retain(|_, row| row.family != "fam-pillar");
-    let (document, notes) = crate::standards::v1::subsets::any::io::export::ifc::model_to_part21(Schema::Ifc2x3, &model).expect("the export");
+    let (document, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21(Schema::Ifc2x3, &model).expect("the export");
     assert!(notes.iter().any(|note| note.contains("cmp-pillar")), "{notes:?}");
     assert!(!tags(&document, "IFCBUILDINGELEMENTPROXY").contains(&"cmp-pillar".to_string()));
 }
@@ -201,7 +203,7 @@ fn read_components(name: &str) -> Vec<u8> {
 
 #[test]
 fn the_committed_components_file_is_the_current_export() {
-    let (bytes, notes) = crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&components()).expect("the components export");
+    let (bytes, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&components()).expect("the components export");
     assert!(notes.is_empty(), "every component and run is written: {notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::write(format!("{COMPONENTS_DIR}/🪑️components.ifc"), &bytes).expect("the file is written");
@@ -211,7 +213,7 @@ fn the_committed_components_file_is_the_current_export() {
 
 #[test]
 fn the_components_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::projection::projection;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
     let oracle: serde_json::Value = serde_json::from_slice(&read_components("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&components()).to_json()).expect("the report parses");
     assert_eq!(oracle["schema"], ours["schema"]);

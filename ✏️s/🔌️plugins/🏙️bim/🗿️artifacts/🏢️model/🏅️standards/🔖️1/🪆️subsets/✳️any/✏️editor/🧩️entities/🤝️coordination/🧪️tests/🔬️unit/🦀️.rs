@@ -1,12 +1,13 @@
 //! 🧪️ The coordination rows: selector and scope text round trips, field reads and writes, the pickers, the create defaults and the inferred counts.
 
-use crate::editor::bim::entities::coordination::{author};
-use crate::editor::bim::entities::coordination::{CLASH_SET, CLASH_SET_INFERRED, ISSUE, ISSUE_COMMENT, RULE, RULE_INFERRED, create_clash_set, create_comment, create_issue, create_rule, kind_choices, latest_moment, parse_scope, parse_selector, priority_choices, scope_text, selector_text, severity_choices, status_choices};
-use crate::editor::bim::entities::{EntityKind, InferredRow};
-use crate::standards::v1::subsets::any::schema::snapshot::{ClashSet, DEFAULT_TOLERANCE, ElementClass, ElementSelector, Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Phase, Rule, RuleKind, RuleScope, RuleSeverity};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, IssueViewpoint, Point2, Point3, SectionBox, ViewCamera};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::coordination::author;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::coordination::{CLASH_SET, CLASH_SET_INFERRED, ISSUE, ISSUE_COMMENT, RULE, RULE_INFERRED, create_clash_set, create_comment, create_issue, create_rule, kind_choices, latest_moment, parse_scope, parse_selector, priority_choices, scope_text, selector_text, severity_choices, status_choices};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, InferredRow};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClashSet, DEFAULT_TOLERANCE, Issue, IssueComment, ModelSnapshot, Rule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, ElementSelector, IssuePriority, IssueStatus, Phase, RuleKind, RuleScope, RuleSeverity};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssueViewpoint, Point2, Point3, SectionBox, ViewCamera};
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
@@ -101,7 +102,7 @@ fn new_records_start_with_the_conventions_and_the_latest_moment_the_model_knows(
     assert_eq!(latest_moment(&ModelSnapshot::default()), "1970-01-01");
     let Ok(ModelMutation::CreateIssue(create)) = create_issue(&model, "i-2", "", "Door swings into the corridor") else { panic!("an issue") };
     assert_eq!((create.issue.author.as_str(), create.issue.status, create.issue.priority), ("UG", IssueStatus::Open, IssuePriority::Normal));
-    assert!(crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&create.issue.created));
+    assert!(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&create.issue.created));
     let Ok(ModelMutation::CreateRule(create)) = create_rule(&model, "r-2", "", "Riser") else { panic!("a rule") };
     assert_eq!((create.rule.kind, create.rule.limit), (RuleKind::MaxRiser, 0.19));
     let Ok(ModelMutation::CreateClashSet(create)) = create_clash_set(&model, "cs-2", "", "Everything") else { panic!("a clash set") };
@@ -114,9 +115,9 @@ fn new_records_start_with_the_conventions_and_the_latest_moment_the_model_knows(
 #[test]
 fn the_inferred_rows_read_the_clash_and_rule_results() {
     let model = model();
-    let mut inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::default();
+    let mut inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::default();
     inference.clash_sets.insert("cs-1".into(), Default::default());
-    inference.rule_results.insert("r-1".into(), crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult { checked: 3, violations: Vec::new() });
+    inference.rule_results.insert("r-1".into(), semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult { checked: 3, violations: Vec::new() });
     let read = |rows: &'static [InferredRow], key: &str, id: &str| rows.iter().find(|row| row.key == key).and_then(|row| (row.read)(&model, &inference, id));
     assert_eq!(read(CLASH_SET_INFERRED, "hard", "cs-1").as_deref(), Some("0"));
     assert_eq!(read(CLASH_SET_INFERRED, "hard", "cs-9"), None);

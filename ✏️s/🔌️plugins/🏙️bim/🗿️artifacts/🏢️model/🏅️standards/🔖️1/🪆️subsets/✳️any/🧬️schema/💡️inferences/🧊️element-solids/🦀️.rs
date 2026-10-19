@@ -6,10 +6,9 @@
 //! element, its type and the already inferred values it is built from (layouts, frames, runs, levels) to an [`ElementSolid`], and the `dependency` it reads besides them.
 //! The pure geometry comes from `semio_framework_geometry`. See `r4-api-element-solids.md` and `r7-design-model-graph.md` in the BIM-PLUGIN ticket.
 
-pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_value::DslValue;
 #[cfg(test)] use std::collections::BTreeMap;
@@ -248,7 +247,7 @@ macro_rules! anonymous {
     (phased $($record:ty),+) => {
         $(impl Anonymous for $record {
             fn anonymous(&self) -> Self {
-                Self { name: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, ..self.clone() }
+                Self { name: String::new(), phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, ..self.clone() }
             }
         })+
     };
@@ -261,8 +260,8 @@ macro_rules! anonymous {
     };
 }
 
-anonymous!(phased crate::standards::v1::subsets::any::schema::snapshot::Wall, crate::standards::v1::subsets::any::schema::snapshot::CurtainWall, crate::standards::v1::subsets::any::schema::snapshot::Column, crate::standards::v1::subsets::any::schema::snapshot::Beam, crate::standards::v1::subsets::any::schema::snapshot::Slab, crate::standards::v1::subsets::any::schema::snapshot::Roof, crate::standards::v1::subsets::any::schema::snapshot::Stair, crate::standards::v1::subsets::any::schema::snapshot::Railing);
-anonymous!(crate::standards::v1::subsets::any::schema::snapshot::Ramp, crate::standards::v1::subsets::any::schema::snapshot::Opening, crate::standards::v1::subsets::any::schema::snapshot::Ceiling, crate::standards::v1::subsets::any::schema::snapshot::WallSweep, crate::standards::v1::subsets::any::schema::snapshot::Component, crate::standards::v1::subsets::any::schema::snapshot::MepElement);
+anonymous!(phased semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Beam, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Slab, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Roof, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing);
+anonymous!(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Opening, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallSweep, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Component, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement);
 
 /// 🔑️ A dependency value of keyed records, names left out.
 pub fn dep_records<'a, T: Anonymous + semio_framework_value::ToValue + 'a>(rows: impl IntoIterator<Item = (&'a String, &'a T)>) -> DslValue {
@@ -291,30 +290,8 @@ pub const READS: &[&str] = &["walls", "wall_sweeps", "wall_types", "curtain_wall
 //#region 🔖️Fixtures
 /// 🧫️ The committed fixture cases `🧫️fixtures/💡️inferences/🧊️element-solids/<case>/🔣️.json`: an authored `snapshot`, the oracle-written `expected` table and the blessed `meshes`.
 #[cfg(any(test, feature = "testkit"))]
-pub mod fixtures {
-    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-    use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-
-    const STRAIGHT_OPENINGS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🚪️straight-openings/🔣️.json");
-    const ARC_WINDOW: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🌀️arc-window/🔣️.json");
-    const ROOM_JOINS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🧩️room-joins/🔣️.json");
-    const CURTAIN_GRID: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏬️curtain-grid/🔣️.json");
-    const CEILINGS_MESHES: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪵️ceilings-meshes/🔣️.json");
-    const FRAME_TILT_JOINS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/📐️frame-tilt-joins/🔣️.json");
-    const CURTAIN_OVERRIDES: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪟️curtain-overrides/🔣️.json");
-    const COMPONENTS_MEP: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪑️components-mep/🔣️.json");
-
-    /// 🧫️ Every case name with its committed text.
-    pub const CASES: [(&str, &str); 8] = [("straight-openings", STRAIGHT_OPENINGS), ("arc-window", ARC_WINDOW), ("room-joins", ROOM_JOINS), ("curtain-grid", CURTAIN_GRID), ("ceilings-meshes", CEILINGS_MESHES), ("frame-tilt-joins", FRAME_TILT_JOINS), ("curtain-overrides", CURTAIN_OVERRIDES), ("components-mep", COMPONENTS_MEP)];
-
-    /// 🧫️ The decoded snapshot and the whole committed document of a case.
-    pub fn case(name: &str) -> (ModelSnapshot, serde_json::Value) {
-        let text = CASES.iter().find(|(case, _)| *case == name).map(|(_, text)| *text).expect("a committed case");
-        let document: serde_json::Value = serde_json::from_str(text).expect("the case is JSON");
-        let snapshot = from_json_str(&document["snapshot"].to_string(), JsonMemberPolicy::Reject).expect("the case snapshot decodes");
-        (snapshot, document)
-    }
-}
+#[path = "🧪️tests/🧰️testkit/🦀️.rs"]
+pub mod fixtures;
 //#endregion 🔖️Fixtures
 
 

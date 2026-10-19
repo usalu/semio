@@ -16,7 +16,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_declaration::ui::SurfaceKind;
 use semio_framework_ui_layout::layout::UiPresence;
 use semio_framework_ui_scene_node_graph::{NodeGraphInteractionDomain, NodeGraphScene};
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 static NODE_GRAPH_SCENE_FIXTURE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧫️fixtures/🕸️wgpu-node-graph/🔣️.json"));
 

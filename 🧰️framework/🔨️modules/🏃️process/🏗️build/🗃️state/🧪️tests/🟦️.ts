@@ -6,7 +6,7 @@ import {existsSync,readFileSync} from "node:fs";
 import {join} from "node:path";
 import {withCompilerState} from "../🟦️.ts";
 import {typecheckProject} from "../../🟦️typescript/🟦️.ts";
-import {typecheckRepositoryProjectV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import {typecheckAdmittedProjectV1,type TypeScriptProjectCheckRequestV1} from "../../🟦️typescript/🔌️provider/🟦️.ts";
 import {receiveScriptProcessInvocation,withIssuedResourceControlV1,withScriptInvocationSignalV1,createIssuedResourceControlV1} from "../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import cases from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
@@ -24,7 +24,7 @@ test("compiler state authenticates its actual storage owner before effect DATA",
   if(row.kind==="foreign-owner")await withScriptInvocationSignalV1(original,new AbortController().signal,async alias=>invoke(createIssuedResourceControlV1(alias,"compiler-state:foreign",0)));
   else await invoke(row.kind==="copied-owner"?{...control}:control);
  }
- for(const kind of cases.repositoryCases){let dataReads=0,failure:unknown;const options={invocation:kind==="copied-invocation"?{...original}:original,control:kind==="copied-control"?{...control}:control,get workspace(){dataReads++;throw Error("Repository workspace DATA read before actual control authority");}};try{await typecheckRepositoryProjectV1(options as unknown as Parameters<typeof typecheckRepositoryProjectV1>[0]);}catch(error){failure=error;}expect(dataReads,kind).toBe(0);expect(String(failure),kind).toMatch(/Original|issuance/i);}
+ for(const kind of cases.repositoryCases){let dataReads=0,failure:unknown;const options={invocation:kind==="copied-invocation"?{...original}:original,control:kind==="copied-control"?{...control}:control,get workspace(){dataReads++;throw Error("Repository workspace DATA read before actual control authority");}};try{await typecheckAdmittedProjectV1(options as unknown as TypeScriptProjectCheckRequestV1);}catch(error){failure=error;}expect(dataReads,kind).toBe(0);expect(String(failure),kind).toMatch(/Original|issuance/i);}
  for(const[index,observed]of rows.entries()){const row=cases.cases[index%cases.cases.length]!;expect(observed.accepted,row.kind).toBe(row.accepted);expect(observed.dataReads,row.kind).toBe(row.dataReads);expect(observed.effects,row.kind).toBe(row.effects);expect(observed.created,row.kind).toBe(false);expect(String(observed.failure),row.kind).toMatch(/Original|native storage|refinement|issuance/i);database.query("insert into admission values(?,?,?,?,?)").run(String(observed.receiver),row.kind,Number(observed.accepted),Number(observed.dataReads),Number(observed.effects));}
  expect(database.query("select count(*) as count from admission").get()).toEqual({count:cases.cases.length*cases.receivers.length});
  }finally{database.close();}

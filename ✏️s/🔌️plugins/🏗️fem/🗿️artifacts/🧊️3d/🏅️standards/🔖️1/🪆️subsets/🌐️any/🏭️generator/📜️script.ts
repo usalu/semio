@@ -43,11 +43,11 @@ import type { CrossSection, Manifold } from "manifold-3d";
 import * as THREE from "three";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 
 // 🩹️ Defensive: three's PLY/GLTF exporters need these off-browser; STL/OBJ do not, in principle, but
 // the mesh pilot's spike found them cheap insurance and the cost of carrying them is one shim block.
@@ -444,7 +444,7 @@ async function main(argv: readonly string[]): Promise<number> {
   // and nothing of ours.
   if (command === "carrier" || command === "carrier-manifests") {
     const engineDir = join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust");
-    const cargoTargetDir = cargoTargetDirectory(getWorkspaceRoot());
+    const cargoTargetDir = cargoTargetDirectory(findWorkspaceRoot());
     // 🏭️`--offline`: the engine is its own standalone workspace; the shared build-dir/target-dir
     // (`.cargo/config.toml`, `-Zfine-grain-locking`) resolves without any override here.
     const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(engineDir, "Cargo.toml")], { stdio: "inherit" });

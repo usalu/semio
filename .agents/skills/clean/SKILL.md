@@ -40,6 +40,8 @@ Process lifecycle belongs to each actual execution or service owner. Workspace c
 - `.🧬semio/🌐hub`
 - `.🧬semio/🔗space`
 - `.🧬semio/🦑️repo/⚡️cache`, except rustc `incremental` directories larger than 1 GiB under its Cargo output roots
+- `.cache/b/*`: the build cache partitions (`fixed.dmg` images, `image.json` receipts, mounted `m`), including orphan or retired images. Deleting one by hand is a recovery step (see `build`), never cleanup.
+- The `🗑️generated` folder of any ticket that is open, missing or malformed. Only closed tickets lose theirs.
 
 ## Reply
 

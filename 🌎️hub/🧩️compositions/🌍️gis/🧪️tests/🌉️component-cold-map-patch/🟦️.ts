@@ -1,15 +1,15 @@
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {parseFreshProcessPolicyV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🎛️control/🟦️.ts";
-import cargoCommandLimits from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
-import {cargoPreparationStorageFromEnvironmentV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
-import { produceFreshComponentV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
-import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
+import {parseFreshProcessPolicyV1} from "@semio-tech/framework-plugin/describe/fresh-component/control";
+import { entrypointPolicyDocument as cargoCommandLimits } from "@semio-tech/repo-lib/cargo";
+import { cargoPreparationStorageFromEnvironmentV1 } from "@semio-tech/repo-lib/cargo";
+import { produceFreshComponentV1 } from "@semio-tech/framework-plugin/describe/fresh-component";
+import { type FreshBuildControlV1 } from "@semio-tech/framework-plugin/describe/source-epoch";
 
 const GIS_SCHEMA_MODULE = "🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json";
 
@@ -147,7 +147,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
             const descriptor = readFileSync(join(stage, "descriptor.semio"));
             const descriptorSha256 = createHash("sha256").update(descriptor).digest("hex");
             if (createHash("sha256").update(stagedComponent).digest("hex") !== componentSha256) throw new Error("leased GIS component differs from staged component");
-            const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, control:phaseControl, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
+            const receipts = await runAdmittedExactCargoLawsV1({ invocation: this.invocation, control:phaseControl, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 86_400_000), listMilliseconds: 120_000, lawMilliseconds: 300_000 }, cwd: this.repoRoot, groups: [
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },

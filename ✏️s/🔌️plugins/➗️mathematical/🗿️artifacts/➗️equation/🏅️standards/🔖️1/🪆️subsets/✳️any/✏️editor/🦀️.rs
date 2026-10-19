@@ -64,7 +64,7 @@ use semio_framework_plugin::NoDraftMutation;
 use std::sync::Arc;
 use pack::snapshot::ArtifactPack;
 use semio_framework_2d_compute::EngineHandles;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 
@@ -88,9 +88,9 @@ use retained_command_limits_and_work_state::{
     EQUATION_PUBLICATION_CONTRACTS, EQUATION_RETAINED_PAYLOAD_SCHEMA, EQUATION_RETAINED_RAW_BYTES,
     EQUATION_RETAINED_WORK_ITEMS,
 };
-#[cfg(test)]
-pub(crate) use retained_command_limits_and_work_state::EQUATION_MAX_DELETE_IDS;
-pub(crate) use retained_command_limits_and_work_state::EQUATION_MAX_TEXT_BYTES;
+pub(crate) use retained_command_limits_and_work_state::{
+    EQUATION_MAX_DELETE_IDS, EQUATION_MAX_TEXT_BYTES,
+};
 
 #[path = "🛠️retained-command-work-and-job-factory/🦀️.rs"]
 mod retained_command_work_and_job_factory;

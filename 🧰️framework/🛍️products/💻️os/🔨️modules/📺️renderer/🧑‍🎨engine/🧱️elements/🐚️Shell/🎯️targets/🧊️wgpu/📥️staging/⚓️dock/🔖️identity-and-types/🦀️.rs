@@ -4,7 +4,7 @@
 
 use super::*;
 
-pub const PANEL_CHROME_ICON_TINY: f32 = ui_wgpu::wgpu::chrome::ICON_TINY;
+pub const PANEL_CHROME_ICON_TINY: f32 = semio_framework_ui_wgpu_layout::chrome::ICON_TINY;
 
-pub const PANEL_CHROME_GRIP_SIZE: f32 = ui_wgpu::wgpu::chrome::ICON_TREE_ROW;
+pub const PANEL_CHROME_GRIP_SIZE: f32 = semio_framework_ui_wgpu_layout::chrome::ICON_TREE_ROW;
 

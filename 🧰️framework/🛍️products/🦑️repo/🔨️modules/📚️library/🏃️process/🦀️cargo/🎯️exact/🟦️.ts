@@ -11,7 +11,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../📦️packages/�
 import preparationSchema from "../🛠️preparation/🧬️schema/🔣️.json";
 import preparationPolicy from "../🛠️preparation/📋️policy/🔣️.json";
 import {withRepositoryCompilerStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import {compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
 
 /** 📋️ Declares Repository preparation line authority independently of byte capacity. */

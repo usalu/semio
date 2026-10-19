@@ -33,7 +33,7 @@ struct Fixture {
 
 impl Fixture {
     fn new() -> Self {
-        Self { flex: FlexTree::new(), metrics: TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()), children: Vec::new(), parents: Vec::new(), kinds: Vec::new(), sizes: Vec::new() }
+        Self { flex: FlexTree::new(), metrics: TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default()), children: Vec::new(), parents: Vec::new(), kinds: Vec::new(), sizes: Vec::new() }
     }
 
     fn push(&mut self, kind: LayoutNodeKind, parent: Option<usize>, authored: Option<&LayoutSpec>) -> usize {
@@ -125,7 +125,14 @@ fn assert_rect(actual: FlexRect, expected: FlexRect) {
 /// placed totally different" against React. This law fails the moment any of it is test-gated again.
 #[test]
 fn the_flex_engine_carries_no_test_gating() {
-    let source = include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🦀️.rs");
+    let source = [
+        include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🦀️.rs"),
+        include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🎚️layout-node-kind-geometry-and-job-stages/🦀️.rs"),
+        include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🌊️flow-style/🦀️.rs"),
+        include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🎨️style-mapping-and-chrome-metrics/🦀️.rs"),
+        include_str!("../../🎯️targets/🧊️wgpu/📐️flex/🧮️flex-tree/🦀️.rs"),
+    ]
+    .join("\n");
     let gated: Vec<&str> = source.lines().map(str::trim).filter(|line| line.starts_with("#[cfg(test)]") || line.starts_with("#[cfg(any(test")).collect();
     assert_eq!(gated.len(), 1, "only the trailing `mod tests` declaration may be test-gated, found {gated:?}");
     let tail: Vec<&str> = source.lines().map(str::trim).skip_while(|line| !line.starts_with("#[cfg(test)]")).take(3).collect();
@@ -382,8 +389,8 @@ fn a_legacy_declarative_stack_still_grows_every_child_equally() {
 
 #[test]
 fn a_field_reserves_its_label_band_and_its_control_keeps_its_own_height() {
-    let theme = crate::wgpu::theme::Theme::default();
-    let metrics = field_chrome_metrics(Some(crate::wgpu::text::line_height(FIELD_DETAIL_FONT_SIZE)), 0.0, Some(crate::wgpu::text::line_height(FIELD_DETAIL_FONT_SIZE)), theme.gap_standard);
+    let theme = semio_framework_ui_theme::Theme::default();
+    let metrics = field_chrome_metrics(Some(semio_framework_ui_text::line_height(FIELD_DETAIL_FONT_SIZE)), 0.0, Some(semio_framework_ui_text::line_height(FIELD_DETAIL_FONT_SIZE)), theme.gap_standard);
     let mut fixture = Fixture::new();
     let parent = fixture.push(LayoutNodeKind::Field { top: metrics.top, bottom: metrics.bottom }, None, None);
     let child = fixture.push(LayoutNodeKind::Control { height: theme.control_height, label_padding: None }, Some(parent), None);
@@ -396,7 +403,7 @@ fn a_field_reserves_its_label_band_and_its_control_keeps_its_own_height() {
 
 #[test]
 fn a_section_stacks_children_below_its_header_at_their_own_height() {
-    let theme = crate::wgpu::theme::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let chrome = section_chrome_metrics(Some(SECTION_TITLE_LINE_HEIGHT * 2.0), 24.0 + theme.gap_standard);
     let mut fixture = Fixture::new();
     let parent = fixture.push(LayoutNodeKind::Section { gap: theme.gap_standard, top: chrome.top, bottom: chrome.bottom }, None, None);
@@ -413,7 +420,7 @@ fn a_section_stacks_children_below_its_header_at_their_own_height() {
 
 #[test]
 fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() {
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let row = metrics.row_height;
     let action_count = 55;
     let intrinsic = row * (action_count + 1) as f32;
@@ -437,7 +444,7 @@ fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() 
 
 #[test]
 fn a_closed_tree_section_keeps_its_header_toolbar_live_and_collapses_only_its_rows() {
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let header = metrics.row_height;
     let toolbar_layout = LayoutSpec::Stack(StackLayout { axis: Axis::Horizontal, ..StackLayout::default() });
     let mut fixture = Fixture::new();
@@ -458,7 +465,7 @@ fn a_closed_tree_section_keeps_its_header_toolbar_live_and_collapses_only_its_ro
 /// the first row on the bottom side, exactly mirrored.
 #[test]
 fn a_windowed_rows_lead_pitches_the_unmaterialised_rows_before_it_in_both_flows() {
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let row = metrics.row_height;
     let (lead, trail) = (row * 40.0, row * 10.0);
     let height = row + lead + row * 3.0 + trail;
@@ -488,7 +495,7 @@ fn a_windowed_rows_lead_pitches_the_unmaterialised_rows_before_it_in_both_flows(
 #[test]
 fn the_flex_tree_releases_exactly_one_node_per_close_grant() {
     use semio_framework_job::{InteractiveJobCloseStep as Step, RetainedCloneGrant, RetainedCloneProgress};
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let mut flex = FlexTree::new();
     for index in 0..4 {
         assert!(flex.push(LayoutNodeKind::Leaf, if index == 0 { None } else { Some(0) }, None, &metrics, None, None));

@@ -11,24 +11,14 @@
       "declaration": "ShardClient",
       "fields": [
         "residentLedger",
-        "uiResidentControllerCell",
-        "uiResidentControllerRecord",
-        "uiResidentCell",
-        "uiResidentRecord",
-        "uiResidentPool",
-        "uiResidentPhase",
-        "uiResidentWitness",
-        "uiResidentFault",
-        "uiResidentClosing",
-        "clientAdmissionPurpose",
-        "workerBootstrapCell",
-        "workerBootstrapRecord",
-        "workerBootstrapPhase",
-        "workerBootstrapFault",
-        "workerAdmissionCell",
-        "workerAdmissionRecord",
-        "workerAdmissionIndex",
-        "workerAdmissionShell",
+        "hub"
+      ]
+    },
+    {
+      "group": "client",
+      "declaration": "ShardClientState",
+      "fields": [
+        "residentLedger",
         "shards",
         "actorShard",
         "actorActivations",
@@ -57,6 +47,30 @@
         "originalWorkStock",
         "originalClosures",
         "originalReturns"
+      ]
+    },
+    {
+      "group": "client",
+      "declaration": "ResidentAdmissionState",
+      "fields": [
+        "uiResidentControllerCell",
+        "uiResidentControllerRecord",
+        "uiResidentCell",
+        "uiResidentRecord",
+        "uiResidentPool",
+        "uiResidentPhase",
+        "uiResidentWitness",
+        "uiResidentFault",
+        "uiResidentClosing",
+        "clientAdmissionPurpose",
+        "workerBootstrapCell",
+        "workerBootstrapRecord",
+        "workerBootstrapPhase",
+        "workerBootstrapFault",
+        "workerAdmissionCell",
+        "workerAdmissionRecord",
+        "workerAdmissionIndex",
+        "workerAdmissionShell"
       ]
     },
     {
@@ -153,9 +167,9 @@
   ],
   "minimumShells": {
     "client": {
-      "bytes": 816,
-      "slots": 1,
-      "owners": 1
+      "bytes": 976,
+      "slots": 3,
+      "owners": 3
     },
     "worker": {
       "bytes": 336,

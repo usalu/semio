@@ -26,6 +26,7 @@ func TestExhaustiveCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
+	withExhaustiveRepo(t)
 
 	fileRel := filepath.ToSlash(filepath.Join("go", "repo", "main.go"))
 
@@ -127,6 +128,7 @@ func TestExhaustiveCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
+	withExhaustiveRepo(t)
 	openOut, openErr, err := executeCommand(
 		"goal", "open",
 		"E2E Goal Title",
@@ -174,6 +176,7 @@ func TestExhaustiveCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
+	withExhaustiveRepo(t)
 
 	cmds := []struct {
 		name string
@@ -186,7 +189,7 @@ func TestExhaustiveCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		{"section list", []string{"list", "--only-section", "compose/js/compose.ts"}},
 		{"definition list", []string{"list", "--only-definition", "compose/js/compose.ts"}},
 		{"policy list", []string{"list", "--only-policy"}},
-		{"policy check", []string{"policy", "check", "code", "compose/js"}},
+		{"analyze", []string{"analyze", "compose/go"}},
 		{"goal list", []string{"list", "--only-goal"}},
 		{"goal tree", []string{"search", "--only-goal"}},
 		{"ticket list", []string{"list", "--only-ticket"}},
@@ -210,6 +213,7 @@ func TestExhaustiveCliJsonPureData(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow CLI JSON pure data test in short mode")
 	}
+	withExhaustiveRepo(t)
 	cmds := []struct {
 		name string
 		args []string
@@ -263,9 +267,7 @@ func TestExhaustiveMarkdownOutput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow markdown output test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)
@@ -338,9 +340,7 @@ func TestExhaustiveLifecycleCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow lifecycle commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)

@@ -2,12 +2,12 @@
 /** 👷️ Worker: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
 import{createHash}from"node:crypto";
 import{relative,isAbsolute,resolve,sep}from"node:path";
-import{receiveScriptProcessInvocation}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{receiveScriptProcessInvocation}from"@semio-tech/process/routing";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{readNativeCallerAuthorityV1}from"../../../../📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import{writeOwnedCommandOutputV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{repositoryCachePartitionRootDataV1}from"../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import{writeOwnedCommandOutputV1}from"@semio-tech/process/execution";
+import { repositoryCachePartitionRootDataV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import{readVscodeCompilerFilesV1}from"../📡️data/🟦️.ts";
 import{extensionBuildConfig}from"../🟦️.ts";
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};

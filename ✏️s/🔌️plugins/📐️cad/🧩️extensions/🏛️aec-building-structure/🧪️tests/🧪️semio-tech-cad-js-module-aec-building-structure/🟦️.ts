@@ -1,6 +1,8 @@
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { core } from "@semio-tech/cad-js";
-import type { AecBuildingStructureTestDependencies } from "../../🟦️.ts";
+import { core } from "@semio-tech/cad-js";
+import type { AecBuildingStructureTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import * as vitestRuntime from "vitest";
+import { AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID, STRUCTURE_STABILITY_STAT_ID } from "../../🟦️.ts";
 
 type TestSource = { readonly url: string };
 
@@ -56,3 +58,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const dependencies: AecBuildingStructureTestDependencies = { AEC_BUILDING_STRUCTURE_MODEL_DEFINITION_ID, STRUCTURE_FROM_BUILDING_TRANSFORMATION_ID, STRUCTURE_STABILITY_STAT_ID, core, qualifiedTransformationId: core.qualifiedTransformationId, solidRef: core.solidRef };
+await registerTests1(vitestRuntime, dependencies, { url: new URL("../../🟦️.ts", import.meta.url).href });

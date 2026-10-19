@@ -8,7 +8,7 @@ use semio_framework_ui_tui_core::text::display_width;
 use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 use crate::widget::DividerState;
 
-pub(crate) fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_divider(d: &DividerState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Base), |c| c.bg);
     let fg = theme.role(Role::BorderNormal);
     buf.hline(Pos { x: rect.x, y: rect.y }, rect.width, '\u{2500}', fg, bg);

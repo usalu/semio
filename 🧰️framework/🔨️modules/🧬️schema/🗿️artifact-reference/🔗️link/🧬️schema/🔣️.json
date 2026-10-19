@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json",
+  "title": "ArtifactLink",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "target",
+    "pin",
+    "role"
+  ],
+  "properties": {
+    "target": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef"
+    },
+    "pin": {
+      "$ref": "#/$defs/LinkPin",
+      "x-semio-ui": {
+        "label": {
+          "en": "Version pin",
+          "de": "Versionsfixierung"
+        },
+        "description": {
+          "en": "Which version the link follows: the live head, a checkpoint, or a stored snapshot.",
+          "de": "Welcher Version die Verknüpfung folgt: dem aktuellen Stand, einem Prüfpunkt oder einem gespeicherten Schnappschuss."
+        }
+      }
+    },
+    "role": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "LinkPin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "head"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "checkpoint"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "blob"
+          ],
+          "properties": {
+            "kind": {
+              "const": "snapshot"
+            },
+            "blob": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/blob/schema.json"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

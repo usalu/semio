@@ -13,19 +13,19 @@ pub use messages::{render, row_of, Row, LOCALES};
 pub use index::{categories, category_of, DiagnosticIndex, ElementFindings, SeverityCounts};
 
 use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
 use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -336,7 +336,7 @@ pub fn storey_dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let ceilings = snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey);
     let roofs = snapshot.roofs.iter().filter(|(_, row)| row.storey == storey);
     let spaces = snapshot.spaces.iter().filter(|(_, row)| row.storey == storey).map(|(id, space)| (id.clone(), dep_value(&space.boundary)));
-    let profiles = |rows: Vec<(&String, Option<crate::standards::v1::subsets::any::schema::snapshot::Profile>)>| DslValue::object(rows.into_iter().map(|(id, profile)| (id.clone(), dep_value(&profile))));
+    let profiles = |rows: Vec<(&String, Option<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile>)>| DslValue::object(rows.into_iter().map(|(id, profile)| (id.clone(), dep_value(&profile))));
     dep_object([
         ("storey", dep_value(&snapshot.storeys.get(storey).cloned())),
         ("curtain_walls", dep_records(snapshot.curtain_walls.iter().filter(|(_, row)| row.storey == storey))),

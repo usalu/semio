@@ -6,17 +6,18 @@
 
 use semio_framework_os_infinite_world_model::{World3dBuildContext, World3dMeshAsset, World3dMeshAssetRejected, WORLD_DYNAMIC_ID_BYTE_CAPACITY, WORLD_DYNAMIC_MESH_CAPACITY, WorldDynamicFault, WorldDynamicRejected, WorldEnvironmentRecord, WorldInteractionState, WorldMeshRegistry, WorldReferenceRecord, WorldSessionState, WorldTerrainStyle};
 use semio_framework_os_infinite_world_components::{placeholder_normalize3, placeholder_scale3, TerrainTileMeshPayload, WORLD_REFERENCE_SOURCE_PIXELS, WorldBrushMeshRun, WorldCameraState, WorldMeshBuffers, WorldPlaceholderOwner, WorldSceneState, WorldSelectionState};
-use ui_wgpu::wgpu::{ActionDescriptor, Camera3d, camera_grid_fade_distance, Instance3d, LineVertex3d, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera, Mat4, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, Rect, Rgba, SceneColorSource3d, SceneDraw3d, Theme, Vec3};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{Camera3d, camera_grid_fade_distance, Instance3d, LineVertex3d, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera, Mat4, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneColorSource3d, SceneDraw3d, Vec3};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{directional_shadow_view_projection, ICON_SHADOW_MAP_SIZE, SceneMaterial3d, SceneMaterialDraw3d, SceneShadow3d, SceneShadowRole3d, WORLD_SHADOW_MAP_SIZE};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{directional_shadow_view_projection, ICON_SHADOW_MAP_SIZE, SceneMaterial3d, SceneMaterialDraw3d, SceneShadow3d, SceneShadowRole3d, WORLD_SHADOW_MAP_SIZE};
 use std::sync::{LazyLock, Mutex};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_surface_terrain::TerrainSessionCore;
 use serde_json::json;
-#[cfg(any(test, feature = "testkit"))]
-use ui_wgpu::wgpu::pick_closest_mesh_url;
+#[cfg(any(test, feature = "testkit"))] use ui_scene::math::pick_closest_mesh_url;
 use ui_styling::metrics::tool_run;
 
 /// 🧩️ World3d terrain component: terrain style, tiles, session and build.

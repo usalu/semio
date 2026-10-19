@@ -3,10 +3,9 @@
 use semio_framework_os_infinite_world_model::{world_mesh_ownership_grant, world_scene_raster_pool};
 use semio_framework_os_infinite_world_components::{WorldMeshBuffers, WorldMeshInput, WorldPlaceholderMeshCursor, WorldPlaceholderMeshStep};
 use semio_framework_test_fixtures::fixture_text;
-use ui_wgpu::wgpu::{mesh3d_begin_close, mesh3d_close_step, Mesh3dField, Mesh3dLease};
+use ui_scene::math::{mesh3d_begin_close, mesh3d_close_step, Mesh3dField, Mesh3dLease};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{SceneMaterialAlpha3d, SceneMaterialKind3d};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneMaterialAlpha3d, SceneMaterialKind3d};
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 
@@ -21,7 +20,7 @@ fn read_joined(paths: &[&str]) -> &'static str {
 
 fn close_oracle_mesh(lease:Mesh3dLease) {
     loop {
-        let demand=ui_wgpu::wgpu::mesh3d_close_demands(lease,4096).unwrap();
+        let demand=ui_scene::math::mesh3d_close_demands(lease,4096).unwrap();
         let grant=world_mesh_ownership_grant(4096,demand.capacity_bytes,demand.release_bytes,demand.depth);
         let step=mesh3d_close_step(lease,grant).unwrap();
         assert!(step.progress.fits(grant));
@@ -69,7 +68,7 @@ fn authored_inline_surface_preserves_corner_face_channels_five_maps_and_cancella
     assert!(cursor.texture_job.is_none()&&cursor.texture_retirement.is_none());
     let material=&appearance.primitives()[0].material;
     assert_eq!(SceneMaterialKind3d::Authored(material.clone()).texture_keys().count(),5);
-    assert_eq!(material.texture_sampler.wrap_u,ui_wgpu::wgpu::SceneTextureWrap3d::ClampToEdge);assert_eq!(material.texture_sampler.wrap_v,ui_wgpu::wgpu::SceneTextureWrap3d::MirrorRepeat);assert_eq!(material.texture_sampler.mag_filter,ui_wgpu::wgpu::SceneTextureFilter3d::Nearest);assert_eq!(material.texture_sampler.min_filter,ui_wgpu::wgpu::SceneTextureFilter3d::Linear);assert_eq!(material.additional_texture_samplers[0],ui_wgpu::wgpu::SceneTextureSampler3d{min_filter:ui_wgpu::wgpu::SceneTextureFilter3d::LinearMipmapLinear,..material.texture_sampler});assert_eq!(material.additional_texture_samplers[1..],[material.texture_sampler;3]);
+    assert_eq!(material.texture_sampler.wrap_u,ui_scene::math::SceneTextureWrap3d::ClampToEdge);assert_eq!(material.texture_sampler.wrap_v,ui_scene::math::SceneTextureWrap3d::MirrorRepeat);assert_eq!(material.texture_sampler.mag_filter,ui_scene::math::SceneTextureFilter3d::Nearest);assert_eq!(material.texture_sampler.min_filter,ui_scene::math::SceneTextureFilter3d::Linear);assert_eq!(material.additional_texture_samplers[0],ui_scene::math::SceneTextureSampler3d{min_filter:ui_scene::math::SceneTextureFilter3d::LinearMipmapLinear,..material.texture_sampler});assert_eq!(material.additional_texture_samplers[1..],[material.texture_sampler;3]);
     assert_eq!(material.normal_scale,[0.5;2]);assert_eq!(material.occlusion_strength,0.25);
     assert_eq!(material.base_color[3],1.0);assert_eq!(material.alpha,SceneMaterialAlpha3d::Opaque);assert!(!material.double_sided);
     assert_eq!(appearance.primitives()[1].material.alpha,SceneMaterialAlpha3d::Blend);

@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🌀️ Public Generation2d owned schema and relational law router. */
-import{runArtifactTypeScriptPackageMain}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import{readdirSync}from"node:fs";
 import{join,resolve}from"node:path";
-import{runRepositoryCommand}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  await receiveScriptProcessInvocation(process.env,async original=>{
  const workspace=resolve(import.meta.dir,"../../../../../../.."),roots=[resolve(import.meta.dir,"../../🏅️standards"),resolve(import.meta.dir,"../../../🧊️generation3d/🏅️standards")],files:string[]=[],pending=[...roots];

@@ -1,11 +1,19 @@
 import {join,resolve} from "node:path";
 import schema from "./🧬️schema/🔣️.json";
-import {compileJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {compileJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const argumentsContract=compileJsonSchemaSubset(schema.definitions.Arguments),changesContract=compileJsonSchemaSubset(schema.definitions.Changes);
 export const watchBuildChangeLimitsV1=Object.freeze({files:schema.definitions.Changes.properties.files.maxItems,path:schema.definitions.Changes.properties.files.items.maxLength});
 export const maximumWatchBuildDescendantsV1=schema.definitions.Policy.const.maximumDescendants;
 export type BuildWatchChangesV1=Readonly<{files:readonly string[];projects:readonly string[]}>;
+
+/** 🔌️ Owned child callback ports the composition root hands to the watcher so selection never imports the caller or its child runner. */
+export interface BuildWatchChildPortV1 {
+ readOwnedBuildInvocationV1(root:string,invocation:ScriptInvocation,args:readonly string[]):unknown;
+ runOwnedBuildChildInvocationV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl,changes?:BuildWatchChangesV1):Promise<void>;
+}
 
 /** 👁️ Recognizes only the literal owned Repo entry among watch callback commands. */
 export function watchBuildChildArgumentsV1(root:string,command:readonly string[]):string[]|undefined {

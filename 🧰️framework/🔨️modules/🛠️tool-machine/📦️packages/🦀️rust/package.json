@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./index": "./🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-machine-rs:test",
     "check": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-tool-machine-rs:check",

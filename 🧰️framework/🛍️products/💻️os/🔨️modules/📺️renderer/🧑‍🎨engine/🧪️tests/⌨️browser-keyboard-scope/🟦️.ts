@@ -6,8 +6,8 @@ import { dirname, resolve } from "node:path";
 
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { wireBrowserKeyboard, wireBrowserFullscreen, type BrowserKeyboardEvent } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
-import { createAccessibilityMirror, WGPU_ACCESSIBILITY_MIRROR_ID } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
+import { wireBrowserKeyboard, wireBrowserFullscreen, type BrowserKeyboardEvent } from "@semio-tech/framework-renderer-wgpu/input-wire";
+import { createAccessibilityMirror, WGPU_ACCESSIBILITY_MIRROR_ID } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
 import fixture from "../🧫️fixtures/⌨️browser-keyboard-scope/🔣️.json";
 
 const cleanups: (() => void)[] = [];

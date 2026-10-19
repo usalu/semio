@@ -33,8 +33,8 @@ function canonicalGoLayout(): CanonicalGoLayout {
   const taxonomy = loadCatalogTaxonomy();
   const goKind = taxonomy.testAdapterFileKinds[GO_LANGUAGE_DIRECTORY];
   const sourceDomains = taxonomy.semanticDirectoryMemberKinds["members-of-members-of-members-of-modules"];
-  if (!taxonomy.testsDirName || !taxonomy.testFixturesDirName || !taxonomy.packagesDirName || !goKind || !sourceDomains) throw new Error("The taxonomy must define Go inputs, tests, packages and fixture ownership.");
-  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy), packagesDirectory: taxonomy.packagesDirName, languageDirectory: GO_LANGUAGE_DIRECTORY, opaqueDirectoryNames: [taxonomy.testFixturesDirName, taxonomy.packagesDirName], sourceDirectoryNames: sourceDomains.memberNames };
+  if (!taxonomy.testsDirName || !taxonomy.testFixturesDirName || !taxonomy.testOraclesDirName || !taxonomy.packagesDirName || !goKind || !sourceDomains) throw new Error("The taxonomy must define Go inputs, tests, packages, oracle and fixture ownership.");
+  return { testsDirectory: taxonomy.testsDirName, implementationFilename: canonicalFilenameForKind(goKind, taxonomy), packagesDirectory: taxonomy.packagesDirName, languageDirectory: GO_LANGUAGE_DIRECTORY, opaqueDirectoryNames: [taxonomy.testFixturesDirName, taxonomy.testOraclesDirName, taxonomy.packagesDirName], sourceDirectoryNames: sourceDomains.memberNames };
 }
 
 /** 🧭️Reads the package clause that opens one Go source, skipping leading whitespace, line comments and block comments. */
@@ -59,6 +59,11 @@ function packageModuleOwner(root: string, layout: CanonicalGoLayout): string | n
   return basename(root) === layout.languageDirectory && basename(packages) === layout.packagesDirectory ? dirname(packages) : null;
 }
 
+/**
+ * 🧩️Projects one Go module into virtual compiler inputs: registered member directories become sources of their parent package and `🧪️tests/<case>` leaves become its tests.
+ * A module rooted at `<owner>/📦️packages/🐹️go` additionally adopts the owner's `🧪️tests/<case>/🐹️.go` leaves that declare its own package (or its `_test` twin), so white-box cases live at the language-neutral owner.
+ * @see https://pkg.go.dev/cmd/go#hdr-Compile_packages_and_dependencies
+ */
 function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): CanonicalGoPlan {
   const root = realpathSync(moduleRoot);
   const sourceReplacements: Record<string, string> = {};
@@ -83,6 +88,7 @@ function canonicalGoModulePlan(moduleRoot: string, layout: CanonicalGoLayout): C
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
       const path = join(directory, entry.name);
+      if (existsSync(join(path, "go.mod"))) continue;
       if (layout.sourceDirectoryNames.includes(entry.name)) {
         const source = join(path, layout.implementationFilename);
         if (existsSync(source)) {

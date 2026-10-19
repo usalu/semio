@@ -1,13 +1,10 @@
 /** 📥️ Execution: module exporting `runStdioOwnedCommandV1`. */
-import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,type ScriptInvocation}from"@semio-tech/process/routing";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{captureOwnedCommandV1,writeOwnedCommandOutputV1}from"@semio-tech/process/owned-execution";
-import{readNativeCallerAuthorityV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import{withRepositoryCompilerStoreV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import{withCompilerWorkspaceWriteV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import{withRepositoryCargoInputsV1,repositoryCargoNetworkV1,repositoryCargoConsumptionV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import{prepareCargoWorkspaceInvocation,cargoInvocationManifestV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import{repositoryCargoPreparationStorageV1}from"../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { readNativeCallerAuthorityV1, repositoryCargoPreparationStorageV1 } from "@semio-tech/repo-lib/artifacts";
+import { withRepositoryCompilerStoreV1, withCompilerWorkspaceWriteV1 } from "@semio-tech/repo-lib/storage";
+import { withRepositoryCargoInputsV1, repositoryCargoNetworkV1, repositoryCargoConsumptionV1, prepareCargoWorkspaceInvocation, cargoInvocationManifestV1 } from "@semio-tech/repo-lib/cargo";
 import{requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{join}from"node:path";

@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/window-view-store` entry: explicit re-exports of the source module that owns each member. */
+export { WorldOrbitProjectionSwitchPane, clearPendingWorldProjection, registerPendingWorldProjection, world3dProjectionPaneElementId } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🪟️window-view-store/🟦️.tsx";

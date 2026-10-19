@@ -2,7 +2,7 @@
 //! none when the column is absent or nothing would change.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 fn restored<T: Clone + PartialEq>(value: &Option<T>, current: &T) -> Option<T> {
     value.as_ref().filter(|next| *next != current).map(|_| current.clone())

@@ -1,10 +1,10 @@
-import compilerInventory from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json";
+import compilerInventory from "@semio-tech/process/artifacts/publication/sources/schema.json";
 import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import {isAbsolute,join,resolve} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import type {RepositoryArtifactRequestV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
-import policy from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import type { RepositoryArtifactRequestV1 } from "@semio-tech/repo-lib/artifacts";
+import { artifactsStorageSchema as policy } from "@semio-tech/repo-lib/artifacts";
 export type DescriptorEmitterIntentV1=Readonly<{version:1;mode:"prototype"|"release";platform:"darwin"|"linux"|"win32"}>;
 export const DESCRIPTOR_EMITTER_MANIFEST_V1="🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml";
 /** 🛠️ Copies closed tool selection DATA without issuing an executable reader. */

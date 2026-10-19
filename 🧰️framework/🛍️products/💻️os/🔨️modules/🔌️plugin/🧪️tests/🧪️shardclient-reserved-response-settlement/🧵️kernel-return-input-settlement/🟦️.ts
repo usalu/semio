@@ -1,6 +1,6 @@
 /** 🧵️ The kernel return input resident payload, settlement and framing tests. */
 import { loadRetainedResidentSlotFixture, loadRetainedResidentPayloadFixture, loadRetainedResidentBuilderFixture, loadRetainedResidentEvidenceFixture, loadRetainedResidentReaderFixture, loadRetainedResidentPageFixture, loadResidentPageBindingFixture, loadResidentEvidenceCopiedFixture, loadResidentEvidenceCopiedSchema, loadResidentPageBindingSchema } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { loadContentInputAuthorityFixture, loadContentInputPayloadFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadContentInputAuthorityFixture, loadContentInputPayloadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import type { OwnedUiResidentPayload, ShardClientSettlementTestKit, UiResidentSourceProof } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
 
@@ -17,7 +17,7 @@ export function registerKernelReturnInputSettlementTests(kit: ShardClientSettlem
     expect(scope.terminalIsEmpty()).toBe(true); expect(residentLedger.usage.data).toEqual(before); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
   });
   it("OwnedKernelReturnInput settles the genuine payload in exact charged phases after operation revocation", async () => {
-    const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("@semio-tech/framework-kernel/return/content/input");
     const { OwnedUiResidentPayloadSourceRelease } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const fixture = await loadContentInputPayloadFixture(); const { produce } = await import("immer");
     for (const activationState of fixture.runtimeClose.activationStates) {
@@ -53,7 +53,7 @@ export function registerKernelReturnInputSettlementTests(kit: ShardClientSettlem
     }
   });
   it("OwnedKernelReturnInput abandons a genuine unbound payload only after clean source refusal", async () => {
-    const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("@semio-tech/framework-kernel/return/content/input");
     const { OwnedUiResidentPayloadSourceRelease } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const fixture = await loadContentInputPayloadFixture(); const ui = await loadRetainedResidentPayloadFixture();
     for (const driver of fixture.abandonment.drivers) {
@@ -92,7 +92,7 @@ export function registerKernelReturnInputSettlementTests(kit: ShardClientSettlem
     input.beginClose(); builder.beginClose(); expect(OwnedUiOperationPayloadBuilder.empty(builder)).toBe(false); client.disposeAll();
   });
   it("OwnedKernelReturnInput privately identifies its bound builder after the real bind call throws", async () => {
-    const { OwnedKernelReturnContent, OwnedKernelReturnInputField } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent, OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input");
     const { OwnedUiResidentPool } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const { OwnedUiOperationPayloadBuilder } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
     
@@ -132,7 +132,7 @@ export function registerKernelReturnInputSettlementTests(kit: ShardClientSettlem
     expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
   });
   it("OwnedKernelReturnInput advances no framing on unread or genuinely cancelled fragments", async () => {
-    const { OwnedKernelReturnContent } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent } = await import("@semio-tech/framework-kernel/return/content/input");
     const { OwnedUiOperationInputCancelled } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
     const evidenceFixture = await loadRetainedResidentEvidenceFixture();
     const builderFixture = await loadRetainedResidentBuilderFixture();
@@ -182,7 +182,7 @@ export function registerKernelReturnInputSettlementTests(kit: ShardClientSettlem
     expect(pool.terminalIsEmpty()).toBe(true); expect(input.field).toBe(field); client.disposeAll();
   });
   it("OwnedKernelReturnInput consumes only privately copied bytes and retains the containing raw page", async () => {
-    const { OwnedKernelReturnInputFragment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputFragment } = await import("@semio-tech/framework-kernel/return/content/input");
     const { OwnedUiOperationInputCopied } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
     const vector = await loadContentInputAuthorityFixture();
     const readers = await loadRetainedResidentReaderFixture();

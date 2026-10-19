@@ -268,7 +268,7 @@ describe("Flow compiler output boundaries", () => {
     const { parse: parseJsonc } = await import("jsonc-parser");
     const root = findWorkspaceRoot(contractRoot);
     const flow = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow");
-    const text = readFileSync(join(flow, "🫀️core/🧪️bindings.json"), "utf8"), vector = JSON.parse(text);
+    const text = readFileSync(join(flow, "🎁️browser-package/🧪️bindings.json"), "utf8"), vector = JSON.parse(text);
     expect(parseJsonc(text)).toEqual(vector);
     expect(wasmOutputDirectory(flow, vector.outputDirectory)).toBe(join(flow, vector.outputDirectory));
     for (const outputDirectory of vector.invalidDirectories) expect(() => wasmOutputDirectory(flow, outputDirectory)).toThrow();

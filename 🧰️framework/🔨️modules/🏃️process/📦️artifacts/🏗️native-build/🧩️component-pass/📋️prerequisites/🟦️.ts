@@ -1,5 +1,5 @@
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 const policy=structuredClone(schema);
 /** 🗺️ Orders finite job-only prerequisites in declaration-stable dependency waves before retained pass planning. */
 export function nativeBuildPrerequisiteOrderV1(jobs:readonly Readonly<{id:string;after:readonly string[]}>[]):readonly string[]{

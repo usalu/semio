@@ -1,8 +1,16 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-type Dependencies = Pick<typeof import("../../🎯️targets/⚛️5d-react/🟦️.tsx"), "PUZZLE_5D_TOPOLOGY_ICON_WIDTH" | "compose5d" | "prepareTopologyModel">;
+type FlatRecord = Record<string, unknown>;
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Dependencies, source: TestSource): Promise<void> {
+type ComposedModel = { readonly parts: readonly { readonly id: string; readonly "2d": Record<string, unknown>; readonly "3d": Record<string, unknown> }[] };
+
+type Dependencies<Model extends ComposedModel> = {
+  readonly PUZZLE_5D_TOPOLOGY_ICON_WIDTH: number;
+  readonly compose5d: (flatFixture: FlatRecord, volumeFixture: FlatRecord) => Model;
+  readonly prepareTopologyModel: (model: Model) => Model;
+};
+
+export async function registerTests1<Model extends ComposedModel>(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Dependencies<Model>, source: TestSource): Promise<void> {
   const { PUZZLE_5D_TOPOLOGY_ICON_WIDTH, compose5d, prepareTopologyModel } = dependencies;
 
   const { describe, it, expect } = vitest;

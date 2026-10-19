@@ -18,9 +18,9 @@ import { type SpawnedJobRowV1 } from "../../../🔌️PluginRuntime/💼️job-l
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
 import runningTasks from "../🧫️fixtures/🏃️running-tasks.json";
 import { ActivationRegistry } from "@semio-tech/framework";
-import { ShardClient } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { type ShardBudget } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { type ShardBudget } from "@semio-tech/framework-actor/shard-client/wire";
+import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client/quota";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 // #endregion 🔌️Adapters
 

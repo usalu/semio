@@ -31,7 +31,7 @@ type PolicyContext struct {
 func NewPolicyContext(scope workspace.Scope, bundles []model.Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
-		RootDir:      workspace.RootDir,
+		RootDir:      workspace.GetRootDir(),
 		Bundles:      bundles,
 		fileCache:    make(map[string]string),
 		sectionCache: make(map[string][]model.Section),
@@ -69,7 +69,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.sources != nil {
 		return ctx.sources[filePath]
 	}
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	if content, ok := ctx.fileCache[absPath]; ok {
 		return content
 	}

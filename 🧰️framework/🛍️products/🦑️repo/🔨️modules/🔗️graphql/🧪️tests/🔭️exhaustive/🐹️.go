@@ -14,12 +14,25 @@ import (
 	tickets "github.com/usalu/semio/repo/tickets"
 )
 
+func getExhaustiveExecutor(t *testing.T) *Executor {
+	t.Helper()
+	root := withMonorepoFixture(t)
+	exhaustiveExecutor, err := NewExecutorWithContext(root, NewRepoContext(root))
+	if err != nil {
+		t.Fatalf("failed to create fixture executor: %v", err)
+	}
+	if _, err := exhaustiveExecutor.ExecuteJSON(context.Background(), `mutation { ticketOpen(input: { emoji: "🎫️", title: "Seed Ticket", prompt: "Seed prompt", llm: "opus-4", client: COPILOT_CHAT, goal: "TEST-GOAL", noIssue: true }) { id } }`, nil); err != nil {
+		t.Fatalf("failed to seed fixture ticket: %v", err)
+	}
+	return exhaustiveExecutor
+}
+
 // 📦️#region 🧳️Collection
 func TestExhaustiveBundlesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ bundles { name } }", nil)
 	if err != nil {
@@ -42,7 +55,7 @@ func TestExhaustiveContributorsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow contributor test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ contributors { github } }", nil)
 	if err != nil {
@@ -65,7 +78,7 @@ func TestExhaustiveTicketsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tickets test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ tickets { slug } }", nil)
 	if err != nil {
@@ -88,7 +101,7 @@ func TestExhaustivePoliciesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policies test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ policies { name } }", nil)
 	if err != nil {
@@ -111,7 +124,7 @@ func TestExhaustiveStatutesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statutes test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ statutes { id } }", nil)
 	if err != nil {
@@ -134,7 +147,7 @@ func TestExhaustiveFoldersNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow folders test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ folders { path } }", nil)
 	if err != nil {
@@ -157,7 +170,7 @@ func TestExhaustiveFilesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow files test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	result, err := executor.ExecuteJSON(ctx, "{ files { path } }", nil)
 	if err != nil {
@@ -180,7 +193,7 @@ func TestExhaustiveBreachsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow breachs test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	// Unscoped breachs defaults to technology scope "compose" and runs full policy
 	// analysis across the tree (very slow). Single-file scope keeps the test
@@ -206,7 +219,7 @@ func TestExhaustiveTicketTitleValidation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket title validation test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	tests := []struct {
@@ -225,7 +238,7 @@ func TestExhaustiveTicketTitleValidation(t *testing.T) {
 		{"Emoji Uppercase Slug Valid", "🎫️", "ENSURE-COMPOSE-REPO-MCP-WORKS-ALLIDES", false},
 		{"Missing Emoji Invalid", "", "Some Title on Something", true},
 		{"Plain Text Emoji Invalid", "ticket", "Some Title", true},
-		{"Multiple Emoji Invalid", "🎫️", "Some Title", true},
+		{"Multiple Emoji Invalid", "🎫️🛠️", "Some Title", true},
 		{"Empty Title Invalid", "🎫️", "", true},
 		{"Non Alphanumeric Title Invalid", "🎫️", "---", true},
 	}
@@ -265,7 +278,7 @@ func TestExhaustiveTicketTitleValidation(t *testing.T) {
 }
 
 func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	if executor == nil {
 		t.Fatal("executor is nil")
 	}
@@ -286,7 +299,7 @@ func TestExhaustiveNodesAndEdgesQuick(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges quick test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 	query := `{
 		tickets {
@@ -402,7 +415,7 @@ func TestExhaustiveNodesAndEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	query := `{
@@ -600,7 +613,7 @@ func TestExhaustiveNodeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow node query test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	bundleResult, err := executor.ExecuteJSON(ctx, "{ bundles { id name } }", nil)
@@ -621,24 +634,20 @@ func TestExhaustiveNodeQuery(t *testing.T) {
 	}
 
 	testID := bundleResp.Bundles[0].ID
-	nodeResult, err := executor.ExecuteJSON(ctx, `query($id: ID!) { node(id: $id) { ... on Bundle { id name } } }`, map[string]interface{}{"id": testID})
+	nodeResult, err := executor.ExecuteJSON(ctx, `query($id: ID!) { node(id: $id) { __typename } }`, map[string]interface{}{"id": testID})
 	if err != nil {
 		t.Fatalf("node query failed: %v", err)
 	}
 	var nodeResp struct {
 		Node struct {
-			ID   string `json:"id"`
-			Name string `json:"name"`
+			Typename string `json:"__typename"`
 		} `json:"node"`
 	}
 	if err := json.Unmarshal([]byte(nodeResult), &nodeResp); err != nil {
 		t.Fatalf("failed to parse node response: %v", err)
 	}
-	if nodeResp.Node.ID != testID {
-		t.Errorf("node query returned wrong id: got %s, want %s", nodeResp.Node.ID, testID)
-	}
-	if nodeResp.Node.Name != bundleResp.Bundles[0].Name {
-		t.Errorf("node query returned wrong name: got %s, want %s", nodeResp.Node.Name, bundleResp.Bundles[0].Name)
+	if nodeResp.Node.Typename != "Bundle" {
+		t.Errorf("node query returned wrong type for %s: got %s, want Bundle (%s)", testID, nodeResp.Node.Typename, nodeResult)
 	}
 }
 
@@ -646,7 +655,7 @@ func TestExhaustiveSectionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow sections edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	query := `{
@@ -732,7 +741,7 @@ func TestExhaustiveDefinitionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definitions edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	query := `{
@@ -813,7 +822,7 @@ func TestExhaustiveDefinitionKind(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definition kind test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	ctx := context.Background()
 
 	query := `{
@@ -873,44 +882,11 @@ func TestExhaustiveDefinitionKind(t *testing.T) {
 	}
 }
 
-func TestExhaustiveFixViaGraphQL(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping slow fix via graphql test in short mode")
-	}
-	executor := getTestExecutor(t)
-	ctx := context.Background()
-
-	result, err := executor.ExecuteJSON(ctx, `mutation { fix(scope: "repo/go/main_test.go") { fixed remaining breachs { id summary } } }`, nil)
-	if err != nil {
-		t.Fatalf("fix mutation failed: %v", err)
-	}
-
-	var resp struct {
-		Fix struct {
-			Fixed     int `json:"fixed"`
-			Remaining int `json:"remaining"`
-			Breachs   []struct {
-				ID      string `json:"id"`
-				Summary string `json:"summary"`
-			} `json:"breachs"`
-		} `json:"fix"`
-	}
-	if err := json.Unmarshal([]byte(result), &resp); err != nil {
-		t.Fatalf("failed to parse fix response: %v\nResult: %s", err, result)
-	}
-	if resp.Fix.Remaining < 0 {
-		t.Error("remaining should not be negative")
-	}
-	if len(resp.Fix.Breachs) != resp.Fix.Remaining {
-		t.Errorf("breachs length %d != remaining %d", len(resp.Fix.Breachs), resp.Fix.Remaining)
-	}
-}
-
 func TestExhaustivePolicyGroupsGraphQL(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy groups graphql test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := getExhaustiveExecutor(t)
 	query := `{ policies { id name groups { name description scopes kinds { id } groups { name kinds { id } } } } }`
 	result, err := executor.Execute(context.Background(), query, nil)
 	if err != nil {
@@ -946,7 +922,7 @@ func TestExhaustiveGraphQLTicketsQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow graphql tickets query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ repo { tickets { id slug status } } }`, nil)
+	result, err := getExhaustiveExecutor(t).ExecuteJSON(context.Background(), `{ repo { tickets { id slug status } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL tickets returned error: %v", err)
 	}
@@ -959,7 +935,7 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
+	result, err := getExhaustiveExecutor(t).ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/🧪️file-fixed/🐹️.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}

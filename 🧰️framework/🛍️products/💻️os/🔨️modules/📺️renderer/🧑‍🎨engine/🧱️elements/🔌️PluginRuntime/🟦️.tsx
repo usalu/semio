@@ -60,10 +60,10 @@ import { ActivationRegistry } from "@semio-tech/framework";
 import { createTurnOutcomeBroadcast } from "@semio-tech/framework";
 import { fetchDescriptorManifest } from "@semio-tech/framework";
 // #region 🔌️Adapters
-import { assertShardJspiAvailable, isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
-import { createShardCommandIngressPages } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { SHARD_LIVENESS_POLICY, ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { SHARD_WORKER_URL } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+import { assertShardJspiAvailable, isShardLostError } from "@semio-tech/framework-actor/shard-client/heartbeat";
+import { createShardCommandIngressPages } from "@semio-tech/framework-actor/shard-client/wire";
+import { SHARD_LIVENESS_POLICY, ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { SHARD_WORKER_URL } from "@semio-tech/framework-actor/shard-runtime";
 import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
@@ -356,7 +356,7 @@ export {
 export { fetchDescriptorManifest } from "@semio-tech/framework";
 export { type PluginDispatchHintV1 } from "@semio-tech/framework";
 export type { PluginRegistryEntry } from "@semio-tech/framework";
-export { SHARD_LIVENESS_POLICY } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+export { SHARD_LIVENESS_POLICY } from "@semio-tech/framework-actor/shard-client";
 export { beginPluginLoadV1, endPluginLoadV1, notePluginLoadProgress, notePluginLoadProgressForInFlightV1, pluginLoadProgressAt, pluginLoadRemainingMs, pluginLoadsInFlightV1, resetPluginLoadProgressForTestsV1, sharedDescriptorManifestV1, withPluginLoadInFlightV1, PLUGIN_LOAD_CEILING_MS, PLUGIN_LOAD_IDLE_TIMEOUT_MS } from "./🫀️load-progress/🟦️.ts";
 export { cancelSpawnedJobV1, spawnedJobsSnapshotV1, subscribeSpawnedJobsV1, type SpawnedJobRowV1 } from "./💼️job-ledger/🟦️.ts";
 

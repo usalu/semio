@@ -1,7 +1,8 @@
 //! 🛫️ Borrowed explicit Semio native fields are measured and emitted under one ownership control.
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::native_encoding::NativeEncodeControl;
-use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteDatabaseLimits};
+use semio_framework_value::native_decoding::NativeDecodeRetirementRecipient;
+use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteDatabaseLimits,artifact::owned_workspace};
 use {crate::schema::geometry::SemioTransform, crate::schema::geometry::native::{NativeF64, NativeF32}};
 pub struct Writer<'a,'b,'c>{control:&'a mut NativeEncodeControl<'b>,output:Option<&'c mut Vec<u8>>,count:usize,entities:usize,limits:SqliteDatabaseLimits,primitive_value_limit:Option<usize>}
 impl Writer<'_,'_,'_>{
@@ -31,23 +32,29 @@ impl Writer<'_,'_,'_>{
 }
 struct Word{bytes:[u8;384],length:usize}
 impl std::fmt::Write for Word{fn write_str(&mut self,value:&str)->std::fmt::Result{let end=self.length.checked_add(value.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(value.as_bytes());self.length=end;Ok(())}}
-pub fn encode(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,false,fields,native_owner)}
-/// 🎟️ Uses the caller's physical ledger after the owner completes explicit SQL admission.
-pub fn encode_admitted(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{admit(control)?;encode_fields(encoding,text_preamble,binary_token,control,true,fields,native_owner)}
-fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,semantic_admitted:bool,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{let native_control=native_owner.native();
+/// 🧊️ Original output octets and nested admission recipient stay together through success, cancellation and refusal.
+#[derive(semio_framework_value::RetireOwned)]
+struct EncodingPrefix{bytes:Vec<u8>,admission:NativeDecodeRetirementRecipient}
+impl EncodingPrefix{fn empty()->Self{Self{bytes:Vec::new(),admission:NativeDecodeRetirementRecipient::new()}}}
+pub fn encode(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,false,|_|Ok(()),fields,native_owner)}
+/// 🎟️ Uses the caller's physical ledger after the owner completes explicit SQL admission inside the retained prefix.
+pub fn encode_admitted(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,true,admit,fields,native_owner)}
+fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,semantic_admitted:bool,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{let native_control=native_owner.native();
  let limits=control.limits();let primitive_value_limit=(!semantic_admitted).then_some(limits.max_value_bytes);
+ owned_workspace(control,SqliteSnapshotPhase::EncodeNative,EncodingPrefix::empty,|prefix,control|{
+ control.with_retirement_child(&mut prefix.admission,admit)?;
  control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
  let native_before=native_control.owned_bytes();
     let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
 
- let result=(||->Result<store::io::IoPayload,ValueError>{
+ let result=(||->Result<(),ValueError>{
  let envelope=|writer:&mut Writer<'_,'_,'_>|{if encoding==SnapshotEncoding::Text{writer.bytes(text_preamble.as_bytes())?;}else{writer.bytes(b"\x89SEM\r\n\x1a\n")?;writer.bytes(&u32::try_from(binary_token.len()).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Semio native envelope width"))?.to_le_bytes())?;writer.bytes(binary_token.as_bytes())?;}fields(writer,encoding)};
  native.begin_stage(0)?;let mut measure=Writer{control:native,output:None,count:0,entities:0,limits,primitive_value_limit};envelope(&mut measure)?;let count=measure.count;
- native.begin_stage(count)?;let mut bytes=native.allocate_vec::<u8>(count)?;let mut writer=Writer{control:native,output:Some(&mut bytes),count:0,entities:0,limits,primitive_value_limit};envelope(&mut writer)?;if writer.count!=count||bytes.len()!=count{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Semio native measured and emitted sizes differ"))}native.checkpoint()?;match encoding{SnapshotEncoding::Binary=>Ok(store::io::IoPayload::Binary(bytes)),SnapshotEncoding::Text=>Ok(store::io::IoPayload::Text(String::from_utf8(bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Semio native output is not UTF-8"))?))}
+ native.begin_stage(count)?;prefix.bytes=native.allocate_vec::<u8>(count)?;let mut writer=Writer{control:native,output:Some(&mut prefix.bytes),count:0,entities:0,limits,primitive_value_limit};envelope(&mut writer)?;if writer.count!=count||prefix.bytes.len()!=count{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Semio native measured and emitted sizes differ"))}native.checkpoint()?;if encoding==SnapshotEncoding::Text{std::str::from_utf8(&prefix.bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Semio native output is not UTF-8"))?;}Ok(())
  })();
  result
     })});
     (result,native_control.owned_bytes().saturating_sub(native_before))
  })?
+ },|prefix|{let bytes=std::mem::take(&mut prefix.bytes);match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(bytes).expect("native output was validated as UTF-8"))}})
 }
-

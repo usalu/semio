@@ -75,6 +75,11 @@ pub(super) fn schema_metrics() -> Vec<NamedType> {
             interfaces: Vec::new(),
             fields: vec![Field::new("breachs", nn_list(ty("Breach"))), Field::new("metrics", nn(ty("AnalyzeMetrics")))],
         }),
+        NamedType::Object(ObjectType {
+            name: "FixResult".to_string(),
+            interfaces: Vec::new(),
+            fields: vec![Field::new("fixed", nn(ty("Int"))), Field::new("remaining", nn(ty("Int"))), Field::new("breachs", nn_list(ty("Breach")))],
+        }),
     ]
 }
 //#endregion 🏗️SchemaCommon

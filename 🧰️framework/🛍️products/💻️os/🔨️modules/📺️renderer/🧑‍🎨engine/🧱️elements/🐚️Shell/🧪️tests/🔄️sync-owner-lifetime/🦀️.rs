@@ -7,7 +7,7 @@ fn SHELL_SOURCE() -> &'static str {
 }
 #[allow(non_snake_case)]
 fn BRIDGE_SOURCE() -> &'static str {
-    semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs")
+    semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs")
 }
 #[allow(non_snake_case)]
 fn KERNEL_SOURCE() -> &'static str {

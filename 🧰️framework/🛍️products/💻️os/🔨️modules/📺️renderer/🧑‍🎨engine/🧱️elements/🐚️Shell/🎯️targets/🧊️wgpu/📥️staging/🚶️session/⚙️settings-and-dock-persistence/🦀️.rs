@@ -94,7 +94,7 @@ impl<'ctx> SessionCtx<'ctx> {
         let session_plugin = self.docs.session.as_ref().map(|session| session.plugin_id.clone());
         let ids = self.plugins.marketplace_roster();
         let installing = self.plugins.plugin_install.as_ref().map(|install| install.plugin_id.clone());
-        let verb = |action: &str, args: Option<DslValue>, icon: IconName, label_key: &'static str, disabled_because: Option<&'static str>| ui_wgpu::wgpu::component::ui::UiTreeItemAction {
+        let verb = |action: &str, args: Option<DslValue>, icon: IconName, label_key: &'static str, disabled_because: Option<&'static str>| semio_framework_ui_declaration::ui::UiTreeItemAction {
             icon_id: icon,
             label: Some(Label::data(shell_chrome_string(label_key, is_de))),
             action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
@@ -142,7 +142,7 @@ impl<'ctx> SessionCtx<'ctx> {
                 id: format!("framework.marketplace.plugin.{plugin_id}"),
                 label: Label::data(head),
                 default_open: Some(!extensions.is_empty()),
-                presence: UiPresence { status: if in_flight { ui_wgpu::wgpu::component::ui::UiStatus::Loading } else { ui_wgpu::wgpu::component::ui::UiStatus::Idle }, ..UiPresence::default() },
+                presence: UiPresence { status: if in_flight { semio_framework_ui_declaration::ui::UiStatus::Loading } else { semio_framework_ui_declaration::ui::UiStatus::Idle }, ..UiPresence::default() },
                 actions: Some(actions),
                 items: (!extensions.is_empty()).then_some(extensions),
                 ..UiTreeItemNode::base(String::new(), Label::data(String::new()))

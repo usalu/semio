@@ -6,12 +6,13 @@
 //! add row that takes `Set.Property = value`), a place-at row that puts it where the author types, and a wall has its flip and split rows. With nothing selected the panel edits the
 //! project record next to the per-kind summary. Every one of these is reachable from the keyboard: they are labelled inputs and rows, not gestures.
 
-use crate::editor::bim::commands::attach_walls;
-use crate::editor::bim::entities::wall_sweeps::top_attach_text;
-use crate::editor::bim::entities::{fields_of, kind_holding, property_text, EntityKind, FieldRow, PROJECT_FIELDS, PROJECT_ID};
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::top_attach_text;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding, property_text, PROJECT_FIELDS, PROJECT_ID};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
@@ -124,7 +125,7 @@ fn summary_rows(snapshot: &ModelSnapshot, labels: &BimLabels) -> Vec<UiAssemblyR
         ui_label(labels.summary_schema.as_str()).and_then(|label| tree_item_desc(format!("{ROOT}.summary.schema"), label, Some(snapshot.schema.clone()))),
     ];
     rows.extend(
-        crate::editor::bim::entities::ENTITIES
+        semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES
             .iter()
             .filter(|row| !(row.ids)(snapshot).is_empty())
             .map(|row| ui_label((row.group)(labels).as_str()).and_then(|label| tree_item_desc(format!("{ROOT}.summary.{}", row.kind), label, Some((row.ids)(snapshot).len().to_string())))),
@@ -158,7 +159,7 @@ fn wall_rows(snapshot: &ModelSnapshot, ids: &[&str], selected: &[String], labels
         ids_args(ids).and_then(|args| tree_item_with_icon(format!("{ROOT}.action.flip"), Label::data(labels.action_flip_wall.as_str().to_string()), "flip-horizontal", bim_action("flipWalls", Some(args)))),
         ids_args(ids).and_then(|args| input_row(&format!("{ROOT}.action.split"), labels.action_split_wall_at.as_str(), "0.5", Some("0.5"), bim_action("splitWall", Some(args)))),
     ];
-    if let Some(target) = attach_walls::target_of(snapshot, "", &[], selected) {
+    if let Some(target) = semio_s_artifact_bim_model_coordination::editor::bim::commands::attach_walls::target_of(snapshot, "", &[], selected) {
         let args = || ui_value_map([("ids", ui_value_list(ids.iter().map(|id| ui_value_text(id)).collect::<UiAssemblyResult<Vec<_>>>()?)?), ("target", ui_value_text(target)?)]);
         rows.push(args().and_then(|args| tree_item_with_icon(format!("{ROOT}.action.attach"), Label::data(labels.action_attach_walls.as_str().to_string()), "arrow-up-to-line", bim_action("attachWalls", Some(args)))));
     }
@@ -171,7 +172,7 @@ fn wall_rows(snapshot: &ModelSnapshot, ids: &[&str], selected: &[String], labels
 
 /// 📍️ The place-at row of a placed selection: the reference point of the first element, to be typed over.
 fn place_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
-    let reference = ids.first().and_then(|id| crate::standards::v1::subsets::any::schema::mutations::elements::placement(snapshot, id)).and_then(|placement| crate::editor::bim::commands::place_elements::reference_of(&placement));
+    let reference = ids.first().and_then(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(snapshot, id)).and_then(|placement| semio_s_artifact_bim_model_move_storey::editor::bim::commands::place_elements::reference_of(&placement));
     let Some(reference) = reference else { return Vec::new() };
     vec![ids_args(ids).and_then(|args| input_row(&format!("{ROOT}.action.place"), labels.action_place_at.as_str(), &format!("{}, {}", reference.x, reference.y), Some("0, 0"), bim_action("placeElements", Some(args))))]
 }
@@ -190,10 +191,10 @@ fn conditions_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -
 
 //#region 🔖️PropertySets
 /// 🧾️ The input and the remove row of one property of one element.
-fn property_pair(id: &str, pset: &str, name: &str, value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
+fn property_pair(id: &str, pset: &str, name: &str, value: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
     let row_id = format!("{ROOT}.property.{pset}.{name}");
     let args = || ui_value_map([("ids", ui_value_list([ui_value_text(id)?])?), ("pset", ui_value_text(pset)?), ("property", ui_value_text(name)?)]);
-    let label = format!("{pset} · {name} ({})", crate::editor::bim::entities::property_type(value));
+    let label = format!("{pset} · {name} ({})", semio_s_artifact_bim_model_entities::editor::bim::entities::property_type(value));
     let set = input_row(&row_id, &label, &property_text(value), None, bim_action("setProperty", Some(args()?)))?;
     let remove = tree_item_with_icon(format!("{row_id}.remove"), Label::data(BimLabels::named(labels.action_remove_property, &format!("{pset}.{name}"))), "trash", bim_action("removeProperty", Some(args()?)))?;
     Ok(vec![set, remove])
@@ -245,7 +246,7 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[
         if snapshot.components.contains_key(*only) {
             builder = builder.section(format!("{ROOT}.overrides"), Some(ui_label(labels.section_overrides.as_str())?), true, ui_node_list(overrides::render_rows(snapshot, ROOT, only, labels))?)?;
         }
-        if crate::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, only) {
+        if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, only) {
             builder = builder.section(format!("{ROOT}.properties"), Some(ui_label(labels.section_property_sets.as_str())?), true, ui_node_list(property_rows(snapshot, only, labels))?)?;
             let effective = data::effective_rows(snapshot, inference, only, labels);
             if !effective.is_empty() {

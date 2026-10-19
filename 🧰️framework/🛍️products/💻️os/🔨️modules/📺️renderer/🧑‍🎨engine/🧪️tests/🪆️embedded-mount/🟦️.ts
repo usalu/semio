@@ -16,11 +16,11 @@ import graphlib from "graphlib";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlaygroundBootPlanner, expandPluginRegistry, orderPluginRegistryEntries, createMemoryStoragePort, type PluginCatalog } from "@semio-tech/framework";
-import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan } from "../../🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts";
+import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan } from "@semio-tech/framework-renderer-wgpu/plugin-modules";
 import pluginModulesFixture from "../🧫️fixtures/🧩️plugin-modules/🔣️.json";
 import pluginModulesSchema from "../../🧬️schema/🧩️plugin-modules/🔣️.json";
 import fixture from "../🧫️fixtures/🪆️embedded-mount/🔣️.json";
-import { bootFrameworkOsWgpu } from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts";
+import { bootFrameworkOsWgpu } from "@semio-tech/framework-renderer-wgpu";
 import wgpuBootSource from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts?raw";
 import bootExecutionFixture from "../🧫️fixtures/🎬️boot-execution/🔣️.json";
 import serviceStatusFixture from "../🧫️fixtures/⏳️owned-service-status/🔣️.json";
@@ -685,14 +685,14 @@ describe("admitted General empty React mounts", () => {
 
 describe("actual admitted General Dev receiving", () => {
   it("boots an explicit empty variant without generated session authority", async () => {
-    const { default: rows } = await import("../../../../🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧩️composition/🔣️.json");
+    const { default: rows } = await import("@semio-tech/plugin-registry/testing/fixtures/composition.json");
     const input = rows.cases.find(row => row.id === rows.devBoot.case)!.input;
     const operation = new AbortController(), events: { completed: number; total: number; work: number }[] = [], admission = { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: (event: { completed: number; total: number; work: number }) => events.push(event) };
     installBrowserRuntime();
     const root = mountRoots()[0]!; root.id = rows.devBoot.rootId;
     vi.stubEnv("VITE_SEMIO_RENDERER", "wgpu");
     try {
-      const { bootFrameworkOsDev } = await import("../../../../🧑‍💻dev/🟦️.ts");
+      const { bootFrameworkOsDev } = await import("@semio-tech/framework-os-dev");
       const mounted = await bootFrameworkOsDev({ catalogRows: input as PluginCatalogRowsV1, admission, variant: rows.devBoot.variant, brands: [] });
       cleanups.push(() => mounted.dispose());
       expect(events.some(event => event.total === 0)).toBe(true);

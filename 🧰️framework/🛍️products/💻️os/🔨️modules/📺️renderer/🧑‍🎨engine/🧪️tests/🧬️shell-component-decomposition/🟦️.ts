@@ -12,8 +12,8 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Parser from "web-tree-sitter";
 import { describe, expect, it } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
-import { rustFindTopLevel, rustTokenPairs, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { rustFindTopLevel, rustTokenPairs, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(readFileSync(resolve(here, "../🧫️fixtures/🧬️shell-components/🔣️.json"), "utf8")) as {

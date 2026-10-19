@@ -1,13 +1,13 @@
-import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withRetainedOperationsV1,withRetainedOperationV1,requireRetainedOperationLifetimeV1,requireRetainedOperationFrameV1,type RetainedOperationLifetimeV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts";
 import{withNativeImageTerminalCloseV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{statfs}from"node:fs/promises";
 import{resolve}from"node:path";
 import{randomBytes}from"node:crypto";
-import{acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{acquireQueuedResourceLease,acquireResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 📐️ Physical initial headroom is independent from persistent logical compiler charges. */
@@ -26,7 +26,7 @@ export function withCompilerInitialHeadroomV1<T>(image:Pick<NativeImageStorageV1
  return withCompilerWriterCustodyV1(image,leaseDirectory,control,request,async actual=>{let fs=await statfs(image.root,{bigint:true}),availableBytes=Number(fs.bavail*fs.bsize);checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})&&recover){await recover();await image.recheck();fs=await statfs(image.root,{bigint:true});availableBytes=Number(fs.bavail*fs.bsize);}checkResourceLeaseControl(actual);if(!compilerHeadroomAdmittedV1({version:1,availableBytes,requiredBytes})){throw Error("Insufficient physical compiler initial headroom");}return body(actual);});
 }
 
-import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 /** 🧷️ Retains the authenticated Native allocation through every accepted workspace operation. */
 export async function withCompilerWorkspaceLifetimeV1<T>(storage:NativeStorageReservationV1,control:ResourceLeaseControl,body:(control:ResourceLeaseControl)=>Promise<T>,recover?:()=>Promise<void>):Promise<T>{
  requireIssuedResourceControlV1(control);requireNativeStorageReservationV1(storage,control);if(typeof body!=="function")throw Error("Actual compiler workspace callback required");if(storage.allocation.kind!=="compiler-workspace"||owners.get(storage)?.live)throw Error("Original compiler workspace lifetime required");let scope:WriterScope|undefined;return withNativeImageTerminalCloseV1(()=>withRetainedOperationsV1(control,schema.definitions.Protocol.const.maximumOperations,async(lifetime,actual)=>{scope={root:resolve(storage.backing.root),control,lifetime,live:true,recover};owners.set(storage,scope);await storage.recheck();return body(actual);}),async()=>{try{await storage.recheck();}finally{if(scope)scope.live=false;}});

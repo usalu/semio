@@ -1,9 +1,5 @@
 //! 🥣️ tui cross-crate laws: engine behaviour, overlays, pointer routing, chrome anatomy, render equivalence and the unit corpus.
 
-#[path = "../🔬️unit/🦀️.rs"]
-#[cfg(test)]
-mod tests;
-
 #[path = "../🔬️text-elements/🦀️.rs"]
 #[cfg(test)]
 mod text_elements;

@@ -3,7 +3,8 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector, type Command, type GuardFn, type Machine, type MachineDefinition, type MachineSpec, type NodeDef, type Snapshot, type StatechartEvent, type TransitionDef } from "@semio-tech/framework/machine";
+import { EventId, GuardId, NodeId, ROOT, init, macrostep, NullInspector } from "@semio-tech/framework/machine";
+import type { Command, GuardFn, Machine, MachineDefinition, NodeDef, Snapshot, TransitionDef } from "@semio-tech/framework/machine";
 import type { Vec3 } from "@semio-tech/framework/3d";
 import { emptyMeshTransfer, solidRef } from "@semio-tech/framework/3d";
 import { type EdgeRef, type FaceRef, type VertexRef, type WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
@@ -17,30 +18,15 @@ import { type ActionRegistry } from "../🎬️actions/🧬️action-contract/�
 import { applyTransition, pureTsStateEngineProvider, type StateEngine, type StateEngineProvider, type StateEngineSendResult } from "../🎬️actions/🎰️interaction-state/🟦️.ts";
 import { loadSpatialInteraction } from "../🗿️artifact/📚️interaction-catalog/🟦️.ts";
 import { createInteractionRuntime, type InteractionRuntime } from "../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
+import type { StatelyAdvanceEvent, StatelyMachineSpec, SpatialStatelyMachineTransitionView, SpatialStatelyMachineStateView, SpatialStatelyMachineView, SpatialStatelyMachineCatalogView } from "./🎛️machine-views/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🎭️AdvanceEvent
-/** 🎭️ The one wire-level event kind every compiled `StatelyMachineSpec` reacts to; rows for
- * different `spec.machine` `(state, event)` pairs are disambiguated purely by guard, not by event
- * identity — same encoding the former XState chart used (`__advance` + `interactionKind` + `branch`). */
-interface StatelyAdvanceEvent extends StatechartEvent {
-  readonly type: "__advance";
-  readonly interactionKind: string;
-  readonly branch: number;
-}
 const ADVANCE_EVENT_ID = EventId(0);
 function makeAdvanceEvent(interactionKind: string, branch: number): StatelyAdvanceEvent {
   return { type: "__advance", interactionKind, branch, eventCount: 1, eventId: () => ADVANCE_EVENT_ID, eventName: () => "__advance" };
 }
 
-/** 🎭️ Associated types bound to `@semio-tech/machine`'s generic kernel for the stately adapter. */
-export interface StatelyMachineSpec extends MachineSpec {
-  Context: undefined;
-  Event: StatelyAdvanceEvent;
-  Input: undefined;
-  Output: never;
-  Effect: never;
-}
 // #endregion 🎭️AdvanceEvent
 
 // #region 🎭️MachineBuild
@@ -85,47 +71,6 @@ function buildStatelyMachine(spec: InteractionSpec, initial: string): Machine<St
     manifestJson: "{}",
   };
   return { definition };
-}
-
-/** 📊️ One transition row for `🔣️machine.json` / Mermaid (matches `__advance` branch order). */
-export interface SpatialStatelyMachineTransitionView {
-  readonly from: string;
-  readonly to: string;
-  readonly on: string;
-  readonly branch: number;
-  readonly guard: string | null;
-  readonly transient: boolean;
-  readonly key?: string;
-  readonly label?: string;
-}
-
-/** 📊️ Serializable state node summary. */
-export interface SpatialStatelyMachineStateView {
-  readonly id: string;
-  readonly final: boolean;
-  readonly selectionAccept?: readonly string[];
-}
-
-/** 📊️ Single spatial interaction as a viewable state machine (edges + Mermaid). */
-export interface SpatialStatelyMachineView {
-  readonly interactionId: string;
-  readonly interactionVersion: string;
-  readonly label: string;
-  readonly hostKey: string;
-  readonly initial: string;
-  readonly states: readonly SpatialStatelyMachineStateView[];
-  readonly edges: readonly SpatialStatelyMachineTransitionView[];
-  readonly mermaid: string;
-  readonly statelyRoutingNote: string;
-}
-
-/** 📊️ Catalog of model-definition interactions for Stately/Mermaid viewers (`🔣️machine.json`). */
-export interface SpatialStatelyMachineCatalogView {
-  readonly kind: "spatial.stately-machine-view/v1";
-  readonly schemaVersion: "1.0";
-  readonly generatedAt: string;
-  readonly machines: readonly SpatialStatelyMachineView[];
-  readonly mermaidCombined: string;
 }
 
 /** 📊️ Collects flat transition rows from `InteractionSpec.machine` (same order as `StatelyStateEngine`). */
@@ -297,28 +242,6 @@ export const statelyStateEngineProvider: StateEngineProvider = {
 // #region 🧪️Tests
 const __spatialStatelyTestRuntime = import.meta.vitest ? await import("../🏃️runtime/🟦️.ts") : null;
 const __spatialStatelyTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js/testing/spatial-kernel/brepjs") : null;
-
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts`. */
-export type StatelyTestDependencies = {
-  readonly Model: typeof Model;
-  readonly NullInspector: typeof NullInspector;
-  readonly __spatialStatelyTestKernel: typeof __spatialStatelyTestKernel;
-  readonly __spatialStatelyTestRuntime: typeof __spatialStatelyTestRuntime;
-  readonly buildSpatialStatelyMachineCatalogView: typeof buildSpatialStatelyMachineCatalogView;
-  readonly buildStatelyMachine: typeof buildStatelyMachine;
-  readonly createInteractionRuntime: typeof createInteractionRuntime;
-  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
-  readonly emptyMeshTransfer: typeof emptyMeshTransfer;
-  readonly init: typeof init;
-  readonly isEmptyModelDiff: typeof isEmptyModelDiff;
-  readonly listSpatialInteractionsForModelDefinition: typeof listSpatialInteractionsForModelDefinition;
-  readonly loadSpatialInteraction: typeof loadSpatialInteraction;
-  readonly macrostep: typeof macrostep;
-  readonly makeAdvanceEvent: typeof makeAdvanceEvent;
-  readonly pureTsStateEngineProvider: typeof pureTsStateEngineProvider;
-  readonly solidRef: typeof solidRef;
-  readonly statelyStateEngineProvider: typeof statelyStateEngineProvider;
-};
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts");

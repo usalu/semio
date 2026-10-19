@@ -1,13 +1,14 @@
 //! 🔺️ Diff constructor for `CreateDoorType`: one created door type entry. The id must be free, the material must exist and every dimension must be valid.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType;
-use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{is_positive_length, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let record = &payload.door_type;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.materials.contains_key(&record.material) {

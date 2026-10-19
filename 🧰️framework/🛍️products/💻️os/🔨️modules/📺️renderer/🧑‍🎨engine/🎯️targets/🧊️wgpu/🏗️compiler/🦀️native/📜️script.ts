@@ -1,13 +1,12 @@
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {repositoryCargoNetworkV1,type CargoDependencyNetworkV1} from "./../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { repositoryCargoNetworkV1, type CargoDependencyNetworkV1, buildRepositoryCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModeEnvironment, buildModePolicy, readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
 /** 📂️ Gives the native producer and its runner one profile-specific artifact directory. */
 export function nativeRendererDirectory(rustPackageRoot: string, profile: string): string {

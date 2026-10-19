@@ -1,4 +1,4 @@
-import type{ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 declare const batchBrand:unique symbol,managedBrand:unique symbol;
 /** 🧷️ Resolves only to an actual live, root-bound canonical Source I/O batch. */
 export interface ExactSourceReadBatchV1{readonly[batchBrand]:true}

@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/mesh-render/mesh-style-palette` entry: explicit re-exports of the source module that owns each member. */
+export { resolveMeshSelectionPreviewStyle, resolveMeshStyle, semanticColorsFromPalette, worldMeshMaterialRevision } from "../../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";
+export type { SemanticColors } from "../../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🎨️mesh-render/🖌️mesh-style-palette/🟦️.ts";

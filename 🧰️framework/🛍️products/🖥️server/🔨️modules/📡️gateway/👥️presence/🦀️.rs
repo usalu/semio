@@ -223,7 +223,8 @@ pub type OriginAdmission = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 
 /// 🧍️ One member of a presence room: its session and its entry as every reader is sent it.
 #[derive(Debug)]
-pub(super) struct Member {
+#[doc(hidden)]
+pub struct Member {
     pub session: String,
     pub wire: Box<str>,
 }
@@ -239,7 +240,8 @@ pub(super) struct Member {
 /// ([`Room::next_changed`]), which is what lets every reader go round a room of any size at the
 /// cost of what it is sent.
 #[derive(Debug)]
-pub(super) struct Room {
+#[doc(hidden)]
+pub struct Room {
     pub seats: Vec<Option<Member>>,
     pub changed: Vec<u64>,
     vacant: Vec<usize>,
@@ -247,7 +249,7 @@ pub(super) struct Room {
     departed: VecDeque<(u64, String)>,
     forgotten: u64,
     pub clock: u64,
-    pub(super) readers: usize,
+    pub readers: usize,
     changes: watch::Sender<u64>,
 }
 
@@ -362,14 +364,15 @@ pub const SHARE_EPOCH: Duration = Duration::from_millis(250);
 /// and what the next deal goes by: the bytes it drew since the last deal, the rate measured up to
 /// that deal, and whether a page was refused it since the last deal or during the one before.
 #[derive(Debug)]
-struct Share {
-    pub(super) readers: usize,
+#[doc(hidden)]
+pub struct Share {
+    pub readers: usize,
     equal: i128,
     fair: i128,
     filled: Instant,
-    pub(super) drawn: u64,
-    pub(super) rate: u64,
-    pub(super) held: bool,
+    pub drawn: u64,
+    pub rate: u64,
+    pub held: bool,
     was_held: bool,
 }
 
@@ -390,8 +393,9 @@ struct Share {
 /// than its split waits by itself, however many sockets it reads through. Over any stretch the
 /// rooms send the budget, half a second's worth and at most one page per reader more.
 #[derive(Debug)]
-pub(super) struct Outflow {
-    pub(super) per_second: u64,
+#[doc(hidden)]
+pub struct Outflow {
+    pub per_second: u64,
     level: i128,
     filled: Instant,
     pub shares: HashMap<ClientKey, Share>,

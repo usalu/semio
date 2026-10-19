@@ -1,7 +1,5 @@
 {
   "schema": "semio.tool-job.scalar-config-cohort.v1",
-  "textMaximumBytes": 128,
-  "grantBytes": 4096,
   "sources": [
     "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
     "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -9,14 +7,16 @@
     "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
     "🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/🦀️.rs",
     "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
     "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs",
-    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs"
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🏗️structure/🦀️.rs",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"
   ],
   "owners": [
     {
       "id": "fem2d",
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
-      "prefix": "FEM2D",
       "routes": [
         {
           "id": "addAreaLoad",
@@ -115,6 +115,110 @@
           "blocker": ""
         },
         {
+          "id": "canvasPointerDown",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerMove",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "canvasPointerUp",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "focusEntity",
+          "disposition": "Migrated",
+          "lanes": [
+            "WindowConfig"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchCombination",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchElement",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchLoad",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchLoadCase",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchMaterial",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchNode",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchRegion",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchSection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchSupport",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
           "id": "removeSelection",
           "disposition": "Migrated",
           "lanes": [
@@ -123,10 +227,37 @@
           "blocker": ""
         },
         {
+          "id": "resultAnimationTick",
+          "disposition": "Migrated",
+          "lanes": [
+            "WindowConfig",
+            "WindowTransient"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "rotateSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Transient"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "scaleSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Transient"
+          ],
+          "blocker": ""
+        },
+        {
           "id": "setActiveExample",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "HostOnly"
           ],
           "blocker": ""
         },
@@ -142,7 +273,16 @@
           "id": "setCamera",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowConfig"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "setResultAnimation",
+          "disposition": "Migrated",
+          "lanes": [
+            "WindowConfig",
+            "WindowTransient"
           ],
           "blocker": ""
         },
@@ -150,7 +290,7 @@
           "id": "setResultDisplay",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowConfig"
           ],
           "blocker": ""
         },
@@ -161,25 +301,46 @@
             "Artifact"
           ],
           "blocker": ""
+        },
+        {
+          "id": "setTransformGumballFlag",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "translateSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Transient"
+          ],
+          "blocker": ""
         }
       ]
     },
     {
       "id": "generation2d",
       "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-      "prefix": "GENERATION2D",
       "routes": [
         {
           "id": "addGeneration",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "blocker": ""
         },
         {
           "id": "addWidget",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
         },
         {
           "id": "canvasPointerDown",
@@ -215,15 +376,27 @@
         },
         {
           "id": "connectMediaPorts",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "flowEvalResolve",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
         },
         {
           "id": "flowEvalTick",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+          "disposition": "Migrated",
+          "lanes": [
+            "Transient"
+          ],
+          "blocker": ""
         },
         {
           "id": "generate",
@@ -235,18 +408,64 @@
         },
         {
           "id": "moveMediaNode",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
         },
         {
           "id": "nodeGraphEdit",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
         },
         {
           "id": "nodeGraphViewport",
+          "disposition": "Migrated",
+          "lanes": [
+            "WindowConfig"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "removeGeneration",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "removeWidget",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "renameGeneration",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "reorganize",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "selectGeneration",
           "disposition": "Migrated",
           "lanes": [
             "Config"
@@ -254,40 +473,29 @@
           "blocker": ""
         },
         {
-          "id": "removeGeneration",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "id": "setActiveExample",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "blocker": ""
         },
         {
-          "id": "removeWidget",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
-        },
-        {
-          "id": "renameGeneration",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
-        },
-        {
-          "id": "reorganize",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Whole FlowHostSnapshot/graph clone and host operation diff remain monolithic; needs granular graph root and Artifact Store preparation."
-        },
-        {
-          "id": "selectGeneration",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "id": "setContributions",
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
         },
         {
           "id": "setEvalOutputs",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "FlowEvalSession is reconstructed per call; app-instance evaluator authority and retained evaluator state must own this route before it can be interactive."
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
         },
         {
           "id": "setShowMode",
@@ -299,34 +507,41 @@
         },
         {
           "id": "updateGenerationValues",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Generation projection and preview evaluate/clone the full generation state; needs retained generation/preview computation and exact mixed Artifact/Config preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "blocker": ""
         }
       ]
     },
     {
       "id": "layout",
       "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-      "prefix": "LAYOUT",
       "routes": [
         {
           "id": "addFrame",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
         },
         {
           "id": "addPage",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "WindowConfig"
+          ],
+          "blocker": ""
         },
         {
           "id": "canvasDragLeave",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowTransient"
           ],
           "blocker": ""
         },
@@ -334,27 +549,35 @@
           "id": "canvasDragOver",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowTransient"
           ],
           "blocker": ""
         },
         {
           "id": "canvasDrop",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "WindowConfig",
+            "WindowTransient"
+          ],
+          "blocker": ""
         },
         {
           "id": "canvasPointerDown",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
         },
         {
           "id": "canvasPointerMove",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "Hit testing builds a full page display list before selection/hover effects; requires retained scene/hit-test cursor."
+          "disposition": "Migrated",
+          "lanes": [
+            "HostOnly"
+          ],
+          "blocker": ""
         },
         {
           "id": "canvasPointerUp",
@@ -365,10 +588,18 @@
           "blocker": ""
         },
         {
+          "id": "deleteSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
           "id": "engagementInput",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowTransient"
           ],
           "blocker": ""
         },
@@ -416,27 +647,57 @@
           "id": "focusPreflightIssue",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowConfig"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "patchDocument",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
           ],
           "blocker": ""
         },
         {
           "id": "patchFrame",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
         },
         {
           "id": "patchPage",
-          "disposition": "BatchOnlyPendingRewrite",
-          "lanes": [],
-          "blocker": "LayoutSnapshot owns deep page/frame/style roots; mutation cloning/diff and Artifact Store publication require retained per-item preparation."
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "rotateSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "WindowTransient"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "scaleSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "WindowTransient"
+          ],
+          "blocker": ""
         },
         {
           "id": "setActivePage",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowConfig"
           ],
           "blocker": ""
         },
@@ -444,7 +705,16 @@
           "id": "setCamera",
           "disposition": "Migrated",
           "lanes": [
-            "Config"
+            "WindowConfig"
+          ],
+          "blocker": ""
+        },
+        {
+          "id": "translateSelection",
+          "disposition": "Migrated",
+          "lanes": [
+            "Artifact",
+            "WindowTransient"
           ],
           "blocker": ""
         }

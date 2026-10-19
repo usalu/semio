@@ -8,6 +8,7 @@ SRC = set(t['semanticDirectoryMemberKinds']['members-of-members-of-members-of-mo
 TESTS = t['testsDirName']
 PKGS = t['packagesDirName']
 FIX = t['testFixturesDirName']
+ORA = t['testOraclesDirName']
 IMPL = '🐹️.go'
 LANG = '🐹️go'
 
@@ -54,6 +55,8 @@ def module_plan(root):
             p = os.path.join(d, name)
             if not os.path.isdir(p) or os.path.islink(p):
                 continue
+            if os.path.exists(os.path.join(p, 'go.mod')):
+                continue
             if name in SRC:
                 s = os.path.join(p, IMPL)
                 if os.path.isfile(s) and not os.path.islink(s):
@@ -68,7 +71,7 @@ def module_plan(root):
                     if os.path.isfile(s) and not os.path.islink(s):
                         mp(d, s, True)
                 continue
-            if name in ('.git', 'node_modules', 'target', 'vendor', FIX, PKGS):
+            if name in ('.git', 'node_modules', 'target', 'vendor', FIX, ORA, PKGS):
                 continue
             walk(p)
 

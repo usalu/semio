@@ -143,7 +143,7 @@ async fn presence_and_transient_one_item_publications_are_retained_stale_safe_ca
     let mut presence = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: Some(0) });
     let root_factory: Arc<dyn SnapshotRetirementFactory<DemoSnapshot>> = Arc::new(DemoSnapshotRetirementFactory);
     presence.install_local_retirement_factory(root_factory.clone()).unwrap();
-    let old_presence_root = Arc::downgrade(presence.local.as_ref().expect("live local presence owner"));
+    let old_presence_root = Arc::downgrade(presence.local_root().expect("live local presence owner"));
     let mut presence_publication = presence.begin_publish_one(semio_framework_job::OperationId(5), 0, DemoMutation::SetN(SetN { n: 5 }), Some(&presence_factory), Some(root_factory.clone())).expect("presence factory admits");
     let presence_receipt = loop {
         if let ArtifactStoreOneItemAdvance::Published(receipt) = presence.advance_publish_one(&mut presence_publication, grant).expect("presence step") {

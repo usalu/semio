@@ -1,9 +1,11 @@
 //! 🦴️ Structural support and loading tools use current analytical members and emit authored semantic mutations.
-use crate::editor::bim::gestures::plane::P;
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{StructuralLocation, StructuralSupport, StructuralLoad, LoadCase, Point3, Restraints}};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralLocation, StructuralSupport, StructuralLoad, LoadCase, Restraints};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 
 /// 🖱️ The four structural authoring gestures; line loads retain their first station until the second click.
 pub struct Structure { kind: &'static str, anchor: Option<(String, f64, P)>, hover: Option<P> }
@@ -43,16 +45,16 @@ impl Tool for Structure {
                 if self.kind=="support" {
                     let id=ctx.mint("support");
                     let fixed=!pointer.modifiers.shift;
-                    return Step::write(ctx,ModelMutation::CreateSupport(crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport{id,support:StructuralSupport{name:member.clone(),member,location,offset:zero,restraints:Restraints{x:true,y:true,z:true,rx:fixed,ry:fixed,rz:fixed}}}));
+                    return Step::write(ctx,ModelMutation::CreateSupport(semio_s_artifact_bim_model_mut_any_112::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport{id,support:StructuralSupport{name:member.clone(),member,location,offset:zero,restraints:Restraints{x:true,y:true,z:true,rx:fixed,ry:fixed,rz:fixed}}}));
                 }
                 let mut mutations=Vec::new();
                 let load_case=match ctx.library_type(&ctx.snapshot.load_cases) {
                     Some(case)=>case,
-                    None=>{let id=ctx.mint("load-case");mutations.push(ModelMutation::CreateLoadCase(crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase{id:id.clone(),load_case:LoadCase{name:id.clone(),category:"gravity".into(),factor:1.0}}));id}
+                    None=>{let id=ctx.mint("load-case");mutations.push(ModelMutation::CreateLoadCase(semio_s_artifact_bim_model_mut_any_113::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase{id:id.clone(),load_case:LoadCase{name:id.clone(),category:"gravity".into(),factor:1.0}}));id}
                 };
-                if crate::standards::v1::subsets::any::schema::snapshot::location_problem(ctx.snapshot,&member,&location).is_some(){return Step::refuse(REJECTED);}
+                if semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::location_problem(ctx.snapshot,&member,&location).is_some(){return Step::refuse(REJECTED);}
                 let id=ctx.mint("load");
-                mutations.push(ModelMutation::CreateLoad(crate::standards::v1::subsets::any::schema::mutations::create_load::CreateLoad{id,load:StructuralLoad{name:member.clone(),load_case,member,location,force:Point3{x:0.0,y:0.0,z:-1000.0},moment:zero}}));
+                mutations.push(ModelMutation::CreateLoad(semio_s_artifact_bim_model_mut_any_114::standards::v1::subsets::any::schema::mutations::create_load::CreateLoad{id,load:StructuralLoad{name:member.clone(),load_case,member,location,force:Point3{x:0.0,y:0.0,z:-1000.0},moment:zero}}));
                 Step::mutate(mutations)
             }
             ToolEvent::Escape | ToolEvent::Lost => { self.anchor=None;self.hover=None;Step::default() }

@@ -65,19 +65,20 @@ fn set_cell_refuses_stale_rows_and_unknown_columns() {
 
 type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<EpwEditor>>;
 
-async fn kit_fixture_holding(document: &EpwSnapshot) -> KitFixtureApp {
+async fn kit_fixture_holding(document: &EpwSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
     use semio_framework_plugin::PluginApp;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<semio_framework_plugin::EditorApp<EpwEditor>, _>(async { semio_framework_plugin::App { definition: create_epw_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_EPW_DOCUMENT_SCHEMA) else { panic!("EPW fixture load must carry the document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads EPW document");
-    app
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("host loads EPW document");
+    (app, scope)
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
     use semio_framework_plugin::PluginApp;
     let snapshot = crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot();
-    let mut app = kit_fixture_holding(&snapshot).await;
+    let (mut app, mut scope) = kit_fixture_holding(&snapshot).await;
     let revision = epw_row_revision(&snapshot.records[0]);
     let args = semio_framework_value::DslValue::object([
         ("row".into(), semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0))),
@@ -86,10 +87,10 @@ async fn set_cell_reaches_the_document_through_the_registered_native_factory() {
         ("value".into(), semio_framework_value::DslValue::String("2026".into())),
     ]);
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action("set-cell", Some(&args), &meta, &mut identity).await).expect("set-cell starts");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("set-cell settles");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "set-cell", Some(args.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).expect("set-cell starts");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("set-cell settles");
     assert_eq!(app.snapshot().expect("EPW snapshot").records[0].year, "2026");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::epw::EpwEditor, || semio_framework_plugin::App { definition: crate::editor::epw::create_epw_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️energyplus/🪆️subsets/✳️any");

@@ -7,8 +7,7 @@
 import { type Implementation, IMPLEMENTATIONS } from "@semio-tech/framework/test/adapter";
 import { readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { getSemioRoot } from "../../📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { type Taxonomy } from "../../📚️library/🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { getSemioRoot, type Taxonomy } from "@semio-tech/repo-lib/inventory";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract
@@ -74,8 +73,6 @@ export const CORE_COMPARISON_PROFILES: readonly ComparisonProfileSpec[] = [
 type TestFileKind = Readonly<{ emoji: string; extensionChains: readonly string[] }>;
 type TestPathExclusion = Readonly<{ path: string; mode: "opaque"; reason: string }>;
 type TestLocation = Readonly<{ directoryPath: string; fileKindId: string }>;
-/** 🐹️ A toolchain convention that compiles a test only beside the package it tests, e.g. Go's `_test.go`. */
-export type TestInPackageImplementation = Readonly<{ id: string; implementation: string; fileKindId: string; filenameSuffix: string; rationale: string }>;
 export type MutationCatalogAuthority = Pick<Taxonomy, "mutationDomainOwners" | "mutationCatalogSourceOwners" | "pathEmojiPolicy" | "schemaScopeOwnerLevels">;
 
 /** 🗂️ Canonical v7 test taxonomy, mirrored from `🔣️taxonomy.json` so drift fails closed. */
@@ -97,7 +94,6 @@ export type TestTaxonomy = MutationCatalogAuthority & Readonly<{
   testImplementationFileKindIds: readonly string[];
   testLegacyDirectoryNames: readonly string[];
   testLegacyFilenamePatterns: readonly Readonly<{ id: string; pattern: string }>[];
-  testInPackageImplementations: readonly TestInPackageImplementation[];
   testRunnerConfigurationCaseName: string;
   /** 🔬️ Owner collections whose members bound the search for a case's subject package. */
   testSubjectBoundaryOwnerKinds: readonly string[];
@@ -130,7 +126,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testExamplesDirName", "testOraclesDirName", "testObsoleteCategoryStems", "testObsoleteTestEmojiCategoryStems", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testInPackageImplementations", "testRunnerConfigurationCaseName", "testSubjectBoundaryOwnerKinds", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testExamplesDirName", "testOraclesDirName", "testObsoleteCategoryStems", "testObsoleteTestEmojiCategoryStems", "testFixtureLegacyDirectoryNames", "exampleAssetsDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testImplementationFileKindIds", "testLegacyDirectoryNames", "testLegacyFilenamePatterns", "testRunnerConfigurationCaseName", "testSubjectBoundaryOwnerKinds", "testDeliveryScopeDirectoryNames", "testJavaScriptFrameworkModules", "testAssertionModules", "testSelfTestDeclarationPattern", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   required.push("mutationDomainOwners", "mutationCatalogSourceOwners", "pathEmojiPolicy", "schemaScopeOwnerLevels");
   const moduleDirectory = (parsed.schemaScopeOwnerLevels as { moduleMemberDirName?: unknown } | undefined)?.moduleMemberDirName;
   if (typeof moduleDirectory !== "string" || !moduleDirectory || moduleDirectory.includes("/") || moduleDirectory.includes("\\")) throw Error("Declared module collection vocabulary required");

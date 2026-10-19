@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-ui-wgpu-input-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu input laws: hit registry, pointer and keyboard actions against the widget kit"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-input-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-ui-action = { path = "../../../../../../../🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-retained-tree = { path = "../../../../../../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-theme = { path = "../../../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-mounted-layout = { path = "../../../../../📌️mounted_layout/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🌱️value/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+ui_contract = { path = "../../../../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }

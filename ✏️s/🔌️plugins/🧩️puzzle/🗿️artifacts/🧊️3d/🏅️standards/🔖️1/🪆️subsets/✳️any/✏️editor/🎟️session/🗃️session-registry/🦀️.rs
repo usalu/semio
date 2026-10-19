@@ -275,11 +275,10 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for Puzzle3dInstance
         if self.retirement.is_empty() && !self.brush_suggestions.is_empty() {
             self.retirement.stage(std::mem::take(&mut self.brush_suggestions));
         }
-        Ok(match self.retirement.close_step(grant) {
+        Ok(match self.retirement.close_step(grant)? {
             InteractiveJobCloseStep::Pending { progress } => semio_framework_plugin::PluginLifecycleStep::Progress(progress),
             InteractiveJobCloseStep::Complete { progress } => semio_framework_plugin::PluginLifecycleStep::Complete(progress),
             InteractiveJobCloseStep::Blocked => semio_framework_plugin::PluginLifecycleStep::Blocked { reason: "puzzle3d instance owner close is blocked" },
-            InteractiveJobCloseStep::Refused { kind, .. } => return Err(Fault::from(format!("puzzle3d instance owner close was refused: {kind:?}"))),
         })
     }
 

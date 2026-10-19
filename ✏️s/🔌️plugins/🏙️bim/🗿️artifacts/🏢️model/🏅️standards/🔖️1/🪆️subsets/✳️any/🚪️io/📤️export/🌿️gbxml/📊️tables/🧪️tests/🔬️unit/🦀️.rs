@@ -1,10 +1,9 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gbxml::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
+use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::gbxml::tables::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::tables::table_json;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -12,7 +11,7 @@ static BOX: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixt
 
 fn table() -> String {
     let model: ModelSnapshot = from_json_str((*BOX), JsonMemberPolicy::Reject).expect("the box decodes");
-    let plan = inference::try_with_inference(None, &model, |inferred| crate::standards::v1::subsets::any::io::export::gbxml::plan_of(&model, inferred)).expect("infers").expect("a plan");
+    let plan = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::plan_of(&model, inferred)).expect("infers").expect("a plan");
     table_json(&plan, &model)
 }
 

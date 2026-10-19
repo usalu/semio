@@ -1,5 +1,6 @@
 import {buildModePolicy,type BuildMode} from "../../🏗️build/🎚️mode/🟦️.ts";
-import { readFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import policySchema from "./🧬️schema/🔣️.json" with {type:"json"};
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { StringDecoder } from "node:string_decoder";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -25,7 +26,6 @@ export type CargoTestStepV1 = Readonly<{phase:"build"|"assert"|"report";args:str
 export function cargoTestExecutionArgumentsV1(step:CargoTestStepV1):string[]{
  const compiling=step.phase==="build"||step.phase==="assert"&&(step.args[0]==="test"||step.args[0]==="llvm-cov"&&step.args[1]==="test");if(!compiling)return[...step.args];const separator=step.args.indexOf("--"),head=separator<0?step.args:step.args.slice(0,separator),tail=separator<0?[]:step.args.slice(separator);return[...head,...["--locked","--offline"].filter(flag=>!head.includes(flag)),...tail];
 }
-const policySchema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
 
 /** 🔐️ Refuses absent or malformed execution policies before starting a compiler. */
 export function readCargoTestPolicyV1(environment:Readonly<Record<string,string|undefined>>):CargoTestPolicyV1 {
@@ -187,7 +187,7 @@ async function admitCargoExecutionV1(request:CargoTestRequestV1,policy:CargoTest
 
 /** 🏃️ Executes only after actual backing and selected Source admission, under unchanged original authority. */
 export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1,admission:CargoTestAdmissionV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
- const policy=admitPolicy(input),compilerArgs=cargoTestCompilerArgumentsV1(request,policy);return withCargoCompilerInputsV1({manifest:request.manifestPath,cwd:request.cwd,arguments:compilerArgs,environment:request.environment??process.env,control:admission.control},admission.withCargoInputs,async actual=>{
+ if(!admission?.control)return Promise.reject(Error("Original Cargo test admission required"));const policy=admitPolicy(input),compilerArgs=cargoTestCompilerArgumentsV1(request,policy);return withCargoCompilerInputsV1({manifest:request.manifestPath,cwd:request.cwd,arguments:compilerArgs,environment:request.environment??process.env,control:admission.control},admission.withCargoInputs,async actual=>{
  request={...request,environment:actual.environment};admission={...admission,control:actual.control};const env=await admitCargoExecutionV1(request,policy,admission,actual.arguments),control=actual.control;
  mkdirSync(policy.artifactDirectory,{recursive:true});const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")),metadata=join(directory,"binaries-metadata.json");requireNativeStoragePathV1(admission.storage.backing.root,directory);
  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined,primary:{error:unknown}|undefined;
@@ -210,6 +210,6 @@ export function cargoLintPlanV1(request:CargoTestRequestV1,input:CargoTestPolicy
 
 /** 🛠️ Executes admitted Clippy inside the same original physical compiler workspace. */
 export async function runCargoLintV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,admission:CargoTestAdmissionV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
- const step=cargoLintPlanV1(request,policy);return withCargoCompilerInputsV1({manifest:request.manifestPath,cwd:request.cwd,arguments:cargoTestExecutionArgumentsV1(step),environment:request.environment??process.env,control:admission.control},admission.withCargoInputs,async actual=>{request={...request,environment:actual.environment};admission={...admission,control:actual.control};const env=await admitCargoExecutionV1(request,policy,admission,actual.arguments),control=actual.control,identity=cargoBuildLeaseIdentityV1(policy.buildDirectory,actual.arguments),stop=startNativeProgress("cargo:lint");let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined,primary:{error:unknown}|undefined;
+ if(!admission?.control)return Promise.reject(Error("Original Cargo test admission required"));const step=cargoLintPlanV1(request,policy);return withCargoCompilerInputsV1({manifest:request.manifestPath,cwd:request.cwd,arguments:cargoTestExecutionArgumentsV1(step),environment:request.environment??process.env,control:admission.control},admission.withCargoInputs,async actual=>{request={...request,environment:actual.environment};admission={...admission,control:actual.control};const env=await admitCargoExecutionV1(request,policy,admission,actual.arguments),control=actual.control,identity=cargoBuildLeaseIdentityV1(policy.buildDirectory,actual.arguments),stop=startNativeProgress("cargo:lint");let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined,primary:{error:unknown}|undefined;
  try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:actual.arguments,signal:control.signal,control});await admission.storage.recheck();const remaining=checkResourceLeaseControl(control);await runBudgetedTestCommand(port.command,[...port.args,...actual.arguments],{cwd:request.cwd,env,signal:control.signal,budgetMs:Math.floor(remaining===null?step.budgetMs:step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining),throwOnFailure:true});checkResourceLeaseControl(control);}catch(error){primary={error};throw error;}finally{let failure:{error:unknown}|undefined;for(const cleanup of[()=>lease?.release(),stop])try{cleanup();}catch(error){failure??={error};}if(!primary&&failure)throw failure.error;}});
 }

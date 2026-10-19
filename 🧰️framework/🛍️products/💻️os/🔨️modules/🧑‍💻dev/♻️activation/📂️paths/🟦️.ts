@@ -1,4 +1,4 @@
-import {repositoryCachePartitionRootDataV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

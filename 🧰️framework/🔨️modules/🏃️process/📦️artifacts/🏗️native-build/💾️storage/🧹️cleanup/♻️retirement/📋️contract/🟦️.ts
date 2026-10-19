@@ -43,7 +43,7 @@ export function nativeDisposableJournalV1(bytes:Uint8Array,capacity:number,alloc
 import{withNativeStorageFundedChildReservationV1,settleEnteredNativeStorageFundedChildV1,retainNativeStorageFundedChildV1,type NativeStorageFailedBirthRetirementV1}from"../../../🟦️.ts";
 import type{NativeStorageChildRequestV1}from"../../../📜️journal/🟦️.ts";
 import{readNativeStorageFundedFactoryV1,type NativeStorageChildFundingV1}from"../../../🌱️birth/🟦️.ts";
-import type{NativeFixedPlatformOptionsV1}from"../../../🧱️fixed/🟦️.ts";
+import type{NativeFixedPlatformOptionsV1}from"../../../🔌️port/🟦️.ts";
 /** 🪢️ Actual backends keep their private EX and failed-preparation settlement inside these callbacks. */
 export interface NativeFundedImagePortV1{prepare(control:ResourceLeaseControl,enrollment:AcceptedPhysicalCleanupV1):Promise<void>;open(request:NativeStorageChildRequestV1,control:ResourceLeaseControl):Promise<NativeImageStorageV1>;settle(enrollment:AcceptedPhysicalCleanupV1):Promise<NativeStorageFailedBirthRetirementV1|undefined>;unresolved(failure:unknown):void;}
 /** 🏦️ Joins real durable birth and reader close before the same preaccepted cleanup phase begins. */

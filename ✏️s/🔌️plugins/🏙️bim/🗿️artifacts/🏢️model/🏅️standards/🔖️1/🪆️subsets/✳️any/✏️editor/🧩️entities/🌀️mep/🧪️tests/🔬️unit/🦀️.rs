@@ -1,9 +1,10 @@
-use crate::editor::bim::entities::mep::{MEP_INFERRED, TRAY, create_mep, default_shape, parse_path, parse_shape, path_text, shape_text, size_text};
-use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::fixture::furnished;
-use crate::editor::bim::entities::{kind_holding, kind_of};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::mep::{MEP_INFERRED, TRAY, create_mep, default_shape, parse_path, parse_shape, path_text, shape_text, size_text};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::furnished;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 fn model() -> ModelSnapshot {

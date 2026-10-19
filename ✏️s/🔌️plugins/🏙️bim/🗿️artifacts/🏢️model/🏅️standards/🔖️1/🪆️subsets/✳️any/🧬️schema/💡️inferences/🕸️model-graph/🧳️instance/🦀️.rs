@@ -9,9 +9,11 @@
 //! ([`shown`]); the calls whose caller can refuse (`try_*`, exports, jobs) hand the fault over as a value.
 
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
-use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{InferenceWorkFailure,InferenceError, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;

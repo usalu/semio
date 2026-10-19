@@ -1,7 +1,7 @@
 //! 📋️ Manifest: the hidden operation and view action builders and `create_sourcing_curation_app`.
 
 use super::*;
-use crate::editor::sourcing::base::{DEMO_STOCK_EXAMPLE_ID, SOURCING_OBJECT_GRANULARITY, SOURCING_ROWS_DOMAIN, sourcing_curation_io};
+use crate::editor::sourcing::editor_vocabulary::{DEMO_STOCK_EXAMPLE_ID, SOURCING_OBJECT_GRANULARITY, SOURCING_ROWS_DOMAIN, sourcing_curation_io};
 
 //#region 🔖️Manifest
 /// 🙈️ An internal document operation kept out of the command palette — the curation/DnD arms that mutate
@@ -131,7 +131,7 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
                 vec![ActionArgDef::select(
                     "exampleId",
                     LocalizedLabel::native("Example", "Beispiel"),
-                    crate::editor::sourcing::base::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone())).collect(),
+                    crate::editor::sourcing::editor_vocabulary::examples().iter().map(|example| ActionArgOption::new(example.id(), example.label().clone())).collect(),
                 )
                 .default_value(&DEMO_STOCK_EXAMPLE_ID)],
             )

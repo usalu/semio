@@ -3,7 +3,7 @@ import { renderOwnerPublications } from "../../📇️catalog/📣️publication
 import { declaredPlaygroundHostInputPathsV1, nativeHostTextSourceViewV1 } from "../../🎮️playground/🖥️native-host/🟦️.ts";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { type DiscoveredPackage, declaredComponentKind, isDiscoverySkipDirectory } from "../🪧️owner-markers/🟦️.ts";
-import { type GeneratorInputProjection, type RegistryCatalogInputView, type RegistryCatalogProjection, type RegistryCompilerInputDependencies, type RegistryCompilerInputRole, parseGeneratorInputProjection, parseRegistryCatalogProjection, parseRegistrySourceRoots, registryCompilerInputDependencies } from "../📇️registry-catalog-inputs/🟦️.ts";
+import { type GeneratorInputProjection, type RegistryCatalogInputView, type RegistryCatalogProjection, type RegistryCompilerInputDependencies, type RegistryCompilerInputRole, parseGeneratorInputProjection, parseRegistryCatalogProjection, parseRegistrySourceRoots, registryCatalogOwnerIndex, registryCompilerInputDependencies } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, loadTaxonomy, registryCatalogInputView } from "../🔐️taxonomy-authority/🟦️.ts";
 import { scanRepo } from "../🔭️repository-scan/🟦️.ts";
 
@@ -71,8 +71,9 @@ export function registryCatalogPathMayAffect(path: string, taxonomy: Taxonomy = 
 }
 
 /** 📦️ Catalog discovery deliberately omits source-role, cache-tag and package-purity diagnostics. */
-export function discoverCatalogPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): DiscoveredPackage[] {
-  return [...scanRepo(repoRoot, taxonomy, { view, inputs: new Set<string>() }).packages];
+export function discoverCatalogPackages(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy(), view?: RegistryCatalogInputView): DiscoveredPackage[] {
+  const ownerIndex = view === undefined ? registryCatalogOwnerIndex(repoRoot, taxonomy.packagesDirName) : undefined;
+  return [...scanRepo(repoRoot, taxonomy, { view: view ?? registryCatalogInputView(repoRoot, taxonomy), inputs: new Set<string>(), ...(ownerIndex ? { ownerIndex } : {}) }).packages];
 }
 
 /** 🛂️ Admits explicit physical source directories within the workspace without following any symlink. */

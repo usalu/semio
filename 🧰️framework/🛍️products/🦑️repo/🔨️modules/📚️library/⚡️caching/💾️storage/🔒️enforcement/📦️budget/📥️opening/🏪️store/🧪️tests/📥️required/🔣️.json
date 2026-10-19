@@ -215,7 +215,7 @@
       "method": "withBuildOrchestrationTaskEnvironmentV1"
     },
     {
-      "module": "🟨️.mjs",
+      "module": "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs",
       "method": "readPrivateNxBuildGraphV1"
     }
   ],

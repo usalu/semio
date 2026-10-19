@@ -1,6 +1,7 @@
 //! 🏠️ `create-roof` payload. Brings a new roof onto a storey; footprint is a closed counter-clockwise loop, pitched shapes need pitches in (0, 89 degrees); the solid is inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Roof}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Roof};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateRoof {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateRoof
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRoof> + From<crate::standards::v1::subsets::any::schema::mutations::delete_roof::DeleteRoof>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRoof> + From<semio_s_artifact_bim_model_mut_any_69::standards::v1::subsets::any::schema::mutations::delete_roof::DeleteRoof>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "roof", kind: "create-roof", record: "CreateRoof" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

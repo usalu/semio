@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document, house, real, rows, string, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{document, house, real, rows, string, target};
 
 #[test]
 fn spaces_are_named_by_number_long_named_by_name_and_extruded_over_their_clear_height() {

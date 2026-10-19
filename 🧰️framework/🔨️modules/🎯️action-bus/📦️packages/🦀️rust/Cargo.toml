@@ -34,4 +34,4 @@ semio-framework-manifest-media = { path = "../../../🛂️manifest/🎞️media
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }

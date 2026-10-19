@@ -8,12 +8,14 @@
 //! A beam end that lies inside the section of a column of its storey (at mid-depth of the beam) is joined to it: the axis is cut back to the face where it leaves the column, so the beam
 //! solid and the column solid share a face instead of overlapping. The joins are derived here from the authored columns, never stored.
 
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::{footprint, profile_loop, reach, Joiner};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Column, ModelSnapshot, Profile};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::{footprint, profile_loop, reach, Joiner};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{point, segment_of};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Column, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::mesh::{sweep_profile_ramped, TriMesh};
@@ -99,7 +101,7 @@ pub fn trims(axis: &BulgeSeg, depth: f64, tops: [f64; 2], joiners: &[Joiner<'_>]
 pub fn beam_geometry(beam: &Beam, profile: &Profile, own: &StoreyLevel, joiners: &[Joiner<'_>]) -> BeamGeometry {
     let top_z = own.top_elevation + beam.top_offset;
     let end_top_z = own.top_elevation + beam.end_top_offset.unwrap_or(beam.top_offset);
-    let axis = seg(&beam.axis);
+    let axis = segment_of(&beam.axis);
     let length = axis.length();
     let section = section_of(profile);
     let depth = -section.iter().map(|p| p.y).fold(f64::INFINITY, f64::min);
@@ -117,7 +119,7 @@ pub fn beam_geometry(beam: &Beam, profile: &Profile, own: &StoreyLevel, joiners:
 
 /// 🔗️ The columns of the storey of a beam whose reach touches an end of its axis: the candidates of its joins, from authored data only.
 pub fn joining<'a>(snapshot: &'a ModelSnapshot, beam: &Beam) -> Vec<(&'a String, &'a Column)> {
-    let axis = seg(&beam.axis);
+    let axis = segment_of(&beam.axis);
     let ends = [axis.start, axis.end];
     snapshot
         .columns
@@ -138,7 +140,7 @@ pub fn beam_solid(snapshot: &ModelSnapshot, beam: &Beam, own: &StoreyLevel, join
 pub fn beam_solid_in(snapshot: &ModelSnapshot, beam: &Beam, own: &StoreyLevel, joiners: &[Joiner<'_>], profiles: &FamilyProfiles<'_>) -> ElementSolid {
     let mut builder = SolidBuilder::new(SolidFamily::Beam);
     if let Some(kind) = snapshot.beam_types.get(&beam.beam_type) {
-        builder.add(parts::BODY, &kind.material, 0, &beam_geometry(beam, &profiles.resolve(&kind.profile), own, joiners).mesh);
+        builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, &kind.material, 0, &beam_geometry(beam, &profiles.resolve(&kind.profile), own, joiners).mesh);
     }
     builder.build()
 }

@@ -21,21 +21,31 @@ for (const pkg of workspacePackages) {
 workspacePackages = [...packageOwners.values()];
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
 const BOOTSTRAP_TOOLING_ENTRY_PATH = "(^|/)(?:📜️script\\.ts|🏗️builder/🌐️vite/🟦️\\.ts|🧪️tests/🎚️config/🟦️\\.ts|(?:⚙️|🧪️)?(?:vite|vitest)\\.config\\.[cm]?[jt]s)$";
+const IN_SOURCE_TEST_PATH = "(^|/)🧪️tests/";
+const BUILDER_SOURCE_PATH = "(^|/)🏗️builder/";
+const UI_TEST_SOURCE_PATH = "(^|/)🧪️(?:tests|testing)/|\\.(?:test|spec|story)\\.[cm]?[jt]sx?$";
 const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/(🎯️targets/⚛️react|🧱️elements)/";
-const RESOLVED_NODE_BUILTIN_PATH = `^(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")))].map(escapeRegex).join("|")})(?:$|/)`;
+const RESOLVED_NODE_BUILTIN_PATH = `^(?:node:)?(?:${[...new Set(nodeBuiltins.map((name) => name.replace(/^node:/, "")).filter((name) => !name.includes(":")))].map(escapeRegex).join("|")})(?:$|/)`;
 const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
   RENDERER_HOST_ROOT,
   "^🧰️framework/🔨️modules/🖱️ui/",
   "^🧰️framework/📦️packages/",
-  "^node_modules/react(?:-dom)?/",
+  installedPackagePath(["react", "react-dom"]),
   "^(?:node:|vitest/)",
-  "^node_modules/(?:vite|vitest)/",
+  "^bun:test$",
+  installedPackagePath(["vite", "vitest"]),
   RESOLVED_NODE_BUILTIN_PATH,
 ];
 
 /** ⚙️ Escapes a literal string for embedding inside a `RegExp` alternation. */
 function escapeRegex(literal) {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** 📦️ Matches an installed package by its resolved path whether it is linked at `node_modules/<name>` or realpathed into the bun store (`<store>/node_modules/.bun/<name>@<version>/node_modules/<name>`), independent of the store location. Written without an optional group around the version repetition so the resolver's safe-regex admission holds. */
+function installedPackagePath(names) {
+  const alternation = names.map(escapeRegex).join("|");
+  return `(?:^|/)node_modules/(?:(?:${alternation})/|\\.bun/(?:${alternation})@[^/]+/node_modules/(?:${alternation})/)`;
 }
 
 /** 🌳️ Factors literal prefixes without introducing captures or changing their accepted strings. */
@@ -122,12 +132,18 @@ function assertFocusedBoundarySemantics() {
     "node_modules/react/index.js",
     "node_modules/react-dom/client.js",
     "node_modules/vitest/dist/index.js",
+    ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react@19.3.1/node_modules/react/index.js",
+    ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react-dom@19.3.1+peer/node_modules/react-dom/client.js",
     "vitest/importMeta",
+    "bun:test",
     "fs",
     "node:path",
   ];
   const forbiddenRendererTargets = [
     "node_modules/three/build/three.module.js",
+    ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/three@0.170.0/node_modules/three/build/three.module.js",
+    ".cache/b/d/m/j/0123456789abcdef0123/node_modules/.bun/react@19.3.1/node_modules/three/index.js",
+    "bun:sqlite",
     "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
     "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts",
@@ -147,8 +163,10 @@ const OPAQUE_PATHS = Object.values(TAXONOMY.pathExclusions).map(({ path: prefix 
 const WORKSPACE_PACKAGES = workspacePackages.map(({ owner, ...pkg }) => ({ dir: owner, ...pkg }));
 const S_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("✏️s/"));
 const FRAMEWORK_PACKAGES = WORKSPACE_PACKAGES.filter(({ dir }) => dir.startsWith("🧰️framework/"));
+const VENDORED_PATHS = TAXONOMY.dependencyDirections.vendoredPaths;
+if (!Array.isArray(VENDORED_PATHS) || new Set(VENDORED_PATHS).size !== VENDORED_PATHS.length || VENDORED_PATHS.some((path) => typeof path !== "string" || !path || path.startsWith("/") || path.endsWith("/") || path.split("/").some((segment) => !segment || segment === "." || segment === ".."))) throw new Error("Dependency policy requires unique normalized repository-relative vendored paths");
 const IGNORED_GRAPH_PATHS = TAXONOMY.implementationLeafPolicy.ignoredPathPatterns.filter((pattern) => pattern !== "**/node_modules").map((pattern) => `(^|/)${escapeRegex(pattern.replace(/^\*\*\//u, ""))}(/|$)`)
-  .concat(OPAQUE_PATHS.map((prefix) => `^${escapeRegex(prefix)}(/|$)`));
+  .concat(OPAQUE_PATHS.concat(VENDORED_PATHS).map((prefix) => `^${escapeRegex(prefix)}(/|$)`));
 
 /** 🧱️ Matches framework and implementation owners identically through resolved paths and public package names. */
 function frameworkNoImplementationRule() {
@@ -164,17 +182,53 @@ function frameworkNoImplementationRule() {
   };
 }
 
-/** 🧬️ Builds declared semantic role rules from taxonomy owners and workspace package contributions. */
-function declaredDependencyDirectionRules() {
-  const { roles, rules } = TAXONOMY.dependencyDirections;
-  for (const pkg of WORKSPACE_PACKAGES) if (pkg.dependencyRole && !roles[pkg.dependencyRole]) throw new Error(`Unknown dependency role ${pkg.dependencyRole} in ${pkg.dir}`);
-  const patterns = (roleIds) => roleIds.flatMap((id) => {
+/** 🧬️ Resolves declared roles to resolved-path and package-alias selectors from taxonomy owners and workspace package contributions. */
+function dependencyRolePatterns(roleIds) {
+  const { roles } = TAXONOMY.dependencyDirections;
+  return roleIds.flatMap((id) => {
     const role = roles[id];
     if (!role) throw new Error(`Unknown dependency direction role ${id}`);
     const packages = WORKSPACE_PACKAGES.filter((pkg) => pkg.dependencyRole === id || role.ownerPaths.some((owner) => pkg.dir === owner || pkg.dir.startsWith(`${owner}/`)));
     return sourceOwnerPatterns(role.ownerPaths.concat(packages.map((pkg) => pkg.dir))).concat(packageOwnerPatterns(packages.map((pkg) => pkg.name).concat(role.externalPackages)));
   });
-  return Object.entries(rules).map(([name, rule]) => ({ name, severity: "error", comment: "Semantic owners must follow their declared dependency direction through resolved paths, package aliases and subpaths", from: { path: patterns(rule.fromRoles) }, to: { path: patterns(rule.toRoles) } }));
+}
+
+/** 🧬️ Builds declared semantic role rules from taxonomy owners and workspace package contributions. */
+function declaredDependencyDirectionRules() {
+  const { roles, rules } = TAXONOMY.dependencyDirections;
+  for (const pkg of WORKSPACE_PACKAGES) if (pkg.dependencyRole && !roles[pkg.dependencyRole]) throw new Error(`Unknown dependency role ${pkg.dependencyRole} in ${pkg.dir}`);
+  return Object.entries(rules).map(([name, rule]) => ({ name, severity: "error", comment: "Semantic owners must follow their declared dependency direction through resolved paths, package aliases and subpaths", from: { path: dependencyRolePatterns(rule.fromRoles) }, to: { path: dependencyRolePatterns(rule.toRoles) } }));
+}
+
+/** 🖱️ The ui boundary: ui sources may depend on the declared foundation roles at runtime, on the declared test-support roles only from test sources, and on nothing else of the framework; bootstrap entry points are the composition roots and stay exempt. */
+function uiBoundaryRules() {
+  const boundary = TAXONOMY.dependencyDirections.uiBoundary, { roles } = TAXONOMY.dependencyDirections;
+  if (!boundary || boundary.version !== 1 || !roles[boundary.subjectRole] || !Array.isArray(boundary.foundationRoles) || !Array.isArray(boundary.testSupportRoles)) throw new Error("Dependency policy requires a canonical ui boundary declaration");
+  const subject = sourceOwnerPatterns(roles[boundary.subjectRole].ownerPaths);
+  const foundation = dependencyRolePatterns(boundary.foundationRoles), testSupport = dependencyRolePatterns(boundary.testSupportRoles);
+  return [
+    {
+      name: "ui-no-framework-packages",
+      severity: "error",
+      comment: "🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic free — it may use only the declared ui-foundation modules, and the declared ui-test-support modules from tests; everything else is injected through a ui-owned port",
+      from: { path: subject, pathNot: BOOTSTRAP_TOOLING_ENTRY_PATH },
+      to: { path: ["^🧰️framework/", "^@semio-tech/framework-"], pathNot: subject.concat(["^@semio-tech/ui-"], foundation, testSupport) },
+    },
+    {
+      name: "ui-foundation-closure",
+      severity: "error",
+      comment: "ui-foundation modules are the closed set the ui may depend on: their runtime sources may depend only on the ui and on other foundation modules; scripts, tests and builders are composition roots",
+      from: { path: foundation, pathNot: [BOOTSTRAP_TOOLING_ENTRY_PATH, UI_TEST_SOURCE_PATH, BUILDER_SOURCE_PATH] },
+      to: { path: ["^🧰️framework/", "^@semio-tech/framework-"], pathNot: subject.concat(["^@semio-tech/ui-"], foundation) },
+    },
+    {
+      name: "ui-runtime-no-test-support",
+      severity: "error",
+      comment: "ui-test-support modules are test infrastructure and corpora: only test sources and bootstrap entry points may use them",
+      from: { path: subject, pathNot: [BOOTSTRAP_TOOLING_ENTRY_PATH, UI_TEST_SOURCE_PATH] },
+      to: { path: testSupport, pathNot: foundation },
+    },
+  ];
 }
 
 /** 🥾️ Keeps product-runtime technology edges forbidden while exempting only executable bootstrap and Vite/Vitest configuration entry points. */
@@ -239,9 +293,21 @@ function noImplSegmentRule() {
   };
 }
 
-/** 🚫️ Bans dependency paths whose emoji-stripped segment is a banned stem (`core`, `shared`, …). */
+/** 🚫️ Bans dependency paths with a segment whose emoji-stripped, extension-stripped name is a banned stem (`core`, `shared`, …), exactly like the filesystem naming law `policyBannedNameStemBreaches`.
+ * Node builtins (`core`) and unresolvable specifiers (`unknown`, for example `bun:test` or an uninstalled npm package) are not repository paths and never count.
+ * Stems listed in `bannedNameStemExemptions.subsetDirectories` stay legal as the direct child of a `subsetsDirName` owner, where the standard's own subset vocabulary (for example `base`) names the directory.
+ * Files listed in `bannedNameStemExemptions.vendoredFiles` are installed third-party modules with a fixed internal import identity and never count. */
 function noCorePathRule() {
-  const stems = (TAXONOMY.bannedNameStems || ["core"]).map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+  const { bannedNameStems: banned, bannedNameStemExemptions: exemptions, subsetsDirName: subsets } = TAXONOMY;
+  if (!Array.isArray(banned) || !banned.length || banned.some((stem) => typeof stem !== "string" || !/^[a-z0-9][a-z0-9-]*$/u.test(stem))) throw new Error("Dependency policy requires canonical bannedNameStems authority");
+  if (!exemptions || Object.keys(exemptions).join() !== "subsetDirectories,vendoredFiles" || !Array.isArray(exemptions.subsetDirectories) || exemptions.subsetDirectories.some((stem) => !banned.includes(stem))) throw new Error("Dependency policy requires bannedNameStemExemptions.subsetDirectories drawn from bannedNameStems");
+  if (!Array.isArray(exemptions.vendoredFiles) || exemptions.vendoredFiles.some((file) => typeof file !== "string" || !file || file.startsWith("/") || file.includes("..") || file.endsWith("/"))) throw new Error("Dependency policy requires bannedNameStemExemptions.vendoredFiles as repository-relative file paths");
+  if (typeof subsets !== "string" || !subsets || subsets.includes("/")) throw new Error("Dependency policy requires canonical subsetsDirName authority");
+  const exempt = new Set(exemptions.subsetDirectories), alternation = (stems) => stems.map(escapeRegex).join("|");
+  const emoji = "[^\\x00-\\x7f]*";
+  const everywhere = banned.filter((stem) => !exempt.has(stem)), subsetOnly = banned.filter((stem) => exempt.has(stem));
+  const boundary = "(?:\\.(?:rs|ts|tsx|js|mjs|cjs|go|py|cs))?(?=/|$)";
+  const branches = [...(everywhere.length ? [`(?:^|/)${emoji}(?:${alternation(everywhere)})`] : []), ...(subsetOnly.length ? [`^${emoji}(?:${alternation(subsetOnly)})`, `(?:^|/)(?!${escapeRegex(subsets)}/)[^/]+/${emoji}(?:${alternation(subsetOnly)})`] : [])];
   return {
     name: "no-core-path",
     severity: "error",
@@ -250,8 +316,9 @@ function noCorePathRule() {
       path: "^(✏️s/|🧰️framework/|🌎️hub/|♻️mit-bestand/)",
     },
     to: {
-      path: `(^|/)([^/]*?)(${stems})(/|$)`,
-      pathNot: "node_modules|target|/pkg/",
+      path: branches.map((branch) => branch + boundary),
+      pathNot: ["(?:^|/)(?:node_modules|target|pkg)(?:/|$)", ...(exemptions.vendoredFiles.length ? [`^(?:${exemptions.vendoredFiles.map(escapeRegex).join("|")})$`] : [])],
+      dependencyTypesNot: ["core", "unknown"],
     },
   };
 }
@@ -380,9 +447,9 @@ return {
     {
       name: "no-circular",
       severity: "error",
-      comment: "No circular dependencies",
-      from: {},
-      to: { circular: true },
+      comment: "No circular dependencies; a module's own in-source tests (registered behind `import.meta.vitest`, dead code in every production bundle) are leaves of that module and never members of its production graph",
+      from: { pathNot: IN_SOURCE_TEST_PATH },
+      to: { circular: true, pathNot: IN_SOURCE_TEST_PATH },
     },
     {
       name: "not-to-unlisted",
@@ -418,16 +485,7 @@ return {
         path: ["^✏️s/🔌️plugins/"].concat(S_PACKAGES.filter((pkg) => pkg.dir.startsWith("✏️s/🔌️plugins/")).map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`)),
       },
     },
-    {
-      name: "ui-no-framework-packages",
-      severity: "error",
-      comment: "🧰️framework/🔨️modules/🖱️ui must stay presentational and business-logic free — no OS/plugin/framework coupling",
-      from: { path: "^🧰️framework/🔨️modules/🖱️ui/" },
-      to: {
-        path: ["^🧰️framework/", "^@semio-tech/framework-"],
-        pathNot: ["^🧰️framework/🔨️modules/🖱️ui/", "^@semio-tech/ui-"],
-      },
-    },
+    ...uiBoundaryRules(),
     rendererHostsOnlyUiRule(),
     {
       name: "no-state-outside-os",
@@ -441,6 +499,7 @@ return {
       to: {
         path: "^🧰️framework/🛍️products/💻️os/.*/(🏪️store|🖥️host)/",
         dependencyTypes: ["local"],
+        dependencyTypesNot: ["aliased-workspace"],
       },
     },
     ...crossTechnologyRules(),

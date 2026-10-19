@@ -1,7 +1,7 @@
 //! 📊️ Native JSON inference table projection.
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use std::collections::BTreeMap;
 
 /// 📏️ The canonical JSON table `view → measure → value` the view oracle compares: the silhouette union, cut area and datum length of every section and elevation (see `VERTICAL_METRICS`). A plan is measured by the `plan-metrics` of its storey, a camera draws nothing.

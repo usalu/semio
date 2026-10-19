@@ -19,7 +19,7 @@ use semio_framework_os_renderer_wgpu_program_bridge::filter_plugins;
 use semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins;
 use std::collections::HashMap;
 use std::sync::Arc;
-use ui_wgpu::wgpu::IconAtlas;
+use semio_framework_ui_draw_contract::IconAtlas;
 
 #[path = "../🧊️renderer/🔬️native-socket-probe/🦀️.rs"]
 mod native_socket_probe;

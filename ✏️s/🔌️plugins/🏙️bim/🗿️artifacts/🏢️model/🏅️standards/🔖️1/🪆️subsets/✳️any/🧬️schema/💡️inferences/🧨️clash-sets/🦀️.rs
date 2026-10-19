@@ -13,8 +13,9 @@
 //!
 //! Related: buildingSMART BCF clash topics, Navisworks clash detective rules; the pair test is the mesh collision of `semio_framework_geometry::collision`.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidKey};
-use crate::standards::v1::subsets::any::schema::snapshot::{ClashSet, ElementClass, ModelSnapshot, Point3};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidKey};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClashSet, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, Point3};
 use semio_framework_geometry::collision::{self, Aabb, Bvh};
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_value::DslValue;
@@ -104,7 +105,7 @@ pub fn world_mesh(solid: &ElementSolid) -> TriMesh {
 /// 📦️ The probe of the solid of the element `id`.
 pub fn probe_of(snapshot: &ModelSnapshot, id: &str, solid: &ElementSolid) -> SolidProbe {
     let mesh = world_mesh(solid);
-    SolidProbe { class: crate::standards::v1::subsets::any::schema::snapshot::class_of(snapshot, id), storey: solid.storey.clone(), bounds: collision::mesh_aabb(&mesh), bvh: Bvh::build(&mesh), mesh }
+    SolidProbe { class: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::class_of(snapshot, id), storey: solid.storey.clone(), bounds: collision::mesh_aabb(&mesh), bvh: Bvh::build(&mesh), mesh }
 }
 //#endregion 🔖️Probe
 
@@ -113,11 +114,11 @@ pub fn probe_of(snapshot: &ModelSnapshot, id: &str, solid: &ElementSolid) -> Sol
 pub fn picks(snapshot: &ModelSnapshot, set: &ClashSet) -> (Vec<String>, Vec<String>) {
     let mut a = Vec::new();
     let mut b = Vec::new();
-    for (id, class) in crate::standards::v1::subsets::any::schema::snapshot::classified(snapshot) {
-        if crate::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.a, snapshot, &id, class) {
+    for (id, class) in semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::classified(snapshot) {
+        if semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.a, snapshot, &id, class) {
             a.push(id.clone());
         }
-        if crate::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.b, snapshot, &id, class) {
+        if semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::selector_picks(&set.b, snapshot, &id, class) {
             b.push(id);
         }
     }
@@ -236,7 +237,7 @@ pub fn clashes_of(set: &ClashSet, a: &[(&str, &SolidProbe)], b: &[(&str, &SolidP
 pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
     let Some(set) = snapshot.clash_sets.get(id) else { return DslValue::Null };
     let (a, b) = picks(snapshot, set);
-    let storeys = DslValue::object(a.iter().chain(b.iter()).map(|element| (element.clone(), dep_value(&crate::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, element).cloned()))));
+    let storeys = DslValue::object(a.iter().chain(b.iter()).map(|element| (element.clone(), dep_value(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, element).cloned()))));
     dep_object([("set", dep_value(set)), ("a", dep_value(&a)), ("b", dep_value(&b)), ("storeys", storeys), ("hosting", dep_value(&hosting(snapshot)))])
 }
 
@@ -279,7 +280,7 @@ pub fn table_json(results: &BTreeMap<String, ClashSetResult>) -> String {
 
 /// 🧊️ The world meshes of the classified elements that have a solid, `{ <element id>: { class, storey, positions, indices } }`: the committed input of the clash oracle, written by the blessing test from the inferred solids.
 pub fn meshes_json(snapshot: &ModelSnapshot, solids: &BTreeMap<String, ElementSolid>) -> String {
-    let rows = crate::standards::v1::subsets::any::schema::snapshot::classified(snapshot).into_iter().filter_map(|(id, class)| {
+    let rows = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::classified(snapshot).into_iter().filter_map(|(id, class)| {
         let solid = solids.get(&id).filter(|solid| !solid.is_empty())?;
         let mesh = world_mesh(solid);
         let positions = DslValue::Array(mesh.positions.iter().map(|p| DslValue::Array(p.iter().map(|value| number(*value)).collect())).collect());

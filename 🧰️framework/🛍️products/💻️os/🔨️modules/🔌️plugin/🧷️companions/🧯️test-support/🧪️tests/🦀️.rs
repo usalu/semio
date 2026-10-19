@@ -1,6 +1,6 @@
 //! 🧪️ Closed-fixture laws of the module tree reader; the TypeScript `🟦️.ts` beside the fixture proves the same expectations against the independent `readModuleTreeSource`.
 
-use super::{inspect_module_children, read_module_tree_files, read_module_tree_source, slice_module_tree_source, ModuleChild, ModuleVia};
+use super::{inspect_module_children, list_source_family, read_module_tree_files, read_module_tree_source, read_source_family_source, slice_module_tree_source, ModuleChild, ModuleVia};
 use semio_framework_test_fixtures::fixture_path;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -125,4 +125,30 @@ fn the_plugin_trees_resolve_below_their_roots() {
     assert!(files.iter().all(|file| !file.to_string_lossy().contains("🧪️tests") && !file.to_string_lossy().contains("🛬️lifted")));
     let source = read_module_tree_source(&root).expect("the retained-command tree reads");
     assert!(source.contains("ArtifactRetainedWorkCapacity"));
+}
+
+#[test]
+fn families_list_the_fixture_files_in_utf16_path_order_and_read_the_same_text() {
+    for row in fixture()["families"].as_array().expect("families") {
+        let base = materialize(row["id"].as_str().expect("id"), &row["files"]);
+        let directory = base.join(row["directory"].as_str().expect("directory"));
+        let expected: Vec<PathBuf> = row["expected"].as_array().expect("expected").iter().map(|path| base.join(path.as_str().expect("path"))).collect();
+        assert_eq!(list_source_family(&directory).expect("lists"), expected, "{}", row["id"]);
+        let joined: String = expected.iter().map(|path| std::fs::read_to_string(path).expect("reads")).map(|text| if text.ends_with('\n') { text } else { text + "\n" }).collect();
+        assert_eq!(read_source_family_source(&directory).expect("reads"), joined, "{}", row["id"]);
+        let _ = std::fs::remove_dir_all(base);
+    }
+}
+
+#[test]
+fn the_instance_family_resolves_below_the_plugin_folder() {
+    let plugin = fixture_path!("../../../..");
+    let root = plugin.join("🧵️instance");
+    if !root.exists() {
+        return;
+    }
+    let files = list_source_family(&root).expect("the instance family lists");
+    assert!(files.len() > 1);
+    assert!(files.iter().all(|file| !file.to_string_lossy().contains("🧪️tests")));
+    assert!(read_source_family_source(&root).expect("the instance family reads").contains("async fn dispatch_typed_command_inner"));
 }

@@ -321,18 +321,25 @@ impl DrawingClipboardJob{
         DrawingJobTurn::Yield
     }
 }
+impl DrawingClipboardJob{
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{let turn=self.turn(cx);self.outcomes.lend(turn,cx)}
+}
+
 impl InteractiveJob for DrawingClipboardJob{
-    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{let turn=self.turn(cx);self.outcomes.lend(turn,cx)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{self.outcomes.borrow_outcome(descriptor)}
     fn begin_close(&mut self){self.closing=true;}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{
-        if !self.closing{return InteractiveJobCloseStep::Blocked;}
-        if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}
-        if self.locator.is_some()||self.footprint.is_some()||self.tree.is_some(){if grant.maximum_items==0{return InteractiveJobCloseStep::Pending{progress:Default::default()};}self.locator=None;self.footprint=None;self.tree=None;return InteractiveJobCloseStep::Pending{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}};}
-        let step=if let Some(owner)=self.layer_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.layer_clone=None;}step}else if let Some(owner)=self.asset_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.asset_clone=None;}step}else if !self.owner.terminal_is_empty(){self.owner.step(grant)}else{
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}
+            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}
+            if self.locator.is_some()||self.footprint.is_some()||self.tree.is_some(){if grant.maximum_items==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}self.locator=None;self.footprint=None;self.tree=None;return Ok(InteractiveJobCloseStep::Pending{progress:semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}});}
+            let step=if let Some(owner)=self.layer_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.layer_clone=None;}step}else if let Some(owner)=self.asset_clone.as_mut(){let step=owner.close_step(grant);if owner.terminal_is_empty(){self.asset_clone=None;}step}else if !self.owner.terminal_is_empty(){self.owner.step(grant)}else{
 
-            self.encoding=None;self.decoding=None;return InteractiveJobCloseStep::Complete{progress:Default::default()};
-        };match step{Ok(RetainedCloneStep::Progress(progress))|Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}
+                self.encoding=None;self.decoding=None;return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()});
+            };Ok(match step{Ok(RetainedCloneStep::Progress(progress))|Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Pending{progress},Err(error)=>return Err(error)})
+        })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.maximum_copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.demands(copy)?.maximum_capacity_bytes)}

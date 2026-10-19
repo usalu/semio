@@ -1,16 +1,16 @@
 /** 🧭️ Browser actor child worker containment, GIS describe and document reservation gates.
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
-import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
-import { produceFreshComponentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
-import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
-import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { produceFreshComponentV1 } from "@semio-tech/framework-plugin/describe/fresh-component";
+import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "@semio-tech/framework-plugin/browser-bundle/script";
+import { runVitest } from "@semio-tech/process/vitest";
+import { BundleScript } from "@semio-tech/process/routing";
 import { freeLoopbackPort } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { trustedBootstrapBuildControl } from "../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
 import { trustedBootstrapReadRegular } from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
@@ -399,7 +399,7 @@ export class BrowserActorGisDescribeCheckScript extends BundleScript {
     if (!artifactRoot || !isAbsolute(artifactRoot) || relativeRoot === "" || relativeRoot.startsWith("..") || isAbsolute(relativeRoot)) throw new Error("GIS child gate requires ticket-owned SEMIO_TEST_ARTIFACT_DIR");
     mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
     await proveBrowserActorGisEvidenceV1(artifactRoot);
-    const { createFreshComponentTests } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts");
+    const { createFreshComponentTests } = await import("@semio-tech/framework-plugin/describe/testing/fresh-component");
     await createFreshComponentTests(this.invocation).testFreshComponentProcessV1(this.repoRoot);
     console.log(`browser-actor-gis-describe: TypeScript=1 fast-deep-equal=${fixture.cases.length} normalization=${fixture.cases.length} source passed; real guest execution requires --native`);
     if (segments[0] !== "--native") return;

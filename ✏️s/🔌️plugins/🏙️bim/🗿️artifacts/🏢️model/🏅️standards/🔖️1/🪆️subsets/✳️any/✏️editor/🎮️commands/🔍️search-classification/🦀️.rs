@@ -2,10 +2,11 @@
 //! id `system:code`); the classification browser then lists the matches with their ancestors instead of the whole table. An empty text clears the search. Selection is framework state, so the command writes no mutation; a text
 //! that matches nothing is refused instead of silently selecting nothing.
 
-use crate::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
-use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationSystem, ModelSnapshot}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

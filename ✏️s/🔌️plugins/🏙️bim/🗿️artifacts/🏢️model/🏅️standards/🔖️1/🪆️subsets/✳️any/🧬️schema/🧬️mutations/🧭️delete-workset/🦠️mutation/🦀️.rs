@@ -1,5 +1,6 @@
 //! 🧭️ delete-workset authored mutation.
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -9,7 +10,7 @@ pub struct DeleteWorkset {
 }
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteWorkset
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteWorkset> + From<crate::standards::v1::subsets::any::schema::mutations::create_workset::CreateWorkset> + From<crate::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteWorkset> + From<crate::standards::v1::subsets::any::schema::mutations::create_workset::CreateWorkset> + From<semio_s_artifact_bim_model_mut_any_51::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "workset", kind: "delete-workset", record: "DeleteWorkset" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_workset::diff::diff(self, base) }

@@ -23,12 +23,12 @@ func StreamFolders(ctx context.Context, scope string, out chan<- model.Folder, o
 		options = opts[0]
 	}
 
-	root := workspace.RootDir
+	root := workspace.GetRootDir()
 	if bundleName, found := strings.CutPrefix(scope, "compose/"); found {
 		bundles := codebase.GetTechnologies()
 		for _, b := range bundles {
 			if b.Name == bundleName || model.NormalizeBundleLabel(b.Name) == bundleName {
-				root = filepath.Join(workspace.RootDir, b.Root)
+				root = filepath.Join(workspace.GetRootDir(), b.Root)
 				break
 			}
 		}
@@ -36,7 +36,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- model.Folder, o
 		if filepath.IsAbs(scope) {
 			root = scope
 		} else {
-			root = filepath.Join(workspace.RootDir, scope)
+			root = filepath.Join(workspace.GetRootDir(), scope)
 		}
 	}
 
@@ -67,7 +67,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- model.Folder, o
 
 	for _, folderPath := range folders {
 		ignored := workspace.IsGitIgnored(folderPath)
-		relPath, _ := filepath.Rel(workspace.RootDir, folderPath)
+		relPath, _ := filepath.Rel(workspace.GetRootDir(), folderPath)
 		generated := model.IsGenerated(folderPath) || model.IsGeneratedFolder(relPath)
 		folderKind := model.DeriveFolderKind(relPath)
 
@@ -131,13 +131,13 @@ func StreamFiles(ctx context.Context, scope string, out chan<- model.File, opts 
 		options = opts[0]
 	}
 
-	root := workspace.RootDir
+	root := workspace.GetRootDir()
 	if scope != "" && scope != "compose" {
 		bundles := codebase.GetTechnologies()
 		matched := false
 		for _, b := range bundles {
 			if b.Name == scope || b.Root == scope || model.NormalizeBundleLabel(b.Name) == scope {
-				root = filepath.Join(workspace.RootDir, b.Root)
+				root = filepath.Join(workspace.GetRootDir(), b.Root)
 				matched = true
 				break
 			}
@@ -149,7 +149,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- model.File, opts 
 				subPath := parts[2]
 				for _, b := range bundles {
 					if b.Name == bundleScope || b.Root == bundleScope || model.NormalizeBundleLabel(b.Name) == bundleScope {
-						root = filepath.Join(workspace.RootDir, b.Root, subPath)
+						root = filepath.Join(workspace.GetRootDir(), b.Root, subPath)
 						matched = true
 						break
 					}
@@ -160,13 +160,13 @@ func StreamFiles(ctx context.Context, scope string, out chan<- model.File, opts 
 			if filepath.IsAbs(scope) {
 				root = scope
 			} else {
-				root = filepath.Join(workspace.RootDir, scope)
+				root = filepath.Join(workspace.GetRootDir(), scope)
 			}
 		}
 	}
 
 	if info, err := os.Stat(root); err == nil && !info.IsDir() {
-		relPath, _ := filepath.Rel(workspace.RootDir, root)
+		relPath, _ := filepath.Rel(workspace.GetRootDir(), root)
 		var bundleID *string
 		if b := model.GetBundleByPath(relPath); b != nil {
 			id := b.GetID()
@@ -247,7 +247,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- model.File, opts 
 			continue
 		}
 
-		relPath, _ := filepath.Rel(workspace.RootDir, filePath)
+		relPath, _ := filepath.Rel(workspace.GetRootDir(), filePath)
 		var bundleID *string
 		if b := model.GetBundleByPath(relPath); b != nil {
 			id := b.GetID()
@@ -344,7 +344,7 @@ func StreamSections(ctx context.Context, scope string, out chan<- model.Section,
 	for f := range fileChan {
 		fullPath := f.Path
 		if !filepath.IsAbs(fullPath) {
-			fullPath = filepath.Join(workspace.RootDir, fullPath)
+			fullPath = filepath.Join(workspace.GetRootDir(), fullPath)
 		}
 		content, err := workspace.ReadTextFile(fullPath)
 		if err != nil {
@@ -409,7 +409,7 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- model.Defin
 	for f := range fileChan {
 		fullPath := f.Path
 		if !filepath.IsAbs(fullPath) {
-			fullPath = filepath.Join(workspace.RootDir, fullPath)
+			fullPath = filepath.Join(workspace.GetRootDir(), fullPath)
 		}
 		content, err := workspace.ReadTextFile(fullPath)
 		if err != nil {

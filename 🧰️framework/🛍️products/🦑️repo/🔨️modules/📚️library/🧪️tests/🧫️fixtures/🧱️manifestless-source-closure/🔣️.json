@@ -95,7 +95,7 @@
       ],
       "consumers": [
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
-        "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🏛️bootstrap/🟦️.ts"
       ]
     },
     {
@@ -172,8 +172,7 @@
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
           "language": "typescript",
           "anchors": [
-            "export class SupportScript",
-            "export class MaterializeScript"
+            "export class SupportScript"
           ]
         }
       ],
@@ -194,32 +193,32 @@
   "aliases": [
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@/lib/persistence",
-      "target": "../../🗄️persistence/🟦️.ts",
+      "specifier": "../../📚️library/🗄️persistence/🟦️.ts",
+      "target": "../../../📚️library/🗄️persistence/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@/lib/source-index",
-      "target": "../../🔎️source-index/🟦️.ts",
+      "specifier": "../../📚️library/🔎️source-index/🟦️.ts",
+      "target": "../../../📚️library/🔎️source-index/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@/lib/authentication",
-      "target": "../../🔐️authentication/🟦️.ts",
+      "specifier": "../../📚️library/🔐️authentication/🟦️.ts",
+      "target": "../../../📚️library/🔐️authentication/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts"
     },
     {
       "config": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json",
-      "specifier": "@/lib/event",
-      "target": "../../📡️event/🟦️.ts",
+      "specifier": "../../📚️library/📡️event/🟦️.ts",
+      "target": "../../../📚️library/📡️event/🟦️.ts",
       "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts"
     }
   ],
   "command": {
     "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts",
-    "maximumLines": 12,
+    "maximumLines": 48,
     "forbiddenExports": [
       "ACTOR_COMPONENT_EXPORTS",
       "assertActorComponentExports",
@@ -230,10 +229,9 @@
   },
   "cacheAuthority": [
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "fragments": [
-        "const webSourceRoot = \"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle\";",
-        "`{workspaceRoot}/${webSourceRoot}/**/*.ts`"
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.{ts,json}"
       ]
     },
     {

@@ -1,0 +1,36 @@
+{
+ "name": "hdr4-forms",
+ "crates": [
+  "semio-s-artifact-forms-forms-commands",
+  "semio-s-artifact-forms-forms-config",
+  "semio-s-artifact-forms-forms-definition",
+  "semio-s-artifact-forms-forms-diff",
+  "semio-s-artifact-forms-forms-inferences",
+  "semio-s-artifact-forms-forms-mutations",
+  "semio-s-artifact-forms-forms-questions",
+  "semio-s-artifact-forms-forms-schema",
+  "semio-s-artifact-forms-forms-snapshot",
+  "semio-s-artifact-forms-forms-tests",
+  "semio-s-artifact-forms-forms-tests-2",
+  "semio-s-artifact-forms-forms-tests-3",
+  "semio-s-artifact-forms-forms-commands-try"
+ ],
+ "base": {
+  "rev": "4dab415ed90",
+  "crates": [
+   "semio-s-artifact-forms-forms-commands",
+   "semio-s-artifact-forms-forms-config",
+   "semio-s-artifact-forms-forms-definition",
+   "semio-s-artifact-forms-forms-diff",
+   "semio-s-artifact-forms-forms-inferences",
+   "semio-s-artifact-forms-forms-mutations",
+   "semio-s-artifact-forms-forms-questions",
+   "semio-s-artifact-forms-forms-schema",
+   "semio-s-artifact-forms-forms-snapshot",
+   "semio-s-artifact-forms-forms-tests",
+   "semio-s-artifact-forms-forms-tests-2",
+   "semio-s-artifact-forms-forms-tests-3"
+  ]
+ },
+ "note": "HDR-4: forms try-wizard commands to their own crate"
+}

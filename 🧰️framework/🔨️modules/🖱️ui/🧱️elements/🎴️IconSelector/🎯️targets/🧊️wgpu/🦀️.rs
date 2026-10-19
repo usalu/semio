@@ -9,12 +9,12 @@
 //! `crate::wgpu::chrome`/`crate::wgpu::geometry`/`crate::wgpu::input` are the other top-level engine mods `widgets`
 //! itself also depends on.
 
-use crate::wgpu::chrome::{chrome_item_bg, push_control_border, push_icon, ICON_TINY};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::input::{HitKind, HitTarget};
-use crate::wgpu::widgets::{draw_text, WidgetContext};
+use semio_framework_ui_wgpu_layout::chrome::{chrome_item_bg, push_control_border, push_icon, ICON_TINY};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget};
+use semio_framework_ui_wgpu_widget_kit::{draw_text, WidgetContext};
 
-pub(crate) fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_icon_select<E: Clone>(id: &str, value: &str, _uniform: bool, _classifier_kind: &str, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)));
     let content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {

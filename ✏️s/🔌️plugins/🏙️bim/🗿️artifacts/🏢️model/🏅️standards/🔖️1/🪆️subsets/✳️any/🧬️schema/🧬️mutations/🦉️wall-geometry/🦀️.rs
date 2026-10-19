@@ -3,7 +3,9 @@
 //! same diff from the same mutation. Arc geometry follows `semio-framework-geometry::bulge` (`bulge = tan(sweep / 4)`, parameters
 //! proportional to arc length), which cross-checks it in the unit tests.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot, Point2, Profile, Slope, TopConstraint}, diff::ModelDiff};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, CurtainGrid, CurtainPanel, Point2, Profile, Slope, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::f64::consts::TAU;
 
@@ -232,7 +234,7 @@ pub fn curtain_wall_flaw(base: &ModelSnapshot, wall: &CurtainWall) -> Option<Fla
 //#endregion 🔖️CurtainWall
 
 //#region 🔖️Frame
-pub use crate::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
 
 /// 🚫 Why a lean is no lean: the direction must be finite and the angle a positive, finite angle of at most [`MAX_TILT`]; plumb is the absence of a tilt.
 pub fn tilt_flaw(tilt: &Slope) -> Option<Flaw> {
@@ -252,9 +254,10 @@ pub fn offsets_flaw(top_offset: f64, end_top_offset: Option<f64>) -> Option<Flaw
 /// 🧪️ Helpers shared by the wall leaf tests: fixture decoding, tolerant comparison and the code of a refusal.
 #[cfg(any(test, feature = "testkit"))]
 pub mod testing {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
-    use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-    use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+    use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use protocol::Mutation;
     use semio_framework_diagnostic::Severity;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};

@@ -1,4 +1,4 @@
-import type{FormExpr}from"../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormExpr } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 import{parseCondition}from"../../../🧬️schema/📝️definition/🟦️.ts";
 import{parseFormsValue}from"../../../🧬️schema/🌱️value/🟦️.ts";
 

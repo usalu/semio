@@ -1,7 +1,35 @@
 {
  "name": "uic-tui",
- "crates": ["semio-framework-ui", "semio-framework-ui-tui-core", "semio-framework-ui-tui-vt", "semio-framework-ui-tui-terminal", "semio-framework-ui-tui-widgets", "semio-framework-ui-tui-frame", "semio-framework-ui-tui-engine", "semio-framework-ui-tui-host", "semio-framework-ui-tui-laws"],
- "features": {"semio-framework-ui": ["tui", "tui-terminal"], "semio-framework-ui-tui-terminal": ["native"], "semio-framework-ui-tui-host": ["bindgen"]},
- "base": {"rev": "HEAD", "crates": ["semio-framework-ui"]},
+ "crates": [
+  "semio-framework-ui",
+  "semio-framework-ui-tui-core",
+  "semio-framework-ui-tui-vt",
+  "semio-framework-ui-tui-terminal",
+  "semio-framework-ui-tui-widgets",
+  "semio-framework-ui-tui-frame",
+  "semio-framework-ui-tui-engine",
+  "semio-framework-ui-tui-host",
+  "semio-framework-ui-tui-laws",
+  "semio-framework-ui-tui-unit-laws",
+  "semio-framework-ui-tui-vt-laws"
+ ],
+ "features": {
+  "semio-framework-ui": [
+   "tui",
+   "tui-terminal"
+  ],
+  "semio-framework-ui-tui-terminal": [
+   "native"
+  ],
+  "semio-framework-ui-tui-host": [
+   "bindgen"
+  ]
+ },
+ "base": {
+  "rev": "7880cc36f78",
+  "crates": [
+   "semio-framework-ui"
+  ]
+ },
  "note": "tui carve: ui crate tui+tui-terminal at HEAD vs the seven tui crates"
 }

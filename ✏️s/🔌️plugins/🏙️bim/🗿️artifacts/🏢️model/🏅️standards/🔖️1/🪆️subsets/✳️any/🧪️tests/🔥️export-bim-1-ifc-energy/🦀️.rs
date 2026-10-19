@@ -10,8 +10,9 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::{energy::thermal_report, Schema};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::energy::thermal_report;
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 
     fn table(ctx: &Context, schema: Schema) -> Result<Outcome, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;

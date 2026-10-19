@@ -115,6 +115,28 @@ export function splitTop(text: string): string[] {
   return parts.filter((part) => part !== "");
 }
 
+const LIBRARY_GENERICS: ReadonlySet<string> = new Set(["Array", "ReadonlyArray", "Record", "Readonly", "Partial", "Required", "Set", "ReadonlySet", "Map", "ReadonlyMap"]);
+
+/** 🧬️ True when `text` instantiates a generic type of the codebase (`Box<Point>`, or an alias that does): its type arguments are types no parser can build from a schema that states no structure for them, while the generic types of the TypeScript library are not (their arguments are searched). `aliasOf` answers the right-hand side of a one-line alias. */
+export function instantiatesGeneric(text: string, aliasOf: (name: string) => string | undefined, depth = 0): boolean {
+  if (depth > 8) return false;
+  for (const member of unionMembers(normalizeType(text))) {
+    const element = member.replace(/(?:\[\])+$/u, "").trim();
+    if (element.startsWith("[") && element.endsWith("]")) {
+      if (splitTop(element.slice(1, -1)).some((entry) => instantiatesGeneric(entry, aliasOf, depth + 1))) return true;
+      continue;
+    }
+    const open = /^([A-Za-z_$][\w$]*)\s*<([\s\S]*)>$/u.exec(element);
+    if (open === null) {
+      const alias = /^[A-Za-z_$][\w$]*$/u.test(element) ? aliasOf(element) : undefined;
+      if (alias !== undefined && instantiatesGeneric(alias, aliasOf, depth + 1)) return true;
+      continue;
+    }
+    if (!LIBRARY_GENERICS.has(open[1]!) || splitTop(open[2]!).some((entry) => instantiatesGeneric(entry, aliasOf, depth + 1))) return true;
+  }
+  return false;
+}
+
 /** ✂️ The `name: type` members of an interface body or an inline object type, split at the separators outside every bracket pair. */
 function memberParts(body: string): string[] {
   const parts: string[] = [];

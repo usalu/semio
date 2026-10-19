@@ -8,6 +8,7 @@ require (
 	github.com/usalu/semio/repo/languages v0.0.0
 	github.com/usalu/semio/repo/model v0.0.0
 	github.com/usalu/semio/repo/workspace v0.0.0
+	github.com/usalu/semio/repo/workspace/sandbox v0.0.0
 )
 
 replace github.com/usalu/semio/repo/codebase => ../../../🗂️codebase/📦️packages/🐹️go
@@ -19,3 +20,5 @@ replace github.com/usalu/semio/repo/languages => ../../../🗣️languages/📦�
 replace github.com/usalu/semio/repo/model => ../../../📐️model/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/workspace => ../../../🏠️workspace/📦️packages/🐹️go
+
+replace github.com/usalu/semio/repo/workspace/sandbox => ../../../🏠️workspace/📦️packages/🐹️go/🏖️sandbox

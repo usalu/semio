@@ -7,16 +7,16 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
     let window_id = "apply-ui-commands-scene-canvas2d-pointer-down";
     let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![ui_wgpu::wgpu::UiCommand::Scene {
+        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
             kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         }],
         Some(ui_render::PointerId(1)),
         &mut input,
@@ -39,16 +39,16 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
     let window_id = "apply-ui-commands-scene-canvas2d-pointer-payload";
     let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(30.0, 40.0, 200.0, 120.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![ui_wgpu::wgpu::UiCommand::Scene {
+        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
             kind: semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 50.0, y: 70.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         }],
         Some(ui_render::PointerId(1)),
         &mut input,
@@ -83,16 +83,16 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
     }
     let node = seed_scene_window_with(window_id, scene_node);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![ui_wgpu::wgpu::UiCommand::Scene {
+        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
             kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() },
+            event: semio_framework_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() },
         }],
         None,
         &mut input,
@@ -124,7 +124,7 @@ fn ink_editing_scene(law: &Value) -> UiNode {
 }
 
 #[track_caller]
-fn drive_ink_scene_terminal(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn drive_ink_scene_terminal(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     for _ in 0..4096 {
         if !drive_scene_interaction_step(input) {
             assert!(scene_interaction_terminal_is_empty());
@@ -154,13 +154,13 @@ fn drain_presented_document_close(window_id: &str) {
     caller.finish();
 }
 
-fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: Rect, x: f32, y: f32, down: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn dispatch_ink_pointer(window_id: &str, node: NodeId, surface_id: &str, rect: Rect, x: f32, y: f32, down: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     let event = if down {
-        ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }
+        semio_framework_ui_wgpu_events::UiEvent::PointerDown { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }
     } else {
-        ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }
+        semio_framework_ui_wgpu_events::UiEvent::PointerUp { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() }
     };
-    apply_ui_commands(&mut vec![ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event }], Some(ui_render::PointerId(1)), input);
+    apply_ui_commands(&mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.into(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event }], Some(ui_render::PointerId(1)), input);
     drive_ink_scene_terminal(input);
 }
 //#endregion 🔖️SceneCommandTests

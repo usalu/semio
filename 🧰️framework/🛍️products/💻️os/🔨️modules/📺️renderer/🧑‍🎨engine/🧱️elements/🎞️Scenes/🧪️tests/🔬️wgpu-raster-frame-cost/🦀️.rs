@@ -2,7 +2,9 @@ use semio_framework_os_renderer_wgpu_contracts::{AdmittedSurfaceMap, RasterUploa
 use semio_framework_os_renderer_wgpu_scene_canvas2d::{canvas_apply_blend_mode, canvas_gradient_color_at, canvas_layer_should_render, draw_checkerboard, push_linear_gradient_fill, push_radial_gradient_fill, queue_canvas_image_upload, queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_canvas_shape_fill};
 use semio_framework_os_renderer_wgpu_scene_state::{CanvasFillJson, CanvasGradientStopJson, CanvasLayer, PENDING_RASTER_CLOSE_OWNER, PENDING_RASTER_STATE, PendingRasterQueue, PendingRasterQueueToken, PendingRasterUploadCursor, PendingRasterUploadStep, RASTER_UPLOADS_PER_SURFACE_CAPACITY, Viewport, begin_pending_raster_authority_close};
 use semio_framework_os_renderer_wgpu_scene_tables::{Paint2dFlatLayer, paint2d_navigator_fit_viewport, paint2d_navigator_overlay_rect};
-use ui_wgpu::wgpu::{PreparedRasterProducer, PreparedRasterReservation, Rect, Rgba, Theme};
+use semio_framework_ui_prepared::{PreparedRasterProducer, PreparedRasterReservation};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
 
 fn pending_raster_len(surface_id: &str) -> usize {
     PENDING_RASTER_STATE.with(|cell| cell.borrow().get(surface_id).map_or(0, |surface| surface.queue.len()))

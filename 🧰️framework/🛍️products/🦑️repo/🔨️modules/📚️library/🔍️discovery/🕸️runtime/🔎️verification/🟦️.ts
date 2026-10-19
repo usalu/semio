@@ -1,6 +1,6 @@
 import{runtimeActorCargoArgumentsV1,type RuntimeActorCargoArgumentsRequestV1}from"./🎭️actor/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 export type { RuntimeTrunkObservationV1,  RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
 import type { RuntimeCompilerInputV1, RuntimeCargoBuildScriptV1, RuntimeCargoUnitV1, RuntimeCargoObservationV1, RuntimeBuildResourceObservationV1, RuntimeCargoBuildResourcesV1, RuntimeCompilerResourceEntryV1, RuntimeCompilerResourceOperationV1, RuntimeCompilerResourceV1, RuntimeCargoCompilerResourcesV1, RuntimeTrunkObservationV1,  RuntimeCompilerChecksumV1 } from "../🧬️schema/🟦️.ts";
 import { observeSelectedRuntimeActorsV1, acquireSelectedRuntimeActorsV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, parseSelectedRuntimeGraphPackageRootsV1, type SelectedRuntimeGraphPackageRootsV1 } from "../🎭️selection/🧬️schema/🟦️.ts";
@@ -8,20 +8,20 @@ import { existsSync, readFileSync, realpathSync, writeFileSync, mkdirSync, readd
 import { createHash } from "node:crypto";
 import { cargoInputDigestV1, cargoDirectoryEntriesV1, cargoProvenancePhysicalControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import { cargoDepInfoResolvedChecksumsV1, cargoDepInfoResolvedSourcesV1, cargoDepInfoSourcesV1, decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import type {FileObservationControlV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import { blake3Hex } from "@semio-tech/framework/hash";
+import type {FileObservationControlV1} from "@semio-tech/framework/filesystem";
+import {CurrentPhysicalOwnerV1,type CurrentPhysicalPortV1} from "@semio-tech/framework/filesystem";
 import {cmdBudgetMs} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeRustReferencesV1, runtimeFixturePathV1, type RuntimeResourceReadOwnerV1, type RuntimeGraphEvidenceV1, type RuntimeGraphFindingV1 } from "../🟦️.ts";
 import { policyWalkRelFiles } from "../../🚶️file-walk/🟦️.ts";
-import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoDirectories } from "../../../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,checkScriptInvocation,scriptInvocationEnvironment,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {withRuntimeVerificationStorageV1,runtimeVerificationMetadataV1} from "./💾️storage/🟦️.ts";
 import {withRepositoryCargoInputsV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 
 /** 🧵️ Binds one actual verified-Blob import operation while preserving all other computed callers. */
 export function runtimeActorChildImportV1(source:string,child:string,actor:string,sha256:string){

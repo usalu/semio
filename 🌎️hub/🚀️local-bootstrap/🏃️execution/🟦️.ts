@@ -1,19 +1,15 @@
 import {decodeCargoProvenanceV1} from "@semio-tech/process/native-receipt";
-import {repositoryLeaseDirectoryV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {withRepositoryDevelopmentStateTaskV1,type RepositoryDevelopmentStateV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
+import { repositoryLeaseDirectoryV1, withRepositoryDevelopmentStateTaskV1, type RepositoryDevelopmentStateV1, withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {lstat,mkdir,rm} from "node:fs/promises";
 import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
-import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1,scriptInvocationEnvironment,type ScriptInvocation} from "@semio-tech/process/routing";
 import {withCapturedCargoArtifactsTaskV1,type CapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
-import {withRepositoryPublishedCargoExecutableV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import {buildRepositoryCargoArtifacts} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "@semio-tech/repo-lib/cargo";
+import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
+import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1 } from "@semio-tech/repo-lib/artifacts";
 import {advanceLocalHubReadinessProgressV1,type LocalHubReadinessProgressV1,captureLocalHubStartV1,localHubHostPolicyV1,advanceLocalHubHostStateV1,LocalHubHostLedgerV1,type LocalHubHostStateV1,type LocalHubStartDataV1} from "../🎛️host/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { randomBytes } from "node:crypto";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -21,10 +17,9 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import type { Duplex } from "node:stream";
-import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
 
-import { protectOwnerOnly } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
-import { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LocalFrameReader, writeLocalFrame } from "../📡️framing/🟦️.ts";
@@ -118,7 +113,7 @@ export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 export type HubDevBinaryStaging = Readonly<{ stage: () => number }>;
 
 const nativeHubDevBinaryStaging: HubDevBinaryStaging = {
-  stage: () => spawnSync("bun", ["repo", "run", HUB_DEV_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
+  stage: () => spawnSync("bun", ["repo", "run", HUB_DEV_BINARY_TARGET], { cwd: findWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
 };
 
 /** 📦 Stages the development executable through its own build target on EVERY launch and returns its path. The build
@@ -433,7 +428,7 @@ export function withPublishedDevelopmentLocalHubHostV1<T>(invocation:ScriptInvoc
 /** 🏗️ Produces the canonical managed Hub before acquiring its retained publication reader. */
 export async function withBuiltLocalHubHostV1<T>(invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,body:(host:LocalHubHostV1,context:LocalHubHostContextV1)=>Promise<T>):Promise<T>{
  requireIssuedResourceControlInvocationV1(phaseControl,invocation);const authority=readNativeCallerAuthorityV1(invocation.capabilities),workspace=authority.repositoryRoot,manifest=join(workspace,"🌎️hub/📦️packages/🦀️rust/Cargo.toml"),name=process.platform==="win32"?"os-hub.exe":"os-hub";let expected:Readonly<{digest:string;bytes:number;permissions:number}>|undefined;
- await buildRepositoryCargoArtifacts(manifest,["--bin","os-hub"],workspace,{producer:"artifact",invocation,control:phaseControl,network:repositoryCargoNetworkV1(invocation,workspace),consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async view=>{
+ await buildAdmittedCargoArtifactsV1(manifest,["--bin","os-hub"],workspace,{producer:"artifact",invocation,control:phaseControl,consume:capture=>withCapturedCargoArtifactsTaskV1(capture,async view=>{
   const path=view.files.get(name);if(!path||view.owner!=="🌎️hub/📦️packages/🦀️rust/Cargo.toml")throw Error("Actual built Hub deliverable required");const facts=await lstat(path),observation=decodeCargoProvenanceV1(view.observation),outputs=observation.units.flatMap(unit=>unit.artifacts).filter(row=>row.stagedPath?.replaceAll("\\","/").split("/").at(-1)===name);if(observation.status!==0||observation.cancelled||outputs.length!==1||!outputs[0]?.sha256||outputs[0].sha256!==outputs[0].stagedSha256||!facts.isFile()||facts.isSymbolicLink()||facts.nlink!==1||facts.size<1)throw Error("Exact completed Hub source and published output binding required");expected=Object.freeze({digest:outputs[0].stagedSha256,bytes:facts.size,permissions:facts.mode&0o777});await view.recheck();
  })});
  return withRepositoryPublishedCargoExecutableV1(manifest,name,workspace,authority.original.buildMode,invocation,phaseControl,(artifact,control)=>{if(!expected||artifact.receipt.digest!==expected.digest||artifact.receipt.bytes!==expected.bytes||artifact.receipt.permissions!==expected.permissions)throw Error("Current Hub publication differs from the actual completed producer binding");return withLocalHubHostStorageV1(invocation,control,artifact.path,artifact.environment,undefined,body);});

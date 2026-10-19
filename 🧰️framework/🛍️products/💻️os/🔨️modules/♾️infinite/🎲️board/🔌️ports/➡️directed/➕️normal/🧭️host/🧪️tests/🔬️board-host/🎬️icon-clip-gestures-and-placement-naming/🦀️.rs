@@ -305,7 +305,7 @@ fn close_probe_fill_job(job: &mut BoardFillJob) {
             maximum_release_bytes: job.next_close_release_byte_demand().expect("job release demand"),
             maximum_depth: job.next_close_depth_demand().expect("job depth demand"),
         };
-        match job.close_step(exact) {
+        match semio_framework_job::close_with_self_funded_context(exact, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Pending { .. } => {}
             InteractiveJobCloseStep::Complete { .. } => break,
             other => panic!("probe job close ended in {other:?}"),

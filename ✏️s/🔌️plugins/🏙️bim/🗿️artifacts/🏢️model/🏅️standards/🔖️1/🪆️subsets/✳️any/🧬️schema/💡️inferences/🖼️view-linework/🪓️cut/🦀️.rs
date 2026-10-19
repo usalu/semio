@@ -2,8 +2,8 @@
 //! holes (clockwise), in view coordinates `(u, z)`. The cut is taken from the whole mesh and clipped to the plane's length afterwards, so a cut element stays closed.
 
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::{clip_ring, Rect};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use semio_framework_geometry::section::{chain, section_plane};
 
 /// 📏️ The classification band, in metres, of the plane section.

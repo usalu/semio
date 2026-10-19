@@ -6,7 +6,7 @@ import {mkdirSync,rmSync,writeFileSync,lstatSync} from "node:fs";
 import {join,posix,win32} from "node:path";
 import {nxCollectionAdmissionPlanV1,withNxCollectionAdmissionStoreV1} from "../🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {resourceLeasePathV1} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {resourceLeasePathV1} from "@semio-tech/process/leases";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
 

@@ -2,10 +2,11 @@
 //! existing property keeps its kind (a length stays a length); a new one takes the kind named after a colon (`Pset.Name:length = 3.5`) or the kind its value shows. Without a set and a
 //! name the value is the whole entry `Pset.Name = value`, which is what the properties panel's add row sends.
 
-use crate::editor::bim::entities::{property_entry, property_type, property_value};
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{property_entry, property_type, property_value};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -21,7 +22,7 @@ pub struct SetProperty {
 /// 🎯️ The holders of properties and classifications among the explicit ids, else among the selection: the placed elements and the type records of the library (instances inherit the properties of their type); the other library entries carry none.
 pub fn elements_of<'a>(snapshot: &ModelSnapshot, ids: &'a [String], selected: &'a [String]) -> Vec<&'a String> {
     let wanted = if ids.is_empty() { selected } else { ids };
-    wanted.iter().filter(|id| crate::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, id)).collect()
+    wanted.iter().filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, id)).collect()
 }
 
 pub fn handle(payload: &SetProperty, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
@@ -42,7 +43,7 @@ pub fn handle(payload: &SetProperty, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
         let wanted = kind.as_deref().or_else(|| existing.map(property_type));
         let value = property_value(&text, wanted).ok_or_else(|| fault("bim.property.value-invalid", format!("'{text}' does not fit the property '{pset}.{property}'")))?;
         if existing != Some(&value) {
-            mutations.push(ModelMutation::SetElementProperty(crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: pset.clone(), property: property.clone(), value }));
+            mutations.push(ModelMutation::SetElementProperty(semio_s_artifact_bim_model_mut_any_87::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: pset.clone(), property: property.clone(), value }));
         }
     }
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })

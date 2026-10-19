@@ -33,7 +33,7 @@
       "key": "replication",
       "package": "semio-framework-replication",
       "manifest": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml",
-      "file": "🧰️framework/📦️packages/🦀️rust/Cargo.toml"
+      "file": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🦀️rust/Cargo.toml"
     }
   ]
 }

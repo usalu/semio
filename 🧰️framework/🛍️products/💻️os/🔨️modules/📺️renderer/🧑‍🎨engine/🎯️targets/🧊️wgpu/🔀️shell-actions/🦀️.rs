@@ -49,7 +49,7 @@ use semio_framework_value::{DslValue, FromValue};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactSyncStatus, DocumentLinkStatus, PersistenceBinding};
-use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/⌨️keyboard-and-palette/🦀️.rs"]
 mod staged_actions__keyboard_and_palette;

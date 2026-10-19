@@ -1,6 +1,5 @@
 import type { Edge } from "@xyflow/react";
-import type { DiagramPagedStore } from "../🗃️paged-store/🟦️.ts";
-import { DIAGRAM_LAYOUT_MAX_INPUT_ITEMS } from "../📜️wire/🟦️.ts";
+import { DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, type DiagramLayoutPosition } from "../📜️wire/🟦️.ts";
 
 export interface DiagramLayoutWork {
   readonly deadline: number;
@@ -14,12 +13,6 @@ export interface DiagramLayoutPreview {
   readonly generation: number;
   readonly positions: readonly DiagramLayoutPosition[];
   readonly sequence: number;
-}
-
-export interface DiagramLayoutPosition {
-  readonly index: number;
-  readonly x: number;
-  readonly y: number;
 }
 
 export interface DiagramLayoutStepResult {
@@ -85,17 +78,5 @@ export function asDiagramLayoutSource<Value>(values: readonly Value[] | DiagramL
   return { get: (index) => array[index], length: array.length };
 }
 
-export interface DiagramLayoutMerge<Value> {
-  left: number;
-  leftCursor: number;
-  middle: number;
-  right: number;
-  rightCursor: number;
-  source: DiagramPagedStore<Value>;
-  target: DiagramPagedStore<Value>;
-  width: number;
-}
-
 export const diagramLayoutLimits = Object.freeze({ maxEdges: DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, maxNodes: DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, previewNodes: 128 });
 export const diagramLayoutFrame = Object.freeze({ fuel: 16_384, milliseconds: 6 });
-export const diagramLayoutPageSize = 128;

@@ -7,7 +7,7 @@ import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{scriptInvocationEnvironment,withIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
-import{registerBuildTestLawV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../../../../../🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 test("neutral bounded revision contract and independent SQLite admission agree",()=>{const db=new Database(":memory:"),ajv=new Ajv({strict:true});try{for(const row of corpus.cases){expect(ajv.validate(schema.definitions.Case,row)).toBe(true);expect(db.query<{accepted:number},[number,number,number]>("select (?2=cast(?2 as integer) and ?2>=0 and ?2<=8388608 and ?1<=?2 and (?3=0 or ?2<=65536)) accepted").get(row.bytes,row.maximumBytes,row.retainText?1:0)?.accepted===1).toBe(row.accepted);}expect(ajv.validate(schema,{sha256:"a".repeat(64),byteLength:0,text:null})).toBe(true);expect(ajv.validate(schema,{sha256:"a".repeat(64),byteLength:0,text:null,authority:true})).toBe(false);}finally{db.close();}});

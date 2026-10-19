@@ -71,7 +71,7 @@ test("fresh policy changes with root locator, plugin and package roles despite N
     expect(result.oldPath).toBe(fixture.freshness.initialLocator); expect(result.freshPath).toBe(fixture.freshness.nextLocator);
     expect(result.oldPlugins).toEqual(fixture.freshness.initialPlugins); expect(result.freshPlugins).toEqual(fixture.freshness.nextPlugins); expect(result.otherPlugins).toEqual(fixture.freshness.otherRootPlugins);
     expect(result.exports).toEqual(fixture.freshness.nextExports); expect(result.role).toBe(fixture.freshness.nextRole);
-    expect(result.oldRule.to.path.includes(fixture.freshness.nextBannedStem)).toBe(false); expect(result.freshRule.to.path.includes(fixture.freshness.nextBannedStem)).toBe(true);
+    expect([result.oldRule.to.path].flat().join("|").includes(fixture.freshness.nextBannedStem)).toBe(false); expect([result.freshRule.to.path].flat().join("|").includes(fixture.freshness.nextBannedStem)).toBe(true);
   } finally { rmSync(first, { recursive: true, force: true }); rmSync(second, { recursive: true, force: true }); }
 });
 

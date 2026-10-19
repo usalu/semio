@@ -1,5 +1,5 @@
 /** 🛰️ The exclusive lease, watchdog, shard failure, rebuild, crash and metrics tests. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { FakeShardWorker, afterSettle, flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 

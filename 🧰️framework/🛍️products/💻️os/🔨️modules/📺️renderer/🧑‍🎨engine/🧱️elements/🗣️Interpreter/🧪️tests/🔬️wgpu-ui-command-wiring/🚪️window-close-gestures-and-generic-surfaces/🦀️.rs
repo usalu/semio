@@ -11,13 +11,13 @@ fn window_close_retires_queued_scene_and_capture_owners_before_slot_release() {
     let generation = target.window_generation;
     assert!(claim_scene_pointer_owner(target, ui_render::PointerId(1)));
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -41,13 +41,13 @@ fn closing_window_silently_retires_an_active_canvas_gesture() {
     let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
     let window_id = "closing-window-active-canvas";
     let node = seed_scene_window(window_id, "active-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         Rect::new(0.0, 0.0, 200.0, 200.0),
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -72,20 +72,20 @@ fn closing_window_silently_retires_an_active_canvas_gesture() {
 #[test]
 fn live_canvas_gesture_cancels_when_its_published_generation_is_replaced() {
     while !close_scene_interaction_step() {}
-    let mut discarded = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut discarded = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     semio_framework_os_renderer_wgpu_scene_render::cancel_canvas_pointer_gesture(&mut discarded);
     let window_id = "canvas-generation-cancellation";
     let node = publish_focus_rebase_document(window_id, 1, 454, semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d, &[4]).expect("presented Canvas receiver");
     assert_eq!(retained_scene_surface_id(window_id, node), window_id);
     let canvas_host = retained_scene_host_id(window_id, node);
     let rect = Rect::new(0.0, 0.0, 100.0, 100.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 20.0, y: 20.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: ui_wgpu::wgpu::EventModifiers::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 20.0, y: 20.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -106,16 +106,16 @@ fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
     let window_id = "apply-ui-commands-scene-bespoke-skip";
     let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![ui_wgpu::wgpu::UiCommand::Scene {
+        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
             kind: semio_framework_ui_declaration::ui::SurfaceKind::NodeGraph,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         }],
         None,
         &mut input,
@@ -156,15 +156,15 @@ fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking()
         let window_id = format!("apply-ui-commands-scene-smoke-{kind:?}");
         let node = seed_scene_window(&window_id, "s1", kind);
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         let events = [
-            ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
-            ui_wgpu::wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0, modifiers: Default::default() },
-            ui_wgpu::wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
-            ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
+            semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: 12.0, y: 12.0, modifiers: Default::default() },
+            semio_framework_ui_wgpu_events::UiEvent::PointerUp { x: 12.0, y: 12.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
+            semio_framework_ui_wgpu_events::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
         ];
         for event in events {
-            apply_ui_commands(&mut vec![ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], None, &mut input);
+            apply_ui_commands(&mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], None, &mut input);
         }
     }
 }
@@ -186,16 +186,16 @@ fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_
     let window_id = "apply-ui-commands-scene-text-editor-right-click";
     let node = seed_scene_window(window_id, "s1", semio_framework_ui_declaration::ui::SurfaceKind::TextEditor);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &mut vec![ui_wgpu::wgpu::UiCommand::Scene {
+        &mut vec![semio_framework_ui_wgpu_events::UiCommand::Scene {
             window_id: window_id.into(),
             node,
             surface_id: "s1".into(),
             kind: semio_framework_ui_declaration::ui::SurfaceKind::TextEditor,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Secondary, modifiers: Default::default() },
+            event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Secondary, modifiers: Default::default() },
         }],
         None,
         &mut input,

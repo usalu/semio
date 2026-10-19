@@ -1,5 +1,5 @@
-import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
-import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
+import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { cargoWorkspaceDeclaresMemberV1 } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -22,8 +22,8 @@ export function parseSemanticPackageBrowserProfile(input: unknown, genericEmojiI
   if (!Array.isArray(input.sourceModulePaths) || input.sourceModulePaths.length < expected.length || input.sourceModulePaths.some((path, index, paths) => !exactOwnerPath(path) || !/\.(?:tsx?|m?js|json)$/u.test(path) || index > 0 && projectionByteCompare(paths[index - 1], path) >= 0)) throw new Error("WGPU browser module paths must be exact, nonopaque, unique and byte ordered");
   if (input.entries.some((entry) => !(input.sourceModulePaths as string[]).includes(input.ownerPath + "/" + entry.sourceRelativePath))) throw new Error("WGPU browser entry is not an exact declared current module");
   const specifiers = input.workspaceImports !== null && typeof input.workspaceImports === "object" && !Array.isArray(input.workspaceImports) ? Object.keys(input.workspaceImports) : [];
-  if (["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"].some((root) => !specifiers.includes(root)) || specifiers.some((specifier, index) => !/^@semio-tech\/[a-z0-9-]+(?:\/[a-z0-9-]+)*$/u.test(specifier) || index > 0 && projectionByteCompare(specifiers[index - 1]!, specifier) >= 0)) throw new Error("WGPU browser workspace import identities drifted");
-  for (const binding of Object.values(input.workspaceImports)) if (!exact(binding, ["manifestPath", "entryPath"]) || !exactOwnerPath(binding.manifestPath) || basename(binding.manifestPath) !== "package.json" || !exactOwnerPath(binding.entryPath) || !input.sourceModulePaths.includes(binding.entryPath)) throw new Error("WGPU browser workspace import binding drifted");
+  if (["@semio-tech/framework", "@semio-tech/framework-os", "@semio-tech/framework-replication"].some((root) => !specifiers.includes(root)) || specifiers.some((specifier, index) => !/^@semio-tech\/[a-z0-9-]+(?:\/[a-z0-9][a-z0-9.-]*)*$/u.test(specifier) || index > 0 && projectionByteCompare(specifiers[index - 1]!, specifier) >= 0)) throw new Error("WGPU browser workspace import identities drifted");
+  for (const binding of Object.values(input.workspaceImports as Record<string, unknown>)) if (!exact(binding, ["manifestPath", "entryPath"]) || !exactOwnerPath(binding.manifestPath) || basename(binding.manifestPath) !== "package.json" || !exactOwnerPath(binding.entryPath) || !input.sourceModulePaths.includes(binding.entryPath)) throw new Error("WGPU browser workspace import binding drifted");
   return input as unknown as SemanticPackageBrowserProfile;
 }
 

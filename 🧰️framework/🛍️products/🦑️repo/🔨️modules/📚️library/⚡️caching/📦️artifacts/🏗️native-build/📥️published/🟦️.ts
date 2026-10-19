@@ -3,12 +3,12 @@ import {lstat,readFile,readdir,open} from "node:fs/promises";
 import {join,relative,resolve,dirname} from "node:path";
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withResourceLeases,checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {runOwnedCommand,OwnedCommandFailure} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {publishedCargoArtifactDirectoryV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {withResourceLeases,checkResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand,OwnedCommandFailure} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {publishedCargoArtifactDirectoryV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📤️published/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 

@@ -185,12 +185,6 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	}, nil
 }
 
-// 🔧️Fix MUST return a non-nil error when the operation fails.
-// 🔧️Fix performs the fix operation on the repo context.
-func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	return nil, fmt.Errorf("fix was removed; handle autofix inside script.ts policy export")
-}
-
 // 🏷️inferDefinitionKindFromLine holds the data fields for a inferDefinitionKindFromLine record.
 func inferDefinitionKindFromLine(line string) DefinitionKind {
 	lower := strings.ToLower(strings.TrimSpace(line))

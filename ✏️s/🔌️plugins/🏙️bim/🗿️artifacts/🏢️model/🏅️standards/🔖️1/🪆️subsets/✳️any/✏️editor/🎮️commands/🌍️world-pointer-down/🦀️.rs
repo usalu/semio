@@ -1,10 +1,11 @@
 //! 🌍️ `worldPointerDown`: a press in the 3D window while a drawing utility holds an engagement session: the host ray-casts the ground and sends the point. It is the click of the
 //! click-click tools (walls, columns, beams, slabs, railings, stairs, spaces, grid lines, openings and the transforms); the pointer position is a plan point in metres.
 
-use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, ToolEvent};
 use crate::editor::bim::gestures::{run, Raw};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

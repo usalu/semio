@@ -1,4 +1,4 @@
-import type { IntroductionDefinition, IntroductionLogo, IntroductionStepDefinition, IntroductionDemonstration } from "@semio-tech/framework";
+import type { IntroductionDefinition, IntroductionLogo, IntroductionStepDefinition, IntroductionDemonstration } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
 import * as React from "react";
 import { cn } from "../../../🔨️modules/🏷️class-name-composition/🟦️.ts";

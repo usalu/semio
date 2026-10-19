@@ -5,7 +5,7 @@ import { loadTaxonomy, semanticDirectoryKindId } from "../../../../🔍️discov
 import { policyReaddirSafe } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyLeadingEmojiPrefix, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { createFixedContractResolver, fixedFilenameContractIdsForPath } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
-import { type PathEmojiEntry, pathEmojiStatuteFindings } from "../../../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { type PathEmojiEntry, pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { taxonomyRelativePathIsExcluded } from "../../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
 import type { PolicyCrateRef } from "../../🏛️foundation/🟦️.ts";
 import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
@@ -19,17 +19,22 @@ const POLICY_VS16 = "\uFE0F";
 /**
  * 🚫️ Bans emoji-stripped directory/file stems listed in `taxonomy.bannedNameStems` (e.g. `core`, `shared`).
  * Medium during migration; Wave 4 flips to high once cores are dissolved.
+ * Stems in `taxonomy.bannedNameStemExemptions.subsetDirectories` stay legal as a direct child directory of a `subsetsDirName` owner; the files in `taxonomy.bannedNameStemExemptions.vendoredFiles` are installed third-party modules and never count.
  */
 export function policyBannedNameStemBreaches(repoRoot: string): BreachRecord[] {
-  const stems = new Set((loadTaxonomy().bannedNameStems ?? []).map((s) => s.toLowerCase()));
+  const taxonomy = loadTaxonomy();
+  const stems = new Set((taxonomy.bannedNameStems ?? []).map((s) => s.toLowerCase()));
   if (stems.size === 0) return [];
+  const subsetExempt = new Set(taxonomy.bannedNameStemExemptions.subsetDirectories.map((s) => s.toLowerCase()));
+  const vendored = new Set(taxonomy.bannedNameStemExemptions.vendoredFiles);
   const breaches: BreachRecord[] = [];
   const walk = (relDir: string): void => {
+    const subsetOwner = relDir.split("/").at(-1) === taxonomy.subsetsDirName;
     for (const entry of policyReaddirSafe(repoRoot, relDir)) {
       if (entry.name === "node_modules" || entry.name === "target" || entry.name === "dist" || entry.name === "pkg") continue;
       const childRel = `${relDir}/${entry.name}`;
       const stem = policyStripEmoji(entry.name.replace(/\.(rs|ts|tsx|js|mjs|cjs|go|py|cs)$/, "")).toLowerCase();
-      if (stems.has(stem)) {
+      if (stems.has(stem) && !(subsetOwner && entry.isDirectory && subsetExempt.has(stem)) && !vendored.has(childRel)) {
         breaches.push({
           id: `banned-name-stem-${childRel}`,
           summary: `"${childRel}" uses banned name stem "${stem}" — use a domain concept folder instead`,

@@ -1,8 +1,8 @@
-import{withNativePersistentStateTaskV1,type NativePersistentStateV1}from"../../../../../🔨️modules/🏃️process/💾️state/🟦️.ts";
+import{withNativePersistentStateTaskV1,type NativePersistentStateV1}from"@semio-tech/process/state";
 import{withRepositoryDevelopmentStatePartitionV1}from"../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 🧷️ Retains actual non-recomputable local development state independently of build intent. */
 export type RepositoryDevelopmentStateV1=NativePersistentStateV1;
 /** 📂️ Carries actual state task custody to a closed domain Host factory without exporting an image. */

@@ -1,0 +1,219 @@
+# Follow-up law1: framework files that import `🛍️products` (dependency inversion needed)
+
+Ruling (coordinator, CLEAN-ARCHITECTURE FLEET / TEST-SWEEP-PRODUCTS): framework `📜️script.ts` must not import repo products. Move the repo-dependent logic (cargo admission, wasm policy, compiler-state typecheck) into repo-product command modules; the framework script delegates through the neutral `bun repo ...` interface or a framework abstraction the repo implements. No lazy-import tricks. Not implemented in the law1 session (needs cargo to verify; 75 scripts + 121 other files). The five laws that were briefly exempted from this ruling are red again on purpose: `framework/📏️script-boundary` (router bundle), `tool-run/🏛️ownership`, `actor/.../🏛️boundary`, `actor/🧪️tests/🏛️owner-boundary`, `process/routing/command/🚧️boundary` (#2 and #3).
+
+## Scripts (75), with the repo modules each imports
+
+- `F/📦️packages/🟦️typescript/📜️script.ts`: `repo:🏗️build/🟦️typescript/🟦️.ts`
+- `F/📦️packages/🦀️rust/📜️script.ts`: `repo:⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/⏪️time-travel/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/⏯️tool-run/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/⏳️async/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/◻️2d/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/✍️editor/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🕸️wasm/🔣️policy/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🌱️value/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts`: `repo:⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`, `repo:🏃️process/🦀️cargo/📥️dependencies/🟦️.ts`
+- `F/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🎒️pack/🚰️source/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🎭️actor/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🕸️wasm/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🏃️process/📜️script.ts`: 
+- `F/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/📐️geometry/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/📚️compiler/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/📡️replication/⚠️error/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts`: `repo:⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`, `repo:🏃️process/🦀️cargo/📥️dependencies/🟦️.ts`
+- `F/🔨️modules/📡️replication/🔐️crypto/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🔄️machine/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🔤️typeset/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🔲️pixels/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🕸️graph/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖌️raster/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts`: `repo:⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts`: `repo:🏗️build/🟦️typescript/🟦️.ts`
+- `F/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧬️contract/🆔️identity/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧬️contract/📏️budget/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧬️contract/🔤️text/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🖼️canvas/📦️packages/🦀️rust/📜️script.ts`: `repo:⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts`, `repo:⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts`, `repo:⚡️caching/📦️artifacts/🟦️.ts`
+- `F/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts`: `repo:⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts`, `repo:🏃️process/🦀️cargo/📥️dependencies/🟦️.ts`
+- `F/🔨️modules/🗜️deflate/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🗣️dsl/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🕸️wasm/🔣️policy/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/📦️codec/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/🔢️binary/📥️source/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧊️3d/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧬️schema/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️borrow/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧮️expression/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧮️math/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- `F/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🧵️job/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- `F/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- `F/🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust/📜️script.ts`: `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`, `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+
+## Imported repo modules by script count
+
+- 68 x `repo:🏃️process/🦀️cargo/🎟️admission/🟦️.ts`
+- 12 x `repo:🏃️process/🦀️cargo/🔣️policy/🟦️.ts`
+- 11 x `repo:🏃️process/🦀️cargo/🎯️exact/🟦️.ts`
+- 3 x `repo:🏃️process/🕸️wasm/🔣️policy/🟦️.ts`
+- 3 x `repo:⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts`
+- 3 x `repo:🏃️process/🦀️cargo/📥️dependencies/🟦️.ts`
+- 2 x `repo:🏗️build/🟦️typescript/🟦️.ts`
+- 2 x `repo:⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts`
+- 1 x `repo:⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts`
+- 1 x `repo:⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts`
+- 1 x `repo:⚡️caching/📦️artifacts/🟦️.ts`
+
+## Other framework files importing products (tests, libraries; 121)
+
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts`
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️testing/🧫️fixtures/🟦️.ts`
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts`
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts`
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts`
+- `F/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts`
+- `F/🔨️modules/⏪️time-travel/🧪️testing/📥️values/🧪️tests/🟦️.ts`
+- `F/🔨️modules/⏪️time-travel/🧪️testing/🧊️wgpu-mirror/🟦️.ts`
+- `F/🔨️modules/⏯️tool-run/🏛️ownership/🧪️tests/🟦️.ts`
+- `F/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts`
+- `F/🔨️modules/⏳️async/♻️cancel-return/📬️claim/🧪️tests/🟦️.ts`
+- `F/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts`
+- `F/🔨️modules/⚠️diagnostic/🧾️retained/🏛️ownership/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🎒️pack/🌱️value/🧭️tooling/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts`
+- `F/🔨️modules/🎠️kernel/🧪️tests/📦️package-assets/🟦️.ts`
+- `F/🔨️modules/🎠️kernel/🧪️tests/📦️receipt/🟦️.ts`
+- `F/🔨️modules/🎭️actor/🧪️tests/🏛️owner-boundary/🟦️.ts`
+- `F/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️style/🟦️.ts`
+- `F/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🔐️inheritance/🟦️.ts`
+- `F/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts`
+- `F/🔨️modules/🏃️process/🏗️build/🗃️state/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🏗️build/🟦️typescript/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/💾️state/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/⚙️configuration/🎟️admission/🧪️tests/📥️runtime/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📥️parent/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🪟️windows/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/📦️owner/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/📥️allocation/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/📥️receipt/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🗂️system/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🧪️tests/📥️receipt/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🧪️tests/♻️preparation/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🎟️stage/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/📥️inputs/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️claims/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️frontier/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️inventory/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧭️continuation/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧪️tests/♻️preparation/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/📦️bounded/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🔒️leases/🧪️tests/🎟️writer/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🎟️phase/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/📥️preparation/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📊️profile/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🧪️tests/📥️canonical/📦️sdk/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/📥️invocation/🧪️tests/⏱️finite/🟦️.ts`
+- `F/🔨️modules/🏃️process/🧭️routing/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🐚️shell/🟦️.ts`
+- `F/🔨️modules/📄️document/📌️check-in/🟦️.ts`
+- `F/🔨️modules/📡️replication/🎮️mutation/🌐️foreign/🧪️tests/🟦️.ts`
+- `F/🔨️modules/📡️replication/🎮️mutation/📨️messages/♻️retire/🧪️tests/🟦️.ts`
+- `F/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🧪️tests/🟦️.ts`
+- `F/🔨️modules/📡️replication/🎮️mutation/🧾️transaction/🎟️admission/🧪️tests/🟦️.ts`
+- `F/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️tests/🟦️.ts`
+- `F/🔨️modules/📡️replication/🔗️causal/🔀️transition/📝️drafts/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts`
+- `F/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚀️boot-html/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🌅️appearance-boot/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧭️shell-chrome/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts`
+- `F/🔨️modules/🖱️ui/📱️device/🧪️tests/🔬️unit/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🖌️render/🧪️tests/🔬️interactivity-mounted-prepared-render/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/📥️checked-values/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-layout-text/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-mounted-surface-lane/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🔬️interactivity-prepared-raster-producer/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🟦️.ts`
+- `F/🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🪆️binding/🟦️.ts`
+- `F/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🖼️canvas/🔌️runtime-assets/🧪️tests/📦️bundle-staging/🟦️.ts`
+- `F/🔨️modules/🖼️canvas/🧪️tests/🧱️ownership/🟦️.ts`
+- `F/🔨️modules/🗂️plugin-catalog/🟦️.ts`
+- `F/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🛬️decoding/🟦️.ts`
+- `F/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️tests/🏛️ownership/🟦️.ts`
+- `F/🔨️modules/🚪️io/📦️codec/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🚪️io/🧬️schema/🏛️ownership/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🔬️unit/🟦️.ts`
+- `F/🔨️modules/🛠️tool-machine/🧪️tests/🧪️history-closure-policy/🟦️.ts`
+- `F/🔨️modules/🛰️backbone/🪪️config-lane/🟦️.ts`
+- `F/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts`
+- `F/🔨️modules/🧪️test/📖️source-text/🟦️.ts`
+- `F/🔨️modules/🧪️test/🔌️adapter/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧬️schema/🧩️composition/📥️admission/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts`
+- `F/🔨️modules/🧵️job/⏱️context/📸️capture/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧵️job/🎟️context/🪙️loan/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧵️job/🏃️work/🎟️grant/🧪️tests/🟦️.ts`
+- `F/🔨️modules/🧵️job/🧪️tests/🔬️tool-job-fixed-operation-registry/🟦️.ts`

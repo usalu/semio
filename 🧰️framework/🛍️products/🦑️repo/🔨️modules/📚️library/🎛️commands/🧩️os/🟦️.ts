@@ -5,7 +5,7 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 

@@ -4,8 +4,9 @@ use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapsh
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
-use crate::standards::v1::subsets::any::io::export::svg::codec::*;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::tags;
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::{SvgElement, CommonAttrs, ViewBox, PathCommand, TransformOp};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::{text, element, attr, document_text};
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::tags;
 
 fn root(children: Vec<SvgElement>) -> SvgElement {
     SvgElement::Svg { common: CommonAttrs::new().with_class("plan"), view_box: Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 20.0, height: 10.5 }), width: Some("20mm".into()), height: Some("10.5mm".into()), xmlns: Some("http://www.w3.org/2000/svg".into()), children }

@@ -1,11 +1,12 @@
-use crate::editor::bim::gestures::route::{UTILITY};
-use crate::editor::bim::gestures::session::{GestureKey, Step, ToolEvent};
-use crate::editor::bim::gestures::typed::INVALID;
-use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, Point3};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::fixture::furnished;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::Rig;
+use semio_s_artifact_bim_model_gestures::editor::bim::gestures::route::UTILITY;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Step, ToolEvent};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::furnished;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::Rig;
 use semio_framework_test_fixtures::fixture_text;
 
 fn created(step: &Step) -> &MepElement {

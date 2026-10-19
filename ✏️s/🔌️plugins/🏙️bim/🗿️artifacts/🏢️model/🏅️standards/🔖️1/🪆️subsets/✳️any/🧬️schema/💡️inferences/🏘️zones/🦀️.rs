@@ -11,10 +11,11 @@
 //!
 //! Related: DIN 277 and ISO 9836 area schemes (gross, net, rentable), <https://www.iso.org/standard/32443.html>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Space, Zone};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, ModelSnapshot, Space, Zone};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

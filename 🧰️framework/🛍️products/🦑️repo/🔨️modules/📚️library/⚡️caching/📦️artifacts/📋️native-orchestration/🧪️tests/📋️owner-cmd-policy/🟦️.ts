@@ -4,7 +4,7 @@ import { join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import type { ClassDeclaration, ClassElement, FunctionDeclaration, IfStatement, MethodDeclaration, Statement } from "typescript";
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import * as toml from "@iarna/toml";
 import { getWorkspaceRoot } from "../../../../../🗂️workspaces/🟦️.ts";
 import { repositoryCargoTestPolicyV1 } from "../../../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";

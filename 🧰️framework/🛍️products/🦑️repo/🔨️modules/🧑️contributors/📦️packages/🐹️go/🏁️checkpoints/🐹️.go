@@ -24,7 +24,7 @@ import (
 // 🔢️LoadCheckpoints loads the checkpoints of the current repository root through the ported reader,
 // so the author identifier the log carries reaches the checkpoint rather than being dropped.
 func LoadCheckpoints(limit *int) []model.Checkpoint {
-	return ListCheckpoints(NewFsCheckpointSource(workspace.RootDir), limit)
+	return ListCheckpoints(NewFsCheckpointSource(workspace.GetRootDir()), limit)
 }
 
 // 💾️StreamCheckpoints MUST invoke the callback for each matching checkpoints entry.

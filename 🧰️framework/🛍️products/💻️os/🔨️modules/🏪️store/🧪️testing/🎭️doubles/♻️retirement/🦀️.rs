@@ -45,11 +45,11 @@ pub struct ExactDemoSnapshotRetirement {
 impl ExactDemoSnapshotRetirement {
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
-        if let Some(owner) = self.owner.as_ref() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<DemoSnapshot>(),depth: 1,..Default::default() }); }
+        if let Some(owner) = self.owner.as_ref() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<DemoSnapshot>(),depth: 1,..Default::default() }); }
         if let Some(value) = self.value.as_ref() { return Ok(RetirementDemand { capacity_bytes: DemoInitialSnapshotRetirementFactory.retirement_birth_bytes(value),depth: 2,..Default::default() }); }
         if let Some(child) = self.child.as_ref() { let mut demand=artifact_retirement_box_demands(child,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"counted original child depth overflow"))?;return Ok(demand); }
         if !self.completion_recorded { return Ok(RetirementDemand { depth: 1,..Default::default() }); }
-        Ok(self.completed.as_ref().map_or(Default::default(),|counter|RetirementDemand { release_bytes: if Arc::strong_count(counter)==1 { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicUsize>() } else { 0 },depth: 1,..Default::default() }))
+        Ok(self.completed.as_ref().map_or(Default::default(),|counter|RetirementDemand { release_bytes: if Arc::strong_count(counter)==1 { semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicUsize>() } else { 0 },depth: 1,..Default::default() }))
     }
 }
 

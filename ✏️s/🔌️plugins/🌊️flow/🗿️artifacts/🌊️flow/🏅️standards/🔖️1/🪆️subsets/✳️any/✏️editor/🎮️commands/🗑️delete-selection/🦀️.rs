@@ -4,7 +4,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit};
-use crate::editor::flow::base::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::editor_vocabulary::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};

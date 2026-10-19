@@ -83,7 +83,7 @@ function replay(testCase: Replayable): Case["expected"] {
 //#endregion 🧮️DemoOracle
 
 //#region 🧪️Corpus
-const corpus = read("../../🧫️fixtures/🧫️supersede-replay/🔣️.json");
+const corpus = read("../🧫️fixtures/🧫️supersede-replay/🔣️.json");
 
 test("cold history fixtures declare finite caller identity admission", () => {
   const law = corpus.identityAdmission;
@@ -91,7 +91,7 @@ test("cold history fixtures declare finite caller identity admission", () => {
   try { expect(database.query<{ ceiling: number }, number[]>("SELECT ?1 * ?2 + ?3 AS ceiling").get(law.maximumOperations, law.bodyBytesPerOperation, law.commandScaffoldBytes)?.ceiling).toBe(law.maximumOwnedBytes); }
   finally { database.close(); }
   const source = readModuleTreeSource(new URL("./🦀️.rs", import.meta.url));
-  expect(source).toContain("EntityIdentityAuthority::new(FIXTURE_IDENTITY_BYTE_CEILING");
+  expect(source).toContain("EntityIdentityAuthority");expect(source).toContain(">::new(FIXTURE_IDENTITY_BYTE_CEILING,");
   expect(source).toContain("const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES");
 });
 
@@ -110,14 +110,14 @@ test("🎟️ semantic preparation validates independent physical currencies", (
 
 test("📨️ selected diagnostic copy belongs to the neutral message owner", () => {
   const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
-  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  const law = read(`${base}🧪️tests/🧫️fixtures/🔣️.json`);
   for (const row of law.cases) for (const text of [row.code, row.message, ...row.target]) expect(new TextDecoder("utf-8", { fatal: true }).decode(new TextEncoder().encode(text))).toBe(text);
   expect(readFileSync(new URL(`${base}🦀️.rs`, import.meta.url), "utf8").includes("pub struct MessageCopyCursor")).toBe(true);
 });
 
 test("📨️ cooperative message copy matches independent UTF-8 and JSON Patch owners", () => {
   const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
-  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  const law = read(`${base}🧪️tests/🧫️fixtures/🔣️.json`);
   for (const row of law.cases) {
     for (const bytes of law.byteGrants) {
       const values = [row.code, row.message, ...row.target].map((text: string) => {
@@ -138,7 +138,7 @@ test("📨️ cooperative message copy matches independent UTF-8 and JSON Patch 
 
 test("📨️ copied diagnostic closure admits each actual backing release", () => {
   const base = "../../../../../../🔨️modules/📡️replication/🎮️mutation/📨️messages/📋️copy/";
-  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  const law = read(`${base}🧪️tests/🧫️fixtures/🔣️.json`);
   for (const row of law.cases) {
     const owners = [row.code, row.message, ...row.target].map((value: string) => Buffer.byteLength(value, "utf8")).filter((bytes: number) => bytes > 0);
     let current = { owners };
@@ -226,9 +226,9 @@ test("🕰️ bounded history reads stop at the selected mutation and replay the
 
 /** 🌱️ Independent pack and hash authorities distinguish equal decoded values from stored-byte identity. */
 test("🌱️ actor and stored genesis law preserves supplied bytes across encoder choices", () => {
-  const law = read("../../🧫️fixtures/🧫️actor-genesis/🔣️.json");
-  const producerBase="../../../🌿️vcs/🚪️io/💾️binary/🌱️genesis/🧬️schema/";
-  const producerSchema=read(producerBase+"🔣️.json");const producerLaw=read(producerBase+"🧪️tests/🧫️fixtures/🔣️.json");
+  const law = read("../🧫️fixtures/🧫️actor-genesis/🔣️.json");
+  const producerBase="../../../🌿️vcs/🚪️io/💾️binary/🌱️genesis/";
+  const producerSchema=read(producerBase+"🧬️schema/🔣️.json");const producerLaw=read(producerBase+"🧪️tests/🧫️fixtures/🧬️schema/🔣️.json");
   const admitProducer=new Ajv({strict:true,allErrors:true}).compile(producerSchema);expect(admitProducer(producerLaw)).toBe(true);
   expect(admitProducer({...producerLaw,reload:"reencode-decoded-snapshot"})).toBe(false);
   for(const [relative,invalid] of [
@@ -236,7 +236,7 @@ test("🌱️ actor and stored genesis law preserves supplied bytes across encod
     ["🏗️initialization/🏠️owners/🏭️producer/🧬️schema/",{close:"different-factory-or-renewed-grant"}],
     ["🏗️initialization/🌱️genesis/🏭️factory/🧬️schema/",{reset:"parent-selected-reencoded-baseline"}],
   ] as const){
-    const base="../../"+relative;const schema=read(base+"🔣️.json");const descriptor=read(base+"🧪️tests/🧫️fixtures/🔣️.json");
+    const base="../../"+relative;const schema=read(base+"🔣️.json");const descriptor=read(base+"../🧪️tests/🧫️fixtures/🔣️.json");
     const independent=new Ajv({strict:true,allErrors:true}).compile(schema);
     expect(independent(descriptor)).toBe(true);expect(independent({...descriptor,...invalid})).toBe(false);
   }
@@ -279,7 +279,7 @@ test("🌱️ actor and stored genesis law preserves supplied bytes across encod
 /** ⏳️ The platform UTF-8 decoder and JSON Patch independently validate granted history decoding and cancellation. */
 test("⏳️ bounded fold and decoder neutral law preserves UTF-8 and cancellation owners", () => {
   const base = "../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/";
-  const law = read(`${base}🧫️fixtures/🔣️.json`);
+  const law = read(`${base}🧪️tests/🧫️fixtures/🔣️.json`);
   for (const row of law.decodeCases) {
     const payload = Uint8Array.from(Buffer.from(row.payloadHex, "hex"));
     const length = payload[1];

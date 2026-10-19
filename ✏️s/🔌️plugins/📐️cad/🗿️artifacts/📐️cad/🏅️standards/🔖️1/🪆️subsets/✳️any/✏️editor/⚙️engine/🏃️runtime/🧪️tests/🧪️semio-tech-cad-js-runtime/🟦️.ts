@@ -1,4 +1,6 @@
-import type { RuntimeTestDependencies } from "../../🟦️.ts";
+import type { RuntimeTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import * as vitestRuntime from "vitest";
+import { bootstrapCadModules } from "../../🟦️.ts";
 
 type TestSource = { readonly url: string };
 
@@ -36,3 +38,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const dependencies: RuntimeTestDependencies = { bootstrapCadModules };
+await registerTests1(vitestRuntime, dependencies, { url: new URL("../../🟦️.ts", import.meta.url).href });

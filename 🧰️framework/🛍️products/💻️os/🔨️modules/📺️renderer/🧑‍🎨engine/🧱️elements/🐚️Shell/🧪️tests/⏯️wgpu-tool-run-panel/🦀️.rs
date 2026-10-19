@@ -58,7 +58,7 @@ fn paint_panel(shell: &mut ShellState, surface: &str, document: &UiDocumentLease
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, Rect::new(0.0, 0.0, 360.0, 720.0), &mut ctx, surface, "s.test.tool-run", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
+        let done = caller.turn(|cx|render_ui_document_step(&mut cursor, document, Rect::new(0.0, 0.0, 360.0, 720.0), &mut ctx, surface, "s.test.tool-run", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
         assert!(done || !cursor.terminal_is_fault(), "the panel paint faulted in phase {}", cursor.phase_name());
         done
     });
@@ -144,10 +144,10 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     let records = fixture_records();
     let mut focused = Vec::new();
     for _ in 0..3 {
-        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() }, &mut painted.input);
         shell.chrome.chrome_build.note_content_focus_commands(&commands);
         focused.extend(commands.iter().filter_map(|command| match command {
-            ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
+            semio_framework_ui_wgpu_events::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
             _ => None,
         }));
     }
@@ -156,9 +156,9 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
     assert!(!focused.iter().any(|key| key.ends_with("toolRunStep")), "a disabled run button never takes focus: {focused:?}");
     let mut wrapped = None;
     for _ in 0..=focused.len() {
-        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+        let commands = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() }, &mut painted.input);
         wrapped = commands.iter().find_map(|command| match command {
-            ui_wgpu::wgpu::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
+            semio_framework_ui_wgpu_events::UiCommand::FocusChanged { node: Some(node), .. } => records.get(arena_index(node)).map(|record| record.key.as_str().to_string()),
             _ => None,
         });
         if wrapped.as_deref().is_some_and(|key| key.ends_with("toolRunPause")) {
@@ -166,7 +166,7 @@ fn tool_run_panel_buttons_are_keyboard_reachable() {
         }
     }
     assert_eq!(wrapped.as_deref(), Some("framework.toolRun.1.toolRunPause"), "Tab wraps past the last enabled button back onto the first");
-    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, ui_wgpu::wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: ui_wgpu::wgpu::EventModifiers::default() }, &mut painted.input);
+    semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::dispatch_ui_event(surface, semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Enter".into(), modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() }, &mut painted.input);
     assert_eq!(dispatched(&mut painted.input), vec![serde_json::json!({ "action": "toolRunPause", "runId": "1", "generation": 0 })], "Enter on the focused Pause button dispatches the run's pause");
     close_panel(surface, &mut document);
 }

@@ -62,7 +62,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction, hover: _hover, context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-window-work-repeated"));
@@ -78,6 +79,9 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         let (emit, ephemeral) = puzzle2d_dispatch_emit::<A>(command, snapshot, config, &window_config, &window_transient, window_kind, view_state, puzzle2d_active_utility(view_state), &selection, &self.authoring_seed, &self.base_revision, gesture, None)?;
         self.consumed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
@@ -103,7 +107,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         if self.consumed {
             return Err(Fault::from("puzzle2d-export-work-repeated"));
@@ -114,6 +119,9 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
             export_snapshot::Puzzle2dExportPublication::Segmented(download) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::CompleteDownload { download: download, ephemeral: Default::default() },
             export_snapshot::Puzzle2dExportPublication::Refused(message) => semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { effects: vec![Effect::Notify { message }], ui_scope: UiDirtyScope::None, ..Default::default() }),
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

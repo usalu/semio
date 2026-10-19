@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, normalize, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import fastGlob from "fast-glob";
 import Parser from "web-tree-sitter";
 import ts from "typescript";
 
@@ -196,3 +197,14 @@ test("module tree reader owns its types and has a strict neutral source graph", 
   const program = ts.createProgram([path], { noEmit: true, strict: true, skipLibCheck: true, types: ["node"], target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true });
   expect(ts.getPreEmitDiagnostics(program).map(value => ts.flattenDiagnosticMessageText(value.messageText, "\n"))).toEqual([]);
 }, 30_000);
+
+test("source family reading lists every authored Rust file below a directory except canonical test folders, as an independent glob does", async () => {
+  const module = await api();
+  const base = materialize("family", { "a/🦀️.rs": "a", "a/b/🦀️.rs": "b\n", "a/b/c.txt": "x", "a/🧪️tests/🦀️.rs": "t", "a/b/🧪️testing/🦀️.rs": "u", "a/node_modules/🦀️.rs": "n", "z/🦀️.rs": "z" });
+  const oracle = fastGlob.sync("**/*.rs", { cwd: join(base, "a"), absolute: true, ignore: ["**/🧪️tests/**", "**/🧪️testing/**", "**/node_modules/**"] }).map(path => resolve(path)).sort();
+  const listed: string[] = [...module.listSourceFamily(join(base, "a"))];
+  expect([...listed].sort()).toEqual(oracle);
+  expect(listed).toHaveLength(2);
+  expect(module.readSourceFamilySource(join(base, "a"))).toBe(listed.map(path => readFileSync(path, "utf8")).map(text => text.endsWith("\n") ? text : text + "\n").join(""));
+  expect(module.readSourceFamilySource(pathToFileURL(join(base, "a") + "/"))).toBe(module.readSourceFamilySource(join(base, "a")));
+});

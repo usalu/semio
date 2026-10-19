@@ -108,7 +108,7 @@ impl OpeningState {
             let task = format!("documentTransfer:{}", transfer.id);
             let progress = format!("{}/{}", transfer.delivered, transfer.total);
             children.push(settings_text_row(&format!("{} · {} · {} · {}", transfer.file, transfer.lane.label(is_de), transfer.owner, pick("Running", "Läuft"))));
-            children.push(UiNode::Progress(ui_wgpu::wgpu::component::ui::UiProgressNode {
+            children.push(UiNode::Progress(semio_framework_ui_declaration::ui::UiProgressNode {
                 id: format!("os.task-manager.progress.{task}"),
                 completed: transfer.delivered as f64,
                 total: Some(transfer.total as f64),

@@ -1,0 +1,25 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/framework",
+   "newExportEntries": 1,
+   "importerEdges": 2
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/framework": {
+   "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts": {
+    "targetFile": "🧰️framework/📦️packages/🟦️typescript/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+    "proposedSubpath": "./ui/targets/react/build-tooling",
+    "symbols": [
+     "defineOwnedTestConfig"
+    ],
+    "glueExists": true,
+    "importers": [
+     "✏️s/🔌️plugins/🎞️animate/🧪️tests/🎚️config/🟦️.ts",
+     "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🎚️config/🟦️.ts"
+    ]
+   }
+  }
+ }
+}

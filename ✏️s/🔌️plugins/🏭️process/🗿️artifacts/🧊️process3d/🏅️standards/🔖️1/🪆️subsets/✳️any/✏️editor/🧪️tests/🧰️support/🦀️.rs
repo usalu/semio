@@ -78,7 +78,7 @@ use stock::set_stock;
 use sun::{set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use workshop::{add_workshop_machine, remove_workshop_machine, update_workshop_machine};
 use world::{world_face_drag_end, world_pointer_down};
-use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
+use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, meta, new_app_with_registry_and_members, render_registered_fixture_app, OriginalFixtureScope};
 use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
 /// ✏️ `Process3dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
@@ -96,7 +96,16 @@ pub type Process3dRawApp = VcsArtifactApp<EditorApp<Process3dPlayApp>, semio_s_a
 /// `Deref`/`DerefMut` keep every call site writing `&mut app` exactly as before. The drain never
 /// panics while the thread is ALREADY unwinding — a second panic in a destructor aborts the whole
 /// binary and hides the assertion that actually failed.
-pub struct Process3dApp(Process3dRawApp);
+/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// scope pays the caller's terminal retirement after the paid app close.
+pub struct Process3dApp(pub Process3dRawApp, pub OriginalFixtureScope);
+
+impl Process3dApp {
+    /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
+    pub fn close_fixture(&mut self) {
+        close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+    }
+}
 
 impl std::ops::Deref for Process3dApp {
     type Target = Process3dRawApp;
@@ -113,27 +122,9 @@ impl std::ops::DerefMut for Process3dApp {
 
 impl Drop for Process3dApp {
     fn drop(&mut self) {
-        for _ in 0..1_048_576 {
-            if self.0.close_terminal_is_empty() {
-                return;
-            }
-            let demand = match PluginApp::close_retirement_demands(&self.0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                Ok(demand) => demand,
-                Err(error) => {
-                    assert!(std::thread::panicking(), "Process3d fixture close demand faulted: {error:?}");
-                    return;
-                }
-            };
-            match PluginApp::close_step(&mut self.0, semio_s_artifact_process_process3d_host::process3d_demand_grant(demand)) {
-                Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_)) => return,
-                Ok(_) => continue,
-                Err(fault) => {
-                    assert!(std::thread::panicking(), "Process3d fixture close faulted: {fault:?}");
-                    return;
-                }
-            }
+        if !std::thread::panicking() {
+            self.close_fixture();
         }
-        assert!(std::thread::panicking(), "Process3d fixture never reached its terminal-empty witness");
     }
 }
 
@@ -150,7 +141,7 @@ semio_framework_plugin::history_edit_acceptance_law!("process", Process3dPlayApp
 /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
 
 /// 🧪 Seeds wood/metal contribution catalogs so panel tests can install machines without the host.
-fn seed_domain_catalog_contributions(app: &mut Process3dRawApp) {
+fn seed_domain_catalog_contributions(app: &mut Process3dApp) {
     use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::StockQuantity, snapshot::WorkshopMachine};
     use semio_framework::{ProgramContributionEntry, TopicContribution};
     fn param(id: &str, label: &str, value: f64) -> CapabilityParameter {
@@ -248,24 +239,27 @@ pub fn app() -> Process3dApp {
 /// that generation, so a test that swaps a production envelope must start from here; seeding first
 /// bumps the generation and the decode comes back `Fault` instead of `Ready`.
 pub fn unseeded_app_with_registry() -> Process3dApp {
-    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+    let scope = OriginalFixtureScope::admit();
+    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
-    Process3dApp(app)
+    Process3dApp(app, scope)
 }
 
 /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
 pub fn app_with_registry() -> Process3dApp {
-    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())));
+    let scope = OriginalFixtureScope::admit();
+    let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry_and_members::<EditorApp<Process3dPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(process3d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     ::semio_framework_async::poll::resolve_ready(PluginApp::bind_instance_id(&mut app, meta("local").instance_id));
+    let mut app = Process3dApp(app, scope);
     seed_domain_catalog_contributions(&mut app);
-    Process3dApp(app)
+    app
 }
 
-pub fn dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> InvocationResult {
+pub fn dispatch(app: &mut Process3dApp, command: Process3dCommand) -> InvocationResult {
     dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
 }
 
-pub fn dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> InvocationResult {
+pub fn dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> InvocationResult {
     settled_dispatch_with_utility(app, command, active_utility_id).0
 }
 
@@ -276,33 +270,33 @@ pub fn dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dComman
 /// drains for. The settled receipt's effects are folded into the answer, since either surface may
 /// be the one carrying a `LoadDocument`; its `lanes` are the observable proof that a command wrote
 /// a store (`InvocationResult.mutations` is empty by construction on this path).
-pub fn settled_dispatch(app: &mut Process3dRawApp, command: Process3dCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+pub fn settled_dispatch(app: &mut Process3dApp, command: Process3dCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     settled_dispatch_with_utility(app, command, PROCESS3D_DEFAULT_UTILITY)
 }
 
-pub fn settled_dispatch_with_utility(app: &mut Process3dRawApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dCommand, active_utility_id: &str) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view_state.active_utility_id = Some(active_utility_id.into());
     let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-    let mut result = ::semio_framework_async::poll::resolve_ready(app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("dispatch");
+    let mut result = ::semio_framework_async::poll::resolve_ready(app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)
 }
 
-pub fn action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
+pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
     settled_action(app, action, args).0
 }
 
 /// 🏁️ The settling action bridge — same reason as [`settled_dispatch`]: the host verb's retained
 /// operation publishes after the call answers.
-pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-    let admitted = ::semio_framework_async::poll::resolve_ready(app.handle_action(action, args, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("action dispatch");
+pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
+    let admitted = ::semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("action dispatch");
     // 🛂️ A framework-reserved verb (`interactionSelect`, `interactionHover`, undo/redo, …) is only
     // ADMITTED by `handle_action` — it finishes in a reserved job handed back as an
     // `Effect::SpawnJob`. Without driving that job home the selection never lands in the
     // interaction store and every selection-addressed render still projects the empty state.
-    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted)).expect("settle the framework-reserved admission");
+    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted)).expect("settle the framework-reserved admission");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)
@@ -310,8 +304,8 @@ pub fn settled_action(app: &mut Process3dRawApp, action: &str, args: Option<&Dsl
 
 /// 🏁️ Drives every pending typed operation of the bound instance to its publication, the way the
 /// plugin host's continuation does.
-pub fn settle(app: &mut Process3dRawApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("settle the typed operation")
+pub fn settle(app: &mut Process3dApp) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("settle the typed operation")
 }
 
 /// 🧾️ Whether a settled publication reached the DOCUMENT lane — the mounted app's observable
@@ -323,16 +317,15 @@ pub fn published_a_document_mutation(receipt: &semio_framework_plugin::artifact_
 /// 🧩️ A `BuiltNode` carries retained page children, so the rendered tree is projected through the
 /// fixture transport rather than serialized directly — a bare `serde_json::to_string(&tree.root)`
 /// now fails with `BuiltChildren requires retained page transport`.
-pub fn render(app: &mut Process3dRawApp, body_key: &str) -> String {
+pub fn render(app: &mut Process3dApp, body_key: &str) -> String {
     render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native))
 }
 
 /// 🪟️ Renders one body against a host view state — the seam every tree-window law drives, since
 /// `ViewModel.tree_windows` is the ONLY way a caller states which containers are open and which
 /// rows the viewport holds.
-pub fn render_with_view(app: &mut Process3dRawApp, body_key: &str, view_state: &ViewModel) -> String {
-    let tree = ::semio_framework_async::poll::resolve_ready(app.render(body_key, None, view_state)).expect("render");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection")
+pub fn render_with_view(app: &mut Process3dApp, body_key: &str, view_state: &ViewModel) -> String {
+    ::semio_framework_async::poll::resolve_ready(render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx())).expect("render projection")
 }
 
 /// 🪟️ The host's own view state for the single main window. `VcsArtifactApp::window_measures`
@@ -347,7 +340,7 @@ pub fn main_window_view() -> ViewModel {
     }
 }
 
-pub fn main_window_measures(app: &mut Process3dRawApp) -> Vec<WindowMeasure> {
+pub fn main_window_measures(app: &mut Process3dApp) -> Vec<WindowMeasure> {
     ::semio_framework_async::poll::resolve_ready(app.window_measures(&main_window_view())).get(workpiece::PROCESS_3D_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
 }
 

@@ -267,6 +267,9 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 
 // RunMcpServerFor starts the MCP stdio server for the given kind.
 func RunMcpServerFor(kind providers.McpClientKind, toolTimeout time.Duration) error {
+	if err := workspace.BindWorkingDirectory(); err != nil {
+		return err
+	}
 	s := CreateMcpServer(kind, toolTimeout)
 	return ServeStdio(s)
 }
@@ -299,12 +302,10 @@ func RunHookFor(kind providers.McpClientKind, eventStr string, stdin []byte) err
 	if client == "" {
 		return fmt.Errorf("hooks are not available for mcp kind %q", kind)
 	}
-	cwd, err := os.Getwd()
-	if err != nil {
+	if err := workspace.BindWorkingDirectory(); err != nil {
 		return err
 	}
-	repoRoot := workspace.FindRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	repoRoot := workspace.GetRootDir()
 	var input json.RawMessage
 	if len(stdin) > 0 {
 		input = json.RawMessage(stdin)

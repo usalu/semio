@@ -1,6 +1,7 @@
 //! 🟥️ `delete-slab-type` payload. Removes a slab type that no slab uses.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,7 +13,7 @@ pub struct DeleteSlabType {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteSlabType
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteSlabType> + From<crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteSlabType> + From<crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType> + semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "slab-type", kind: "delete-slab-type", record: "DeleteSlabType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

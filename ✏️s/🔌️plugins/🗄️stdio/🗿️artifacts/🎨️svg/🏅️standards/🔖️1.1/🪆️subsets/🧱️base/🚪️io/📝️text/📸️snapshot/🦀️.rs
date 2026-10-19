@@ -97,12 +97,12 @@ use crate::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
 
 pub(crate) fn encode_snapshot(snapshot: &SvgSnapshot) -> String {
-    use crate::standards::v1_1::subsets::base::io::text::diff::enc_svg_node;
-    use crate::standards::v1_1::subsets::base::io::text::diff::{enc_doctype};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{enc_declaration};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{enc_prolog};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{encode_option};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{enc_str};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::enc_svg_node;
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{enc_doctype};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{enc_declaration};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{enc_prolog};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{encode_option};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{enc_str};
     format!(
         "[{},{},{},{},{},{}]",
         enc_str(&snapshot.schema),
@@ -115,14 +115,14 @@ pub(crate) fn encode_snapshot(snapshot: &SvgSnapshot) -> String {
 }
 
 pub(crate) fn decode_snapshot(value: &str) -> Result<SvgSnapshot, String> {
-    use crate::standards::v1_1::subsets::base::io::text::diff::{dec_svg_node};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{dec_doctype};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{dec_declaration};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{dec_prolog};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{decode_option};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{strip_brackets};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{split_top_level};
-    use crate::standards::v1_1::subsets::base::io::text::diff::{dec_str};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{dec_svg_node};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{dec_doctype};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{dec_declaration};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{dec_prolog};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{decode_option};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{strip_brackets};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{split_top_level};
+    use crate::standards::v1_1::subsets::base::io::text::snapshot::document_parts::{dec_str};
     let parts = split_top_level(strip_brackets(value)?, ',');
     let [schema, root, doctype, declaration, prolog, epilog] = parts.as_slice() else {
         return Err(format!("svg snapshot: expected 6 fields, got {}", parts.len()));
@@ -152,6 +152,9 @@ impl crate::SvgSnapshot {
 
 #[path="🧮️attributes/🦀️.rs"]
 pub mod attributes;
+#[path = "🧱️document-parts/🦀️.rs"]
+pub mod document_parts;
+
 pub use attributes::*;
 
 

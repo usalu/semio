@@ -20,15 +20,15 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE = join(HERE, "🧩️json", "📦️packages", "🦀️rust");
-const TARGET = cargoTargetDirectory(getWorkspaceRoot());
+const TARGET = cargoTargetDirectory(findWorkspaceRoot());
 const OWNER = join(HERE, "..", "..", "➗️equation");
 const FIXTURES_DIR = join(OWNER, "🧪️tests/🧫️fixtures");
 const CATALOG = join(OWNER, "🔮️oracles", "🔣️.json");

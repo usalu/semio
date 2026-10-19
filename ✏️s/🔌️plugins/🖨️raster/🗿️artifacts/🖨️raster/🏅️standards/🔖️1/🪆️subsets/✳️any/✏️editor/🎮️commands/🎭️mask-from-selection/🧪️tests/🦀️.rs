@@ -59,8 +59,8 @@ fn selection_mask_cancellation_releases_private_work_without_publication() {
     assert!(!work.candidate.as_mut().unwrap().advance(32768));
     work.begin_close();
     assert!(!work.terminal_is_empty());
-    assert!(matches!(work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant::default()),semio_framework_job::InteractiveJobCloseStep::Pending {..}));
-    assert!(matches!(work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:1}),semio_framework_job::InteractiveJobCloseStep::Complete {..}));
+    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_framework_value::retained_clone::RetainedCloneGrant::default(), |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Pending {..}));
+    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:262144,maximum_capacity_bytes:0,maximum_release_bytes:262144,maximum_depth:1}, |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete {..}));
     assert!(work.terminal_is_empty());
     assert!(document.assets.is_empty());
     assert!(matches!(&document.layers[0],RasterLayerNode::Pixel {mask:None,image_key:None,..}));

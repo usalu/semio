@@ -1,7 +1,8 @@
 //! 🔀️ `reorder-columns` — repositions one named column within the sequence (never spatial —
 //! `SemioTableColumn` carries no position of its own, only sequence order).
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
@@ -13,13 +14,13 @@ pub struct ReorderColumns {
     pub to_index: usize,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for ReorderColumns {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for ReorderColumns {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "columns", kind: "reorder-columns", record: "ReorderedColumns" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

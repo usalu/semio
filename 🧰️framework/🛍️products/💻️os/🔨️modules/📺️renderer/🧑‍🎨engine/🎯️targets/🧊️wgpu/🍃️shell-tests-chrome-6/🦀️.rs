@@ -60,7 +60,8 @@ use semio_framework_value::DslValue;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{HitKind, InputState, KeyAction, PointerModifiers, RetainedGlyphCursor, RetainedGlyphStep};
+use semio_framework_ui_wgpu_input::{HitKind, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep};
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🚗️driver-editor/🦀️.rs"]
 mod driver_editor_tests;

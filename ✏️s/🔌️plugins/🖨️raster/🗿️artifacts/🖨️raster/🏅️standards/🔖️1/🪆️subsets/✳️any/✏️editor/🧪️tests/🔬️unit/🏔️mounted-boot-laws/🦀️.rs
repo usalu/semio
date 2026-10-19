@@ -15,7 +15,8 @@ pub mod mounted {
 
     pub const RASTER_TEST_INSTANCE: u32 = 1;
 
-    pub struct MountedRasterApp(VcsArtifactApp<EditorApp<RasterPlayApp>>);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct MountedRasterApp(pub VcsArtifactApp<EditorApp<RasterPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for MountedRasterApp {
         type Target = VcsArtifactApp<EditorApp<RasterPlayApp>>;
@@ -33,7 +34,7 @@ pub mod mounted {
     impl Drop for MountedRasterApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -43,17 +44,18 @@ pub mod mounted {
     }
 
     pub fn mounted_app() -> MountedRasterApp {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<RasterPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(RASTER_TEST_INSTANCE));
-        MountedRasterApp(app)
+        MountedRasterApp(app, scope)
     }
 
     pub async fn dispatch(app: &mut MountedRasterApp, command: RasterCommand) -> InvocationResult {
         let id = "raster-composite";
         let mut action = meta("local");
         action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -63,7 +65,7 @@ pub mod mounted {
     /// sees `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it
     /// without that ladder reads back as a silent no-op.
     pub async fn history(app: &mut MountedRasterApp, action: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 }
 
@@ -369,7 +371,7 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     use semio_framework_job::InteractiveJob;
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() })).await;
-    let archive = PluginApp::document_archive(&*app).await.expect("the demo document reads as one archive");
+    let archive = PluginApp::document_archive(&mut app.0).await.expect("the demo document reads as one archive");
     let envelope = store::os_store::text_format::parse_document_pack::<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot, semio_s_artifact_raster_raster_mutations::RasterMutation>(&archive.parent_pack, &archive.parent_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the archive's pack/spr pair parses").into_envelope();
     let edits = envelope.vcs.edits.len();
     let operation = semio_framework_job::OperationId(4_401);
@@ -405,24 +407,24 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     }
     assert!(job.terminal_is_empty(), "the completed initializer closes to terminal-empty");
     drop(job);
-    PluginApp::begin_document_archive_load(&mut *app, 91, archive).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut app.0, 91, archive).expect("archive admission");
     let started = std::time::Instant::now();
     let mut status = None;
     let mut polls = 0usize;
     let mut last = (0u64, 0u64);
     while started.elapsed() < std::time::Duration::from_secs(240) {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         polls += 1;
         last = (polled.completed, polled.total);
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
     let status = status.unwrap_or_else(|| panic!("the demo archive load reached no terminal in {polls} polls (last progress {}/{})", last.0, last.1));
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    PluginApp::acknowledge_document_archive_load(&mut *app, 91).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut app.0, 91).expect("archive acknowledgement");
     let snapshot = app.snapshot().expect("loaded snapshot");
     assert!(semio_s_artifact_raster_raster_io::raster_asset(&snapshot.assets, "semio-emblem").is_some(), "the emblem survives the archive door");
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(snapshot);
@@ -433,6 +435,6 @@ async fn raster_close_diagnosis_registered_add_layer_releases_all_owners() {
     use semio_framework_plugin::PluginApp;
     let mut app=context::app().await;
     context::dispatch(&mut app,RasterCommand::AddLayer(commands::add_layer::AddLayer{kind:"pixel".into()})).await;
-    for _ in 0..100000 {if app.close_terminal_is_empty(){break;}app.close_step(1,16384).unwrap();semio_framework_async::yield_once().await;}
+    for _ in 0..100000 {if app.close_terminal_is_empty(){break;}app.0.close_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();semio_framework_async::yield_once().await;}
     assert!(app.close_terminal_is_empty(),"registered AddLayer closure must release all owners");
 }

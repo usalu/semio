@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ wfc-bitmap Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-wfc-bitmap", { packages: ["semio-s-artifact-wfc-bitmap", "semio-s-artifact-wfc-bitmap-bitmap", "semio-s-artifact-wfc-bitmap-inferences", "semio-s-artifact-wfc-bitmap-mut-family", "semio-s-artifact-wfc-bitmap-mut-family-2", "semio-s-artifact-wfc-bitmap-schema", "semio-s-artifact-wfc-bitmap-snapshot", "semio-s-artifact-wfc-bitmap-tests", "semio-s-artifact-wfc-bitmap-tests-shrinks-the-output-and-cascades-a-pin", "semio-s-artifact-wfc-bitmap-transient"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"],snapshotSqliteTestBudgetMs:120000});

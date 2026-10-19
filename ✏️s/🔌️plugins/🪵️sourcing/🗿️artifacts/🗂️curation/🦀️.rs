@@ -171,7 +171,7 @@ pub mod editor {
         pub use semio_s_artifact_sourcing_curation_tests::editor::sourcing::*;
 pub use semio_s_artifact_sourcing_curation_examples::editor::sourcing::demo_session;
 
-        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::base;
+        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::editor_vocabulary;
 
         #[path = "."]
         pub mod config {

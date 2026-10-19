@@ -85,7 +85,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
     let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-    assert!(!caller.turn(|cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx)));
+    assert!(!caller.turn(|cx|render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx)));
     assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
 
     for _ in 0..262_144 {
@@ -150,7 +150,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
     };
     let mut document = shell.windows.publish_surface_records(surface, vec![root(&[2, 3]), child(2, "left-canvas", &scene(0)), child(3, "right-canvas", &scene(1))]).unwrap();
     let input = paint_component_pointer_documents(&mut shell, &[(surface, controller, &document, body)]);
-    let mut rects: Vec<_> = input.hits().iter().filter(|hit| hit.kind == ui_wgpu::wgpu::HitKind::ComponentScene).map(|hit| hit.rect).collect();
+    let mut rects: Vec<_> = input.hits().iter().filter(|hit| hit.kind == semio_framework_ui_wgpu_input::HitKind::ComponentScene).map(|hit| hit.rect).collect();
     assert_eq!(rects.len(), 2);
     rects.sort_by(|a, b| a.x.total_cmp(&b.x));
     assert!(rects.iter().all(|rect| rect.w > 0.0 && rect.h > 0.0));
@@ -172,7 +172,7 @@ fn sibling_canvas_components_mount_under_one_document_without_sharing_their_came
     let mut successor = interaction.shell.windows.publish_surface_records(surface, vec![root(&[3]), child(3, "right-canvas", &scene(1))]).unwrap();
     interaction.input = paint_component_pointer_documents(&mut interaction.shell, &[(surface, controller, &successor, body)]);
     assert!(!semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::scene_pointer_target_is_live(&targets[0]));
-    let survivor = interaction.input.hits().iter().find(|hit| hit.kind == ui_wgpu::wgpu::HitKind::ComponentScene).unwrap().rect;
+    let survivor = interaction.input.hits().iter().find(|hit| hit.kind == semio_framework_ui_wgpu_input::HitKind::ComponentScene).unwrap().rect;
     semio_framework_async::block_on(semio_framework_os_renderer_wgpu_frame_actions::dispatch_normalized_event(
         &mut interaction,
         &mut ui_render::DispatchEvent::Scroll { x: survivor.x + survivor.w * 0.5, y: survivor.y + survivor.h * 0.5, delta_x: 0.0, delta_y: -120.0, modifiers: Default::default() },

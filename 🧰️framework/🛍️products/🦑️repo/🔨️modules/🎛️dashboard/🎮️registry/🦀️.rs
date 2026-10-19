@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use ui_locale::Locale;
-use ui_tui::tui::text::elide_end;
+use semio_framework_ui_tui_core::text::elide_end;
 
 // #region 🔖️Wire
 /// 🏷️ The launch types the registry produces and the daemon wire carries, which the launch contract owns: what a running task is

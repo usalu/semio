@@ -42,7 +42,10 @@ use semio_framework_value::DslValue;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use store_sync::{PresencePeer, PresenceWindowView};
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, Theme, UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiInputNode, UiNode, UiPresence, UiStackNode, UiTextNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📒️directory/🧬️component/🦀️.rs"]
 mod staged_directory__component;

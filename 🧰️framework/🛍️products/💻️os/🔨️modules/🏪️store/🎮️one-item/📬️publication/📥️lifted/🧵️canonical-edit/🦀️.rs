@@ -21,12 +21,12 @@ use semio_framework_os_store_canonical_json::CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYT
 
 
 pub struct ArtifactStoreOneItemAuthorityRetirement {
-    pub owner: semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>,
+    pub owner: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>,
 }
 
 impl ArtifactStoreOneItemAuthorityRetirement {
     pub fn new(authority: Arc<ArtifactStoreOneItemLiveAuthority>) -> Self {
-        Self { owner: semio_framework_value::retirement::shared::SharedControlledRetirement::lease(authority) }
+        Self { owner: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(authority) }
     }
 }
 
@@ -45,8 +45,8 @@ impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
 /// `from_slice` against `checkpoint()`) uses it as an independent differential oracle. Production
 /// never serializes this type through serde.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ArtifactStoreOneItemSealCheckpoint {
     pub version: u8,

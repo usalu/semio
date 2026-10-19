@@ -7,10 +7,10 @@
 
 use std::path::{Path, PathBuf};
 use ui_styling::appearance::AppearanceName;
-use ui_tui::tui::backend::{NativeTerminal, TerminalBackend, UnicodeLevel};
-use ui_tui::tui::engine::Tui;
-use ui_tui::tui::geometry::Size;
-use ui_tui::tui::theme::Theme;
+use semio_framework_ui_tui_terminal::backend::{NativeTerminal, TerminalBackend, UnicodeLevel};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::geometry::Size;
+use semio_framework_ui_tui_core::theme::Theme;
 
 #[path = "🚀️launcher/🦀️.rs"]
 pub mod launcher;
@@ -54,7 +54,7 @@ pub fn help_text(preferences: &dashboard_preferences::Preferences) -> String {
     lines.join("\n")
 }
 
-fn present(term: &mut NativeTerminal, tui: &mut Tui, patch: &ui_tui::tui::ansi::AnsiPatch) { term.present(patch, tui.cursor()).ok(); }
+fn present(term: &mut NativeTerminal, tui: &mut Tui, patch: &semio_framework_ui_tui_terminal::ansi::AnsiPatch) { term.present(patch, tui.cursor()).ok(); }
 
 /// ⚙️ Starts a native dashboard with strict optional configuration overrides.
 pub fn run_with(root: &Path, parsed: &dashboard_core::args::ParsedArgs) -> i32 {

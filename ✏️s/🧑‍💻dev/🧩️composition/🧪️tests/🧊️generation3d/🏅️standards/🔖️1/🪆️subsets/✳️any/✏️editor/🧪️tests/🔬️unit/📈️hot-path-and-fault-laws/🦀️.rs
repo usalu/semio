@@ -18,16 +18,16 @@ struct BootBudget {
 }
 
 /// 🧊️ Meshes the preview window currently paints.
-async fn rendered_preview_mesh_count(app: &mut context::Generation3dApp, view: &semio_framework_plugin::ViewModel) -> usize {
+async fn rendered_preview_mesh_count(app: &mut context::Generation3dAppFixture, view: &semio_framework_plugin::ViewModel) -> usize {
     let preview = context::render_with_view(app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, view).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("preview body decodes as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("preview body decodes as an assembled world-3d scene");
     serde_json::from_str::<serde_json::Value>(&world.meshes_json).ok().and_then(|value| value.as_array().map(Vec::len)).unwrap_or_default()
 }
 
 /// 📈️ Drives the boot sequence's `previewEval` run one hop at a time, timing ONLY the guest hop — the extension
 /// capability runs in its own actor under its own budget, so folding it into the turn measurement
 /// would measure the brep kernel, not the reactor.
-async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semio_framework_plugin::ViewModel) -> BootBudget {
+async fn measure_hex_column_boot(app: &mut context::Generation3dAppFixture, view: &semio_framework_plugin::ViewModel) -> BootBudget {
     semio_framework_job::set_runtime_diagnostics(true);
     semio_framework_os_flow::reset_flow_eval_publication_ledger();
     semio_framework_os_flow::reset_flow_eval_step_ledger();
@@ -38,7 +38,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semi
         if app.has_pending_typed_operations() {
             owed.extend(context::settle(app).await.effects);
         }
-        let answered = crate::brep_extension::settle(app, action_meta.instance_id, &action_meta).await.answered;
+        let answered = crate::brep_extension::settle(&mut app.0, action_meta.instance_id, &action_meta, app.1.cx()).await.answered;
         budget.round_trips += answered;
         let dispatches: Vec<(String, Option<semio_framework_value::DslValue>)> = std::mem::take(&mut owed).into_iter().filter_map(|effect| match effect {
             Effect::DispatchAction { action, args, .. } => Some((action, args)),
@@ -53,7 +53,7 @@ async fn measure_hex_column_boot(app: &mut context::Generation3dApp, view: &semi
         }
         for (action, args) in dispatches {
             if semio_framework_plugin::is_tool_run_action_id(&action) {
-                app.handle_action(&action, args.as_ref(), &action_meta).await.expect("the run's framework action");
+                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the run's framework action");
                 continue;
             }
             let started = semio_framework_job::default_now_us().expect("a native monotonic microsecond clock");
@@ -317,11 +317,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
             (rows, cleared)
         })
         .expect("the retained evaluation-session owner lends its session");
-    for _ in 0..1_000_000 {
-        if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
-            break;
-        }
-    }
+    assert!(context::close_instance_operation_owner(&mut owner), "the projection's own session owner must reach its terminal close");
     assert!(semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner), "the projection's own session owner must close terminal-empty");
 
     let (rows, cleared) = observed;

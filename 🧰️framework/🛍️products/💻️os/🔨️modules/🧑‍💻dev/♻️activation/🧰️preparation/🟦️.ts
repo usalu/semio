@@ -1,12 +1,12 @@
-import {withPlaygroundSessionV1} from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
-import{repositoryCargoNetworkV1}from"../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {withPlaygroundSessionV1} from "@semio-tech/plugin-registry/playground/session/reading";
+import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{withInfiniteFontArtifactV1}from"@semio-tech/framework-os/modules/infinite/fonts/reading";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic activation preparation owner. */
 
-import { newestComponentSourceMtime, stagedModuleMtime } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { newestComponentSourceMtime, stagedModuleMtime } from "@semio-tech/framework-plugin/build/freshness";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "@semio-tech/framework-canvas-ts/fonts";
@@ -17,60 +17,49 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import {
   ensurePreview2ShimVendorAt,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/preview2-shim-patches";
 import {
   hostShimSource,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/host-shim-source";
 import {
   PLUGIN_HOST_SHIM_FILE,
   GUESTSLIM_FONT_RELATIVE,
   SHARD_WORKER_FILE,
   type PluginWebMaterializeContext,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/contract";
 import {
   PREVIEW2_VENDOR_RELATIVE,
   rewritePreview2ShimImportSource,
-} from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/imports";
 import {
   pluginComponentBridgeSource,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/component-bridge-source";
 import {
   rewriteJcoComponentAssetUrls,
   rewriteJcoAsyncResultLifting,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/jco-module-rewrites";
 import {
   shardWorkerSource,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization/shard-worker-source";
 import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
-} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+} from "@semio-tech/framework-plugin/browser-bundle/materialization";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "@semio-tech/plugin-registry/deployment";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
-import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 
 import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
-import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import { buildComponentClosureV1, playgroundComponentClosureV1 } from "@semio-tech/framework-plugin/build/driver-stages";
 
 
 

@@ -5,14 +5,15 @@
 //!
 //! @see ../../../🚪️io/📤️export — the dialect writers this command speaks.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::editor::bim::{BimCommand, BimModelApp};
-use crate::standards::v1::subsets::any::io::export::ifc::{Schema, StagedExport};
-use crate::standards::v1::subsets::any::io::export::{csv, gltf, ifc, svg};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::StagedExport;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
@@ -80,16 +81,16 @@ pub fn encode(format: &str, model: &ModelSnapshot, inferred: &ModelInference) ->
     let stem = stem(&model.project.name);
     let (extension, mime_type, data, encoding) = match format {
         "ifc2x3" | "ifc4" => {
-            let (document, _) = ifc::inferred_to_part21(schema_of(format).unwrap_or(Schema::Ifc2x3), model, inferred);
+            let (document, _) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::inferred_to_part21(schema_of(format).unwrap_or(Schema::Ifc2x3), model, inferred);
             return document_output(format, &stem, document);
         }
         "glb" => {
-            let (scene, _) = gltf::scene::build(model, inferred);
+            let (scene, _) = semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(model, inferred);
             let bytes = scene.to_glb().map_err(|error| failed(format, error))?;
             ("glb", "model/gltf-binary", semio_framework_io_base64::base64_standard_encode(&bytes), Some(MEDIA_EXPORT_BASE64_ENCODING))
         }
-        "svg" => ("svg", "image/svg+xml", svg::views_to_svg(model, &inferred.view_linework).map_err(|error| failed(format, error))?, None),
-        "csv" => ("csv", "text/csv", csv::report_csv(model, inferred), None),
+        "svg" => ("svg", "image/svg+xml", semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::views_to_svg(model, &inferred.view_linework).map_err(|error| failed(format, error))?, None),
+        "csv" => ("csv", "text/csv", semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::report_csv(model, inferred), None),
         other => return Err(refusal(other)),
     };
     Ok(Output { filename: format!("{stem}.{extension}"), mime_type, data, encoding })
@@ -105,7 +106,7 @@ pub fn schema_of(format: &str) -> Option<Schema> {
 }
 
 fn document_output(format: &str, stem: &str, document: semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<Output, Fault> {
-    let bytes = ifc::encode(schema_of(format).unwrap_or(Schema::Ifc2x3), document).map_err(|error| failed(format, error))?;
+    let bytes = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::encode(schema_of(format).unwrap_or(Schema::Ifc2x3), document).map_err(|error| failed(format, error))?;
     let (data, encoding) = binary(&bytes);
     Ok(Output { filename: format!("{stem}.ifc"), mime_type: "application/x-step", data, encoding })
 }
@@ -131,7 +132,7 @@ pub struct ExportJob {
 
 impl ExportJob {
     /// 🏗️ A job writing `format` of the document that instance `instance` shows.
-    pub fn new(format:String, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
+    pub fn new(format:String, instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>) -> Self {
         Self { format,analysis:Analysis::new(instance),writer:None }
     }
 
@@ -218,7 +219,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for ModelExportWork {
 /// 📤️ The synchronous path: the file of the instance's inference session as one download.
 pub fn handle(payload: &ExportModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let ended=|error:protocol::InferenceError|fault("bim.export.inference",format!("the model could not be analysed: {error}"));
-    inference::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|inferred|encode(&payload.format,doc.snapshot,inferred)).map_err(ended)?.map(download)
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|inferred|encode(&payload.format,doc.snapshot,inferred)).map_err(ended)?.map(download)
 
 }
 

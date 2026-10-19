@@ -22,10 +22,10 @@ use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance};
 async fn set_active_example_passes_the_retained_preflight() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_BOX_SHELL }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted in the retained job ladder");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🕹️ The framework-reserved local observation on the same instance. Its footprint is the framework's
@@ -42,7 +42,7 @@ async fn interaction_select_passes_the_reserved_preflight() {
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     eprintln!("interactionSelect reserved work items={} effects={}", ArtifactRetainedWorkCapacity::for_invertible_items(1).work_items(), settled.requested_effects.len());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🪟️ The runtime reproduction. `pending_effects` arms `flowEvalTick` with a bare
@@ -68,5 +68,5 @@ async fn an_unaddressed_flow_eval_tick_is_refused_not_over_capacity() {
         Err(fault) => format!("{fault:?}"),
     };
     assert!(!detail.contains("exceeds semantic work capacity"), "an addressing refusal must not be reported as a work-capacity fault: {detail}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

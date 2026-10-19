@@ -1,6 +1,7 @@
 //! 📽️ `create-view` payload. Brings a new view into a building: a plan or ceiling plan of one of its storeys, a section or elevation through a vertical plane, or a camera. Each kind owns exactly its fields; the linework it draws is inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, View}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateView {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateView
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateView> + From<crate::standards::v1::subsets::any::schema::mutations::delete_view::DeleteView>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateView> + From<semio_s_artifact_bim_model_mut_any_93::standards::v1::subsets::any::schema::mutations::delete_view::DeleteView>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "view", kind: "create-view", record: "CreateView" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

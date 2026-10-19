@@ -1,11 +1,12 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{canvas_surface, meta_record, text_record};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{canvas_surface, meta_record, text_record};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ViewPlane;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane;
 #[allow(unused_imports)]
 use semio_framework_plugin::DslValue;
 #[allow(unused_imports)]
@@ -16,14 +17,15 @@ use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
 use semio_framework_plugin::WindowOptions;
-use crate::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig;
-use crate::editor::bim::modes::edit::windows::section::*;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewKind};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::{active_view, vertical_views, plane_of, records, render};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
@@ -64,8 +66,8 @@ async fn the_window_shows_the_configured_view_else_the_first_vertical_one() {
 #[semio_framework_async_macros::async_test]
 async fn a_plane_beside_the_model_cuts_nothing() {
     let (mut snapshot, _) = demo();
-    snapshot.views.insert("v-beside".into(), View::through("bldg-1", "Beside", ViewKind::Section, crate::standards::v1::subsets::any::schema::snapshot::ViewPlane { start: Point2 { x: -1.0, y: 20.0 }, end: Point2 { x: 9.0, y: 20.0 } }));
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    snapshot.views.insert("v-beside".into(), View::through("bldg-1", "Beside", ViewKind::Section, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane { start: Point2 { x: -1.0, y: 20.0 }, end: Point2 { x: 9.0, y: 20.0 } }));
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     assert_eq!(inference.view_linework["v-beside"].lines.area_of(PlanKind::SectionCut), 0.0);
 }
 

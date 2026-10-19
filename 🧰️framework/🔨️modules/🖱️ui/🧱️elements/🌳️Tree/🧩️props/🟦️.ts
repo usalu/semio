@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { ContextMenuItem } from "../../🖱️ContextMenu/🎨️item-render/🟦️.tsx";
-import type { TreeWindowRowExtent, TreePresentation } from "@semio-tech/framework";
+import type { UiLabel } from "../../🎗️UiLabel/🟦️.tsx";
+import type { TreeWindowRowExtent, TreePresentation } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { TreeDirection } from "../📏️row-alignment/🟦️.tsx";
 import { reactHostPort } from "../../🔌️Ports/🟦️.tsx";
 import type { TreeDragRole, TreeHeaderAction } from "../⚡️actions/🟦️.tsx";
@@ -265,3 +266,26 @@ export const getTreeItemLoadingId = (itemId: string): string => `tree-item-loadi
 export const getTreeSectionItems = (section: TreeDataSection, loadedSectionItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => section.items ?? loadedSectionItemsById[section.id] ?? [];
 
 export const getTreeItemItems = (item: TreeDataItem, itemItemsById: Record<string, TreeDataItem[]>): TreeDataItem[] => itemItemsById[item.id] ?? item.items ?? [];
+
+/**
+ * Data interface for a node in a file tree.
+ **/
+export interface FileTreeNode {
+  title: string;
+  path: string;
+  icon?: string;
+  isFolder: boolean;
+  children?: FileTreeNode[];
+}
+
+/**
+ * TreeFilesProps holds the data fields for a TreeFilesProps record.
+ **/
+export interface TreeFilesProps {
+  title?: UiLabel;
+  nodes: FileTreeNode[];
+  currentPath?: string;
+  onNavigate?: (path: string) => void;
+  as?: "a" | "div";
+  className?: string;
+}

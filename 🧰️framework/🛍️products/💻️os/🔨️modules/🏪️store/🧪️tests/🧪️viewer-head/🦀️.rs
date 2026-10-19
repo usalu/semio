@@ -95,7 +95,7 @@ async fn deliver(to: &mut DemoStore, log: Vec<semio_framework_os_spr::MutationEn
     for event in log.into_iter().filter(|event| !known.contains(&event.mutation_id)) {
         to.ingest_remote(event).await.expect("a replica ingests a shared event");
     }
-    assert!(to.dag.pending_is_empty(), "every delivered event found its dependencies");
+    assert!(to.log.dag.pending_is_empty(), "every delivered event found its dependencies");
 }
 
 /// 💾️ The store a replica restores from its own persisted pair (`spr`, head included) or from the shared text log (`ops`).
@@ -248,7 +248,7 @@ async fn a_content_revision_names_a_head_whatever_line_its_replica_stood_on() {
                         standing = true;
                     }
                 }
-                assert!(standing && replica.dag.pending_is_empty(), "{name} arrival {arrival}: the replica stood on {stand} and every event found its dependencies");
+                assert!(standing && replica.log.dag.pending_is_empty(), "{name} arrival {arrival}: the replica stood on {stand} and every event found its dependencies");
                 for line in &lines {
                     let alternative_id = line_id(&replica, line);
                     test_support::dispatch_test_command(&mut replica, ArtifactCommand::SwitchAlternative { alternative_id }).await.expect("a local switch");

@@ -6,7 +6,7 @@ import {transformSync,build} from "esbuild";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync,existsSync,openSync,closeSync,readSync,writeSync,fsyncSync,lstatSync,statSync,renameSync} from "node:fs";
 import {resolve,join,dirname,isAbsolute} from "node:path";
 import {createHash} from "node:crypto";
-import {readModuleTreeSource} from "../../../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")),workspace=process.cwd(),script=join(workspace,"🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts"),source=readModuleTreeSource(script)+"\n"+readModuleTreeSource(join(dirname(script),"🧾️catalog-artifact-io/🟦️.ts")),syntax=ts.createSourceFile("hub.ts",source,ts.ScriptTarget.Latest,true);
 const definition=(name:string)=>syntax.statements.find((node:any)=>node.name?.text===name)!.getText(syntax).replace(/^export /,"");
 /** 🧾️ Independent SQLite phases require private artifact capture before compiler admission returns. */

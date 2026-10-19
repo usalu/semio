@@ -124,7 +124,7 @@
     {
       "id": "install-ticket-admission",
       "change": {
-        "role": "store",
+        "role": "storeOwnerInstall",
         "from": "if !owners.constructor_is_complete()",
         "to": "if false"
       },
@@ -133,7 +133,7 @@
     {
       "id": "install-original-tickets",
       "change": {
-        "role": "store",
+        "role": "storeOwnerInstall",
         "from": "*self.factory_retirement_tickets = owners.take_factory_retirement_tickets();",
         "to": "*self.factory_retirement_tickets = Default::default();"
       },
@@ -142,7 +142,7 @@
     {
       "id": "install-original-disposer",
       "change": {
-        "role": "store",
+        "role": "storeOwnerInstall",
         "from": "*self.owned_disposer = owners.store_disposer.take();",
         "to": "*self.owned_disposer = None;"
       },
@@ -160,7 +160,7 @@
     {
       "id": "cursor-terminal-witness",
       "change": {
-        "role": "store",
+        "role": "storeDisposer",
         "from": "self.phase == ArtifactStoreCursorDisposerPhase::Complete && self.active.is_none() && store.owned_roots_terminal_is_empty()",
         "to": "true"
       },
@@ -205,7 +205,7 @@
     {
       "id": "create-wrapper-bypass",
       "change": {
-        "role": "store",
+        "role": "memberStore",
         "from": "install_funded_member_store_owners(&mut store,catalog)?;",
         "to": "Ok::<(), VcsError>(())?;",
         "occurrence": 0
@@ -215,7 +215,7 @@
     {
       "id": "open-wrapper-bypass",
       "change": {
-        "role": "store",
+        "role": "memberStore",
         "from": "install_funded_member_store_owners(&mut store,catalog)?;",
         "to": "Ok::<(), VcsError>(())?;",
         "occurrence": 1
@@ -225,8 +225,8 @@
     {
       "id": "cursor-current-refusal-owner-lost",
       "change": {
-        "role": "store",
-        "from": "self.current = std::mem::ManuallyDrop::new(original); Err(error)",
+        "role": "storeCloseCursor",
+        "from": "self.live.current = std::mem::ManuallyDrop::new(original); Err(error)",
         "to": "Err(error)"
       },
       "accepted": false
@@ -261,7 +261,7 @@
     {
       "id": "comment-cannot-supply-missing-production-owner",
       "change": {
-        "role": "store",
+        "role": "storeOwnerInstall",
         "from": "*self.owned_disposer = owners.store_disposer.take();",
         "to": "*self.owned_disposer = None; /* *self.owned_disposer = owners.store_disposer.take(); */"
       },
@@ -306,7 +306,7 @@
     {
       "id": "backbone-grant-lost",
       "change": {
-        "role": "store",
+        "role": "storeBackbone",
         "from": "ArtifactStoreBackboneRetirement::admit_attached(&mut self.member_inbox, &mut self.backbone, grant)",
         "to": "unreachable!()"
       },

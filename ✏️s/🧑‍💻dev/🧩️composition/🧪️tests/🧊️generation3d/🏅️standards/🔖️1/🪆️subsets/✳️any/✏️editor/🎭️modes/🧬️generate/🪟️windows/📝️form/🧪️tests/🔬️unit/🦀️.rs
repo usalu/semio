@@ -2,7 +2,7 @@ use semio_framework_artifact_playbook_playbook::flow_forms::PlaybookFlowFormProd
 use super::*;
 use semio_s_artifact_procedural_3d_editor_commands::add_generation;
 use semio_s_artifact_procedural_3d_editor_commands::update_generation_values;
-use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dApp};
+use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dAppFixture};
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 #[semio_framework_async_macros::async_test]
@@ -13,7 +13,7 @@ async fn generate_form_hints_without_a_selected_generation() {
 
 /// 📝️ The first slider question the bundled fixture's form spec exposes, plus the generation it
 /// belongs to — the exact pair a user types into.
-async fn first_slider_question(app: &mut Generation3dApp) -> (String, String, f64) {
+async fn first_slider_question(app: &mut Generation3dAppFixture) -> (String, String, f64) {
     dispatch(app, Generation3dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     let read = snapshot(app);
     let generation_id = read.generation.generations.first().expect("addGeneration seeds one generation").id.clone();

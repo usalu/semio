@@ -9,3 +9,5 @@ import "./📏️measure-and-pack/🟦️.ts";
 import "./📝️docs-and-mounts/🟦️.ts";
 import "./🧰️host-imports/🟦️.ts";
 import "./🚦️test-support-wiring/🟦️.ts";
+import "./🚧️hard-budget/🟦️.ts";
+import "./🚀️launch-routes/🟦️.ts";

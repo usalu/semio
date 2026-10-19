@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.trinity.jack.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message JackDiff {
   optional string schema = 1;
@@ -8,7 +8,7 @@ message JackDiff {
   optional string manifest_id = 3;
   optional semio.s.trinity.jack.artifact.Manifest manifest = 4;
   optional semio.s.trinity.jack.artifact.Camera camera = 5;
-  optional semio.os.store.ArtifactChild content = 6;
+  optional semio.framework.schema.artifact_child.ArtifactChild content = 6;
   optional string root_node_id = 7;
   optional string query = 8;
 }

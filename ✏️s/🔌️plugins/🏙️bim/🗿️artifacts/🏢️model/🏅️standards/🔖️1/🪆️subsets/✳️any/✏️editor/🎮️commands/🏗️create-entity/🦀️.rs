@@ -1,14 +1,18 @@
 //! 🏗️ `createEntity`: brings one entity of a kind into the model. The entity table owns what a new entity of the kind looks like and which `create-*` mutation brings it; this
 //! command resolves its container (the explicit parent, else the selection, else the first container), mints its id from the authoring seed, names it and selects it.
 
-use crate::editor::bim::entities::views::unique_name;
-use crate::editor::bim::entities::{id_taken, kind_of, ordered_storeys, EntityKind, ENTITIES};
-use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
-use crate::editor::bim::kit::{fault, select_effect, IdMint};
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, View, ViewKind}};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::views::unique_name;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{id_taken, kind_of, ENTITIES};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect, IdMint};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

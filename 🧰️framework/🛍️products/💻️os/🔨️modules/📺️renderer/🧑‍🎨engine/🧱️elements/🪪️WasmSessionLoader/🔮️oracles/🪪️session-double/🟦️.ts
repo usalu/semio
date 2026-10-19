@@ -1,7 +1,7 @@
 import { vi } from "vitest";
-import * as flowSessionLoader from "../../🟦️.tsx";
+import type { Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 
-export function boardTestSession(): flowSessionLoader.Board2dWasmSession {
+export function boardTestSession(): Board2dWasmSession {
   return {
     attach_canvas: vi.fn(async () => {}),
     setSize: vi.fn(),

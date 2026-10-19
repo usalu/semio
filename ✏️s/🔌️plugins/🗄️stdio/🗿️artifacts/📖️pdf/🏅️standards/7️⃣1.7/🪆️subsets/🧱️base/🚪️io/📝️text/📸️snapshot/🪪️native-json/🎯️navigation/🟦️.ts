@@ -1,6 +1,7 @@
 /** 🎯️ Explicit native JSON navigation admission into the canonical owned model. */
 import type { PdfDestination, PdfDestinationFit, PdfFileSpecification, PdfAction, PdfActionKind, PdfOutlineItem, PdfOpenAction, PdfNamedDestination } from "../../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
-import { record,array,text,boolean,integer,real,four,three,pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { record, array, text, boolean, integer, real, four, three } from "../🧰️scalars/🟦️.ts";
 
 const optionalText=(value:unknown)=>value==null?null:text(value);
 const optionalBoolean=(value:unknown)=>value==null?null:boolean(value);

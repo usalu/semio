@@ -110,3 +110,5 @@ export function parseInstalledServiceContributionsV1(value: unknown): Readonly<{
   const services = row.services.map((value) => { const row = record(value); if (Object.keys(row).sort().join(",") !== "owner,serviceId") throw new Error("installed-service.invalid"); const owner = text(row.owner, 128), serviceId = text(row.serviceId, 256), key = `${owner}\0${serviceId}`; if (seen.has(key)) throw new Error("installed-service.invalid"); seen.add(key); return { owner, serviceId }; });
   return { kind: "service-contributions", services };
 }
+
+export type { InferencePortUiAction, InstalledServicePresentationV1, MountedServiceUiReaderV1, MountedServiceUiStateV1, ServiceMountedViewV1 } from "./🪟️presentation/🟦️.ts";

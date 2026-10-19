@@ -231,7 +231,6 @@ export function toolJobReservedImporterOwners(root: string, productionFiles: Rea
       ownerImpl.body.includes("ArtifactReservedToolJob::new(") &&
       source.includes('"import-media"') &&
       source.includes("impl InteractiveJob for ") &&
-      source.includes("CheckpointReady(") &&
       source.includes("cx.is_cancelled()");
     if (row.currentMonolith === migrated) failures.push(`reserved importer inventory currentMonolith is stale for ${row.owner}`);
     if (!migrated) pending.push({ owner: row.owner, file: row.file, id: "import-media", status: "failClosedPendingFactory" });
@@ -270,7 +269,7 @@ export function toolJobRuntimeProofQualified(source: string): boolean {
   const activationOpen = activationStart < 0 ? -1 : source.indexOf("{", activationStart);
   const activation = activationOpen < 0 ? "" : toolJobRustBlock(source, activationOpen)?.body ?? "";
   const registered = activation.indexOf("A::register_tool_job_factories(&mut app_tool_registry)");
-  const joined = activation.indexOf(".tool_job_registration::<A>");
+  const joined = activation.indexOf("tool_job_registration::<A>(");
   return (
     source.includes("pub struct ArtifactBoundedFirstStepProof") &&
     source.includes("macro_rules! bounded_first_step_tool_proofs") &&
@@ -292,8 +291,8 @@ export function toolJobRuntimeProofQualified(source: string): boolean {
     source.includes("QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission)") &&
     source.includes("proof.with_factory_type::<$owner, $factory_type>()") &&
     source.includes("seen != expected") &&
-    /tool_job_registration\s*::<A>\s*\(\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
-    source.includes("fn qualified_tool_proof(&self, verb: &str)") &&
+    /reserved_jobs::tool_job_registration\s*::<A>\s*\(\s*&registry,\s*&app_id,\s*A::DOCUMENT_SCHEMA,/.test(source) &&
+    source.includes("pub fn qualified_tool_proof(&self, stores: &InstanceStores<A>, verb: &str)") &&
     source.includes("owner: ToolOwnerWitness") &&
     source.includes("runtime_controller_id: &str") &&
     source.includes("addressed_controller_id: &str") &&

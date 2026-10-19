@@ -1,8 +1,8 @@
 import {isAbsolute,relative,resolve} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {cargoDepInfoResolvedSourcesV1,type CargoProvenanceV1} from "../../🟦️.ts";
-import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json";
-import schemaDocument from "../🧬️schema/🔣️.json";
+import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json" with { type: "json" };
+import schemaDocument from "../🧬️schema/🔣️.json" with { type: "json" };
 const schema=JSON.parse(JSON.stringify(schemaDocument)) as typeof schemaDocument;
 
 export interface CompletedCargoOriginV1{readonly version:1;readonly workspace:string;readonly mode:"prototype"|"release";readonly manifest:string;readonly cwd:string;readonly buildDirectory:string;readonly targetDirectory:string;readonly cargoHome:string}

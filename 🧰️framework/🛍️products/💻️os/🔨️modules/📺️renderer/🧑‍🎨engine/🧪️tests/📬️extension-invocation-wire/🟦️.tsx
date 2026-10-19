@@ -1,8 +1,8 @@
 /** 📬 Extension invocation WIT identity, icon export and host effect wire decoding, completion publication and command-ingress fault diagnostics. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
-import type { ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import type { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import type { ShardEventEnvelope, ShardJobStep } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import type { ActivationRegistry } from "@semio-tech/framework-kernel";
+import type { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import type { ShardEventEnvelope, ShardJobStep } from "@semio-tech/framework-actor/shard-client";
 import type { PluginWasmHandle, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { cancelSpawnedJobV1, resetSpawnedJobsForTestsV1, spawnedJobsSnapshotV1 } from "../../🧱️elements/🔌️PluginRuntime/💼️job-ledger/🟦️.ts";
@@ -21,7 +21,7 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
   
       it("preserves nested UTF-8 payloads and exact u64 ids in both renderer decoders", async () => {
         const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🔣️extension-invocation.json");
-        const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
+        const { wireEffectToFriendly: sharedDecode } = await import("@semio-tech/framework-actor/wire-turn");
         const requestJson = JSON.stringify({ ...fixture.request, label: "Hölzer 日本語" });
         for (const id of fixture.requestIds) {
           const req = BigInt(id);
@@ -38,7 +38,7 @@ export async function registerExtensionInvocationWireTests(vitest: PluginRuntime
         const { default: fixture } = await import("../../🧱️elements/🖼️IconRenderHost/🧪️tests/🧫️fixtures/📡️export-wire/🔣️.json");
         const { default: schema } = await import("../../🧱️elements/🖼️IconRenderHost/🧬️schema/📡️export-wire/🔣️.json");
         const { default: Ajv2020 } = await import("ajv/dist/2020");
-            const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts");
+            const { wireEffectToFriendly: sharedDecode } = await import("@semio-tech/framework-actor/wire-turn");
         const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
         for (const sample of fixture.cases) {
           expect(validate(sample.items), sample.name).toBe(sample.valid);

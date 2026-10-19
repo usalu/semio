@@ -1,6 +1,0 @@
-import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
-import Ajv from "ajv";
-import {parseDevLocalHubProviderV1} from "../../🧬️schema/🟦️.ts";
-/** 🧪️ Service selection is neutral DATA and never accepts a process effect command. */
-export async function proveDevLocalHubProviderContract():Promise<number>{const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json",import.meta.url),"utf8")),schema=JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8")),broker=JSON.parse(readFileSync(new URL("../../../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).addKeyword("x-semio-formats").addSchema(broker).compile(schema);for(const row of fixture.cases){let accepted=true;try{parseDevLocalHubProviderV1(row.value);}catch{accepted=false;}assert.equal(accepted,row.accepted,row.name);assert.equal(validate(row.value),row.accepted,row.name+": Ajv");}console.log("[DEBUG] local Hub service DATA agrees with Ajv; process activation unqualified");return fixture.cases.length;}

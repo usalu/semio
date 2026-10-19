@@ -10,8 +10,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::gbxml::export_table;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::export_table;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 
     /// 🌿️ The table of the gbXML document of the committed snapshot.
     pub fn export_gbxml(ctx: &Context) -> Result<Outcome, String> {

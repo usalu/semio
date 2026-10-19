@@ -4,7 +4,9 @@ use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx;
 use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
 use semio_s_artifact_stdio_pptx_base::standards::v_ecma_376::subsets::base::io::import::deserializers::{decode_pptx, sniff_pptx_bytes};
-use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::{io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML},schema::{refusal::{PptxError},vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART}}};
+use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::{PptxAnalyzerAnalysis,PptxBuilderConstruction,MINIMAL_SLIDE_MASTER_XML};
+use semio_s_artifact_stdio_pptx_base_vocabulary::refusal::PptxError;
+use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::{PRESENTATION_CONTENT_TYPE,PRESENTATION_PART,REL_TYPE_OFFICE_DOCUMENT_STRICT,REL_TYPE_SLIDE,REL_TYPE_SLIDE_LAYOUT,REL_TYPE_SLIDE_MASTER,SLIDE_CONTENT_TYPE,SLIDE_LAYOUT_PART,SLIDE_MASTER_CONTENT_TYPE,SLIDE_MASTER_PART,THEME_PART};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 

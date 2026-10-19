@@ -1,11 +1,12 @@
-use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentIssueCode, ComponentValue, component_of, dependency, overrides_of, signed_area};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::families;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::{ComponentIssueCode, ComponentValue, component_of, dependency, overrides_of, signed_area};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families;
 use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, MepSystem, ModelSnapshot, Point2};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepSystem, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -157,7 +158,7 @@ fn the_faults_of_a_placement_are_typed_issues_and_the_component_has_no_geometry(
 #[test]
 fn a_component_without_an_override_shares_the_value_of_its_family() {
     let snapshot = room();
-    let family = Arc::new(families::family_of(&snapshot, "fam-table", &BTreeMap::new()));
+    let family = Arc::new(semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of(&snapshot, "fam-table", &BTreeMap::new()));
     let level = StoreyLevel::default();
     let entry = component_of(&snapshot, "c-table", &level, Some(&family), None);
     assert!(Arc::ptr_eq(&entry.family, &family));

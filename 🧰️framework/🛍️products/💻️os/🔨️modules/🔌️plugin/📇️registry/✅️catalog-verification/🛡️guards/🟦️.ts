@@ -41,11 +41,17 @@ export function normalizeCatalogDescriptorEnums(value: unknown): unknown {
   return Object.fromEntries(Object.entries(record).map(([key, child]) => [key, normalizeCatalogDescriptorEnums(child)]));
 }
 
+const scalarToken = /(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/uy;
+
 /** 🧭️ Rejects duplicated object names before the platform JSON decoder can collapse them. */
 export function rejectDuplicateJsonObjectNames(source: string): void {
   let index = 0;
   const whitespace = (): void => {
-    while (index < source.length && /\s/u.test(source[index]!)) index++;
+    while (index < source.length) {
+      const code = source.charCodeAt(index);
+      if (code === 32 || code === 10 || code === 13 || code === 9 || ((code > 127 || code === 11 || code === 12) && /\s/u.test(source[index]!))) index++;
+      else break;
+    }
   };
   const string = (): string => {
     if (source[index] !== '"') throw new Error(`expected JSON string at byte ${index}`);
@@ -101,7 +107,8 @@ export function rejectDuplicateJsonObjectNames(source: string): void {
       string();
       return;
     }
-    const token = source.slice(index).match(/^(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?)/u)?.[0];
+    scalarToken.lastIndex = index;
+    const token = scalarToken.exec(source)?.[0];
     if (!token) throw new Error(`invalid JSON value at byte ${index}`);
     index += token.length;
   };

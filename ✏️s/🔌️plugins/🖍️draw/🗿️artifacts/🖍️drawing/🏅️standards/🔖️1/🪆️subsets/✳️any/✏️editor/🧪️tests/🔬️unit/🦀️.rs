@@ -16,7 +16,8 @@ pub mod context {
 
     pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
 
-    pub struct DrawingAppFixture(DrawingApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct DrawingAppFixture(pub DrawingApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for DrawingAppFixture {
         type Target = DrawingApp;
@@ -37,7 +38,7 @@ pub mod context {
             if std::thread::panicking() || self.0.close_terminal_is_empty() {
                 return;
             }
-            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
 
@@ -48,9 +49,10 @@ pub mod context {
 
     /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
     pub async fn drawing_app() -> DrawingAppFixture {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        DrawingAppFixture(app)
+        DrawingAppFixture(app, scope)
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("draw", DrawingPlayApp, || App { definition: create_drawing_app(), examples: Vec::new() }, "../..");

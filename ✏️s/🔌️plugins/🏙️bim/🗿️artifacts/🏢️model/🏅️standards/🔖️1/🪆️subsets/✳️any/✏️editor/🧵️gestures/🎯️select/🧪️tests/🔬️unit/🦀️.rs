@@ -1,30 +1,35 @@
-use crate::standards::v1::subsets::any::schema::{snapshot::Axis, snapshot::ModelSnapshot, mutations::ModelMutation};
-use crate::editor::bim::gestures::session::Step;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Step;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::{length_label, Pointer, Tool, ToolContext, PICK_PIXELS};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Tool, ToolContext, PICK_PIXELS};
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{snapshot::Vertex, inferences::ModelInference};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::editor::bim::gestures::select::*;
-use crate::editor::bim::gestures::session::{Modifiers, Pick, Surface, ToolEvent};
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
-use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind, Point2};
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::select::{plan_marks, section_marks, outline_handles};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Pick, Surface, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Opening;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, Point2};
 
 fn target(kind: &str, id: &str) -> (String, String) {
     (kind.to_string(), id.to_string())
@@ -155,7 +160,7 @@ async fn the_storey_height_handle_of_the_section_sets_the_storey_height() {
     assert_eq!(set.id, "st-ground");
     assert!((set.height - 3.6).abs() < 1e-9, "snapped to 5 cm: {}", set.height);
     assert!((rig.snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-9);
-    let marks = section_marks(&crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
+    let marks = section_marks(&semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, |inference| inference.clone()), [0.0, 0.0], [8.0, 0.0]);
     assert_eq!(marks.len(), 4, "a guide and a handle for each of the two storeys");
 }
 
@@ -185,9 +190,9 @@ async fn escape_drops_a_drag_without_a_trace() {
 fn room_with_outlines() -> ModelSnapshot {
     let mut snapshot = room();
     for (kind, id) in [("slab", "slab-1"), ("roof", "roof-1")] {
-        let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
+        let create = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, "st-ground", "Sample").expect("creates");
-        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }
@@ -244,8 +249,8 @@ async fn a_drag_that_ends_where_it_began_or_a_press_away_from_the_corners_writes
 fn room_with_duct() -> ModelSnapshot {
     let mut snapshot = room();
     let storey = snapshot.walls["w-south"].storey.clone();
-    let vertex = |x: f64, y: f64, z: f64| crate::standards::v1::subsets::any::schema::snapshot::Point3 { x, y, z };
-    snapshot.mep_elements.insert("m-1".into(), crate::standards::v1::subsets::any::schema::snapshot::MepElement { storey, system: crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Supply, shape: crate::standards::v1::subsets::any::schema::snapshot::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
+    let vertex = |x: f64, y: f64, z: f64| semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3 { x, y, z };
+    snapshot.mep_elements.insert("m-1".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement { storey, system: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepSystem::Supply, shape: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
     snapshot
 }
 
@@ -262,7 +267,7 @@ async fn the_vertices_of_the_selected_mep_element_are_handles_and_dragging_one_r
     let ModelMutation::SetMepElement(leaf) = only_mutation(&step) else { panic!("a set-mep-element") };
     let path = leaf.path.clone().expect("the new path");
     assert_eq!((path.len(), path[1].x, path[1].y, path[1].z), (3, 5.0, 4.5, 2.5), "the first of the two vertices on that point moves, keeping its own elevation");
-    assert_eq!(rig.snapshot.mep_elements["m-1"].path[0], crate::standards::v1::subsets::any::schema::snapshot::Point3 { x: 2.0, y: 3.0, z: 2.5 });
+    assert_eq!(rig.snapshot.mep_elements["m-1"].path[0], semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3 { x: 2.0, y: 3.0, z: 2.5 });
 }
 
 #[semio_framework_async_macros::async_test]

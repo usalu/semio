@@ -47,7 +47,7 @@ export function flowTypedRetirementSelfTests(): number {
     && value.includes("pub fn next_capacity_byte_demand") && value.includes("pub fn next_release_byte_demand")
     && value.includes("pub fn reserve_push") && value.includes("pub fn admit_owner")
     && value.includes("pub fn push(&mut self,owner:FlowOwner)->Result<(),FlowOwner>") && value.includes("return Err(owner)")
-    && value.includes("std::thread::panicking()||self.terminal_is_empty()") && value.includes("owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot")
+    && value.includes("std::thread::panicking()||self.terminal_is_empty()") && value.includes("owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget")
     && !value.includes("maximum_bytes.max") && !value.includes("released_bytes.min")
     && !value.includes("std::mem::forget(owner)") && !/\.clone\(|serde_json::to_/.test(value);
   if (!exact(source)) throw new Error("Flow retirement exact source ownership linkage failed");
@@ -57,7 +57,7 @@ export function flowTypedRetirementSelfTests(): number {
     source.replace("pub fn reserve_push", "fn reserve_push"),
     source.replace("return Err(owner)", "drop(owner); return Ok(())"),
     source.replace("std::thread::panicking()||self.terminal_is_empty()", "true"),
-    source.replace("owned_variant!(Bytes,Strings,Set,Dictionary,Value,HostSnapshot", "owned_variant!(Bytes,Strings,Set,Dictionary,Value"),
+    source.replace("owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,HostSnapshot,Widget", "owned_variant!(Spec,Neuron,Synapse,Preview,Channel,Bytes,Strings,Set,Dictionary,Value,Widget"),
   ];
   for (const value of mutants) if (exact(value)) throw new Error("Flow retirement accepted hostile source");
   return 2 + mutants.length;

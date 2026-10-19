@@ -104,7 +104,7 @@ pub mod editor {
         #[path = "../../../../../../../✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
-        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::base;
+        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::editor_vocabulary;
         #[path = "."]
         pub mod config {
             pub use semio_s_artifact_sourcing_curation_examples::editor::sourcing::config::*;

@@ -217,7 +217,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let mounted=MountedTypedCommandFullOperation::<A>{
             verb:verb.into(),meta:meta.clone(),operation,source_identity:(cx.operation(),cx.generation()),canonical_revision:revision,artifact_generation:generation.0,
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
-            window_config_authority:None,window_transient_authority:None,publication_lanes:&[],
+            window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
             session:None,session_rejected:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
             publication,publication_ownership_progress:None,actor_capture:None,worker_resume_pending:false,pending_artifact_publication:None,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,

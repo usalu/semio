@@ -1,7 +1,7 @@
-use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::attic;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::with_depth;
-use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::attic;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::with_depth;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
 
 #[test]
 fn the_runs_of_every_sweep_merge_into_the_sweep_that_was_written() {

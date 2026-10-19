@@ -26,7 +26,6 @@ pub mod standards {
                     pub mod export {
                         #[path = "."]
                         pub mod ifc {
-                            pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer;
                             #[path = "../../../../../🚪️io/📤️export/🏗️ifc/🧊️brep/🦀️.rs"]
                             pub mod brep;
                         }
@@ -34,19 +33,9 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
-                        pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes;
-                        pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys;
-                    }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
+                    
                     #[path = "."]
                     pub mod inferences {
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels;
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs;
                         #[path = "."]
                         pub mod ramp_runs {
                             #[path = "../../🦀️.rs"]
@@ -67,8 +56,6 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod element_solids {
-                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::*;
-                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit;
                             #[path = "."]
                             pub mod slabs {
                                 #[path = "../../../🧊️element-solids/⬜️slabs/🦀️.rs"]
@@ -93,12 +80,10 @@ pub mod standards {
                     pub mod mutations {
                         #[path = "../../../../🧬️mutations/🧵️elements/🦀️.rs"]
                         pub mod elements;
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules;
                         #[path = "../../../../🧬️mutations/🔌️component-rules/🦀️.rs"]
                         pub mod component_rules;
                         #[path = "../../../../🧬️mutations/📍️placement/🦀️.rs"]
                         pub mod placement;
-                        pub use semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule;
                     }
                 }
             }

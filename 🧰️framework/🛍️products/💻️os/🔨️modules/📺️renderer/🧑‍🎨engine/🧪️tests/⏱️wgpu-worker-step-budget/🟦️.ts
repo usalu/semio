@@ -4,11 +4,12 @@ import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { PlaygroundBootPlanner, PLUGIN_GRAPH_CHUNK_ROWS, resolvePlaygroundBoot } from "@semio-tech/framework";
-import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
-import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../../🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts";
+import { SUSTAINED_TURN_OVERRUN_TURNS, TurnClock, TurnLedger, WORKER_STEP_BUDGET_MS } from "@semio-tech/framework-renderer-wgpu/turn-budget";
+import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "@semio-tech/framework-renderer-wgpu/frame-turn-scheduler";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
-import catalogFixture from "../../../../🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧩️composition/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import catalogFixture from "@semio-tech/plugin-registry/testing/fixtures/composition.json";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readFrameWorkerDirectory } from "../📨️browser-frame-transport/📖️frame-worker-source/🟦️.ts";
 const catalog = pluginCatalogV1(admitPluginCatalogV1(catalogFixture.cases[1].input, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }));
 
 const ENGINE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -372,7 +373,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("keeps asset decode off the public frame path and wakes presentation exactly when state changes", () => {
-    const worker = readFileSync(FRAME_WORKER_TS, "utf8");
+    const worker = readFrameWorkerDirectory(dirname(FRAME_WORKER_TS));
     const decodeAt = worker.indexOf("function runAssetDecodeTurn");
     expect(decodeAt).toBeGreaterThanOrEqual(0);
     const decode = worker.slice(decodeAt, worker.indexOf("\nfunction ", decodeAt + 1));
@@ -535,7 +536,7 @@ describe("wgpu frame-Worker step budget", () => {
       readonly textIngressTurns: readonly { readonly phase: string; readonly committed: boolean; readonly retiring: boolean; readonly continueFrame: boolean }[];
       readonly expected: { readonly runtimePhases: readonly string[]; readonly nonRunnableCallbacks: readonly string[]; readonly runnableTextPhases: readonly string[] };
     };
-    const workerSource = readFileSync(FRAME_WORKER_TS, "utf8");
+    const workerSource = readFrameWorkerDirectory(dirname(FRAME_WORKER_TS));
     const turnSource = workerSource.slice(workerSource.indexOf("function runFrameTurn"), workerSource.indexOf("function answerIntrospection"));
     expect(turnSource).toContain("return result.continueFrame");
     expect(turnSource).not.toContain("return result.requestFrame");
@@ -601,7 +602,7 @@ describe("wgpu frame-Worker step budget", () => {
   });
 
   it("acknowledges ingress before the private frame callback and never runs tick in the batch handler", () => {
-    const worker = readFileSync(FRAME_WORKER_TS, "utf8");
+    const worker = readFrameWorkerDirectory(dirname(FRAME_WORKER_TS));
     const handler = worker.slice(worker.indexOf('ownedStep("frame-ingress"'), worker.indexOf("function runFrameTurn"));
     expect(handler).toContain('post({ kind: "batch-accepted"');
     expect(handler).toContain("frameTurns?.request()");
@@ -618,7 +619,7 @@ describe("wgpu frame-Worker step budget", () => {
   it("pins the Worker ceiling and the attribution law it shares with the UI isolate and the guest", () => {
     expect(WORKER_STEP_BUDGET_MS).toBe(8);
     expect(SUSTAINED_TURN_OVERRUN_TURNS).toBe(4);
-    const worker = readFileSync(FRAME_WORKER_TS, "utf8");
+    const worker = readFrameWorkerDirectory(dirname(FRAME_WORKER_TS));
     expect(worker).toContain('new TurnLedger(WORKER_STEP_BUDGET_MS, "worker-step")');
     expect(worker).not.toContain("worker-boot-step-overrun");
     expect(worker).not.toContain("interactive-job-overrun");
@@ -692,6 +693,6 @@ describe("wgpu frame-Worker step budget", () => {
     for (const stage of ["font-atlas", "icon-atlas", "font-upload", "icon-upload", "plugin-parse", "shell-construct", "shell-boot", "runtime-ready"]) {
       expect(rust).toContain(`stage: "${stage}"`);
     }
-    expect(readFileSync(FRAME_WORKER_TS, "utf8")).toContain("phaseUs=${step.elapsedUs}");
+    expect(readFrameWorkerDirectory(dirname(FRAME_WORKER_TS))).toContain("phaseUs=${step.elapsedUs}");
   });
 });

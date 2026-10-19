@@ -9,7 +9,7 @@ import {publishNxSdkBinaryV1} from "../🧊️binary/📥️publication/🟦️.
 import {nxSdkBinaryPathV1,nxSdkBinaryReceiptV1,type NxSdkBinaryReceiptV1} from "../🧊️binary/🟦️.ts";
 import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🔏️ One applied SDK receipt is independent of authorizer source revisions. */
 export interface NxSdkSnapshotReceiptV1 {readonly version:1;readonly digest:string;readonly patches:Readonly<Record<string,{readonly version:1;readonly files:Readonly<Record<string,string>>}>>;readonly binaries:Readonly<{version:1;entry:string;digest:string}>;}

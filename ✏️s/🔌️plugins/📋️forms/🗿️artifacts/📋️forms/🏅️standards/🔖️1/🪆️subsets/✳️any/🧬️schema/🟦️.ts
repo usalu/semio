@@ -1,7 +1,6 @@
 /** 🧬️ Forms durable document with exact owned-child coordinates. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
-import { requireArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
+import { requireArtifactDialect, parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 import { parseFormsDefinition, type FormsDefinition } from "./📝️definition/🟦️.ts";
 import { parseFormsResponse, type FormsResponse } from "./📨️response/🟦️.ts";

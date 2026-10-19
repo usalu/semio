@@ -30,12 +30,27 @@ export class GenerateScript extends Script {
       this.generatePluginGlue(segments.slice(1));
       return;
     }
+    if (segments[0] === "launch") {
+      await this.generateLaunch(segments.slice(1));
+      return;
+    }
     if (segments[0] === "scale-fixture") {
       runCmd("bun", ["repo", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
-    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|taxonomy|plugin-glue|scale-fixture>");
+    console.error("[generate] usage: bun ./📜️script.ts generate <config [--check]|launch [--check]|taxonomy|plugin-glue|scale-fixture>");
     process.exit(1);
+  }
+
+  /** 🚀️ Writes `.vscode/launch.json` as the expansion of `.vscode/🧩️launch.seed.jsonc`, or with `--check` only verifies that it is.
+   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts */
+  private async generateLaunch(args: string[]): Promise<void> {
+    const { checkLaunchCatalog, writeLaunchCatalog } = await import("../../🏗️authoring/🚀️launch-catalog/🟦️.ts");
+    const check = args.includes("--check");
+    const problems = check ? checkLaunchCatalog(this.root) : writeLaunchCatalog(this.root).problems;
+    for (const problem of problems) console.error(`[generate launch] ${problem}`);
+    if (problems.length) process.exit(1);
+    console.log(check ? "[generate launch] launch.json is the expansion of the seed" : "[generate launch] launch.json written from the seed");
   }
 
   /** 📝️ Writes (or with `--check` only verifies) every checked-in file that derives from one canonical source: the devcontainer

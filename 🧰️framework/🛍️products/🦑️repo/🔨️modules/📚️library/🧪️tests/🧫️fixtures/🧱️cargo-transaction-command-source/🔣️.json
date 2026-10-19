@@ -209,15 +209,11 @@
     },
     {
       "path": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
-      "owners": [
-        "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts"
-      ]
+      "owners": []
     },
     {
       "path": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",

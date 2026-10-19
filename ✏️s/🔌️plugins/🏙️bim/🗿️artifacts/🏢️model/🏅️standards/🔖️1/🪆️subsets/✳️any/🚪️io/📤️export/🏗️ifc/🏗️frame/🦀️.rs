@@ -3,13 +3,13 @@
 //! its axis or is cut back by the columns it joins is the faceted brep of its inferred solid with an `Axis` curve (an `IfcTrimmedCurve` for an arc); IFC has no slot for the authored lean, offsets
 //! or axis, so such a column and beam carry their authored record as the `Column` and `Beam` rows of their `Semio_Authoring` set (canonical JSON) and an import restores them exactly.
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, brep_definition, mesh_item, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::frames::{ccw, profile_top};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Profile, Vertex};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, brep_definition, mesh_item, mesh_where};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::{ccw, profile_top};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Profile, Vertex};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored column record of a tilted column.
 pub const COLUMN_ROW: &str = "Column";
@@ -36,7 +36,7 @@ fn associate(x: &mut Export<'_>, material: &str, element: u64) {
     }
 }
 
-fn column(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Column) {
+fn column(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.column_types.get(&row.column_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("column", id, "its storey, type or inferred solid is missing");
@@ -63,7 +63,7 @@ fn column(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any
     let solid = match leaning {
         None => x.ifc.extrusion(section, x.ifc.origin, [0.0, 0.0, 1.0], height),
         Some(tilt) => {
-            let ring: Vec<Vertex> = footprint(row, &kind.profile, base, base).iter().map(|p| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: p.x - row.position.x, y: p.y - row.position.y }, bulge: 0.0 }).collect();
+            let ring: Vec<Vertex> = footprint(row, &kind.profile, base, base).iter().map(|p| Vertex { point: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: p.x - row.position.x, y: p.y - row.position.y }, bulge: 0.0 }).collect();
             if ring.len() < 3 {
                 x.skip("column", id, "its tilted section is not a polygon");
                 return;
@@ -90,7 +90,7 @@ fn column(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any
     x.quantify(element, "Qto_ColumnBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Area("CrossSectionArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Volume("NetVolume", row.net_volume)]);
 }
 
-fn beam(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Beam) {
+fn beam(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Beam) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.beam_types.get(&row.beam_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("beam", id, "its storey, type or inferred solid is missing");

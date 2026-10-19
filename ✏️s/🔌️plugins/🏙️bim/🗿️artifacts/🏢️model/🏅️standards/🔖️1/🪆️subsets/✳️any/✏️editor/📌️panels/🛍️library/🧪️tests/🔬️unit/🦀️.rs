@@ -1,13 +1,13 @@
-use crate::editor::bim::entities::ENTITIES;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::EntityKind;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 #[allow(unused_imports)]
 use semio_framework_plugin::Buildable;
 #[allow(unused_imports)]
@@ -32,12 +32,12 @@ use semio_framework_ui_locale::{Locale, Terminology};
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    let node = render(snapshot, crate::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the library renders");
+    let node = render(snapshot, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the library renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
 fn demo() -> ModelSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
 }
 
 #[semio_framework_async_macros::async_test]

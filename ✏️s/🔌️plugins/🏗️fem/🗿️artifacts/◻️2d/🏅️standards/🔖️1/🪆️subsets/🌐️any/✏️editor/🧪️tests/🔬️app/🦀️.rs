@@ -13,7 +13,8 @@ pub mod context {
     /// [`FEM2D_TEST_INSTANCE`] so typed commands reach their retained routes, and retired through the
     /// framework's exact close loop when it goes out of scope (the store's `Drop` demands the
     /// terminal-empty witness; a test that already called [`close`] drops a closed shell, a no-op).
-    pub struct Fem2dApp(VcsArtifactApp<EditorApp<Fem2dPlayApp>>);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct Fem2dApp(pub VcsArtifactApp<EditorApp<Fem2dPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for Fem2dApp {
         type Target = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
@@ -31,7 +32,7 @@ pub mod context {
     impl Drop for Fem2dApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -47,9 +48,10 @@ pub mod context {
     semio_framework_plugin::history_edit_acceptance_law!("fem", Fem2dPlayApp, manifest, "../../../../../../..");
 
     pub fn fem2d_app() -> Fem2dApp {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = ::semio_framework_async::poll::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
         ::semio_framework_async::poll::resolve_ready(app.bind_instance_id(FEM2D_TEST_INSTANCE));
-        Fem2dApp(app)
+        Fem2dApp(app, scope)
     }
 
     /// 🧪️ The instance id every `meta("local")` dispatch is stamped with.
@@ -79,7 +81,7 @@ pub mod context {
 
     /// 🧹️ Retires a [`fem2d_mounted_app`] the way the plugin host retires a closing instance.
     pub fn close(app: &mut Fem2dApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 
     pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
@@ -90,16 +92,16 @@ pub mod context {
         };
         let mut action = meta("local");
         action.view_state = Some(view(kind));
-        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         // 🔁️ A mounted app answers before its retained typed operation has published: drive it home the
         // way the plugin host's continuation does, and fold the settled receipt's effects into the answer
         // (either surface may be the one carrying a `LoadDocument` or a playback re-arm).
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         result
@@ -111,13 +113,13 @@ pub mod context {
     pub async fn dispatch_rows(app: &mut Fem2dApp, command: Fem2dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut action = meta("local");
         action.view_state = Some(view(model_window::WINDOW_KIND_ID));
-        app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {
             assert!(std::time::Instant::now() < deadline, "the typed operation settles within 30 seconds");
-            app.maintenance_step(1, 65_536).expect("maintenance step");
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance the publication");
+            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("advance the publication");
             while let Some(page) = app.take_typed_operation_result_page(FEM2D_TEST_INSTANCE) {
                 assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "the retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
                 assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge the result page"), "the app accepts its own result token");
@@ -132,12 +134,12 @@ pub mod context {
 
     /// ↩️ Runs a framework-reserved history verb (`undo`/`redo`) and settles its publication.
     pub async fn history_verb(app: &mut Fem2dApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, FEM2D_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
         let kind = if body_key == semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::BODY_KEY { semio_s_artifact_fem_2d_editor_model_window::editor::fem2d::modes::edit::windows::model::WINDOW_KIND_ID } else { semio_s_artifact_fem_2d_editor_results_window::editor::fem2d::modes::edit::windows::results::WINDOW_KIND_ID };
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(::semio_framework_async::poll::resolve_ready(app.render(body_key, None, &view(kind))).expect("render")).expect("fixture projection")
+        ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &view(kind), app.1.cx())).expect("fixture projection")
     }
 }
 

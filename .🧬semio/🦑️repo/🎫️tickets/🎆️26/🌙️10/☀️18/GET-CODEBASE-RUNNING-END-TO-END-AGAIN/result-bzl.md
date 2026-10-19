@@ -43,3 +43,16 @@ Nx route (mirror, same contract):
 - Runtime phase (needs node_modules): re-measure the closure, run the Bazel suite, `tools setup bazel`, dry-runs, real runs of `quiz:test` and `proctor:build`.
 - Verify at runtime that Nx honours `readyWhen` of the bridge for a continuous root, and that all inferred `framework-os-dev:(prepare|activate)-<variant>-react-prototype` names are in the loaded graph.
 - Extend the Bazel service integration phase (`SEMIO_BAZEL_INTEGRATION`) with a `ready`-declared service.
+
+
+## Runtime phase, first pass (after node_modules appeared)
+
+Done:
+- Readiness tests: 18/18 pass with ajv. `strip-ansi` is not an installed dependency anywhere (the dashboard test that imports it has the same gap), so the oracle now uses Node `util.stripVTControlCharacters`.
+- `bun repo tools setup bazel`: OK (about 20 s, no output).
+- Adapter source closure re-measured with all imports resolved: 527 files (4.2 MB) against the 512-file cap, i.e. the Bazel implementation capture was already broken by the monolith splits (19 new inference `.mjs` files). Fixes: `📥️source/🔏️closure/🧬️schema/🔣️.json` cap 512 -> 2048 (`maximumFiles` and `files.maxItems`); `📥️source/🔏️closure/🟦️.ts` no longer pulls `*.d.mts/.d.ts/.d.cts` (type-only, a JSDoc `import("../🟨️.d.mts")` made the walker scan a declaration file and die with a parse error).
+- Graph-load blockers fixed (they stopped `--tool=bazel run … --dry-run` before the adapter ran): `🕸️graph/📥️inference/🛡️policy/🟨️.d.mts` imported `../../🟨️.mjs` (-> `../🟨️.mjs`); `📥️inputs/🔒️lock/📥️read/🟨️.d.mts` imported `../../../🧮️digest` (-> `../../🧮️digest`); test-kit `🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧰️settlement-test-kit/🟦️.ts` imported the deleted `shard-client/🧩️wiring/🟦️.ts` (-> `shard-client/🟦️.ts`, where `ShardClientHub` now lives).
+
+Blocked: no dry-run has reached the planner yet. Attempts 4 and 5 (12:20-13:20) spent 21-22 min in the build-environment stage: package.json (+ `@webassemblyjs/leb128`, `immer`, `lodash-es`, `path-to-regexp`, `fast-json-stable-stringify` at 12:33) and bun.lock (12:42) changed under me, the parser receipt is stale, `inspect(false)` fails, so every `bun repo` command starts a full dependency `install` (see `build:dependencies` in `🚀️bootstrap/📜️script.ts:56`), and both runs ended with `Original Script process interrupted` (SIGINT from outside). The install also printed `Store dependency sync incomplete` once. Needs the deps owner: freeze package.json/bun.lock, get `bun repo dependencies sync --all` green once so a parser receipt exists for the current manifest, then my dry-runs take about 5 min of graph load.
+
+Not run: `quiz:test` dry-run result, the other 7 dry-runs, the real `quiz:test` run, `proctor:build` (a `bun repo cargo … check` from the compile executor is running; queued), the Bazel suite, the Nx `readyWhen` check.

@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🧰️fram
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🦀️ Checks the independent neutral native package with explicit owning manifest and finite process authority. */
 class CheckScript extends BundleScript {
  async run(segments:string[]):Promise<void>{

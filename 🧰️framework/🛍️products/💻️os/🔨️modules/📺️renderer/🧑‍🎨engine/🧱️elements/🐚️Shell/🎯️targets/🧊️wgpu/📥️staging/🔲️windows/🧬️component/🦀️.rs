@@ -29,7 +29,7 @@ pub struct WindowState {
     /// 🪟️ Physical window transfers journal through the ordinary guest action lane, but only after
     /// the Full refresh publishes the required retained body. Direct Display opens intentionally
     /// have no React journal. The shared queue gives every attempted note one admission or refusal.
-    pub window_topology_actions: ui_wgpu::wgpu::BoundedActionQueue,
+    pub window_topology_actions: semio_framework_ui_action::BoundedActionQueue,
     /// 🪟️ Required initial-body identities, retry counts and journal outcomes bounded to the action
     /// queue's item capacity so a refusing guest cannot grow host ownership without limit.
     pub window_topology_publications: VecDeque<WindowTopologyPublication>,

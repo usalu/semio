@@ -1,16 +1,17 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import { OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { actorInstanceLifetimeEquals } from "../../🚪️lifetime/🟦️.ts";
 import { actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../🚪️lifetime/🩹️patch/🟦️.ts";
 import type { ShardInstanceOwner } from "../🔐️activation/🟦️.ts";
-import { type NativeUiPatchState, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry, mintNativePatch, mintNativeSubmission, nativePatchState } from "../🩹️ui-patch/🟦️.ts";
+import { type NativeUiPatchState, OwnedNativeUiPatchAuthority, type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry, mintNativePatch, mintNativeSubmission, nativePatchState } from "../🩹️ui-patch/🟦️.ts";
 import type { ShardBudget, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
 
 /** 📥️ Captures the native UI patches of an instance turn and acknowledges them in one lifecycle crossing. */
 export class ShardUiAcknowledgements {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   recordInstanceTurn(owner: ShardInstanceOwner, result: unknown): void {
     if (result !== null && typeof result === "object") this.state.instanceTurns.set(result, { owner, patches: new WeakMap() });

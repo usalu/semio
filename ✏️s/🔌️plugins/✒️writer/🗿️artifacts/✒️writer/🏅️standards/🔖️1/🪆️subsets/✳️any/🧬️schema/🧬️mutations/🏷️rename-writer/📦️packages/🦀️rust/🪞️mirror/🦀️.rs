@@ -129,7 +129,7 @@ pub mod standards {
                                         pub mod base {
                                             pub use semio_s_artifact_writer_writer_inferences::standards::v1::subsets::any::io::import::deserializers::artifacts::pdf::v1_4::base::*;
                                             #[cfg(test)]
-                                            #[path = "../../../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🧪️tests/🔬️unit/🦀️.rs"]
+                                            #[path = "../../../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️pdf-page-text/🧪️tests/🔬️unit/🦀️.rs"]
                                             pub mod tests;
                                         }
                                     }
@@ -213,7 +213,7 @@ pub mod standards {
                                         pub mod base {
                                             pub use semio_s_artifact_writer_writer_inferences::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::*;
                                             #[cfg(test)]
-                                            #[path = "../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🧪️tests/🔬️unit/🦀️.rs"]
+                                            #[path = "../../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️pdf-page-text/🧪️tests/🔬️unit/🦀️.rs"]
                                             pub mod tests;
                                         }
                                     }

@@ -2,6 +2,8 @@
 import type { TestLevel } from "../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import type { ScriptInvocation } from "../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
+import { createHash } from "node:crypto";
+import { writeFileSync } from "node:fs";
 
 export const IMPLEMENTATIONS = ["rust", "typescript", "go", "python", "dotnet"] as const;
 
@@ -177,3 +179,23 @@ export type TestEvidence = Readonly<{
   /** 📁️ Repo-relative directory the manifest was read from; `files[].path` resolves against it. */
   manifestDir?: string;
 }>;
+
+/** 🧫️ Matches every explicit `shared://`, `local://`, `asset://` or `schema://` fixture reference in a text. */
+export const TEST_INPUT_URI_RE = /\b(shared|local|asset|schema):\/\/([^\s"'`,;)\]]+)/g;
+
+/** 🖥️ This process's platform coordinate; never inferred from a hostname or a CI variable. */
+export function currentPlatform(): PlatformId {
+  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  return `${os}-${arch}` as PlatformId;
+}
+
+/** 📦️ The answer of a reader oracle whose expected state is committed, not computed: the one fixture the scenario's steps name whose URI ends with `/<leaf>`, copied into the artifact bundle under `role` with its URI and digest as the projection; a scenario naming no such fixture, or more than one, is an error. */
+export function committedArtifact(ctx: AdapterContext, leaf: string, role: string, mediaType: string): AdapterOutcome {
+  const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(TEST_INPUT_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
+  if (uris.length !== 1) throw new Error(`scenario ${ctx.scenario.id} names ${uris.length} committed fixture(s) ending in /${leaf}; a reader oracle answers with exactly one`);
+  const bytes = ctx.inputBytes(uris[0]!);
+  const path = ctx.artifact(role, leaf);
+  writeFileSync(path, bytes);
+  return { projection: { role, uri: uris[0], sha256: createHash("sha256").update(bytes).digest("hex").slice(0, 32) }, artifacts: [{ role, path, mediaType }] };
+}

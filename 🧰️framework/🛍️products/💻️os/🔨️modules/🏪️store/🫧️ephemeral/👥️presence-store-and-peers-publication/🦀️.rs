@@ -26,6 +26,15 @@ pub struct PresenceStore<P, Mutation> {
     pub(super) _mutation: PhantomData<fn() -> Mutation>,
 }
 
+#[cfg(any(test, feature = "testkit"))]
+impl<P, Mutation> PresenceStore<P, Mutation> {
+    /// 🪝️ Test hook: the live local presence root, absent once its owner is closed.
+    #[doc(hidden)]
+    pub fn local_root(&self) -> Option<&Arc<P>> {
+        self.local.as_ref()
+    }
+}
+
 pub struct PresencePeersPublication<P> {
     pub(super) base_root: std::mem::ManuallyDrop<Option<Arc<PresencePeersRoot<P>>>>,
     pub(super) candidate: std::mem::ManuallyDrop<Option<PresencePeersRoot<P>>>,

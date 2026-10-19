@@ -5,7 +5,7 @@ import {readFileSync} from "node:fs";
 import Ajv2020 from "ajv/dist/2020";
 import Ajv from "ajv";
 import {pluginSubtreeText} from "../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const vectors=JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
 test("tool original custody vectors satisfy their neutral schema",()=>{const validate=new Ajv2020({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));expect(validate(vectors)).toBe(true);});
 /** 🎟️ Independent transaction ownership survives zero and one-below retirement grants. */

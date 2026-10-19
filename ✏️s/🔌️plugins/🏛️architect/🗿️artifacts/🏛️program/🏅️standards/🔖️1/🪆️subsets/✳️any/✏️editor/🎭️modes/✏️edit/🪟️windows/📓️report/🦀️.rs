@@ -1,6 +1,6 @@
 //! 📄️ Architect report window — one selected authored `ReportRecord`, rendered from the document.
 
-use crate::editor::architect::base::ui_label;
+use crate::editor::architect::editor_vocabulary::ui_label;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
@@ -53,10 +53,10 @@ fn localized(view: &ViewModel, en: impl AsRef<str>, de: impl AsRef<str>) -> semi
 
 pub fn render(program: &ProgramSnapshot, cfg: &config::ArchitectReportWindowConfig, view: &ViewModel, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(selected_report_id) = cfg.selected_report_id.as_ref() else {
-        return crate::editor::architect::base::ui_node(semio_framework_ui_contract::text(localized(view, "Generate a report in this window.", "Erstellen Sie in diesem Fenster einen Bericht.")?), "architect-report.empty");
+        return crate::editor::architect::editor_vocabulary::ui_node(semio_framework_ui_contract::text(localized(view, "Generate a report in this window.", "Erstellen Sie in diesem Fenster einen Bericht.")?), "architect-report.empty");
     };
     let Some(report) = program.reports.iter().find(|report| report.header.id == *selected_report_id) else {
-        return crate::editor::architect::base::ui_node(
+        return crate::editor::architect::editor_vocabulary::ui_node(
             semio_framework_ui_contract::text(localized(
                 view,
                 format!("The selected report '{selected_report_id}' is unavailable."),

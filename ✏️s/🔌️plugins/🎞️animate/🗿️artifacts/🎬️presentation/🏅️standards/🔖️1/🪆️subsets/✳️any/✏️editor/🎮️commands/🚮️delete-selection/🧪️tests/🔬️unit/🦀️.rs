@@ -38,8 +38,8 @@ async fn delete_selection_removes_the_live_selected_tile() {
         ("merge".to_string(), semio_framework_value::DslValue::String("replace".into())),
         ("method".to_string(), semio_framework_value::DslValue::String("pick".into())),
     ]);
-    let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("interactionSelect settles");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, INTERACTION_SELECT_ACTION_ID, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect settles");
     dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
     assert!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty(), "selected tile must be deleted");
 }
@@ -51,8 +51,8 @@ async fn delete_selection_removes_the_live_selected_tile() {
 async fn delete_selection_with_no_selection_is_a_no_op() {
     let mut app = presentation_app_with_registry().await;
     dispatch(&mut app, PresentationCommand::AddTile(add_tile::AddTile { crop: None })).await;
-    let admitted = app.handle_action(CLEAR_SELECTION_ACTION_ID, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("clearSelection");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("clearSelection settles");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, CLEAR_SELECTION_ACTION_ID, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("clearSelection");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("clearSelection settles");
     dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
     assert_eq!(crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
 }

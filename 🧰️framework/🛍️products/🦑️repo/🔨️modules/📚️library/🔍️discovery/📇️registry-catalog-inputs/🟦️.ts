@@ -1,4 +1,4 @@
-import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { ephemeralMap } from "@semio-tech/framework/transient";
 import { execFileSync } from "node:child_process";
 import { extname } from "node:path";
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
@@ -75,6 +75,32 @@ export function registryCatalogGitlinkBoundaries(repoRoot: string): ReadonlySet<
   } catch { boundaries = new Set(); }
   gitlinkBoundaryCache.set(repoRoot, boundaries);
   return boundaries;
+}
+
+/** 🧭️ What the git index knows about the directory tree: every directory holding tracked content, and the subset that is an owner or an ancestor of one (it has a `packagesDirName` directory at or beneath it). */
+export type RegistryCatalogOwnerIndex = Readonly<{ known: ReadonlySet<string>; candidates: ReadonlySet<string> }>;
+
+/** 🧭️ Derives the {@link RegistryCatalogOwnerIndex} from one `git ls-files --cached` listing (a sorted index read, no working-tree walk), so a catalog walk can skip every tracked directory without an owner beneath it and still read each directory the index does not know. `undefined` when no listing is available, which obliges the caller to walk the whole tree. The index only prunes: each directory it admits is still read and verified through the no-follow view, and a directory it has never seen is always walked. @see https://git-scm.com/docs/git-ls-files */
+export function registryCatalogOwnerIndex(repoRoot: string, packagesDirName: string): RegistryCatalogOwnerIndex | undefined {
+  let stdout: string;
+  try {
+    stdout = execFileSync("git", ["ls-files", "-z", "--cached"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1024 * 1024 * 1024, stdio: ["ignore", "pipe", "ignore"] });
+  } catch { return undefined; }
+  const marker = `/${packagesDirName}/`, known = new Set<string>([""]), candidates = new Set<string>([""]);
+  const include = (into: Set<string>, directory: string): void => {
+    for (let current = directory; current !== "" && !into.has(current); current = current.slice(0, Math.max(0, current.lastIndexOf("/")))) into.add(current);
+  };
+  let previousDirectory = "", previousOwner = "";
+  for (const row of stdout.split("\0")) {
+    if (!row || row.charCodeAt(0) === 46) continue;
+    const slash = row.lastIndexOf("/"), directory = slash < 0 ? "" : row.slice(0, slash).normalize("NFC");
+    if (directory !== previousDirectory) { previousDirectory = directory; include(known, directory); }
+    const at = ("/" + row).indexOf(marker);
+    if (at < 0) continue;
+    const owner = row.slice(0, Math.max(0, at - 1)).normalize("NFC");
+    if (owner !== previousOwner) { previousOwner = owner; include(candidates, owner); }
+  }
+  return { known, candidates };
 }
 
 /** 📂️ Decodes the closed owner-authored source table without importing an external TOML runtime. */

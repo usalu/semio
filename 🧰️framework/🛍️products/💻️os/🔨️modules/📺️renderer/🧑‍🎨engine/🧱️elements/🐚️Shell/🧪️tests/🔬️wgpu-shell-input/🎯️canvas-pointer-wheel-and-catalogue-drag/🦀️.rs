@@ -23,7 +23,7 @@ fn published_canvas_pointer_capture_preserves_modifiers_and_cancels_exactly_once
     let theme = Theme::default();
 
     semio_framework_async::block_on(ChromeViewCtx::of(&mut shell).handle_pointer_button(x, y, true, 0, &mut input, &theme)).expect("Shell routes Canvas2d down");
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input);
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerUp"]);
     let down_args = canvas_action_args(&actions[0]);

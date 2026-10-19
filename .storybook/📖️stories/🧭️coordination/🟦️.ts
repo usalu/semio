@@ -16,11 +16,10 @@
 
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { discoverPackages, readSemioMarkerSubTable } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
-import { loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { runtimeAssetDeliveries } from "../../../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
-import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import { discoverPackages, readSemioMarkerSubTable, loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
+import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { runtimeAssetDeliveries } from "../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
+import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
 
 export type { AssetDeliveryDeclarationV1 };
 
@@ -81,25 +80,25 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "puzzle",
     titlePrefix: "🧩️puzzle",
     sourceRoots: [],
-    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/**/🧪️.story.tsx", "../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/*/📖️stories/**/🧪️.story.tsx"],
+    storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/**/🧪️.story.tsx"],
   },
   {
     id: "puzzle/2d",
     titlePrefix: "🧩️puzzle🩻️2d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d")],
-    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️2d-*/🧪️.story.tsx"],
+    storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️2d-*/🧪️.story.tsx"],
   },
   {
     id: "puzzle/3d",
     titlePrefix: "🧩️puzzle🧊️3d",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle"), repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript")],
-    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️3d-*/🧪️.story.tsx"],
+    sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle"), repoRelative("🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript")],
+    storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️3d-*/🧪️.story.tsx"],
   },
   {
     id: "puzzle/5d",
     titlePrefix: "🧩️puzzle🕐️5d",
     sourceRoots: [repoRelative("✏️s/🔌️plugins/🧩️puzzle")],
-    storyGlobs: ["../✏️s/🔌️plugins/🧩️puzzle/📖️stories/🎭️5d-*/🧪️.story.tsx"],
+    storyGlobs: ["../✏️s/🧑‍💻dev/🧩️puzzle/📖️stories/🎭️5d-*/🧪️.story.tsx"],
   },
   {
     // 📸️ Hand-curated rather than a package-catalog opt-in (`GENERATED_SCOPES`): the remodel plugin's
@@ -109,8 +108,8 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     // manifest is free to edit; nothing else here depends on which of the two lists it comes from.
     id: "remodel",
     titlePrefix: "📸️remodel",
-    sourceRoots: [repoRelative("✏️s/🔌️plugins/📸️remodel")],
-    storyGlobs: ["../✏️s/🔌️plugins/📸️remodel/📖️stories/**/🧪️.story.tsx"],
+    sourceRoots: [repoRelative("✏️s/🧑‍💻dev/📸️remodel")],
+    storyGlobs: ["../✏️s/🧑‍💻dev/📸️remodel/📖️stories/**/🧪️.story.tsx"],
   },
   {
     id: "framework",
@@ -129,7 +128,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       repoRelative("🧰️framework/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🗺️surface"),
       repoRelative("🧰️framework/🔨️modules/✍️editor"),
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"),
+      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"),
     ],
     aliases: {
       "@semio-tech/framework-renderer-react": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx",
@@ -168,7 +167,7 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     titlePrefix: "♾️infinite",
     sourceRoots: [
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"),
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"),
     ],
     aliases: {

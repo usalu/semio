@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { pathToFileURL } from "node:url";
 import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { ResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { testCacheContractBindingsV1 } from "./📋️bindings/🟦️.ts";
 import { testCommandInputs } from "./🧾️command-inputs/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
@@ -273,7 +273,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const moduleOf = (pluginId: string) => contracts.find((project) => project.name === componentLaunchers.find((entry) => entry.pluginId === pluginId)?.project);
         const hostDirectory = moduleOf(playground.pluginId) && toml.parse(readFileSync(join(root, moduleOf(playground.pluginId)!.root, "Cargo.toml"), "utf8")).package.metadata.semio["deployment-directory"];
         if (hostDirectory !== undefined) assert.ok(preparation.outputs.some((output: string) => output.endsWith(`/${hostDirectory}`)), `${targetName}: boot prepare must publish the host module`);
-        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
+        const fullSession = buildPlaygroundSession(playground.variant, (await import("@semio-tech/plugin-registry/catalog-view")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
         assert.ok(preparation.outputs.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
         if (fullSession.length > preparation.outputs.length + 5) assert.ok(preparation.outputs.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
         for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(preparation.dependsOn.includes(prerequisite));

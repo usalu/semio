@@ -2,7 +2,7 @@ import {resolve,isAbsolute} from "node:path";
 import {checkScriptInvocation,type ScriptInvocation} from "../../📥️invocation/🟦️.ts";
 import {readCargoExecutionContractV1} from "../../../🧪️testing/🦀️cargo/🏃️execution/🟦️.ts";
 import {readCargoTestPolicyV1,type CargoTestPolicyV1} from "../../../🧪️testing/🦀️cargo/🟦️.ts";
-import type {CommandRequestV1} from "../🟦️.ts";
+import type {CommandRequestV1} from "../📥️request/🟦️.ts";
 import {isDeepStrictEqual} from "node:util";
 
 /** 🎟️ Retains compiler policy only for an explicitly issued execution port and its exact child selection. */

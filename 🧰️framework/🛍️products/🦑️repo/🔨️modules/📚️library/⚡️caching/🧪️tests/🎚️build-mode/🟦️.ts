@@ -1,8 +1,8 @@
 import{readBuildGraphV1}from"../../../🏗️build/🕸️graph/🟦️.ts";
 import {testOwnedFixtureWireBindingsV1,testNxCustodyInputsModelV1} from "./📥️contracts/🟦️.ts";
 import {scriptInvocationEnvironment,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 import {isTestRecordV1,testRecordV1,testStringsV1,testMethodV1,testInputsV1} from "../📋️values/🟦️.ts";
 import { testNxSourceCacheCustody } from "./🔐️custody/🟦️.ts";
 import assert from "node:assert/strict";
@@ -11,7 +11,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync, lstatSync,
 import { createRequire, isBuiltin } from "node:module";
 import { resolve } from "node:path";
 import { collectionManifestCandidate, collectionManifestsFromInventory } from "../../🚀️bootstrap/📥️admission/🟦️.ts";
-import {nxToolingInstallManifestV1, nxToolingInstallIdentityV1} from "../../🚀️bootstrap/🛠️tools/📜️script.ts";
+import {nxToolingInstallManifestV1, nxToolingInstallIdentityV1} from "@semio-tech/nx-bootstrap-tools/script";
 import {verifyNxAdmissionDirectoriesV1,resolveNxInvocation} from "../../🚀️bootstrap/📜️script.ts";
 import { resolveNxBuildMode } from "../../🚀️bootstrap/🎚️mode/🟦️.ts";
 import {devToolingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
@@ -27,7 +27,7 @@ import { targetBuildModes } from "../../../🏗️build/🎚️mode/🟨️.mjs"
 import { internals as testOwnerInternals } from "../../../../🧪️test/🟨️.mjs";
 import { compactTaskPlans } from "../../🕸️graph/📤️export/🟨️.mjs";
 import {nxCacheBudgetV1} from "../../🚀️bootstrap/💾️budget/🟦️.ts";
-import {toolPatchReceipt} from "../../🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts";
+import {toolPatchReceipt} from "@semio-tech/nx-bootstrap-tools/patch";
 
 /** 🧪️ Portable mode selections agree with the installed Nx task graph and output resolver. */
 export async function testNxBuildModes(workspace: string, output: string|undefined, invocation: ScriptInvocation, phaseControl: ResourceLeaseControl): Promise<void> {

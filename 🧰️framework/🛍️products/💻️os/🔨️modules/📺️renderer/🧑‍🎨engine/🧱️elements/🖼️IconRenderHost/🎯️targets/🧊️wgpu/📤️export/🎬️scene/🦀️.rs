@@ -1,7 +1,13 @@
 //! 🎬️ Request-owned Icon World scene construction and prepared-packet publication.
 use semio_framework_job::{InteractiveJob, StepContext, JobOutcomeDescriptor, JobOutcomeKind, OriginalTurnFailure};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, InputState, PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderPacket, Rect, Theme};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::InputState;
+use semio_framework_ui_prepared::{PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderPacket};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, publish_world3d_asset_mesh, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_scene_bridge, step_world3d_snapshot, world3d_cursor_work_pending,
@@ -122,7 +128,7 @@ impl IconExportPreparedScene {
 
 pub struct IconExportScenePreparation {
     phase: Phase,
-    scene: ui_wgpu::wgpu::UiComponentSceneNode,
+    scene: semio_framework_ui_declaration::ui::UiComponentSceneNode,
     state: Option<World3dState>,
     resources: World3dBuildContext,
     input: Option<PreparedRenderInput>,
@@ -134,7 +140,7 @@ pub struct IconExportScenePreparation {
     world_rejected: Option<World3dBuildRejected>,
     dimensions: (u32, u32),
     format: IconExportFormat,
-    viewport_mask: ui_wgpu::wgpu::SceneViewportMask3d,
+    viewport_mask: ui_scene::math::SceneViewportMask3d,
     shadow_profile: infinite_world::world::World3dShadowProfile,
     scene_revision: u64,
     faulted: bool,
@@ -163,7 +169,7 @@ impl IconExportScenePreparation {
             Err(fault) => return Err(IconExportSceneRejected { fault, asset: Some(asset) }),
         };
         let shadow_profile = icon_render_shadow_profile(&request);
-        let viewport_mask = if request.shape.as_deref() == Some("ellipse") { ui_wgpu::wgpu::SceneViewportMask3d::Ellipse } else { ui_wgpu::wgpu::SceneViewportMask3d::Rectangle };
+        let viewport_mask = if request.shape.as_deref() == Some("ellipse") { ui_scene::math::SceneViewportMask3d::Ellipse } else { ui_scene::math::SceneViewportMask3d::Rectangle };
         let revision = asset.mesh.revision();
         if revision == 0 || revision == u64::MAX {
             return Err(IconExportSceneRejected { fault: "icon export mesh revision was invalid".into(), asset: Some(asset) });

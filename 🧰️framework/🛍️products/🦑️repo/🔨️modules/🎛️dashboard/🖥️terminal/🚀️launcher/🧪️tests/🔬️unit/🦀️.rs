@@ -1,6 +1,6 @@
 use super::*;
 use dashboard_registry::Facts;
-use ui_tui::tui::widget::{TreeState, WidgetState};
+use semio_framework_ui_tui_widgets::widget::{TreeState, WidgetState};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 

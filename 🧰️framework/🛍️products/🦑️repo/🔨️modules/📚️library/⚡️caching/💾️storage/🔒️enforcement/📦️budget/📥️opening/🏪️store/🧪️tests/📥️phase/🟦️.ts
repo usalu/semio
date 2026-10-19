@@ -12,7 +12,7 @@ test("cache phase opening protocol preserves closed ordering against Ajv SQLite 
 
 import{AsyncLocalStorage}from"node:async_hooks";
 import*as issuance from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{withRepositoryCacheStoreV1,withRepositoryCacheStoreMaintenanceV1,withRepositoryCacheStoreQueuedMaintenanceV1}from"../../🟦️.ts";
 const outside=AsyncLocalStorage.snapshot();
 test("cache phase exact private entry refuses copied foreign alias and expired controls before opening",()=>withBuildTestInvocationV1(async invocation=>{
@@ -28,7 +28,7 @@ test("cache phase complete authored caller roster uses mandatory controls in act
 
 import{mkdirSync,rmSync,mkdtempSync}from"node:fs";
 import{join}from"node:path";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 async function sqliteLifetime(invocation:issuance.ScriptInvocation,failure?:Readonly<{value:unknown}>):Promise<void>{
  const base=issuance.createIssuedResourceControlV1(invocation,"fixture:store-sqlite-lifetime",0),directory=process.env.SEMIO_CACHE_PHASE_OUTPUT;if(!directory)throw Error("Authored phase fixture output required");mkdirSync(directory,{recursive:true});const owned=mkdtempSync(join(directory,"sp-")),path=join(owned,"held.sqlite"),order:string[]=[];let outer:typeof base|undefined,joined=false,closed=false;
  try{await issuance.withRequestedIssuedResourceControlV1(base,0,async control=>{outer=control;const database=new Database(path);database.exec("create table proof(value integer);begin exclusive");try{await issuance.withRequestedIssuedResourceControlV1(control,0,async bodyControl=>{void issuance.withIssuedResourceOperationV1(bodyControl,async()=>{await new Promise(done=>setTimeout(done,10));issuance.requireIssuedResourceControlV1(bodyControl);const probe=new Database(path,{create:false,readwrite:true});try{expect(()=>probe.exec("BEGIN EXCLUSIVE")).toThrow(/locked|busy/iu);}finally{probe.close();}order.push("joined");joined=true;if(failure)throw failure.value;});order.push("body-return");});}finally{issuance.requireIssuedResourceControlV1(control);expect(joined).toBe(true);database.exec("rollback");database.close();closed=true;order.push("close");const probe=new Database(path,{create:false,readwrite:true});try{expect(()=>probe.exec("BEGIN EXCLUSIVE;ROLLBACK")).not.toThrow();}finally{probe.close();}}});}finally{try{expect(joined).toBe(true);expect(closed).toBe(true);expect(order).toEqual(["body-return","joined","close"]);if(outer)expect(()=>issuance.requireIssuedResourceControlV1(outer!)).toThrow();}finally{rmSync(owned,{recursive:true});}}

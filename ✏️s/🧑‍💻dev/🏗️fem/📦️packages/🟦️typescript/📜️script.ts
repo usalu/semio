@@ -2,17 +2,14 @@
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { policyReadModuleTreeSource } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
+import { runCmd, runCargo } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { policyReadModuleTreeSource, policyReadFileSafe } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
 /** 🧪️ Executes the contracts owned by this component. */
-import { policyReadFileSafe } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
-import { toolJobFemLiveVisualPublicationExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts";
-import { toolJobFemNumericalMicrocursorExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts";
+import { toolJobFemLiveVisualPublicationExact, toolJobFemNumericalMicrocursorExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 import { toolJobFemNumericalMicrocursorSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts";
 import { toolJobFemLiveVisualPublicationSelfTests } from "../../../../🔌️plugins/🏗️fem/📦️packages/🟦️typescript/🧪️testing/🔬️tool-job-fem-live-visual-publication/🟦️.ts";
 class OwnedVerifyScript extends BundleScript {
@@ -38,7 +35,7 @@ if (segments[0] === "fem-live-visual-publication") {
       const femAnalyses = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
       const femMesh = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
       const mutations = args.includes("--self-test")
-        ? toolJobFemLiveVisualPublicationSelfTests(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
+        ? toolJobFemLiveVisualPublicationSelfTests(toolJobFemLiveVisualPublicationExact, fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh)
         : 0;
       if (!toolJobFemLiveVisualPublicationExact(fem2dModel, fem2dSession, fem3dSession, fem3dEditor, fem3dModel, fem3dResults, fem3dViewer, fem3dViewerModel, femPluginRoot, femGlue, femSparse, frameworkPlugin, frameworkWorld, worldSnapshot, canvasSnapshot, canvasRenderer, femAnalyses, femMesh))
         throw new Error("[verify interactivity tool-jobs p6i] mounted FEM live visual publication contract failed.");
@@ -53,7 +50,7 @@ if (segments[0] === "fem-numerical-microcursor") {
       const model = policyReadFileSafe(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
       const elements = policyReadModuleTreeSource(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
       const runtime = policyReadFileSafe(this.repoRoot, "🧰️framework/🔨️modules/🧵️job/🦀️.rs");
-      const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(sparse, mesh, analyses, model, elements, session, runtime) : 0;
+      const mutations = args.includes("--self-test") ? toolJobFemNumericalMicrocursorSelfTests(toolJobFemNumericalMicrocursorExact, sparse, mesh, analyses, model, elements, session, runtime) : 0;
       if (!toolJobFemNumericalMicrocursorExact(sparse, mesh, analyses, model, elements, session, runtime)) throw new Error("[verify interactivity tool-jobs p6h] live FEM numerical microcursor contract failed.");
       console.log(`[verify interactivity tool-jobs p6h] live-source clean; hostile-mutations=${mutations}.`);
       return;
@@ -65,7 +62,7 @@ if (segments[0] === "fem-pcg-publication-owners") {
       testFemPcgPublicationGrantOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_", "pcg_construction_", "solver_jobs_reject_stale_and_cancelled_"], this.repoRoot);
       }
       return;
@@ -77,7 +74,7 @@ if (segments[0] === "fem-assembly-physical-owners") {
       testFemAssemblyPhysicalOwners();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "assembly_triplet_pages_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
       }
       return;
@@ -89,7 +86,7 @@ if (segments[0] === "fem-numerical-page-owners") {
       testNumericalPageOwners();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "subspace_job_resume_", "p6h_subspace_"], this.repoRoot);
       }
       return;
@@ -101,7 +98,7 @@ if (segments[0] === "fem-mesh-preparation-owners") {
       testMeshPreparationOwners();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "mesh_preparation_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
       }
       return;
@@ -112,7 +109,7 @@ if (segments[0] === "fem-scalar-owners-native") {
       const { testFemScalarOwnerOracle } = await import(testPath);
       testFemScalarOwnerOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
-      const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+      const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_initial_precondition_", "subspace_factor_cursor_", "subspace_publication_"], this.repoRoot);
       return;
     }
@@ -122,7 +119,7 @@ if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-win
       const mountedStiffnessOracle = join(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts");
       const numericalOwnerOracle = join(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🧪️tests/📦️numerical-pages/🟦️.ts");
       if (dimension === "3d") {
-        const { runVitest } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts");
+        const { runVitest } = await import("../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts");
         await runVitest(join(this.repoRoot, "✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript"), ["-t", "story window ownership|story document replacement"], "../../🧪️tests/🎚️config/🟦️.ts");
       }
       const contract = await import(`${testRoot}/🟦️.ts`);
@@ -137,7 +134,7 @@ if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-win
       }
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${testRoot}/🟦️.ts`, ...(dimension === "3d" ? [mountedStiffnessOracle, numericalOwnerOracle, join(this.repoRoot, "✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🧪️tests/🪟️viewport/🟦️.ts")] : [])], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+        const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
         if (dimension === "2d") {
           await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "fem2d_window_config_", "--", "--nocapture"], this.repoRoot);
         } else {

@@ -1,14 +1,19 @@
 //! 🧬️ The family rows of the entity table: how a family (a library entry) and a family solid read off the snapshot, how an edited value becomes a `set-family` or `set-family-solid` mutation, what a new
 //! family and a new solid are, and the category picker of the properties panel. What a family shows (its volume, its issues) is read off the `families` inference; parameters are rows of the family window.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::editor::bim::entities::{partial, Created, FieldRow, InferredRow};
-use crate::editor::bim::modes::edit::windows::family::edit::{apply, category_of, Edit, CATEGORIES};
-use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Family, FamilyCategory, ModelSnapshot}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::partial;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, InferredRow};
+use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::{apply, category_of, Edit, CATEGORIES};
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::category_label;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Family, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family;
+use semio_s_artifact_bim_model_mut_any_43::standards::v1::subsets::any::schema::mutations::set_family_solid;
 
 fn parse_category(text: &str) -> Option<FamilyCategory> {
     category_of(text)
@@ -19,7 +24,7 @@ fn parse_name(text: &str) -> Option<String> {
 }
 
 fn parse_formula(text: &str) -> Option<String> {
-    formula::canonical(text).ok()
+    semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::canonical(text).ok()
 }
 
 //#region 🔖️Choices
@@ -60,7 +65,7 @@ pub static FAMILY_SOLID_INFERRED: &[InferredRow] =
 /// 🧬️ A new family: empty, in the category the parent names (generic when it names none).
 pub fn create_family(_: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let category = category_of(parent).unwrap_or(FamilyCategory::Generic);
-    Ok(ModelMutation::CreateFamily(crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily { id: id.into(), family: Family { name: name.into(), category } }))
+    Ok(ModelMutation::CreateFamily(semio_s_artifact_bim_model_mut_any_149::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily { id: id.into(), family: Family { name: name.into(), category } }))
 }
 
 /// 🧊️ A new solid: a cuboid of a tenth of a metre in the first material of the model, in the family the parent names.

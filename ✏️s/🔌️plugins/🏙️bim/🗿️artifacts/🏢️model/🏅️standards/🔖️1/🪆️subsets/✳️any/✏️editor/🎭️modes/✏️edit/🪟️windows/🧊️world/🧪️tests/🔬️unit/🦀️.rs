@@ -1,17 +1,18 @@
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Preview, Shape};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shape};
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use crate::render::world::{mesh_data, overview_orbit, world_bounds};
+use semio_s_artifact_bim_model_tests_5::render::world::{mesh_data, overview_orbit, world_bounds};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
 use semio_framework_plugin::DslValue;
 #[allow(unused_imports)]
@@ -20,14 +21,14 @@ use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::WindowKindDefinition;
 #[allow(unused_imports)]
 use semio_framework_plugin::WindowOptions;
-use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
-use crate::editor::bim::modes::edit::windows::world::*;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::{scene, config, section_options, visible_solids, framing_camera, INITIAL_CAMERA, definition, WINDOW_KIND_ID, BODY_KEY, view_phase};
 use protocol::Inference;
 use serde_json::Value;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
@@ -116,8 +117,8 @@ async fn the_world_window_is_a_world3d_surface_bound_to_the_elements_domain() {
 #[semio_framework_async_macros::async_test]
 async fn the_phase_filter_draws_only_the_elements_of_its_phase() {
     let (mut snapshot, _) = demo();
-    snapshot.walls.get_mut("w-south").expect("wall").phase = crate::standards::v1::subsets::any::schema::snapshot::Phase::Demolished;
-    snapshot.walls.get_mut("w-east").expect("wall").phase = crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing;
+    snapshot.walls.get_mut("w-south").expect("wall").phase = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Demolished;
+    snapshot.walls.get_mut("w-east").expect("wall").phase = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Existing;
     let inference = ModelInference::infer(&snapshot).expect("infers");
     let drawn = |view_phase: &str| -> Vec<String> { instances(&scene(&snapshot, &inference, &BimWorldWindowConfig { view_phase: view_phase.into(), ..BimWorldWindowConfig::default() }, &[], &[], 1)).iter().map(|instance| instance["id"].as_str().expect("id").to_string()).collect() };
     assert_eq!(drawn("").len(), 4, "an empty filter and 'all' draw every element");

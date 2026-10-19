@@ -25,7 +25,7 @@ import (
 
 // 🔖️ToolGoalCreate MUST complete the operation successfully.
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noManagement bool, parent, milestone string) workspace.ToolResult {
-	ctx := graphqlpkg.NewRepoContext(workspace.RootDir)
+	ctx := graphqlpkg.NewRepoContext(workspace.GetRootDir())
 	goal, err := ctx.GoalCreate(model.GoalCreateInput{
 		Title:        title,
 		Description:  description,
@@ -83,7 +83,7 @@ func ToolGoalList() workspace.ToolResult {
 
 // 🔖️ToolGoalClose MUST complete the operation successfully.
 func ToolGoalClose(id, summary string, noManagement bool) workspace.ToolResult {
-	ctx := graphqlpkg.NewRepoContext(workspace.RootDir)
+	ctx := graphqlpkg.NewRepoContext(workspace.GetRootDir())
 	res, err := ctx.GoalClose(model.GoalCloseInput{
 		ID:           id,
 		Summary:      summary,
@@ -104,7 +104,7 @@ func ToolGoalClose(id, summary string, noManagement bool) workspace.ToolResult {
 
 // 🔖️ToolGoalReopen MUST complete the operation successfully.
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noManagement bool) workspace.ToolResult {
-	ctx := graphqlpkg.NewRepoContext(workspace.RootDir)
+	ctx := graphqlpkg.NewRepoContext(workspace.GetRootDir())
 	var titlePtr, descriptionPtr, dueDatePtr *string
 	if title != "" {
 		titlePtr = &title

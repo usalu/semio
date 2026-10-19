@@ -1,5 +1,0 @@
-📡️client
-🔤️codec
-🚚️transport
-🛣️routes-and-sockets
-🧬️wire-types

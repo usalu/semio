@@ -7,10 +7,10 @@
 //! 🎥️ The viewer owns exactly one kind of write: the window configuration of the window a gesture came from (camera, projection preset,
 //! storey visibility, plan storey). Every verb is a retained bounded job whose publication contract names the window-config lane only.
 
-use crate::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
-use crate::viewer::bim::modes::view;
-use crate::viewer::bim::modes::view::windows::{plan, world};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_bim_model_tests_5::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;
@@ -26,7 +26,6 @@ use semio_framework_value::{DslValue, FromValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::{BTreeMap, HashMap};
 
-pub use semio_s_artifact_bim_model_tests::viewer::bim::terminology;
 
 //#region 🔖️Constants
 pub const SET_CAMERA: &str = "setCamera";
@@ -149,24 +148,24 @@ fn parsed<T: FromValue>(text: &str, what: &str) -> Result<T, Fault> {
 /// the viewer's command channel and it can only ever produce a window-config mutation.
 pub fn window_config_mutation(command: &BimViewCommand, view_state: &ViewModel, window_config: Option<&WindowConfigSnapshot>) -> Result<WindowConfigMutation, Fault> {
     let kind = window_kind(view_state)?;
-    let (is_world, is_plan) = (kind == world::WINDOW_KIND_ID, kind == plan::WINDOW_KIND_ID);
-    let world_config = || world::config::from_snapshot(window_config);
-    let plan_config = || plan::config::from_snapshot(window_config);
+    let (is_world, is_plan) = (kind == semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::WINDOW_KIND_ID, kind == semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::WINDOW_KIND_ID);
+    let world_config = || semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::from_snapshot(window_config);
+    let plan_config = || semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::from_snapshot(window_config);
     match command {
         BimViewCommand::SetCamera { camera } if is_world => {
             let orbit: store::Viewport3dOrbit = parsed(camera, "camera pose")?;
             orbit.validate().map_err(|error| invalid(&error.to_string()))?;
-            world::config::addressed(view_state, world_config().with_orbit(orbit))
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::addressed(view_state, world_config().with_orbit(orbit))
         }
         BimViewCommand::SetCamera { camera } if is_plan => {
             let viewport: store::Viewport2d = parsed(camera, "camera pose")?;
             viewport.validate().map_err(|error| invalid(&error.to_string()))?;
-            plan::config::addressed(view_state, plan_config().with_viewport(viewport))
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::addressed(view_state, plan_config().with_viewport(viewport))
         }
         BimViewCommand::SetProjection { field, value } if is_world => {
             let arguments = json_arguments([("field", DslValue::String(field.clone())), ("value", DslValue::String(value.clone()))]);
             let next = world_config().with_projection_action(SET_PROJECTION, &arguments).ok_or_else(|| invalid("the projection field or value is unknown"))?;
-            world::config::addressed(view_state, next)
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::addressed(view_state, next)
         }
         BimViewCommand::SetProjectionParameter { param, value } if is_world => {
             if !value.is_finite() {
@@ -174,10 +173,10 @@ pub fn window_config_mutation(command: &BimViewCommand, view_state: &ViewModel, 
             }
             let arguments = json_arguments([("param", DslValue::String(param.clone())), ("value", DslValue::float(*value))]);
             let next = world_config().with_projection_action(SET_PROJECTION_PARAMETER, &arguments).ok_or_else(|| invalid("the projection parameter is unknown"))?;
-            world::config::addressed(view_state, next)
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::addressed(view_state, next)
         }
-        BimViewCommand::SetStoreyVisible { storey, visible } if is_world => world::config::addressed(view_state, world_config().with_storey_visible(storey, *visible)),
-        BimViewCommand::SetPlanStorey { storey } if is_plan => plan::config::addressed(view_state, plan_config().with_storey(storey)),
+        BimViewCommand::SetStoreyVisible { storey, visible } if is_world => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::addressed(view_state, world_config().with_storey_visible(storey, *visible)),
+        BimViewCommand::SetPlanStorey { storey } if is_plan => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::addressed(view_state, plan_config().with_storey(storey)),
         other => Err(wrong_window(other)),
     }
 }
@@ -312,14 +311,14 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for BimViewCommandJobFa
 
 //#region 🔖️Viewer
 /// 👁️ Reads the framework-owned selection and hover of the element domain.
-fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> world::Marks {
-    world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
+fn marks_of(interaction: &semio_framework_plugin::app::InteractionView<'_>) -> semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks {
+    semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks { selected: interaction.selection(ELEMENT_DOMAIN).ids.clone(), hovered: interaction.hover(ELEMENT_DOMAIN, HOVER_CHANNEL).ids.clone() }
 }
 
-fn render_body(body_key: &str, instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &world::Marks, labels: &terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
-    let node = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
-        world::BODY_KEY => world::render(snapshot, inference, &world::config::current(cfg), marks),
-        plan::BODY_KEY => plan::render(snapshot, inference, &plan::config::current(cfg), &marks.selected),
+fn render_body(body_key: &str, instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, snapshot: &ModelSnapshot, cfg: &ConfigView<'_, NoConfig>, marks: &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks, labels: &semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels) -> UiAssemblyResult<ComponentTree> {
+    let node = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(instance, snapshot, |inference| match body_key {
+        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::current(cfg), marks),
+        semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::BODY_KEY => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::render(snapshot, inference, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::current(cfg), &marks.selected),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("{}: {body_key}", labels.unknown_body.as_str()))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("bim.viewer.ui.capacity", "viewer label admission failed")),
     })?;
     Ok(semio_framework_plugin::built_to_component_tree(node))
@@ -348,7 +347,7 @@ impl ArtifactViewer for BimModelViewer {
     }
 
     fn initial_snapshot() -> ModelSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+        semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
     }
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
@@ -404,13 +403,13 @@ impl ArtifactViewer for BimModelViewer {
 
     /// 🕹️ Every drawn element is a pickable target of the `elements` domain; without it the framework prunes every world pick.
     fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
-        let ordered = crate::render::element_ids(doc.snapshot).into_iter().map(|id| TopologyNode { id, granularity: ELEMENT_GRANULARITY.into(), parent: None }).collect();
+        let ordered = semio_s_artifact_bim_model_tests_5::render::element_ids(doc.snapshot).into_iter().map(|id| TopologyNode { id, granularity: ELEMENT_GRANULARITY.into(), parent: None }).collect();
         Ok(InteractionTopology { domains: BTreeMap::from([(ELEMENT_DOMAIN.to_string(), DomainTopology { ordered })]) })
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
-        registry.register::<world::config::BimViewerWorldWindowConfigOwner>()?;
-        registry.register::<plan::config::BimViewerPlanWindowConfigOwner>()
+        registry.register::<semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::BimViewerWorldWindowConfigOwner>()?;
+        registry.register::<semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::BimViewerPlanWindowConfigOwner>()
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {
@@ -469,7 +468,7 @@ impl ArtifactViewer for BimModelViewer {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-        render_body(body_key, None, doc.snapshot, cfg, &world::Marks::default(), terminology::bim_viewer_labels(view_state))
+        render_body(body_key, None, doc.snapshot, cfg, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::Marks::default(), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state))
     }
 
     fn render_with_request_context(
@@ -483,7 +482,7 @@ impl ArtifactViewer for BimModelViewer {
         cx:&mut semio_framework_plugin::StepContext<'_>,
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
-        render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), terminology::bim_viewer_labels(view_state))
+        render_body(body_key, Some(owner), doc.snapshot, cfg, &marks_of(interaction), semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state))
 
         })();
         rendered.map(Some).map_err(Into::into)
@@ -493,10 +492,10 @@ impl ArtifactViewer for BimModelViewer {
     fn window_measures(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let Some(id) = view_state.window_id.as_deref() else { return HashMap::new() };
         let Ok(kind) = window_kind(view_state) else { return HashMap::new() };
-        let labels = terminology::bim_viewer_labels(view_state);
+        let labels = semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels(view_state);
         let measures = match kind {
-            world::WINDOW_KIND_ID => world::measures(doc.snapshot, &world::config::current(cfg), labels, viewer_action),
-            plan::WINDOW_KIND_ID => plan::measures(doc.snapshot, &plan::config::current(cfg), labels, viewer_action),
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::WINDOW_KIND_ID => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::measures(doc.snapshot, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::current(cfg), labels, viewer_action),
+            semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::WINDOW_KIND_ID => semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::measures(doc.snapshot, &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::config::current(cfg), labels, viewer_action),
             _ => return HashMap::new(),
         };
         HashMap::from([(id.to_string(), measures)])
@@ -511,8 +510,8 @@ pub fn viewer_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
 
 //#region 🔖️Manifest
 /// 🗣️ A label of the viewer's one `app_labels!` block in both languages.
-fn localized(pick: fn(&terminology::BimViewerLabels) -> semio_framework_ui_locale::LabelText) -> LocalizedLabel {
-    terminology::BimViewerLabels::localized(pick)
+fn localized(pick: fn(&semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels) -> semio_framework_ui_locale::LabelText) -> LocalizedLabel {
+    semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels::localized(pick)
 }
 
 fn view_action(id: &str, label: LocalizedLabel, args: Vec<ActionArgDef>) -> ActionDefinition {
@@ -525,11 +524,11 @@ pub fn create_bim_viewer() -> semio_framework_plugin::AppDefinition {
     let mut builder = Viewer::builder(BIM_MODEL_DIALECT)
         .document(["semio", "bim"])
         .icon_id("building")
-        .mode_def(view::definition())
-        .default_mode_id(view::BIM_VIEW_MODE_VIEW)
-        .window_kind_def(world::definition())
-        .window_kind_def(plan::definition())
-        .default_layout(view::layout())
+        .mode_def(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::definition())
+        .default_mode_id(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::BIM_VIEW_MODE_VIEW)
+        .window_kind_def(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::definition())
+        .window_kind_def(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::plan::definition())
+        .default_layout(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::layout())
         .action_with(view_action(SET_CAMERA, localized(|labels| labels.set_camera), vec![ActionArgDef::text("camera", localized(|labels| labels.camera_pose)).required()]))
         .action_with(view_action(SET_PROJECTION, localized(|labels| labels.set_projection), Vec::new()))
         .action_with(view_action(SET_PROJECTION_PARAMETER, localized(|labels| labels.set_projection_parameter), Vec::new()))
@@ -553,7 +552,7 @@ pub fn create_bim_viewer() -> semio_framework_plugin::AppDefinition {
                 broadcast: true,
             },
         })
-        .window_kind_interactions(world::WINDOW_KIND_ID, vec![InteractionRef::new(ELEMENT_DOMAIN)])
+        .window_kind_interactions(semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::WINDOW_KIND_ID, vec![InteractionRef::new(ELEMENT_DOMAIN)])
         .build_definition()
 }
 //#endregion 🔖️Manifest

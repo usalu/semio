@@ -1,9 +1,9 @@
 {
   "schema": "semio.framework.plugin.shared-framework-action-routes.v1",
   "routes": [
-    { "id": "copy", "factory": "FrameworkCopyJobFactory", "schemaId": "framework.reserved.copy.v1", "descriptorDisposition": "migrated", "routeIndex": 7, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 1048576 },
-    { "id": "cut", "factory": "FrameworkCutJobFactory", "schemaId": "framework.reserved.cut.v1", "descriptorDisposition": "migrated", "routeIndex": 8, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 1048576 },
-    { "id": "paste", "factory": "FrameworkPasteJobFactory", "schemaId": "framework.reserved.paste.v1", "descriptorDisposition": "migrated", "routeIndex": 9, "maximumRawBytes": 1048576, "maximumItems": 4096, "workUnits": 4096, "maximumOutputBytes": 4194304 },
+    { "id": "copy", "factory": "FrameworkCopyJobFactory", "schemaId": "framework.reserved.copy.v1", "descriptorDisposition": "migrated", "routeIndex": 7, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 6307840 },
+    { "id": "cut", "factory": "FrameworkCutJobFactory", "schemaId": "framework.reserved.cut.v1", "descriptorDisposition": "migrated", "routeIndex": 8, "maximumRawBytes": 8192, "maximumItems": 4096, "workUnits": 256, "maximumOutputBytes": 6307840 },
+    { "id": "paste", "factory": "FrameworkPasteJobFactory", "schemaId": "framework.reserved.paste.v1", "descriptorDisposition": "migrated", "routeIndex": 9, "maximumRawBytes": 6324224, "maximumItems": 4096, "workUnits": 4096, "maximumOutputBytes": 12615680 },
     { "id": "noteShellCommand", "factory": "FrameworkNoteShellCommandJobFactory", "schemaId": "framework.reserved.noteShellCommand.v1", "descriptorDisposition": "migrated", "routeIndex": 11, "maximumRawBytes": 65536, "maximumItems": 64, "workUnits": 4096, "maximumOutputBytes": 65536 },
     { "id": "setHistoryCommandFilter", "factory": "FrameworkSetHistoryCommandFilterJobFactory", "schemaId": "framework.reserved.setHistoryCommandFilter.v1", "descriptorDisposition": "migrated", "routeIndex": 12, "maximumRawBytes": 4096, "maximumItems": 16, "workUnits": 1024, "maximumOutputBytes": 4096 },
     { "id": "recordTutorial", "factory": "FrameworkRecordTutorialJobFactory", "schemaId": "framework.reserved.recordTutorial.v1", "descriptorDisposition": "migrated", "routeIndex": 13, "maximumRawBytes": 4096, "maximumItems": 16, "workUnits": 1024, "maximumOutputBytes": 4096 },

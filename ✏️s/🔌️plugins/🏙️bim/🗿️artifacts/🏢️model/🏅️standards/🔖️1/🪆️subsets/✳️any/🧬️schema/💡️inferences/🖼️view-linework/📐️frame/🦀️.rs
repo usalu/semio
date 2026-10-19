@@ -3,7 +3,7 @@
 //! the line (the viewer stands on its right). A point is drawn at `(u, z)` and is the nearer to the viewer the smaller its `w`.
 
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidBounds;
-use crate::standards::v1::subsets::any::schema::snapshot::ViewPlane;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane;
 
 /// 🧭️ A point or vector in building coordinates `(x, y, z)`.
 pub type World = [f64; 3];

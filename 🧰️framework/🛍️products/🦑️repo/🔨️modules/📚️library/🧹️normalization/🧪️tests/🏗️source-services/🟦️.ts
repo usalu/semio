@@ -1,9 +1,10 @@
 import Ajv from "ajv";
 import { expect, test } from "bun:test";
 import { build } from "esbuild";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import ts from "typescript";
+import { NORMALIZATION_ENGINE_OWNERS } from "../../🧪️support/🏗️source-services/🟦️.ts";
 
 type Owner = Readonly<{ path: string; dependencies: readonly string[] }>;
 const root = resolve(import.meta.dir, "../.."), workspace = resolve(root, "../../../../../..");
@@ -48,17 +49,20 @@ test("current canonical source owners have exact acyclic imports and no forwardi
 
 
 test("source service types expose only their canonical declaration owners", () => {
-  const path = join(root, "🟦️.ts"), source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-  expect(source.statements.filter(ts.isExportDeclaration).map((node) => node.getText(source))).toEqual([]);
-  const program = ts.createProgram([path, ...fixture.directTypeOwners.map((owner) => join(root, owner.path))], { module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.ESNext, allowImportingTsExtensions: true, noEmit: true, noResolve: true, noLib: true, types: [] });
+  expect(existsSync(join(root, "🟦️.ts"))).toBe(false);
+  const engine = NORMALIZATION_ENGINE_OWNERS.map((owner) => join(root, owner));
+  for (const path of engine) expect(readFileSync(path, "utf8").length, path).toBeGreaterThan(0);
+  const program = ts.createProgram([...engine, ...fixture.directTypeOwners.map((owner) => join(root, owner.path))], { module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.ESNext, allowImportingTsExtensions: true, noEmit: true, noResolve: true, noLib: true, types: [] });
   const checker = program.getTypeChecker();
-  const exports = checker.getExportsOfModule(checker.getSymbolAtLocation(program.getSourceFile(path)!)!);
   for (const owner of fixture.directTypeOwners) {
     const ownerPath = join(root, owner.path), ownerSource = program.getSourceFile(ownerPath)!;
     const symbol = checker.getExportsOfModule(checker.getSymbolAtLocation(ownerSource)!).find((item) => item.name === owner.name);
     expect(symbol, owner.name).toBeDefined();
     expect(symbol!.declarations?.map((declaration) => slash(relative(root, declaration.getSourceFile().fileName)))).toEqual([owner.path]);
-    expect(exports.filter((item) => item.name === owner.name || (item.flags & ts.SymbolFlags.Alias) !== 0 && checker.getAliasedSymbol(item) === symbol).map((item) => item.name)).toEqual([]);
+    for (const path of engine) {
+      const exports = checker.getExportsOfModule(checker.getSymbolAtLocation(program.getSourceFile(path)!)!);
+      expect(exports.filter((item) => item.name === owner.name || (item.flags & ts.SymbolFlags.Alias) !== 0 && checker.getAliasedSymbol(item) === symbol).map((item) => item.name), path).toEqual([]);
+    }
   }
 });
 

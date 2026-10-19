@@ -13,3 +13,4 @@ Repo `/Users/ueli/Documents/semio` (macOS arm64, zsh). Coordinator ticket `C` = 
 
 ## Report
 Write `C/result-<prefix>.md`: what you changed (file list), how you verified (exact commands + outcome), what is still open. Final message: max 8 lines.
+- LAUNCH: `.vscode/🧩️launch.seed.jsonc` is the only authored launch file; `.vscode/launch.json` is generated (`workspace:generate-launch`). Edit the seed, never launch.json. Modules moved/renamed: also re-point static imports in the root `📜️script.ts` (verify with `bun build --target=bun 📜️script.ts`).

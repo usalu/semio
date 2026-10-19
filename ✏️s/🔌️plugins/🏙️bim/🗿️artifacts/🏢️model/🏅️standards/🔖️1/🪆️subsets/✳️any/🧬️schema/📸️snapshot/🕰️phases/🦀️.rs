@@ -1,6 +1,6 @@
 //! 🕰️ The vocabulary of construction phases shared by every consumer: the four phases in their natural order, their stable keys, the parse of a typed name and the default phase of a freshly authored element.
 //! The phase of an element is authored (`phase` on walls, curtain walls, columns, beams, slabs, roofs, stairs, railings and spaces; an opening takes the phase of its host); which elements a view shows per phase is inferred.
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::Phase;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 
 

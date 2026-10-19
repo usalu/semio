@@ -17,7 +17,8 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 import { domSizePx, STYLING_METRICS } from "@semio-tech/ui-styling";
-import { resolveThemeGeometry } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts";
+import { resolveThemeGeometry } from "@semio-tech/ui-styling";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
@@ -132,10 +133,10 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
   });
 
   it("leaves layout as the single writer of tree row geometry", () => {
-    const paint = readFileSync(resolve(wgpuRoot, "🖌️paint/🦀️.rs"), "utf8");
+    const paint = readModuleTreeSource(resolve(wgpuRoot, "🖌️paint/🦀️.rs"));
     expect(paint).not.toContain("const TREE_ROW_HEIGHT: f32 = 24.0;");
     expect(paint).toContain("let metrics = TreeRowMetrics::from_theme(theme);");
-    const mounted = readFileSync(resolve(wgpuRoot, "📌️mounted_layout/🦀️.rs"), "utf8");
+    const mounted = readModuleTreeSource(resolve(wgpuRoot, "📌️mounted_layout/🦀️.rs"));
     expect(mounted).toContain("let height = live_tree_item_height(tree, id, item, &metrics, 0);");
     expect(mounted).toContain("let lead = row_window_lead(tree, id, key, owner);");
     expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed, lead }");

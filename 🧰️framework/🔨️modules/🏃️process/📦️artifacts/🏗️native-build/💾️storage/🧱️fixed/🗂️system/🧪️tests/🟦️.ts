@@ -5,7 +5,7 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import ts from"typescript";
 import*as routing from"../../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{readNativeFixedWindowsSystemV1}from"../🟦️.ts";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";

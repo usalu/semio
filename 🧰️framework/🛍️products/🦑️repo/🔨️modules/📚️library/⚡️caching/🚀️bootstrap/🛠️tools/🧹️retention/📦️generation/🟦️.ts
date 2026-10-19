@@ -1,9 +1,9 @@
 import{repositoryToolingReadContextV1,type ToolingRetirementReadContextV1}from"../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{requireNativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{requireNativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{verifyNxSdkBinaryLinksReadV1}from"../../📦️sdk/🧊️binary/🔎️verification/🟦️.ts";
 import{forEachNxSdkSourceLayerV1}from"../../📦️sdk/📥️source/🔗️derivative/📚️layers/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 👁️ Generate-mode window — the evaluated output preview of the active generation.
 
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_PREVIEW;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_PREVIEW;
 use crate::editor::flow::modes::edit::windows::main::transient::FlowWindowTransient;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -10,7 +10,7 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use ui_wgpu::wgpu::TextEditorScene;
+use semio_framework_ui_declaration::ui::TextEditorScene;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";

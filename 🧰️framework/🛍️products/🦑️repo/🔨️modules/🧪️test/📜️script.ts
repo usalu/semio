@@ -13,9 +13,8 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
 
 import { runMutationInventoryProviderChecksV1 } from "./🏭️inventory/🔌️providers/🧪️tests/🟦️.ts";
 import { join } from "node:path";
-import { orchestratorBudgetOpts, runCmd } from "../📚️library/🏃️process/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd, runRepoScriptMain } from "../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { Script, ScriptRouter,createIssuedResourceControlV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepoScriptMain } from "../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import {withRepositoryTestArtifactsV1} from "./💾️storage/🟦️.ts";
 import { OracleScript, ParityScript, SubjectScript } from "./⚖️parity/📋️orchestration/🟦️.ts";
 import { ContractScript, DiscoverScript, RunScript } from "./🧾️contracts/📋️orchestration/🟦️.ts";
@@ -59,6 +58,11 @@ class TestScript extends Script {
     if (segments[0] === "artifact-root-source") {
       if (segments.length !== 1) throw new Error("Expected test artifact-root-source");
       runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧾️artifact-root-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+      return;
+    }
+    if (segments[0] === "oracle-source-ownership") {
+      if (segments.length !== 1) throw new Error("Expected test oracle-source-ownership");
+      runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🔮️oracle-source-ownership", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "command-composition-source") {

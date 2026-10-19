@@ -1,8 +1,11 @@
 //! 🔭️ `set-view` payload. Sparsely changes a view: name, storey of a plan, plane of a section or elevation, camera, cut height (an assigned null returns to the convention), depth, crop (an assigned null clears it), hidden categories, phase filter (an assigned null shows every phase), scale and detail level. The kind and the building of a view never change.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ViewPatch}, snapshot::{DetailLevel, Phase, ViewCamera, ViewCategory, ViewCrop, ViewPlane}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::ViewPatch;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, ViewCamera, ViewCategory, ViewCrop, ViewPlane};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

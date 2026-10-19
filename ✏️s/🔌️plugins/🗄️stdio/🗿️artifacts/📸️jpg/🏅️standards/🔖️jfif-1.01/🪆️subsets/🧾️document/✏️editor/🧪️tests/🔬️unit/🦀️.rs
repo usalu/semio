@@ -103,19 +103,20 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         data: source.to_vec(),
     };
     let initial = <JpgAnyEditor as ArtifactEditor>::initial_snapshot();
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
-    app.consume_media(NATURAL_FILE_PORT, artifact).await.expect("registered natural import");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("natural import publishes");
+    app.consume_media(NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
-    let refused = match app.consume_media(NATURAL_FILE_PORT, outside).await {
+    let refused = match app.consume_media(NATURAL_FILE_PORT, outside, scope.cx()).await {
         Err(_) => true,
-        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).is_err(),
+        Ok(_) => semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
     };
     assert!(refused);
     assert_eq!(app.snapshot().expect("refused JPEG preserves the owner"), opened);
-    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| app.produce_media(NATURAL_FILE_PORT, native_owner).await).await.expect("registered natural save");
+    let saved = semio_s_artifact_stdio_contract::testing::with_encoding_async(async |native_owner| semio_framework_plugin::artifact_app_laws::produce_fixture_media(&mut app, NATURAL_FILE_PORT, native_owner, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).await.expect("registered natural save");
     assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
     assert_eq!(saved.descriptor.kind_id.as_deref(), Some(codec.format_kind));
     let oracle = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_identity_round_trip(&saved.data).expect("image independently reopens and writes the JPEG export");
@@ -123,22 +124,23 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let expected = semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::project_jpg_mutation(&oracle).expect("project independent JPEG output");
     assert_eq!(observed.get("width"), expected.get("width"));
     assert_eq!(observed.get("height"), expected.get("height"));
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut reopened = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_any_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
-    reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).expect("fresh owner import publishes");
+    reopened.consume_media(NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "undo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source undo snapshot"), initial);
     assert_eq!(reopened.snapshot().expect("reopened snapshot remains isolated"), reopened_snapshot);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("source redo snapshot"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened undo snapshot"), initial);
     assert_eq!(app.snapshot().expect("source remains isolated"), opened);
-    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(reopened.snapshot().expect("reopened redo snapshot"), reopened_snapshot);
-    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy());
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut reopened, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }

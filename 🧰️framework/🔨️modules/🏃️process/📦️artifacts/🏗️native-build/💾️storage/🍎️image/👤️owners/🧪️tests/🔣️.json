@@ -1,0 +1,20 @@
+{
+  "attach": {
+    "root": "/fixture/m",
+    "image": "/fixture/fixed.dmg",
+    "expected": ["attach", "-nobrowse", "-noautoopen", "-owners", "on", "-mountpoint", "/fixture/m", "/fixture/fixed.dmg"]
+  },
+  "mountTable": [
+    "/dev/disk3s1s1 on / (apfs, sealed, local, read-only, journaled)",
+    "/dev/disk3s5 on /System/Volumes/Data (apfs, local, journaled, protect, root data)",
+    "/dev/disk21s1 on /Users/fixture/b/g/m (apfs, local, nodev, nosuid, journaled, noowners, nobrowse, mounted by fixture)",
+    "/dev/disk22s1 on /Users/fixture/b/p/m (apfs, local, nodev, nosuid, journaled, nobrowse, mounted by fixture)",
+    "/dev/disk23s1 on /Users/fixture/b/g/m/with (spaces) (apfs, local, nodev, nosuid, journaled, noowners, nobrowse, mounted by fixture)"
+  ],
+  "hosts": [
+    {"directory": "/Users/fixture/b/g/m/nx/cache", "mountPoint": "/Users/fixture/b/g/m", "owners": false},
+    {"directory": "/Users/fixture/b/g/m/with (spaces)/x", "mountPoint": "/Users/fixture/b/g/m/with (spaces)", "owners": false},
+    {"directory": "/Users/fixture/b/p/m/x", "mountPoint": "/Users/fixture/b/p/m", "owners": true},
+    {"directory": "/Users/fixture/b/g/mother", "mountPoint": "/", "owners": true}
+  ]
+}

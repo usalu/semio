@@ -1,6 +1,8 @@
 //! 🍰️ `split-slab` payload. Cuts a slab along the infinite line through two points into two slabs: the piece to the left of the line (seen from its first point to its second) stays, the piece to the right is created with the type, offset, slope and name of the original; holes go with the piece they lie in, split arcs keep their circle. The line must cross the outline exactly twice and no hole.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -15,7 +17,7 @@ pub struct SplitSlab {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for SplitSlab
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitSlab> + From<crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab> + From<crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitSlab> + From<semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab> + From<semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "split", entity: "slab", kind: "split-slab", record: "SplitSlab" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

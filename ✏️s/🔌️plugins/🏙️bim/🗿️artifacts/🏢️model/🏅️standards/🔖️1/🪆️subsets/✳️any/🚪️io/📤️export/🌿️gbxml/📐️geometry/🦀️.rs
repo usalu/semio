@@ -2,7 +2,7 @@
 //! rectangular geometry (the bounding rectangle in that frame with its lower-left corner), all rounded to nine decimals so the document and the tables the oracles compare are made of the same numbers.
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 
 /// 📍️ A point or vector in metres.
 pub type P3 = [f64; 3];

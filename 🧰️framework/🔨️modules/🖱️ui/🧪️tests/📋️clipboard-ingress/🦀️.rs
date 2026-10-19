@@ -1,6 +1,6 @@
 #![cfg(not(target_arch="wasm32"))]
 use semio_framework_job::*;use semio_framework_job_worker::{WorkerJobOutcome,WorkerJobPoll,WorkerJobSession,WorkerJobSessionPreparation,OriginalWorkerFixtureCaller};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
-use semio_framework_ui::wgpu::{ClipboardIoJob,ClipboardIoJobInitializer};
+use semio_framework_ui_wgpu_hosting::host::{ClipboardIoJob, ClipboardIoJobInitializer};
 #[global_allocator]
 static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}

@@ -327,7 +327,7 @@ fn golden_select() {
 
 #[test]
 fn checkbox_checked_state_does_not_paint_a_selection_outline() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).unwrap();
     let paint = &fixture["checkboxPaint"];
     let width = paint["availableWidth"].as_f64().unwrap() as f32;
     let height = paint["availableHeight"].as_f64().unwrap() as f32;

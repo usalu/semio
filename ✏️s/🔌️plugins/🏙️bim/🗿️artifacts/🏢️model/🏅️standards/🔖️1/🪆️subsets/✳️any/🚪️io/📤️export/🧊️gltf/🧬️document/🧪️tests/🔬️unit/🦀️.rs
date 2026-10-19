@@ -1,8 +1,7 @@
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::io::export::gltf::codec;
-use crate::standards::v1::subsets::any::io::export::gltf::document::{material};
-use crate::standards::v1::subsets::any::io::export::gltf::document::*;
-use crate::standards::v1::subsets::any::io::export::gltf::testkit::third_party;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::material;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfPrimitive, GltfMaterial, GltfMesh, GltfNode};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::third_party;
 
 fn triangle() -> GltfModel {
     let primitive = GltfPrimitive { material: 0, positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0], normals: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], indices: vec![0, 1, 2] };
@@ -36,10 +35,10 @@ fn the_snapshot_describes_buffer_views_and_accessors_that_tile_the_buffer() {
     assert_eq!(end, buffer.len());
     let primitive = &document.meshes[0].primitives[0];
     let position = &document.accessors[primitive.attributes.iter().find(|(name, _)| name == "POSITION").expect("positions").1];
-    assert_eq!((position.component_type, position.count, position.kind), (codec::ComponentType::Float, 3, codec::AccessorType::Vec3));
+    assert_eq!((position.component_type, position.count, position.kind), (semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float, 3, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Vec3));
     assert_eq!((position.min.clone(), position.max.clone()), (Some(vec![0.0, 0.0, 0.0]), Some(vec![1.0, 2.0, 0.0])));
-    assert_eq!(document.materials[0].alpha_mode, codec::AlphaMode::Blend);
-    assert_eq!(document.nodes[1].extras, Some(codec::Json::Object(vec![("id".into(), codec::Json::String("a".into()))])));
+    assert_eq!(document.materials[0].alpha_mode, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode::Blend);
+    assert_eq!(document.nodes[1].extras, Some(semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Object(vec![("id".into(), semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::String("a".into()))])));
     assert!(document.nodes[1].translation.is_none() && document.nodes[0].children == [1]);
 }
 
@@ -73,7 +72,7 @@ fn a_model_without_meshes_writes_no_buffer() {
     let empty = GltfModel { name: "n".into(), extras: DslValue::Null, materials: Vec::new(), meshes: Vec::new(), nodes: Vec::new(), roots: Vec::new() };
     let snapshot = empty.to_snapshot();
     assert!(snapshot.buffers.is_empty() && snapshot.document.buffers.is_empty());
-    let decoded = codec::decode(&empty.to_glb().expect("encodes")).expect("the stdio codec reads its own container");
+    let decoded = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::codec::decode(&empty.to_glb().expect("encodes")).expect("the stdio codec reads its own container");
     assert_eq!((decoded.document.nodes.len(), decoded.document.scenes.len(), decoded.buffers.len()), (0, 1, 0));
 }
 

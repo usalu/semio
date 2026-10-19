@@ -1,11 +1,11 @@
 // #region cursor
 //! 🖱️ Theme-aware Semio cursor URLs for wgpu canvas hover parity with React.
 
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::ui::UiNode;
-use crate::wgpu::events::CaptureKind;
-use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
-use crate::wgpu::tree::{NodeFlags, UiTree};
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_declaration::ui::UiNode;
+use semio_framework_ui_wgpu_events::CaptureKind;
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_framework_ui_retained_tree::tree::{NodeFlags, UiTree};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SemioCursor {
@@ -121,8 +121,8 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
             CaptureKind::Drag => return SemioCursor::Grabbing,
             CaptureKind::ScrollThumb(axis) => {
                 return match axis {
-                    crate::wgpu::events::ScrollAxis::Horizontal => SemioCursor::EwResize,
-                    crate::wgpu::events::ScrollAxis::Vertical => SemioCursor::NsResize,
+                    semio_framework_ui_wgpu_events::ScrollAxis::Horizontal => SemioCursor::EwResize,
+                    semio_framework_ui_wgpu_events::ScrollAxis::Vertical => SemioCursor::NsResize,
                 };
             }
             CaptureKind::Press => {}
@@ -134,7 +134,7 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
     let Some(node) = tree.node(target) else {
         return SemioCursor::Default;
     };
-    if node.spec.0.presence().state == crate::wgpu::component::ui::UiState::Disabled {
+    if node.spec.0.presence().state == semio_framework_ui_declaration::ui::UiState::Disabled {
         return SemioCursor::NotAllowed;
     }
     if node.flags.contains(NodeFlags::DRAG_SOURCE) {

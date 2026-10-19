@@ -62,6 +62,7 @@ semio-s-artifact-stdio-semio-schema = { path = "../../../🧬️schema/📦️pa
 semio-s-artifact-stdio-semio-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-table = { workspace = true }
 semio-s-artifact-stdio-semio-table-model = { workspace = true }
+semio-s-artifact-stdio-semio-table-mut-family = { workspace = true }
 semio-s-artifact-stdio-semio-table-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-text = { workspace = true }
 semio-s-artifact-stdio-semio-text-model = { workspace = true }
@@ -74,6 +75,7 @@ semio-s-artifact-stdio-semio-video-model = { workspace = true }
 semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-audio-mut-family = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { workspace = true }
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }

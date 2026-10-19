@@ -2,13 +2,15 @@
 //! the pointer is on, the selections of both domains), what a tool answers (`Step`: the mutations of one history row, a selection request, a utility to arm) and what it shows
 //! meanwhile (`Preview`: marks painted over the window, never part of the document). A tool is a small statechart: `event` advances it, `preview` projects it.
 
-use crate::editor::bim::gestures::plane::P;
-use crate::editor::bim::marks::{Mark, Preview, Shape, Style};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Shape, Style};
 use crate::editor::bim::gestures::snap::{snap, SnapHit, SnapKind, SnapRequest};
-use crate::editor::bim::entities::id_taken;
-use crate::editor::bim::kit::IdMint;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::IdMint;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_ui_locale::LabelText;
 use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};
@@ -104,7 +106,7 @@ pub struct ToolContext<'a> {
     pub library: &'a [String],
     pub labels: Option<&'static BimLabels>,
     pub mint: IdMint,
-    pub instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'a>,
+    pub instance: semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'a>,
 }
 
 impl<'a> ToolContext<'a> {
@@ -211,7 +213,7 @@ impl Step {
 //#region 🔖️Preview
 /// 📏️ A length label at the middle of a segment, in metres with two decimals.
 pub fn length_label(a: P, b: P) -> Mark {
-    Mark::label(crate::editor::bim::gestures::plane::mid(a, b), format!("{:.2} m", crate::editor::bim::gestures::plane::dist(a, b)))
+    Mark::label(semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::mid(a, b), format!("{:.2} m", semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::dist(a, b)))
 }
 
 /// 🧲️ The marker a snap hit shows: a snap mark named by the kind of the hit.

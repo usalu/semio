@@ -1,6 +1,7 @@
 //! 🏞️ `create-ceiling` payload. Brings a new ceiling onto a storey; its boundary and holes are closed counter-clockwise loops, area, solid and the clear height of the rooms below are inferred.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Ceiling, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateCeiling {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateCeiling
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCeiling> + From<crate::standards::v1::subsets::any::schema::mutations::delete_ceiling::DeleteCeiling>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCeiling> + From<semio_s_artifact_bim_model_mut_any_90::standards::v1::subsets::any::schema::mutations::delete_ceiling::DeleteCeiling>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "ceiling", kind: "create-ceiling", record: "CreateCeiling" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

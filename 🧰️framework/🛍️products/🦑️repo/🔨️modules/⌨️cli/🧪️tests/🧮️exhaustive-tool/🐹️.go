@@ -14,16 +14,13 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	providers "github.com/usalu/semio/repo/providers"
 	ticketspkg "github.com/usalu/semio/repo/tickets"
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 func TestExhaustiveStatuteCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statute commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("statute list returns results", func(t *testing.T) {
 		output, err := executeTreeCommand("list", "--only-statute", "--json")
@@ -74,9 +71,7 @@ func TestExhaustiveCheckpointCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow checkpoint commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("checkpoint list returns results", func(t *testing.T) {
 		output, err := executeTreeCommand("list", "--only-checkpoint", "--json", "--limit", "5")
@@ -134,7 +129,7 @@ func TestExhaustiveToolTechnologyTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool technology tree test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolTechnologyTree()
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
@@ -145,7 +140,7 @@ func TestExhaustiveToolTicketList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool ticket list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
 		t.Errorf("ToolTicketList returned error: %s", result.Error)
@@ -159,7 +154,7 @@ func TestExhaustiveToolFolderTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool folder tree test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolFolderTree("repo")
 	if result.Error != "" {
 		t.Errorf("ToolFolderTree returned error: %s", result.Error)
@@ -170,7 +165,7 @@ func TestExhaustiveToolFileTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool file tree test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolFileTree("repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolFileTree returned error: %s", result.Error)
@@ -181,7 +176,7 @@ func TestExhaustiveToolTicketLifecycle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket lifecycle test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
 	result := ToolTicketOpen("🎫️", title, "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", providers.McpClientGeneric, "", "")

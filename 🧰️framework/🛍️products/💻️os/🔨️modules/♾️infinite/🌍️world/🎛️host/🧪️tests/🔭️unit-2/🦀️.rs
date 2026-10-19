@@ -18,14 +18,18 @@ use semio_framework_os_infinite_world_host::{apply_runtime_draw_flags, step_worl
 use semio_framework_os_infinite_world_host::handle_world3d_pointer_button;
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_framework_os_infinite_world_host::render_world_3d;
-use ui_wgpu::wgpu::{ActionDescriptor, Camera3d, camera_grid_fade_distance, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, PointerModifiers, Rect, Rgba, SceneDraw3d, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode, SurfaceKind, Theme, UiComponentSceneNode, UiPresence, Vec3, World3dPresentation, World3dPresentationClear, World3dScene};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{Camera3d, camera_grid_fade_distance, CameraProjection3d, Instance3d, lod_grid_step_world, Mat4, mesh3d_allocate_step, mesh3d_begin, mesh3d_seal, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, Vec3};
+use semio_framework_ui_wgpu_input::PointerModifiers;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dPresentation, World3dPresentationClear, World3dScene};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Mutex;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{SceneMaterialDraw3d, SceneMaterialKind3d, SceneShadowRole3d, SceneViewportMask3d, WORLD_SHADOW_MAP_SIZE};
-#[cfg(test)]
-use ui_wgpu::wgpu::SceneRasterMeshSeal;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{SceneMaterialDraw3d, SceneMaterialKind3d, SceneShadowRole3d, SceneViewportMask3d, WORLD_SHADOW_MAP_SIZE};
+#[cfg(test)] use semio_framework_ui_raster_owner::SceneRasterMeshSeal;
 use semio_framework_tool_run::{ToolRunTraceCursor, ToolRunTraceDelta};
 use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 use serde_json::json;
@@ -47,7 +51,7 @@ fn test_scene_raster_lease(width: u32, height: u32, profile: SceneRasterProfile,
     let descriptor = SceneRasterDescriptor { width, height, source_digest: [revision, revision.rotate_left(17)], source_revision: revision, profile, mesh };
     let pool = world_scene_raster_pool();
     let mut writer = None;
-    for _ in 0..=ui_wgpu::wgpu::SCENE_RASTER_POOL_SLOTS {
+    for _ in 0..=semio_framework_ui_raster_owner::SCENE_RASTER_POOL_SLOTS {
         match pool.begin(descriptor, revision, SceneRasterWriteMode::Moved { capacity_bytes: descriptor.byte_len().unwrap() }) {
             SceneRasterBegin::Writer(candidate) => {
                 writer = Some(candidate);
@@ -70,7 +74,7 @@ fn test_world_scene_raster(width: u32, height: u32, fill: u8) -> WorldSceneRaste
     WorldSceneRaster { identity: lease.identity(), pending: Mutex::new(Some(lease)) }
 }
 
-pub(crate) fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub(crate) fn take_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -110,7 +114,7 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         colors: (data.colors.len() / 4) as u32,
     surface_uvs:[0;4],tangents:0,};
     let generation = GENERATION.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(),0,1);
+    let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_begin_capacity_byte_demand(),0,1);
     let (token,progress)=mesh3d_begin(generation,revision,schema,grant).expect("oracle mesh claim");
     assert!(progress.fits(grant));
     allocate_oracle_mesh(token);
@@ -136,10 +140,10 @@ pub(crate) fn publish_oracle_mesh_at_revision(data: TerrainMeshOracleData, revis
         mesh3d_write_u32(token, Mesh3dField::EdgeIds, value).unwrap();
     }
     for value in data.uvs.as_chunks::<2>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec2(token, Mesh3dField::Uvs, *value).unwrap();
     }
     for value in data.colors.as_chunks::<4>().0 {
-        ui_wgpu::wgpu::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
+        ui_scene::math::mesh3d_write_vec4(token, Mesh3dField::Colors, *value).unwrap();
     }
     mesh3d_seal(token).expect("oracle mesh publication")
 }

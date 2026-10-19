@@ -7,11 +7,11 @@ use super::*;
 /// (`🧱️elements/🔽️Select/🟦️.tsx:514`) and the kit needs the same number to flip and clamp a popup;
 /// `0.0` means unmeasured and degrades to a below-the-trigger placement at natural height.
 pub fn framework_widget_context<'a>(
-    draw: &'a mut ui_wgpu::wgpu::DrawList,
-    overlay: Option<&'a mut ui_wgpu::wgpu::DrawList>,
-    atlas: &'a mut ui_wgpu::wgpu::FontAtlas,
-    icons: Option<&'a ui_wgpu::wgpu::IconAtlas>,
-    input: &'a mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    draw: &'a mut semio_framework_ui_draw_contract::DrawList,
+    overlay: Option<&'a mut semio_framework_ui_draw_contract::DrawList>,
+    atlas: &'a mut semio_framework_ui_text::FontAtlas,
+    icons: Option<&'a semio_framework_ui_draw_contract::IconAtlas>,
+    input: &'a mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
     theme: &'a Theme,
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,

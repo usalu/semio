@@ -6,6 +6,7 @@ import jsonPatch from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {PublicationClaimReturn} from "../🟦️.ts";
+import {readSourceFamilySource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("original publication permit moves to its pre-admitted slot before the claim bit clears",()=>{
  expect(new Ajv({strict:false}).compile(schema)(fixture)).toBe(true);
  for(const row of fixture.cases){const cursor=new PublicationClaimReturn(row.aliases,32);let oracle:{source:boolean;permit?:string;returned?:string}={source:true};
@@ -14,6 +15,6 @@ test("original publication permit moves to its pre-admitted slot before the clai
  }
 });
 test("publication permit owns no ungranted Arc drop and final source refuses a live return slot",()=>{
- const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=readFileSync(join(import.meta.dir,"../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
- expect(source.indexOf("returned.compare_exchange")).toBeLessThan(source.indexOf("state.fetch_and(!1"));expect(source).toContain("Arc::into_raw(self.inner)");expect(source).toContain("drop(Arc::from_raw(pointer))");expect(source).not.toContain("Weak<");expect(source).not.toContain("Arc::downgrade");expect(source).toContain("source.drain_returned_alias()");expect(source).toContain("grant.maximum_release_bytes<release");expect(host).not.toContain("publish_mounted_claimed_operation_unit");expect(host).toContain("let _permit = mounted.cancellation_lease.as_ref()");expect(host).toContain("claim: PublicationClaimHandle");
+ const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),plugin=join(import.meta.dir,"../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin"),host=readSourceFamilySource(plugin),unit=readFileSync(join(plugin,"🧵️instance/🧾️typed-operations/📥️staging/📬️publication/📬️typed-operation-unit/🦀️.rs"),"utf8"),cancellation=readFileSync(join(plugin,"♻️cancellation/🦀️.rs"),"utf8");
+ expect(source.indexOf("returned.compare_exchange")).toBeLessThan(source.indexOf("state.fetch_and(!1"));expect(source).toContain("Arc::into_raw(self.inner)");expect(source).toContain("drop(Arc::from_raw(pointer))");expect(source).not.toContain("Weak<");expect(source).not.toContain("Arc::downgrade");expect(source).toContain("source.drain_returned_alias()");expect(source).toContain("grant.maximum_release_bytes<release");expect(host).not.toContain("publish_mounted_claimed_operation_unit");expect(unit).toContain("let _permit = mounted.cancellation_lease.as_ref()");expect(cancellation).toContain("claim: PublicationClaimHandle");
 });

@@ -2,7 +2,7 @@ import Ajv from "ajv";
 import constructFixture from "../🧫️fixtures/🔍️construct.json";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 import type { FaceRef, ShellRef, SolidRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
-import type { InferencesTestDependencies } from "../../🟦️.ts";
+import type { InferencesTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 import type { ObjectRef, TypologyRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import type { SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";

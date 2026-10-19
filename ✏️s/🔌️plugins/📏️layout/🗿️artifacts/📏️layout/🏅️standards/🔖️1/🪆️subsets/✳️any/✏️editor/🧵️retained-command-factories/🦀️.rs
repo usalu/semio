@@ -54,7 +54,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
     _cx: &mut StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("layout-window-work-terminal"));
@@ -153,6 +154,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
             }),
             None => Ok(ArtifactCommandWorkStep::Complete(emit)),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

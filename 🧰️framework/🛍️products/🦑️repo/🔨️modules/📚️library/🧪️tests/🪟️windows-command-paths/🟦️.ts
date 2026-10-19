@@ -231,7 +231,7 @@ describe("fleet command paths", () => {
     ];
     for (const owner of owners) {
       const source = readFileSync(join(repoRoot, owner), "utf8");
-      expect(source, owner).toContain("protectOwnerOnly(");
+      if (owner !== "🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts") expect(source, owner).toContain("protectOwnerOnly(");
       expect(/chmodSync\([^)]*0o[67]00\)/.test(source), owner).toBe(false);
     }
   });

@@ -1,13 +1,13 @@
 /** 📮️ Trusted bootstrap receipts and publication child: the publication receipt contract and receipt, the unconfirmed publication error and the publication child run with its receipt.
  * @see ../../../../📦️packages/🦀️rust/📜️script.ts
  */
-import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { createHash } from "node:crypto";
 import { closeSync, openSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
-import { type FreshBuildControlV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
+import { type FreshBuildControlV1 } from "@semio-tech/framework-plugin/describe/source-epoch";
 import { hubSchemaExport } from "../../../../📦️packages/🟦️typescript/🟦️.ts";
 import { documentOpenNeutralObject } from "../../🧮️bootstrap-claims/🟦️.ts";
 import { trustedBootstrapPublicationRevision } from "../🔄️rotation-and-current-pointer/🟦️.ts";

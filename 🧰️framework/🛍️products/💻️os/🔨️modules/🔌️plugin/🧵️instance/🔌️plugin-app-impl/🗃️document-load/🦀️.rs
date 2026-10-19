@@ -62,9 +62,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             }
         }
         archive.members.reverse();
-        let limits =
-            protocol::RetainedSprLimits { file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64, frame_body_bytes: store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES as u64 * 256, records: protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 * 8 };
-        let history = protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(), limits).map_err(|error| document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, error.to_string()))?;
+        let history = document_archive_history_decoder(archive.parent_spr.len()).map_err(|error| document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, error.to_string()))?;
         self.ingest.document_archive_loads.insert_admitted(operation, ActiveDocumentArchiveLoad::new(operation, archive, history));
         Ok(())
     }

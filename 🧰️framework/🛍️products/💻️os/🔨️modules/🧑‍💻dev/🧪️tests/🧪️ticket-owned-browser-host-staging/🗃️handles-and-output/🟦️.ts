@@ -1,9 +1,11 @@
 /** 🗃️ The per-path sqlite handle cache and the deployment output preservation of the ticket-owned browser host staging suite. */
-import { type TestDependencies } from "../🧰️test-kit/🟦️.ts";
+import { createTestKit, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
-export async function registerHandleAndOutputTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies): Promise<void> {
-  const { PLUGIN_HOST_SHIM_FILE, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginOutputChildren, backboneDbHandleFor, createHash, dirname, existsSync, hostShimSource, join, mkdirSync, mkdtempSync, readFileSync, repoRoot, rmSync, tmpdir, writeFileSync } = dependencies;
+export async function registerHandleAndOutputTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
+  const { PLUGIN_HOST_SHIM_FILE, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginOutputChildren, createHash, dirname, existsSync, hostShimSource, join, mkdirSync, mkdtempSync, readFileSync, repoRoot, rmSync, tmpdir, writeFileSync } = dependencies;
   const { describe, expect, it, beforeEach, afterEach } = vitest;
+  const { underBun } = createTestKit(vitest, dependencies, source);
+  const handleCache = (...paths: readonly string[]): { readonly same: boolean[] } => underBun(`const { backboneDbHandleFor } = await import(process.argv[1]); const paths = JSON.parse(process.argv[2]); const handles = []; for (const path of paths) handles.push(await backboneDbHandleFor(path)); console.log(JSON.stringify({ same: handles.slice(1).map((handle, index) => handle === handles[index]) }));`, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🗄️backbone-storage/🟦️.ts"), JSON.stringify(paths));
 
   //#region 🔖️T-P8-sqlite-handle-cache-tests
   describe("backboneDbHandleFor (T-P8 per-path sqlite handle cache)", () => {
@@ -17,22 +19,18 @@ export async function registerHandleAndOutputTests(vitest: NonNullable<ImportMet
       rmSync(root, { recursive: true, force: true });
     });
 
-    it("returns the SAME handle for the same path across repeated calls", async () => {
+    it("returns the SAME handle for the same path across repeated calls", () => {
       const dbPath = join(root, "a", "documents.db");
       mkdirSync(dirname(dbPath), { recursive: true });
-      const first = await backboneDbHandleFor(dbPath);
-      const second = await backboneDbHandleFor(dbPath);
-      expect(second).toBe(first);
+      expect(handleCache(dbPath, dbPath).same).toEqual([true]);
     });
 
-    it("returns DISTINCT handles for distinct paths", async () => {
+    it("returns DISTINCT handles for distinct paths", () => {
       const dbPathA = join(root, "a", "documents.db");
       const dbPathB = join(root, "b", "documents.db");
       mkdirSync(dirname(dbPathA), { recursive: true });
       mkdirSync(dirname(dbPathB), { recursive: true });
-      const a = await backboneDbHandleFor(dbPathA);
-      const b = await backboneDbHandleFor(dbPathB);
-      expect(a).not.toBe(b);
+      expect(handleCache(dbPathA, dbPathB).same).toEqual([false]);
     });
   });
 
@@ -86,8 +84,8 @@ export async function registerHandleAndOutputTests(vitest: NonNullable<ImportMet
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, PLUGIN_HOST_SHIM_FILE), "/** @generated semio plugin host shim */\n");
       writeFileSync(join(dir, "🧵️plugin-worker.js"), "/** pre-H2 leftover */");
-      const inScope = [{ pluginId: "flow-extension-text", role: "extension" }] as never;
-      const otherScope = [{ pluginId: "note", role: "plugin" }] as never;
+      const inScope = [{ pluginId: "flow-extension-text", directoryName: "📝️flow-extension-text", role: "extension" }] as never;
+      const otherScope = [{ pluginId: "note", directoryName: "🗒️note", role: "plugin" }] as never;
       expect(() => assertExtensionOutputsFresh(root, inScope)).not.toThrow();
       expect(() => assertExtensionOutputsFresh(root, otherScope)).toThrow(/preserved/);
       expect(() => assertExtensionOutputsFresh(root)).toThrow(/preserved/);

@@ -1,6 +1,7 @@
 //! 🧷️ `set-wall-end-join` payload. Sets the authored join preference of one end of a wall: mitered, butted or not joined; an absent join returns the end to the geometry (automatic). Only the wall layout reads it, nothing is derived here.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -8,9 +9,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetWallEndJoin {
     pub id: String,
-    pub end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd,
+    pub end: semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd,
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub join: Option<crate::standards::v1::subsets::any::schema::snapshot::EndJoin>,
+    pub join: Option<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::EndJoin>,
 }
 
 impl<Op> MutationKind<ModelSnapshot, Op> for SetWallEndJoin

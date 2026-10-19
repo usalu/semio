@@ -5,7 +5,7 @@
 //#region GlbAssetTests
 fn allocate_oracle_mesh(token:Mesh3dWriteToken) {
     loop {
-        let grant=world_mesh_ownership_grant(0,ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
+        let grant=world_mesh_ownership_grant(0,ui_scene::math::mesh3d_allocate_capacity_byte_demand(token).unwrap(),0,1);
         let step=mesh3d_allocate_step(token,grant).unwrap();
         assert!(step.progress.fits(grant));
         if step.complete{break}
@@ -40,7 +40,7 @@ fn world_component_marquee_cursor_ids(state: &World3dState, points: &[[f32; 2]])
 /// 📨️ Drives one gumball publication job to completion and answers what it published (nothing for a `Skip`).
 fn world_gumball_publish(state: &World3dState, gesture: WorldGumballGesture, phase: WorldGumballPhase) -> Option<ActionDescriptor> {
     let mut job = WorldGumballCommitJob::new(8, gesture, phase);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for _ in 0..4096 {
         if with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)).expect("bounded gumball publication") == WorldInteractionStep::Complete {
             break;
@@ -394,14 +394,14 @@ fn world_environment_reaches_the_actual_scene_pass() {
     let bounds = Rect::new(0.0, 0.0, 128.0, 96.0);
     drive_scene_bridge(&mut state, &scene, bounds);
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw,
         overlay: None,
         atlas: &mut atlas,
@@ -437,7 +437,7 @@ fn world_environment_reaches_the_actual_scene_pass() {
     assert!((pass.light_dir[0] + 0.4531539).abs() < 1e-5);
     assert!((pass.light_dir[1] - 0.7848856).abs() < 1e-5);
     assert!((pass.light_dir[2] - 0.42261827).abs() < 1e-5);
-    let texture_matrix = ui_wgpu::wgpu::directional_shadow_texture_matrix(pass.light_dir);
+    let texture_matrix = ui_scene::math::directional_shadow_texture_matrix(pass.light_dir);
     for (actual, expected) in texture_matrix.into_iter().zip(shadow_fixture["oracle"]["shadowMatrix"].as_array().unwrap()) {
         assert!((actual - expected.as_f64().unwrap() as f32).abs() < 2e-6, "shadow matrix drifted from Three: {actual} != {expected}");
     }
@@ -481,14 +481,14 @@ fn offscreen_light_visible_glb_is_retained_only_in_the_actual_shadow_channel() {
         .expect("source draw admitted");
 
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw,
         overlay: None,
         atlas: &mut atlas,
@@ -552,7 +552,7 @@ fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     state.terrain.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
     apply_terrain_style_if_changed_state(&mut state.session, &mut state.scene, &mut state.terrain);
-    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_wgpu::wgpu::CameraProjection3d::Perspective, zoom: 1.0 };
+    let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0, projection: ui_scene::math::CameraProjection3d::Perspective, zoom: 1.0 };
     let (tile_draws, evicted) = sync_terrain_state(&mut state.session, &mut state.authority, &mut state.scene, &mut state.terrain, &mut state.assets, &camera);
     assert!(tile_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
     assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
@@ -669,7 +669,7 @@ fn pick_select_emits_batched_interaction_select_for_plain_object_pick() {
     state.session.bounds = inner;
     state.session.pick_bounds = inner;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
     let action = pick_select_action(&state.session, &state.camera, &state.selection, &state.interaction, &state.scene, screen[0], screen[1], inner, true, false).expect("pick action");
     assert_eq!(action.action, "interactionSelect");
     let args = action.args.expect("args");
@@ -708,7 +708,7 @@ fn pick_hover_emits_interaction_hover_and_clears_when_nothing_hit() {
     state.session.bounds = inner;
     state.session.pick_bounds = inner;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
     let action = pick_hover_action(&mut state.session, &mut state.camera, &mut state.selection, &mut state.interaction, &mut state.scene, screen[0], screen[1], inner).expect("hover action");
     assert_eq!(action.action, "interactionHover");
     let args = action.args.expect("args");
@@ -771,7 +771,7 @@ fn pick_select_emits_bare_id_into_bound_app_domain_when_window_binds_one() {
     state.session.bounds = inner;
     state.session.pick_bounds = inner;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
     let action = pick_select_action(&state.session, &state.camera, &state.selection, &state.interaction, &state.scene, screen[0], screen[1], inner, false, false).expect("pick action");
     assert_eq!(action.action, "interactionSelect");
     let args = action.args.expect("args");
@@ -793,7 +793,7 @@ fn pick_hover_emits_bare_id_into_bound_app_domain() {
     state.session.bounds = inner;
     state.session.pick_bounds = inner;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), Vec3::new(0.25, 0.25, 0.0), inner.w, inner.h).expect("object projects");
     let action = pick_hover_action(&mut state.session, &mut state.camera, &mut state.selection, &mut state.interaction, &mut state.scene, screen[0], screen[1], inner).expect("hover action");
     let args = action.args.expect("args");
     assert_eq!(args["domainId"], json!("cad"));

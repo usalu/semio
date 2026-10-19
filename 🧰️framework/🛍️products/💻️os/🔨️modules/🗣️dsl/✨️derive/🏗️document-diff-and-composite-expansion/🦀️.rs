@@ -86,7 +86,8 @@ pub fn expand_diff_binary(input: TokenStream) -> TokenStream {
 /// 🌉️ `#[composite(snapshot = ..., op = ...)]` container attrs for
 /// `#[derive(CompositeMutation)]` — see that macro's doc.
 #[derive(Default)]
-struct CompositeAttrs {
+#[doc(hidden)]
+pub struct CompositeAttrs {
     pub(super) snapshot: Option<Type>,
     op: Option<Type>,
 }

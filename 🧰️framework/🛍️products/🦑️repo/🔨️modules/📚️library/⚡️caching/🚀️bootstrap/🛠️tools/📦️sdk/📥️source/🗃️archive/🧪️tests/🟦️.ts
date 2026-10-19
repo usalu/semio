@@ -2,8 +2,8 @@ import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema.json"with{type:"json"};
-import{withBuildTestInvocationV1}from"../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 test("bounded package archives agree with the framework archive oracle through actual Original control",async()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const{decodeNxPackageArchiveV1}=await import("../🟦️.ts"),input=Object.fromEntries(corpus.files.map(row=>[row.path,row.text])),bytes=await new Bun.Archive(input,{compress:"gzip"}).bytes();await withBuildTestInvocationV1(async original=>{const decoded=await decodeNxPackageArchiveV1(bytes,scriptCompilerAdmissionControlV1(original,"nx:archive:oracle",120000)),oracle=await new Bun.Archive(bytes).files();expect(decoded.entries.filter(row=>row.kind==="file")).toHaveLength(corpus.files.length);for(const row of decoded.entries.filter(row=>row.kind==="file")){expect(Buffer.from(row.bytes).toString()).toBe(await oracle.get("package/"+row.path)!.text());}expect(decoded.compressedBytes).toBe(bytes.byteLength);expect(decoded.inflatedBytes).toBeGreaterThan(bytes.byteLength);expect(decoded.integrity).toBe("sha512-"+Buffer.from(new Bun.CryptoHasher("sha512").update(bytes).digest()).toString("base64"));});
 });

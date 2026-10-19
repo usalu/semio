@@ -4,15 +4,12 @@ import {scriptCompilerAdmissionControlV1} from "../../../../🏃️process/📦�
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import type {ScriptInvocation} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-contract` test suite and the guest-target compile gates.
@@ -46,7 +43,7 @@ class BuiltTreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testBuiltTreeRetirementFixture();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-contract": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-framework-ui-contract", target: { kind: "lib" }, laws: [
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-contract": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-framework-ui-contract", target: { kind: "lib" }, laws: [
         "built_tree_retirement_closes_all_typed_fields_and_preserves_foreign_values",
         "built_tree_retirement_closes_full_page_chain_beyond_observer_depth",
         "built_child_retirement_contention_retains_exact_page",
@@ -93,7 +90,7 @@ class ConformanceScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-contract", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-contract", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
     await check(["--target", "wasm32-wasip2", "--features", "typegen"]);
@@ -111,7 +108,7 @@ function generatedUiContractPath(root: string): string {
 /** 🧬️ Runs the owned schema export test, optionally writing its deterministic projection. */
 async function runTypegenExportTest(original:ScriptInvocation,phaseControl:ResourceLeaseControl,workspace:string,root: string, outPath?: string): Promise<void> {
   const env = outPath === undefined ? process.env : { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  await runRepositoryCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
+  await runAdmittedCargoCommandV1(original,phaseControl,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],root,env,buildBudgetMs());
 }
 
 class GenerateScript extends BundleScript {
@@ -131,7 +128,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
+      await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"-p","semio-framework-ui-contract-typegen","--test",TYPEGEN_TEST_NAME],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
       content = readFileSync(outPath);
     } finally {
       rmSync(temp, { recursive: true, force: true });

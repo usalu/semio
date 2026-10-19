@@ -9,15 +9,13 @@ import (
 	testing "testing"
 
 	languages "github.com/usalu/semio/repo/languages"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestDetectBundleLanguage(t *testing.T) {
 
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	t.Run("go", func(t *testing.T) {
 		goDir := filepath.Join(tmpDir, "gomod")
@@ -271,9 +269,7 @@ func TestExtractTestSegmentFromCommand(t *testing.T) {
 
 func TestResolveTestFilesFromCommand(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	goDir := filepath.Join(tmpDir, "pkg", "main")
 	os.MkdirAll(goDir, 0755)

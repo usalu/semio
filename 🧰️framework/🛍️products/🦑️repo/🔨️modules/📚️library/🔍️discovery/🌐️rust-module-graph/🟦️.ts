@@ -1,4 +1,4 @@
-import { type RustCompileReference, type RustStructuralVisibility, rustAttributes, rustFindTopLevel, rustIdentifierSymbol, rustMetadataAttributes, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenText, rustTokens, rustVisibility } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { type RustCompileReference, type RustStructuralVisibility, rustAttributes, rustFindTopLevel, rustIdentifierSymbol, rustMetadataAttributes, rustPathAttributes, rustStringValue, rustTokenPairs, rustTokenText, rustTokens, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
 import { posix } from "node:path";
 import type { RustModuleGraphFact, RustModuleGraphFacts, RustModuleIncludeFact, RustModuleMetadataProblem, RustModuleScopeFact, RustModuleScopeProof, RustModuleUseFact } from "../🦀️rust-fact-contracts/🟦️.ts";
 import { cargoProviderTomlParser } from "../🚚️cargo-provider/🟦️.ts";

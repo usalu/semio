@@ -52,7 +52,9 @@ use serde_json::Value;
 use std::sync::atomic::Ordering;
 use store_sync::PresenceWindowView;
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease, UiFixedList, UiText};
-use ui_wgpu::wgpu::{ActionDescriptor, InputState, PointerModifiers, Rect};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🖼️IconRenderHost/🧪️tests/📤️export-batch/🦀️.rs"]

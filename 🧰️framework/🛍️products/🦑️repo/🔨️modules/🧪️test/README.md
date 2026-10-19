@@ -36,7 +36,7 @@ same testing layout as other semantic owners.
 ## Commands
 
 ```bash
-bun ./📜️script.ts discover                 # every case Nx will generate a project for
+bun ./📜️script.ts discover                 # every case the build graph will generate a project for
 bun ./📜️script.ts doctor                   # toolchains; a missing one fails setup, never skips
 bun ./📜️script.ts contract                 # everything provable without executing a test
 bun ./📜️script.ts oracle   <level>         # the reference implementation only
@@ -56,7 +56,7 @@ bun ./📜️script.ts gc       [--apply]       # mark-and-sweep over the fixtur
 `--owner <path>`, `--owner-root <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;
 `--implementation <id>` narrows their subject implementations. `discover` lists all cases.
 From the repository root the same phases are reachable as `bun ./📜️script.ts test <phase>`, and every
-test owner has one generated Nx project: `lint` runs its contract phase and `test` runs its cases
+test owner has one generated project (`bun repo run <project>:lint|test`): `lint` runs its contract phase and `test` runs its cases
 (`cases <owner> [level] [--facet <phase>] [--case <slug>]`), the level and selection passed as arguments.
 
 Protocol v2 defines the full selector vocabulary — `--artifact`, `--standard`, `--subset`,
@@ -73,7 +73,7 @@ selector.
    behaviour.
 2. **Create the case.** `🧪️tests/<emoji><kebab-case>/🥒️.feature`. The directory carries one leading
    emoji grapheme followed by a kebab-case slug — `testCaseSlugPattern` in `🔣️taxonomy.json` — so a
-   case obeys the same path-emoji statute as every other directory while the derived Nx project name
+   case obeys the same path-emoji statute as every other directory while the derived project name
    (which drops the emoji) stays typable.
 3. **Research a reference implementation.** Search `📇️registry/🔣️.json` first, then the
    existing test dependencies. Only when no approved library can support the behaviour do you compare

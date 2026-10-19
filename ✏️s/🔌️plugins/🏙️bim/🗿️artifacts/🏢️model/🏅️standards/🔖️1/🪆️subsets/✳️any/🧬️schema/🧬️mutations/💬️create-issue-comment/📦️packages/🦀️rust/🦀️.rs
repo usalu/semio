@@ -15,14 +15,10 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
                         #[path = "../../🦀️.rs"]
                         pub mod create_issue_comment;
-                        pub use semio_s_artifact_bim_model_mut_any_121::standards::v1::subsets::any::schema::mutations::delete_issue_comment;
                     }
                 }
             }

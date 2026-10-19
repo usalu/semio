@@ -1,7 +1,7 @@
 /** 🧭️ GIS map process support: document sockets, MCP clients and checkpoint control shared by the GIS map gates.
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { createHash, randomBytes } from "node:crypto";
 import { type ChildProcess } from "node:child_process";
 import { decodeServerFrame, encodeClientFrame } from "@semio-tech/framework-replication";

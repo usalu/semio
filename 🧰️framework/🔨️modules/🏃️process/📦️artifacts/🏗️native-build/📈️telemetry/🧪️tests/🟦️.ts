@@ -1,4 +1,4 @@
-import {registerBuildTestLawV1} from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {registerBuildTestLawV1} from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";

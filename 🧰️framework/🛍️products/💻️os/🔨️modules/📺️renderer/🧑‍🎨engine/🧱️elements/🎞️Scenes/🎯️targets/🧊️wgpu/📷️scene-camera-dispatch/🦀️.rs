@@ -12,14 +12,14 @@ pub struct SceneCameraOwnerMetadata {
     document_id: ui_contract::UiNodeId,
     window_generation: u64,
     pub(crate) component_generation: u64,
-    pub(crate) kind: ui_wgpu::wgpu::SurfaceKind,
-    pub(crate) node: ui_wgpu::wgpu::NodeId,
+    pub(crate) kind: semio_framework_ui_declaration::ui::SurfaceKind,
+    pub(crate) node: semio_framework_ui_arena::NodeId,
     positional_key: Option<(u32, u32)>,
 }
 
 impl SceneCameraOwnerMetadata {
     fn from_owner(owner: &crate::element_contracts::ScenePointerTarget) -> Self {
-        Self { document_id: owner.document_id, window_generation: owner.window_generation, component_generation: owner.component_generation, kind: owner.kind, node: owner.node, positional_key: match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(_) => None, ui_wgpu::wgpu::NodeKey::Positional(a, b) => Some((*a, *b)) } }
+        Self { document_id: owner.document_id, window_generation: owner.window_generation, component_generation: owner.component_generation, kind: owner.kind, node: owner.node, positional_key: match &owner.key { semio_framework_ui_retained_tree::tree::NodeKey::Explicit(_) => None, semio_framework_ui_retained_tree::tree::NodeKey::Positional(a, b) => Some((*a, *b)) } }
     }
 }
 
@@ -29,7 +29,7 @@ pub(crate) fn camera_owner_matches(record: &SceneCameraRecord, owner: &crate::el
     let Some(metadata) = record.metadata else { return false };
     metadata.document_id == owner.document_id && metadata.window_generation == owner.window_generation && metadata.component_generation == owner.component_generation && metadata.kind == owner.kind
         && record.text(2) == owner.host_id && record.text(3) == owner.window_id && record.text(4) == owner.surface_id
-        && match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(key) => metadata.positional_key.is_none() && record.text(5) == key, ui_wgpu::wgpu::NodeKey::Positional(a, b) => metadata.positional_key == Some((*a, *b)) }
+        && match &owner.key { semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key) => metadata.positional_key.is_none() && record.text(5) == key, semio_framework_ui_retained_tree::tree::NodeKey::Positional(a, b) => metadata.positional_key == Some((*a, *b)) }
 }
 
 fn camera_owns_surface(record: &SceneCameraRecord) -> bool {
@@ -45,13 +45,13 @@ fn camera_owns_surface(record: &SceneCameraRecord) -> bool {
     if !current_matches { return false; }
     let Some(metadata) = record.metadata else { return true };
     if crate::element_contracts::ui_document_close_pending_for(record.text(3)) || scene_host_retiring(record.text(2)) { return false; }
-    let witness = ui_wgpu::wgpu::reconcile::UiComponentSceneWitness {
+    let witness = semio_framework_ui_retained_tree::reconcile::UiComponentSceneWitness {
         document_id: metadata.document_id,
         host_id: record.text(2),
         window_id: record.text(3),
         window_generation: metadata.window_generation,
         component_generation: metadata.component_generation,
-        key: match metadata.positional_key { Some((variant, ordinal)) => ui_wgpu::wgpu::NodeKeyRef::Positional(variant, ordinal), None => ui_wgpu::wgpu::NodeKeyRef::Explicit(record.text(5)) },
+        key: match metadata.positional_key { Some((variant, ordinal)) => semio_framework_ui_retained_tree::tree::NodeKeyRef::Positional(variant, ordinal), None => semio_framework_ui_retained_tree::tree::NodeKeyRef::Explicit(record.text(5)) },
         kind: metadata.kind,
         surface_id: record.text(4),
     };
@@ -87,7 +87,7 @@ pub fn schedule_scene_camera_dispatch(host_id: &str, surface_id: &str) {
         let states = states.borrow();
         let owner = states.get(host_id).and_then(|state| state.canvas_camera_owner.as_ref());
         let (metadata, text) = match owner {
-            Some(owner) => (Some(SceneCameraOwnerMetadata::from_owner(owner)), [host_id, surface_id, owner.host_id.as_str(), owner.window_id.as_str(), owner.surface_id.as_str(), match &owner.key { ui_wgpu::wgpu::NodeKey::Explicit(key) => key.as_str(), ui_wgpu::wgpu::NodeKey::Positional(_, _) => "" }]),
+            Some(owner) => (Some(SceneCameraOwnerMetadata::from_owner(owner)), [host_id, surface_id, owner.host_id.as_str(), owner.window_id.as_str(), owner.surface_id.as_str(), match &owner.key { semio_framework_ui_retained_tree::tree::NodeKey::Explicit(key) => key.as_str(), semio_framework_ui_retained_tree::tree::NodeKey::Positional(_, _) => "" }]),
             None => (None, [host_id, surface_id, "", "", "", ""]),
         };
         SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
@@ -284,18 +284,18 @@ fn dsl_value_bytes(value: &semio_framework::DslValue) -> usize {
 /// 📨️ Publishes one already-built `ActionDescriptor` through the bounded action queue — the single
 /// ingress every list surface's pointer handler uses, so a row click, a header sort and a palette
 /// press all pay the same exact item/byte credits.
-pub fn write_scene_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, descriptor: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn write_scene_action(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, descriptor: &ActionDescriptor) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let bytes = scene_action_bytes(descriptor)?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_scene_action_to_batch(&mut batch, descriptor, bytes)?;
     batch.publish()
 }
 
-pub(crate) fn scene_action_bytes(descriptor: &ActionDescriptor) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
-    ui_wgpu::wgpu::checked_action_string_bytes(&[descriptor.controller_id.as_str(), descriptor.action.as_str()])?.checked_add(descriptor.args.as_ref().map_or(0, dsl_value_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+pub(crate) fn scene_action_bytes(descriptor: &ActionDescriptor) -> Result<usize, semio_framework_ui_action::BoundedActionFault> {
+    semio_framework_ui_action::checked_action_string_bytes(&[descriptor.controller_id.as_str(), descriptor.action.as_str()])?.checked_add(descriptor.args.as_ref().map_or(0, dsl_value_bytes)).ok_or(semio_framework_ui_action::BoundedActionFault::ByteCredits)
 }
 
-pub(crate) fn write_scene_action_to_batch(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, descriptor: &ActionDescriptor, bytes: usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub(crate) fn write_scene_action_to_batch(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, descriptor: &ActionDescriptor, bytes: usize) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     batch.action(&descriptor.controller_id, &descriptor.action, bytes, |builder| match descriptor.args.as_ref() {
         Some(args) => builder.value(None, args),
         None => {

@@ -33,8 +33,8 @@ export function newScaffoldIoTree(ioRel: string, taxonomy: ReturnType<typeof loa
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
   leaves.push({ path: `${ioRel}/${rustLeaf}`, content: newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)") });
   leaves.push({ path: `${ioRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)") });
-  for (const rep of taxonomy.nativeRepresentationDirs) {
-    for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
+  for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
+    for (const rep of taxonomy.nativeRepresentationDirs) {
       const facetRel = `${ioRel}/${rep}/${kind}`;
       if (kind === "🧬️mutations" || kind === "💡️inferences") {
         leaves.push({ path: `${facetRel}/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown(kind) });

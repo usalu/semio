@@ -86,8 +86,9 @@ impl<T: Topology + Clone> WfcJob<T> {
     }
 }
 
-impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+impl<T: Topology + Clone + Send> WfcJob<T> {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) && !context.is_cancelled() && context.operation() == self.operation.operation && context.generation() == self.operation.generation {
             return self.retire_delivered_publication(context);
         }
@@ -110,6 +111,10 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
             WfcRun::Cancelled => JobOutcomeBorrow::admit_cancelled(context),
         }
     }
+}
+
+impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -123,66 +128,68 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.closing = true;
-        let demand = match self.close_demands() {
-            Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        }
-        let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(grant);
-            if publication.terminal_is_empty() {
-                self.publication = None;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.closing = true;
+            let demand = match self.close_demands() {
+                Ok(demand) => demand,
+                Err(error) => return Err(error),
+            };
+            if self.terminal_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
             }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
-            };
-        }
-        if let Some(bytes) = self.final_checkpoint.take() {
-            let released_bytes = bytes.capacity();
-            drop(bytes);
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } };
-        }
-        macro_rules! pop_owner {
-            ($owners:expr) => {
-                if $owners.pop().is_some() {
-                    return InteractiveJobCloseStep::Pending { progress: one };
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            if let Some(publication) = self.publication.as_mut() {
+                let step = publication.close_step(grant)?;
+                if publication.terminal_is_empty() {
+                    self.publication = None;
                 }
-            };
-        }
-        if let Some(domains) = self.initial_domains.as_mut() {
-            pop_owner!(domains);
-            self.initial_domains = None;
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        pop_owner!(self.fixed);
-        pop_owner!(self.state.domains);
-        pop_owner!(self.state.domain_counts);
-        pop_owner!(self.state.domain_weight_sums);
-        pop_owner!(self.state.domain_weighted_log_sums);
-        pop_owner!(self.state.revisions);
-        if self.state.queue.pop_front().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        pop_owner!(self.state.queued_marks);
-        pop_owner!(self.state.trail);
-        pop_owner!(self.state.decisions);
-        pop_owner!(self.state.propagation_wave);
-        pop_owner!(self.state.changed_domains);
-        pop_owner!(self.state.backtrack_path);
-        pop_owner!(self.state.observed);
-        if self.state.entropy_heap.pop().is_some() || self.checkpoint_build.take().is_some() || self.commit_build.take().is_some() || self.completed_commit.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: one };
-        }
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+                return Ok(match step {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            if let Some(bytes) = self.final_checkpoint.take() {
+                let released_bytes = bytes.capacity();
+                drop(bytes);
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..one } });
+            }
+            macro_rules! pop_owner {
+                ($owners:expr) => {
+                    if $owners.pop().is_some() {
+                        return Ok(InteractiveJobCloseStep::Pending { progress: one });
+                    }
+                };
+            }
+            if let Some(domains) = self.initial_domains.as_mut() {
+                pop_owner!(domains);
+                self.initial_domains = None;
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            pop_owner!(self.fixed);
+            pop_owner!(self.state.domains);
+            pop_owner!(self.state.domain_counts);
+            pop_owner!(self.state.domain_weight_sums);
+            pop_owner!(self.state.domain_weighted_log_sums);
+            pop_owner!(self.state.revisions);
+            if self.state.queue.pop_front().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            pop_owner!(self.state.queued_marks);
+            pop_owner!(self.state.trail);
+            pop_owner!(self.state.decisions);
+            pop_owner!(self.state.propagation_wave);
+            pop_owner!(self.state.changed_domains);
+            pop_owner!(self.state.backtrack_path);
+            pop_owner!(self.state.observed);
+            if self.state.entropy_heap.pop().is_some() || self.checkpoint_build.take().is_some() || self.commit_build.take().is_some() || self.completed_commit.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: one });
+            }
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -231,11 +238,8 @@ impl<T: Topology + Clone + Send> WfcJob<T> {
     /// 🤝️ Closes the lent payload turn by turn from the next step's own wallet before the search resumes.
     pub(super) fn retire_delivered_publication<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         let publication = self.publication.as_mut().expect("a delivered wfc publication is staged");
-        let step = publication.close_step(context.retained_grant());
+        let step = match publication.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
         context.consume_retained(step.progress())?;
-        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
-            return Err(ValueError::literal(kind, "wfc publication close was refused").with_retained_progress(progress));
-        }
         if publication.terminal_is_empty() {
             self.publication = None;
         }

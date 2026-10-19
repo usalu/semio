@@ -8,14 +8,15 @@ pub mod config;
 #[path = "🌡️envelope/🦀️.rs"]
 pub mod envelope;
 
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::marks::{Preview, Shape};
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::terminology::BimLabels;
-use crate::render::world::{mesh_data, overview_orbit, world_bounds};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shape};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests_5::render::world::{mesh_data, overview_orbit, world_bounds};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;
@@ -179,7 +180,7 @@ pub fn scene_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: 
     let mut meshes: Vec<DslValue> = solids.iter().map(|(id, solid)| mesh_entry(id, snapshot, solid)).collect();
     let mut instances: Vec<DslValue> = solids.iter().map(|(id, solid)| instance_entry(id, snapshot, solid, selection.contains(id), hover.contains(id))).collect();
     if config.structural_overlay {
-        let (structural_meshes,structural_instances)=crate::render::structure::overlay(inference,|id| inference.element_solids.get(id).is_some_and(|solid|visible(id,solid,inference,config)));
+        let (structural_meshes,structural_instances)=semio_s_artifact_bim_model_modify::render::structure::overlay(inference,|id| inference.element_solids.get(id).is_some_and(|solid|visible(id,solid,inference,config)));
         meshes.extend(structural_meshes);
         instances.extend(structural_instances);
     }
@@ -225,7 +226,7 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
 
 
 fn lowest_storey(snapshot: &ModelSnapshot) -> Option<String> {
-    snapshot.buildings.keys().find_map(|building| crate::editor::bim::entities::ordered_storeys(snapshot, building).into_iter().next())
+    snapshot.buildings.keys().find_map(|building| semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys(snapshot, building).into_iter().next())
 }
 
 /// 🧊️ The storey the world window draws and picks on: the isolated one when it exists, else the lowest.

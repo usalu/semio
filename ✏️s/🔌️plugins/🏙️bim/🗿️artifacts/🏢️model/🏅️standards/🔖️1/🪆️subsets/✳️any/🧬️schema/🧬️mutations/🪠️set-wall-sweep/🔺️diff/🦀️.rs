@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `SetWallSweep`: a sparse wall sweep patch of exactly the provided fields that differ. The sweep that results must follow the create rules (host and material exist, profile with positive
 //! dimensions, height not negative, inset leaving part of the profile showing); providing only equal values, or no field, is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::sweep_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::sweep_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::SetWallSweep;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallSweep, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

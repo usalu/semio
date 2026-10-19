@@ -1,0 +1,3 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts","leaf":"🧾️row-codec","names":["Options","Columns","columns","DOCUMENT","MONTH","VERTEX","uint","bool","optionalId","literal","write","emit","vertices","ids","Row","Reader","readVertices","readIds"],"doc":"🧾️ The Energy sqlite row codec shared by the snapshot document and its envelope, systems and schedules tables: IEEE-754 column layout, row writers and the validating reader."}
+]

@@ -5,10 +5,8 @@
 
 import React, { createContext } from "react";
 import { AppRouter, type Severity } from "@semio-tech/framework";
-import { type BrowserActorUiMountedV1 } from "@semio-tech/framework/backbone";
 import { dockSeedActiveWindowIdV1, modeLayoutStacksV1, type WindowScopeLayoutNodeV1 } from "../⌨️window-scope/🟦️.ts";
 import { type IconName, type UiTranslationKey, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
-import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { HISTORY_REFUSAL_LABEL_KEYS, historyRefusalCodeV1 } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { type WindowFault, type WindowFaultClass } from "../🩺️fault/🟦️.ts";
@@ -33,8 +31,6 @@ export type ShellCatalogProbe = {
   readonly programs: readonly { readonly pluginId: string; readonly appId: string; readonly label: string }[];
   readonly spawned: readonly { readonly id: string; readonly pluginId: string; readonly appId: string }[];
 };
-
-export type ServiceMountedViewV1 = Omit<BrowserActorUiMountedV1, "kind" | "instanceId"> & Readonly<{ sessionInstanceId: number; windowKindId: string; store: UiDocumentStore }>;
 
 /** 🔬️ One probe row per installed registry entry: its install status, plus the `surface.*` fault
  * that kept it out of {@link AppRouter} when there is one. Pure and total — a plugin excluded from

@@ -1,0 +1,72 @@
+{
+ "name": "c7w-ui",
+ "crates": [
+  "semio-framework-ui-wgpu-events",
+  "semio-framework-ui-wgpu-paint",
+  "semio-framework-ui-wgpu-engine",
+  "semio-framework-ui-prepared",
+  "semio-framework-ui-wgpu-draw-execution",
+  "semio-framework-ui-wgpu-raster",
+  "semio-framework-ui-draw-contract",
+  "semio-framework-ui-wgpu-mounted-layout",
+  "semio-framework-ui-wgpu-pipelines",
+  "semio-framework-ui-wgpu-engine-surface",
+  "semio-framework-ui-prepared-staging",
+  "semio-framework-ui-render-prepared-shaders",
+  "semio-framework-ui-wgpu-render"
+ ],
+ "features": {
+  "semio-framework-ui-wgpu-paint": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-engine": [
+   "testkit"
+  ],
+  "semio-framework-ui-prepared": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-draw-execution": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-raster": [
+   "testkit"
+  ],
+  "semio-framework-ui-draw-contract": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-mounted-layout": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-pipelines": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-engine-surface": [
+   "testkit"
+  ],
+  "semio-framework-ui-prepared-staging": [
+   "testkit"
+  ],
+  "semio-framework-ui-wgpu-render": [
+   "testkit"
+  ]
+ },
+ "base": {
+  "rev": "overlay",
+  "crates": [
+   "semio-framework-ui-wgpu-events",
+   "semio-framework-ui-wgpu-paint",
+   "semio-framework-ui-wgpu-engine",
+   "semio-framework-ui-prepared",
+   "semio-framework-ui-wgpu-draw-execution",
+   "semio-framework-ui-wgpu-raster",
+   "semio-framework-ui-draw-contract",
+   "semio-framework-ui-wgpu-mounted-layout",
+   "semio-framework-ui-wgpu-pipelines",
+   "semio-framework-ui-wgpu-engine-surface",
+   "semio-framework-ui-prepared-staging",
+   "semio-framework-ui-render-prepared-shaders",
+   "semio-framework-ui-wgpu-render"
+  ]
+ },
+ "note": "ui wgpu crates P01-P03"
+}

@@ -1,20 +1,24 @@
-use crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
-use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
-use crate::standards::v1::subsets::any::schema::{snapshot::FamilyCategory, snapshot::ModelSnapshot, snapshot::ParameterKind, snapshot::SolidAxis, snapshot::SolidShape, mutations::ModelMutation};
+use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
+use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind, SolidAxis, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
+use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
+use semio_s_artifact_bim_model_mut_any_43::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::formula;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, ExprPoint3, FamilySolid, ParametricProfile};
-use crate::editor::bim::modes::edit::windows::family::edit::*;
-use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ExprPoint3, ParametricProfile};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::FamilySolid;
+use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit::{Edit, apply, SHAPES, shape_token};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 

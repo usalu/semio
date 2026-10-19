@@ -1,21 +1,21 @@
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import {verifyNxSdkBinaryLinksV1} from "../🧊️binary/🔎️verification/🟦️.ts";
 import {createHash} from "node:crypto";
 import {constants} from "node:fs";
 import {lstat,open,opendir,readlink,realpath} from "node:fs/promises";
 import {basename,dirname,isAbsolute,join,relative,resolve,posix,win32} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import corpus from "./🧪️tests/🔣️.json";
 import{nxToolingInstallIdentityV1}from"../🪪️identity/🟦️.ts";
 import{nxAuthorizerReceiptHoldsV1}from"../../🔏️authorizers/📤️receipt/🟦️.ts";
 import {nxSdkSnapshotReceiptHoldsV1,nxSdkSnapshotIdentityV1} from "../📥️snapshot/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {readPhysicalCargoSourceV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import type {ScriptInvocation} from "@semio-tech/process/routing";
 const protocol=schema.definitions.Protocol.const;
 async function boundedInput(path:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl):Promise<Buffer>{requireIssuedResourceControlRefinementV1(store.control,control);checkResourceLeaseControl(control);const bytes=await readPhysicalCargoSourceV1(path,{expectedBytes:null,version:1,root:store.root,maximumBytes:262144,remainingFiles:1},control);if(!bytes)throw Error("Original SDK material input required");return Buffer.from(bytes);}
 export interface NxSdkMaterialRowV1{readonly path:string;readonly bytes:number;readonly allocated:number;}

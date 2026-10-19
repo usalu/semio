@@ -2,9 +2,10 @@
 //! (add, remove, move), itemization, and the storey and phase scope. Each edit is a pure function of the definition and yields the `set-schedule` payload that carries exactly the changed list or value;
 //! whether the result stands is decided by the mutation, not here.
 
-use crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule;
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::{preset, PRESETS};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase, Schedule, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
+use semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::{preset, PRESETS};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
 
 /// 🧩️ One edit as the command carries it: the part of the definition, the operation, the key (a key token, a filter index, a storey id or a phase token) and the value.
 #[derive(Clone, Debug, Default, PartialEq)]

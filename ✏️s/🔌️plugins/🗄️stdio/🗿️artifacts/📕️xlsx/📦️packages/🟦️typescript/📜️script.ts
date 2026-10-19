@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📦️ xlsx TypeScript artifact package router. */
-import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

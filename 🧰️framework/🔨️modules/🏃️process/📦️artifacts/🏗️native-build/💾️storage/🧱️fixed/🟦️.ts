@@ -74,7 +74,8 @@ interface NativeFixedBackendV1{
  detach(options:NativeFixedPlatformOptionsV1,image:string,root:string,operation?:NativeFixedOperationV1):Promise<void>;
 }
 /** 📏️ Declares the finite image envelope; its lease directory fixes the sole queue catalog. */
-export type NativeFixedPlatformOptionsV1=Readonly<{directory:string;leaseDirectory:string;filesystemBytes:number;maximumPhysicalBytes:number;control:ResourceLeaseControl;maximumLeaseDatabaseBytes?:number}>;
+export type {NativeFixedPlatformOptionsV1}from"../🔌️port/🟦️.ts";
+import type{NativeFixedPlatformOptionsV1}from"../🔌️port/🟦️.ts";
 
 type FixedReceiver={retirement?:SuccessfulFixedRetirement;incomingControl:ResourceLeaseControl;openLifetime:(close:()=>Promise<void>)=>()=>Promise<void>;preparation?:FixedPreparationAttempt;system?:ReturnType<typeof nativeFixedWindowsSystemV1>;freshRemoved?:boolean;freshCreated?:boolean;unresolvedChild?:{failure:unknown};parent?:FixedChildScope;options:NativeFixedPlatformOptionsV1;platform:NativeFixedBackendV1;stage:"reserved"|"writer"|"acknowledged"|"gap"|"shared"|"ready"|"maintenance"|"closed"|"unresolved";guard?:Awaited<ReturnType<typeof acquireResourceLease>>;owner?:ReturnType<typeof acceptNativeImageBorrowerV1>;image?:NativeImageStorageV1;facts?:{file:Stats;mapping:string;filesystemBytes:number;device:number;receipt:string;directoryIdentity:string;rootIdentity:string}};
 const fixedReceivers=new Set<FixedReceiver>();

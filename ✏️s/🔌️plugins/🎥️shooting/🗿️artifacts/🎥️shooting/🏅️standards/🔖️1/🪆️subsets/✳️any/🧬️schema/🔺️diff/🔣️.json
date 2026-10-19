@@ -21,7 +21,7 @@
           "additionalProperties": false,
           "required": ["value"],
           "properties": {
-            "value": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }] }
+            "value": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json" }, { "type": "null" }] }
           },
           "x-semio-child-kind": "s.stdio.semio.image"
         }

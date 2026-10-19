@@ -8,7 +8,7 @@
 import type { Preview } from "@storybook/react-vite";
 
 import { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, resolveUiDriver } from "@semio-tech/ui-react";
-import { installPageRuntimeAssets } from "../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
+import { installPageRuntimeAssets } from "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 

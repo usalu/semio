@@ -57,7 +57,17 @@ semio-framework-time-travel = { workspace = true }
 # 🖊️ The drawing text line law (`drawing_text_lines`, `DRAWING_TEXT_LINE_HEIGHT`) the Canvas2d scene-node paint lays
 # text out with — the very law React's `drawSceneNode` imports from `◻️2d`. Target-neutral, workspace-internal.
 semio-framework-2d = { workspace = true }
-ui_wgpu ={ path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-paint = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 # 🖥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `winit_app.rs`/`os_host.rs` already
 # named `ui_host::{WindowDelegate, WindowMetrics, RedrawOutcome, should_request_redraw, PointerRegistry,
@@ -294,7 +304,13 @@ semio-framework-os-renderer-wgpu-test-support = { path = "../../🧯️test-supp
 semio-framework-os-renderer-wgpu-ui-engine-tests = { path = "../../🧿️ui-engine-tests/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { workspace = true }
-ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-paint = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-ui-testing-paint-policy = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }
 semio-framework-ui-action = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
 semio-framework-ui-arena = { path = "../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }

@@ -12,7 +12,7 @@ import { describe, expect, it, test, vi } from "vitest";
 import { type BuiltNode, type NodeGraphScene, pendingPanelUiNode } from "@semio-tech/framework";
 import { FlowGraphCanvasHost, InterpretedUiNode, builtNodeToSnapshot, resizeCanvasBackingStore, panelTabDefinitionToNode } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { meshDataFromKind } from "../../🧱️elements/🌐️World3dHost/🎨️mesh-render/🧱️mesh-parsing-and-residency/🟦️.ts";
-import { sceneMeshKindsFixture as sceneMeshKindFixture } from "../../../../../../../🔨️modules/🏗️mesh-engine/🧪️tests/🧫️fixtures/🟦️.ts";
+import { sceneMeshKindsFixture as sceneMeshKindFixture } from "@semio-tech/framework-mesh-engine-rs/testing/fixtures";
 import { buildContractNode, noopAction } from "../🧰️engine-contract-helpers/🟦️.ts";
 import { surfaceHostRetentionFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 

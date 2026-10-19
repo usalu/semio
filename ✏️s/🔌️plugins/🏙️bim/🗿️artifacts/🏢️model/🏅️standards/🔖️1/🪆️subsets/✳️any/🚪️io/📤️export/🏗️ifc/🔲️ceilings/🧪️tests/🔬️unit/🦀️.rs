@@ -1,6 +1,7 @@
-use crate::standards::v1::subsets::any::io::export::ifc::ceilings::{covering};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, real, rows, string, tags, target};
-use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, Layer, LayerFunction, ModelSnapshot, Point2, Slope, Vertex};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings::covering;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, real, rows, string, tags, target};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, LayerFunction, Point2, Slope, Vertex};
 
 fn vertex(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }
@@ -91,10 +92,10 @@ fn the_ceiling_hangs_its_layers_below_the_storey_top_by_the_offset() {
 
 #[test]
 fn only_a_sloped_ceiling_carries_its_authored_record() {
-    let rows_named = |document: &semio_s_artifact_stdio_contract::part21::Part21Document| rows(document, "IFCPROPERTYSINGLEVALUE").into_iter().filter(|(_, args)| string(args, 0).as_deref() == Some(crate::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW)).count();
+    let rows_named = |document: &semio_s_artifact_stdio_contract::part21::Part21Document| rows(document, "IFCPROPERTYSINGLEVALUE").into_iter().filter(|(_, args)| string(args, 0).as_deref() == Some(semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW)).count();
     assert_eq!(rows_named(&document(&with_ceiling(square(4.0), None))), 0);
     let sloped = document(&with_ceiling(square(4.0), Some(Slope { direction: 0.0, angle: 0.1 })));
-    let record = rows(&sloped, "IFCPROPERTYSINGLEVALUE").into_iter().find(|(_, args)| string(args, 0).as_deref() == Some(crate::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW)).expect("the authored record row");
+    let record = rows(&sloped, "IFCPROPERTYSINGLEVALUE").into_iter().find(|(_, args)| string(args, 0).as_deref() == Some(semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW)).expect("the authored record row");
     let text = record.1[2].as_typed().and_then(|(_, items)| items.first()).and_then(|item| item.as_str()).expect("a string");
     assert!(text.contains("\"slope\"") && text.contains("Hall ceiling"), "{text}");
 }

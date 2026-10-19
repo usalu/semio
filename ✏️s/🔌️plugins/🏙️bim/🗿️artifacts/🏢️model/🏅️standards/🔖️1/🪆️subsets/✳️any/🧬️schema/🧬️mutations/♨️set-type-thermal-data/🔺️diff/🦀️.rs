@@ -2,7 +2,9 @@
 //! model, so the id names at most one of them; a door type has no g-value and no frame fraction. The written values must stay in range (see `window_thermal_problem`); providing only equal values is a no-op.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData;
-use crate::standards::v1::subsets::any::schema::{snapshot::{curtain_thermal_problem, door_thermal_problem, window_thermal_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{curtain_thermal_problem, door_thermal_problem, window_thermal_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetTypeThermalData, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -32,7 +32,7 @@ semio-framework-value-derive = { path = "../../../../../../../🔨️modules/�
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
-ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
@@ -41,4 +41,4 @@ semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-l
 semio-framework-replication = { workspace = true }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
+semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }

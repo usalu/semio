@@ -1,6 +1,6 @@
 /** 🛠️ The captured return, response, input stream and delivered input fixtures shared by the captured return authority parts. */
-import { loadInstanceOutputAdmissionFixture, loadActivationReturnAdmissionFixture, loadActorActivationReturnFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { loadContentInputAuthorityFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadInstanceOutputAdmissionFixture, loadActivationReturnAdmissionFixture, loadActorActivationReturnFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { loadContentInputAuthorityFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import { flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { ActorInstanceLifetime, OwnedShardReturn, ShardClientSettlementTestKit, ShardInstanceLifecycleLease } from "../🧰️settlement-test-kit/🟦️.ts";
 
@@ -52,7 +52,7 @@ export function createCapturedReturnHelpers(kit: ShardClientSettlementTestKit) {
     const stream = await inputStream(lifetime, payloadBytes);
     const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const pending = source.execute([], BUDGET);
     const request = worker.sent.at(-1) as { requestId: string };
-    const { encodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult } = await import("@semio-tech/framework-actor/return");
     const identity = { origin: source.origin!, returnSequence: BigInt(row.returnSequence) };
     const pageBytes = pageLength === undefined ? stream.bytes : stream.bytes.subarray(0, pageLength);
     const response = { kind: "result" as const, requestId: request.requestId, ok: true as const, value: encodeActorReturnResult({ kind: "page", receipt: { identity, pageSequence: 1n, length: pageBytes.length, final: pageBytes.length === stream.bytes.length }, page: createActorBytePage(pageBytes) }) };

@@ -1,7 +1,8 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::house;
-use crate::standards::v1::subsets::any::io::export::ifc::{codec, export_ifc2x3, export_ifc4, model_to_part21, Schema};
-use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::house;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4, model_to_part21};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn without_row(model: &ModelSnapshot, row: &str) -> (ModelSnapshot, Vec<String>) {
@@ -13,7 +14,7 @@ fn without_row(model: &ModelSnapshot, row: &str) -> (ModelSnapshot, Vec<String>)
             }
         }
     }
-    import_ifc2x3(&codec::encode_document(document).expect("the document encodes")).expect("the file imports")
+    import_ifc2x3(&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_document(document).expect("the document encodes")).expect("the file imports")
 }
 
 #[test]

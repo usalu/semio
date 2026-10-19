@@ -1,9 +1,10 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
 #[allow(unused_imports)]
 use semio_framework_geometry::triangulation::triangulate;
 #[allow(unused_imports)]
@@ -12,9 +13,9 @@ use semio_framework_geometry::Point;
 use semio_framework_plugin::{MeshData, World3dColorRamp};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::render::envelope::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
+use semio_s_artifact_bim_model_modify::render::envelope::{u_value_rgb, NEUTRAL, u_value_ticks, boundary_steps, Mode, rgb, boundary_rgb, normal_of, mesh_of, Part, LIFT, triangles_of, polygon_area, to_world, centre, parts, by_placement, u_values};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
 
 fn corner(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x, y, z }
@@ -38,7 +39,7 @@ fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 fn model_with(spaces: Vec<EnvelopeSpace>) -> (ModelSnapshot, ModelInference) {
     let snapshot = parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses");
-    let mut inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let mut inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     inference.energy_envelopes = spaces.into_iter().map(|space| (space.space.clone(), space)).collect();
     (snapshot, inference)
 }

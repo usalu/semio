@@ -1,7 +1,8 @@
 //! 🗃️ Io and retained commands of the BIM editor: the io ports and the bounded command job factory. See [`super`].
 
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::AppIo;
@@ -17,6 +18,8 @@ use semio_framework_plugin::MediaForm;
 use semio_framework_plugin::MediaType;
 use crate::editor::bim::{BIM_RETAINED_PAYLOAD_SCHEMA, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS};
 use crate::editor::bim::*;
+use semio_s_artifact_bim_model_tests::editor::bim::presence;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient;
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface: the implicit document in/out ports only.
@@ -74,14 +77,14 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
         let selection = |domain: &str| input.interaction.selection.get(domain).map(|selection| selection.ids.clone()).unwrap_or_default();
         let view = input.context.and_then(|context| context.view_state.as_ref());
         let presence = input.context.and_then(|context| context.presence_view()).map(|presence| presence.local.clone());
-        let mut ctx = BimDispatchCtx::new(selection(crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN), selection(crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN), view, window_config, presence.as_ref());
+        let mut ctx = BimDispatchCtx::new(selection(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN), selection(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN), view, window_config, presence.as_ref());
         ctx.gestures = Some(self.owner.clone());
-        ctx.window_transient = crate::editor::bim::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
+        ctx.window_transient = semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let emit = input.command.dispatch(&doc, &cfg, &mut ctx)?;
-        crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::record_mutations(Some(&self.owner), input.snapshot, &emit.artifact_mutations);
+        semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::record_mutations(Some(&self.owner), input.snapshot, &emit.artifact_mutations);
         self.completed = true;
         let window_transient = match (ctx.transient_out.take(), view) {
-            (Some(transient), Some(view)) => vec![crate::editor::bim::transient::addressed(view, transient)?],
+            (Some(transient), Some(view)) => vec![semio_s_artifact_bim_model_dispatch_context::editor::bim::transient::addressed(view, transient)?],
             _ => Vec::new(),
         };
         Ok(if ctx.presence_out.is_empty() && window_transient.is_empty() { ArtifactCommandWorkStep::Complete(emit) } else { ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence: ctx.presence_out, transient: Vec::new(), window_transient } } })

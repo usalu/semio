@@ -176,6 +176,9 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 
 // 🔊️RunCLI runs the repo CLI entry point.
 func RunCLI() error {
+	if err := workspace.BindWorkingDirectory(); err != nil {
+		return err
+	}
 	if err := Execute(defaultEngineFactory); err != nil {
 		var exitErr workspace.ExitError
 		if errors.As(err, &exitErr) {

@@ -1,0 +1,159 @@
+{
+  "cases": [
+    {
+      "name": "opaque-generic-instance",
+      "seed": "export interface Box<T> { items: T[] }\nexport interface Point { x: number }\nexport interface Wrapper { box?: Box<Point> }\n",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/opaque-generic-instance.json",
+        "title": "Wrapper",
+        "type": "object",
+        "properties": {
+          "box": {
+            "type": "object"
+          }
+        }
+      },
+      "refused": [
+        "parser Wrapper"
+      ],
+      "valid": [],
+      "invalid": []
+    },
+    {
+      "name": "opaque-alias-of-generic-instance",
+      "seed": "export interface Box<T> { items: T[] }\nexport interface Point { x: number }\nexport type PointBox = Box<Point>;\nexport interface Wrapper { box?: PointBox }\n",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/opaque-alias-of-generic-instance.json",
+        "title": "Wrapper",
+        "type": "object",
+        "properties": {
+          "box": {
+            "type": "object"
+          }
+        }
+      },
+      "refused": [
+        "parser Wrapper"
+      ],
+      "valid": [],
+      "invalid": []
+    },
+    {
+      "name": "opaque-array-of-generic-instance",
+      "seed": "export interface Box<T> { items: T[] }\nexport interface Point { x: number }\nexport interface Wrapper { box?: Box<Point>[] }\n",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/opaque-array-of-generic-instance.json",
+        "title": "Wrapper",
+        "type": "object",
+        "properties": {
+          "box": {
+            "type": "array"
+          }
+        }
+      },
+      "refused": [
+        "parser Wrapper"
+      ],
+      "valid": [],
+      "invalid": []
+    },
+    {
+      "name": "opaque-library-record",
+      "seed": "export interface Box<T> { items: T[] }\nexport interface Point { x: number }\nexport interface Wrapper { box?: Record<string, unknown> }\n",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/opaque-library-record.json",
+        "title": "Wrapper",
+        "type": "object",
+        "properties": {
+          "box": {
+            "type": "object"
+          }
+        }
+      },
+      "refused": [],
+      "valid": [
+        {},
+        {
+          "box": {}
+        },
+        {
+          "box": {
+            "a": 1
+          }
+        }
+      ],
+      "invalid": [
+        {
+          "box": 1
+        },
+        {
+          "box": []
+        },
+        {
+          "box": "text"
+        }
+      ]
+    },
+    {
+      "name": "structured-generic-instance",
+      "seed": "export interface Box<T> { items: T[] }\nexport interface Wrapper { box?: Box<string> }\n",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/structured-generic-instance.json",
+        "title": "Wrapper",
+        "type": "object",
+        "properties": {
+          "box": {
+            "type": "object",
+            "required": [
+              "items"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "refused": [],
+      "valid": [
+        {},
+        {
+          "box": {
+            "items": []
+          }
+        },
+        {
+          "box": {
+            "items": [
+              "a"
+            ]
+          }
+        }
+      ],
+      "invalid": [
+        {
+          "box": {}
+        },
+        {
+          "box": {
+            "items": [
+              1
+            ]
+          }
+        },
+        {
+          "box": 1
+        }
+      ]
+    }
+  ]
+}

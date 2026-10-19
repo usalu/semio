@@ -1,6 +1,6 @@
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
-import { discoverCargoWorkspaces } from "../../../📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { discoverCargoWorkspaces } from "@semio-tech/repo-lib/cargo";
 
 export type MutationInventoryProviderV1 = { script: string; roots: string[] };
 

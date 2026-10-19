@@ -3,7 +3,7 @@
 //! 📎 https://www.w3.org/TR/SVG11/masking.html#ClippingPaths
 
 use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout};
 use std::collections::BTreeMap;
 
 #[derive(value_derive::ToValue)]

@@ -22,7 +22,7 @@ import {
 } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 import { type TreePanelConfig, UI_TERMINOLOGY_NATIVE } from "@semio-tech/ui-react";
-import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
 import { TreeWindowContext, type TreeWindowContextValue, type TreeWindowReportV1 } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";

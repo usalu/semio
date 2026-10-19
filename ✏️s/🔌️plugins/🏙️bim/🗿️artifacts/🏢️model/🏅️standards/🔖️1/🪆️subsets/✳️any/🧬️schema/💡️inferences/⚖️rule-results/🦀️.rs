@@ -13,13 +13,14 @@
 //!
 //! Related: DIN 18065 (stairs), DIN 18040 (accessible building), ASR A1.8, the building codes of the federal states (MBO), <https://www.din.de>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
-use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, Rule, RuleKind};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Rule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, RuleKind};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
@@ -85,22 +86,22 @@ pub fn members(snapshot: &ModelSnapshot, rule: &Rule) -> Vec<Member> {
     let mut rows: Vec<Member> = Vec::new();
     match rule.kind {
         RuleKind::MaxRiser | RuleKind::MinTread | RuleKind::MinStairWidth => {
-            rows.extend(snapshot.stairs.iter().filter(|(id, row)| crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.stairs.iter().filter(|(id, row)| semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MaxRampSlope => {
-            rows.extend(snapshot.ramps.iter().filter(|(id, row)| crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.ramps.iter().filter(|(id, row)| semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MinDoorWidth => {
             rows.extend(snapshot.openings.iter().filter(|(_, row)| matches!(row.kind, OpeningKind::Door { .. })).filter_map(|(id, _)| {
-                let storey = crate::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, id)?;
-                crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(storey)).then(|| Member { id: id.clone(), storey: Some(storey.clone()) })
+                let storey = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, id)?;
+                semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(storey)).then(|| Member { id: id.clone(), storey: Some(storey.clone()) })
             }));
         }
         RuleKind::MinClearHeight | RuleKind::MinCorridorWidth => {
-            rows.extend(snapshot.spaces.iter().filter(|(id, row)| filtered(&row.usage) && crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
+            rows.extend(snapshot.spaces.iter().filter(|(id, row)| filtered(&row.usage) && semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, Some(&row.storey))).map(|(id, row)| Member { id: id.clone(), storey: Some(row.storey.clone()) }));
         }
         RuleKind::MaxCompartmentArea => {
-            rows.extend(snapshot.zones.iter().filter(|(id, row)| filtered(&row.category) && crate::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, None)).map(|(id, _)| Member { id: id.clone(), storey: None }));
+            rows.extend(snapshot.zones.iter().filter(|(id, row)| filtered(&row.category) && semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::scope_covers(&scope, snapshot, id, None)).map(|(id, _)| Member { id: id.clone(), storey: None }));
         }
     }
     rows

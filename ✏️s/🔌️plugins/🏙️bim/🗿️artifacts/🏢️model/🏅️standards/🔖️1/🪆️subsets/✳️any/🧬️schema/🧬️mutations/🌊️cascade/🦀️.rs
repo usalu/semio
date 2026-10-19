@@ -2,7 +2,10 @@
 //! storeys and grid lines → the views and schedules scoped to them → everything on a storey → panel overrides and openings of removed curtain walls and openings of removed walls → properties and classifications
 //! of every removed element), the sparse diff that deletes it, and its inverse of one concrete create (or data setter) per record.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{ModelSnapshot, TopConstraint}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, KeyedDelta, Patch};
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeSet;
 

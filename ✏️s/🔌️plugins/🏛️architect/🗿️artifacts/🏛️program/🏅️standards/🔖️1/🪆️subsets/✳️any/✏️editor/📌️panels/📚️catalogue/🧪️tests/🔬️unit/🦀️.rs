@@ -4,9 +4,9 @@ use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
-use crate::editor::architect::base::ui_label;
+use crate::editor::architect::editor_vocabulary::ui_label;
 #[allow(unused_imports)]
-use crate::{editor::architect::base::architect_action, editor::architect::base::ui_value_map, editor::architect::base::ui_value_text};
+use crate::{editor::architect::editor_vocabulary::architect_action, editor::architect::editor_vocabulary::ui_value_map, editor::architect::editor_vocabulary::ui_value_text};
 #[allow(unused_imports)]
 use semio_framework_plugin::tree_item_with_action;
 #[allow(unused_imports)]

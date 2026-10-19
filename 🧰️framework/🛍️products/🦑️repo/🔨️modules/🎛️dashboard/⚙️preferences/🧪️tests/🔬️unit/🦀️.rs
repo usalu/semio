@@ -177,11 +177,35 @@ fn p2_1_a_broken_journal_never_stops_the_dashboard_from_starting() {
     fs::create_dir_all(&root).unwrap();
     fs::write(root.join("local.jsonl"), "this is not an event\n").unwrap();
     assert!(load(&root, &parsed).is_err(), "the strict loader still reports it");
-    let (preferences, problems) = load_lenient(&root, &parsed).unwrap();
+    let (preferences, problems) = load_lenient_in(&root, &parsed, &|_| None).unwrap();
     assert_eq!(preferences, Preferences::default());
     assert_eq!(problems.len(), 1);
     assert!(problems[0].contains("local.jsonl"), "{problems:?}");
     fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn the_language_comes_from_the_system_and_then_the_declared_fallback_below_every_preference_layer() {
+    let root = scratch("language");
+    fs::create_dir_all(&root).unwrap();
+    let parsed = dashboard_core::args::parse(&["dashboard".into(), "--config".into(), root.join("local.jsonl").display().to_string()]);
+    let system = |name: &str| (name == "LANG").then(|| "de_DE.UTF-8".to_string());
+    assert_eq!(load_in(&root, &parsed, &system).unwrap().language, "de", "the system names German");
+    assert_eq!(load_in(&root, &parsed, &|_| None).unwrap().language, language::declared().fallback().as_str(), "the system names none, so the declared fallback speaks");
+    assert_eq!(Preferences::default().language, language::declared().fallback().as_str());
+    append(&local_path(&root, &parsed), &Change::parse(r#"{"language":"en"}"#).unwrap()).unwrap();
+    assert_eq!(load_in(&root, &parsed, &system).unwrap().language, "en", "a stored choice beats the system");
+    let override_de = |name: &str| (name == "SEMIO_LOCALE").then(|| "de".to_string());
+    assert_eq!(load_in(&root, &parsed, &override_de).unwrap().language, "de", "the environment override beats the stored choice");
+    assert!(load_in(&root, &parsed, &|name: &str| (name == "SEMIO_LOCALE").then(|| "xx".to_string())).is_err(), "the override stays strict");
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn compaction_keeps_the_system_language_free_unless_the_journal_chose_one() {
+    let preferences = Preferences::default();
+    assert_eq!(snapshot(&preferences, false).language, None);
+    assert_eq!(snapshot(&preferences, true).language.as_deref(), Some(preferences.language.as_str()));
 }
 
 #[test]
@@ -197,6 +221,7 @@ fn every_scenario_of_the_preferences_feature_is_proved_by_a_test() {
         ("Resolving layered preferences", &["preferences_match_independent_language_neutral_vectors", "explicit_arguments_override_environment_and_reject_mistakes"]),
         ("Customization survives reopening", &["preference_events_replay_and_serialize_concurrent_commands"]),
         ("The prefix key and single bindings are customized by events", &["keymap_customizations_travel_as_preference_events_and_layers_merge_per_binding", "invalid_keymap_changes_are_rejected_before_they_can_be_published"]),
+        ("The language falls back from the stored choice to the system and then to the declared chain", &["the_language_comes_from_the_system_and_then_the_declared_fallback_below_every_preference_layer", "compaction_keeps_the_system_language_free_unless_the_journal_chose_one"]),
         ("The language follows the preference everywhere", &["the_catalogue_follows_the_chosen_language", "p1_11_no_user_visible_text_is_hard_coded_outside_the_catalogue"]),
         ("Discovery does not block interaction", &["the_job_publishes_the_known_commands_first_then_the_result_of_the_walk_and_finishes", "a_cancelled_discovery_returns_nothing_and_leaves_no_snapshot"]),
         ("Keyboard and mouse use the same command selection", &["journeys_match_the_shared_vectors"]),

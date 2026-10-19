@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_window_type::DeleteWindowType;
 use crate::standards::v1::subsets::any::schema::mutations::create_window_type::CreateWindowType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateWindowType, base: &ModelSnapshot) -> Vec<Op>
 where

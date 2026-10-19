@@ -4,7 +4,9 @@ import { assetPathFromRequest } from "../../../../../🖼️assets/📦️packag
 import { existsSync, statSync, readFileSync, mkdirSync, cpSync } from "node:fs";
 import { type MeshDeliveryCatalog, parseMeshDeliveryCatalog } from "../../../../../🖼️assets/📦️packages/🟦️typescript/🥽️mesh/🟦️.ts";
 import { serveFileWithValidatorsV1 } from "../📤️file-serving/🟦️.ts";
-import type { MeshCollectionAssetSpecV1 } from "../🟦️.ts";
+
+/** 🥽️ Supplies one owner-authored mesh catalog to its build provider. */
+export type MeshCollectionAssetSpecV1 = { readonly kind: "mesh-collection"; readonly route: string; readonly catalog: string };
 
 function contentTypeForUiAsset(filePath: string): string | undefined {
   if (filePath.endsWith(".woff2")) {

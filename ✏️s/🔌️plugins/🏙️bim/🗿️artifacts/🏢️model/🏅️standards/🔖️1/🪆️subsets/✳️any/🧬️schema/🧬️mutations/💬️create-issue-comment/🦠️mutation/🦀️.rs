@@ -1,6 +1,7 @@
 //! 💬️ `create-issue-comment` payload. Adds a comment to an issue: who wrote it, when and what.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{IssueComment, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{IssueComment, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateIssueComment {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateIssueComment
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateIssueComment> + From<crate::standards::v1::subsets::any::schema::mutations::delete_issue_comment::DeleteIssueComment>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateIssueComment> + From<semio_s_artifact_bim_model_mut_any_121::standards::v1::subsets::any::schema::mutations::delete_issue_comment::DeleteIssueComment>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "issue-comment", kind: "create-issue-comment", record: "CreateIssueComment" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

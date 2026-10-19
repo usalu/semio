@@ -217,7 +217,7 @@ pub mod testing {
     pub fn close<A: ArtifactApp, W: ArtifactCommandWork<A> + ?Sized>(work: &mut W) -> usize {
         work.begin_close();
         let mut turns = 0;
-        while !matches!(work.close_step(unbounded_grant()), InteractiveJobCloseStep::Complete { .. }) {
+        while !matches!(semio_framework_job::close_with_self_funded_context(unbounded_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
             turns += 1;
             assert!(turns < 100_000, "a work closes in a bounded number of turns");
         }

@@ -1,7 +1,8 @@
 //! ↩️ Inverse of `SetMaterial`: an absolute `SetMaterial` restoring the base value of exactly the fields the forward really changes, none when the material is absent or nothing changes.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_material::SetMaterial;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Patch;
 
 pub fn inverse<Op>(payload: &SetMaterial, base: &ModelSnapshot) -> Vec<Op>
 where

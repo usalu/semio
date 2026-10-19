@@ -1,6 +1,6 @@
 /** 🌱️ `create-step` payload — mirrors Rust `CreateStep` (`../🦀️.rs:14`).
  * Its `#[value(rename_all = "camelCase")]` spells its fields camelCase, like `FormMutation`'s enum tag. */
-import type { FormStep } from "../../🟦️.ts";
+import type { FormStep } from "../../../🧱️form-model/🟦️.ts";
 
 export interface CreateStep {
   step: FormStep;

@@ -39,7 +39,13 @@ semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/�
 semio-framework-os-node-graph = { path = "../../../../../🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-framework-os-kernel" }

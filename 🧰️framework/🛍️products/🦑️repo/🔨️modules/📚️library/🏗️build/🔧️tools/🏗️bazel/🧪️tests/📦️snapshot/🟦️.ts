@@ -9,10 +9,10 @@ import{join}from"node:path";
 import{Database}from"bun:sqlite";
 import fixture from"./🔣️.json";
 import schemaComponent from"../../🧬️schema/🔣️.json";const schema=schemaComponent.definitions.OutputSnapshot;
-import{withBuildTestInvocationV1}from"../../../../🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 
 test("Bazel snapshot link metadata agrees with an independent closed schema oracle",async()=>{
- const{validateJsonSchemaSubset}=await import("../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts"),admit=new Ajv({strict:true}).compile(schema);
+ const{validateJsonSchemaSubset}=await import("@semio-tech/schema-validator-ts"),admit=new Ajv({strict:true}).compile(schema);
  for(const[accepted,entries]of[[true,fixture.entries],[false,fixture.invalid]]as const)for(const entry of entries){const value={version:1,roots:["out"],entries:[entry]};expect(admit(value),JSON.stringify(admit.errors)).toBe(accepted);expect(validateJsonSchemaSubset(schema,value).length===0).toBe(accepted);}
 });
 

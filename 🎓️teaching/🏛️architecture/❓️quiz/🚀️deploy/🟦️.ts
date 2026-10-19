@@ -35,18 +35,20 @@ import { spawn, spawnSync } from "node:child_process";
 import { X509Certificate, createHash, randomBytes } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { connect } from "node:tls";
 import { gzipSync } from "node:zlib";
-import { cargoTargetDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { workspaceCargoVersion } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { runRepositoryCommand as runOwnedCommand, type RepositoryCommandPolicyV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import type { ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withViteArtifactV1 } from "@semio-tech/repo-lib/dev";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { workspaceCargoVersion } from "@semio-tech/repo-lib/cargo";
+import { runRepositoryCommand as runOwnedCommand } from "@semio-tech/process/execution";
+import type { RepositoryCommandPolicyV1 } from "../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { PRESENCE_PROTOCOL, type PresenceFrame } from "../../../../🧰️framework/🛍️products/🖥️server/🧬️wire-types/🟦️.ts";
 import { decodeCommandOutcome, decodePresenceFrame, encodeCommandEnvelope, encodePresenceFrame, encodeQueryEnvelope } from "../../../../🧰️framework/🛍️products/🖥️server/🔤️codec/🟦️.ts";
 import { presenceSocketUrl } from "../../../../🧰️framework/🛍️products/🖥️server/🛣️routes-and-sockets/🟦️.ts";
 import type { IdentityClaim } from "../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts";
-import { TEACHING_WORKSPACE } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { TEACHING_WORKSPACE, buildProctor, launchProctor } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 import catalog from "../🔣️.json" with { type: "json" };
 import deployment from "./🔣️.json" with { type: "json" };
 
@@ -218,12 +220,12 @@ export function sourceRevision(repoRoot: string): Readonly<{ revision: string; c
 }
 
 /** ✅️ `proctor check <catalog>` over the site's catalog with the release binary the image ships: the Rust core validates the
- * catalog and every quiz it names and exits non-zero with the issues. The release profile and a private target directory keep
- * the check off the debug executable a running dev proctor holds open (Windows refuses to replace a running image, and
- * uplifted binaries are hard links into the shared build directory). */
-export async function checkQuizCatalog(invocation: ScriptInvocation, repoRoot: string): Promise<void> {
-  const env = { ...process.env, CARGO_TARGET_DIR: `${cargoTargetDirectory(repoRoot)}-architecture-quiz` };
-  await runOwnedCommand(invocation, "cargo", ["run", "--release", "--quiet", "--package", "teaching-proctor", "--bin", "proctor", "--", "check", resolve(repoRoot, CATALOG)], join(repoRoot, TEACHING_WORKSPACE), "architecture-quiz:check", QUIZ_COMMAND_POLICY, { env });
+ * catalog and every quiz it names and exits non-zero with the issues. The binary is built through the repository's cargo
+ * launcher and run from a private copy, so the check never holds the executable a running dev proctor has open. */
+export async function checkQuizCatalog(repoRoot: string): Promise<void> {
+  const executable = await buildProctor(repoRoot, process.env, undefined, "release");
+  const status = await launchProctor(executable, repoRoot, ["check", resolve(repoRoot, CATALOG)], process.env).exited;
+  if (status !== 0) throw new Error(`proctor check exited with status ${status}`);
 }
 //#endregion 🧰️Tools
 
@@ -380,25 +382,35 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
   return problems;
 }
 
+/** 👓️ Runs `body` with the site the last `build` published — the files Vite wrote into the repository's product store —
+ * held under the artifact reader's custody until `body` settles; `path` is the directory to read, serve or stage from. The
+ * build mode is the one the invocation was born with ({@link readBuildMode} of `SEMIO_BUILD_MODE`). */
+export function withQuizSiteArtifact<T>(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, body: (artifact: { readonly path: string; readonly files: readonly string[] }) => Promise<T>): Promise<T> {
+  return withViteArtifactV1(repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE), `vite:${relative(repoRoot, bundleRoot)}`, invocation, scriptCompilerAdmissionControlV1(invocation, "vite:quiz-site-reader", 0), body);
+}
+
 /** 🚚️ `publish` — a fresh release build of the site with the proctor origin baked in (`PROCTOR_URL`, else the production
- * proctor), verified as the CDN artifact and staged with `_headers` under `dist/pages/quizzes`, ready for any static host
- * (GitHub Pages, Cloudflare Pages, Netlify). Nothing is uploaded; a build for another proctor is flagged as a rehearsal. */
-export async function publishQuizSite(bundleRoot: string, build: () => Promise<void>): Promise<void> {
+ * proctor), verified as the CDN artifact where the build published it and staged with `_headers` under
+ * `dist/<mode>/pages/quizzes`, ready for any static host (GitHub Pages, Cloudflare Pages, Netlify). Nothing is uploaded; a
+ * build for another proctor is flagged as a rehearsal. */
+export async function publishQuizSite(invocation: ScriptInvocation, repoRoot: string, bundleRoot: string, build: () => Promise<void>): Promise<void> {
   const proctorOrigin = releaseProctorOrigin();
   say(`building the site for ${QUIZ_SITE_ORIGIN} against ${proctorOrigin}`);
   await build();
-  const dist = join(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE));
-  const problems = siteArtifactProblems(dist, proctorOrigin);
-  if (problems.length > 0) throw new Error(`the site artifact is not publishable:\n- ${problems.join("\n- ")}`);
-  const pages = join(dist, QUIZ_PAGES_DIRECTORY);
-  rmSync(join(dist, "pages"), { recursive: true, force: true });
-  const files = siteFiles(dist, STAGED_DIRECTORIES);
-  for (const path of files) {
-    mkdirSync(dirname(join(pages, path)), { recursive: true });
-    copyFileSync(join(dist, path), join(pages, path));
-  }
-  writeFileSync(join(pages, "_headers"), QUIZ_SITE_HEADERS);
-  say(`staged ${files.length + 1} files (${files.reduce((sum, path) => sum + statSync(join(dist, path)).size, 0)} bytes) in ${pages}`);
+  await withQuizSiteArtifact(invocation, repoRoot, bundleRoot, async (artifact) => {
+    const problems = siteArtifactProblems(artifact.path, proctorOrigin);
+    if (problems.length > 0) throw new Error(`the site artifact is not publishable:\n- ${problems.join("\n- ")}`);
+    const dist = join(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE));
+    const pages = join(dist, QUIZ_PAGES_DIRECTORY);
+    rmSync(join(dist, "pages"), { recursive: true, force: true });
+    const files = siteFiles(artifact.path);
+    for (const path of files) {
+      mkdirSync(dirname(join(pages, path)), { recursive: true });
+      copyFileSync(join(artifact.path, path), join(pages, path));
+    }
+    writeFileSync(join(pages, "_headers"), QUIZ_SITE_HEADERS);
+    say(`staged ${files.length + 1} files (${files.reduce((sum, path) => sum + statSync(join(artifact.path, path)).size, 0)} bytes) in ${pages}`);
+  });
   if (proctorOrigin !== QUIZ_PROCTOR_ORIGIN) say(`REHEARSAL artifact: it talks to ${proctorOrigin}, not ${QUIZ_PROCTOR_ORIGIN}; do not upload it`);
 }
 //#endregion 🌐️Site
@@ -965,8 +977,8 @@ export async function checkQuizDeployment(invocation: ScriptInvocation, repoRoot
       if (drift.length > 0) throw new Error(`the deployment drifted:\n- ${drift.join("\n- ")}`);
     },
     "sources type-checked": () => runOwnedCommand(invocation, "bun", ["repo", "run", `${PROJECT}:typecheck`], repoRoot, "architecture-quiz:typecheck", QUIZ_COMMAND_POLICY),
-    "catalog valid in the Rust core": () => checkQuizCatalog(invocation, repoRoot),
-    "site built and verified as the CDN artifact": () => publishQuizSite(bundleRoot, build),
+    "catalog valid in the Rust core": () => checkQuizCatalog(repoRoot),
+    "site built and verified as the CDN artifact": () => publishQuizSite(invocation, repoRoot, bundleRoot, build),
     "proctor image built": () => buildQuizImage(invocation, repoRoot, [...tagged, ...jobs]),
     "proctor image checked": () => checkQuizImage(repoRoot, tagged),
     "stack checked": () => checkQuizStack(tagged),

@@ -1,0 +1,29 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "tsBuildInfoFile": null,
+  "baseUrl": "/Users/ueli/Documents/semio",
+  "paths": {
+   "@semio-tech/assets": [
+    "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"
+   ]
+  }
+ },
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🐾️pets/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🐾️pets/🎪️stage/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🟦️.tsx",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🧮transform/🎛️layer-inference/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🧮transform/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🖼️render/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📍spatial/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/🥧shape/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/🔬️probes/🟦️.ts"
+ ],
+ "include": []
+}

@@ -22,7 +22,7 @@ import { describe, it } from "vitest";
 import { SHELL_KEYBINDINGS, ariaKeyshortcutsText, composeControlKeybindings, formatKeybindingShortcut } from "@semio-tech/ui-react";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import type { AppRole, ArtifactDialect } from "@semio-tech/framework";
-import { resolveBootQueryAppRole } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
+import { resolveBootQueryAppRole } from "@semio-tech/framework-os-dev/boot-query";
 import {
   MODE_STEP_CONTROL_IDS,
   SEALED_INSTANCE_DROP_CODE,

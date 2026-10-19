@@ -1,19 +1,19 @@
 /** ⚙️ Neutral and React oracle for General Tree projection and bottom-panel flow. */
 import { readFileSync } from "node:fs";
-import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { act, fireEvent, render } from "@testing-library/react";
 import { createElement as h, useState } from "react";
 import { describe, expect, test, vi } from "vitest";
-import { Button } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx";
-import { Input } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️.tsx";
-import { Stepper } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx";
-import { Slider } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx";
-import { Toggle } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx";
-import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx";
+import { Button } from "@semio-tech/ui-react";
+import { Input } from "@semio-tech/ui-react";
+import { Stepper } from "@semio-tech/ui-react";
+import { Slider } from "@semio-tech/ui-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@semio-tech/ui-react";
+import { Toggle } from "@semio-tech/ui-react";
+import { Tree } from "@semio-tech/ui-react";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const frameworkRoot = join(engineRoot, "..", "..", "..", "..", "..");

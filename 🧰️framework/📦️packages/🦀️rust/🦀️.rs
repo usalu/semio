@@ -35,7 +35,7 @@ pub use semio_framework_onboarding as onboarding;
 pub const FRAMEWORK_RESERVED_CONTRIBUTIONS: [manifest::ReservedContribution; 2] = [semio_framework_time_travel_actions::RESERVED, semio_framework_tool_run_actions::RESERVED];
 //#endregion 🧩️ReservedFeatures
 
-pub use ui_wgpu::wgpu::IconName;
+pub use semio_framework_ui_declaration::IconName;
 pub use semio_framework_io_schema as io_schema;
 pub use semio_framework_io_sqlite_snapshot as sqlite_snapshot;
 pub use action_bus::{

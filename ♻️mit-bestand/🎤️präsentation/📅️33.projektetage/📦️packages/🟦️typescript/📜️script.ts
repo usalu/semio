@@ -7,11 +7,9 @@ import {resolveTestLevel} from "../../../../../🧰️framework/🔨️modules/�
 /** 🧭️ `@semio-tech/mit-bestand-praesentation-projektetage` task router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
 import {BundleScript, ScriptRouter} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import {playgroundDevPortString, playgroundPortEnv} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import { playgroundDevPortString, playgroundPortEnv, runViteBunxDev, runViteBuild } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 
-import {runViteBunxDev} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import {runViteBuild} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🏗️build/🟦️.ts";
-import {runVitest} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import {runVitest} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {

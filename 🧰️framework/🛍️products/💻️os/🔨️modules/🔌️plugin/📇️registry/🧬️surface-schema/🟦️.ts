@@ -1,10 +1,9 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { policyExtractRustSchemaFields } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
-import type { PolicySchemaFieldShape, PolicySchemaLeafExtract } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
-import { policyAppPresenceTypeName } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🗺️surface/🧱️contract/🟦️.ts";
+import { policyExtractRustSchemaFields, policyAppPresenceTypeName } from "@semio-tech/repo-lib/inventory";
+import type { PolicySchemaFieldShape, PolicySchemaLeafExtract } from "@semio-tech/repo-lib/inventory";
 import { TAXONOMY } from "../🔎️discovery/🟦️.ts";
 import { CONFIG_FACET_DIR, PRESENCE_FACET_DIR, SCHEMA_FACET_DIR, TAXONOMY_LEAF_FILENAME, findNewContractPluginRoots, listDirs, surfaceDirsForPlugin, taxonomySchemaFilenames } from "../🗿️taxonomy-validation/🟦️.ts";
 
@@ -651,7 +650,7 @@ export function runSurfaceSchemaProjection(repoRoot: string, options: SurfaceSch
 /** 🚪️ `surface-schema` CLI: project every lane, or verify with `--check`. */
 export class SurfaceSchemaScript extends BundleScript {
   run(segments: string[]): void {
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = findWorkspaceRoot();
     const controller = new AbortController();
     const cancel = (): void => controller.abort();
     process.once("SIGINT", cancel);

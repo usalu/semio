@@ -5,7 +5,9 @@ import{createHash}from"node:crypto";
 import{mkdtemp,writeFile,rm}from"node:fs/promises";
 import{join}from"node:path";
 import*as owner from"../../🟦️.ts";
-import{planRustUnitsV1,readRustUnitV1,type RustUnitPlanV1}from"../../../🟦️.ts";
+import{planRustUnitsV1}from"../../../🟦️.ts";
+import{readRustUnitV1}from"../../../🧬️definition/🟦️.ts";
+import type{RustUnitPlanV1}from"../../🟦️.ts";
 import{bindRustUnitDependencyArtifactsV1,type RustUnitReceiptV1}from"../../../📤️receipt/🟦️.ts";
 import fixture from"../../../🧪️tests/🧫️fixtures/🔣️.json";
 import schema from"../../🧬️schema/🔣️.json";
@@ -13,10 +15,10 @@ import unitSchema from"../../../🧬️schema/🔣️.json";
 import contextSchema from"../../../🧭️context/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
-import{projectCargoRlibProfileV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📐️profile/🟦️.ts";
-import{registerBuildTestLawV1}from"../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{projectCargoRlibProfileV1}from"@semio-tech/process/artifacts/native-build/units/profile";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import{captureRustUnitGraphInputsV1,iterateRustUnitPlansV1}from"../../🕸️graph/🟦️.ts";
 function inputs(mode:"prototype"|"release"){return fixture.units.map(value=>{const unit=readRustUnitV1(structuredClone(value));unit.mode=mode;unit.execution={root:"/repo",policy:mode==="prototype"?"compiler-context-v2":"temporary-v1"};unit.profile=mode;unit.profileData={...unit.profileData,name:mode,incremental:mode==="prototype",...(mode==="release"?{opt_level:"3",lto:"thin",codegen_units:1,debuginfo:0,debug_assertions:false,overflow_checks:false}:{})};unit.arguments=[...projectCargoRlibProfileV1(unit.profileData,{edition:unit.target.edition,kind:unit.target.kind,operation:unit.operation,roles:[unit.target.role],triple:unit.target.triple}).arguments,"-Zthreads=1"];unit.environment={...corpus.environment};unit.dependencies=unit.dependencies.map(edge=>({...edge,artifactDigest:null}));return unit;});}
 function receipt(plan:RustUnitPlanV1):RustUnitReceiptV1{return{version:1,unit:plan.unit.id,semanticDigest:plan.digest,mode:plan.unit.mode,dependencyDigests:[],artifacts:plan.unit.outputs.map(path=>({path,digest:"a".repeat(64),bytes:1}))};}

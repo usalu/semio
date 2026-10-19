@@ -345,6 +345,11 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode, progress func(searc
 	if err != nil {
 		return nil, err
 	}
+	includesSections, err := treeIncludesSections(ctx, root)
+	if err != nil {
+		return nil, err
+	}
+	newMeta.IncludeSections = includesSections
 	dir := getCacheDir()
 	indexPath := filepath.Join(dir, "index.search")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -359,7 +364,7 @@ func ensureCacheIndexed(ctx context.Context, root *TreeNode, progress func(searc
 		return nil, err
 	}
 	existing, metaErr := loadCacheMeta(indexPath)
-	if metaErr == nil && existing.Fingerprint == fingerprint {
+	if metaErr == nil && existing.Fingerprint == fingerprint && existing.IncludeSections == includesSections {
 		index, err := search.Open(indexPath)
 		if err != nil {
 			return nil, fmt.Errorf("open current search index: %w", err)
@@ -476,6 +481,27 @@ func acquireSearchCacheLock(ctx context.Context, path string, progress func(sear
 		}
 	}
 	return nil, errors.New("search index lock timeout")
+}
+
+// 🧩️treeIncludesSections reports whether the tree carries section or definition nodes, the part of a tree an index must not be reused without.
+func treeIncludesSections(ctx context.Context, root *TreeNode) (bool, error) {
+	if root == nil {
+		return false, errors.New("search tree is required")
+	}
+	stack := []*TreeNode{root}
+	for len(stack) > 0 {
+		if err := ctx.Err(); err != nil {
+			return false, err
+		}
+		last := len(stack) - 1
+		node := stack[last]
+		stack = stack[:last]
+		if node.Kind == TreeNodeSection || node.Kind == TreeNodeDefinition {
+			return true, nil
+		}
+		stack = append(stack, node.Children...)
+	}
+	return false, nil
 }
 
 func collectSearchIndexNodes(ctx context.Context, root *TreeNode, progress func(search.Progress)) ([]*TreeNode, error) {

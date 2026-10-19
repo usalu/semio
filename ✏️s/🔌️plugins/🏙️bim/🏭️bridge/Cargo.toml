@@ -18,4 +18,5 @@ semio-framework-pack-json = { path = "../../../../🧰️framework/🔨️module
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 pack = { path = "../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-s-artifact-bim-model = { path = "../🗿️artifacts/🏢️model/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-190 = { path = "../🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-snapshot = { path = "../🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }

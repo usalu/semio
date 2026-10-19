@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     ".": "./pkg/framework_editor.js",
-    "./pkg/framework_editor.js": "./pkg/framework_editor.js"
+    "./pkg/framework_editor.js": "./pkg/framework_editor.js",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
   },
   "bundleKind": "library",
   "scripts": {

@@ -89,7 +89,7 @@ impl ShellInputState {
     /// leave behind.
     pub fn close_open_selects(&mut self) {
         for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
-            ui_wgpu::wgpu::clear_select_scroll(&mut self.scroll_offsets, &key);
+            semio_framework_ui_wgpu_controls::select::clear_select_scroll(&mut self.scroll_offsets, &key);
             self.open_selects.insert(key, false);
         }
     }
@@ -112,16 +112,16 @@ impl ShellInputState {
     pub fn resolve_context_menu_surface(&self, x: f32, y: f32, node_id: Option<&str>, edge_id: Option<&str>, surfaces: &SurfaceState) -> ContextMenuSurfaceResolution {
         let mut fallback_hits = Vec::new();
         if let Some(node_id) = node_id {
-            fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
+            fallback_hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "node".into(), id: node_id.into(), label: None });
         }
         if let Some(edge_id) = edge_id {
-            fallback_hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
+            fallback_hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
         if let Some((window_id, body)) = self.retained_context_menu_window(x, y) {
             if let Some(resolved) = semio_framework_os_renderer_wgpu_ui_engine::scene_interaction::surface_context_menu_target(&window_id, x - body.x, y - body.y) {
                 let kind = semio_framework_os_renderer_wgpu_scene_render::context_menu_surface_kind_id(resolved.kind).to_string();
                 let semio_framework_os_renderer_wgpu_scene_render::SceneContextMenuTarget { mut hits, mut selection, text } = resolved.target;
-                if resolved.kind == ui_wgpu::wgpu::SurfaceKind::World3d {
+                if resolved.kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d {
                     if let Some(state) = surfaces.world3d_state_for_window(&window_id) {
                         let (world_hits, world_selection) = infinite_world::world::world3d_context_menu_surface(&state.selection);
                         hits = world_hits;
@@ -182,14 +182,14 @@ impl ShellInputState {
     }
 
     /** ⌨️ Routes keyboard input to the open shell context menu. */
-    pub fn context_menu_handle_key(&mut self, action: ui_wgpu::wgpu::KeyAction) -> ContextMenuKeyOutcome {
+    pub fn context_menu_handle_key(&mut self, action: semio_framework_ui_wgpu_input::KeyAction) -> ContextMenuKeyOutcome {
         let Some(menu) = self.context_menu.as_mut() else {
             return ContextMenuKeyOutcome::Ignored;
         };
         let root = menu.items.clone();
         let path = menu.active.clone();
         match action {
-            ui_wgpu::wgpu::KeyAction::Escape => {
+            semio_framework_ui_wgpu_input::KeyAction::Escape => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                     return ContextMenuKeyOutcome::Consumed;
@@ -197,7 +197,7 @@ impl ShellInputState {
                 self.context_menu = None;
                 return ContextMenuKeyOutcome::CloseMenu;
             }
-            ui_wgpu::wgpu::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
+            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') => {
                 let ordinal = key.parse::<usize>().ok();
                 let Some(ordinal) = ordinal else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -208,15 +208,15 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            ui_wgpu::wgpu::KeyAction::ArrowUp => {
+            semio_framework_ui_wgpu_input::KeyAction::ArrowUp => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::ArrowDown => {
+            semio_framework_ui_wgpu_input::KeyAction::ArrowDown => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::ArrowLeft => {
+            semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => {
                 if menu.active.len() > 1 {
                     let parent = menu.active[..menu.active.len() - 1].to_vec();
                     menu.active = parent.clone();
@@ -224,13 +224,13 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::ArrowRight => {
+            semio_framework_ui_wgpu_input::KeyAction::ArrowRight => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Space(true) => {
+            semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::Space(true) => {
                 let active = menu.active.clone();
                 let Some(item) = context_menu_item_at_path(&root, &active) else {
                     return ContextMenuKeyOutcome::Ignored;
@@ -250,21 +250,21 @@ impl ShellInputState {
                 }
                 return ContextMenuKeyOutcome::Ignored;
             }
-            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
+            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
                 menu.active = context_menu_move_active(&root, &path, false);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
+            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
                 menu.active = context_menu_move_active(&root, &path, true);
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
+            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
                 if menu.active.len() > 1 {
                     menu.active.pop();
                 }
                 return ContextMenuKeyOutcome::Consumed;
             }
-            ui_wgpu::wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
+            semio_framework_ui_wgpu_input::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
                 if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
                     menu.active = next;
                 }
@@ -319,9 +319,9 @@ impl ShellInputState {
     /// `chordFromKeyboardEvent`: the fixed `ctrl, meta, alt, shift` modifier order then the key, with
     /// Escape cancelling the capture and a bare modifier press ignored. `true` when the event was
     /// consumed by the capture (which includes the Escape cancel).
-    pub fn capture_keybinding_chord(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
+    pub fn capture_keybinding_chord(&mut self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState) -> bool {
         let Some(control_id) = self.keybinding_capture_control_id.clone() else { return false };
-        if matches!(action, ui_wgpu::wgpu::KeyAction::Escape) {
+        if matches!(action, semio_framework_ui_wgpu_input::KeyAction::Escape) {
             self.keybinding_capture_control_id = None;
             return true;
         }

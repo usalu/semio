@@ -15,7 +15,7 @@ import { registerHostEffectBridgeTests } from "./🌉️host-effect-bridge/🟦�
 import { registerInboundActivationAuthorityTests } from "./🛂️inbound-activation-authority/🟦️.ts";
 import { registerJobWireTests } from "./💼️job-wire/🟦️.ts";
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("@semio-tech/framework-actor/shard-client").ShardClientTestDependenciesV1, testSource: TestSource): Promise<void> {
   const kit = createShardClientSettlementTestKit(vitest, dependencies, testSource);
   const { vi } = kit;
   registerShardWorkerBootstrapTests(kit);

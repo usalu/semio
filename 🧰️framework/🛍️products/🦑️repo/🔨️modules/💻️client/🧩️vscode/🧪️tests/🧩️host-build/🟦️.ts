@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 import { extensionBuildConfig } from "../../🏗️builder/🟦️.ts";
 
 /** 🧩️ Compares CommonJS host bundles with esbuild and native Node while excluding framework test registration. */

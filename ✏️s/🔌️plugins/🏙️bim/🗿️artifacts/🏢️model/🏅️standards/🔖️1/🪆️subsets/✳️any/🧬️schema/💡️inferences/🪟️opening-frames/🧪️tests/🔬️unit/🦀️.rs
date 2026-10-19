@@ -1,19 +1,24 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Point2, Swing};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, Swing};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::f64::consts::FRAC_PI_2;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, mark, seg};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::depth_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{mark, segment_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{elevation_at, ElevationPoint};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{elevation_at, ElevationPoint};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, DoorLeaves, DoorType, Opening, OpeningKind, Profile, Wall, WindowType};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, DoorType, Opening, Wall, WindowType};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, OpeningKind, Profile};
 #[allow(unused_imports)]
 use semio_framework_geometry::placement::Affine3;
 #[allow(unused_imports)]
@@ -24,11 +29,15 @@ use semio_framework_geometry::{Point, Vec2};
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::{OpeningPatch, StoreyPatch, WallPatch}};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{Vec3, PlanRole, PlanShape, OpeningIssue, Frame};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{plan, ModelNode};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames;
 use semio_framework_test_fixtures::fixture_text;
 
 static PLACED: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json"));
@@ -220,7 +229,7 @@ async fn a_moved_opening_slides_along_its_host_and_overlap_follows_the_offsets()
 #[semio_framework_async_macros::async_test]
 async fn the_host_extent_agrees_with_the_wall_layout_of_the_same_wall() {
     let snapshot = placed();
-    let layouts = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot);
+    let layouts = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot);
     let frames = compute_opening_frames(&snapshot);
     for (opening, wall) in [("o-win-south", "w-south"), ("o-door-east", "w-east"), ("o-win-arc", "w-arc"), ("o-void-first", "w-first")] {
         assert!(close(frames[opening].host_height, layouts[wall].height), "{wall} height");
@@ -287,7 +296,7 @@ async fn the_subject_reproduces_the_third_party_oracle_tables() {
 #[semio_framework_async_macros::async_test]
 async fn an_opening_depends_on_its_host_and_the_cuts_of_its_siblings_and_a_host_on_its_layout() {
     let snapshot = placed();
-    let steps = plan::build(&snapshot, kinds::closure(kinds::FRAMES));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::FRAMES));
     let parents = |key: ModelNode| steps.iter().find(|step| step.key == key).map(|step| step.parents.clone()).expect("planned");
     let frame = parents(ModelNode::OpeningFrame("o-win-south".into()));
     assert_eq!(frame[..2], [ModelNode::Host("w-south".into()), ModelNode::Cut("o-win-south".into())]);
@@ -301,7 +310,7 @@ async fn an_opening_depends_on_its_host_and_the_cuts_of_its_siblings_and_a_host_
             assert!(position(parent) < position(&step.key), "parents come first");
         }
     }
-    let orphan = plan::build(&invalid(), kinds::closure(kinds::FRAMES));
+    let orphan = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&invalid(), semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::FRAMES));
     assert!(!orphan.iter().find(|step| step.key == ModelNode::OpeningFrame("o-orphan".into())).expect("planned").parents.iter().any(|parent| matches!(parent, ModelNode::Host(_))), "an orphan has no host parent");
     assert!(orphan.iter().all(|step| step.key != ModelNode::Host("w-ghost".into())));
 }

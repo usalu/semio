@@ -189,14 +189,14 @@ fn named_layout_store_app_id(app_id: Option<&str>) -> String {
 /// 🖥️ This app's USER layouts, projected from the replayed `os.config.ui-preferences` preferences — React's
 /// `displayUserLayouts`: `namedLayouts[appId]` sorted by layout id, each `origin: "user"`. A saved arrangement this
 /// renderer cannot type is left out rather than failing the roster.
-pub fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
-    let mut layouts: Vec<ui_wgpu::wgpu::NamedLayout> = preferences
+pub fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> Vec<semio_framework_ui_declaration::layout::NamedLayout> {
+    let mut layouts: Vec<semio_framework_ui_declaration::layout::NamedLayout> = preferences
         .named_layouts
         .get(&named_layout_store_app_id(app_id))
         .map(|saved| {
             saved
                 .iter()
-                .filter_map(|(id, entry)| Some(ui_wgpu::wgpu::NamedLayout { id: id.clone(), label: entry.label.clone(), icon_id: None, layout: ui_wgpu::wgpu::WindowLayout::from_value(entry.layout.clone()).ok()?, origin: "user".to_string(), group_path: None }))
+                .filter_map(|(id, entry)| Some(semio_framework_ui_declaration::layout::NamedLayout { id: id.clone(), label: entry.label.clone(), icon_id: None, layout: semio_framework_ui_declaration::layout::WindowLayout::from_value(entry.layout.clone()).ok()?, origin: "user".to_string(), group_path: None }))
                 .collect()
         })
         .unwrap_or_default();
@@ -207,7 +207,7 @@ pub fn user_named_layouts(preferences: &UiPreferences, app_id: Option<&str>) -> 
 /// 🖥️ The `setNamedLayout` events that turn `preferences`' saved layouts of this app into `layouts` — one per
 /// added, changed or removed user layout, none for an unchanged roster and never one for a builtin (React's
 /// `onSaveUserLayout`/`onDeleteUserLayout`, one event per gesture).
-pub fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) -> Vec<UiPreferencesConfigMutation> {
+pub fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, layouts: &[semio_framework_ui_declaration::layout::NamedLayout]) -> Vec<UiPreferencesConfigMutation> {
     let key = named_layout_store_app_id(app_id);
     let before = preferences.named_layouts.get(&key).cloned().unwrap_or_default();
     let after: HashMap<String, UserNamedLayout> = layouts
@@ -220,12 +220,12 @@ pub fn named_layout_events(preferences: &UiPreferences, app_id: Option<&str>, la
 }
 
 /// 🖥️ The persisted user layouts for `app_id`, off the replayed preference log.
-pub fn load_named_layouts_from_store(app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
+pub fn load_named_layouts_from_store(app_id: Option<&str>) -> Vec<semio_framework_ui_declaration::layout::NamedLayout> {
     user_named_layouts(&read_ui_preferences(), app_id)
 }
 
 /// 🖥️ Appends the events that make `layouts` this app's saved roster to the preference log.
-pub fn save_named_layouts_to_store(app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) {
+pub fn save_named_layouts_to_store(app_id: Option<&str>, layouts: &[semio_framework_ui_declaration::layout::NamedLayout]) {
     commit_ui_preferences_write(|log| {
         let events = named_layout_events(&replay_ui_preferences(log), app_id, layouts);
         log.events.extend(events);

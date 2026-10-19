@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import type { DescriptorProgress } from "../📥️text/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 

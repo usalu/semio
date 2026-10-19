@@ -380,13 +380,10 @@ pub(super) fn borrow_remodel_outcome<'a>(outbox: &'a Outbox, descriptor: &'a Job
     }
 }
 
-pub(super) fn close_outbox_turn(outbox: &mut Outbox, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
+pub(super) fn close_outbox_turn(outbox: &mut Outbox, grant: RetainedCloneGrant) -> Result<Option<InteractiveJobCloseStep>, ValueError> {
     if outbox.terminal_is_empty() {
-        return None;
+        return Ok(None);
     }
-    Some(match outbox.close_step(grant) {
-        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-        Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-    })
+    outbox.close_step(grant).map(|step| Some(InteractiveJobCloseStep::Pending { progress: step.progress() }))
 }
 //#endregion 📤️Outbox

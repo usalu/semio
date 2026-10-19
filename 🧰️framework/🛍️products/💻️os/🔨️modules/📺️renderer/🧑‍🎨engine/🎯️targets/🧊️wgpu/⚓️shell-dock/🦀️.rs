@@ -24,7 +24,13 @@ use semio_framework_value::{FromValue, ToValue};
 use serde::Serialize;
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{ActionDescriptor, FontAtlas, HitKind, InputState, Rect, Theme, UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, UiTreeWindowRowExtent, UtilityNode, WindowLayout, WindowStackCorner};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowLayout, WindowStackCorner};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, InputState};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiTreeItemNode, UiTreeSectionNode, UiTreeWindowRowExtent};
+use semio_framework_ui_declaration::utilities::UtilityNode;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⚓️dock/🧬️component/🦀️.rs"]
 mod staged_dock__component;

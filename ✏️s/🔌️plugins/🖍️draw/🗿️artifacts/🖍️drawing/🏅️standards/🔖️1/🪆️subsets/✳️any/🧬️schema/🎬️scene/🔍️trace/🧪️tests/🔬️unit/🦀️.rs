@@ -5,7 +5,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::PathSegment as DrawingSegment;
 #[allow(unused_imports)] #[cfg(test)] use semio_framework_pixels::RasterImage;
 #[allow(unused_imports)] use std::sync::Arc;
-#[allow(unused_imports)] use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+#[allow(unused_imports)] use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::trace::*;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneJob, DocumentSceneLimits};
 use crate::preparation::tests::{close_plan, close_owned, close_raster};

@@ -3,7 +3,7 @@ import {spawn} from "node:child_process";
 import {terminateOwnedProcessTree} from "../🪓️termination/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation, type ScriptProgress } from "../🧭️routing/📥️invocation/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import policySchema from "./📋️policy/🧬️schema/🔣️.json";
+import policySchema from "./📋️policy/🧬️schema/🔣️.json" with { type: "json" };
 import {isDeepStrictEqual} from "node:util";
 
 export type OwnedProcessCaptureResult = { status: number | null; signal: string | null; stdout: string; stderr: string } & { reason?: "exit" | "timeout" | "cancelled" | "output-limit" | "spawn-error" };
@@ -105,5 +105,6 @@ export async function captureOwnedProcess(command: string, args: string[], optio
 
 /** 🛑️ Reports interruption from the same original signal or decreasing deadline. */
 class CaptureInterrupted extends Error {
-  constructor(readonly reason: "cancelled" | "timeout") { super("Owned capture stopped: " + reason); }
+  readonly reason: "cancelled" | "timeout";
+  constructor(reason: "cancelled" | "timeout") { super("Owned capture stopped: " + reason); this.reason = reason; }
 }

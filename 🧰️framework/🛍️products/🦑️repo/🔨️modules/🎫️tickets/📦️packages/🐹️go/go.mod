@@ -14,6 +14,7 @@ require (
 	github.com/usalu/semio/repo/providers v0.0.0
 	github.com/usalu/semio/repo/search v0.0.0
 	github.com/usalu/semio/repo/workspace v0.0.0
+	github.com/usalu/semio/repo/workspace/sandbox v0.0.0
 )
 
 replace github.com/usalu/semio/repo/codebase => ../../../🗂️codebase/📦️packages/🐹️go
@@ -37,3 +38,5 @@ replace github.com/usalu/semio/repo/providers => ../../../🧩️providers/📦�
 replace github.com/usalu/semio/repo/search => ../../../🔎️search/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/workspace => ../../../🏠️workspace/📦️packages/🐹️go
+
+replace github.com/usalu/semio/repo/workspace/sandbox => ../../../🏠️workspace/📦️packages/🐹️go/🏖️sandbox

@@ -1,12 +1,10 @@
 #!/usr/bin/env bun
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runDeclaredRustBuildV1} from "../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
-import {runRepositoryPublishedCargoExecutableV1} from "../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
+import { runDeclaredRustBuildV1, runRepositoryPublishedCargoExecutableV1, runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** ⚙️ Builds/tests the `semio-framework-repo-cli` crate and execs its `semio-repo` binary (owned build route for `repo/cli/rs`). */
 import { join } from "node:path";
-import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

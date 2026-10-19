@@ -1,9 +1,9 @@
-use crate::editor::bim::commands::delete_selection::{DeleteSelection, Plan, handle, plan};
-use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
-use crate::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_gestures::editor::bim::commands::delete_selection::{DeleteSelection, Plan, handle, plan};
+use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
 
 #[semio_framework_async_macros::async_test]
 async fn a_deleted_container_takes_its_selected_contents_with_its_cascade() {
@@ -11,7 +11,7 @@ async fn a_deleted_container_takes_its_selected_contents_with_its_cascade() {
     let Plan { mutations, unsupported, remaining } = plan(&snapshot, &["st-ground".to_string(), "w-south".to_string(), "w-east".to_string()]);
     assert!(unsupported.is_empty() && remaining.is_empty());
     assert!(matches!(mutations.as_slice(), [ModelMutation::DeleteElements(DeleteElements { ids })] if ids == &["st-ground".to_string()]), "the storey's own cascade removes its walls");
-    let after = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutations[0]).expect("the storey leaves");
+    let after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutations[0]).expect("the storey leaves");
     assert!(!after.storeys.contains_key("st-ground") && after.walls.is_empty());
 }
 
@@ -57,8 +57,8 @@ async fn an_unreferenced_library_entry_is_deleted_like_any_element() {
 fn crowded(count: usize) -> (ModelSnapshot, Vec<String>) {
     let mut snapshot = demo();
     for (kind, id, parent) in [("column-type", "ct-1", ""), ("column", "c-0", "st-ground")] {
-        let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
-        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, id, parent, "Sample").expect("creates")).expect("applies");
+        let create = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
+        snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, id, parent, "Sample").expect("creates")).expect("applies");
     }
     let column = snapshot.columns.remove("c-0").expect("the column");
     let ids: Vec<String> = (0..count).map(|index| format!("c-{index:06}")).collect();
@@ -78,7 +78,7 @@ async fn any_number_of_elements_leave_as_parts_of_a_bounded_inverse() {
         assert!(protocol::Mutation::<ModelSnapshot>::inverse_rows(mutation) <= INVERSE_ROWS, "every part declares a bounded inverse");
         let inverse = protocol::Mutation::<ModelSnapshot>::inverse(mutation, &after).expect("the inverse");
         assert!(inverse.len() <= INVERSE_ROWS, "{} rows", inverse.len());
-        after = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
+        after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
     assert!(ids.iter().all(|id| !after.columns.contains_key(id)));
     assert!(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&mutations).is_ok(), "the gesture fits the store");
@@ -92,12 +92,12 @@ async fn a_selection_beyond_one_gesture_streams_and_the_rest_stays_selected() {
     assert!(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&first.mutations).is_ok());
     let mut after = snapshot.clone();
     for mutation in &first.mutations {
-        after = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
+        after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
     let second = plan(&after, &first.remaining);
     assert!(second.remaining.is_empty(), "the second press finishes the selection");
     for mutation in &second.mutations {
-        after = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
+        after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
     assert!(ids.iter().all(|id| !after.columns.contains_key(id)));
 }
@@ -109,7 +109,7 @@ async fn the_press_keeps_a_storey_selected_until_its_contents_are_gone() {
     assert_eq!(remaining, vec!["st-ground".to_string()], "the storey outgrows one removal, its contents go first");
     let mut after = snapshot.clone();
     for mutation in &mutations {
-        after = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
+        after = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
     assert!(after.columns.is_empty() && after.storeys.contains_key("st-ground"));
     let last = plan(&after, &remaining);
@@ -120,6 +120,6 @@ async fn the_press_keeps_a_storey_selected_until_its_contents_are_gone() {
 async fn one_removal_above_the_bound_is_refused_and_has_no_inverse() {
     let (snapshot, ids) = crowded(INVERSE_ROWS + 1);
     let whole = ModelMutation::DeleteElements(DeleteElements { ids });
-    assert!(crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &whole).is_err(), "the bound is a promise the diff keeps");
+    assert!(semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &whole).is_err(), "the bound is a promise the diff keeps");
     assert!(protocol::Mutation::<ModelSnapshot>::inverse(&whole, &snapshot).expect("an inverse").is_empty());
 }

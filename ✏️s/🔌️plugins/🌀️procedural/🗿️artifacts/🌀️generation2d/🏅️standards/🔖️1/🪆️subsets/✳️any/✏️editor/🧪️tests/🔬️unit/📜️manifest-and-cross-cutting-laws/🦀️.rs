@@ -83,7 +83,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        app.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+        app.0.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;
@@ -102,7 +102,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
 async fn add_widget_undo_redo_round_trip() {
     let mut app = app().await;
     let before = snapshot_read(&app).host_snapshot.widgets.len();
-    assert_undo_redo_round_trip(&mut app, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    assert_undo_redo_round_trip(&mut app.0, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), |app| snapshot_read(app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     close(app);
 }
 

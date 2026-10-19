@@ -82,7 +82,7 @@ impl PrefsState {
                 label: Label::data(shell_chrome_string("settings.driver.save", is_de)),
                 action: ActionDescriptor { controller_id: "framework".into(), action: "saveDriver".into(), args: None },
                 style: None,
-                presence: UiPresence { state: if self.driver_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if self.driver_save_label.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             })),
             ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -199,10 +199,10 @@ impl PrefsState {
                 let kind = shell_chrome_string(if conflict.quarantined { "conflict.quarantined" } else { "conflict.degraded" }, is_de);
                 let selected = self.selected_conflict_id.as_deref() == Some(conflict.id.as_str());
                 let detail = selected.then(|| {
-                    let UiNode::ComponentScene(scene) = ui_wgpu::wgpu::build_diff_view_scene(
+                    let UiNode::ComponentScene(scene) = semio_framework_ui_declaration::ui::build_diff_view_scene(
                         format!("{row_id}.preview"),
                         "framework",
-                        ui_wgpu::wgpu::DiffViewScene { before: String::new(), after: conflict.preview_after.clone(), language: Some("json".into()), mode: Some("unified".into()), domain_id: Some(conflict.id.clone()) },
+                        semio_framework_ui_declaration::ui::DiffViewScene { before: String::new(), after: conflict.preview_after.clone(), language: Some("json".into()), mode: Some("unified".into()), domain_id: Some(conflict.id.clone()) },
                     ) else {
                         unreachable!("DiffView builder returns a ComponentScene")
                     };

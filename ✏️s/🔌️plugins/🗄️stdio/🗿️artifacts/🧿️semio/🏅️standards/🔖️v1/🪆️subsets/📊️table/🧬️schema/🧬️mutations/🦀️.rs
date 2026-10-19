@@ -21,14 +21,14 @@ use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Leaves
-use super::create_column;
-use super::delete_column;
-use super::edit_cell;
-use super::insert_row;
-use super::remove_row;
-use super::rename_column;
-use super::reorder_columns;
-use super::reorder_rows;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::create_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::delete_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::edit_cell;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::insert_row;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::remove_row;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::rename_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_columns;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_rows;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations

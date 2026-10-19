@@ -1,16 +1,18 @@
 //! 🔺️ Diff constructor for `CreateColumn`: one created column entry. The storey and the column type must exist, a storey constraint
 //! must name a storey of the same building, and the authored top must lie above the base, a tilt leans by at most 60 degrees. No height is stored: it is inferred.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::tilt_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::tilt_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn;
-use crate::standards::v1::subsets::any::schema::mutations::placement::rise;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::rise;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateColumn, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let column = &payload.column;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     let Some(storey) = base.storeys.get(&column.storey) else {

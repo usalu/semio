@@ -9,7 +9,7 @@ test("Fixed publication complete mapping DATA matches independent Ajv and SQLite
 import ts from"typescript";
 import{readFileSync}from"node:fs";
 import{join,resolve,dirname}from"node:path";
-import{withBuildTestInvocationV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../🔒️leases/🟦️.ts";
 import{nativeLinuxLoopMountV1,nativeFixedVhdFooterV1}from"../../../🧱️fixed/🟦️.ts";

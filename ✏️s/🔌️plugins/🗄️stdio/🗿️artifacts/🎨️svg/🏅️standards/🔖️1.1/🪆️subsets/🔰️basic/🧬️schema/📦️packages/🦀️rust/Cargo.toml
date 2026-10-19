@@ -43,6 +43,7 @@ semio-s-artifact-stdio-svg-mut-family = { path = "../../../../🔬️tiny/🧬�
 semio-s-artifact-stdio-svg-mutations-2 = { path = "../../../../🔬️tiny/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-schema = { path = "../../../../🧱️base/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-snapshot = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-diff = { path = "../../../../🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml = { workspace = true }
 
 [dev-dependencies]

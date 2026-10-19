@@ -2,9 +2,8 @@ import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../..
 import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import{fontAssetPublicationRootV1}from"@semio-tech/framework-canvas-ts/fonts/publication";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import{withRepositoryCacheStoreV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{withRepositoryArtifactV1,withRepositoryArtifactTaskV1,type RepositoryArtifactV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import{readNativeCallerAuthorityV1}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1, type RepositoryArtifactV1, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 🔤️ Retains the actual mode's packed font publication until its accepted consumer settles. */

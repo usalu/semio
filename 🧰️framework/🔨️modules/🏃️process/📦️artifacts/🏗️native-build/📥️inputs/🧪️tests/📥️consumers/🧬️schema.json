@@ -4,7 +4,8 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "cases"
+    "cases",
+    "substitutions"
   ],
   "properties": {
     "version": {
@@ -23,6 +24,7 @@
           "threads",
           "outcome",
           "releaseFails",
+          "settlement",
           "trace"
         ],
         "properties": {
@@ -57,6 +59,46 @@
               "type": "string"
             },
             "maxItems": 32
+          },
+          "settlement": {
+            "enum": [
+              "settles",
+              "rejects"
+            ]
+          }
+        }
+      }
+    },
+    "substitutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "occurrence",
+          "port"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "tests",
+              "lint",
+              "wasm"
+            ]
+          },
+          "occurrence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "port": {
+            "enum": [
+              "planning",
+              "lease",
+              "admit",
+              "run"
+            ]
           }
         }
       }

@@ -171,12 +171,20 @@
     "emit",
     "pending_completion_rejection",
     "retirement",
+    "pending_bytes",
+    "pending_media_value",
+    "pending_media_text",
+    "pending_port",
     "contract",
     "byte_cursor",
     "byte_length",
     "decode_progress",
     "stage",
     "completed",
+    "state",
+    "fault",
+    "pending",
+    "outcomes",
     "closing"
   ]
 }

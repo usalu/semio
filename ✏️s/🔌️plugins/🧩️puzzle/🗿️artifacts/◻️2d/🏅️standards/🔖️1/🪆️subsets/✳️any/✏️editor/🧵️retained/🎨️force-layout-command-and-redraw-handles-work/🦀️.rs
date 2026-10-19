@@ -46,7 +46,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-force-nodes-missing"))?;
         let edges = snapshot.value().get("edges").and_then(Value::as_array);
@@ -137,6 +138,9 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle2dForceStage::Complete => Err(Fault::from("puzzle2d-force-complete-repolled")),
             Puzzle2dForceStage::Closing => Err(Fault::from("puzzle2d-force-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -144,8 +148,10 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle2dForceLayoutWorkOwners { node_ids: std::mem::take(&mut self.node_ids), raw_node_indices: std::mem::take(&mut self.raw_node_indices), original: std::mem::take(&mut self.original), positions: std::mem::take(&mut self.positions), velocities: std::mem::take(&mut self.velocities), forces: std::mem::take(&mut self.forces), radii: std::mem::take(&mut self.radii), id_to_index: std::mem::take(&mut self.id_to_index), handle_to_node: std::mem::take(&mut self.handle_to_node), edges: std::mem::take(&mut self.edges), edge_set: std::mem::take(&mut self.edge_set), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -423,7 +429,8 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction: _interaction, hover: _hover, context: _context, .. } = *input;
         let nodes = snapshot.value().get("nodes").and_then(Value::as_array).ok_or_else(|| Fault::from("puzzle2d-redraw-nodes-missing"))?;
         match self.stage {
@@ -459,6 +466,9 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle2dRedrawStage::Complete => Err(Fault::from("puzzle2d-redraw-complete-repolled")),
             Puzzle2dRedrawStage::Closing => Err(Fault::from("puzzle2d-redraw-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -466,8 +476,10 @@ impl<A: Puzzle2dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle2dRedrawHandlesWorkOwners { shapes: std::mem::take(&mut self.shapes), handle_locations: std::mem::take(&mut self.handle_locations), angles: std::mem::take(&mut self.angles), mutations: std::mem::take(&mut self.mutations) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

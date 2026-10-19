@@ -7,7 +7,7 @@ import { listModelObjectsForModelDefinition } from "@semio-tech/s-spatial-kernel
 import { listSelectionOperationsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/selection-operations";
 import { collectGeometrySelectionTargets, selectionTargetsFromContext } from "../../../../🎬️actions/🧲️selection-targets/🟦️.ts";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { ArtifactTestDependencies } from "../../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../../🎒️test-dependencies/🟦️.ts";
 import type { InteractionSnapshot } from "../../../📨️interaction-model/🟦️.ts";
 import type { ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import type { InteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";

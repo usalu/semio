@@ -25,19 +25,18 @@ import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/�
  */
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runCmd } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 
-import {verifyCapturedCargoArtifactsV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildAdmittedCargoArtifactsV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { join } from "node:path";
 import { PROCTOR_LIBRARY_PACKAGES, PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCatalog, proctorDevelopmentEnvironment, proctorSelection, runDevelopmentProctor, runProctor } from "../../🏗️bootstrap/🟦️.ts";
 
 /** 🏗️ Builds the crate's cargo artifacts (`--release` for a deployment). */
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+    await buildAdmittedCargoArtifactsV1(`${this.root}/Cargo.toml`, segments, this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
   }
 }
 

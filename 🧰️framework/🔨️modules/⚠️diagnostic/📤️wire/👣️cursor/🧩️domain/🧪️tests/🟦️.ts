@@ -4,7 +4,7 @@ import {resolve} from "node:path";
 import {createRequire} from "node:module";
 import {Database} from "bun:sqlite";
 import type {IntrinsicValue} from "@semio-tech/value-ts/schema/intrinsic";
-import {faultFromOriginalTurnFailure} from "../../../../🧾️retained/🟦️.ts";
+import {faultFromOriginalTurnFailure} from "@semio-tech/framework/job/failure";
 import {decodeFaultDomainControlled,encodeFaultDomainControlled} from "../../../../🎛️controlled/🟦️.ts";
 import type {ValueRefusalCodecControl} from "@semio-tech/value-ts/refusal/codec";
 import {ValueError} from "../../../../../🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts";

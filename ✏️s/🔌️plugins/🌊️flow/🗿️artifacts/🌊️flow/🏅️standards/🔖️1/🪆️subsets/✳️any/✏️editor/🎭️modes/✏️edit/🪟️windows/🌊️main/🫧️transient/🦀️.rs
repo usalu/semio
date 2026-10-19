@@ -35,9 +35,9 @@ semio_framework_plugin::window_transient_owners! {
     state: FlowWindowTransient,
     mutation: FlowWindowTransientMutation,
     windows: {
-        FlowMainWindowTransientOwner => crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN,
-        FlowGenerationsWindowTransientOwner => crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATIONS,
-        FlowFormWindowTransientOwner => crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_FORM,
-        FlowPreviewWindowTransientOwner => crate::editor::flow::base::FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
+        FlowMainWindowTransientOwner => crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN,
+        FlowGenerationsWindowTransientOwner => crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATIONS,
+        FlowFormWindowTransientOwner => crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_FORM,
+        FlowPreviewWindowTransientOwner => crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
     },
 }

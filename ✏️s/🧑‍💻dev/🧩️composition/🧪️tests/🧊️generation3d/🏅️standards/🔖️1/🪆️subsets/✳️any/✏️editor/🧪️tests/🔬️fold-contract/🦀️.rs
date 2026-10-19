@@ -39,7 +39,7 @@ fn bundled_widget_ids(example_id: &str) -> std::collections::BTreeSet<String> {
 }
 
 /// 🪪️ The same signature for the app's LIVE document — synchronous for the same reason.
-fn live_widget_ids(app: &context::Generation3dApp) -> std::collections::BTreeSet<String> {
+fn live_widget_ids(app: &context::Generation3dAppFixture) -> std::collections::BTreeSet<String> {
     context::snapshot(app).host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).map(str::to_string).collect()
 }
 
@@ -116,7 +116,7 @@ fn every_bundled_example_records_every_declared_default_of_its_operators() {
 /// Before the fold-envelope fix every one of these retired without publishing
 /// (`typed-operation publication turn=… operations=["27:Retiring:true:true"] latest_wins_empty=true`).
 /// 🎯️ One law PER bundled example, and the body EXPANDED into each — never one walk over all eight
-/// and never an awaited helper: a live `Generation3dApp` plus the host's publication machine is a
+/// and never an awaited helper: a live `Generation3dAppFixture` plus the host's publication machine is a
 /// multi-megabyte future, so nesting even two of those states in one test future overflows the test
 /// thread's 8 MiB stack. Each example therefore gets its own test thread holding exactly one, and the
 /// picker's whole roster stays covered.
@@ -128,13 +128,13 @@ macro_rules! set_active_example_publishes {
                 let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
                 let mut app = app_with_registry().await;
                 let before = live_widget_ids(&app);
-                app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("setActiveExample dispatches");
+                semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": $example }).into()), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches");
                 let receipt = context::settle(&mut app).await;
                 assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "{} published a fault lane", $example);
                 let after = live_widget_ids(&app);
                 assert_eq!(after, bundled_widget_ids($example), "{} did not reach the store: the published document is not the example's fixture", $example);
                 assert!(after != before || $example == PROCEDURAL_EXAMPLE_HEX_COLUMN, "{} left the document untouched", $example);
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
             }
         )+
     };
@@ -167,5 +167,5 @@ async fn interaction_select_publishes_through_the_retained_typed_path() {
     let settled = context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     eprintln!("interactionSelect published: effects={}", settled.requested_effects.len());
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

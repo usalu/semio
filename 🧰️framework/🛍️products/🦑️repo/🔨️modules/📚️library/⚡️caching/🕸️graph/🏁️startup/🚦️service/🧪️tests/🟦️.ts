@@ -1,6 +1,6 @@
 import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{withResourceLeases}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
+import{withResourceLeases}from"@semio-tech/process/leases";
 import{repositoryLeaseDirectoryV1}from"../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{expect,test}from"bun:test";
 import{spawn,type ChildProcess}from"node:child_process";
@@ -12,7 +12,7 @@ import{withNxDaemonServiceBirthV1}from"../🟦️.ts";
 import{receiveScriptProcessInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryNxStorageV1,nxDaemonNamespaceResourceV1}from"../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
-import{nxToolingUseStorageV1}from"../../../../🚀️bootstrap/🛠️tools/📥️use/🟦️.ts";
+import{nxToolingUseStorageV1}from"@semio-tech/nx-bootstrap-tools/use";
 
 /** 🧪️ Actual Node provider scopes survive parent handoff and callback return until real server settlement. */
 test("issued daemon service holds its actual images and SDK after finite parent callback closes",async()=>receiveScriptProcessInvocation(process.env,async original=>{

@@ -1,6 +1,6 @@
 //! 📐️ Original CAD projection retains scoped name indexes and every authored geometry cell.
 use super::{SemioCadSnapshot,CadEntityRecord,CadEntity,number,float_columns};
-use crate::base_foundation::io::sqlite::snapshot::projection::NameIndex;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::NameIndex;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,RowWriter,ProjectionStorage,project_owned,owned_workspace},transfer::reserve};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 

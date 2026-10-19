@@ -1,7 +1,7 @@
 import {preparePlaygroundSourceFixtureV1} from "../🧊️preparation/🟦️.ts";
 import {testMethodV1,testRecordV1,testStringsV1} from "../📋️values/🟦️.ts";
 import {type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";

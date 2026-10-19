@@ -6,7 +6,7 @@ import { sha256 } from "../📁️input/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 import { classifyPackageSource, classifyPackageSourceDisposition } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
 import { implementationLeafBasenameFinding, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
 import { basename, dirname } from "node:path";
 import { GENERIC_SEMANTIC_STEMS, type TaxonomyInventory, type TaxonomyInventoryEntry, type TaxonomyPackageRole, type TaxonomyViolation, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { matchDirectoryKind, resolveFileKind, splitLeadingEmojiIdentity, violation } from "../🏷️file-kind-matching/🟦️.ts";

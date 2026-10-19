@@ -2,20 +2,20 @@ import {createHash} from "node:crypto";
 import {constants,lstatSync,opendirSync,statfsSync,unlinkSync,type BigIntStats} from "node:fs";
 import {open} from "node:fs/promises";
 import {join} from "node:path";
-import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {openNativePlatformStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import type {NativeFixedPlatformOptionsV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
 import authoritySchema from "../../../../../../🏗️build/🧬️schema/📥️authority.json";
 const protocol=schema.definitions.Protocol.const,authorityKindsV1=authoritySchema.properties.observations.items.properties.kind.enum;
-/** 📋️ Names the required physical floor without granting cleanup custody. */
-export interface BuildGraphHeadroomRequestV1{readonly minimumAvailableBytes:number}
+/** 📋️ Names the required physical floor and whether recovery queues behind concurrent readers or defers to them, without granting cleanup custody. */
+export interface BuildGraphHeadroomRequestV1{readonly minimumAvailableBytes:number;readonly wait:boolean}
 /** 🧾️ Reports observed available bytes after actual exclusive image maintenance. */
 export interface BuildGraphHeadroomResultV1{readonly acquired:boolean;readonly availableBytes:number;readonly retiredBytes:number;readonly retiredFiles:number}
 /** 🚦️ Refuses unbounded recovery requests before opening an enforcing image. */
-export function readBuildGraphHeadroomRequestV1(value:unknown):BuildGraphHeadroomRequestV1{if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed graph headroom request required");return Object.freeze({minimumAvailableBytes:(value as BuildGraphHeadroomRequestV1).minimumAvailableBytes});}
+export function readBuildGraphHeadroomRequestV1(value:unknown):BuildGraphHeadroomRequestV1{if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed graph headroom request required");return Object.freeze({minimumAvailableBytes:(value as BuildGraphHeadroomRequestV1).minimumAvailableBytes,wait:(value as BuildGraphHeadroomRequestV1).wait});}
 type LeafV1=Readonly<{path:string;stamp:string;bytes:number;allocated:number;modified:bigint}>;
 const stamp=(row:BigIntStats)=>[row.dev,row.ino,row.size,row.nlink,row.mtimeNs,row.ctimeNs].join(":");
 function leaf(image:NativeImageStorageV1,path:string,maximum:number):LeafV1{
@@ -31,12 +31,12 @@ async function publicationGraphV1(image:NativeImageStorageV1,row:LeafV1,control:
  checkResourceLeaseControl(control);unchanged(image,row);await control.publish({resource:"repository:graph-receipt-authentication",mode:"exclusive",elapsedMs:0});const output=await captureOwnedCommandV1(process.versions.bun?"node":process.execPath,["--max-old-space-size="+protocol.receiptHeapMiB,"-e",authorityProgramV1,JSON.stringify({path:row.path,stamp:row.stamp,kinds:authorityKindsV1})],image.root,{control,output:{maximumBytes:8192,maximumLines:64}}),value=JSON.parse(output.trim());if(!value||Object.keys(value).join()!=="graph"||typeof value.graph!=="string"||!/^[a-f0-9]{64}$/u.test(value.graph))throw Error("Closed graph receipt child result required");checkResourceLeaseControl(control);unchanged(image,row);return value.graph;
 }
 function available(image:NativeImageStorageV1):number{const row=statfsSync(image.root),bytes=row.bavail*row.bsize;if(!Number.isSafeInteger(bytes)||bytes<0)throw Error("Actual graph image capacity required");return bytes;}
-/** 🧹️ Reclaims only authenticated snapshots and current publications beneath the actual image's exclusive lifetime. */
+/** 🧹️ Reclaims only authenticated snapshots and current publications beneath the actual image's exclusive lifetime; a queued request waits for concurrent readers with progress and cancellation while an opportunistic one reports them as not acquired. */
 export async function recoverBuildGraphImageHeadroomV1(options:NativeFixedPlatformOptionsV1,value:unknown):Promise<BuildGraphHeadroomResultV1>{
  const request=readBuildGraphHeadroomRequestV1(value),control=options.control;checkResourceLeaseControl(control);const image=await openNativePlatformStorageV1(options);let retiredBytes=0,retiredFiles=0;
  try{
   await image.recheck();if(available(image)>=request.minimumAvailableBytes)return Object.freeze({acquired:true,availableBytes:available(image),retiredBytes,retiredFiles});
-  const result=await image.withExclusiveMaintenance({version:1,wait:false},async()=>{
+  const result=await image.withExclusiveMaintenance({version:1,wait:request.wait},async()=>{
    await image.recheck();const snapshots:LeafV1[]=[],directory=requireNativeStoragePathV1(image.root,join(image.root,"snapshots"));const names:string[]=[];let entries:ReturnType<typeof opendirSync>|undefined;try{entries=opendirSync(directory);for(;;){checkResourceLeaseControl(control);const entry=entries.readSync();if(!entry)break;if(names.length>=protocol.maximumEntries)throw Error("Bounded graph snapshot inventory required");names.push(entry.name);}}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}finally{entries?.closeSync();}
    for(const name of names){checkResourceLeaseControl(control);if(!/^[a-f0-9]{64}\.json$/u.test(name))continue;const row=leaf(image,join(directory,name),protocol.maximumSnapshotBytes);if(await digest(image,row,control)!==name.slice(0,64))throw Error("Graph snapshot content identity changed");snapshots.push(row);}
    const canonical=join(image.root,"canonical.json"),authority=join(image.root,"authority.json");let publication:readonly LeafV1[]=[];

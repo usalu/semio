@@ -31,7 +31,6 @@ type RepoContext interface {
 	GetTodos(filter *FilterInput) ([]*Todo, error)
 	GetStatutes() []*StatuteMeta
 	Analyze(scope *string) (*AnalyzeResult, error)
-	Fix(scope *string) (*FixResult, error)
 	GoalCreate(input GoalCreateInput) (*Goal, error)
 	GoalChange(input GoalChangeInput) (*Goal, error)
 	GoalClose(input GoalCloseInput) (*Goal, error)

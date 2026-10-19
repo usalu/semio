@@ -1,10 +1,11 @@
 //! 🔗️ `set-wall-location` / `follows-by-inference`: the `wall-layout` inference follows the location line. The face offsets always add up to
 //! the thickness, the interior line puts the body to the right of the axis and the exterior line to the left, and the extent never changes.
 
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_location::SetWallLocation;
+use semio_s_artifact_bim_model_mut_any_23::standards::v1::subsets::any::schema::mutations::set_wall_location::SetWallLocation;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
-use crate::standards::v1::subsets::any::schema::{snapshot::LocationLine, mutations::ModelMutation};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LocationLine;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_test_fixtures::fixture_text;
 
 static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦚️set-wall-location/✅️moves-to-the-exterior-face/📸️snapshot/⬅️before/🔣️.json"));

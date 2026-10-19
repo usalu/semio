@@ -4,7 +4,7 @@
 @mutations-stl-ascii-any
 Feature: Apply every typed STL ascii mutation to a real-world mesh
   The input is shared://🏛️hexagonal-cut-concrete-forest-left/🧊️.stl, a real 958-triangle ASCII STL
-  derived ONCE (♻️mit-bestand/🖼️asset/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb, a
+  derived ONCE (🧰️framework/🔨️modules/🖼️assets/🏚️abbau-aufbau/◀️hexagonal-cut-concrete-forest-left.glb, a
   real modelled hexagonal-cut concrete forest structure, 86 KB) by hand-parsing its GLB container
   (12-byte header, JSON chunk, BIN chunk — no glTF crate is linked) since it carries no vertex
   normals: the 57 triangle-mode primitives of its one mesh are flattened into one solid and each

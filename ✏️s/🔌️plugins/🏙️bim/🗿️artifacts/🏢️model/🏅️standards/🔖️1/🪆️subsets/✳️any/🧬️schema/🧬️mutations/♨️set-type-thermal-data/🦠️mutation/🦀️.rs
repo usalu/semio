@@ -1,8 +1,10 @@
 //! ♨️ `set-type-thermal-data` payload. Sparsely sets the thermal data of a window type (U-value of the whole window, g-value of the glazing, frame fraction), of a curtain wall type (the same three for the whole facade) or of a door type (U-value); an assigned null clears a field. The envelope U-values and solar gains are inferred from them.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CurtainWallTypePatch, DoorTypePatch, WindowTypePatch}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::{CurtainWallTypePatch, DoorTypePatch, WindowTypePatch};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

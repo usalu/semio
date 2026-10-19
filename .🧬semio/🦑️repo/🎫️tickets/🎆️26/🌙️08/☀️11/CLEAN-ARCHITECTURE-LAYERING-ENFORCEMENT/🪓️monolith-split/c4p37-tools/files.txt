@@ -1,8 +1,0 @@
-tt 🧰️framework/🔨️modules/⏪️time-travel/🦀️.rs
-trc 🧰️framework/🔨️modules/⏱️trace/🦀️.rs
-edt 🧰️framework/🔨️modules/✍️editor/🦀️.rs
-abi 🧰️framework/🔨️modules/🌉️abi/🦀️.rs
-cod 🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs
-omap 🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🦀️.rs
-dec 🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🦀️.rs
-ret 🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs

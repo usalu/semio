@@ -1,22 +1,24 @@
-use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge, WallEnd};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge, WallEnd};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::transform::{ghost, outline};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::{ghost, outline};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
-use crate::editor::bim::gestures::reshape::*;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape::{offset_distance, end_to_move, Kind, reference_line};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Phase, Point2, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Slab, Wall};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 fn only(mutations: &[ModelMutation]) -> &ModelMutation {
     match mutations {
@@ -29,7 +31,7 @@ fn line(start: (f64, f64), end: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }
 }
 
-fn wall_on(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str, axis: Axis) -> Wall {
+fn wall_on(snapshot: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str, axis: Axis) -> Wall {
     Wall { axis, name: id.into(), ..snapshot.walls["w-south"].clone() }
 }
 
@@ -131,9 +133,9 @@ async fn split_parts_a_beam_where_it_is_pressed() {
     let step = rig.down(2.0, 2.0);
     let ModelMutation::SplitBeam(split) = only(&step.mutations) else { panic!("a split-beam") };
     assert_eq!((split.id.as_str(), split.t), ("b-1", 0.25));
-    let crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { end, .. } = rig.snapshot.beams["b-1"].axis else { panic!("a straight beam") };
+    let semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { end, .. } = rig.snapshot.beams["b-1"].axis else { panic!("a straight beam") };
     assert_eq!(end, Point2 { x: 2.0, y: 2.0 });
-    let crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, .. } = rig.snapshot.beams[&split.new_id].axis else { panic!("a straight beam") };
+    let semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start, .. } = rig.snapshot.beams[&split.new_id].axis else { panic!("a straight beam") };
     assert_eq!(start, Point2 { x: 2.0, y: 2.0 });
 }
 

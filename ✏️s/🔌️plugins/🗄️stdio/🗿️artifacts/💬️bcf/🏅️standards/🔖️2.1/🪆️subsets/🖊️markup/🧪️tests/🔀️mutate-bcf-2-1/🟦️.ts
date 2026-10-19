@@ -12,7 +12,7 @@ import { defineTestAdapter, type AdapterContext } from "@semio-tech/framework/te
  *  each row's expected archive is COMMITTED — its generator pair's `➡️after.bcf` for a mutation, `⬅️before.bcf` for its
  *  inverse, the real coordination review itself for the identity round trip — handed to the `bcf-2-1-jszip-compare-v1`
  *  pipeline as `expected-bcf`, where the jszip reader reads it and the subject's `actual-bcf`. */
-import { committedArtifact } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { committedArtifact } from "@semio-tech/framework/test/adapter";
 
 //#region 🧭️Adapter
 const after = { oracle: (ctx: AdapterContext) => committedArtifact(ctx, "➡️after.bcf", "expected-bcf", "application/octet-stream") };

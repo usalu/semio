@@ -36,7 +36,7 @@ semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀
 semio-framework-os-semio = { path = "../../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-backbone = { path = "../../../🔗️backbone/📦️packages/🦀️rust" }
-semio-framework-os-store-blob-identity = { path = "../../../📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-blob-identity = { path = "../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-framework-os-store-child = { path = "../../../🪆️child/📦️packages/🦀️rust" }
 semio-framework-os-store-codec-factory = { path = "../../../📦️codec/🏭️factory/📦️packages/🦀️rust" }
@@ -46,14 +46,14 @@ semio-framework-os-store-composition = { path = "../../../🧩️composition/�
 semio-framework-os-store-config = { path = "../../../🎚️config/📦️packages/🦀️rust" }
 semio-framework-os-store-document = { path = "../../../🧾️document/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../⚙️engine/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../../⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
 semio-framework-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-initialization-replay = { path = "../../../🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust", features = ["hot-path-census"] }
-semio-framework-os-store-link-schema = { path = "../../../🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-link-schema = { path = "../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-member-open = { path = "../../../🧩️composition/🚪️open/📦️packages/🦀️rust" }
 semio-framework-os-store-member-open-store = { path = "../../../🧩️composition/🚪️open/🏭️operation/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }

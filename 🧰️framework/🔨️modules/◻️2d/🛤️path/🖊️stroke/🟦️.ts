@@ -1,5 +1,5 @@
 /** 🖊️ Stroke regions for https://www.w3.org/TR/SVG11/painting.html#StrokeProperties. */
-import type {Vec2} from "../../🟦️.ts";
+import type {Vec2} from "../../📐️drawing-contract/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "../../🧹️retire/🟦️.ts";
 export type StrokeGeometryStyle={width:number;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";miterLimit:number;dash:readonly number[];dashOffset:number};
 export type StrokeOutlineInput={contours:readonly {points:readonly Vec2[];closed:boolean}[];transform:readonly number[];tolerance:number;style:StrokeGeometryStyle};

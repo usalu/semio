@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🌿️ Supplies caller-owned process budget overrides through first-party text values. */
 export type ProcessBudgetEnvironment = Readonly<Record<string, string | undefined>>;

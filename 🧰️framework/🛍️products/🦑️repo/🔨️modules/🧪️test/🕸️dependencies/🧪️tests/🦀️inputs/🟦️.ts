@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSyn
 import { dirname, join, relative } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import {testMethodV1,testRecordV1} from "../../../../📚️library/⚡️caching/🧪️tests/📋️values/🟦️.ts";
+import { testMethodV1, testRecordV1 } from "@semio-tech/repo-lib/testing";
 
 /** 🦀️ Compares inferred test ownership with Cargo's local package graph and mounted compiler inputs. */
 export async function testInferredNativeInputs(workspace: string, output: string): Promise<void> {
@@ -49,7 +49,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const metadata = JSON.parse(cargo.stdout.toString());
   const cargoRoots = metadata.packages.map((pkg: any) => relative(root, dirname(pkg.manifest_path)).replaceAll("\\", "/")).sort();
   assert.deepEqual(cargoRoots, Object.keys(fixture.projects).sort());
-  const { cacheInternals } = await import("../../../../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
+  const { cacheInternals } = await import("@semio-tech/repo-lib/build/inference");
   const projects: Record<string, any> = { [project.name]: project };
   for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: testRecordV1(await testMethodV1(cacheInternals,"projectInputs",{ name, targets: {} }, path, root, new Map())), targets: {} };
   const edges:unknown = await testMethodV1(plugin,"createDependencies",{}, { workspaceRoot: root, projects });

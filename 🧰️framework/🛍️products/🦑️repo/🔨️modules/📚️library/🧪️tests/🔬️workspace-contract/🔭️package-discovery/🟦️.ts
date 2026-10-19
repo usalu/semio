@@ -329,7 +329,7 @@ describe("computeWorkspaces", () => {
     expect(new Set(result).size).toBe(result.length);
     expect(result).toContain("🧰️framework/📦️packages/🟦️typescript");
     expect(result).toContain("✏️s/🔌️plugins/🌊️flow/📦️packages/🟦️typescript");
-    expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
+    expect(result).toContain("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust");
     expect(result).not.toContain("🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg");
   }, 600_000);
 });

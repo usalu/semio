@@ -55,7 +55,7 @@ impl SurfaceState {
     pub fn close_component_world_step(&mut self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, grant: semio_framework_value::retained_clone::RetainedCloneGrant, context: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep,infinite_world::world::WorldDynamicFault> {
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
         use infinite_world::world::{WorldDynamicFault,WorldTerrainMeshPublicationStep};
-        if !matches!(target.kind, ui_wgpu::wgpu::SurfaceKind::World3d | ui_wgpu::wgpu::SurfaceKind::IconRender) {
+        if !matches!(target.kind, semio_framework_ui_declaration::ui::SurfaceKind::World3d | semio_framework_ui_declaration::ui::SurfaceKind::IconRender) {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
         if context.is_cancelled() || context.should_yield() || grant.maximum_items==0 {

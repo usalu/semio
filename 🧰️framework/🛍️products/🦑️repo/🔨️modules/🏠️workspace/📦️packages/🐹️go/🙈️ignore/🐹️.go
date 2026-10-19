@@ -152,7 +152,7 @@ func getGitignore() *GitIgnore {
 	if GitignoreLoaded {
 		return CachedGitignore
 	}
-	gitignorePath := filepath.Join(RootDir, ".gitignore")
+	gitignorePath := filepath.Join(GetRootDir(), ".gitignore")
 	ign, err := CompileIgnoreFile(gitignorePath)
 	if err != nil {
 		GitignoreLoaded = true

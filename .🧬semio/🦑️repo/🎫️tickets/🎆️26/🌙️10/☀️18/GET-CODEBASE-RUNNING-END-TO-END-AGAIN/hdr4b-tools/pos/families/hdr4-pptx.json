@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-pptx",
+ "crates": ["semio-s-artifact-stdio-pptx-base-model", "semio-s-artifact-stdio-pptx-base-vocabulary"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-s-artifact-stdio-pptx-base-model"]},
+ "note": "HDR-4: pptx vocabulary, refusal and transform scalar to a lower crate"
+}

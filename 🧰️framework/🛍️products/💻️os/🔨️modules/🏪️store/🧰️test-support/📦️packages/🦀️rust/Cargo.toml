@@ -30,7 +30,7 @@ semio-framework-os-store-canonical-json = { path = "../../../🧵️canonical-ed
 semio-framework-os-store-config = { path = "../../../🎚️config/📦️packages/🦀️rust" }
 semio-framework-os-store-document = { path = "../../../🧾️document/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../⚙️engine/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../../⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }

@@ -31,7 +31,7 @@ import {
   type WorldProjectionSpec,
   type WorldReferenceProps,
   type WorldReferenceRelocatePayload
-} from "@semio-tech/infinite-world-r3f";
+} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { type InteractionSpec, type ResolvedInteractionEngagementControl } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";

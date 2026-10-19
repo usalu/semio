@@ -1,6 +1,9 @@
 //! 🛠️ `set-property-template` payload. Sets any of a property set template's name, applicable kinds and property definitions; absent fields stay untouched and a list replaces the whole list.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::PropertyTemplatePatch}, snapshot::{ModelSnapshot, PropertyDef, TemplateTarget}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::PropertyTemplatePatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, TemplateTarget};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

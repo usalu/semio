@@ -11,8 +11,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { runRepositoryCargoTests } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -108,7 +108,7 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-projection-persistence-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           laws: ["editor::home::transient::component::tests::the_projection_wire_round_trips_documents_and_rejects_corruption"],
@@ -209,7 +209,7 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-event-page-owner-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
           laws: [
@@ -266,7 +266,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const spaceIndexCrate = readFileSync(join(spaceIndexCrateRoot, "🦀️.rs"), "utf8");
   const spaceShared = readSources([
     "✏️s/🔌️plugins/🪐️space/🦀️.rs",
-    "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+    "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/🦀️.rs",
     "✏️s/🔌️plugins/🪐️space/🧪️tests/🔬️surface/🦀️.rs",
   ]);
   const spaceConfig = readSources([
@@ -405,7 +405,7 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("home-directory-identity-rows-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [
           {
             package: "semio-framework-plugin-host-imports",
             target: { kind: "lib" },
@@ -544,7 +544,7 @@ class SnapshotOwnerCensusScript extends BundleScript {
       try{db.exec(readFileSync(join(this.repoRoot,owner.sqlPath),"utf8"));assert.deepEqual(db.query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY name").all(),owner.tables.map(name=>({name})));assert.deepEqual(db.query("PRAGMA integrity_check").all(),[{integrity_check:"ok"}]);assert.deepEqual(db.query("PRAGMA foreign_key_check").all(),[]);}finally{db.close();}
     }
     if(segments[0]==="native"){
-      const receipts=await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){} });
+      const receipts=await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd:this.root, env:{...process.env,RUST_MIN_STACK:"268435456"}, groups:[{package:"semio-hub-space",target:{kind:"lib"},laws:["interactive_job_catalog_tests::sqlite_snapshot_composed_owner_census"]}], progress(event){} });
     }
   }
 }
@@ -553,7 +553,7 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("interactive-job-catalog-check accepts only --native");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456" }, groups: [{
           package: "semio-hub-space",
           target: { kind: "lib" },
           laws: [
@@ -586,7 +586,7 @@ function persistenceDataClassOracle(repoRoot: string): number {
     assert(validateBinding(c.binding), JSON.stringify(validateBinding.errors));
     if (c.wireLane) assert(validateLane(c.wireLane), JSON.stringify(validateLane.errors));
   }
-  const core = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs"), "utf8");
+  const core = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/🦀️.rs"), "utf8");
   assert(core.includes('origin: "hub"'));
   assert(core.includes('data_class: "persistedShared"'));
   assert(core.includes('ephemeralLocalOnly'));

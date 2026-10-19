@@ -1,7 +1,7 @@
 /** 🔱️ Specific installation interprets Semio graph literals for intrinsic Jack queries. */
 import type {ArtifactChild,JackGraphQuery,JackFlatPositionUv} from "@semio-tech/trinity-jack/source";
 import type {SemioGraphSnapshot,SemioGraphEdge} from "@semio-tech/stdio-semio/source";
-import {ValueError} from "../../../../🧰️framework/📦️packages/🟦️typescript/🌱️value/⚠️refusal/🟦️.ts";
+import {ValueError} from "@semio-tech/framework/value/refusal";
 function offset(edge:SemioGraphEdge,key:string):number {
  const values=edge.properties.filter(value=>value.key===key);if(values.length>1)throw new ValueError("invalidValue","Jack flattened offset requires unique property key");const value=values[0]?.value;if(value===undefined)return 0;
  if(value.kind!=="float"&&value.kind!=="int")throw new ValueError("invalidValue","Jack flattened offset requires numeric intrinsic family");

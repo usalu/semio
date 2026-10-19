@@ -13,7 +13,10 @@
 //! `dir === "rtl"` inversion of the horizontal pair — which is the whole reason this twin takes a
 //! `FlowInline`: a mirrored tablist must step the other way for the same key.
 
-use crate::wgpu::{ActionDescriptor, IconName, Label, UiButtonNode, UiNode, UiPresence, UiStackNode, UiState, UiTextNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::IconName;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode, UiState, UiTextNode};
 use ui_contract::FlowInline;
 
 //#region 📑️Vocabulary

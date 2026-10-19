@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import{Script,ScriptRouter,findWorkspaceRoot,receiveScriptProcessInvocation,runScriptMain}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{readBuildMode}from"../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import{buildBudgetMs}from"../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
-import{scriptResourceProcessEnvironmentV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
+import{readBuildMode}from"@semio-tech/process/build-mode";
+import{buildBudgetMs}from"@semio-tech/process/budget";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import{scriptResourceProcessEnvironmentV1}from"@semio-tech/process/routing";
 import{runRepositoryCmakeV1}from"./🏃️execution/🟦️.ts";
 import{resolve}from"node:path";
 /** 🛠️ Routes exact native root intent beneath the existing received Original and actual owned producer. */

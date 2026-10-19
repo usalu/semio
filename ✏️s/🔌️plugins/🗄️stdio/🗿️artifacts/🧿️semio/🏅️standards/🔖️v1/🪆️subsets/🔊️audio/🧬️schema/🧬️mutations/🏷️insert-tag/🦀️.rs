@@ -12,13 +12,13 @@ pub struct InsertTag {
     pub tag: SemioAudioTag,
 }
 
-impl protocol::MutationKind<SemioAudioSnapshot, SemioAudioMutation> for InsertTag {
+impl<Op: SemioAudioOp> protocol::MutationKind<SemioAudioSnapshot, Op> for InsertTag {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tag", kind: "insert-tag", record: "InsertTag" };
 
-    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<<SemioAudioMutation as Mutation<SemioAudioSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioAudioSnapshot) -> protocol::MutationOutcome<SemioAudioDiff> {
         diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<SemioAudioMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioAudioSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         inverse::inverse(self, base)?
     

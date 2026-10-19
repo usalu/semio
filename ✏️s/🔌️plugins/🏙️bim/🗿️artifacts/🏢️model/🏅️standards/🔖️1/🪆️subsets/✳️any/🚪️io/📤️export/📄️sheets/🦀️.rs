@@ -3,22 +3,19 @@
 //! 🔖 `IoFidelity::Lossy`: a sheet shows cuts and projections of the model, never the model.
 //! 📎 https://www.w3.org/TR/SVG11/, https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink;
 #[path = "📖️pdf/🦀️.rs"]
 pub mod pdf;
-pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::sheets::svg;
-pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::tables;
 
-pub use ink::TitleLabels;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::TitleLabels;
 
 /// 🪪️ The PDF 1.7 dialect the sheet set is written in.
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
@@ -56,7 +53,7 @@ pub fn file_stem(number: &str) -> String {
 
 /// 🎨️ The SVG of the sheet `sheet`, none when the model has no layout for it.
 pub fn sheet_svg(model: &ModelSnapshot, inferred: &ModelInference, sheet: &str, labels: &TitleLabels) -> Option<Result<String, String>> {
-    inferred.sheet_layouts.get(sheet).map(|layout| svg::sheet_svg(model, layout, &drawings(inferred), labels))
+    inferred.sheet_layouts.get(sheet).map(|layout| semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::sheets::svg::sheet_svg(model, layout, &drawings(inferred), labels))
 }
 
 /// 📖️ The PDF of the sheets `only` names, or of the whole set, one page per sheet.
@@ -73,7 +70,7 @@ impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &ModelSnapshot, _: &ArchiveChildren, _: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-        let bytes = inference::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
+        let bytes = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, from, |inferred| sheets_pdf(from, inferred, None, &TitleLabels::english()))
             .map_err(|error| error.to_string())
             .and_then(|written| written)
             .map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ModelIntoSheetsPdf: {message}"))))?;

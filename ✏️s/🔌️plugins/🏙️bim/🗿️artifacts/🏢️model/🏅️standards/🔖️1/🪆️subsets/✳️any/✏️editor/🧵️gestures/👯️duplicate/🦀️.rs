@@ -8,15 +8,14 @@
 //!
 //! Every tool shows the plan outline of what it would create as ghosts, so the preview travels in the window transient like every other mark.
 
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::editor::bim::gestures::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
-use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::gestures::transform::{ghost, outline};
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::standards::v1::subsets::any::schema::mutations::modify::{self, ArrayPattern, MAX_COPIES};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::{ghost, outline};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::{ArrayPattern, MAX_COPIES};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::f64::consts::{PI, TAU};
 
 /// 🖱️ How many pixels a press must travel before it counts as a drag.
@@ -88,25 +87,25 @@ pub fn radial_count(step: f64) -> u32 {
 
 //#region 🔖️Picking
 fn pick_ids(ctx: &ToolContext<'_>, pointer: &Pointer) -> (Vec<String>, Option<(String, String)>) {
-    let placed = |id: &String| crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some();
+    let placed = |id: &String| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some();
     let selected: Vec<String> = ctx.selected.iter().filter(|id| placed(id)).cloned().collect();
     if !selected.is_empty() {
         return (selected, None);
     }
-    let hit = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey)).and_then(|linework| plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)).filter(placed);
+    let hit = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey)).and_then(|linework| semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)).filter(placed);
     let target = hit.as_ref().and_then(|id| kind_holding(ctx.snapshot, id).map(|row| (row.kind.to_string(), id.clone())));
     (hit.into_iter().collect(), target)
 }
 
 /// 🎯️ The `(kind, id)` of every element the copies `1..=copies` of a mutation with `prefix` create, in creation order: the minted ids carry the kind of their source.
 fn minted_targets(ctx: &ToolContext<'_>, ids: &[String], prefix: &str, copies: u32) -> Vec<(String, String)> {
-    let Ok(sources) = modify::sources(ctx.snapshot, ids) else { return Vec::new() };
+    let Ok(sources) = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::sources(ctx.snapshot, ids) else { return Vec::new() };
     let kinds: Vec<Option<&'static str>> = sources.elements.iter().map(|source| kind_holding(ctx.snapshot, source).map(|row| row.kind)).collect();
     let mut targets = Vec::new();
     for copy in 1..=copies {
         for (ordinal, kind) in kinds.iter().enumerate() {
             if let Some(kind) = kind {
-                targets.push((kind.to_string(), modify::mint(prefix, copy, ordinal)));
+                targets.push((kind.to_string(), semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::mint(prefix, copy, ordinal)));
             }
         }
     }
@@ -145,7 +144,7 @@ impl Duplicate {
         }
         let prefix = ctx.mint("copy");
         let targets = minted_targets(ctx, &self.ids, &prefix, 1);
-        let mutation = ModelMutation::CopyElements(crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements { ids: self.ids.clone(), vector: point2(vector), prefix });
+        let mutation = ModelMutation::CopyElements(semio_s_artifact_bim_model_mut_any_179::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements { ids: self.ids.clone(), vector: point2(vector), prefix });
         self.finish(ctx, mutation, targets)
     }
 
@@ -156,14 +155,14 @@ impl Duplicate {
         }
         let prefix = copies.then(|| ctx.mint("mirror"));
         let targets = prefix.as_ref().map_or_else(Vec::new, |prefix| minted_targets(ctx, &self.ids, prefix, 1));
-        let mutation = ModelMutation::MirrorElements(crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements { ids: self.ids.clone(), line_start: point2(start), line_end: point2(end), prefix });
+        let mutation = ModelMutation::MirrorElements(semio_s_artifact_bim_model_mut_any_189::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements { ids: self.ids.clone(), line_start: point2(start), line_end: point2(end), prefix });
         self.finish(ctx, mutation, targets)
     }
 
     fn array(&mut self, ctx: &mut ToolContext<'_>, pattern: ArrayPattern) -> Step {
         let prefix = ctx.mint("array");
         let targets = minted_targets(ctx, &self.ids, &prefix, pattern.count());
-        let mutation = ModelMutation::ArrayElements(crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements { ids: self.ids.clone(), prefix, pattern });
+        let mutation = ModelMutation::ArrayElements(semio_s_artifact_bim_model_mut_any_180::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements { ids: self.ids.clone(), prefix, pattern });
         self.finish(ctx, mutation, targets)
     }
 

@@ -1,0 +1,7 @@
+{
+ "name": "wfcjb",
+ "crates": [
+  "semio-s-plugin-wfc-engine"
+ ],
+ "note": "every crate owning a file this port rewrote"
+}

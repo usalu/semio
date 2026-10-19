@@ -1,6 +1,6 @@
 import type { FrameworkOsBootOptions } from "@semio-tech/framework-renderer-react";
 import type { SDevBrowserHostV1 } from "../🟦️.ts";
-import { createFrameworkOsHostPortsV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 
 /** ⚛️ Binds one Specific browser mount to the actual General React receiver and its exact installed inventory. */
 export function createSDevReactHostV1(configuration: Pick<FrameworkOsBootOptions, "rootId" | "plugin" | "appId" | "appRole" | "locks" | "defaults" | "brand">): SDevBrowserHostV1 {

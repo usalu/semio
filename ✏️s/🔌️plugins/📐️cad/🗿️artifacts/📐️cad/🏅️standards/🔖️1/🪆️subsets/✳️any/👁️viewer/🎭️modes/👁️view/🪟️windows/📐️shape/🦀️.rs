@@ -18,7 +18,7 @@ use semio_framework_plugin::MeshWindowKit;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
-use ui_wgpu::wgpu::SurfaceKind;
+use semio_framework_ui_declaration::ui::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "cad-view-shape";

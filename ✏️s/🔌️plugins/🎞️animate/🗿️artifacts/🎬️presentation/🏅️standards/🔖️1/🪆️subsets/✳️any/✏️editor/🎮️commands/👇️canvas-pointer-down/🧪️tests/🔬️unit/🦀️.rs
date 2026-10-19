@@ -22,8 +22,8 @@ use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
 /// would have been handed and the selection snapshot is the witness.
 async fn settled(app: &mut PresentationApp, command: PresentationCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
     let instance_id = artifact_app_laws::meta("local").instance_id;
-    app.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-    artifact_app_laws::settle_registered_typed_operation(&mut **app, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained publication settles")
+    app.0.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication settles")
 }
 
 async fn selected_tiles(app: &PresentationApp) -> Vec<String> {
@@ -44,5 +44,5 @@ async fn canvas_pointer_down_selects_a_hit_inline_and_clears_on_miss() {
     let miss = settled(&mut app, PresentationCommand::CanvasPointerDown(CanvasPointerDown { layer_id: Some("source-frame".into()) })).await;
     assert!(!miss.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "the clearing interactionSelect is folded too: {:?}", miss.effects);
     assert!(selected_tiles(&app).await.is_empty(), "a miss clears the tiles selection inside the carrying operation");
-    artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

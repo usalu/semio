@@ -8,7 +8,8 @@ export function originalBootstrapStockFromWire(value:unknown):OriginalBootstrapS
 /** 🧵️ One bootstrap owns all admitted original operation sources and fences closure until they return. */
 export class KernelOriginalBootstrapStock {
  readonly #pool:KernelOriginalResourcePool;readonly #issuer:KernelOriginalOperationIssuer;readonly #live=new Map<bigint,{original:OriginalOperationAdmission;remaining:OriginalRetainedGrant;fuel:number;epoch:bigint;receipt:OriginalOperationReceipt|undefined;refusal:unknown}>();#closed=false;
- constructor(readonly configuration:OriginalBootstrapStock){this.#pool=new KernelOriginalResourcePool(configuration.stock);this.#issuer=new KernelOriginalOperationIssuer(request=>this.#pool.admit(request));}
+ readonly configuration: OriginalBootstrapStock;
+ constructor(configuration:OriginalBootstrapStock){this.configuration = configuration; this.#pool=new KernelOriginalResourcePool(configuration.stock);this.#issuer=new KernelOriginalOperationIssuer(request=>this.#pool.admit(request));}
  get fuelRemaining():number{return this.#pool.fuelRemaining}
  get retainedRemaining():OriginalRetainedGrant{return this.#pool.remaining}
  get liveSources():number{return this.#live.size}
@@ -31,7 +32,8 @@ export abstract class OriginalBootstrapOwner {
 }
 /** 🌳️ Actual root composition forwards the same initiating pool through the asynchronous owner port. */
 export class RootOriginalBootstrapOwner extends OriginalBootstrapOwner {
- constructor(readonly stock:KernelOriginalBootstrapStock){super()}
+ readonly stock: KernelOriginalBootstrapStock;
+ constructor(stock:KernelOriginalBootstrapStock){super(); this.stock = stock;}
  async admit():Promise<OriginalOperationAdmission>{return this.stock.admit()}
  async receive(original:OriginalOperationAdmission,receipt:OriginalOperationReceipt):Promise<void>{this.stock.receive(original,receipt)}
  async hold(original:OriginalOperationAdmission,refusal:unknown):Promise<void>{this.stock.hold(original,refusal)}

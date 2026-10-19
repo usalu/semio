@@ -1,10 +1,10 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {createRequire,isBuiltin} from "node:module";
 import {dirname,extname,isAbsolute,join,relative,resolve,sep} from "node:path";
 import {lstat,readFile} from "node:fs/promises";
 import {lstatSync,readFileSync} from "node:fs";
 import {createHash} from "node:crypto";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {checkScriptInvocation,advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 /** 🧬️ Names authored source roots and compiler configuration without exporting external compiler types. */
@@ -22,4 +22,4 @@ async function collectConfiguredSourceV1(workspace:string,request:ConfiguredSour
 }
 
 /** 🔏️ Retains current observed resolution probes and exact physical Source through its Original invocation. */
-export async function configuredSourceInputsV1(workspace:string,request:ConfiguredSourceRequestV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<ConfiguredSourceInputsV1>{const check=()=>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);};check();const observation=createRequire(import.meta.url)("../../../🏗️build/👁️observation/🟨️.mjs"),captured=await observation.captureObservedSourceInputsV1(()=>collectConfiguredSourceV1(workspace,request,invocation,phaseControl),undefined,false),recheck=async()=>{check();await captured.value.recheck();check();if(!await observation.observationsHold(captured.observations,64,new Set(),new Set(),phaseControl.signal))throw Error("Configured Source resolution changed");};await recheck();check();return Object.freeze({...captured.value,recheck});}
+export async function configuredSourceInputsV1(workspace:string,request:ConfiguredSourceRequestV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<ConfiguredSourceInputsV1>{const check=()=>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);};check();const observation=await import("../../../🏗️build/👁️observation/🟨️.mjs"),captured=await observation.captureObservedSourceInputsV1(()=>collectConfiguredSourceV1(workspace,request,invocation,phaseControl),undefined,false),recheck=async()=>{check();await captured.value.recheck();check();if(!await observation.observationsHold(captured.observations,64,new Set(),new Set(),phaseControl.signal))throw Error("Configured Source resolution changed");};await recheck();check();return Object.freeze({...captured.value,recheck});}

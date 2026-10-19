@@ -6,7 +6,7 @@ import {CoverageJob,type CoverageMask} from "@semio-tech/framework/pixels/covera
 import {validateExtent,type PixelImage} from "@semio-tech/framework/pixels/editing";
 import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
 import {PreparedFill} from "../../🎨️fill/🎨️sampling/🟦️.ts";
-import type {Fill,Color} from "../../🎨️fill/🟦️.ts";
+import type { Fill, Color } from "../../🎨️fill/🖌️paint-model/🟦️.ts";
 import {parseStrokeCap,parseStrokeJoin,type StrokeCap,type StrokeJoin} from "../../🖊️stroke/🟦️.ts";
 export type PathRasterStroke={readonly color:Readonly<Color>;readonly width:number;readonly cap:StrokeCap;readonly join:StrokeJoin;readonly dash?:readonly number[]|null};
 export type PathRasterInput={width:number;height:number;origin:readonly [number,number];segments:readonly PathSegment[];transform:readonly number[];tolerance:number;fillRule:"nonzero"|"evenodd";fill:Fill|null;stroke:PathRasterStroke|null};

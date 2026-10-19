@@ -1,6 +1,7 @@
 //! ⚖️ `create-rule` payload. Brings a new numeric code check into the model: the measure and direction (minimum clear height, maximum riser, minimum tread, minimum stair width, minimum door width, maximum ramp slope, minimum corridor width, maximum compartment area), the limit, the severity and the scope. Its findings are inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Rule}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Rule};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateRule {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateRule
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRule> + From<crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateRule> + From<semio_s_artifact_bim_model_mut_any_119::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "rule", kind: "create-rule", record: "CreateRule" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

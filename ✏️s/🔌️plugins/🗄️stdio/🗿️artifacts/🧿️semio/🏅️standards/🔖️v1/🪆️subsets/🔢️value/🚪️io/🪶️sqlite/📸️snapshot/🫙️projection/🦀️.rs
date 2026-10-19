@@ -1,15 +1,15 @@
 //! 🔢️ Original Value projection owns graph ordinals and shared scalar tree frames through every result.
 use super::{SemioValue,SemioValueSnapshot,ValueSqliteTables,VALUE_TABLES,number};
-use crate::base_foundation::io::sqlite::snapshot::projection::NameIndex;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::NameIndex;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,ProjectionStorage,RowWriter,project_owned,owned_workspace}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="🌳️tree/🦀️.rs"]mod tree;
-pub(crate)use tree::TreeScratch;
-pub(crate)use tree::visit as visit_tree;
+pub use tree::TreeScratch;
+pub use tree::visit as visit_tree;
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 
 /// 🔗️ Resolves an actual graph identity while keeping all source bytes borrowed.
-pub(crate)trait References{fn lookup(&self,id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>;}
+pub trait References{fn lookup(&self,id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>;}
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate)struct Scratch{nodes:NameIndex,tree:TreeScratch}

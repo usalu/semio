@@ -1,6 +1,7 @@
 //! 🦈️ `split-wall` payload. Splits a wall at the fraction `t` of its axis into the original wall and a new wall that continues it with the same type, location, base, top and phase; openings beyond the split point move onto the new wall.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,7 +15,7 @@ pub struct SplitWall {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for SplitWall
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitWall> + From<crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall> + From<crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening> + From<crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitWall> + From<semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall> + From<semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening> + From<semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "split", entity: "wall", kind: "split-wall", record: "SplitWall" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

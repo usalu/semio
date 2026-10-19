@@ -1,5 +1,5 @@
 /** 🧬️ Lowpoly artifact schema — every field with its state class. */
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import { type Binary32 } from "@semio-tech/framework/value/ieee754";
 import { parseBinary32 } from "@semio-tech/framework/value/ieee754";
 import {parseLowpolyMeshState,type LowpolyMeshState}from"./🕸️mesh/🟦️.ts";

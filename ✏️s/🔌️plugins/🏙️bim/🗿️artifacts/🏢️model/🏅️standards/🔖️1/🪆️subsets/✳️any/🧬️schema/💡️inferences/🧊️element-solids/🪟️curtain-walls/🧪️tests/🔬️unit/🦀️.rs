@@ -1,20 +1,22 @@
-use crate::standards::v1::subsets::any::schema::snapshot::CurtainWallType;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::CurtainWall;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -27,10 +29,11 @@ use semio_framework_geometry::vector::{perp, unit};
 use semio_framework_geometry::{Point, Vec2};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, ModelSnapshot, Opening, OpeningKind, Profile};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::{member, without, touched, remaining, PANEL_THICKNESS, SOLID_THICKNESS};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainGrid, CurtainPanel, OpeningKind, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, ModelSnapshot, Opening};
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-12 * right.abs().max(1.0)
@@ -102,7 +105,7 @@ async fn the_border_mullions_use_the_border_section_and_the_interior_ones_the_in
 #[semio_framework_async_macros::async_test]
 async fn the_grid_follows_the_storey_height_and_the_spacings() {
     let (mut snapshot, _) = case("curtain-grid");
-    snapshot.curtain_walls.get_mut("cw-1").expect("curtain wall").top = crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { offset: 0.0 };
+    snapshot.curtain_walls.get_mut("cw-1").expect("curtain wall").top = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { offset: 0.0 };
     let before = compute_element_solids(&snapshot);
     snapshot.storeys.get_mut("st-1").expect("storey").height = 3.5;
     let after = compute_element_solids(&snapshot);
@@ -140,7 +143,7 @@ async fn round_and_profile_mullions_use_their_outline() {
 #[semio_framework_async_macros::async_test]
 async fn a_curved_curtain_wall_has_a_solid_following_the_arc() {
     let (mut snapshot, _) = case("curtain-grid");
-    snapshot.curtain_walls.get_mut("cw-1").expect("curtain wall").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 4.0 }, bulge: (std::f64::consts::PI / 8.0).tan() };
+    snapshot.curtain_walls.get_mut("cw-1").expect("curtain wall").axis = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: 0.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 4.0 }, bulge: (std::f64::consts::PI / 8.0).tan() };
     let solids = compute_element_solids(&snapshot);
     let wall = &solids["cw-1"];
     assert!(wall.volume > 0.0 && wall.bounds.max.x > 3.9 && wall.bounds.max.y > 3.9 && wall.bounds.min.x < 0.1);

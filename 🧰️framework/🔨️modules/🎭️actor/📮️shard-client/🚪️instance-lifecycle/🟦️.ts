@@ -1,16 +1,17 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import type { ResidentGrant } from "@semio-tech/value-ts/resident";
-import { OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import { OwnedUiInstance, OwnedUiInstanceRetirement, type OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, type ActorInstanceCloseRequest, type ActorInstanceLifecycleReceipt, type ActorInstanceOpenRequest } from "../../🚪️lifetime/🟦️.ts";
 import { NO_RETURN_FAULT, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput, type ShardInstanceOwner, isRetryableLifecycleTurn } from "../🔐️activation/🟦️.ts";
-import { OwnedNativeUiPatchAuthority, type OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
+import type { OwnedNativeUiPatchAuthority, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
 import type { ShardBudget, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
 
 /** 🚪️ Owns the exact instance lifecycle of an activation: open, poll, close and acknowledgement crossings with their receipts. */
 export class ShardInstanceLifecycles {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   /** 🪪️ Reserves an exact pre-open owner; only a guest receipt can populate its lifetime. */
   captureInstanceLifecycle(actorId: string, instanceId: number): ShardInstanceLifecycleLease {

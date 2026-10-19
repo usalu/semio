@@ -3,27 +3,25 @@
  */
 import { runLiveSignInV1 } from "../../🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { scriptCompilerAdmissionControlV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { resolveTestLevel } from "@semio-tech/process/test-budget";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runCargo, runRepositoryCommand } from "@semio-tech/process/execution";
+import { runAdmittedCargoPackageTestsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
-import { runRepositoryCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { HUB_TEST_PACKAGES } from "../../🧪️testing/📖️source-readers/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
 /** 🕸️ Supplies Hub's actual actor publication capability to the neutral runtime graph verifier. */
 export class RuntimeFixtureGraphScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    const {verifyRuntimeFixtureGraphV1}=await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
+    const {verifyRuntimeFixtureGraphV1}=await import("@semio-tech/repo-lib/inventory");
     const {hubRuntimeActorPublicationPortV1}=await import("../../🏗️bootstrap/🎭️actors/🟦️.ts");
     await verifyRuntimeFixtureGraphV1(this.repoRoot,segments,hubRuntimeActorPublicationPortV1(this.repoRoot),["🧰️framework","✏️s","🌎️hub"],this.invocation);
   }
@@ -31,7 +29,7 @@ export class RuntimeFixtureGraphScript extends BundleScript {
 
 /** 🧱️ Runs the bounded Hub foundation source contract through the shared owned-process boundary. */
 export class HubDocumentSweepScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");const {withIssuedResourceControlV1}=await import("../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");await withIssuedResourceControlV1(this.invocation,"hub:document-sweep",0,phase=>runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments,this.invocation,phase));}
+ async run(segments:string[]):Promise<void>{const {runHubDocumentSweepCli}=await import("../../🧪️tests/🗂️document-sweep/🟦️.ts");const {withIssuedResourceControlV1}=await import("@semio-tech/process/routing");await withIssuedResourceControlV1(this.invocation,"hub:document-sweep",0,phase=>runHubDocumentSweepCli(this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🗂️document-sweep"),segments,this.invocation,phase));}
 }
 export class HubIoMatrixScript extends BundleScript {
  async run(segments:string[]):Promise<void>{const {runIoMatrixCli}=await import("../../🧪️tests/🚪️io-matrix/🟦️.ts");await runIoMatrixCli(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"io-matrix",0),this.repoRoot,join(this.repoRoot,"🌎️hub/🤖️generated/🚪️io-matrix"),segments);}
@@ -96,7 +94,7 @@ export class InferenceClientContractTestScript extends BundleScript {
     
     
     
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),progress: event => console.log(`inference-client-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [{ package: "semio-hub", target: { kind: "test", name: "inference_client_contract" }, laws: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),progress: event => console.log(`inference-client-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [{ package: "semio-hub", target: { kind: "test", name: "inference_client_contract" }, laws: [
           "the_published_error_vocabulary_is_exactly_the_neutral_fixtures_and_status_alone_is_ambiguous",
           "the_client_mirrors_the_neutral_fixtures_exact_fixed_limits",
           "an_offered_page_carries_the_corpus_preview_and_a_forged_or_open_ring_is_refused",
@@ -118,7 +116,7 @@ export class ComponentCodecCheckScript extends BundleScript {
     if(!oracle(fixture)) throw new Error(JSON.stringify(oracle.errors));
     resolveTestLevel([],segments[0]==="budget"?"exhaustive":"quick");
     const filter=segments[0]==="budget"?"actual_gis_owned_codec_honors":"actual_component_codec_exports";
-    await runRepositoryCargoTests(["semio-hub-component-codec-laws"], this.repoRoot, this.invocation, ["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
+    await runAdmittedCargoPackageTestsV1(["semio-hub-component-codec-laws"], this.repoRoot, this.invocation, ["--lib","--features","integration-fixtures",filter,"--","--nocapture"]);
   }
 }
 
@@ -128,7 +126,7 @@ export class TestScript extends BundleScript {
     const [head, ...tail] = rest;
     const allFeatures = head === "all-features";
     process.env.SEMIO_TEST_ARTIFACT_DIR ??= hubTestArtifactRoot(this.root);
-    await runRepositoryCargoTests([...HUB_TEST_PACKAGES], this.repoRoot, this.invocation, allFeatures ? ["--all-features", ...tail] : rest);
+    await runAdmittedCargoPackageTestsV1([...HUB_TEST_PACKAGES], this.repoRoot, this.invocation, allFeatures ? ["--all-features", ...tail] : rest);
   }
 }
 
@@ -195,7 +193,7 @@ export class HostileInputCheckScript extends BundleScript {
     process.once("SIGINT", interrupt);
     await withAcceptanceRecord(this.repoRoot, "hub-hostile-input", async () => {
       const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
-      const oracle = spawnSync("bunx", ["vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
+      const oracle = spawnSync("bun", ["x", "vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
       const law = ([owner, name]: readonly [string, string], seed?: number): Promise<{ status: number; lines: string[] }> =>
         runLawProcess("cargo", ["test", "--manifest-path", "Cargo.toml", "-p", owner, "--lib", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) } });
       const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));

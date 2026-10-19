@@ -78,11 +78,11 @@ pub(super) fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, ValueError>
 }
 
 /// 🎟️ One close unit's receipt: `items` released owners and `bytes` of released backing.
-pub(super) fn session_child_failure(step: InteractiveJobCloseStep) -> Option<PluginLifecycleStep> {
+pub(super) fn session_child_step<E>(step: Result<InteractiveJobCloseStep, E>) -> Result<InteractiveJobCloseStep, PluginLifecycleStep> {
     match step {
-        InteractiveJobCloseStep::Blocked => Some(PluginLifecycleStep::Blocked { reason: "mounted FEM child close is blocked" }),
-        InteractiveJobCloseStep::Refused { .. } => Some(PluginLifecycleStep::Blocked { reason: "mounted FEM child close was refused" }),
-        InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. } => None,
+        Ok(InteractiveJobCloseStep::Blocked) => Err(PluginLifecycleStep::Blocked { reason: "mounted FEM child close is blocked" }),
+        Err(_) => Err(PluginLifecycleStep::Blocked { reason: "mounted FEM child close was refused" }),
+        Ok(step @ (InteractiveJobCloseStep::Pending { .. } | InteractiveJobCloseStep::Complete { .. })) => Ok(step),
     }
 }
 

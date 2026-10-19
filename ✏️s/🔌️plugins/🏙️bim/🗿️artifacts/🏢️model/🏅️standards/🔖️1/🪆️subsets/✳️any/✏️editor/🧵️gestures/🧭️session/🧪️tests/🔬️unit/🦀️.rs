@@ -1,27 +1,28 @@
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
 #[allow(unused_imports)]
-use crate::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::snap::{snap, SnapHit, SnapKind, SnapRequest};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::{snap, SnapHit, SnapKind, SnapRequest};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::IdMint;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::IdMint;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_ui_locale::LabelText;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::gestures::session::*;
-use crate::editor::bim::fixture::{model, room};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, ToolContext, Surface, Step, REJECTED, length_label};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{model, room};
 
 #[semio_framework_async_macros::async_test]
 async fn the_held_modifiers_map_to_the_framework_merge_modes() {
@@ -60,7 +61,7 @@ async fn the_model_is_asked_before_a_tool_proposes_a_mutation() {
     let snapshot = model();
     let inference = ModelInference::default();
     let context = ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
-    let storey = |id: &str| ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: id.into(), height: 3.5 });
+    let storey = |id: &str| ModelMutation::SetStoreyHeight(semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: id.into(), height: 3.5 });
     assert!(context.accepts(&storey("st-ground")));
     assert!(!context.accepts(&storey("nowhere")));
     assert_eq!(Step::write(&context, storey("nowhere")).refused, Some(REJECTED));

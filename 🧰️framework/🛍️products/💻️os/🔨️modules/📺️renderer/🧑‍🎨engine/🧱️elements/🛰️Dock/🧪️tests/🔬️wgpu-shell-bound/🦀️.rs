@@ -7,7 +7,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_layout::layout::{create_default_layout, WindowOptions};
 //#region WindowActionsAndUtilitiesTests
 use semio_framework::{ActionArgDef, ActionDefinition, ActionKind, UtilityDefinition, UtilityRef};
-use ui_wgpu::wgpu::{KeyAction, PointerModifiers};
+use semio_framework_ui_wgpu_input::{KeyAction, PointerModifiers};
 
 fn tab(id: &str) -> DockStackTab {
     DockStackTab::new(id)

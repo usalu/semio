@@ -10,12 +10,12 @@ import { COORDINATOR_PARSERS, COORDINATOR_SCHEMA_ID, parseG3EventEnvelope, parse
 const ownerRoot = join(import.meta.dirname, "../..");
 const schemaPath = join(ownerRoot, "🧬️schema/🔣️.json");
 const document = JSON.parse(readFileSync(schemaPath, "utf-8")) as { $schema: string; $id: string; $defs: Record<string, Record<string, unknown>> };
-const cases = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/📨️rest-cases.json"), "utf-8")) as {
+const cases = JSON.parse(readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/📨️rest-cases.json"), "utf-8")) as {
   schema: string;
   accepted: { export: string; value: unknown; parsed: unknown }[];
   rejected: { export: string; value: unknown; reason: string }[];
 };
-const eventLog = readFileSync(join(ownerRoot, "🧫️fixtures/📜️g3-event-log.jsonl"), "utf-8");
+const eventLog = readFileSync(join(ownerRoot, "🧪️tests/🧫️fixtures/📜️g3-event-log.jsonl"), "utf-8");
 
 const AjvConstructor = createRequire(import.meta.url)("ajv") as new (options: Record<string, unknown>) => {
   addSchema(schema: unknown): void;

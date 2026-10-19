@@ -1,7 +1,9 @@
-import { toolJobFemLiveVisualPublicationExact } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts";
-
 /** 🧪️ Executes tool job fem live visual publication policy assertions. */
+/** 🧪️ Checks the live visual publication law against the miniatures; the law is injected by the caller that owns it. */
+export type FemLiveVisualPublicationLaw = (...sources: string[]) => boolean;
+
 export function toolJobFemLiveVisualPublicationSelfTests(
+  toolJobFemLiveVisualPublicationExact: FemLiveVisualPublicationLaw,
   fem2dModel: string,
   fem2dSession: string,
   fem3dSession: string,

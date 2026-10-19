@@ -139,16 +139,16 @@ pub(super) async fn inline_selection_app() -> (DrawingAppFixture, semio_framewor
 
 /// 🔁️ One dispatch settled the way the plugin host settles it; the receipt's `effects` are exactly
 /// what the host would have been handed.
-pub(super) async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_framework_plugin::ActionMeta) -> (semio_framework_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
+pub(super) async fn settled(app: &mut DrawingAppFixture, command: DrawingCommand, meta: &semio_framework_plugin::ActionMeta) -> (semio_framework_plugin::InvocationResult, artifact_laws::TypedOperationFixtureReceipt) {
     settle_drawing_geometry(app,meta.view_state.as_ref()).await;
     let command_id = command.command_id();
-    let result = app.dispatch_typed(command, meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
-    let receipt = artifact_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
+    let result = app.0.dispatch_typed(command, meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("dispatch {command_id}: {fault:?}"));
+    let receipt = artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("retained publication of {command_id} settles: {fault:?}"));
     (result, receipt)
 }
 
 /// 📸️ Loads test geometry through the same retained envelope owner as the host.
-pub(super) fn load_drawing_fixture(app: &mut DrawingApp, snapshot: &DrawingSnapshot) {
+pub(super) fn load_drawing_fixture(app: &mut DrawingAppFixture, snapshot: &DrawingSnapshot) {
     use pack::snapshot::ArtifactPack;
     let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
@@ -276,7 +276,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let first_meta = drawing_composite_shape_meta();
     let first_view = first_meta.view_state.as_ref().expect("first drawing-composite view");
     let initial_tree = rendered_drawing_canvas(&mut app, None, first_view).await.expect("initial drawing-composite render");
-    artifact_laws::project_and_retire_fixture_tree(initial_tree).expect("retire initial drawing-composite tree");
+    drop(initial_tree);
     let before = app.snapshot().expect("initial Drawing snapshot").layers.len();
     let width = 1587.0;
     let height = 907.0;
@@ -314,7 +314,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let second_meta = drawing_composite_shape_meta();
     let second_view = second_meta.view_state.as_ref().expect("fresh post-publication drawing-composite view");
     let refreshed_tree = rendered_drawing_canvas(&mut app, None, second_view).await.expect("post-publication drawing-composite render");
-    artifact_laws::project_and_retire_fixture_tree(refreshed_tree).expect("retire post-publication drawing-composite tree");
+    drop(refreshed_tree);
     settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &second_meta).await;
     settled(
         &mut app,
@@ -348,7 +348,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let third_meta = drawing_composite_shape_meta();
     let third_view = third_meta.view_state.as_ref().expect("fresh identical-geometry drawing-composite view");
     let third_tree = rendered_drawing_canvas(&mut app, None, third_view).await.expect("identical-geometry drawing-composite render");
-    artifact_laws::project_and_retire_fixture_tree(third_tree).expect("retire identical-geometry drawing-composite tree");
+    drop(third_tree);
     settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &third_meta).await;
     settled(
         &mut app,
@@ -379,7 +379,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let third_reset = has_direct_select_reset(&third_receipt);
 
     let projection = app.snapshot().expect("three-times-published Drawing snapshot");
-    artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     assert_eq!(first_layer_count, before + 1, "first rectangle publication: {first_observation}");
     assert!(first_reset, "first PointerUp returns its exact drawing-composite utility to Direct Select: {first_observation}");
     assert!(second_reset, "second PointerUp returns its exact drawing-composite utility to Direct Select: {second_observation}");

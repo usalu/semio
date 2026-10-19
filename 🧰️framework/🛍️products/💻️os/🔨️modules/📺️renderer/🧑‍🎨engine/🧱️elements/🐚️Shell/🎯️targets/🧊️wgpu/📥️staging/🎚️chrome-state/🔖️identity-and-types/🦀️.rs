@@ -7,8 +7,8 @@ use super::*;
 //#region ShellTypes
 //#region 🔖️ChromeThreadBoundary
 pub struct RetainedContentFocus {
-    pub node: ui_wgpu::wgpu::NodeId,
-    pub key: ui_wgpu::wgpu::NodeKey,
+    pub node: semio_framework_ui_arena::NodeId,
+    pub key: semio_framework_ui_retained_tree::tree::NodeKey,
     pub kind: RetainedNodeFocusKind,
 }
 
@@ -30,7 +30,7 @@ pub struct ShellChromeBuildState {
     /// driver) actually suppress a hover tooltip on this target; before ticket 26/09/17 packet W15a
     /// the whole `UiDriver` vocabulary had zero readers anywhere in the wgpu tree, so every chrome
     /// control fired its tooltip under every driver.
-    pub driver: ui_wgpu::wgpu::UiDriverChrome,
+    pub driver: semio_framework_ui_wgpu_layout::chrome::UiDriverChrome,
     pub tooltip_hover: Option<ChromeTooltipHover>,
     pub dialog_stack: Vec<ChromeDialogRequest>,
     pub tour_state: Option<ChromeTourState>,

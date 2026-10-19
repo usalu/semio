@@ -12,7 +12,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
     reconcile_puzzle3d_settings(&mut ui, window_id, &law);
 
     let mut atlas = FontAtlas::builtin();
-    let icons = crate::wgpu::draw_types::IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
+    let icons = semio_framework_ui_draw_contract::IconAtlas::from_packed(2, 1, vec![255; 8], vec![("minus".into(), [0.0, 0.0, 0.5, 1.0]), ("plus".into(), [0.5, 0.0, 0.5, 1.0])]);
     let body = Rect::new(0.0, 0.0, 360.0, 480.0);
     drive_layout(&mut ui, window_id, body.w, body.h, &mut atlas);
     let mut draw = DrawList::default();
@@ -46,30 +46,30 @@ fn puzzle3d_settings_document_completes_retained_paint() {
         assert!(bounds.w > 0.0 && bounds.h > 0.0, "{key} has accepted layout");
         assert!(hits.iter().any(|hit| hit.control_id == key && hit.kind == HitKind::NumberStepper), "{key} publishes its retained hit");
 
-        let clip = crate::wgpu::draw_types::ScissorRect::from_rect(bounds, body.h);
+        let clip = semio_framework_ui_draw_contract::ScissorRect::from_rect(bounds, body.h);
         let clipped: Vec<_> = draw.layers.iter().filter(|layer| layer.scissor == Some(clip)).flat_map(|layer| layer.ui_instances.iter()).collect();
-        let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_SOLID).collect();
+        let solids: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_SOLID).collect();
         assert_eq!(solids.len(), 7, "{key} retains one five-quad border and two clipped dividers when neither side is hovered");
         assert!(solids.iter().any(|instance| rect_matches(instance.rect, bounds)), "{key} retains the outer background");
-        let [minus, value_segment, plus] = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
+        let [minus, value_segment, plus] = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
         assert!(!solids.iter().any(|instance| rect_matches(instance.rect, value_segment)), "{key} center is transparent and borderless");
         let hair = ui.theme.stroke_hairline;
         for divider in [Rect::new(minus.x + minus.w - hair, minus.y, hair, minus.h), Rect::new(plus.x, plus.y, hair, plus.h)] {
             assert!(solids.iter().any(|instance| rect_matches(instance.rect, divider)), "{key} side divider follows its button edge");
         }
-        let texture_instances: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_TEXTURED).collect();
+        let texture_instances: Vec<_> = clipped.iter().copied().filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_TEXTURED).collect();
         assert_eq!(texture_instances.len(), 2, "{key} retains two catalog icons");
         for (id, segment) in [("minus", minus), ("plus", plus)] {
-            let size = crate::wgpu::chrome::ICON_TINY;
+            let size = semio_framework_ui_wgpu_layout::chrome::ICON_TINY;
             let inset = if id == "minus" { -hair } else { hair };
             let expected = Rect::new(segment.x + (segment.w - size + inset) * 0.5, segment.y + (segment.h - size) * 0.5, size, size);
             assert!(texture_instances.iter().any(|instance| instance.uv_rect == icons.icon_uv(id).unwrap() && rect_matches(instance.rect, expected)), "{key} positions the {id} catalog icon");
         }
 
-        let glyphs: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == crate::wgpu::draw_types::KIND_GLYPH && rect_inside(instance.rect, bounds)).collect();
+        let glyphs: Vec<_> = all_instances.iter().copied().filter(|instance| instance.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH && rect_inside(instance.rect, bounds)).collect();
         let expected_text = control["formatted"].as_str().unwrap();
         assert_eq!(ui_contract::format_ui_number(stepper.value), expected_text);
-        let thirds = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
+        let thirds = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline);
         let in_segment = |segment: Rect| {
             glyphs
                 .iter()
@@ -88,7 +88,7 @@ fn puzzle3d_settings_document_completes_retained_paint() {
 #[test]
 fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture() {
     let law = puzzle3d_settings_law();
-    let gestures: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
+    let gestures: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪜️stepper-pointer-commit/🔣️.json")).expect("stepper pointer fixture");
     for gesture in gestures["cases"].as_array().expect("gesture cases") {
         let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         let window_id = law["document"]["surface"].as_str().expect("surface");
@@ -104,7 +104,7 @@ fn puzzle3d_settings_stepper_commits_on_press_and_release_only_retires_capture()
             "plus" => 2,
             _ => unreachable!(),
         };
-        let rect = crate::wgpu::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline)[segment];
+        let rect = semio_framework_ui_wgpu_layout::layout::number_stepper_segments(bounds, ui_contract::FlowInline::Ltr, ui.theme.stroke_hairline)[segment];
         let (x, y) = (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5);
         let pressed = ui.dispatch_event(window_id, UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
         let actions = pressed
@@ -138,7 +138,7 @@ fn accessibility_dispatch_uses_current_window_generation_and_node_identity() {
     let first_generation = ui.surface_generation(window_id).expect("published surface generation");
     let focus = ui.dispatch_accessibility_event(window_id, first_generation, 2, "#width", AccessibilityUiEvent::Focus).expect("current focus address is accepted");
     assert!(focus.iter().any(|command| matches!(command, UiCommand::FocusChanged { node: Some(_), .. })));
-    assert_eq!(crate::wgpu::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).iter().find(|node| node.node_id == 2).map(|node| node.focused), Some(true));
+    assert_eq!(semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).iter().find(|node| node.node_id == 2).map(|node| node.focused), Some(true));
     let value = ui.dispatch_accessibility_event(window_id, first_generation, 2, "#width", AccessibilityUiEvent::Value("42".into())).expect("current value address is accepted");
     assert_eq!(value.iter().filter(|command| matches!(command, UiCommand::App { .. })).count(), 1, "one AT value event mints one retained action");
     assert!(ui.dispatch_accessibility_event(window_id, first_generation + 1, 2, "#width", AccessibilityUiEvent::Activate).is_none());
@@ -192,7 +192,7 @@ fn close_surface_to_terminal(ui: &mut Ui, token: UiSurfaceToken) {
 
 #[test]
 fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "surface-close-same-id";
     publish_accessibility_document(&mut ui, window_id);
@@ -218,7 +218,7 @@ fn closed_surface_token_and_document_epoch_cannot_alias_a_same_id_successor() {
 
 #[test]
 fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let count = law["sequentialMounts"].as_u64().unwrap() as usize;
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     for index in 0..count {
@@ -236,7 +236,7 @@ fn surface_close_releases_queued_layout_capacity_for_every_sequential_window() {
 
 #[test]
 fn surface_close_silently_discards_a_focused_blur_commit() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🪟️surface-lifetime/🔣️.json")).unwrap();
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
     let id = "silent-input-unmount";
     publish_blur_commit_input_document(&mut ui, id);
@@ -291,11 +291,11 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
     publish_select_accessibility_document(&mut ui, &law);
     let generation = ui.surface_generation(window_id).expect("published Select surface generation");
 
-    let closed: Vec<_> = crate::wgpu::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).into_iter().filter(|node| node.node_id == node_id).map(|node| node.role).collect();
+    let closed: Vec<_> = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).into_iter().filter(|node| node.node_id == node_id).map(|node| node.role).collect();
     assert_eq!(closed, law["closedRoles"].as_array().unwrap().iter().map(|role| role.as_str().unwrap().to_string()).collect::<Vec<_>>());
     let opened = ui.dispatch_accessibility_event(window_id, generation, node_id, node_key, AccessibilityUiEvent::Activate).expect("current Select address opens");
     assert!(opened.iter().all(|command| !matches!(command, UiCommand::App { .. })), "opening the listbox commits no value");
-    let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window_id).unwrap());
+    let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window_id).unwrap());
     let open: Vec<_> = projection.iter().filter(|node| node.node_id == node_id).map(|node| node.role.as_str()).collect();
     assert_eq!(open, law["openRoles"].as_array().unwrap().iter().map(|role| role.as_str().unwrap()).collect::<Vec<_>>());
     for expected in law["select"]["options"].as_array().unwrap() {
@@ -321,7 +321,7 @@ fn accessibility_select_projects_one_live_listbox_and_option_activation_commits_
     );
     assert!(commands.iter().any(|command| matches!(command, UiCommand::OverlayClosed { .. })), "option activation closes its one popup authority");
     assert!(ui.dispatch_accessibility_event(window_id, generation, node_id, option_key, AccessibilityUiEvent::Activate).is_none(), "the closed popup rejects its retired virtual option address");
-    let closed_again: Vec<_> = crate::wgpu::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).into_iter().filter(|node| node.node_id == node_id).map(|node| node.role).collect();
+    let closed_again: Vec<_> = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window_id).unwrap()).into_iter().filter(|node| node.node_id == node_id).map(|node| node.role).collect();
     assert_eq!(closed_again, closed, "closing retires listbox and options without retiring the Select document");
 }
 //#endregion 🔖️FacadeTests

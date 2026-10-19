@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{gable_roof, model, rect, wall};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{gable_roof, model, rect, wall};
 use serde_json::json;
 
 fn codes(found: &[Diagnostic]) -> Vec<DiagnosticCode> {

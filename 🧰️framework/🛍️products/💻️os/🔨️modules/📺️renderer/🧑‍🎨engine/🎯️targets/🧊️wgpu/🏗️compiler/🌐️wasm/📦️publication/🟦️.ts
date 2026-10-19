@@ -1,6 +1,6 @@
 import{createHash}from"node:crypto";
 import{isAbsolute,join,resolve}from"node:path";
-import{readScriptProcessJsonV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import{readScriptProcessJsonV1}from"@semio-tech/process/routing/invocation/process/json";
 
 /** 📦️ Names one stable renderer product without issuing physical custody. */
 export function rendererWasmPublicationV1(productsRoot:string,value:unknown):Readonly<{directory:string;owner:string}>{

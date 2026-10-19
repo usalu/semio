@@ -1,6 +1,6 @@
 //! 🧪️ Original sparse visitation and physical read ownership share one portable fixture.
 use super::*;
-use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::shared::SharedControlledRetirement,value::observe_retirement_allocations};
+use crate::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::arc_custody::SharedControlledRetirement,value::observe_retirement_allocations};
 use std::sync::Arc;
 
 fn drain<T:crate::ErasedSnapshotRetirement>(owner:&mut T,copy:usize)->(usize,usize,usize) {

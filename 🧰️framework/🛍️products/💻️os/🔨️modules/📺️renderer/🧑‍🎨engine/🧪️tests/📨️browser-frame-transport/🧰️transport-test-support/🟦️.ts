@@ -1,7 +1,8 @@
 /** 🧰️ Browser frame transport test support: the resolved boot descriptor, the host appearance, platform and storage defaults, the fake Worker port and the transport factory the transport test modules share. */
-import { fixtureOriginalWorkStock } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand

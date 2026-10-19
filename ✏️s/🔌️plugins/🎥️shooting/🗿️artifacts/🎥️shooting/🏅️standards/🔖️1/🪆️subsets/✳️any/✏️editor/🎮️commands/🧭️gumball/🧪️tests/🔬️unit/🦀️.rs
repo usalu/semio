@@ -111,9 +111,9 @@ async fn an_id_less_gesture_moves_the_live_selection() {
     let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
     let before = origin(&app, &asset_id);
     let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).expect("targets");
-    let admitted = app.handle_action("interactionSelect", Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("the selection admission settles");
-    artifact_app_laws::settle_registered_typed_operation(&mut *app, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the selection settles");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("the selection admission settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the selection settles");
     let captured = app.interaction_state().await;
     let rows = dispatch_rows(&mut app, translate(Vec::new(), 3.0)).await;
     let after_dispatch = app.interaction_state().await;

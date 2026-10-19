@@ -1,6 +1,6 @@
 //! 📊️ Original table projection retains shared scalar value pages and every partial SQL field.
 use super::{SemioTableSnapshot,number,kind,VALUES};
-use crate::standards::v1::subsets::value::io::sqlite::snapshot::projection::{TreeScratch,visit_tree};
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::projection::{TreeScratch,visit_tree};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,RowWriter,ProjectionStorage,project_owned,owned_workspace}};
 use semio_framework_value::ValueError;
 

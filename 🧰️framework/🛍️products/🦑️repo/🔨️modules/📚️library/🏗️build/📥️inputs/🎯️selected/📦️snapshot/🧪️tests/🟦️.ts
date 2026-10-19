@@ -7,8 +7,8 @@ import {readSelectedNativeSnapshotV1,withSelectedNativeSnapshotV1,withOriginalSe
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import {createRequestedIssuedResourceControlV1,receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {withRepositoryNxStorageV1} from "../../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 const hash=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
 test("closed physical selected Source snapshot retains genuine funding and Native reader until settlement",async()=>{
@@ -23,7 +23,7 @@ test("closed physical selected Source snapshot retains genuine funding and Nativ
  }finally{rmSync(source,{recursive:true,force:true});}
 },120000);
 
-import {acquireResourceLease} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease} from "@semio-tech/process/leases";
 
 import {selectedRustNativeInputPathsV1} from "../../🦀️rust/🟦️.ts";
 import selectionSchema from "../../🦀️rust/🧬️schema/🔣️.json" with {type:"json"};

@@ -155,8 +155,8 @@ fn place_tooltip_anchor(tree: &mut UiTree, anchor: [f32; 4], viewport: [f32; 2])
     let root = tree.document_node(UiNodeId(1)).expect("tooltip root");
     let control = tree.document_node(UiNodeId(2)).expect("tooltip control");
     let generation = tree.accepted_layout_generation().saturating_add(1);
-    assert!(tree.write_inactive_layout(root, generation, crate::wgpu::tree::AcceptedLayout { x: 0.0, y: 0.0, width: viewport[0], height: viewport[1], inline_suffix_width: 0.0 }));
-    assert!(tree.write_inactive_layout(control, generation, crate::wgpu::tree::AcceptedLayout { x: anchor[0], y: anchor[1], width: anchor[2], height: anchor[3], inline_suffix_width: 0.0 },));
+    assert!(tree.write_inactive_layout(root, generation, semio_framework_ui_retained_tree::tree::AcceptedLayout { x: 0.0, y: 0.0, width: viewport[0], height: viewport[1], inline_suffix_width: 0.0 }));
+    assert!(tree.write_inactive_layout(control, generation, semio_framework_ui_retained_tree::tree::AcceptedLayout { x: anchor[0], y: anchor[1], width: anchor[2], height: anchor[3], inline_suffix_width: 0.0 },));
     tree.commit_inactive_layout(generation);
 }
 
@@ -301,7 +301,7 @@ fn held_pointer_capture_transfers_to_the_accepted_candidate_and_releases_once() 
 
 #[test]
 fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_repeat_changes_state() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("number stepper fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/⌨️number-stepper-editing/🔣️.json")).expect("number stepper fixture");
     let hold = &fixture["hold"];
     let window_id = "clock-held-stepper";
     let generation = 1;
@@ -320,7 +320,7 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
     let (x, y, width, height) = ui.windows.get(window_id).and_then(|window| window.presented_tree.mounted_layout(presented)).expect("presented stepper bounds");
     ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerDown { x: x + width - height * 0.5, y: y + height * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
     let tooltip_deadline = clock_origin + f64::from(TOOLTIP_DWELL_SECONDS);
-    let caret_deadline = clock_origin + crate::wgpu::events::CARET_BLINK_SECONDS;
+    let caret_deadline = clock_origin + semio_framework_ui_wgpu_events::CARET_BLINK_SECONDS;
     let first_deadline = clock_origin + (hold["delayMs"].as_f64().unwrap() + hold["intervalMs"].as_f64().unwrap()) / 1000.0;
     assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(tooltip_deadline))));
     let accepted = vec![(window_id.to_string(), surface)];
@@ -402,9 +402,9 @@ fn a_late_hidden_visibility_ack_cannot_suspend_a_reused_surface_id() {
 
 #[test]
 fn accepted_input_caret_starts_solid_blinks_resets_and_cancels_from_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/⌨️caret-cadence/🧪️tests/🧫️fixtures/🔣️.json")).expect("caret cadence fixture");
     let half_period = fixture["halfPeriodMs"].as_f64().expect("half period") / 1_000.0;
-    assert_eq!(half_period, crate::wgpu::events::CARET_BLINK_SECONDS);
+    assert_eq!(half_period, semio_framework_ui_wgpu_events::CARET_BLINK_SECONDS);
     for (case_index, case) in fixture["cases"].as_array().expect("caret cases").iter().enumerate() {
         let window_id = format!("caret-cadence-{case_index}");
         let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
@@ -471,8 +471,8 @@ fn scene_caret_requires_exact_accepted_surface_and_document_identity() {
     let origin = 31_536_000.25;
     let armed = ui.arm_presented_scene_caret(window_id, surface, UiNodeId(1), origin).expect("exact scene arms");
     assert_eq!((armed.source, armed.visible), (UiCaretSource::Scene, true));
-    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(origin + crate::wgpu::events::CARET_BLINK_SECONDS))));
-    let blink = ui.advance_window_clock(window_id, origin + crate::wgpu::events::CARET_BLINK_SECONDS).expect("scene blink").caret.expect("scene directive");
+    assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(origin + semio_framework_ui_wgpu_events::CARET_BLINK_SECONDS))));
+    let blink = ui.advance_window_clock(window_id, origin + semio_framework_ui_wgpu_events::CARET_BLINK_SECONDS).expect("scene blink").caret.expect("scene directive");
     assert_eq!((blink.surface, blink.document_id, blink.source, blink.visible), (surface, UiNodeId(1), UiCaretSource::Scene, false));
     let cleared = ui.clear_presented_scene_caret(window_id, surface, UiNodeId(1)).expect("exact scene clears");
     assert!(!cleared.visible);

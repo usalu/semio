@@ -423,7 +423,7 @@ async fn the_editor_boots_on_the_bundled_example_document() {
 async fn undo_restores_document_after_add_node() {
     let mut app = fem2d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]

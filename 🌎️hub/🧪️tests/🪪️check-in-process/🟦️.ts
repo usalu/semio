@@ -3,32 +3,30 @@
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
 import { withTrustedCatalogCleanupV1 } from "../../🏗️bootstrap/🧾️provenance/🧹️settlement/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
-import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { parseSpaceArtifactCreationStatusJsonV1 } from "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1";
 import { withExactCargoLawOutputV1 } from "@semio-tech/process/testing/cargo/exact";
 import { withCheckInProcessFixtureV1 } from "../../🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/📥️reading/🟦️.ts";
 import type { CheckInProcessFixtureDataV1 } from "../../🏗️bootstrap/🧾️provenance/📦️cargo/🧫️fixture/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { createHash, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { type ChildProcess } from "node:child_process";
-import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "@semio-tech/repo-lib/cargo";
+import { buildAdmittedCargoArtifactsV1, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { decodeServerFrame, encodeClientFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
 import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocumentCheckInV1 } from "@semio-tech/framework-os/modules/directory/io/text/document-check-in-v1";
 import { type DocumentCheckInStatusV1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
@@ -407,13 +405,13 @@ export class CheckInCheckScript extends BundleScript {
     if (phase === "native" || phase === "process") {
       const laws: [string, string][] = [["semio-hub-hostile-input-laws", "check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it"], ["semio-hub-hostile-input-laws", "check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned"], ["semio-hub-hostile-input-laws", "check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author"]];
       if (phase === "process") laws.push(["semio-hub-boot-laws", "check_in_process_fixture_emits_verified_gis_ledger_and_catalog"]);
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           ...hubLawGroups(laws, ["--features", "integration-fixtures"]),
         ],consume:async outputs=>{
          if(phase!=="process")return;
          await withExactCargoLawOutputV1(outputs,{version:1,receiptIndex:outputs.receipts.findIndex(row=>row.package==="semio-hub-boot-laws")},output=>withBuiltLocalHubHostV1(this.invocation,output.control,(host,context)=>withCheckInProcessFixtureV1(host,context.control,outputs,{version:1,purpose:"runtime"},async(data,actual)=>{
           const manifest=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml");
-          await buildRepositoryCargoArtifacts(manifest,["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:actual,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),consume:verifyCapturedCargoArtifactsV1});
+          await buildAdmittedCargoArtifactsV1(manifest,["--bins"],this.repoRoot,{producer:"artifact",invocation:this.invocation,control:actual,consume:verifyCapturedCargoArtifactsV1});
           await withRepositoryPublishedCargoExecutableV1(manifest,process.platform==="win32"?"semio-os-mcp.exe":"semio-os-mcp",this.repoRoot,readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode,this.invocation,actual,(mcp,mcpPhase)=>proveCheckInMcpProcess(host,mcpPhase,data,mcp.path));
          })));
         },progress(event) {

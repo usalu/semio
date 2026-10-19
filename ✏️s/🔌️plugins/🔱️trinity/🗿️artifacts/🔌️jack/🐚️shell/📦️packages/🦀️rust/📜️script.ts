@@ -2,7 +2,7 @@
 import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🐚️ `@semio-tech/trinity-jack-shell` router: `bun ./📜️script.ts test` / `bun ./📜️script.ts run [args…]`. */
 import { join } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
@@ -10,7 +10,7 @@ const BINARY_NAME = "semio-s-artifact-trinity-jack-shell";
 
 class TestScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runRepositoryCargoTests([BINARY_NAME], this.repoRoot, this.invocation);
+    await runAdmittedCargoPackageTestsV1([BINARY_NAME], this.repoRoot, this.invocation);
   }
 }
 

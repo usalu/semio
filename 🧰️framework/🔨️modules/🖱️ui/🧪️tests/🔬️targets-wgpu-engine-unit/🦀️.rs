@@ -1,22 +1,18 @@
 use super::*;
 use semio_framework_value::DslValue;
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{
-    ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence,
-    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-};
-use crate::wgpu::events::{AccessibilityUiEvent, PointerButton};
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::input::{HitKind, InputState};
-use crate::wgpu::scene_slots::SceneSlot;
-use crate::wgpu::widgets::{
-    draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext,
-    WidgetInteractionMaps, WidgetNode,
-};
-use crate::wgpu::Label;
-use crate::wgpu::TOOLTIP_DWELL_SECONDS;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_wgpu_events::{AccessibilityUiEvent, PointerButton};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_input::{HitKind, InputState};
+use semio_framework_ui_wgpu_hosting::scene_slots::SceneSlot;
+use semio_framework_ui_wgpu_widget_kit::{draw_text_on, draw_text_overlay_on, render_scroll_region, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode};
+use semio_framework_ui_wgpu_widgets::{measure_widget, render_widget};
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_wgpu_events::TOOLTIP_DWELL_SECONDS;
 use std::collections::HashMap as StdHashMap;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision};
+use semio_framework_test_fixtures::fixture_text;
 
 include!("🧱️engine-fixtures-and-scene-lifetime-laws/🦀️.rs");
 include!("💬️tooltip-and-accessibility-fixtures-laws/🦀️.rs");

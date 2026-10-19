@@ -131,7 +131,7 @@ impl ShellInputState {
                     label: Label::data(shell_chrome_string(label, is_de)),
                     action: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
                     style: None,
-                    presence: UiPresence { state: if disabled { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                    presence: UiPresence { state: if disabled { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                     menu: None,
                 }),
             )

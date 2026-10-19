@@ -2,7 +2,8 @@ import {closeSync,fstatSync,fsyncSync,ftruncateSync,lstatSync,openSync,writeSync
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import authoritySchema from "../🧬️schema/📜️ticket.json" with {type:"json"};
-import {checkResourceLeaseControl,requireMaterializedPathV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl} from "../🟦️.ts";
+import {requireResourceLeaseCustodyV1,type ResourceLease} from "../🟦️.ts";
+import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../🎛️control/🟦️.ts";
 
 /** 🧱️ Keeps charged real file blocks available for full-filesystem metadata retirement. */
 export function retainResourceQueueMetadataHeadroomV1(directory:string,catalog:ResourceLease,control:ResourceLeaseControl):Readonly<{recover():void;recheck():void}>{

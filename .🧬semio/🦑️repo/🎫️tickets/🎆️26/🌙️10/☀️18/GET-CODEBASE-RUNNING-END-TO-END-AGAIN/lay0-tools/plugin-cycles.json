@@ -1,0 +1,4448 @@
+{
+ "summary": {
+  "cycles": 92,
+  "byPlugin": {
+   "architect": 7,
+   "forms": 11,
+   "cad": 32,
+   "energy": 3,
+   "draw": 11,
+   "stdio": 27,
+   "puzzle": 1
+  },
+  "allMembersUnderOneHubDir": 54,
+  "parentChild2": 44,
+  "withDynamicEdge": 48,
+  "withTypeOnlyEdge": 45,
+  "breakableByTypeOnlyOrDynamicAlready": 71,
+  "allStaticValueEdges": 21,
+  "involvingTests": 30,
+  "bySize": {
+   "2": 56,
+   "3": 23,
+   "4": 2,
+   "5": 4,
+   "6": 2,
+   "8": 1,
+   "9": 2,
+   "12": 2
+  },
+  "hubDirTop": [
+   [
+    "(none)",
+    38
+   ],
+   [
+    "s/plugins/architect/artifacts/program/standards/1/subsets/any/schema/diff",
+    7
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/editor/engine/artifact",
+    7
+   ],
+   [
+    "s/plugins/stdio/artifacts/step/standards/ap214/subsets/6cc6/generator",
+    5
+   ],
+   [
+    "s/plugins/stdio/artifacts/semio/standards/v1/subsets/mesh/generator",
+    5
+   ],
+   [
+    "s/plugins/stdio/artifacts/semio/standards/v1/subsets/brep/generator",
+    5
+   ],
+   [
+    "s/plugins/forms/artifacts/forms/standards/1/subsets/any/schema/mutations",
+    4
+   ],
+   [
+    "s/plugins/energy/artifacts/model/standards/1/subsets/any/io/sqlite/snapshot",
+    3
+   ],
+   [
+    "s/plugins/stdio/artifacts/semio/standards/v1/subsets/document/generator",
+    3
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/editor/engine/renderer",
+    2
+   ],
+   [
+    "s/plugins/stdio/artifacts/pdf/standards/71.7/subsets/base/io/text/snapshot/native-json",
+    2
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/editor/engine/actions",
+    1
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/editor/engine/stately",
+    1
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/editor/engine/runtime",
+    1
+   ],
+   [
+    "s/plugins/cad/artifacts/cad/standards/1/subsets/any/io/text/inferences",
+    1
+   ],
+   [
+    "s/plugins/cad/extensions/aec-building-structure",
+    1
+   ],
+   [
+    "s/plugins/cad/extensions/aec-building",
+    1
+   ],
+   [
+    "s/plugins/cad/extensions/spatial-shape",
+    1
+   ],
+   [
+    "s/plugins/cad/extensions/aec-building-energy",
+    1
+   ],
+   [
+    "s/plugins/draw/artifacts/drawing/standards/1/subsets/any/schema/fill",
+    1
+   ],
+   [
+    "s/plugins/draw/artifacts/drawing/standards/1/subsets/any/schema/scene/prepare",
+    1
+   ],
+   [
+    "s/plugins/stdio/artifacts/xml/standards/1.0/subsets/valid/schema",
+    1
+   ]
+  ]
+ },
+ "rows": [
+  {
+   "plugin": "🏛️architect",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📋️deltas-requirements/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🗃️deltas-records/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧱️deltas-program-structure/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🏛️architect",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patch-types/🚪️parsers/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 4,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌱️value/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📋️forms",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🧪️tests/🧪️semio-tech-cad-js-core-box-display-committed/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🧪️tests/🧪️semio-tech-cad-js-stately/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 6,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 4,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 6,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 4,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 5,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 2,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 5,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 2,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 5,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 2,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 5,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 2,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🧪️repluserfacingsuggestiondetail/🟦️.tsx",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🪝️hookorder/🟦️.tsx",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🪝️hookorder/🟦️.tsx"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🪝️hookorder/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🧪️tests/🪝️hookorder/🟦️.tsx",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 4,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🎰️interaction-state/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🏃️interaction-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/📨️interaction-model/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🎞️e2e/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🎞️e2e/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🎞️e2e/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🎞️e2e/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📏️measure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📏️measure/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📏️measure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📏️measure/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📦️box-length/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📦️box-length/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📦️box-length/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/📦️box-length/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕰️history/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕰️history/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕰️history/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕰️history/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕹️transforms/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕹️transforms/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕹️transforms/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🕹️transforms/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🗂️registries/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🗂️registries/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🗂️registries/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🗂️registries/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🧪️tests/🧪️semio-tech-cad-js-core-interactions/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🧪️tests/🧪️semio-tech-cad-js-query-parse/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 12,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 8,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 8,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 4,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-structure/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 12,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 8,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 9,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 6,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🧪️semio-tech-cad-js-module-spatial-shape/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "📐️cad",
+   "size": 9,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 6,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+    "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts",
+     "to": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🧪️semio-tech-cad-js-module-aec-building-energy/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🔋️energy",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/⚙️systems/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/⚙️systems/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/⚙️systems/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/⚙️systems/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🔋️energy",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🏘️envelope/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🏘️envelope/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🏘️envelope/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🏘️envelope/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🔋️energy",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗓️schedules/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗓️schedules/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗓️schedules/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🗓️schedules/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧭️selection/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🖍️draw",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/⚙️mechanical/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/⚙️mechanical/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/⚙️mechanical/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/⚙️mechanical/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/💥️failure/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/💥️failure/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/💥️failure/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/💥️failure/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧩️shape-complexity/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧩️shape-complexity/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧩️shape-complexity/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧭️spatial-relationship/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧭️spatial-relationship/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🧭️spatial-relationship/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🛡️robustness/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🛡️robustness/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/🛡️robustness/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📇️metadata/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️cos/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📇️metadata/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📇️metadata/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️cos/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧩️cos/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📇️metadata/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 2,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖋️content/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖋️content/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖋️content/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🖋️content/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🪪️stream-roles/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 3,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json",
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🎯️navigation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json",
+   "parentChild": true,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/📌️annotation/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖋️content/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖼️resource/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖋️content/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖋️content/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖼️resource/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖼️resource/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🪪️native-json/🖋️content/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📇️metadata/📆️date/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧩️cos/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📇️metadata/📆️date/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📇️metadata/📆️date/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧩️cos/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧩️cos/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/📇️metadata/📆️date/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧪️tests/🧪️stdio-xml-valid-conformance-mirror/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧪️tests/🧪️stdio-xml-valid-conformance-mirror/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧪️tests/🧪️stdio-xml-valid-conformance-mirror/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid/🧬️schema/🧪️tests/🧪️stdio-xml-valid-conformance-mirror/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 0,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️control/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🟦️.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️control/🟦️.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️control/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️extras/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧩️control/🟦️.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🎨️styles/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🎨️styles/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🎨️styles/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🎨️styles/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🖋️runs/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🖋️runs/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🖋️runs/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧱️blocks/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧱️blocks/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧱️blocks/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/⚠️degenerate/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/⚠️degenerate/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/⚠️degenerate/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/⚠️degenerate/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📏️scale/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📏️scale/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📏️scale/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📏️scale/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🔷️primitives/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🔷️primitives/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🔷️primitives/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🕸️topology/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🕸️topology/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🕸️topology/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 1,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧮️booleans/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧮️booleans/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧮️booleans/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": true,
+     "types": [
+      "local",
+      "type-only",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📍️move-vertex/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📍️move-vertex/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📍️move-vertex/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📍️move-vertex/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🔄️geometry-replace/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🔄️geometry-replace/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🔄️geometry-replace/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧮️booleans/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧮️booleans/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧮️booleans/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧱️topology-build/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧱️topology-build/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧱️topology-build/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🗄️stdio",
+   "size": 2,
+   "hubDir": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator",
+   "parentChild": true,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": false,
+   "members": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧹️topology-remove/📜️script.ts",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧹️topology-remove/📜️script.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧹️topology-remove/📜️script.ts",
+     "to": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/📜️script.ts",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "import"
+     ]
+    }
+   ]
+  },
+  {
+   "plugin": "🧩️puzzle",
+   "size": 3,
+   "hubDir": null,
+   "parentChild": false,
+   "dynamic": 1,
+   "typeOnly": 0,
+   "tests": true,
+   "members": [
+    "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🧪️compose5d-preparetopologymodel/🟦️.ts",
+    "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧪️compose5d-preparetopologymodel/🟦️.tsx",
+    "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx"
+   ],
+   "edges": [
+    {
+     "from": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🧪️compose5d-preparetopologymodel/🟦️.ts",
+     "dynamic": true,
+     "typeOnly": false,
+     "types": [
+      "undetermined",
+      "dynamic-import"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🧪️compose5d-preparetopologymodel/🟦️.ts",
+     "to": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧪️compose5d-preparetopologymodel/🟦️.tsx",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "export"
+     ]
+    },
+    {
+     "from": "✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧪️compose5d-preparetopologymodel/🟦️.tsx",
+     "to": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/🟦️.tsx",
+     "dynamic": false,
+     "typeOnly": false,
+     "types": [
+      "local",
+      "type-import"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -109,8 +109,8 @@ pub use semio_s_artifact_sourcing_curation_examples::examples;
 pub mod editor {
     #[path = "."]
     pub mod sourcing {
-        #[path = "../../../../../✏️editor/🧱️base/🦀️.rs"]
-        pub mod base;
+        #[path = "../../../../../✏️editor/🧱️editor-vocabulary/🦀️.rs"]
+        pub mod editor_vocabulary;
         #[path = "."]
         pub mod config {
             pub use semio_s_artifact_sourcing_curation_examples::editor::sourcing::config::*;

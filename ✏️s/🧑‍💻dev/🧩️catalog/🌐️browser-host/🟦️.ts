@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, lstatSync, mkdirSync, openSync, opendirSync, readFileSync, readSync, readdirSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { ACTIVATION_RECEIPT_FILE, nextActivationReceipt, parseActivationReceipt, publishActivationReceipt, readActivationReceipt } from "@semio-tech/framework-os-dev/activation";
-import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, parseComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, parseComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
 import { type ComponentReceiptV1 } from "@semio-tech/framework/component-receipt";
 
 export const TEST_BROWSER_MODULE_ROOT_ENV = "SEMIO_TEST_BROWSER_MODULE_ROOT";

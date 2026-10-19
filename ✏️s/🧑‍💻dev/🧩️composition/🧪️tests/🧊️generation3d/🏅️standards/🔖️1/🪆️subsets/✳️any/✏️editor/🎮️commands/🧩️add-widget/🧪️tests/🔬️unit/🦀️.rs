@@ -53,10 +53,10 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
     for value in cases["invalid"].as_array().unwrap().iter().chain(cases["unsupportedOperators"].as_array().unwrap()) {
         let args: semio_framework_value::DslValue = value.clone().into();
         let command = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("decoded");
-        let admission = app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
+        let admission = app.0.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         let fault = match admission {
             Err(fault) => fault,
-            Ok(_) => semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, 1).await.err().expect("creation must fail"),
+            Ok(_) => semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("creation must fail"),
         };
         assert_eq!(fault.code.0, fixture()["faultCode"].as_str().unwrap());
         assert_eq!(context::snapshot(&app), before);
@@ -89,8 +89,8 @@ async fn automatic_addition_undo_redo_restores_both_content_and_position() {
     context::dispatch(&mut app, Generation3dCommand::AddWidget(payload(&serde_json::json!({"kind":"inputNote"})))).await;
     let after = context::snapshot(&app);
     assert_eq!(after.host_snapshot.widgets.len(), before.host_snapshot.widgets.len() + 1);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", 1).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), before);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", 1).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), after);
 }

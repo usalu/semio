@@ -1,10 +1,10 @@
 syntax = "proto3";
 package semio.s.animate.presentation;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message PresentationArtifact {
   string schema = 1;
-  semio.os.store.ArtifactChild presentation = 2;
-  semio.os.store.ArtifactChild animation = 3;
+  semio.framework.schema.artifact_child.ArtifactChild presentation = 2;
+  semio.framework.schema.artifact_child.ArtifactChild animation = 3;
   FigureTileSource source = 4;
   repeated FigureTileDraft tiles = 5;
 }

@@ -1,3 +1,5 @@
+import type { MenuRef } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+
 /** 🖱️ A render-time address for an on-demand context menu — bytes only, never items. At right-click
  * time the host resolves the nearest `menu` up the tree (or a scene's implicit surface-kind
  * convention id) and asks the owning plugin's `contextMenu` export to compute rows fresh; nothing
@@ -248,3 +250,48 @@ export function organizeContextMenu(
     ? contextMenuEmitWithinBudget(normalized)
     : contextMenuEmitOverBudget(normalized, categoryOf);
 }
+
+/** 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
+ * surface's own picking (hover/selection), not cached across clicks. */
+export type UiContextMenuHit = {
+  readonly domain: string;
+  readonly id: string;
+  readonly label?: string;
+};
+
+/** 🗂️ The ids of one domain that are selected when a context menu is requested. */
+export type UiContextMenuSelectionGroup = {
+  readonly domain: string;
+  readonly ids: readonly string[];
+};
+
+/** 📝️ Text-editor facts a context menu depends on. */
+export type UiContextMenuTextContext = {
+  readonly caret: number;
+  readonly hasSelection: boolean;
+  readonly word?: string;
+  readonly canRename: boolean;
+  readonly hasCompletions: boolean;
+};
+
+/** 🎯️ The surface a context-menu request was raised on. */
+export type UiContextMenuSurfaceTarget = {
+  readonly surfaceId: string;
+  readonly kind: string;
+  readonly hits?: readonly UiContextMenuHit[];
+  readonly selection?: readonly UiContextMenuSelectionGroup[];
+  readonly text?: UiContextMenuTextContext;
+};
+
+/** 📍️ Screen point a context-menu request was raised at. */
+export type UiContextMenuPoint = { readonly x: number; readonly y: number };
+
+/** 🖱️ On-demand context-menu request — never cached, never batched into a refresh request.
+ * `menu` is the {@link MenuRef} the host resolved from `data-menu-id`/a scene surface convention id
+ * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
+export type UiContextMenuRequest = {
+  readonly menu: MenuRef;
+  readonly surface?: UiContextMenuSurfaceTarget;
+  readonly windowInstanceId?: string;
+  readonly point?: UiContextMenuPoint;
+};

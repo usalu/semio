@@ -75,22 +75,25 @@ use transform::{rotate_selection, scale_selection, translate_selection};
 use utility::set_utility_param;
 use uv::{clear_seam, mark_uv_seam, unwrap_active};
 use semio_framework_plugin::InteractionRef;
-use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, project_and_retire_fixture_tree};
+use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, dispatch_fixture_action, meta, new_app_with_registry, render_registered_fixture_app, OriginalFixtureScope};
 use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
 /// 🪪️ The one live instance every fixture app binds — a registry-backed app refuses typed
 /// commands until it knows its instance (`interactive-job.live-instance`).
 pub const INSTANCE: u32 = 1;
 
-/// 🔁️ The settle loop's maintenance grant. `settle_registered_typed_operation` pages maintenance at
-/// exactly one 4 KiB page; a lowpoly document carrying mesh content is larger than that, so its
-/// close cursor never receives a grant it can act on and the operation never retires (measured
-/// 2026-09-17: a 2 299-byte snapshot settles, a 4 240-byte one hangs).
-const SETTLE_GRANT_BYTES: usize = 1 << 20;
-
 /// 🧪️ A registry-backed, instance-bound app that closes its stores on drop (the store drop witness
 /// panics otherwise). Derefs to the framework app, so every `PluginApp` call reads as before.
-pub struct LowpolyApp(pub VcsArtifactApp<EditorApp<LowpolyPlayApp>>);
+/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// scope pays the caller's terminal retirement after the paid app close.
+pub struct LowpolyApp(pub VcsArtifactApp<EditorApp<LowpolyPlayApp>>, pub OriginalFixtureScope);
+
+impl LowpolyApp {
+    /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
+    pub fn close_fixture(&mut self) {
+        close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+    }
+}
 
 impl std::ops::Deref for LowpolyApp {
     type Target = VcsArtifactApp<EditorApp<LowpolyPlayApp>>;
@@ -108,7 +111,7 @@ impl std::ops::DerefMut for LowpolyApp {
 impl Drop for LowpolyApp {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            self.close_fixture();
         }
     }
 }
@@ -133,9 +136,10 @@ pub async fn app() -> LowpolyApp {
 
 /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
 pub async fn app_with_registry() -> LowpolyApp {
+    let scope = OriginalFixtureScope::admit();
     let mut app = new_app_with_registry::<EditorApp<LowpolyPlayApp>>(lowpoly_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(INSTANCE).await;
-    LowpolyApp(app)
+    LowpolyApp(app, scope)
 }
 
 /// 🪟️ The Model window's view state — what the React shell stamps on every dispatch, and what the
@@ -151,8 +155,8 @@ pub fn action_meta() -> semio_framework_plugin::ActionMeta {
 /// the snapshot a test reads next is the committed one.
 pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
     let verb = command.command_id().to_string();
-    let result = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
-    settle(&mut app.0, &verb).await;
+    let result = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+    settle(app, &verb).await;
     result
 }
 
@@ -161,31 +165,31 @@ pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> Invocati
 /// `undo`, `redo`) return an admission receipt; their tool job only lands through the reserved settle.
 pub async fn act(app: &mut LowpolyApp, action: &str, args: serde_json::Value) {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = app.0.handle_action(action, Some(&args), &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
+    let result = dispatch_fixture_action(&mut app.0, action, Some(args), &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action} refused: {fault:?}"));
     if matches!(action, "interactionSelect" | "interactionHover" | "undo" | "redo") {
         semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, result).await.unwrap_or_else(|fault| panic!("{action} did not settle its reserved job: {fault:?}"));
     }
-    settle(&mut app.0, action).await;
+    settle(app, action).await;
 }
 
 /// 🚫️ Dispatches a command the app must REFUSE and returns the refusal's text — either the dispatch
 /// itself faults, or the retained reducer publishes a fault page while the operation settles.
 pub async fn dispatch_refused(app: &mut LowpolyApp, command: LowpolyCommand) -> String {
     let verb = command.command_id().to_string();
-    if let Err(fault) = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
+    if let Err(fault) = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         return fault.message;
     }
-    settle_faults(&mut app.0, &verb).await.into_iter().next().unwrap_or_else(|| panic!("{verb} was admitted and settled without a refusal"))
+    settle_faults(app, &verb).await.into_iter().next().unwrap_or_else(|| panic!("{verb} was admitted and settled without a refusal"))
 }
 
 /// 🔁️ `settle`, but a fault page is collected instead of asserted away.
-async fn settle_faults(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> Vec<String> {
+async fn settle_faults(app: &mut LowpolyApp, action: &str) -> Vec<String> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     let mut faults = Vec::new();
     while app.has_pending_typed_operations() {
         assert!(std::time::Instant::now() < deadline, "{action} did not settle");
-        let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+        let _ = app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
             if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                 faults.push(String::from_utf8_lossy(page.bytes()).to_string());
@@ -207,15 +211,15 @@ async fn settle_faults(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, acti
     faults
 }
 
-/// 🔁️ The fixture's own settle loop, at a REAL host grant (see `SETTLE_GRANT_BYTES`). Returns the
+/// 🔁️ The fixture's own settle loop, at the mounted policy's maintenance grant. Returns the
 /// number of result pages the operation published.
-pub async fn settle(app: &mut VcsArtifactApp<EditorApp<LowpolyPlayApp>>, action: &str) -> usize {
+pub async fn settle(app: &mut LowpolyApp, action: &str) -> usize {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     let mut lanes = 0;
     while app.has_pending_typed_operations() {
         assert!(std::time::Instant::now() < deadline, "{action} did not settle");
-        let _ = app.maintenance_step(1, SETTLE_GRANT_BYTES).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
+        let _ = app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap_or_else(|fault| panic!("{action} maintenance: {fault:?}"));
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{action} publication: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(INSTANCE) {
             let lane = page.lane;
             let fault = (lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| String::from_utf8_lossy(page.bytes()).to_string());
@@ -248,8 +252,7 @@ pub async fn committed_edits(app: &mut LowpolyApp) -> usize {
 /// 🖼️ Renders one body and projects it to JSON through the fixture observer, which also retires the
 /// paged children a serde projection cannot carry (`BuiltChildren requires retained page transport`).
 pub async fn render(app: &mut LowpolyApp, body_key: &str) -> String {
-    let tree = app.0.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+    render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("rendered fixture observation and retirement")
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's

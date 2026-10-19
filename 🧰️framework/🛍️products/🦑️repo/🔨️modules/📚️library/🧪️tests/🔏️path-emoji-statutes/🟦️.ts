@@ -1,4 +1,4 @@
-import { requireRecord, requireString, requireStringArray } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord, requireString, requireStringArray } from "@semio-tech/schema-validator-ts";
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -15,15 +15,15 @@ import { mutationDomainOwnersProblems, mutationCatalogSourceOwnersProblems } fro
 import { mutationOwnerIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
 import { semanticManifestFilenameForCollection, subsetDirectoryNameForId, subsetIdForDirectoryName, mutationPayloadSchemaRelativePath } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { semanticProjectionCatalogProblems } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
-import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
-import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
+import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
+import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { inventoryTaxonomySources } from "../../🧹️normalization/🚪️source-admission/📁️io/🟦️.ts";
 import { jsonDocumentDuplicateKeys } from "../../🧬️schema/🔣️json-document/🟦️.ts";
 import { mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems } from "../../🔍️discovery/📄️implementation-findings/🟦️.ts";
 import { semanticExactOwnedFileCatalog } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const root = import.meta.dir;
@@ -779,7 +779,7 @@ test("OS semantic-stem owners use canonical leaves and exact tool authority", ()
   const scenario = fixture.cases.find((row: { id: string }) => row.id === "os-semantic-stem-owners-use-canonical-leaves-and-exact-tool-authority");
   expect(pathEmojiStatuteFindings(scenario.entries, taxonomy.pathEmojiPolicy.genericEmojiIdentities)).toEqual([]);
   const coreManifest = scenario.entries.find((row: { path: string }) => row.path.endsWith("/package.json")).path;
-  const familyManifest = coreManifest.replace("/🫀️core/🕸️bindings/", "/📦️packages/🦀️rust/🕸️bindings/");
+  const familyManifest = coreManifest.replace("/🎁️browser-package/🕸️bindings/", "/📦️packages/🦀️rust/🕸️bindings/");
   expect(fixedFilenameContractIdsForPath(coreManifest, taxonomy)).toEqual(["flow-core-package-manifest"]);
   expect(fixedFilenameContractIdsForPath(familyManifest, taxonomy)).toEqual([]);
   expect(fixedFilenameContractIdsForPath(coreManifest.replace("/🕸️bindings/", "/🕸️bindings/🧪️nested/"), taxonomy)).toEqual([]);

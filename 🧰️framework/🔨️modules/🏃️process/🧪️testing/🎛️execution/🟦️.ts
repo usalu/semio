@@ -1,4 +1,6 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { join, resolve, sep } from "node:path";
 import { terminateOwnedProcessTree } from "../../🪓️termination/🟦️.ts";
 
 /** 🎛️ Supplies a test command's complete caller-owned process policy. */
@@ -48,4 +50,59 @@ export async function runBudgetedTestCommand(command: string, args: readonly str
     process.off("SIGINT", interrupt);
     process.off("SIGTERM", interrupt);
   }
+}
+
+const scratchRoots = new Map<string, string>();
+let exitGuard = false;
+
+/** 🧲️ Lists the attached macOS disk images through the system tool, deepest backing file first. */
+export function attachedDiskImagesV1(): readonly Readonly<{ image: string; target: string }>[] {
+  if (process.platform !== "darwin") return [];
+  const info = spawnSync("/usr/bin/hdiutil", ["info", "-plist"], { encoding: "utf8" });
+  if (info.status !== 0) return [];
+  const json = spawnSync("/usr/bin/plutil", ["-convert", "json", "-o", "-", "-"], { input: info.stdout, encoding: "utf8" });
+  if (json.status !== 0) return [];
+  const rows = (JSON.parse(json.stdout) as { images?: { "image-path"?: string; "system-entities"?: { "mount-point"?: string; "dev-entry"?: string }[] }[] }).images ?? [];
+  return rows.flatMap((row) => {
+    const entities = row["system-entities"] ?? [], target = entities.find((entity) => entity["mount-point"])?.["mount-point"] ?? entities[0]?.["dev-entry"];
+    if (!row["image-path"] || !target) return [];
+    let image = row["image-path"];
+    try { image = realpathSync(image); } catch {}
+    return [{ image, target }];
+  }).sort((left, right) => right.image.length - left.image.length);
+}
+
+/** 🧲️ Detaches every disk image whose backing file lives under the root, nested images first. */
+export function detachDiskImagesUnderV1(root: string): readonly string[] {
+  let real = resolve(root);
+  try { real = realpathSync(real); } catch {}
+  const prefix = real + sep, detached: string[] = [];
+  for (const { image, target } of attachedDiskImagesV1()) {
+    if (!image.startsWith(prefix)) continue;
+    const plain = spawnSync("/usr/bin/hdiutil", ["detach", target], { encoding: "utf8" });
+    if (plain.status === 0 || spawnSync("/usr/bin/hdiutil", ["detach", "-force", target], { encoding: "utf8" }).status === 0) detached.push(image);
+  }
+  return detached;
+}
+
+/** 🗑️ Detaches every disk image under a scratch root created by this module, then removes the tree. */
+export function disposeTestScratchRootV1(root: string): void {
+  const real = scratchRoots.get(resolve(root));
+  if (!real) throw Error("Scratch root created by createTestScratchRootV1 required");
+  try {
+    detachDiskImagesUnderV1(real);
+    rmSync(real, { recursive: true, force: true });
+  } finally {
+    scratchRoots.delete(resolve(root));
+  }
+}
+
+/** 🧹️ Creates a unique scratch root that is detached and removed on disposal and when the process exits. */
+export function createTestScratchRootV1(parent: string, prefix: string): string {
+  mkdirSync(parent, { recursive: true });
+  const root = mkdtempSync(join(parent, prefix)), real = realpathSync(root);
+  if (!exitGuard) process.on("exit", () => { for (const path of [...scratchRoots.keys()]) try { disposeTestScratchRootV1(path); } catch (error) { console.error(`[leak] scratch root ${path} not released: ${String(error)}`); } });
+  exitGuard = true;
+  scratchRoots.set(resolve(root), real);
+  return root;
 }

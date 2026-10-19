@@ -1,6 +1,5 @@
-import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { runtimeFixturePathV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
-import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
+import { requirePlaygroundVariant } from "@semio-tech/plugin-registry/playground/default";
 
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
 /** 🧩️ Semantic distribution plan owner. */

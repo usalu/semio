@@ -51,7 +51,7 @@ semio_framework_os_kernel::config_record! {
 pub struct FlowMainWindowConfigOwner;
 
 impl semio_framework_plugin::WindowConfigOwner for FlowMainWindowConfigOwner {
-    const WINDOW_KIND_ID: &'static str = crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
+    const WINDOW_KIND_ID: &'static str = crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
     const SCHEMA: &'static str = "flow.mainwindowconfig";
     const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
     type State = FlowMainWindowConfig;
@@ -85,7 +85,7 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
 pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &FlowMainWindowConfig, config: FlowMainWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("flow-main-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str());
-    if kind != Some(crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN) {
+    if kind != Some(crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN) {
         return Err(semio_framework_plugin::Fault::from("flow-main-window-kind-required"));
     }
     Ok(FlowMainWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<FlowMainWindowConfigOwner>(id, mutation)).collect())

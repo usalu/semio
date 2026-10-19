@@ -1,5 +1,5 @@
 import{AsyncLocalStorage}from"node:async_hooks";
-import type{ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../🔒️leases/🎛️control/🟦️.ts";
 import requestSchema from"./📥️issuance/🧬️schema/📥️request.json" with{type:"json"};
 import cleanupSchema from"./🧬️schema/🧹️cleanup.json" with{type:"json"};
 import type{AcceptedPhysicalCleanupV1,PhysicalCleanupRequestV1,AcceptedPhysicalCleanupFactsV1,AcceptedPhysicalCleanupBodyV1}from"./🧹️cleanup/🟦️.ts";
@@ -127,10 +127,11 @@ export function scriptInvocationEnvironment(invocation: ScriptInvocation, enviro
 const projectedChildDeadlines=new WeakMap<ControlScope,number>();
 /** 📨️ Projects only the actual live phase's remaining deadline into an already owned child's wire DATA. */
 export function scriptResourceProcessEnvironmentV1(control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>):Record<string,string|undefined>{
- requireIssuedResourceControlV1(control);const owner=controls.get(control)!,available=remaining(owner),original=owner.birth.envelope;if(available===null)return scriptProcessEnvironment(original,environment);
- let ceiling=original.policy.maximumElapsedMilliseconds||Infinity,deadline=original.deadlineEpochMilliseconds??Infinity;for(let row:ControlScope|undefined=owner;row;row=row.parentControl){if(row.requestedMilliseconds!==0)ceiling=Math.min(ceiling,row.requestedMilliseconds);deadline=Math.min(deadline,row.deadlineEpochMilliseconds??Infinity,projectedChildDeadlines.get(row)??Infinity);}
+ requireIssuedResourceControlV1(control);const owner=controls.get(control)!,available=remaining(owner),original=owner.birth.envelope;let carried=original;const suppliedWire=environment[SCRIPT_PROCESS_INVOCATION_ENV];if(suppliedWire!==undefined)try{const candidate=readScriptProcessEnvelope(JSON.parse(suppliedWire),Date.now());if(candidate.policy.owner===original.policy.owner)carried=candidate;}catch{}
+ if(available===null)return scriptProcessEnvironment(carried,environment);
+ let ceiling=Math.min(original.policy.maximumElapsedMilliseconds||Infinity,carried.policy.maximumElapsedMilliseconds||Infinity),deadline=Math.min(original.deadlineEpochMilliseconds??Infinity,carried.deadlineEpochMilliseconds??Infinity);for(let row:ControlScope|undefined=owner;row;row=row.parentControl){if(row.requestedMilliseconds!==0)ceiling=Math.min(ceiling,row.requestedMilliseconds);deadline=Math.min(deadline,row.deadlineEpochMilliseconds??Infinity,projectedChildDeadlines.get(row)??Infinity);}
  if(!Number.isSafeInteger(ceiling)||ceiling<1||ceiling>policySchema.properties.maximumElapsedMilliseconds.maximum)throw Error("Representable actual child phase policy required");const now=Date.now();deadline=Math.min(deadline,now+Math.floor(available));if(!Number.isSafeInteger(deadline)||deadline<=now)throw Error("Original child phase deadline exhausted");
- const envelope=readScriptProcessEnvelope({version:1,policy:readScriptPolicy({...original.policy,maximumElapsedMilliseconds:ceiling}),capabilities:original.capabilities,deadlineEpochMilliseconds:deadline},now);projectedChildDeadlines.set(owner,deadline);requireIssuedResourceControlV1(control);return scriptProcessEnvironment(envelope,environment);
+ const envelope=readScriptProcessEnvelope({version:1,policy:readScriptPolicy({...original.policy,maximumElapsedMilliseconds:ceiling}),capabilities:carried.capabilities,deadlineEpochMilliseconds:deadline},now);projectedChildDeadlines.set(owner,deadline);requireIssuedResourceControlV1(control);return scriptProcessEnvironment(envelope,environment);
 }
 
 const physicalCleanupOperationLimits=Object.freeze({...cleanupSchema.definitions.OperationProtocol.const});

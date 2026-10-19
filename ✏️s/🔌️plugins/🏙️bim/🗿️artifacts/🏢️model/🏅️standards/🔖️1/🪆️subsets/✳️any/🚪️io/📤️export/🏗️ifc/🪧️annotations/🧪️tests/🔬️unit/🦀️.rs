@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, notated, real, rows, string, target};
-use crate::standards::v1::subsets::any::io::export::ifc::model_to_part21;
-use crate::standards::v1::subsets::any::io::export::ifc::projection::dimension_total;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, notated, real, rows, string, target};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::dimension_total;
 
 #[test]
 fn every_annotation_is_one_ifc_annotation_of_its_kind_contained_in_its_storey() {
@@ -38,7 +38,7 @@ fn the_representation_is_the_plan_drawing_of_the_annotation() {
 #[test]
 fn a_dimension_carries_its_measured_total_and_an_unresolved_one_draws_nothing_and_is_reported() {
     let model = notated();
-    let (document, notes) = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &model).expect("exports");
+    let (document, notes) = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &model).expect("exports");
     let value = |name: &str| rows(&document, "IFCANNOTATION").into_iter().find(|(_, args)| string(args, 2).as_deref() == Some(name)).map(|(instance, _)| instance.id).expect("the dimension");
     let totals: Vec<f64> = dimension_total(&document, value("South length")).into_iter().collect();
     assert_eq!(totals.len(), 1);

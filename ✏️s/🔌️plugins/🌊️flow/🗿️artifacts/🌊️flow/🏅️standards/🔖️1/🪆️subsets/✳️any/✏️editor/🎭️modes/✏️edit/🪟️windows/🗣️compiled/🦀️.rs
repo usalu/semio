@@ -12,7 +12,7 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use ui_wgpu::wgpu::TextEditorScene;
+use semio_framework_ui_declaration::ui::TextEditorScene;
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";

@@ -4,11 +4,14 @@
 //! loops. Refused: an unknown slab, a taken new id, a cut line without length, a line that does not cut the outline in two and a line
 //! through a hole.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{contains, crosses, cut_loop, CutFlaw};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::{contains, crosses, cut_loop, CutFlaw};
 use crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::SlabPatch}, snapshot::{ModelSnapshot, Slab, Vertex}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, KeyedDelta};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::SlabPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Slab};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -44,7 +47,7 @@ pub fn pieces(payload: &SplitSlab, base: &ModelSnapshot) -> Result<((Vec<Vertex>
 }
 
 pub fn diff(payload: &SplitSlab, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if let Some(noun) = elements::taken(base, &payload.new_id).filter(|_| base.slabs.contains_key(&payload.id)) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.new_id).filter(|_| base.slabs.contains_key(&payload.id)) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.new_id), [payload.new_id.clone()]);
     }
     let ((boundary, holes), (right, right_holes)) = match pieces(payload, base) {

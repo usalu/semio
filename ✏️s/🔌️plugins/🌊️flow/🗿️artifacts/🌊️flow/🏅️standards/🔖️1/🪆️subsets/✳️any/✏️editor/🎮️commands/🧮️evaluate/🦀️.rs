@@ -3,7 +3,7 @@
 use crate::editor::flow::commands::flow_eval_tick::{eval_tick_effect, may_rearm};
 use crate::editor::flow::host::host_from_snapshot;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
 use semio_framework_plugin::NoConfig;

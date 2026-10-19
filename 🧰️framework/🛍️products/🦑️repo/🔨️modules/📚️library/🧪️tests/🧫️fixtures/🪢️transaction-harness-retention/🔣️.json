@@ -4,6 +4,7 @@
   "allocationPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
   "filterWavesConstant": "TRANSACTION_V2_DEFAULT_FILTER_WAVES",
   "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+  "builderPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🏗️fixture-builders/🟦️.ts",
   "absoluteBundleExpression": "bundle",
   "runIdExpression": "runId",
   "runIdEntropyCall": "crypto.randomUUID()",

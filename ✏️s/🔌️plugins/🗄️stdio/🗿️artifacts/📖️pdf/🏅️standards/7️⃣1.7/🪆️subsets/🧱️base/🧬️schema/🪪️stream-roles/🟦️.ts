@@ -5,7 +5,7 @@ import type { PdfOp } from "../📸️snapshot/🖋️content/🟦️.ts";
 import type { PdfIndirectObject } from "../📸️snapshot/📄️document/🟦️.ts";
 import type { PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram } from "../📸️snapshot/🔤️font/🟦️.ts";
 import type { PdfImage } from "../📸️snapshot/🖼️resource/🟦️.ts";
-import { parsePdfOp, parsePdfToUnicode, parsePdfEmbeddedCMap, parsePdfFontProgram, parsePdfImage } from "../📸️snapshot/🟦️.ts";
+import { parsePdfOp, parsePdfToUnicode, parsePdfEmbeddedCMap, parsePdfFontProgram, parsePdfImage } from "../📸️snapshot/🔎️stream-parsers/🟦️.ts";
 export type PdfGraphPath = { kind: "entry"; key: string } | { kind: "item"; index: number };
 export interface PdfGraphIdentity { owner: ObjRef; path: PdfGraphPath[] }
 export type PdfStreamRoleValue = { kind: "operators"; content: PdfOp[] } | { kind: "sampledWords"; samples: number[] } | { kind: "calculatorProgram"; code: string } | { kind: "unicodeMap"; mapping: PdfToUnicode } | { kind: "characterMap"; cmap: PdfEmbeddedCMap } | { kind: "fontProgram"; program: PdfFontProgram } | { kind: "image"; image: PdfImage } | { kind: "metadataText"; text: string } | { kind: "attachmentBytes"; bytes: number[] } | { kind: "paletteComponents"; components: number[] } | { kind: "glyphIds"; glyphs: number[] } | { kind: "referenceBody"; reference: ArtifactRef };

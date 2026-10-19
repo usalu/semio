@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
-import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
 
 test("selected member factory graph prices every original Arc and preborn ticket once", () => {
   type Node = { kind: string; children: Node[] };

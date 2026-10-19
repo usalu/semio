@@ -84,29 +84,29 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
 }
 
-pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
-    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = host_snapshot
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_framework_ui_declaration::ui::NodeGraphNodeRecord>, Vec<semio_framework_ui_declaration::ui::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_framework_ui_declaration::ui::NodeGraphNodeRecord> = host_snapshot
         .nodes
         .iter()
-        .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
+        .map(|node| semio_framework_ui_declaration::ui::NodeGraphNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui_declaration::ui::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
             ..Default::default()
         })
         .collect();
-    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = host_snapshot
+    let edges: Vec<semio_framework_ui_declaration::ui::NodeGraphEdgeRecord> = host_snapshot
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            semio_framework_ui::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+            semio_framework_ui_declaration::ui::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
         })
         .collect();
     (nodes, edges)

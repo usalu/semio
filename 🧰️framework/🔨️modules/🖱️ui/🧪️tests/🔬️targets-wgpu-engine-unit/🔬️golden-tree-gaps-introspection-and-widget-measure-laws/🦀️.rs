@@ -4,7 +4,7 @@
 /// 🌳️ Clickable identity rows preserve the label pixels painted by their owning Tree.
 #[test]
 fn retained_tree_action_rows_do_not_overpaint_their_labels() {
-    let samples: serde_json::Value = serde_json::from_str(include_str!("../../../🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/♿️actions/🔣️.json")).unwrap();
+    let samples: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧱️elements/🌳️Tree/🧪️tests/🧫️fixtures/♿️actions/🔣️.json")).unwrap();
     for sample in samples.as_array().unwrap() {
         let label = sample["label"].as_str().unwrap();
         let item = UiTreeItemNode {
@@ -56,8 +56,8 @@ fn retained_tree_action_rows_do_not_overpaint_their_labels() {
         }
         assert!(completed, "{label}: retained frame completes");
         let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
-        assert!(instances.iter().filter(|item| item.params[2] == crate::wgpu::draw_types::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
-        assert!(instances.iter().all(|item| item.params[2] == crate::wgpu::draw_types::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
+        assert!(instances.iter().filter(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH).count() >= label.chars().filter(|ch| !ch.is_whitespace()).count(), "{label}: label glyphs are emitted");
+        assert!(instances.iter().all(|item| item.params[2] == semio_framework_ui_draw_contract::KIND_GLYPH), "{label}: an idle action row has no opaque control chrome covering its glyphs");
         assert!(ui.window_hit_targets("tree-paint").iter().any(|hit| hit.action.is_some()), "{label}: suppressing identity paint must retain activation");
     }
 }

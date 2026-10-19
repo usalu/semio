@@ -602,8 +602,9 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     }
 }
 
-impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.delivered {
             let step = self.publication.close_step(cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
@@ -677,6 +678,10 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
             }
         }
     }
+}
+
+impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {

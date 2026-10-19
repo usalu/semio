@@ -11,7 +11,7 @@ import {
   type HostTemporalFormatReplyV1,
   type HostTemporalValueV1,
 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts";
-import { createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
+import { createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 
 function relativeOracle(date: Date, nowMs: number, locale: string): string {
   const seconds = (date.valueOf() - nowMs) / 1_000;

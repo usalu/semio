@@ -1,15 +1,15 @@
 //! 🧪️ The coordination rules: element classes, storeys and phases, selectors, scopes, moments and why a clash set, a rule, an issue or a comment cannot be written.
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, Phase, RuleScope};
-use crate::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Issue, IssueComment, Rule};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, Phase, RuleScope};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Issue, IssueComment, Rule};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
-use crate::standards::v1::subsets::any::schema::snapshot::coordination::{missing};
-use crate::standards::v1::subsets::any::schema::snapshot::coordination::*;
-use crate::standards::v1::subsets::any::schema::snapshot::values::*;
-use crate::standards::v1::subsets::any::schema::snapshot::coordination_values::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Point3, SectionBox, ViewCamera};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::coordination::missing;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::coordination::{class_of, storey_of, phase_of, classified, selector_picks, scope_covers, valid_timestamp, clash_set_problem, DEFAULT_TOLERANCE, rule_problem, issue_problem, comment_problem, comments_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::coordination_values::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -32,8 +32,8 @@ fn issue() -> Issue {
     Issue {
         title: "Beam hits the wall".into(),
         description: String::new(),
-        status: crate::standards::v1::subsets::any::schema::snapshot::IssueStatus::Open,
-        priority: crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::Normal,
+        status: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::IssueStatus::Open,
+        priority: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::IssuePriority::Normal,
         assignee: String::new(),
         author: "UG".into(),
         created: "2026-10-09T08:30:00Z".into(),
@@ -123,7 +123,7 @@ fn a_clash_set_needs_a_name_sane_distances_and_selectors_that_exist() {
 #[test]
 fn a_rule_needs_a_name_a_limit_the_kind_accepts_and_a_scope_that_exists() {
     let model = model();
-    let rule = Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: crate::standards::v1::subsets::any::schema::snapshot::RuleSeverity::Error, scope: RuleScope::all() };
+    let rule = Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RuleSeverity::Error, scope: RuleScope::all() };
     assert_eq!(rule_problem(&model, "r-1", &rule), None);
     let problem = |rule: Rule| rule_problem(&model, "r-1", &rule).expect("a problem");
     assert_eq!(problem(Rule { name: "".into(), ..rule.clone() }).field, "name");

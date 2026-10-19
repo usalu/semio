@@ -32,12 +32,12 @@ fn close_original_compute<J:InteractiveJob+'static>(completion:&mut ComputeJobCo
 
 async fn receive_original_compute_job<J:InteractiveJob+'static>(pool:&ComputePool,runtime:&TokioHostRuntime,scope:&ScopeHandle,ctx:&OperationContext,original:J)->Result<(),ComputeError>{
     use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget};
-use semio_framework_job_worker_authority::{BatchJobParams,WorkerJobAdmissionContext};
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobAdmissionContext};
     let grant=fixture_compute_grant();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut admission=RetainedCloneProgress::default();let mut job=Some(original);let mut params:Option<BatchJobParams>=None;
     let mut close_sequence=0;let mut close_authority=semio_framework_job::JobPayloadAuthority::admit(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),grant).unwrap().unwrap().0;
     let deadline=ctx.deadline_ms.map_or(u64::MAX,|deadline|deadline.saturating_sub(runtime.pool.now_ms()).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap()));
     let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,deadline,grant),semio_framework_job::default_now_us,&mut admission).unwrap();
-    assert!(ComputePool::prepare_job_params(ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
+    params=Some(BatchJobParams{operation:OperationId(ctx.trace.0),generation:Generation(u64::from(ctx.generation)),cancel:ctx.cancel.clone(),config:BatchDriveConfig{retained:grant,site:"compute-original-fixture",stage:InteractiveStage::InteractiveStep,fuel_per_step:64,step_budget_us:1000},now_us:semio_framework_job::default_now_us});
     let mut completion=None;assert!(pool.run_job(runtime,scope,ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|outcome|assert!(outcome.is_terminal())).await.unwrap(),"original supplied fixture authority admits unchanged source");let completion=completion.as_mut().unwrap();
     drop(control);assert!(job.is_none()&&params.is_none());assert!(admission.retained_capacity_bytes>0);let result=completion.result().clone();
     while !completion.terminal_is_empty(){let step=close_original_compute(completion,ctx,deadline,&mut close_sequence,&close_authority,&mut receipt);assert!(step.progress().fits(grant));if step.progress()==Default::default(){sleep_ms(runtime,1).await;}}
@@ -227,11 +227,11 @@ use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,Worke
 #[semio_framework_async_macros::async_test]
 async fn cancelled_compute_driver_preserves_the_original_caller_completion_slot(){
     use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget};
-use semio_framework_job_worker_authority::{WorkerJobAdmissionContext};
+use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobAdmissionContext};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧮️compute-retained/🔣️.json")).unwrap();let denied_progress:RetainedCloneProgress=serde_json::from_value(law["zeroWorkClose"]["progress"].clone()).unwrap();
     let runtime=TokioHostRuntime::with_pool(test_pool(1));let pool=ComputePool::with_pool(1,test_pool(1));let scope=runtime.open_scope(ScopeOwner::Service("compute-original-driver"),None).await;let ctx=test_ctx(81300,scope.cancel.clone()).await;let grant=fixture_compute_grant();let mut job=Some(NeverCompleteComputeJob{closing:false});let mut params=None;let mut admission=RetainedCloneProgress::default();let mut receipt=OriginalComputeRecipient{original:grant,progress:RetainedCloneProgress::default()};let mut completion=None;
     let mut close_sequence=0;let mut close_authority=semio_framework_job::JobPayloadAuthority::admit(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),grant).unwrap().unwrap().0;
-    let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();assert!(ComputePool::prepare_job_params(&ctx,grant,semio_framework_job::default_now_us,&mut params,&mut control,&mut receipt).unwrap());
+    let mut control=WorkerJobAdmissionContext::new(OperationId(ctx.trace.0),Generation(u64::from(ctx.generation)),StepBudget::new(1,u64::MAX,grant),semio_framework_job::default_now_us,&mut admission).unwrap();params=Some(BatchJobParams{operation:OperationId(ctx.trace.0),generation:Generation(u64::from(ctx.generation)),cancel:ctx.cancel.clone(),config:BatchDriveConfig{retained:grant,site:"compute-original-fixture",stage:InteractiveStage::InteractiveStep,fuel_per_step:64,step_budget_us:1000},now_us:semio_framework_job::default_now_us});
     {let mut driver=std::pin::pin!(pool.run_job(&runtime,&scope,&ctx,grant,&mut job,&mut params,&mut control,&mut receipt,&mut completion,|_|panic!("nonterminal original job cannot publish completion")));assert!(matches!(driver.as_mut().poll(&mut Context::from_waker(std::task::Waker::noop())),Poll::Pending));}
     drop(control);assert!(job.is_none()&&params.is_none());assert!(completion.is_some());let original=completion.as_ref().unwrap()as*const _;
     let mut denied_receipt=Default::default();

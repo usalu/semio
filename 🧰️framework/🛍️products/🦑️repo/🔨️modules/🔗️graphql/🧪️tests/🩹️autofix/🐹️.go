@@ -14,6 +14,7 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestFixApplyAutofixes(t *testing.T) {
@@ -21,9 +22,7 @@ func TestFixApplyAutofixes(t *testing.T) {
 	expectedContent := readStatutesFixture(t, "🧪️file-fixable-expected")
 
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	fixtureSrc := statutesFixtureDir + "/🧪️file-fixable/🟦️.tsx"
 	srcAbs := filepath.Join(tmpDir, filepath.FromSlash(fixtureSrc))
@@ -72,9 +71,7 @@ func TestFixApplyAutofixes(t *testing.T) {
 
 func TestApplyAutofixesRunsFormatterAfterEdit(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	if err := workspace.WriteTextFile(filepath.Join(tmpDir, "package.json"), "{}\n"); err != nil {
 		t.Fatalf("failed to write package.json: %v", err)
@@ -141,9 +138,7 @@ func TestApplyAutofixesRunsFormatterAfterEdit(t *testing.T) {
 
 func TestApplyAutofixesFormatterFallbackNormalizesText(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	originalLookup := workspace.FormatterBinaryLookup
 	defer func() { workspace.FormatterBinaryLookup = originalLookup }()
@@ -178,9 +173,7 @@ func TestApplyAutofixesFormatterFallbackNormalizesText(t *testing.T) {
 
 func TestFixSectionMissingEndName(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️MySection\n\nconst x = 1;\n\n// #endregion\n"
 	expected := "// #region 🔖️MySection\n\nconst x = 1;\n\n// #endregion 🔖️MySection\n"
@@ -211,9 +204,7 @@ func TestFixSectionMissingEndName(t *testing.T) {
 
 func TestFixSectionNameMismatch(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Alpha\n\nconst x = 1;\n\n// #endregion 🔖️Beta\n"
 	expected := "// #region 🔖️Alpha\n\nconst x = 1;\n\n// #endregion 🔖️Alpha\n"
@@ -244,9 +235,7 @@ func TestFixSectionNameMismatch(t *testing.T) {
 
 func TestFixSectionEmpty(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Keep\n\nconst x = 1;\n\n// #endregion 🔖️Keep\n\n// #region 🔖️Empty\n\n// #endregion 🔖️Empty\n\n// #region 🔖️Also\n\nconst y = 2;\n\n// #endregion 🔖️Also\n"
 	expected := "// #region 🔖️Keep\n\nconst x = 1;\n\n// #endregion 🔖️Keep\n\n// #region 🔖️Also\n\nconst y = 2;\n\n// #endregion 🔖️Also\n"
@@ -277,9 +266,7 @@ func TestFixSectionEmpty(t *testing.T) {
 
 func TestFixInlineComment(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Section\n\n// inline one\n\n// inline two\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 	expected := "// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
@@ -310,9 +297,7 @@ func TestFixInlineComment(t *testing.T) {
 
 func TestFixBlockComment(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Section\n\n/* block comment */\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 	expected := "// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
@@ -343,9 +328,7 @@ func TestFixBlockComment(t *testing.T) {
 
 func TestFixJSDocComment(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Section\n\n/** jsdoc comment */\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 	expected := "// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
@@ -376,9 +359,7 @@ func TestFixJSDocComment(t *testing.T) {
 
 func TestFixMultipleBreachsSameFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️A\n\n// bad comment\n\nconst a = 1;\n\n// #endregion\n\n// #region 🔖️B\n\n// another bad\n\nconst b = 2;\n\n// #endregion 🔖️Wrong\n"
 	testFile := "test_multi.tsx"
@@ -419,9 +400,7 @@ func TestFixMultipleBreachsSameFile(t *testing.T) {
 
 func TestFixImprovedCommentLogic(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := `// #region 🔖️Section
 const x = 1; // trailing comment

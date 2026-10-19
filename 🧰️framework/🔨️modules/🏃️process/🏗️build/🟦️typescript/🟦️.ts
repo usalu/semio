@@ -8,7 +8,7 @@ import { withCompilerState } from "../🗃️state/🟦️.ts";
 import { compilerAdmissionBudgetV1,type CompilerAdmissionControl } from "../🎟️capacity/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {readNativeStorageReservationPolicyV1,type NativeStorageReservationV1}from"../../📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🟦️ One caller-owned TypeScript check with explicit warm state and original process authority. */
 export type TypeScriptCheckOptions = Readonly<{ workspace: string; stateRoot: string; storage:NativeStorageReservationV1;storageControl:CompilerAdmissionControl;control:CompilerAdmissionControl;cwd: string; project: string; owner: string; args?: readonly string[]; mode: BuildMode; timeoutMs: number; invocation: ScriptInvocation; execution?: Omit<OwnedCommandOptions, "signal"> }>;

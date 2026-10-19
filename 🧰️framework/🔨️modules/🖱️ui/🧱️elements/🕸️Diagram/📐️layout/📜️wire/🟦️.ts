@@ -1,5 +1,4 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { DiagramLayoutPosition } from "../📊️job-types/🟦️.ts";
 
 /**
  * Base pixel unit for diagram node sizing.
@@ -133,3 +132,13 @@ export function diagramLayoutCredits(nodeCount: number, edgeCount: number): Diag
   if (!Number.isSafeInteger(inputBytes) || inputBytes + outputBytes > DIAGRAM_LAYOUT_MAX_RESERVED_BYTES) return { admitted: false, reason: "bytes" };
   return { admitted: true, inputBytes, inputItems: nodeCount + edgeCount, outputBytes, outputItems: nodeCount };
 }
+
+/** 📍️ One laid-out node position of a diagram layout. */
+export interface DiagramLayoutPosition {
+  readonly index: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+/** 📄️ Items per page of the paged layout stores. */
+export const diagramLayoutPageSize = 128;

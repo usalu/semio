@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Vector3 } from "three";
 import { describe, expect, test } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 let workspace = dirname(fileURLToPath(import.meta.url));
 while (!existsSync(join(workspace, ".git"))) workspace = resolve(workspace, "..");

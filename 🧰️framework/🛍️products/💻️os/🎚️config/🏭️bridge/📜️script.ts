@@ -20,7 +20,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import {runRepositoryMutationBridgeScriptV1} from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
+import { runRepositoryMutationBridgeScriptV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry

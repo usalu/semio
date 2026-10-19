@@ -1,15 +1,19 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::{case, CASES};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::TopConstraint};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::{case, CASES};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily, parts, SolidGroup, SolidPoint, ElementSolid, SolidPlacement, SolidKey};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, ModelNode};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_geometry::placement::ZPlane;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 
 fn square_prism(side: f64, height: f64) -> TriMesh {
     semio_framework_geometry::mesh::extrude(&[Point::new(0.0, 0.0), Point::new(side, 0.0), Point::new(side, side), Point::new(0.0, side)], &[], ZPlane::flat(0.0), ZPlane::flat(height))
@@ -18,7 +22,7 @@ fn square_prism(side: f64, height: f64) -> TriMesh {
 #[test]
 fn a_builder_groups_runs_and_measures_the_union_of_its_parts() {
     let mut builder = SolidBuilder::new(SolidFamily::Column);
-    builder.add(parts::BODY, "m-a", 0, &square_prism(1.0, 2.0)).add(parts::BODY, "m-a", 0, &square_prism(0.5, 1.0).translated([5.0, 0.0, 0.0])).add(parts::FRAME, "m-b", 1, &TriMesh::new());
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, "m-a", 0, &square_prism(1.0, 2.0)).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, "m-a", 0, &square_prism(0.5, 1.0).translated([5.0, 0.0, 0.0])).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::FRAME, "m-b", 1, &TriMesh::new());
     let solid = builder.build();
     assert_eq!(solid.groups, vec![SolidGroup { part: "body".into(), material: "m-a".into(), layer: 0 }]);
     assert_eq!(solid.face_groups, vec![0; 24]);
@@ -31,7 +35,7 @@ fn a_builder_groups_runs_and_measures_the_union_of_its_parts() {
 #[test]
 fn a_solid_converts_into_the_world3d_mesh_arrays_without_re_indexing() {
     let mut builder = SolidBuilder::new(SolidFamily::Wall);
-    builder.add(parts::LAYER, "m-a", 0, &square_prism(1.0, 1.0)).add(parts::PANEL, "m-b", 0, &square_prism(1.0, 1.0));
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LAYER, "m-a", 0, &square_prism(1.0, 1.0)).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::PANEL, "m-b", 0, &square_prism(1.0, 1.0));
     let solid = builder.build();
     assert_eq!((solid.positions_f32().len(), solid.normals_f32().len()), (solid.positions.len(), solid.positions.len()));
     assert_eq!(solid.face_ids().len(), solid.triangle_count());
@@ -51,9 +55,9 @@ fn the_empty_solid_is_the_default_and_is_empty() {
 fn the_vertical_extent_follows_the_top_constraint() {
     let own = StoreyLevel { elevation: 3.0, top_elevation: 6.0, absolute_elevation: 3.0, absolute_top_elevation: 6.0 };
     let above = StoreyLevel { elevation: 6.0, top_elevation: 9.0, absolute_elevation: 6.0, absolute_top_elevation: 9.0 };
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.1, &TopConstraint::Unconnected { height: 2.0 }, &own, None), (3.1, 5.1));
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.0, &TopConstraint::StoreyTop { offset: -0.2 }, &own, None), (3.0, 5.8));
-    assert_eq!(crate::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.0, &TopConstraint::Storey { storey: "x".into(), offset: 0.5 }, &own, Some(&above)), (3.0, 6.5));
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.1, &TopConstraint::Unconnected { height: 2.0 }, &own, None), (3.1, 5.1));
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.0, &TopConstraint::StoreyTop { offset: -0.2 }, &own, None), (3.0, 5.8));
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of(0.0, &TopConstraint::Storey { storey: "x".into(), offset: 0.5 }, &own, Some(&above)), (3.0, 6.5));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -86,7 +90,7 @@ async fn every_element_with_geometry_has_one_placed_solid() {
 #[semio_framework_async_macros::async_test]
 async fn the_placement_carries_the_building_origin_rotation_and_datum() {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.buildings.get_mut("bldg-1").expect("building").origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 20.0, y: -4.0 };
+    snapshot.buildings.get_mut("bldg-1").expect("building").origin = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 20.0, y: -4.0 };
     snapshot.buildings.get_mut("bldg-1").expect("building").rotation = 0.5;
     snapshot.buildings.get_mut("bldg-1").expect("building").elevation = 2.0;
     snapshot.sites.get_mut("site-1").expect("site").elevation = 100.0;
@@ -100,7 +104,7 @@ async fn the_placement_carries_the_building_origin_rotation_and_datum() {
 async fn the_model_inference_carries_the_solids_of_the_house_walls() {
     use protocol::Inference;
     let (snapshot, _) = case("straight-openings");
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred.element_solids, compute_element_solids(&snapshot));
 }
 
@@ -110,14 +114,14 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
     snapshot.openings.clear();
     for index in 0..count {
         let (column, row) = ((index % 25) as f64, (index / 25) as f64);
-        let wall = crate::standards::v1::subsets::any::schema::snapshot::Wall {
+        let wall = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall {
             storey: "st-1".into(),
             wall_type: if index % 3 == 0 { "wt-300".into() } else { "wt-200".into() },
-            axis: crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: column * 6.0, y: row * 6.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: column * 6.0 + 4.0, y: row * 6.0 } },
-            location: crate::standards::v1::subsets::any::schema::snapshot::LocationLine::Center,
+            axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: column * 6.0, y: row * 6.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: column * 6.0 + 4.0, y: row * 6.0 } },
+            location: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LocationLine::Center,
             base_offset: 0.0,
             top: TopConstraint::StoreyTop { offset: 0.0 },
-            phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
+            phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New,
             start_join: None,
             end_join: None,
             name: String::new(),
@@ -125,7 +129,7 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
         };
         snapshot.walls.insert(format!("w-{index:04}"), wall);
         if index % 4 == 0 {
-            let opening = crate::standards::v1::subsets::any::schema::snapshot::Opening { host: format!("w-{index:04}"), kind: crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
+            let opening = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Opening { host: format!("w-{index:04}"), kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
             snapshot.openings.insert(format!("o-{index:04}"), opening);
         }
     }
@@ -200,7 +204,7 @@ async fn the_committed_expectations_and_meshes_match_the_inference() {
 #[semio_framework_async_macros::async_test]
 async fn the_plan_puts_storeys_first_and_gives_elements_their_layouts_frames_and_storeys_as_parents() {
     let (snapshot, _) = case("straight-openings");
-    let steps = plan::build(&snapshot, kinds::closure(kinds::SOLIDS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::SOLIDS));
     let position = |key: &ModelNode| steps.iter().position(|step| &step.key == key).expect("planned");
     for step in &steps {
         for parent in &step.parents {
@@ -218,9 +222,9 @@ async fn the_plan_puts_storeys_first_and_gives_elements_their_layouts_frames_and
 #[semio_framework_async_macros::async_test]
 async fn a_wall_constrained_to_another_storey_depends_on_both() {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.storeys.insert("st-2".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
+    snapshot.storeys.insert("st-2".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
     snapshot.walls.get_mut("w-plain").expect("wall").top = TopConstraint::Storey { storey: "st-2".into(), offset: -0.5 };
-    let steps = plan::build(&snapshot, kinds::closure(kinds::SOLIDS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::SOLIDS));
     let parents = steps.iter().find(|step| step.key == ModelNode::WallLayout("w-plain".into())).expect("planned").parents.clone();
     assert_eq!(parents[..2], [ModelNode::Storey("st-1".into()), ModelNode::Storey("st-2".into())]);
     let solids = compute_element_solids(&snapshot);
@@ -256,7 +260,8 @@ async fn a_warm_cache_equals_a_cold_recompute() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_opening_edit_re_infers_its_host_and_its_filler_but_a_door_type_edit_leaves_windows_alone() {
-    use crate::standards::v1::subsets::any::schema::diff::patches::{DoorTypePatch, OpeningPatch};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::DoorTypePatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
     let (snapshot, _) = case("straight-openings");
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).element_solids.clone();

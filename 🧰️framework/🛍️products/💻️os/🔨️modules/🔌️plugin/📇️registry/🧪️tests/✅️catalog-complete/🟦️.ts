@@ -4,12 +4,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { parseInstallationDirectoryV1 } from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import { parseInstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
 import { registryModuleDirectories, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
+import { APP_CHANNEL_VERSION, encodePackValue } from "@semio-tech/framework-os";
 import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
@@ -19,12 +19,11 @@ import { createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier } from 
 import { executeCatalogVerificationPlan, orderCatalogNodes } from "../../✅️catalog-verification/🗺️verification-plan/🟦️.ts";
 import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { sha256CatalogArtifact } from "../../✅️catalog-verification/📥️artifact-io/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts";
-import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts";
+import { examplesForApp, normalizeManifestExamples } from "@semio-tech/framework";
+import type { PluginManifest } from "@semio-tech/framework";
 import { identityInstallationSchemaUrl } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");

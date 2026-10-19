@@ -4,7 +4,8 @@
 
 use super::settle_renderer_action_receipt;
 use semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome;
-use ui_wgpu::wgpu::{ActionDescriptor, InputState};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::InputState;
 
 /// 🧾️ Takes every action out of the bounded input authority, settles its receipt as accepted and returns the descriptors in order.
 pub fn collect_fixture_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {

@@ -1,7 +1,6 @@
 //! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use crate::editor::grid2d::modes::edit::windows::preview;
-use semio_framework_job::{JobOutcomeBorrow, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolRunJobPort;
@@ -36,7 +35,7 @@ fn drive_once(job: &mut Grid2dFillRunJob, operation: OperationId, generation: Ge
     let now = semio_framework_job::default_now_us().expect("clock");
     let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
     let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(operation, generation, budget, cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
+    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation, generation, budget, cancel.clone(), sequence, &mut receipt);
     let mut verdict = None;
     match semio_framework_job::drive_step(job, &mut context, "wfc.grid2d.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
         None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
@@ -70,13 +69,13 @@ fn close(job: &mut Grid2dFillRunJob) {
             maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
             maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
         };
-        match job.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty());
                 return;
             }
             InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("fill close blocked or refused"),
+            InteractiveJobCloseStep::Blocked => panic!("fill close blocked or refused"),
         }
     }
     panic!("fill close never completed");

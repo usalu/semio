@@ -6,12 +6,29 @@ use super::*;
 enum LoadOriginal<O: WindowConfigOwner> {
     State(O::State),
     History(store::HistoryLog),
-    HistoryAndAuxiliary((Option<store::HistoryLog>, Vec<String>, Vec<String>)),
-    Auxiliary((Vec<String>, Vec<String>)),
     Files((Vec<u8>, Vec<u8>, String)),
     Text(String),
     SharedText(semio_framework_value::SharedUtf8),
 }
+
+/// 📜️ The History read policy of one window config pack: its SPR bytes are the whole file and frame ceiling, its record count the envelope ceiling.
+fn window_config_history_limits(spr_bytes: u32) -> store::os_store::HistoryReadLimits {
+    store::os_store::HistoryReadLimits {
+        file_bytes: spr_bytes,
+        frame_body_bytes: spr_bytes,
+        records: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u32,
+        maximum_fields: 128,
+        maximum_text_bytes: 1_048_576,
+        maximum_binary_bytes: 1_048_576,
+        maximum_json_bytes: 1_048_576,
+        maximum_json_allocation_bytes: 8_388_608,
+        maximum_json_items: 65_536,
+        maximum_json_depth: 64,
+    }
+}
+
+/// 🧮️ The cumulative native allocation ceiling of one window config History decode.
+const WINDOW_CONFIG_HISTORY_ALLOCATION_BYTES: usize = 8_388_608;
 
 pub(super) struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     completed_states:ManuallyDrop<[Option<RetainedWindowConfigStateDecode<O>>;3]>,
@@ -162,14 +179,14 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                     return self.pending();
                 }
                 let spr_len = self.files.as_ref().expect("retained window config SPR input remains").spr.len();
-                let limits = store::RetainedSprLimits { file_bytes: spr_len as u64, frame_body_bytes: spr_len as u64, records: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64 };
-                match store::RetainedHistoryDecode::new_persisted_document(spr_len, limits) {
-                    Ok(decoder) => {
+                let admitted = u32::try_from(spr_len).ok().and_then(|bytes| store::RetainedHistoryDecode::new((0, spr_len), window_config_history_limits(bytes), true, WINDOW_CONFIG_HISTORY_ALLOCATION_BYTES).ok());
+                match admitted {
+                    Some(decoder) => {
                         *self.history_decode = Some(decoder);
                         self.phase = WindowConfigPackLoadPhase::HistoryReplay;
                         self.pending()
                     }
-                    Err(_) => self.reject(WindowConfigPackLoadDiagnostic::History),
+                    None => self.reject(WindowConfigPackLoadDiagnostic::History),
                 }
             }
             Ok(RetainedCloneStep::Complete(_)) => self.reject(WindowConfigPackLoadDiagnostic::Retirement),
@@ -179,27 +196,23 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
     }
 
     fn advance_history(&mut self, grant: RetainedCloneGrant) -> WindowConfigPackLoadStep {
-        let bytes = &self.files.as_ref().expect("retained window config SPR input remains").spr;
+        let files = self.files.as_ref().expect("retained window config SPR input remains");
+        let pack_bytes = files.pack.len() as u64;
         let decoder = self.history_decode.as_mut().expect("retained window config history decoder remains");
-        match decoder.step(bytes, grant.maximum_copy_bytes, grant.maximum_items.min(1)) {
-            Ok(store::RetainedHistoryDecodeStep::Pending { completed_bytes, .. }) => {
-                self.completed_bytes = (self.files.as_ref().expect("retained window config input remains").pack.len() as u64).saturating_add(completed_bytes);
+        match decoder.step(&files.spr, &store::RetainedHistoryUninterrupted, grant, &mut self.history) {
+            Ok(store::RetainedHistorySourceStep::Progress | store::RetainedHistorySourceStep::Blocked) => {
+                self.completed_bytes = pack_bytes.saturating_add(decoder.consumed_end() as u64);
                 self.pending()
             }
-            Ok(store::RetainedHistoryDecodeStep::Ready) => {
-                if !super::super::registry::fits(grant, Self::original_demand()) { return self.pending(); }
-                let history = decoder.take_ready().expect("ready retained window config history remains");
-                let auxiliary = decoder.take_auxiliary_owners();
-                if !decoder.terminal_is_empty() {
+            Ok(store::RetainedHistorySourceStep::Ready) => {
+                if self.history.is_none() || !decoder.terminal_is_empty() {
                     return self.reject(WindowConfigPackLoadDiagnostic::Retirement);
                 }
-
-                *self.history = Some(history);
-                if self.adopt_original(LoadOriginal::Auxiliary(auxiliary)).is_err() { return self.reject(WindowConfigPackLoadDiagnostic::Retirement); }
+                drop(self.history_decode.take());
                 self.phase = WindowConfigPackLoadPhase::InputRetirement;
                 self.pending()
             }
-            Err(_) => self.reject(WindowConfigPackLoadDiagnostic::History),
+            Ok(store::RetainedHistorySourceStep::Fault | store::RetainedHistorySourceStep::Closed) | Err(_) => self.reject(WindowConfigPackLoadDiagnostic::History),
         }
     }
 
@@ -349,7 +362,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         if self.original.is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained original window input has no controlled authority")); }
         if let Some(owner) = self.active.as_ref() { return controlled_demands(owner, body); }
         if let Some(owner) = self.state_decode.as_ref() { return if owner.terminal_is_empty() { frame(size_of::<RetainedWindowConfigStateDecode<O>>()) } else { owner.retirement_demands(body) }; }
-        if self.history_decode.is_some() { return frame(size_of::<store::RetainedHistoryDecode>().checked_add(Self::original_demand().copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "window history handoff size overflow"))?); }
+        if let Some(owner) = self.history_decode.as_ref() { return owner.demands(body); }
         if let Some(owner) = self.hydration.as_ref() {
             return if store::ErasedSnapshotRetirement::terminal_is_empty(owner) { frame(size_of::<store::RetainedConfigStoreHydration<O::State, O::Mutation>>()) }
             else { Ok(RetirementDemand { copy_bytes: store::ErasedSnapshotRetirement::next_copy_byte_demand(owner)?, capacity_bytes: store::ErasedSnapshotRetirement::next_capacity_byte_demand(owner, body)?, release_bytes: store::ErasedSnapshotRetirement::next_release_byte_demand(owner)?, depth: store::ErasedSnapshotRetirement::next_depth_demand(owner)? }) };
@@ -373,12 +386,12 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(owner) = self.history_decode.as_mut() {
-            let history = owner.take_partial();
-            let (dictionary, edits) = owner.take_auxiliary_owners();
-            assert!(owner.terminal_is_empty());
-            drop(self.history_decode.take());
-            self.adopt_original(LoadOriginal::HistoryAndAuxiliary((history, dictionary, edits))).map_err(ValueError::into_message)?;
-            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+            if owner.terminal_is_empty() {
+                drop(self.history_decode.take());
+                return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+            }
+            let files = self.files.as_ref().ok_or_else(|| "retained window config SPR input is absent while its history closes".to_string())?;
+            return owner.close_step(&files.spr, &store::RetainedHistoryUninterrupted, grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message);
         }
         if let Some(owner) = self.hydration.as_mut() {
             if !store::ErasedSnapshotRetirement::terminal_is_empty(owner) { return store::ErasedSnapshotRetirement::close_step(owner, grant).map(|step| PluginLifecycleStep::retained(step, false)).map_err(ValueError::into_message); }

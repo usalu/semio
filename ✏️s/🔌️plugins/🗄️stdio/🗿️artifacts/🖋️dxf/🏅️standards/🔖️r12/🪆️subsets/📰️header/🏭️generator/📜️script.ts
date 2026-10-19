@@ -43,15 +43,15 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 const HERE = import.meta.dir;
 const ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
+const ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const FIXTURE_PATH_PREFIX = "../🧪️tests/🧫️fixtures";
 const READER_ORACLE_ID = "dxf-crate-r12-mutate-reader";
 const CROSS_SEMIO_ORACLE_ID = "dxf-crate-r12-mutate";

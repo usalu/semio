@@ -19,7 +19,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(import.meta.dir, "..", "..");
 const law = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♻️hot-swap-session-handover", "🔣️.json"), "utf8"));
@@ -104,9 +104,9 @@ describe("♻️ a hot swap hands every window over to the successor instance", 
   });
 
   test("the node-graph surface is keyed on its surfaceId alone — which is why the ordering, not a retry, is the fix", () => {
-    const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🟦️.tsx"));
-    const unmount = source.indexOf('console.log("[TRACE] node-graph host unmount surface=%s", surfaceId);');
+    const source = readModuleTreeSource(join(engineRoot, "🧱️elements", "🕸️NodeGraph", "🔌️flow-session-attach", "🟦️.ts"));
+    const unmount = source.indexOf("A retained surface host unmounts exactly once");
     expect(unmount).toBeGreaterThan(0);
-    expect(source.slice(unmount, unmount + 600)).toContain(law.sourceScan.nodeGraphSurfaceEffectKey);
+    expect(source.slice(unmount, unmount + 900)).toContain(law.sourceScan.nodeGraphSurfaceEffectKey);
   });
 });

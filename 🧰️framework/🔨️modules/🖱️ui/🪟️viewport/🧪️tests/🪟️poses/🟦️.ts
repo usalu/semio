@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020";
 import jsonPatch from "fast-json-patch";
-import planarSchema from "../../◻️2d/🧬️schema/🔣️.json";
-import orbitSchema from "../../🧊️3d/🧬️schema/🔣️.json";
+import planarSchema from "../../◻️2d/🧬️schema/🔣️.json" with { type: "json" };
+import orbitSchema from "../../🧊️3d/🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "../🧫️fixtures/🪟️poses/🔣️.json";
 import { parseViewport2d } from "../../◻️2d/🧬️schema/🟦️.ts";
 import { parseViewport3dOrbit } from "../../🧊️3d/🧬️schema/🟦️.ts";

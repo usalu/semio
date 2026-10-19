@@ -356,7 +356,7 @@ async fn the_rendered_viewer_preview_scene_carries_the_status_contract() {
     let shell_view = context::view_shell_view(VIEW_PREVIEW_WINDOW_ID);
     let projection = context::render_with_view(&mut app, preview::BODY_KEY, &shell_view).await;
     drop(app);
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&projection).expect("the viewer preview body decodes as a world-3d scene");
     let published = world.status_json.clone().expect("the viewer preview window must publish a status contract, exactly as both editor preview windows do");
     let status: serde_json::Value = serde_json::from_str(&published).expect("the published status is one JSON object");
     assert_contract_shape(&status, &fixture.status_contract, &fixture.phase_labels, &fixture.cancel_action, "rendered");
@@ -385,7 +385,7 @@ async fn a_viewer_kernel_release_dispatches_live_and_never_mutates_the_document(
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(shell_view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
     let args = preview_eval::window_args(VIEW_PREVIEW_WINDOW_ID, preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalRelease", Some(&args), &action_meta).await.expect("the shell dispatches the declared release verb");
-    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("the cancel settles through the retained ladder");
+    let receipt = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the cancel settles through the retained ladder");
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault), "the viewer kernel release faulted in the retained job ladder");
     assert_eq!(context::snapshot(&app), before, "a kernel release must not mutate the document");
     let _ = app.pending_effects(None).await;

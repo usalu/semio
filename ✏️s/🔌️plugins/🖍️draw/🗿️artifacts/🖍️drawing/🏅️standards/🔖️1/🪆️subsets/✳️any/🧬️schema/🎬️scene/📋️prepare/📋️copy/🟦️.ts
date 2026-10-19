@@ -1,8 +1,8 @@
 /** 📋️ Incrementally own all mutable scene metadata while borrowing immutable source text. */
-import type {DocumentSceneNode,DocumentSceneContent} from "../🟦️.ts";
-import {validateSceneSourceAddress} from "../🟦️.ts";
+import type { DocumentSceneNode, DocumentSceneContent } from "../../🗺️plan-model/🟦️.ts";
+import { validateSceneSourceAddress } from "../../🗺️plan-model/🟦️.ts";
 import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
-import type {Fill,Color} from "../../../🎨️fill/🟦️.ts";
+import type { Fill, Color } from "../../../🎨️fill/🖌️paint-model/🟦️.ts";
 import type {PathRasterStroke} from "../../../🧮️geometry/📷️raster/🟦️.ts";
 function invalid(message:string):never{throw new RangeError(message);}
 function copyPoint(p:Vec2):Vec2{if(!Array.isArray(p)||p.length!==2)invalid("Invalid scene copy point");return[p[0],p[1]];}

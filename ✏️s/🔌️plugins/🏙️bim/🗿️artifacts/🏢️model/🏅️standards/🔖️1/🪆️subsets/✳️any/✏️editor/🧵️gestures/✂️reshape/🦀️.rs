@@ -8,16 +8,16 @@
 //!
 //! Every tool shows the result as a ghost before the click, a refused result as a warning.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
-use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::gestures::transform::{ghost, outline};
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
-use crate::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
-use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge, WallEnd};
-use crate::standards::v1::subsets::any::schema::{snapshot::Axis, mutations::ModelMutation};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform::{ghost, outline};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge, WallEnd};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📏️ The step the distance of an offset snaps to, in metres.
 pub const OFFSET_STEP: f64 = 0.05;
@@ -51,7 +51,7 @@ pub struct Reshape {
 //#region 🔖️Picking
 fn element_at(ctx: &ToolContext<'_>, pointer: &Pointer) -> Option<String> {
     let linework = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey))?;
-    plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)
+    semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)
 }
 
 fn wall_at(ctx: &ToolContext<'_>, pointer: &Pointer) -> Option<String> {
@@ -59,7 +59,7 @@ fn wall_at(ctx: &ToolContext<'_>, pointer: &Pointer) -> Option<String> {
 }
 
 fn target_of(ctx: &ToolContext<'_>, id: &str) -> Option<(String, String)> {
-    crate::editor::bim::entities::kind_holding(ctx.snapshot, id).map(|row| (row.kind.to_string(), id.to_string()))
+    semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding(ctx.snapshot, id).map(|row| (row.kind.to_string(), id.to_string()))
 }
 
 fn axis_path(axis: &Axis) -> Vec<P> {
@@ -126,7 +126,7 @@ impl Reshape {
     fn offset(&mut self, ctx: &mut ToolContext<'_>, wall: &str) -> Step {
         let Some(distance) = ctx.snapshot.walls.get(wall).and_then(|row| offset_distance(&row.axis, self.current)) else { return Step::default() };
         let new_id = ctx.mint("wall");
-        let mutation = ModelMutation::OffsetWall(crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall { id: wall.to_string(), new_id: new_id.clone(), distance });
+        let mutation = ModelMutation::OffsetWall(semio_s_artifact_bim_model_mut_any_182::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall { id: wall.to_string(), new_id: new_id.clone(), distance });
         let step = written(ctx, mutation, Some(("wall".to_string(), new_id)));
         self.reset();
         step
@@ -135,12 +135,12 @@ impl Reshape {
     fn trim(&mut self, ctx: &ToolContext<'_>, target: &str, pointer: &Pointer) -> Step {
         let Some(wall) = wall_at(ctx, pointer).filter(|wall| wall != target) else { return Step::default() };
         let (Some(row), Some(other)) = (ctx.snapshot.walls.get(&wall), ctx.snapshot.walls.get(target)) else { return Step::default() };
-        let Some(end) = end_to_move(self.kind, &row.axis, &other.axis, pointer.at) else { return Step::refuse(crate::editor::bim::gestures::session::REJECTED) };
-        Step::write(ctx, ModelMutation::TrimExtendWall(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall { id: wall, end, target: target.to_string() }))
+        let Some(end) = end_to_move(self.kind, &row.axis, &other.axis, pointer.at) else { return Step::refuse(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::REJECTED) };
+        Step::write(ctx, ModelMutation::TrimExtendWall(semio_s_artifact_bim_model_mut_any_183::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall { id: wall, end, target: target.to_string() }))
     }
 
     fn align(&mut self, ctx: &ToolContext<'_>, pointer: &Pointer) -> Step {
-        let ids: Vec<String> = ctx.selected.iter().filter(|id| crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some()).cloned().collect();
+        let ids: Vec<String> = ctx.selected.iter().filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some()).cloned().collect();
         let Some(hit) = element_at(ctx, pointer) else { return Step::default() };
         if ids.is_empty() {
             return target_of(ctx, &hit).map_or_else(Step::default, |target| Step::select(vec![target], "replace"));
@@ -148,9 +148,9 @@ impl Reshape {
         if ids.contains(&hit) {
             return Step::default();
         }
-        let Some(extent) = crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, &hit).and_then(|placement| bounds(&placement)) else { return Step::default() };
+        let Some(extent) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, &hit).and_then(|placement| bounds(&placement)) else { return Step::default() };
         let (axis, edge, target) = reference_line(extent, pointer.at);
-        Step::write(ctx, ModelMutation::AlignElements(crate::standards::v1::subsets::any::schema::mutations::align_elements::AlignElements { ids, axis, edge, target }))
+        Step::write(ctx, ModelMutation::AlignElements(semio_s_artifact_bim_model_mut_any_181::standards::v1::subsets::any::schema::mutations::align_elements::AlignElements { ids, axis, edge, target }))
     }
 
     fn split(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -158,7 +158,7 @@ impl Reshape {
             let at = ctx.snapped(pointer, self.start, &[slab.clone()], &[]).point;
             let Some(start) = self.start.filter(|start| !same(*start, at)) else { return Step::default() };
             let new_id = ctx.mint("slab");
-            let mutation = ModelMutation::SplitSlab(crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab { id: slab, new_id: new_id.clone(), line_start: point2(start), line_end: point2(at) });
+            let mutation = ModelMutation::SplitSlab(semio_s_artifact_bim_model_mut_any_184::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab { id: slab, new_id: new_id.clone(), line_start: point2(start), line_end: point2(at) });
             let step = written(ctx, mutation, Some(("slab".to_string(), new_id)));
             self.reset();
             return step;
@@ -171,7 +171,7 @@ impl Reshape {
         }
         let Some(t) = beam_fraction(ctx, &hit, pointer.at) else { return Step::default() };
         let new_id = ctx.mint("beam");
-        written(ctx, ModelMutation::SplitBeam(crate::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam { id: hit, t, new_id: new_id.clone() }), Some(("beam".to_string(), new_id)))
+        written(ctx, ModelMutation::SplitBeam(semio_s_artifact_bim_model_mut_any_185::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam { id: hit, t, new_id: new_id.clone() }), Some(("beam".to_string(), new_id)))
     }
 
     fn down(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -221,7 +221,7 @@ fn offset_marks(ctx: &ToolContext<'_>, wall: &str, at: P) -> Vec<Mark> {
     let mut marks = highlighted(ctx, wall);
     let Some(row) = ctx.snapshot.walls.get(wall) else { return marks };
     if let Some(distance) = offset_distance(&row.axis, at) {
-        let probe = ModelMutation::OffsetWall(crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall { id: wall.to_string(), new_id: "probe".into(), distance });
+        let probe = ModelMutation::OffsetWall(semio_s_artifact_bim_model_mut_any_182::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall { id: wall.to_string(), new_id: "probe".into(), distance });
         if let Some(shifted) = offset_axis(&row.axis, distance) {
             marks.push(Mark::path(&axis_path(&shifted), false, if ctx.accepts(&probe) { Style::Ghost } else { Style::Warning }));
         }
@@ -245,12 +245,12 @@ fn trim_marks(ctx: &ToolContext<'_>, kind: Kind, target: &str, at: P, pointer: &
 }
 
 fn align_marks(ctx: &ToolContext<'_>, pointer: &Pointer) -> Vec<Mark> {
-    let ids: Vec<String> = ctx.selected.iter().filter(|id| crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some()).cloned().collect();
+    let ids: Vec<String> = ctx.selected.iter().filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some()).cloned().collect();
     let Some(hit) = element_at(ctx, pointer).filter(|hit| !ids.contains(hit)) else { return Vec::new() };
     if ids.is_empty() {
         return highlighted(ctx, &hit);
     }
-    let Some(extent) = crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, &hit).and_then(|placement| bounds(&placement)) else { return Vec::new() };
+    let Some(extent) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, &hit).and_then(|placement| bounds(&placement)) else { return Vec::new() };
     let (axis, edge, line) = reference_line(extent, pointer.at);
     let mut marks = vec![if axis == AlignAxis::X {
         Mark::path(&[[line, extent[1] - LINE_REACH], [line, extent[3] + LINE_REACH]], false, Style::Guide)
@@ -258,7 +258,7 @@ fn align_marks(ctx: &ToolContext<'_>, pointer: &Pointer) -> Vec<Mark> {
         Mark::path(&[[extent[0] - LINE_REACH, line], [extent[2] + LINE_REACH, line]], false, Style::Guide)
     }];
     for id in &ids {
-        let Some(own) = crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).and_then(|placement| bounds(&placement)) else { continue };
+        let Some(own) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).and_then(|placement| bounds(&placement)) else { continue };
         let gap = align_gap(own, axis, edge, line);
         let vector = if axis == AlignAxis::X { [gap, 0.0] } else { [0.0, gap] };
         marks.extend(ghost(ctx, std::slice::from_ref(id), &|p| [p[0] + vector[0], p[1] + vector[1]]));
@@ -282,7 +282,7 @@ fn split_marks(ctx: &ToolContext<'_>, held: Option<&String>, start: Option<P>, p
     let (along, across) = (axis_tangent_at(&beam.axis, axis_length(&beam.axis) * t), CUT_MARK / 2.0);
     let centre = axis_point_at(&beam.axis, axis_length(&beam.axis) * t);
     let mark = [[centre[0] - along[1] * across, centre[1] + along[0] * across], [centre[0] + along[1] * across, centre[1] - along[0] * across]];
-    let probe = ModelMutation::SplitBeam(crate::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam { id: hit, t, new_id: "probe".into() });
+    let probe = ModelMutation::SplitBeam(semio_s_artifact_bim_model_mut_any_185::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam { id: hit, t, new_id: "probe".into() });
     vec![Mark::path(&mark, false, if ctx.accepts(&probe) { Style::Ghost } else { Style::Warning })]
 }
 //#endregion 🔖️Marks

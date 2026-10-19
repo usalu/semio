@@ -96,7 +96,7 @@ fn every_control_reads_reacts_caption_and_names_its_reserved_action() {
     SessionCtx::of(&mut shell).observe_history_time_travel(Some(&editing));
     let accept = |shell: &ShellState| shell.prefs.time_travel_band_plan_for(&editing, &Theme::light(), &shell.chrome).buttons.into_iter().find(|button| button.control.verb == TimeTravelVerb::Accept).expect("Accept is offered").label;
     let terse = accept(&shell);
-    shell.chrome.chrome_build.driver.label_tier = ui_wgpu::wgpu::UiDriverLabelTier::Beginner;
+    shell.chrome.chrome_build.driver.label_tier = semio_framework_ui_wgpu_layout::chrome::UiDriverLabelTier::Beginner;
     let explaining = accept(&shell);
     let caption = &corpus["labels"]["ui.timeTravel.accept"];
     assert!(terse.contains(caption["normal"]["en"].as_str().expect("normal")) && explaining.contains(caption["beginner"]["en"].as_str().expect("beginner")) && terse != explaining, "the band reads the driver's label tier: {terse:?} / {explaining:?}");
@@ -144,7 +144,7 @@ fn the_time_travel_chords_are_remappable_rows_and_escape_is_never_one() {
     }
     for mask in 0..16u8 {
         let modifiers = PointerModifiers { shift: mask & 1 != 0, alt: mask & 2 != 0, ctrl: mask & 4 != 0, meta: mask & 8 != 0, ..PointerModifiers::default() };
-        assert!(!matches!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Escape, &modifiers), Some(ShellShortcut::TimeTravel(_))), "Escape never discards a history edit");
+        assert!(!matches!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Escape, &modifiers), Some(ShellShortcut::TimeTravel(_))), "Escape never discards a history edit");
     }
     let remapped = shell_shortcut_table(&HashMap::from([("ui.timeTravel.accept".to_string(), "ctrl+shift+y".to_string())]));
     let (action, modifiers) = chord("ctrl+shift+y");
@@ -193,7 +193,7 @@ fn the_keyboard_router_accepts_by_chord_and_escape_discards_nothing() {
     assert!(dispatched().iter().any(|action| action.contains("historyEditAccept")), "the chord reached the guest: {:?}", dispatched());
     assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying), "the dispatch reply's patch moved the band");
     let before = dispatched().len();
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("Escape routes");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input)).expect("Escape routes");
     assert!(!dispatched()[before..].iter().any(|action| action.contains("historyEdit")), "Escape dispatched no history-edit verb: {:?}", &dispatched()[before..]);
     assert_eq!(shell.history.history_time_travel().map(|status| status.stage), Some(HistoryTimeTravelStage::Replaying));
 }

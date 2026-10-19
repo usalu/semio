@@ -1,9 +1,12 @@
 //! 🔺️ Diff constructor for `SetStair`: a sparse stair patch naming only the provided fields that differ from the base. The patched
 //! stair must hold every stair invariant again (positive width, riser and tread, sensible flight, a same-building top storey, a sound stringer, nosing, tread thickness and landing depth).
 
-use crate::standards::v1::subsets::any::schema::mutations::placement::{refuse_stair, stair_issue};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{refuse_stair, stair_issue};
 use crate::standards::v1::subsets::any::schema::mutations::set_stair::SetStair;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch, patches::StairPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::StairPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetStair, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

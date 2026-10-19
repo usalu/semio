@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.kit.snapshot;
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message SemioKitType { string id = 1; string name = 2; string category = 3; }
 message SemioKitPiece { string id = 1; string type_id = 2; semio.s.stdio.semio.v1.base.geometry.SemioTransform transform = 3; }
 message SemioKitConnection { string id = 1; string connecting_piece_id = 2; string connecting_port = 3; string connected_piece_id = 4; string connected_port = 5; }
@@ -11,8 +11,8 @@ message SemioKitSnapshot {
   string schema = 1;
   repeated SemioKitType types = 2;
   repeated SemioKitDesign designs = 3;
-  repeated semio.os.store.ArtifactChild objects = 4;
-  repeated semio.os.store.ArtifactChild models = 5;
-  semio.os.store.ArtifactChild properties = 6;
-  repeated semio.os.store.ArtifactLink representations = 7;
+  repeated semio.framework.schema.artifact_child.ArtifactChild objects = 4;
+  repeated semio.framework.schema.artifact_child.ArtifactChild models = 5;
+  semio.framework.schema.artifact_child.ArtifactChild properties = 6;
+  repeated semio.framework.schema.artifact_link.ArtifactLink representations = 7;
 }

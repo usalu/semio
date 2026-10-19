@@ -3,7 +3,8 @@ use semio_framework_value::retained_clone::ordered_map::{BoundedOrdGrant, Retain
 use semio_framework_value::retained_clone::*;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned};
+use semio_framework_value::factory::OwnedValueRetirementFactory;
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_derive::{RetainedClone, RetireOwned};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

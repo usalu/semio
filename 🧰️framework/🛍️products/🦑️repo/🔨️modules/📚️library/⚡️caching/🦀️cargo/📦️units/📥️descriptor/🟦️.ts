@@ -1,6 +1,6 @@
 import{withRepositoryCargoInputsV1,repositoryCargoNetworkV1}from"../../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import{rustCompilerExecutionV2}from"../🏗️compiler/💾️state/📍️layout/🟦️.ts";
-import{rustCompilerExecutionEnvironmentV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📦️package/🌱️environment/🟦️.ts";
+import{rustCompilerExecutionEnvironmentV1}from"@semio-tech/process/artifacts/native-build/units/package/environment";
 import{captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import{withRepositoryCompilerStoreV1}from"../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{cargoRustUnitArgumentsV1}from"./🕸️graph/🟦️.ts";
@@ -10,7 +10,7 @@ import {join,relative,resolve,dirname} from "node:path";
 import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {readRustUnitV1,type RustUnitV1} from "../🟦️.ts";
+import { readRustUnitV1, type RustUnitV1 } from "../🧬️definition/🟦️.ts";
 import {readRustSourceClosureV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
 import {rustCompilerIdentityV1} from "../🏗️compiler/🦀️rustc/🟦️.ts";
 /** 📥️ Captures the initial dependency-free library variant from actual Cargo and compiler facts. */

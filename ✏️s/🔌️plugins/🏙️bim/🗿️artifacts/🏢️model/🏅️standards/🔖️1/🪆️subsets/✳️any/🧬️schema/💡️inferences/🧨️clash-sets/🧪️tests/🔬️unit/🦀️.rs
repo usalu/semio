@@ -1,21 +1,22 @@
 //! 🧪️ The clash sets: the sweep of candidate pairs against brute force, hard and soft clashes of boxes, hosting, deduplication and grouping.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ClashSet, ElementClass, Point3};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClashSet;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, Point3};
 use semio_framework_geometry::collision::{self, Bvh};
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidKey};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidKey};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_geometry::collision::Aabb;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{point, near};
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ElementSelector;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{point, near};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{SolidProbe, ClashSetResult, clashes_of, candidate_pairs, ClashKind, Clash, grouped, ClashGroup, world_mesh};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ElementSelector;
 use semio_framework_geometry::random::Rng;
 
 type Box3 = ([f64; 3], [f64; 3]);
@@ -149,7 +150,7 @@ fn a_placed_solid_lands_in_the_world() {
     let mut solid = ElementSolid::default();
     solid.positions = vec![1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 1.0, 1.0, 0.0];
     solid.indices = vec![0, 1, 2];
-    solid.placement = crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement { x: 10.0, y: 20.0, z: 3.0, rotation: std::f64::consts::FRAC_PI_2 };
+    solid.placement = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement { x: 10.0, y: 20.0, z: 3.0, rotation: std::f64::consts::FRAC_PI_2 };
     let mesh = world_mesh(&solid);
     let expect = [[10.0, 21.0, 3.0], [10.0, 22.0, 3.0], [9.0, 21.0, 3.0]];
     for (got, want) in mesh.positions.iter().zip(expect) {

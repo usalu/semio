@@ -1,22 +1,20 @@
 #!/usr/bin/env bun
-import {readNativeCallerAuthorityV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { readNativeCallerAuthorityV1, withRepositoryExecutablePinV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {withPlaygroundSessionV1} from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readGeneratedCatalogProjection } from "../../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import { createAssetHttpServerV1 } from "../../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
-import {playgroundNativeHostArtifactV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
-import {withRepositoryExecutablePinV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📌️executable/🟦️.ts";
-import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { playgroundNativeHostArtifactV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import {compilerAdmissionBudgetV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { once } from "node:events";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
 import { nativeRuntimeDirectory,withNativeRuntimeV1 } from "./📦️modules/🟦️.ts";

@@ -3,7 +3,7 @@ import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseFormsArtifact, type FormsArtifact } from "../🟦️.ts";
 import { parseFormsDefinition } from "../📝️definition/🟦️.ts";
 import { parseFormsResponse, type FormsResponse } from "../📨️response/🟦️.ts";
-import type { FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
+import type { FormQuestion, FormStep } from "../🧱️form-model/🟦️.ts";
 import { applyBlockField, parseChangeBlockField, type BlockField } from "../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
 
 export interface FormsOptionalText { value: string | null }

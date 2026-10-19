@@ -1,14 +1,11 @@
 /** 🧠️ The run state every harness module shares: the CLI-derived configuration, the clock, the current locale and step, and the browser handles. Reads are live bindings; every write goes through the setter beside the variable. */
 import type { Browser, BrowserContext, Page } from "playwright";
-import type { TimeTravelScenarioV1 } from "../🧩️scenario/🟦️.ts";
+import type { Locale, Renderer, TimeTravelScenarioV1 } from "../🧩️scenario/🟦️.ts";
+export type { Locale, Renderer };
 
 //#region 🔖️Arguments
 
-export type Locale = "en" | "de";
-
 export type Point = { x: number; y: number };
-
-export type Renderer = "react" | "wgpu";
 
 export let renderer: Renderer = "react";
 

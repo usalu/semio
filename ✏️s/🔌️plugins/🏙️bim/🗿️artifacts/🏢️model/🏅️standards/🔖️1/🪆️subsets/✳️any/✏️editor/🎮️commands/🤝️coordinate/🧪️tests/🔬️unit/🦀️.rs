@@ -1,29 +1,34 @@
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::ClashRef, snapshot::Issue, snapshot::IssuePriority, snapshot::IssueStatus, snapshot::ModelSnapshot, snapshot::Point3, snapshot::SectionBox, mutations::ModelMutation};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, IssuePriority, IssueStatus, Point3, SectionBox};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::Fault;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::coordination::latest_moment;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::coordination::latest_moment;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::IdMint;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::IdMint;
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::world;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world;
 #[allow(unused_imports)]
-use crate::editor::bim::panels::coordination::name_of;
+use semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination::name_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{diff::patches::IssuePatch, snapshot::IssueViewpoint, snapshot::Point2, snapshot::ViewCamera};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::IssuePatch;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueViewpoint, Point2, ViewCamera};
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::coordinate::*;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::run;
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::coordinate::{framing, MIN_DISTANCE, section_around, SECTION_MARGIN, ViewClash, handle, RaiseIssue, CaptureViewpoint, RestoreViewpoint};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::run;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -36,7 +41,7 @@ fn frame() -> ModelSnapshot {
 }
 
 fn first_clash(snapshot: &ModelSnapshot) -> (String, Clash) {
-    let inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("the frame infers");
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("the frame infers");
     inference.clash_sets.iter().find_map(|(id, result)| result.clashes.iter().find(|clash| clash.kind == ClashKind::Hard).map(|clash| (id.clone(), clash.clone()))).expect("the frame has a hard clash")
 }
 
@@ -65,7 +70,7 @@ async fn framing_a_clash_centres_the_camera_on_its_box_and_keeps_the_minimum_dis
 async fn viewing_a_clash_writes_only_the_window_config_of_the_world_window() {
     let snapshot = frame();
     let (_, clash) = first_clash(&snapshot);
-    let mut ctx = window(world::WINDOW_KIND_ID);
+    let mut ctx = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     let payload = ViewClash { first: clash.first.clone(), second: clash.second.clone(), mode: "both".into() };
     let emit = run(&snapshot, |doc, cfg| handle(&payload, doc, cfg, &mut ctx)).expect("frames and isolates");
     assert_eq!(emit.window_config_mutations.len(), 1);
@@ -77,11 +82,11 @@ async fn a_clash_view_needs_a_world_window_a_known_mode_and_a_clash_that_exists(
     let snapshot = frame();
     let (_, clash) = first_clash(&snapshot);
     let payload = |mode: &str| ViewClash { first: clash.first.clone(), second: clash.second.clone(), mode: mode.into() };
-    let mut plan = window(crate::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID);
+    let mut plan = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID);
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&payload("zoom"), doc, cfg, &mut plan))), Some("bim.clash.world-required".to_string()));
     let mut none = BimDispatchCtx::default();
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&payload("zoom"), doc, cfg, &mut none))), Some("bim.clash.window-required".to_string()));
-    let mut world = window(world::WINDOW_KIND_ID);
+    let mut world = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&payload("sideways"), doc, cfg, &mut world))), Some("bim.clash.mode-unknown".to_string()));
     let missing = ViewClash { first: "w-1".into(), second: "c-1".into(), mode: "zoom".into() };
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&missing, doc, cfg, &mut world))), Some("bim.clash.missing".to_string()));
@@ -103,7 +108,7 @@ async fn raising_an_issue_from_a_clash_names_the_pair_the_clash_and_a_viewpoint_
     let viewpoint = issue.viewpoint.as_ref().expect("a viewpoint");
     assert_eq!(viewpoint.isolate, [clash.first.clone(), clash.second.clone()]);
     assert!(viewpoint.section.is_some());
-    assert_eq!(crate::standards::v1::subsets::any::schema::snapshot::issue_problem(&snapshot, &create.id, issue), None, "the issue is writable");
+    assert_eq!(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::issue_problem(&snapshot, &create.id, issue), None, "the issue is writable");
     let missing = RaiseIssue { set: String::new(), first: "w-1".into(), second: "c-1".into() };
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&missing, doc, cfg, &mut ctx))), Some("bim.clash.missing".to_string()));
 }
@@ -118,7 +123,7 @@ async fn a_viewpoint_is_captured_from_the_world_window_and_restored_into_it() {
     let [ModelMutation::CreateIssue(create)] = emit.artifact_mutations.as_slice() else { panic!("one create-issue") };
     snapshot.issues.insert(create.id.clone(), Issue { viewpoint: None, ..create.issue.clone() });
 
-    let mut world = window(world::WINDOW_KIND_ID);
+    let mut world = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     world.world.camera = store::Viewport3dOrbit { position: [10.0, -6.0, 8.0], target: [3.0, 3.0, 1.5], zoom: 1.0, up: None };
     world.world.isolated_elements = vec![clash.first.clone(), "gone".into()];
     world.world.section_box = vec![0.0, 0.0, 0.0, 6.0, 6.0, 4.0];
@@ -133,7 +138,7 @@ async fn a_viewpoint_is_captured_from_the_world_window_and_restored_into_it() {
 
     snapshot.issues.get_mut(&create.id).expect("issue").viewpoint = Some(viewpoint);
     let restore = RestoreViewpoint { issue: create.id.clone() };
-    let mut back = window(world::WINDOW_KIND_ID);
+    let mut back = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     let emit = run(&snapshot, |doc, cfg| handle(&restore, doc, cfg, &mut back)).expect("restores");
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert!(emit.artifact_mutations.is_empty());
@@ -143,7 +148,7 @@ async fn a_viewpoint_is_captured_from_the_world_window_and_restored_into_it() {
 async fn viewpoints_need_a_world_window_and_an_issue_and_for_restoring_a_stored_viewpoint() {
     let mut snapshot = frame();
     snapshot.issues.insert("i-1".into(), Issue { title: "x".into(), description: String::new(), status: IssueStatus::Open, priority: IssuePriority::Normal, assignee: String::new(), author: "UG".into(), created: "2026-10-09".into(), labels: Vec::new(), elements: Vec::new(), clash: None, viewpoint: None });
-    let mut world = window(world::WINDOW_KIND_ID);
+    let mut world = window(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID);
     let restore = RestoreViewpoint { issue: "i-1".into() };
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&restore, doc, cfg, &mut world))), Some("bim.issue.viewpoint-missing".to_string()));
     let unknown = RestoreViewpoint { issue: "i-9".into() };

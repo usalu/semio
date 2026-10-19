@@ -7,9 +7,9 @@ import{Database}from"bun:sqlite";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema/🔣️.json";
 import admission from"../../../🧬️schema/🚪️admission.json";
-import{withBuildTestInvocationV1}from"../../📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import*as routing from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 
 test("Graph candidates release each registry scope before bounded same-Original readmission",async()=>withBuildTestInvocationV1(async original=>{
  const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus)).toBe(true);for(const reason of["owner-registry","source-authority"])expect(ajv.validate(admission.$defs.candidateInvalidation,{kind:"invalidated",reason})).toBe(true);expect(ajv.validate(admission.$defs.candidateInvalidation,{kind:"invalidated",reason:"fatal"})).toBe(false);

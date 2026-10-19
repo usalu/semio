@@ -26,6 +26,8 @@ type RuntimeTreeRetirementFixture = {
 /** 🔬️ Canonical testRuntimeTreeRetirement fixture and oracle checks. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 
 export function testRuntimeTreeRetirement(): void {
@@ -48,8 +50,9 @@ export function testRuntimeTreeRetirement(): void {
   active = undefined; observe("finish-b"); assert.deepEqual(trace, fixture.trace);
   assert.deepEqual(JSON.parse(Buffer.from(JSON.stringify(fixture.foreign)).toString()), fixture.foreign);
   testBuiltTreeRetirementFixture();
-  const runtime = read("../../♻️reconcile/🦀️.rs");
-  const cursorSource = read("../../⏭️cursor/🦀️.rs");
+  const tree = (path: string) => readModuleTreeSource(fileURLToPath(new URL(path, new URL("../..", import.meta.url))));
+  const runtime = tree("../../♻️reconcile/🦀️.rs");
+  const cursorSource = tree("../../⏭️cursor/🦀️.rs");
   assert(read("../../🧱️primitives/🦀️.rs").includes('mod tree_retirement;'), "runtime must mount the exact retained tree owner");
   const owner = read("./🦀️.rs");
   assert(owner.includes("Option<ui_contract::BuiltTreeRetirement>"));

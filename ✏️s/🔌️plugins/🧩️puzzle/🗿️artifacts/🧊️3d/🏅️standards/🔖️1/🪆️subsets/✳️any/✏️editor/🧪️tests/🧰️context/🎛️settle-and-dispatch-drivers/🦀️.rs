@@ -179,7 +179,8 @@ pub async fn dispatch_action_reporting(app: &mut Puzzle3dApp, action: &str, args
     let window_id = main::WINDOW_KIND_ID;
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
-    let answered = app.handle_action(action, Some(args), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let (raw, cx) = app.parts();
+    let answered = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, Some(args.clone()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
     settle_into_reporting_with_items(app, answered, 1).await
 }
 
@@ -231,14 +232,17 @@ pub async fn dispatch_reporting_with_items(
             | "setInteractionGranularity"
     ) {
         let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
-        let admitted = app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let (raw, cx) = app.parts();
+        let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
         let reserved = match admitted {
             Ok(admitted) => settle_reserved(app, admitted).await,
             Err(fault) => Err(fault),
         };
         return settle_into_reporting_with_items(app, reserved, maximum_items).await;
     }
-    let typed = app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
+    let (raw, cx) = app.parts();
+    let typed = raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
     settle_into_reporting_with_items(app, typed, maximum_items).await
 }
 
@@ -252,7 +256,8 @@ pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Optio
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
-    app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await
+    let (raw, cx) = app.parts();
+    raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -280,7 +285,8 @@ pub async fn dispatch_reserved_unsettled(app: &mut Puzzle3dApp, action: &str, ar
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
     let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
-    app.handle_action(action, dsl_args.as_ref(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await
+    let (raw, cx) = app.parts();
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, dsl_args, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
 }
 
 pub async fn hover_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
@@ -295,5 +301,5 @@ pub async fn select_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: &
 }
 
 pub async fn settle_reserved(app: &mut Puzzle3dApp, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
-    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await
+    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.map_err(fault_of)
 }

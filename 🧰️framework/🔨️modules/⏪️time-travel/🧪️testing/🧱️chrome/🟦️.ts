@@ -1,7 +1,7 @@
 /** 🪟️ Shell chrome: DOM ids, dock panels, the boot wait and the tour dialog. */
 import { page, renderer, currentLocale, setLastBootFault, universalRoute, scenario } from "../🧠️state/🟦️.ts";
 import type { Point } from "../🧠️state/🟦️.ts";
-import { evalSafe, sleep, waitUntil } from "../📄️page/🟦️.ts";
+import { evalSafe, sleep, waitUntil } from "../🔬️probe/🟦️.ts";
 import { mirrorFind, mirror, wgpuPress } from "../🧊️wgpu-mirror/🟦️.ts";
 import { log } from "../🧾️report/🟦️.ts";
 import { COPY } from "../🌍️copy/🟦️.ts";
@@ -187,8 +187,4 @@ const wgpuBootShape = async () => {
 
 /** 🎟️ Marks the first element `find` answers with `data-probe-target=<token>` in page, so Playwright can click the
  * exact element a structural search found. */
-export const markToken = (() => {
-  let next = 0;
-  return () => `probe-${++next}`;
-})();
 //#endregion 🔖️Chrome

@@ -3,7 +3,7 @@ import Ajv2020 from "ajv/dist/2020";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
 import { Database } from "bun:sqlite";
 import { existsSync, readFileSync } from "node:fs";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engine = new URL("../../", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, engine), "utf8");
@@ -90,15 +90,15 @@ test("actual phase and aggregate receivers preserve the full typed close chain",
 });
 
 test("the actual StoreSync receiving boundary forwards the original caller identity authority", () => {
-  const source = readTree("../../🏪️store/🔄️sync/🦀️.rs");
+  const source = readTree("../../🏪️store/🔄️sync/🌉️wire-bridge-sync-session-and-presence-heartbeat/🦀️.rs");
   const body = source.slice(source.indexOf("pub async fn receive(&mut self"), source.indexOf("pub async fn reconcile_branch"));
-  expect(body.includes("identity: &mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>")).toBe(true);
+  expect(body.includes("identity: &mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>")).toBe(true);
   expect(body.includes("ArtifactCommand::IngestRemote { envelope }, identity")).toBe(true);
   expect(body.includes("EntityIdentityAuthority::new")).toBe(false);
   const callers = readTree("../../🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs");
   expect(callers.includes("session.receive(envelope, &mut identity).await")).toBe(true);
   expect(callers.includes("identity.pause().expect(\"original fixture receive identity receipt\")")).toBe(true);
-  expect(callers.includes("original receive identity owned={observed} ceiling={CEILING}")).toBe(true);
+  expect(callers.includes("assert!(progress.owned_bytes <= CEILING);")).toBe(true);
 });
 
 test("the actual draft writer forwards the original full caller grant and receipt", () => {
@@ -129,7 +129,7 @@ test("the actual empty engine backing quotes and receipts its physical array rel
 test("native and browser bootstrap frame authority is explicit, finite and preserves all five neutral axes",()=>{
  const law=JSON.parse(read("🪙️authority/🖼️frame/🔣️.json")),schema=JSON.parse(read("🪙️authority/🖼️frame/🧬️schema/🔣️.json"));const ajv=authoritySchema(),validate=ajv.compile(schema);expect(validate(law)).toBe(true);for(const axis of Object.keys(law.grant)){const missing=structuredClone(law);delete missing.grant[axis];expect(validate(missing)).toBe(false);const negative=structuredClone(law);negative.grant[axis]=-1;expect(validate(negative)).toBe(false);}
  const db=new Database(":memory:");try{const expected=db.query("SELECT 1 AS maximumItems,65536 AS maximumCopyBytes,65536 AS maximumCapacityBytes,16777216 AS maximumReleaseBytes,64 AS maximumDepth").get();expect(law.grant).toEqual(expected);}finally{db.close();}
- const native=read("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=readTree("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub fn new() -> Self")).toBe(true);expect(frame.replace(/\s/g,"").includes("site:\"os_renderer_frame_deadlines\"")).toBe(true);expect(renderer.replace(/\s/g,"").includes("retained:self.retained,site:\"os_renderer.prepare.worker\"" )).toBe(true);expect(frame.includes("WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)")).toBe(true);expect(frame.includes("owner.take_retained_step_receipt()")).toBe(true);expect(frame.includes("receive_frame_outcome")).toBe(false);
+ const native=readModuleTreeSource(new URL("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",engine)),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=readSourceFamilySource(new URL("🎯️targets/🧊️wgpu/🧊️renderer",engine));for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, semio_framework_os_renderer_wgpu_frame_job::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub fn new() -> Self")).toBe(true);expect(frame.replace(/\s/g,"").includes("site:\"os_renderer_frame_deadlines\"")).toBe(true);expect(renderer.replace(/\s/g,"").includes("retained:self.retained,site:\"os_renderer.prepare.worker\"" )).toBe(true);expect(frame.includes("WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)")).toBe(true);expect(frame.includes("owner.take_retained_step_receipt()")).toBe(true);expect(frame.includes("receive_frame_outcome")).toBe(false);
 });
 
 test("original Scene camera storage has strict packed identities and independent SQLite ownership semantics",()=>{
@@ -192,7 +192,7 @@ test("actual atlas original-owner contract prices fixed backing with independent
       expect(db.query("SELECT sum(json_extract(value,'$.allocationBytes')) AS bytes FROM json_each(?1)").get(JSON.stringify(row.pages))).toEqual({ bytes: row.pages.length * corpus.policy.pageBytes });
     }
   } finally { db.close(); }
-  const native = read(base + "🦀️.rs");
+  const native = readModuleTreeSource(new URL(base + "📤️staging/🦀️.rs", engine));
   expect(native.includes("pub struct PreparedAtlasAuthority")).toBe(true);
   expect(native.includes("fn original_owner_progress(")).toBe(true);
   expect(native.includes("fn close_original_step(")).toBe(true);
@@ -201,8 +201,8 @@ test("actual atlas original-owner contract prices fixed backing with independent
 test("the actual typed ViewContext dictionaries preserve canonical UTF8 field order and the original wire oracle",()=>{
  expect(existsSync(new URL("../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔢️integer-carriers.json",engine))).toBe(false);
  const manifest="../../../../../🔨️modules/🛂️manifest/",law=JSON.parse(read(manifest+"🪟️view-context/🧪️tests/🧫️fixtures/🔢️integer-carriers/🔣️.json")),viewSchema=JSON.parse(read(manifest+"🪟️view-context/🧬️schema/🔣️.json")),ajv=authoritySchema(),validate=ajv.compile(viewSchema);expect(validate(law.viewContext)).toBe(true);
- const db=new Database(":memory:");try{for(const [name,fields]of Object.entries<string[]>(law.canonicalDictionaryOrder)){const ordered=db.query<{value:string},[string]>("SELECT value FROM json_each(?1) ORDER BY CAST(value AS BLOB)").all(JSON.stringify(fields)).map((row)=>row.value);expect(fields).toEqual(ordered);const source=readTree(name==="ViewModel"?manifest+"🦀️.rs":"../../../../../🔨️modules/⏯️tool-run/🦀️.rs"),start=source.indexOf(`pub struct ${name} {`),body=source.slice(start,source.indexOf("\n}",start));const actual=[...body.matchAll(/pub ([a-z_]+):/g)].map(match=>match[1].replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase()));expect(actual).toEqual(fields);}}finally{db.close();}
- expect(law.packHex.length).toBe(384);const bridge=read("🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");expect(bridge.includes("ToValue::to_value(view_state)")).toBe(true);
+ const db=new Database(":memory:");try{for(const [name,fields]of Object.entries<string[]>(law.canonicalDictionaryOrder)){const ordered=db.query<{value:string},[string]>("SELECT value FROM json_each(?1) ORDER BY CAST(value AS BLOB)").all(JSON.stringify(fields)).map((row)=>row.value);expect(fields).toEqual(ordered);const source=readTree(name==="ViewModel"?manifest+"🖼️view-model/🦀️.rs":"../../../../../🔨️modules/⏯️tool-run/🗄️trace-store/🦀️.rs"),start=source.indexOf(`pub struct ${name} {`),body=source.slice(start,source.indexOf("\n}",start));const actual=[...body.matchAll(/pub ([a-z_]+):/g)].map(match=>match[1].replace(/_([a-z])/g,(_,letter)=>letter.toUpperCase()));expect(actual).toEqual(fields);}}finally{db.close();}
+ expect(law.packHex.length).toBe(384);const bridge=readModuleTreeSource(new URL("🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs",engine));expect(bridge.includes("ToValue::to_value(view_state)")).toBe(true);
 });
 
 
@@ -215,11 +215,11 @@ test("borrowed key presentation releases Scene storage before entering UI and ma
     const sql = database.query("SELECT CASE WHEN json_type(?1,'$.explicit') IS NOT NULL AND json_type(?2,'$.explicit') IS NOT NULL THEN CAST(json_extract(?1,'$.explicit') AS BLOB) = CAST(json_extract(?2,'$.explicit') AS BLOB) WHEN json_type(?1,'$.positional') IS NOT NULL AND json_type(?2,'$.positional') IS NOT NULL THEN json_extract(?1,'$.positional[0]') = json_extract(?2,'$.positional[0]') AND json_extract(?1,'$.positional[1]') = json_extract(?2,'$.positional[1]') ELSE 0 END AS matched");
     for (const row of corpus.cases) expect(Boolean((sql.get(JSON.stringify(row.owned), JSON.stringify(row.borrowed)) as { matched: number }).matched)).toBe(row.matches);
   } finally { database.close(); }
-  const tree = readFileSync(new URL("🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs", base), "utf8");
+  const tree = readFileSync(new URL("🌳️retained/🌳️tree/🍃️nodes/🧩️node-model/🦀️.rs", base), "utf8");
   expect(tree.includes("pub enum NodeKeyRef<'a>")).toBe(true);
-  const reconcile = readFileSync(new URL("🎯️targets/🧊️wgpu/🔀️reconcile/🦀️.rs", base), "utf8");
+  const reconcile = readFileSync(new URL("🌳️retained/🌳️tree/🔀️reconcile/📄️page-reconcile-and-cursor/🦀️.rs", base), "utf8");
   expect(reconcile.includes("pub key: NodeKeyRef<'a>")).toBe(true);
-  const scene = readTree("🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs");
+  const scene = readTree("🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/📷️scene-camera-dispatch/🦀️.rs");
   const body = scene.slice(scene.indexOf("fn camera_owns_surface("), scene.indexOf("fn remove_scene_camera_deadline("));
   const unlocked = body.indexOf("    });");
   expect(unlocked).toBeGreaterThan(0);

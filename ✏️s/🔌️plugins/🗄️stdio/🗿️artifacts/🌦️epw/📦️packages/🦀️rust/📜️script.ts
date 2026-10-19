@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📦️ EPW Rust artifact package router. */
-import{runArtifactRustPackageMain,runArtifactRustTests}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import{BundleScript,scriptInvocationBudget}from"../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import{runBudgetedTestCommand}from"../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
 import{resolve}from"node:path";

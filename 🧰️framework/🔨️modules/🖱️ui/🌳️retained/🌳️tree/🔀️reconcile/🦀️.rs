@@ -32,8 +32,9 @@ use semio_framework_ui_declaration::ui::{
     UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
     UiTreeWindowRowExtent,
 };
-use crate::tree::{Node, NodeFlags, NodeKey, NodeKeyRef, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
-use crate::{IconName, UiIntentAddress, UiIntentBindings};
+use crate::{Node, NodeFlags, NodeKey, NodeKeyRef, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
+use semio_framework_ui_action::{UiIntentAddress, UiIntentBindings};
+use semio_framework_ui_declaration::IconName;
 use ui_contract::{UiDocumentNodePage, UiNodeId, UiNodeRecord, UI_DOCUMENT_NODES};
 
 #[path = "📄️page-reconcile-and-cursor/🦀️.rs"]

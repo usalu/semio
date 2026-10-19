@@ -5,9 +5,9 @@ import compilerSchema from "./🧬️schema/📥️compiler.json";
 import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {relative,resolve,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type {CargoCompilationGraphV1,CargoCompilationUnitV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/🟦️.ts";
-import {readRustUnitV1,type RustUnitV1,type RustUnitInputV1} from "../../🟦️.ts";
+import { readRustUnitV1, type RustUnitV1, type RustUnitInputV1 } from "../../🧬️definition/🟦️.ts";
 /** 🔌️ Supplies actual effective compiler/configuration observations; unsupported planning never invents defaults. */
 export interface CargoRustUnitMaterializationPortV1 {
  compiler(unit:CargoCompilationUnitV1,control:ResourceLeaseControl):Promise<{identity:RustUnitV1["compiler"];programDigest:string;hostTriple:string}>;

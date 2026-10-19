@@ -3,9 +3,12 @@
 //! Whole-list ruling: the holes are part of the slab's ONE planar region (see `set-slab-boundary`), so provided holes replace
 //! the holes as one field.
 
-use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
 use crate::standards::v1::subsets::any::schema::mutations::set_slab::SetSlab;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::SlabPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::SlabPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSlab, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

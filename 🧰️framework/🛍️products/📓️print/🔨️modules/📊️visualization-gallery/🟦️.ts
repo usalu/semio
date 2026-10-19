@@ -9,11 +9,11 @@
  */
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { parseVizTaxonomy, type VizCatalog, type VizSchemaDocument } from "../../🧬️schema/🟦️.ts";
 
 //#region 🔖️Sources
-export const productRoot = join(getWorkspaceRoot(), "🧰️framework/🛍️products/📓️print");
+export const productRoot = join(findWorkspaceRoot(), "🧰️framework/🛍️products/📓️print");
 export const VIZ_GALLERY_DIR = join(productRoot, "🧾️template/📊️viz-gallery");
 export const VIZ_API_DIR = join(productRoot, "🧾️template/📊️viz-api");
 export const VIZ_TAXONOMY_PATH = join(productRoot, "🖼️assets/📊️viz-taxonomy.md");

@@ -1,15 +1,16 @@
-use crate::standards::v1::subsets::any::io::export::ifc::codec;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework::io_schema::{Confidence, IoPayload};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::{Schema, IFC_DIALECT};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, instance as inference};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::IFC_DIALECT;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, instance as inference};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
@@ -17,13 +18,13 @@ use semio_framework_artifact_reference::Dialect;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::reader::Doc;
-use crate::standards::v1::subsets::any::io::import::ifc::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, LocationLine, Point2, SpaceBoundary, TopConstraint};
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{house, psets};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, Ifc2x3IntoModel, walls};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, LocationLine, Point2, SpaceBoundary, TopConstraint};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{house, psets};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 
@@ -82,7 +83,7 @@ fn walls_keep_axis_type_location_height_and_phase() {
     for (id, wall) in &model.walls {
         let row = &back.walls[id];
         assert_eq!((row.storey.as_str(), row.wall_type.as_str(), row.location, row.phase), (wall.storey.as_str(), wall.wall_type.as_str(), wall.location, wall.phase), "{id}");
-        assert!((crate::standards::v1::subsets::any::schema::authored::plan::axis_length(&row.axis) - crate::standards::v1::subsets::any::schema::authored::plan::axis_length(&wall.axis)).abs() < 1e-8, "{id}");
+        assert!((semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length(&row.axis) - semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length(&wall.axis)).abs() < 1e-8, "{id}");
     }
     let free = &back.walls["w-free"];
     assert!(matches!(free.top, TopConstraint::Unconnected { height } if (height - 2.4).abs() < 1e-9));
@@ -121,7 +122,7 @@ fn slabs_columns_beams_spaces_and_grids_keep_their_geometry_and_types() {
     assert_eq!(back.column_types, model.column_types);
     let beam = &back.beams["b-1"];
     assert_eq!(beam.beam_type, "bt-i");
-    assert!(matches!(beam.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } if (start.x - 4.0).abs() < 1e-9 && (end.x - 6.0).abs() < 1e-9) && beam.top_offset.abs() < 1e-9 && beam.end_top_offset.is_none());
+    assert!(matches!(beam.axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start, end } if (start.x - 4.0).abs() < 1e-9 && (end.x - 6.0).abs() < 1e-9) && beam.top_offset.abs() < 1e-9 && beam.end_top_offset.is_none());
     assert!((back.beams["b-2"].top_offset + 0.1).abs() < 1e-9);
     assert_eq!(back.beam_types, model.beam_types);
     assert!(matches!(&back.spaces["sp-2"].boundary, SpaceBoundary::Explicit { outline } if outline.len() == 4));
@@ -241,7 +242,7 @@ fn a_foreign_file_without_semio_identity_is_imported_with_derived_levels_types_a
 
 #[test]
 fn the_phase_of_every_importable_element_survives_the_round_trip() {
-    use crate::standards::v1::subsets::any::schema::snapshot::Phase;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
     let mut model = importable();
     macro_rules! cycle {
         ($($collection:ident),+) => { $( for (index, row) in model.$collection.values_mut().enumerate() { row.phase = Phase::ALL[(index + 1) % 4]; } )+ };
@@ -272,9 +273,9 @@ fn psets_importable() -> ModelSnapshot {
 
 /// 🌍️ The psets model exported, changed as a foreign tool would write it, and imported.
 fn foreign(change: impl FnOnce(&mut Part21Document)) -> (ModelSnapshot, Vec<String>) {
-    let mut document = model_to_part21(crate::standards::v1::subsets::any::io::export::ifc::Schema::Ifc2x3, &psets_importable()).expect("the model exports").0;
+    let mut document = model_to_part21(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema::Ifc2x3, &psets_importable()).expect("the model exports").0;
     change(&mut document);
-    import_ifc2x3(&codec::encode_document(document).expect("the document encodes")).expect("the file imports")
+    import_ifc2x3(&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_document(document).expect("the document encodes")).expect("the file imports")
 }
 
 fn instance_where(document: &Part21Document, entity: &str, matches: impl Fn(&[Part21Value]) -> bool) -> usize {

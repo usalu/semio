@@ -344,8 +344,8 @@ impl EngineGpuCandidate {
         engine_gpu_freshness_matches(self.surface, self.document_generation, self.scene_revision, self.metrics_generation, live)
     }
 
-    fn content_identity(&self) -> Result<ui_wgpu::wgpu::RasterContentIdentity, String> {
-        ui_wgpu::wgpu::RasterContentIdentity::revision(
+    fn content_identity(&self) -> Result<semio_framework_ui_prepared::RasterContentIdentity, String> {
+        semio_framework_ui_prepared::RasterContentIdentity::revision(
             self.width,
             self.height,
             [u64::from(self.surface.token.slot), self.surface.token.generation, self.document_generation, self.scene_revision, self.metrics_generation, self.primary_metrics_generation],

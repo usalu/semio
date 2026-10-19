@@ -60,17 +60,17 @@ fn initializer_job_retains_terminal_authority_until_its_physical_box_is_funded()
         job.begin_close();
         let demand = job.next_close_release_byte_demand().unwrap();
         let original_grant=|release|RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:release,maximum_depth:4096};
-        let first = job.close_step(original_grant(row["callerBytes"].as_u64().unwrap()as usize));
-        if row["releasedBytes"].as_u64().unwrap() == 0 { job.close_step(original_grant(admission)); }
+        let first = semio_framework_job::close_with_self_funded_context(original_grant(row["callerBytes"].as_u64().unwrap()as usize), |cx| job.close_step(cx)).expect("original fixture close turn");
+        if row["releasedBytes"].as_u64().unwrap() == 0 { semio_framework_job::close_with_self_funded_context(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
         assert!(job.accept_terminal_failure());
         assert!(job.authority.is_some());
         assert!(!job.terminal_is_empty());
         let box_bytes = std::mem::size_of::<PhysicalInitializerAuthority>();
         let terminal_demand = job.next_close_release_byte_demand().unwrap();
-        let denied = job.close_step(original_grant(box_bytes-1));
+        let denied = semio_framework_job::close_with_self_funded_context(original_grant(box_bytes-1), |cx| job.close_step(cx)).expect("original fixture close turn");
         let retained = job.authority.is_some();
-        let released = job.close_step(original_grant(box_bytes));
-        for _ in 0..8 { if job.terminal_is_empty() { break; } job.close_step(original_grant(admission)); }
+        let released = semio_framework_job::close_with_self_funded_context(original_grant(box_bytes), |cx| job.close_step(cx)).expect("original fixture close turn");
+        for _ in 0..8 { if job.terminal_is_empty() { break; } semio_framework_job::close_with_self_funded_context(original_grant(admission), |cx| job.close_step(cx)).expect("original fixture close turn"); }
         assert!(job.terminal_is_empty());
         assert_eq!(demand, extent);
         assert_eq!(first, InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:usize::from(row["releasedBytes"].as_u64().unwrap()!=0),copied_bytes:if row["releasedBytes"].as_u64().unwrap()!=0{std::mem::size_of::<Option<Vec<u8>>>()}else{0},released_bytes:row["releasedBytes"].as_u64().unwrap()as usize,..Default::default()}});
@@ -223,13 +223,13 @@ async fn a_long_history_reloads_one_operation_per_initializer_step() {
     let authority_bytes=std::mem::size_of_val(job.authority.as_ref().unwrap().as_ref());
     let handoff_demand=semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).unwrap();
     assert!(job.authority.is_some());
-    assert_eq!(semio_framework_job::InteractiveJob::close_step(&mut job,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:authority_bytes-1,maximum_depth:4096}), semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});
+    assert_eq!(semio_framework_job::close_with_self_funded_context(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:authority_bytes-1,maximum_depth:4096}, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});
     for _ in 0..65_536 {
         if job.terminal_is_empty() {
             break;
         }
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:admission,maximum_depth:4096};
-        let step=semio_framework_job::InteractiveJob::close_step(&mut job,grant);
+        let step=semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         assert!(step.progress().fits(grant));
         if let semio_framework_job::InteractiveJobCloseStep::Pending{progress}=step{assert!(progress.copied_items<=1&&progress.released_bytes<=admission);}
     }

@@ -1,6 +1,6 @@
 import{appendCargoProfileConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/⚙️cargo/🟦️.ts";
 import{createHash}from"node:crypto";
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{BROWSER_CANVAS_HOT_CRATES}from"../../../../../../../🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts";
 import{cargoProfileConstraintsForOwnerV1,CARGO_PROFILE_CONSTRAINT_SOURCE_V1}from"./📋️constraints/🟦️.ts";
 import sourceSchema from"./🧬️schema/🔣️.json"with{type:"json"};

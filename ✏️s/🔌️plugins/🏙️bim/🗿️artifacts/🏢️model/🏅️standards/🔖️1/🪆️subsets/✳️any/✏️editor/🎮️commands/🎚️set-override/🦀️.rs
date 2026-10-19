@@ -2,12 +2,12 @@
 //! formula, or the formula the family itself gives the parameter, is no override and removes the one the component has. Whether the formula names only parameters of the family and closes no circle is decided by the
 //! `set-component-override` mutation, not here. One call is one undoable step.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
-use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
+use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -23,14 +23,14 @@ pub struct SetOverride {
 /// already holds the formula is no change.
 pub fn plan(snapshot: &ModelSnapshot, payload: &SetOverride) -> Result<Option<ModelMutation>, Fault> {
     let component = snapshot.components.get(&payload.component).ok_or_else(|| fault("bim.override.component-missing", format!("the component '{}' does not exist", payload.component)))?;
-    let parameter = snapshot.family_parameters.get(&formula::parameter_id(&component.family, &payload.name)).ok_or_else(|| fault("bim.override.parameter-missing", format!("the family '{}' has no parameter '{}'", component.family, payload.name)))?;
-    let current = snapshot.component_overrides.get(&formula::parameter_id(&payload.component, &payload.name));
+    let parameter = snapshot.family_parameters.get(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&component.family, &payload.name)).ok_or_else(|| fault("bim.override.parameter-missing", format!("the family '{}' has no parameter '{}'", component.family, payload.name)))?;
+    let current = snapshot.component_overrides.get(&semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&payload.component, &payload.name));
     let remove = || current.map(|_| ModelMutation::RemoveComponentOverride(RemoveComponentOverride { component: payload.component.clone(), name: payload.name.clone() }));
     let text = payload.value.trim();
     if text.is_empty() {
         return Ok(remove());
     }
-    let value = formula::canonical(text).map_err(|error| fault("bim.family.formula-invalid", format!("'{text}' is no formula: {error:?}")))?;
+    let value = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::canonical(text).map_err(|error| fault("bim.family.formula-invalid", format!("'{text}' is no formula: {error:?}")))?;
     if value == parameter.value {
         return Ok(remove());
     }

@@ -3,11 +3,12 @@
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcmember.htm>
 
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::set_of;
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
-use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide, WallSweep};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, WallSide};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallSweep;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 🧷️ Reads the wall sweeps of the file into the model.

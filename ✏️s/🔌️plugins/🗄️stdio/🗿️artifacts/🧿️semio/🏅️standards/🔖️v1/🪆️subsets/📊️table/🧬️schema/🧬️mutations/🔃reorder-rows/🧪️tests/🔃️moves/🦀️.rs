@@ -47,7 +47,7 @@ async fn the_undo_reorder_sends_the_row_back_to_the_tail() {
     let mutation = reorder_rows();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTableMutation::ReorderRows(semio_s_artifact_stdio_semio_table_mutations::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })], "the undo must address the landed index #0 and send it back to #2");
+    assert_eq!(undo, vec![SemioTableMutation::ReorderRows(semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })], "the undo must address the landed index #0 and send it back to #2");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-rows applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-rows applies to the reordered table");

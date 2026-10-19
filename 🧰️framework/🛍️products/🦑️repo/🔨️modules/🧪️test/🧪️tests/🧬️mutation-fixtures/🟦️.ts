@@ -8,9 +8,8 @@ import vectors from "../🧫️fixtures/🧬️mutation-fixtures/🔣️.json";
 import htmlPairs from "../🧫️fixtures/🌐️html-source-pair/🔣️.json";
 
 import { parse, serialize } from "parse5";
-import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId, inventoryTaxonomy } from "@semio-tech/repo-lib/inventory";
 import { verifyFixture } from "../../🧷️fixture-evidence/🟦️.ts";
-import { inventoryTaxonomy } from "../../../📚️library/🧹️normalization/🔍️inventory-planning/🟦️.ts";
 
 const taxonomy = testTaxonomy(repoRootFromHere());
 const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: ["change-value"], vectors: [{ mutationId: "change-value", sourceMutationDirectoryName: vectors.mutation, mutationDirectoryName: vectors.mutation, scenarios: [{ id: "changes-the-value", directoryName: vectors.scenario }] }] };
@@ -41,7 +40,7 @@ test("HTML source pair controls preserve the six-node semantic boundary", () => 
 
 test("HTML source pair normalization accepts the primary leaf of a multi-extension kind", () => {
   const root = repoRootFromHere();
-  const scope = posix.join(posix.dirname(htmlPairs.manifestPath), "../🧫️fixtures");
+  const scope = posix.join(posix.dirname(htmlPairs.manifestPath), "../🧪️tests/🧫️fixtures");
   const owners = htmlPairs.pairs.map(pair => `${scope}/${pair.directoryName}/`);
   const expected = htmlPairs.pairs.flatMap(pair => htmlPairs.nodes.filter(node => node.type === "file").map(node => posix.join(scope, pair.directoryName, node.path))).sort();
   const inventory = inventoryTaxonomy({ repoRoot: root, scope, workers: 1 });
@@ -60,7 +59,7 @@ test("HTML source pair manifests retain exact native-reader and parser inputs", 
   expect(manifest.testEvidence.map((fixture: { id: string }) => fixture.id).sort()).toEqual(htmlPairs.pairs.map(pair => pair.id).sort());
   for (const pair of htmlPairs.pairs) {
     const fixture = manifest.testEvidence.find((candidate: { id: string }) => candidate.id === pair.id);
-    const owner = join(root, dirname(htmlPairs.manifestPath), "../🧫️fixtures", pair.directoryName);
+    const owner = join(root, dirname(htmlPairs.manifestPath), "../🧪️tests/🧫️fixtures", pair.directoryName);
     const realized: { path: string; type: string }[] = [];
     const visit = (relative: string): void => {
       const path = join(owner, relative), stat = lstatSync(path);
@@ -79,7 +78,7 @@ test("HTML source pair manifests retain exact native-reader and parser inputs", 
     for (const [index, phase] of ["⬅️before", "➡️after"].entries()) {
       const role = index === 0 ? "expected-before-html" : "expected-after-html";
       const file = fixture.files.find((candidate: { role: string }) => candidate.role === role);
-      expect(file.path).toBe(`../🧫️fixtures/${pair.directoryName}/📸️snapshot/${phase}/🌐️.html`);
+      expect(file.path).toBe(`../🧪️tests/🧫️fixtures/${pair.directoryName}/📸️snapshot/${phase}/🌐️.html`);
       const bytes = readFileSync(join(root, dirname(htmlPairs.manifestPath), file.path));
       expect(bytes.length).toBe(file.bytes);
       expect(`sha256:${Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex")}`).toBe(file.sha256);
@@ -91,7 +90,7 @@ test("HTML source pair manifests retain exact native-reader and parser inputs", 
 
 test("HTML source pair readers declare every external Nx cache input", () => {
   const root = repoRootFromHere();
-  const files = htmlPairs.pairs.flatMap(pair => ["⬅️before", "➡️after"].map(phase => posix.join(posix.dirname(htmlPairs.manifestPath), "../🧫️fixtures", pair.directoryName, "📸️snapshot", phase, "🌐️.html")));
+  const files = htmlPairs.pairs.flatMap(pair => ["⬅️before", "➡️after"].map(phase => posix.join(posix.dirname(htmlPairs.manifestPath), "../🧪️tests/🧫️fixtures", pair.directoryName, "📸️snapshot", phase, "🌐️.html")));
   const expected = [htmlPairs.manifestPath, ...files].map(path => `{workspaceRoot}/${path}`).sort();
   for (const consumer of htmlPairs.nxConsumers) {
     const project = JSON.parse(readFileSync(join(root, consumer.projectPath), "utf8"));

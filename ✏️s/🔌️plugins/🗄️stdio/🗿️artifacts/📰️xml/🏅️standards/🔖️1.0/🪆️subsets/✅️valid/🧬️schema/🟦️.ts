@@ -1,29 +1,13 @@
 /** 🧬️ XmlSnapshot schema (✳️valid subset) — reuses ✳️any types; mirrors Rust `check_valid_conformance`. */
-import type { XmlDocument, XmlDoctype, XmlNode, XmlSnapshot } from '../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import type { XmlSnapshot } from '../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts';
+import { CODE_DOCTYPE_MISSING, CODE_ROOT_NAME_MISMATCH, CODE_STANDALONE_EXTERNAL_SUBSET, CODE_VALIDITY_NOT_VERIFIED, CODE_DOCUMENT_ELEMENT_MISSING, CODE_BOUNDARY_KIND, CODE_DOCTYPE_POSITION, CODE_VERSION, CODE_ENCODING_NAME } from "./🚦️diagnostics/🟦️.ts";
+import type { XmlValidDiagnostic } from "./🚦️diagnostics/🟦️.ts";
 
 export const meta = {
   artifactKind: 's.stdio.xml',
   standard: '1.0',
   subset: 'valid',
 } as const;
-
-export type XmlValidDiagnosticSeverity = 'error' | 'warning' | 'fatal';
-
-export interface XmlValidDiagnostic {
-  code: string;
-  severity: XmlValidDiagnosticSeverity;
-  message: string;
-}
-
-export const CODE_DOCTYPE_MISSING = 'stdio.xml.valid.doctype-missing';
-export const CODE_ROOT_NAME_MISMATCH = 'stdio.xml.valid.root-name-mismatch';
-export const CODE_STANDALONE_EXTERNAL_SUBSET = 'stdio.xml.valid.standalone-external-subset';
-export const CODE_VALIDITY_NOT_VERIFIED = 'stdio.xml.valid.validity-not-fully-verified';
-export const CODE_DOCUMENT_ELEMENT_MISSING = 'stdio.xml.valid.document-element-missing';
-export const CODE_BOUNDARY_KIND = 'stdio.xml.valid.boundary-kind';
-export const CODE_DOCTYPE_POSITION = 'stdio.xml.valid.doctype-position';
-export const CODE_VERSION = 'stdio.xml.valid.version';
-export const CODE_ENCODING_NAME = 'stdio.xml.valid.encoding-name';
 
 function rootElementName(snapshot: XmlSnapshot): string | undefined {
   const root = snapshot.doc.root;
@@ -66,25 +50,7 @@ export function checkValidConformance(snapshot: XmlSnapshot): XmlValidDiagnostic
   return out;
 }
 
-/** 🧪 Build a minimal snapshot around one structured doctype for the conformance mirror tests. */
-export function snapshotWith(
-  doctype: Pick<XmlDoctype, 'name' | 'externalId'> | undefined,
-  standalone: boolean | undefined,
-  rootName: string,
-): XmlSnapshot {
-  const root: XmlNode = { kind: 'element', name: rootName, attrs: [], children: [] };
-  const doc: XmlDocument = {
-    declaration:
-      standalone === undefined ? { version: '1.0' } : { version: '1.0', standalone },
-    doctype: doctype === undefined ? undefined : { ...doctype, declarations: [] },
-    root,
-    prolog: [],
-    epilog: [],
-  };
-  return { schema: 'stdio.xml', doc };
-}
-
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️stdio-xml-valid-conformance-mirror/🟦️.ts");
-  await registerTests1(import.meta.vitest, { CODE_BOUNDARY_KIND, CODE_DOCTYPE_MISSING, CODE_DOCTYPE_POSITION, CODE_DOCUMENT_ELEMENT_MISSING, CODE_ENCODING_NAME, CODE_ROOT_NAME_MISMATCH, CODE_STANDALONE_EXTERNAL_SUBSET, CODE_VALIDITY_NOT_VERIFIED, CODE_VERSION, checkValidConformance, meta, snapshotWith }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { checkValidConformance }, { directory: import.meta.dir, url: import.meta.url });
 }

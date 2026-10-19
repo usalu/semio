@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
@@ -27,7 +27,7 @@ class SourceScript extends BundleScript {
 class NativeScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-native accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-infinite-directed-presentation"],this.root,this.invocation,["--lib"]);
+  await runAdmittedCargoPackageTestsV1(["semio-framework-os-infinite-directed-presentation"],this.root,this.invocation,["--lib"]);
  }
 }
 const router=new ScriptRouter(import.meta.dir).register("test-source",SourceScript).register("test-native",NativeScript);

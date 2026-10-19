@@ -1,21 +1,21 @@
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::{plan, section, world};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, world};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::{schedule, sheet};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::set_view::*;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::{demo, run};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_view::{handle, SetView};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
 use semio_framework_ui_locale::Locale;
 
 fn window(kind: &str) -> BimDispatchCtx {
@@ -36,7 +36,7 @@ fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<
 
 #[semio_framework_async_macros::async_test]
 async fn choosing_the_plan_view_writes_the_window_config_and_shares_its_storey_as_presence() {
-    let (result, ctx) = set(plan::WINDOW_KIND_ID, "view", "v-plan-st-first", None);
+    let (result, ctx) = set(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, "view", "v-plan-st-first", None);
     let emit = result.expect("sets");
     assert_eq!(emit.window_config_mutations.len(), 1);
     assert!(emit.artifact_mutations.is_empty(), "a view parameter never edits the document");
@@ -46,16 +46,16 @@ async fn choosing_the_plan_view_writes_the_window_config_and_shares_its_storey_a
 #[semio_framework_async_macros::async_test]
 async fn the_world_parameters_and_the_views_of_the_plan_and_section_windows_each_write_their_window() {
     for (kind, field, value, pressed) in [
-        (plan::WINDOW_KIND_ID, "view", "v-plan-st-ground", None),
-        (world::WINDOW_KIND_ID, "projection", "orthographic", None),
-        (world::WINDOW_KIND_ID, "isolated_storey", "st-ground", None),
-        (world::WINDOW_KIND_ID, "hidden_storey", "st-first", Some(true)),
-        (world::WINDOW_KIND_ID, "view_phase", "demolished", None),
-        (world::WINDOW_KIND_ID, "view_phase", "", None),
-        (world::WINDOW_KIND_ID, "section_enabled", "", Some(true)),
-        (world::WINDOW_KIND_ID, "section_axis", "x", None),
-        (world::WINDOW_KIND_ID, "section_offset", "2.5", None),
-        (section::WINDOW_KIND_ID, "view", "v-section-a", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, "view", "v-plan-st-ground", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "projection", "orthographic", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "isolated_storey", "st-ground", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "hidden_storey", "st-first", Some(true)),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "view_phase", "demolished", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "view_phase", "", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "section_enabled", "", Some(true)),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "section_axis", "x", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "section_offset", "2.5", None),
+        (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID, "view", "v-section-a", None),
     ] {
         let (result, _) = set(kind, field, value, pressed);
         assert_eq!(result.unwrap_or_else(|fault| panic!("{kind} {field}: {}", fault.message)).window_config_mutations.len(), 1, "{kind} {field}");
@@ -79,6 +79,6 @@ async fn bad_values_unknown_fields_and_missing_windows_are_refused_with_their_ow
 
 #[semio_framework_async_macros::async_test]
 async fn hiding_a_storey_twice_toggles_it_back() {
-    let (result, _) = set(world::WINDOW_KIND_ID, "hidden_storey", "st-first", None);
+    let (result, _) = set(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, "hidden_storey", "st-first", None);
     assert!(result.is_ok());
 }

@@ -8,6 +8,7 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 📋️Requirements And Docs Tests
@@ -76,9 +77,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("requirementsPolicy detects implementation syntax in header Requirements", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖️Header\n\n// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 		testFile := "test.ts"
@@ -106,9 +105,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("requirementsPolicy clean requirements no breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖️Header\n\n// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 		testFile := "test.ts"
@@ -131,9 +128,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("requirementsPolicy detects implementation syntax in section requirements", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖️MySection\n"
 		testFile := "test.ts"
@@ -161,9 +156,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("section spec comments exempt from inline breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖️MySection\n"
 		testFile := "test.ts"
@@ -186,9 +179,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("JSDoc spec comments exempt from JSDoc breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖️MySection\n"
 		testFile := "test.ts"
@@ -211,9 +202,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("non-spec JSDoc still flagged", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️MySection\n\nx = 1;\n\n/**\n * This is a regular docstring without spec keywords.\n */\n\n// #endregion 🔖️MySection\n"
 		testFile := "test.ts"
@@ -241,9 +230,7 @@ func TestRequirementsBreach(t *testing.T) {
 
 	t.Run("non-spec inline comment still flagged", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Header\n\n// 🥼️test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️MySection\n\nconst x = 1;\n\n// This is a regular comment not a spec.\n\n// #endregion 🔖️MySection\n"
 		testFile := "test.ts"
@@ -283,9 +270,7 @@ func TestRequirementsBreach(t *testing.T) {
 func TestDocsBreach(t *testing.T) {
 	t.Run("docsPolicy detects missing README.md", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		bundleRoot := "test-bundle"
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)
@@ -307,9 +292,7 @@ func TestDocsBreach(t *testing.T) {
 	})
 	t.Run("docsPolicy detects missing Summary section", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		bundleRoot := "test-bundle"
 		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
@@ -335,9 +318,7 @@ func TestDocsBreach(t *testing.T) {
 	})
 	t.Run("docsPolicy detects missing Requirements section", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		bundleRoot := "test-bundle"
 		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
@@ -363,9 +344,7 @@ func TestDocsBreach(t *testing.T) {
 	})
 	t.Run("docsPolicy clean README no breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		bundleRoot := "test-bundle"
 		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
@@ -386,9 +365,7 @@ func TestDocsBreach(t *testing.T) {
 	})
 	t.Run("docsPolicy deduplicates bundles with same root", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		bundleRoot := "test-bundle"
 		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
 			t.Fatalf("failed to create dir: %v", err)

@@ -1,3 +1,10 @@
+# PROGRESS (cc, latest first)
+- GREEN: framework lib 34, 35; root lib 63-67, 69, 71, 73, 75; root tests 64, 66; teaching 147-148; ui carve: 300 (20 framework crates incl. new ui-tui-*/ui-wgpu-* lib), cstep priority framework 330.
+- RUNNING: 331 (cstep root: 10 crates, long compile).
+- FAILING / BLOCKED: 301-317 (ui carve tests + consumers, not yet run), 68/76 (test-companion privacy, executor `tco`), 36 and 85, 149 (re-check after ui carve), 70/72/74.
+- QUEUED (generated, `cc-tools/batches.json`): 302-317 ui consumers, 332-365 cstep plugin-workspace crates (--lib), 366 job `original-close-context` test, then bim (cg3 section 7), lfix §4/lfix2, 171 stale locks (law4), epw workspace, pdf law test, BIM_BLESS fixtures, result-lex/c6fin/c6inf/c6store/c6db/c6plug/fnsplit/plugfix/hdr3/glob/wgpu2 crate lists, 86-146 and 150-172 of the original plan.
+- Infra fixes this round: lease image filled by macOS `.fseventsd` (64 MiB) -> `no_log` written at attach (`cleanup/🎛️command`) and manually on all mounted images; runner waits for foreign `bun repo cargo` before each launch.
+
 # Result: cc (COMPILE critical-path executor)
 
 ## Phase 1: launcher (DONE, green)
@@ -26,3 +33,30 @@ Root causes fixed (in order):
 | 63 | root 1 (lib) | green after the fixes below (2 crates skipped behind `semio-framework-ui`) |
 
 Source fixes (63): dsl-record-derive `ContainerAttrs` pub(super); companions `extern crate` cfg(test) (32 files); neural model hash import; pack-format `EncodedSegment`/`DecodedSegment` pub(super); ui-contract-builder `BuiltChildRetire*` pub(super); ui-contract accessibility serde import + `is_default`; neural registry/model: `OperatorRetirement` + `RetireOwned for Box<dyn Operator>` + exported `original_retirement_cursor!` moved to the model crate (orphan rule); store-ephemeral missing imports + deps (io-control, os-store-read); store-replay `ReplayProgress` retire impl moved next to the type, `CursorRevisionRecord` fields pub; space-schema lifted snapshot trait import; engine `exhausted` pub; decode-pages `slot_address()`; `TryFrom<OpsSupersededInput> for SupersededInput` moved to os-store-command; `IoFidelityClass` inherent impl moved to its defining crate (codec-registry); `BindingKey` pub; envelope owns `DslField for OwnerRef` + helpers (new dsl-record dep); `StoreMintWitness` path; engine-core/live explicit lifetimes (9 methods); `MemberGroupPreparation` duplicate removed (single lifted type); `MemberHistoryDictionaryAdmissionError`, `MemberFactorySelectionRejected` pub; `CommandDecodeError` fault impl and `HistoryColumn` retire impl moved to their defining crates; durable-group `value_field!` impls moved to the wire crate; initialization genesis factory bounds; directed presentation uses `semio_framework_graph_dsl::Wire*`; flow-document os-command dep; flow-copy `FlowHostComponents` owner + demand conversion.
+
+## Progress snapshot (second pass)
+Runner: `cc-tools/run.mjs <idx>` / `cc-tools/rb.sh <idx>` (batches from `compile-plan.md`, `--parallelism=4`, auto `update --workspace` on stale lock, retry on transient `System image plist required` / `Bounded unique parent kernel roster required` / `topology changed`, drops `-p` crates whose closure contains a source-gate-refused crate). Logs: `🗑️generated/cc-bNNN.{log,errs,skipped,done}`.
+
+| idx | scope | result |
+| --- | --- | --- |
+| 34, 35 | framework lib 1, 2 | green |
+| 36 | framework lib 3 | blocked by peer edits (see below) |
+| 63-67, 69, 71, 73, 75 | root lib batches | green (crates behind `semio-framework-ui` skipped) |
+| 64, 66, 70?, 72? | root test batches | 64, 66 green; 68, 76: test-companion crates (see below) |
+| 77, 79, 81, 83 | root lib batches | fully skipped (every crate depends on `semio-framework-ui`) |
+| 85 | stdio plugin workspace lib | framework+plugin crates compile up to `semio-framework-interaction`, `-manifest-address`, `-kernel`: `ui_wgpu::wgpu` missing because `ui/🎯️targets/🧊️wgpu/🦀️.rs` is absent from the tree right now (peer c6ui move in progress) |
+| 147, 148 | teaching lib + tests | green |
+| 149 | hub lib | blocked: peer is rewriting `os-mcp-capabilities/Cargo.toml` (ui -> ui-declaration) |
+
+Extra launcher/tooling fixes since the first report: `descriptors` lsof parser accepts macOS lsof `f` rows and empty `n` rows; `ui_contract` time-travel `with_editor_dialogs` roster; plugin-ownership `pack` dependency and `progress()` option; os-pack optional `semio-framework-dsl` dependency behind `record-codec-laws`; vcs `testkit` feature carries the serde impls of `HistoryPageStack`; mcp bridge types `pub(crate)`; plugin-host test fixtures use the new kernel paths (`store::serialization`, `semio_framework_os_kernel::pack_rt`); workflow-run/flow-document `os-command` dependency; flow-vcs-laws `test-fixtures` dependency; testing-doubles `one-item-publication` testkit dependency and `fixture_canonical_json!` invocation moved next to its macro; `management-sync`, `repo-cli` verbs (`RepoContext` trait imports); actor `ScheduledActor` pub(super); sync `acknowledged_edited_head` exported.
+
+## Open (for the coordinator)
+1. `semio-framework-ui` fails the source gate (all-features closure above 12,000 active lines): 257 of 549 root members and every renderer/plugin-host batch (77-84) cannot compile until it is carved. c6ui reports it as pre-existing.
+2. The framework workspace manifest is churned by peers (new members with broken manifests: `3d-brep-construction-unit-tests` wants a missing `testkit` feature, `ui/tests/targets-wgpu-prepared-laws` failed to load). Batches 36-62 and 153-163 need a quiet window.
+3. Test-companion crates (`--tests`): the carve put tests into sibling crates that touch crate-private internals of the crate under test (mcp-bridge session types, store `SnapshotReadLease`/`OwnedSchemaRecordCursor` fields, `LaneItemReceipt` imports, `test_support`, os-services `NativeIoJob` trait methods, vcs `test_allocation`). Root batches 68, 72?, 74?, 76 fail with ~170 + 193 errors of that kind; fix = widen those items to `pub` (or move the tests back) per crate. Logs: `🗑️generated/cc-b068.log`, `cc-b076.log`.
+4. Zero-touch gaps: a fresh clone has no `.🧬semio/🦑️repo/⚡️cache/rust` parent (fixed in `budget/📥️opening`, untested on a clean tree); the framework lock needs the crates.io index online once (`update --workspace --offline` fails for `zip`).
+5. Concurrent `bun repo` runs by other executors attach disposable images that make the launcher fail with transient roster errors; the runner retries.
+
+## Stop state (13:25)
+Blocked, not finished. After the last green batches (63-67, 69, 71, 73, 75, 147, 148) every further call fails on peer churn in the ui/mcp area: `os-mcp-capabilities` manifest rewrite (ui -> ui-declaration), `semio-framework-ui-wgpu-layout` path dependency of the renderer shell-async crate not yet present, `ui/🎯️targets/🧊️wgpu/🦀️.rs` missing. Not started: batches 36-62 (framework, unstable manifest), 70/72/74 (root tests, same churn), 86-146 and 150-172 (plugin workspaces, hub, wasm/feature lanes). Resume with `cc-tools/rb.sh <idx>` (idx = line in `cc-tools/batches.json`, same order as `compile-plan.md`); the runner needs no arguments beyond the index and keeps `cc-tools/refused.txt`.
+No `[DEBUG]` logs remain (the one temporary log in `invocation/process/🟦️.ts` was reverted, file byte-identical). Disk free 238 GB. Temporary tooling: `cc-tools/` (wscheck.mjs, run.mjs, rb.sh, graph.mjs, genindex.mjs, crate-errs.mjs, privscan.py); logs `🗑️generated/cc-*`.

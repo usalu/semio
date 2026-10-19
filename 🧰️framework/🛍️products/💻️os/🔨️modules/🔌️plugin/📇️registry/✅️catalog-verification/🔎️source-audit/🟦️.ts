@@ -1,8 +1,8 @@
 /** 🔎️ Source audit of the catalog verification: the audit of every plugin catalog source against its strict descriptor, its dependency order and its node cap. */
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { declaredComponentKind } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { declaredComponentKind } from "@semio-tech/repo-lib/inventory";
 import { CATALOG_ID, DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, CATALOG_NODE_MAX, type CatalogSourceAudit, type CatalogSourceIssue, type StrictCatalogDescriptor } from "../🟦️.ts";
 import { boundedCatalogDiagnostic } from "../🛡️guards/🟦️.ts";
@@ -11,7 +11,7 @@ import { validateCatalogDescriptorPair } from "../🧬️descriptor-pair/🟦️
 
 //#region 🔖️CatalogCompleteness
 /** 🧮️ Independently enumerates discovered component manifests and audits source identities without reading generated catalog files. */
-export function auditPluginCatalogSources(repoRoot = getWorkspaceRoot(), control?: { readonly cancelled?: () => boolean; readonly progress?: (completed: number, total: number, path: string) => void; readonly descriptorAdmission?: "compiled" | "source" }): CatalogSourceAudit {
+export function auditPluginCatalogSources(repoRoot = findWorkspaceRoot(), control?: { readonly cancelled?: () => boolean; readonly progress?: (completed: number, total: number, path: string) => void; readonly descriptorAdmission?: "compiled" | "source" }): CatalogSourceAudit {
   const manifestPaths = findPluginCargoFiles(repoRoot);
   if (manifestPaths.length > CATALOG_NODE_MAX) throw new Error(`catalog discovery exceeds ${CATALOG_NODE_MAX} manifests`);
   const entries: ComponentSourceOwnerV1[] = [];

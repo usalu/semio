@@ -6,25 +6,19 @@
 //! the weather; windows and doors behind a partition are merged into their wall; curtain walls and surfaces without thermal data are not written (each is a note, a warning of the hop).
 //! 📎 ../../../../../../../../../🔋️energy/🗿️artifacts/🔋️model/🦀️.rs
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::io::export::energy::build::{Build, STAGES};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build::{Build, STAGES};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
-use crate::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target;
 
-pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::energy::library;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs;
 
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build;
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document;
 
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::table;
 
 /// 🪪️ The dialect this leaf writes: the energy model artifact.
 pub const ENERGY_DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -77,19 +71,19 @@ pub fn inferred_to_energy(model: &ModelSnapshot, inferred: &ModelInference) -> R
 
 /// 🏗️ The energy model of `model`, the inference coming from the shared session: an export after an edit recomputes only what the edit touched.
 pub fn model_to_energy(model: &ModelSnapshot) -> Result<(EnergyModel, Vec<String>), String> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_energy(model, inferred)).map_err(|error| error.to_string())?
 }
 
 /// 📤️ The `.energy` text of `model` plus a note per item that could not be written as it is.
 pub fn export_energy(model: &ModelSnapshot) -> Result<(String, Vec<String>), String> {
     let (energy, notes) = model_to_energy(model)?;
-    Ok((document::dsl_text(&energy)?, notes))
+    Ok((semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document::dsl_text(&energy)?, notes))
 }
 
 /// 📤️ The JSON snapshot of `model` plus a note per item that could not be written as it is.
 pub fn export_energy_json(model: &ModelSnapshot) -> Result<(String, Vec<String>), String> {
     let (energy, notes) = model_to_energy(model)?;
-    Ok((document::json_text(&energy)?, notes))
+    Ok((semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document::json_text(&energy)?, notes))
 }
 
 fn warning(note: String) -> semio_framework_diagnostic::Diagnostic {

@@ -11,8 +11,8 @@
 
 use crate::agent_bridge::{agent_label, AgentBridgePresence, AgentBridgeStatus};
 use semio_framework_ui_locale::Locale;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::Theme;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_theme::Theme;
 
 //#region 🔖️AgentPresence
 /// 🚦️ The four visual states the indicator collapses the (status, presence) pair into.

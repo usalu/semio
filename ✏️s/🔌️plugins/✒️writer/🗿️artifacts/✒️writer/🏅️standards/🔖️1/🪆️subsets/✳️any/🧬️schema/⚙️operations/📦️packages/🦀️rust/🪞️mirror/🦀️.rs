@@ -152,7 +152,7 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod writer {
-        pub use semio_s_artifact_writer_writer_inferences::editor::writer::base;
+        pub use semio_s_artifact_writer_writer_inferences::editor::writer::editor_vocabulary;
         pub use semio_s_artifact_writer_writer_tests::editor::writer::terminology;
         #[path = "."]
         pub mod commands {

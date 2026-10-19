@@ -1,5 +1,5 @@
 /** 🏗️ Custody: 5 tests covering neutral actual VSCode compiler publication and package commands retain real factory custody; neutral VSCode compiler protocol and package intent agree with Ajv and SQLite; actual VSCode Source snapshot… */
-import{readBuildMode}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 import{expect,test}from"bun:test";
 import{readFileSync}from"node:fs";
 import ts from"typescript";
@@ -17,8 +17,8 @@ import{vscodeArtifactOwnerV1,readVscodeCompilerFilesV1,vscodePackageManifestV1}f
 import{withVscodeSourceEventsV1}from"../../🏗️builder/👁️watch/🟦️.ts";
 import fixture from"./🔣️.json";
 import schema from"../../🏗️builder/🧬️schema/🔣️.json";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"@semio-tech/process/routing";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 const digest=(value:string|Uint8Array)=>createHash("sha256").update(value).digest("hex");
 /** 🧾️ Compares closed portable worker and package DATA against schema and relational arithmetic. */
 test("neutral VSCode compiler protocol and package intent agree with Ajv and SQLite",()=>{const db=new Database(":memory:");try{for(const row of fixture.cases){expect(new Ajv({strict:true}).validate(schema,{mode:row.mode,kind:row.kind})).toBe(true);expect(vscodeArtifactOwnerV1(row.mode,row.kind)).toBe(row.owner);expect(db.query("select 'typescript:repo-vscode:'||? owner").get(row.mode)).toEqual({owner:row.owner});}const response={version:1,mode:"release",files:fixture.outputs.map(row=>({name:row.name,base64:Buffer.from(row.text).toString("base64"),sha256:digest(row.text)}))};expect(new Ajv({strict:true}).validate(schema.definitions.WorkerResponse,response)).toBe(true);const wire=JSON.stringify(response),files=readVscodeCompilerFilesV1(wire,"release",65536);expect([...files].map(([name,bytes])=>({name,text:new TextDecoder().decode(bytes)}))).toEqual(fixture.outputs);expect(db.query("select sum(length(cast(value->>'$.text' as blob))) bytes from json_each(?)").get(JSON.stringify(fixture.outputs))).toEqual({bytes:[...files.values()].reduce((sum,bytes)=>sum+bytes.length,0)});for(const kind of fixture.refusals){const changed=JSON.parse(wire)as typeof response;if(kind==="duplicate")changed.files.push(changed.files[0]!);if(kind==="digest")changed.files[0]!.sha256="0".repeat(64);if(kind==="partial")changed.files.pop();expect(()=>readVscodeCompilerFilesV1(JSON.stringify(changed),"release",kind==="bound"?1:65536)).toThrow();}const manifest=JSON.parse(vscodePackageManifestV1(Buffer.from(JSON.stringify({name:"repo-vscode",main:"./dist/extension.js",scripts:{install:"refused"}}))));expect(manifest).toEqual({name:"repo-vscode",main:"./out/extension.js"});}finally{db.close();}});

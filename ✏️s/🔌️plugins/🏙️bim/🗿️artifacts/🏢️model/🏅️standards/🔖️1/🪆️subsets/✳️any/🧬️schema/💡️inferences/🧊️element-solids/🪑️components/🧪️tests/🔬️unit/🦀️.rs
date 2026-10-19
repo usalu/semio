@@ -1,17 +1,16 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentEntry, ComponentIssueCode};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::{ComponentEntry, ComponentIssueCode};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid, SolidBuilder};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
 #[allow(unused_imports)]
 use semio_framework_geometry::mesh::TriMesh;
 #[allow(unused_imports)]
 use semio_framework_geometry::placement::Affine3;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::components::*;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;

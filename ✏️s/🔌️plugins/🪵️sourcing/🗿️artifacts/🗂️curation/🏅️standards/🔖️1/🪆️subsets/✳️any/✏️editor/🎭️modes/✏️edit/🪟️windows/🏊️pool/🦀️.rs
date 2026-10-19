@@ -4,7 +4,7 @@ use crate::schema::{available_modules, curated_count, filtered_stock, typology_f
 use crate::{CurationSnapshot, ObjectKind, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::base::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::sourcing::editor_vocabulary::{sourcing_action, sourcing_table, sourcing_table_action, sourcing_table_row, ui_value_bool, ui_value_map, ui_value_text};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_plugin::Buildable;

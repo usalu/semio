@@ -12,7 +12,7 @@ test("native Architect sparse collection roles preserve schema and independent S
   const schema = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
   const ajv = new Ajv({strict:false});
   ajv.addSchema(JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"), "utf8")));
-  ajv.addSchema(JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"), "utf8")));
+  ajv.addSchema(JSON.parse(readFileSync(frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"), "utf8")));
   ajv.addSchema(JSON.parse(readFileSync(resolve(root, "../🔣️.json"), "utf8")));
   const deltaSchema = {...schema, $ref:"#/$defs/ProgramStakeholdersDelta"};
   delete deltaSchema.required;

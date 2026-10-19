@@ -1,9 +1,7 @@
 import { lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { generatorProjectedInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
-import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { parseGeneratorInputProjection } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
-import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { generatorProjectedInputView, loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy, parseGeneratorInputProjection } from "@semio-tech/repo-lib/inventory";
+import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { loadWgpuPackageTaxonomy, renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 
 /** ⚙️ Executes exact preview, generation, or freshness commands without writing outside six owned leaves. */

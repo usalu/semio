@@ -37,7 +37,6 @@
     "🧰️framework/🔨️modules/🎠️kernel/🧬️schema"
   ],
   "generalIncludeSource": [
-    "*.ts",
     "📤️return/📦️content/🟦️.ts"
   ],
   "generalTestCount": 75

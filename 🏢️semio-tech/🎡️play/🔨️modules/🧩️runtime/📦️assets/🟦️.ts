@@ -1,14 +1,14 @@
-import {repositoryCachePartitionRootDataV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {frameworkOsViteArtifactPathsV1} from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
+import {frameworkOsViteArtifactPathsV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts";
 import type { BuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
+import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { join, relative } from "node:path";
 import { playRuntimeComponentIds } from "../🟦️.ts";
-import { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS } from "../../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts";
-import { componentModuleOwnerV1, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import type { BrowserArtifactSource } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
+import { componentModuleOwnerV1, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
+import { PREVIEW2_VENDOR_RELATIVE } from "@semio-tech/framework-plugin/browser-bundle/imports";
+import type { BrowserArtifactSource } from "@semio-tech/framework-plugin/browser-bundle/distribution";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import type { StaticDirectoryAssetSpecV1 } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 
 /** 🎡️ Selects only immutable component, browser-support, font and canvas runtime asset outputs for play, from the one plugin-modules root every build driver materializes into,

@@ -3,7 +3,7 @@
   "consumer": "semio-framework-plugin-testing-laws",
   "dependencies": [
     "semio-framework",
-    "semio-framework-2d",
+    "semio-framework-2d-compute",
     "semio-framework-artifact-reference",
     "semio-framework-composition-admission",
     "semio-framework-diagnostic",
@@ -19,6 +19,7 @@
     "semio-framework-plugin-decl-surface",
     "semio-framework-plugin-decl-views",
     "semio-framework-plugin-declared-verdict",
+    "semio-framework-plugin-document-media",
     "semio-framework-plugin-extension",
     "semio-framework-plugin-instance-app",
     "semio-framework-plugin-instance-children",
@@ -696,7 +697,7 @@
       "present": false
     },
     {
-      "path": "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.lock",
+      "path": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/Cargo.lock",
       "present": false
     },
     {

@@ -2,7 +2,7 @@
   "sources": [
     {
       "id": "ui-axes",
-      "module": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🌱️bootstrap/🟦️.ts",
+      "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🎚️ui-axes/🟦️.ts",
       "export": "bootstrapUiAxes",
       "outputs": [
         "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts",
@@ -15,9 +15,9 @@
       "module": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
       "export": "bootstrapFlowCorePackage",
       "outputs": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json"
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json"
       ],
-      "requiredBy": "`bun install`: `🌊️flow/🫀️core/🕸️bindings` is a root workspace member"
+      "requiredBy": "`bun install`: `🌊️flow/🎁️browser-package/🕸️bindings` is a root workspace member"
     }
   ]
 }

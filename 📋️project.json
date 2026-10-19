@@ -594,7 +594,7 @@
               "wasm"
             ],
             "projects": [
-              "semio-framework-os-flow-core",
+              "semio-framework-os-flow-browser-package",
               "@semio-tech/framework-surface-rs",
               "@semio-tech/s-cad-composition-rs",
               "@semio-tech/s-spatial-kernel-semio-session-rs"
@@ -1606,6 +1606,22 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts generate config --check"
+      },
+      "outputs": []
+    },
+    "generate-launch": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate launch"
+      },
+      "outputs": []
+    },
+    "generate-launch-check": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate launch --check"
       },
       "outputs": []
     },

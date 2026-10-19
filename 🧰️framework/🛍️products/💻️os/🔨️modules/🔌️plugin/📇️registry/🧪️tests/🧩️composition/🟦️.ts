@@ -1,17 +1,17 @@
 const authoredReceiptSource={async read(){throw Error("Descriptor oracle did not request a package receipt");}};
-import { devServeCommandV1 } from "../../../../🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts";
+import { devServeCommandV1 } from "@semio-tech/framework-os-dev/local-hub/execution";
 import graphlib from "graphlib";
 import { resolveFrameworkOsCatalogConfigurationV1 } from "../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts";
-import { prepareWgpuPluginModules, assertWgpuPluginPlan } from "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts";
+import { prepareWgpuPluginModules, assertWgpuPluginPlan } from "@semio-tech/framework-renderer-wgpu/plugin-modules";
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🧩️composition/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import { admitPluginCatalogV1, pluginCatalogV1 } from "../../🟦️.ts";
 import type { PluginCatalogAdmissionV1 } from "@semio-tech/framework/plugin-catalog";
-import { artifactKindActivationOwner } from "../../../../../../../🔨️modules/🎠️kernel/📚️plugin-catalog/🟦️.ts";
-import { resolvePlaygroundBoot, resolvePluginHostConfig } from "../../../../../../../🔨️modules/🎠️kernel/🎮️playground-boot/🟦️.ts";
-import { extensionRegistryFromCatalog } from "../../../../../../../🔨️modules/🎠️kernel/🔌️plugin-source/🟦️.ts";
+import { artifactKindActivationOwner } from "@semio-tech/framework-kernel";
+import { resolvePlaygroundBoot, resolvePluginHostConfig } from "@semio-tech/framework-kernel";
+import { extensionRegistryFromCatalog } from "@semio-tech/framework-kernel";
 const admissionPort = { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 };
 const authority = (changes: Partial<PluginCatalogAdmissionV1> = {}): PluginCatalogAdmissionV1 => ({ maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: 30000, now: () => 0, cancelled: () => false, progress: () => {}, ...changes });
 const validate = new Ajv({ strict: false }).compile(schema);
@@ -124,12 +124,12 @@ test("canonical injected catalog policy owns seven current exports",async()=>{
 test("actual injected catalog scope preserves all original export and diagnostic laws",async()=>{
  const {existsSync}=await import("node:fs"),{dirname,join}=await import("node:path");let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=dirname(root);
  expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json");expect(schema.title).toBe("InjectedPluginCatalogV1");
- const {inventorySchemaScopes}=await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts"),inventory=inventorySchemaScopes(root),scope=inventory.catalog.scopes["os.plugin.registry"],exports=["InjectedPluginCatalogV1","PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"];
+ const {inventorySchemaScopes}=await import("@semio-tech/repo-lib/inventory"),inventory=inventorySchemaScopes(root),scope=inventory.catalog.scopes["os.plugin.registry"],exports=["InjectedPluginCatalogV1","PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"];
  expect(Object.keys(scope.exports).sort()).toEqual(exports.sort());expect(inventory.diagnostics.filter((row:any)=>row.path===scope.path||row.path.startsWith(scope.path+"/")&&!row.path.slice(scope.path.length+1).includes("/🧬️schema/"))).toEqual([]);
 }, 300000);
 
-import { devPlaygroundSessionSchema as publicationSchema, devPlaygroundSessionFixture as publicationCases } from "../../../../🧑‍💻dev/🧪️tests/🧫️fixtures/🟦️.ts";
-import { parsePlaygroundSessionPublicationRequestV1 } from "../../../../🧑‍💻dev/🎮️playground-session/🧬️schema/🟦️.ts";
+import { devPlaygroundSessionSchema as publicationSchema, devPlaygroundSessionFixture as publicationCases } from "@semio-tech/framework-os-dev/testing/fixtures";
+import { parsePlaygroundSessionPublicationRequestV1 } from "@semio-tech/framework-os-dev/playground-session/schema";
 const publicationOracle = new Ajv({ strict: false }).compile(publicationSchema);
 for (const row of publicationCases.cases) test(`explicit session publication ${row.id}`, () => {
  expect(publicationOracle(row.input)).toBe(row.shape);
@@ -138,9 +138,9 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 });
 
  test("owned preview literal argv retains exact bytes through actual spawn", async () => {
-  const { generatorPreviewScriptArguments } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🛠️generator-commands/🟦️.ts"), { generatorPreviewExecution } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts");
-  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), policy = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json");
-  const oracle = new Ajv({ strict: false }).compile(policy.default), { default: parseArgv } = await import("yargs-parser"), { spawnSync } = await import("node:child_process");
+  const { generatorPreviewScriptArguments } = await import("@semio-tech/repo-lib/inventory"), { generatorPreviewExecution } = await import("@semio-tech/repo-lib/inventory");
+  const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), policy = await import("@semio-tech/repo-lib/authoring");
+  const oracle = new Ajv({ strict: false }).compile(policy.previewArgumentsSchema), { default: parseArgv } = await import("yargs-parser"), { spawnSync } = await import("node:child_process");
   for (const row of source.default.cases) {
     expect(oracle(row.arguments)).toBe(row.valid);
     const contract = { ownership: "owned" as const, target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-browser", previewArguments: row.arguments };
@@ -157,8 +157,8 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
  });
 
  test("preview shell metadata has a finite literal grammar with an independent lexer", async () => {
-  const { parseGeneratorPreviewLiteralCommandV1 } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🟦️.ts");
-  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), { default: lexicalPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️literal-command.json"), { default: split } = await import("string-argv");
+  const { parseGeneratorPreviewLiteralCommandV1 } = await import("@semio-tech/repo-lib/authoring");
+  const { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), { previewArgumentsLiteralCommandSchema: lexicalPolicy } = await import("@semio-tech/repo-lib/authoring"), { default: split } = await import("string-argv");
   const lexical = new Ajv({ strict: false }).compile(lexicalPolicy);
   for (const row of source.literalCommands) {
     if (!row.valid) { expect(() => parseGeneratorPreviewLiteralCommandV1(row.command)).toThrow(); continue; }
@@ -169,7 +169,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
  });
 
  test("declared preview progress preserves strict artifact output and bounded first-party event custody", async () => {
-  const progress = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🟦️.ts"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json"), { default: policy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json"), { default: eventPolicy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json"), jsonc = await import("jsonc-parser");
+  const progress = await import("@semio-tech/repo-lib/authoring"), { default: source } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json"), { previewProgressSchema: policy } = await import("@semio-tech/repo-lib/authoring"), { previewProgressEventSchema: eventPolicy } = await import("@semio-tech/repo-lib/authoring"), jsonc = await import("jsonc-parser");
   const oracle = new Ajv({ strict: false }).compile(policy), eventOracle = new Ajv({ strict: false }).compile(eventPolicy), controller = new AbortController(), started = performance.now(), control = { cancelled: () => controller.signal.aborted, remainingMs: () => 30000 - (performance.now() - started) };
   expect(oracle(source.policy)).toBe(true);
   const admitted = progress.parseGeneratorPreviewProgressPolicyV1(source.policy);

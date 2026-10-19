@@ -1,5 +1,5 @@
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import type { DslValue, FormExpr, FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
+import type { DslValue, FormExpr, FormQuestion, FormStep } from "../🧱️form-model/🟦️.ts";
 import{parseIntrinsicValue}from"@semio-tech/framework/value/schema";
 
 /** 📝️ Authoritative form content survives standalone document reloads. */

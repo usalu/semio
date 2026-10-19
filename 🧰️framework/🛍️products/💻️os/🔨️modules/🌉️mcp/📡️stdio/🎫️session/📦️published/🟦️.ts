@@ -5,10 +5,9 @@ import schema from"../🧬️schema/🔣️.json";
 const admission=structuredClone(schema),policy=Object.freeze({...admission.definitions.Policy.const});
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
-import{readNativeCallerAuthorityV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import{withRepositoryPublishedCargoExecutableV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import{withRepositoryCacheStoreV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import { readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1 } from "@semio-tech/repo-lib/artifacts";
+import { withRepositoryPublishedCargoExecutableV1 } from "@semio-tech/repo-lib/cargo";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import{snapshotMcpJsonV1}from"../../📋️protocol/🟦️.ts";
 import{withMcpClientSessionV1,type McpClientSessionV1}from"../🟦️.ts";
 /** 📦️ Holds the actual published executable reader for the complete scoped protocol callback. */

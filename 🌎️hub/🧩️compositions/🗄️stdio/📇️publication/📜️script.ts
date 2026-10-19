@@ -2,8 +2,8 @@
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📣️ Runs the concrete composition's catalog publication and portable laws. */
-import { runVitest } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { runVitest } from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { publishTrustedStdioCatalogV1 } from "./✅️trusted-stdio-catalog/🟦️.ts";
@@ -18,7 +18,7 @@ class TrustedCatalogPublishScript extends BundleScript {
       return index < 0 ? undefined : segments[index + 1];
     };
     const outDir = option("--out") ?? join(this.root, "🤖️generated");
-    const receipt = publishTrustedStdioCatalogV1({ outDir, repoRoot: getWorkspaceRoot() });
+    const receipt = publishTrustedStdioCatalogV1({ outDir, repoRoot: findWorkspaceRoot() });
     console.log(`trusted stdio catalog ${receipt.publication}: ${receipt.catalog.nativeCodecs.length} codecs, open=${receipt.catalog.openTargets[0]?.artifactKind}, hubBundle=${receipt.catalog.hubBundle}, component=${receipt.catalog.componentAdmission.status}, sha256=${receipt.catalogSha256} -> ${receipt.outPath}`);
   }
 }

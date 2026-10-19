@@ -93,7 +93,7 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod sourcing {
-        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::base;
+        pub use semio_s_artifact_sourcing_curation_operations::editor::sourcing::editor_vocabulary;
         #[path = "."]
         pub mod config {
             pub use semio_s_artifact_sourcing_curation_examples::editor::sourcing::config::*;

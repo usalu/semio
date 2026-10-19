@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
 
 /** 📏️ One Rust statement sequence as a whitespace-tolerant pattern: `rustfmt` freely spreads a
  * `match` arm or a `;`-separated pair across lines, so anchoring these linkage clauses on one exact
@@ -66,7 +66,7 @@ export function canonicalErrorProgressSelfTests(): number {
 }
 
 import {test,expect} from "bun:test";
-import { moduleFamilyText, pluginFamilyText } from "../../../../🔌️plugin/🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
+import { moduleFamilyText, pluginFamilyText } from "@semio-tech/framework-plugin/companions/test-support/plugin-family";
 import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
 import { valueRefusalCodecSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";

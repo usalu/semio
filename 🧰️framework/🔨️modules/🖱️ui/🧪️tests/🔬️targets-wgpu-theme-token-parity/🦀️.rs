@@ -111,7 +111,7 @@ fn veil_is_the_dialog_surface_at_the_shared_veil_alpha() {
 #[test]
 fn spatial_axis_paints_are_the_brand_tokens() {
     for (axis, token) in [(0_u8, ui_styling::colors::PRIMARY), (1, ui_styling::colors::SECONDARY), (2, ui_styling::colors::TERTIARY)] {
-        let paint = crate::wgpu::draw_types::gizmo::spatial_axis_rgba(axis, 1.0);
+        let paint = semio_framework_ui_draw_contract::gizmo::spatial_axis_rgba(axis, 1.0);
         assert_eq!(hex_of(paint), hex_of(Rgba::from_token(&token)), "axis {axis} must paint its brand token");
     }
 }
@@ -174,6 +174,5 @@ fn a_base_floor_suppresses_its_fill_only_inside_an_already_painted_base_scope() 
 }
 //#endregion 🏠️ShellFloor
 
-#[cfg(feature = "wgpu-engine")]
 #[path = "../🔬️targets-wgpu-theme-engine-unit/🦀️.rs"]
 mod engine_tests;

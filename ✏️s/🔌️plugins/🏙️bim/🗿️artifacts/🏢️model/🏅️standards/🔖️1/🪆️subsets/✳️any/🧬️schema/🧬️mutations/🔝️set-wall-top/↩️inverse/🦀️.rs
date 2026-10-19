@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallTop`: an absolute `SetWallTop` back to the base constraint, none when the wall is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetWallTop, base: &ModelSnapshot) -> Vec<Op>
 where

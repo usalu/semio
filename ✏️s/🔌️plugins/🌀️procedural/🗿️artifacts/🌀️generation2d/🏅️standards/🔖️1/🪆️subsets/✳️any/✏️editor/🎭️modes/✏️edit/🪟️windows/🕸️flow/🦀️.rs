@@ -16,7 +16,7 @@ use semio_framework_plugin::NodeGraphScene;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
-use semio_framework_ui::wgpu::{NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord};
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

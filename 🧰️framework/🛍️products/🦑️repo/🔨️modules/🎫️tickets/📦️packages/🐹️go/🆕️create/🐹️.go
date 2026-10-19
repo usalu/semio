@@ -276,7 +276,7 @@ func OpenTicket(emoji, title, prompt, llm, effort, client, draft string, noIssue
 
 // ⛳️OpenGoal MUST complete the operation and return consistent results.
 func OpenGoal(title, description, prompt, dueDate, client, llm, effort string, noManagement bool) (*model.Goal, error) {
-	ctx := model.LookupRepoContext(workspace.RootDir)
+	ctx := model.LookupRepoContext(workspace.GetRootDir())
 	input := model.GoalCreateInput{
 		Title:        title,
 		Description:  description,

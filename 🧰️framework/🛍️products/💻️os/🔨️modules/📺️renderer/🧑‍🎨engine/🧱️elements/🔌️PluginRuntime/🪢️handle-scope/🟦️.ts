@@ -9,9 +9,9 @@ import { ActivationRegistry } from "@semio-tech/framework";
 import { type ActivationReason } from "@semio-tech/framework";
 import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
-import { ShardClient } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { type ShardActorActivationLease, type ShardInstanceLifecycleLease } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts";
-import { type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { type ShardActorActivationLease, type ShardInstanceLifecycleLease } from "@semio-tech/framework-actor/shard-client/activation";
+import { type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
 // #endregion 🔌️Adapters
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { type Lane } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";

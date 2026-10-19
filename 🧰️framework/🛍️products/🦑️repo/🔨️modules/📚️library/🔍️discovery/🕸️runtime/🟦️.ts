@@ -3,8 +3,8 @@ export type { RuntimeGraphEdgeV1, RuntimeGraphFindingV1, RuntimeGraphEvidenceV1,
 import { posix } from "node:path";
 import { createHash } from "node:crypto";
 import { scanRegistryCompilerImports } from "../📇️registry-catalog-inputs/🟦️.ts";
-import { ecmaTokens, ecmaStringValue } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
-import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { ecmaTokens, ecmaStringValue } from "@semio-tech/compiler-syntax-ecma-ts";
+import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 
 export interface RuntimeGraphContextV1 {
   readonly read: (path: string) => string | undefined;

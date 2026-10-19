@@ -3,8 +3,9 @@
 //! construction and the IFC export the element a `ThermalTransmittance` belongs to without restating the rule.
 //! 📎 https://www.iso.org/standard/65708.html
 
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 /// 🧱️ The element a surface belongs to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

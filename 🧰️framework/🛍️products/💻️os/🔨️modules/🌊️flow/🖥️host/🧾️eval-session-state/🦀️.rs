@@ -375,12 +375,12 @@ impl SessionResetSources {
 
 impl RetireOwned for SessionResetSources {
     fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,deferred,sequence,shared::SharedControlledRetirement};
+        use semio_framework_value::retirement::{RetireOwned,deferred,sequence,arc_custody::SharedControlledRetirement};
         let eval:Box<dyn RetirementCursor>=match self.eval{Some(value)=>Box::new(SharedControlledRetirement::lease(value)),None=>().retirement()};
         sequence(vec![eval,deferred(self.baseline),deferred(self.fields)])
     }
     fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{deferred_birth_bytes_for,leaf_birth_bytes,sequence_birth_bytes,shared::shared_retirement_birth_bytes};
+        use semio_framework_value::retirement::{deferred_birth_bytes_for,leaf_birth_bytes,sequence_birth_bytes,arc_custody::shared_retirement_birth_bytes};
         sequence_birth_bytes(&[if self.eval.is_some(){shared_retirement_birth_bytes::<String>()}else{leaf_birth_bytes::<()>()},deferred_birth_bytes_for(&self.baseline),deferred_birth_bytes_for(&self.fields)])
     }
     fn controlled_retirement_supported()->bool{true}
@@ -436,7 +436,7 @@ pub(super) enum SessionCollectionOwner {
 
 impl RetireOwned for SessionCollectionOwner {
     fn retirement(self)->Box<dyn RetirementCursor>{
-        use semio_framework_value::retirement::{RetireOwned,shared::SharedControlledRetirement};
+        use semio_framework_value::retirement::{RetireOwned,arc_custody::SharedControlledRetirement};
         match self{
             Self::TickSnapshot(value)=>value.retirement(),
             Self::InvocationOrigins(value)=>value.retirement(),
@@ -454,7 +454,7 @@ impl RetireOwned for SessionCollectionOwner {
         }
     }
     fn retirement_birth_bytes(&self)->Option<usize>{
-        use semio_framework_value::retirement::{RetireOwned,shared::shared_retirement_birth_bytes};
+        use semio_framework_value::retirement::{RetireOwned,arc_custody::shared_retirement_birth_bytes};
         match self{
             Self::TickSnapshot(value)=>value.retirement_birth_bytes(),
             Self::InvocationOrigins(value)=>value.retirement_birth_bytes(),

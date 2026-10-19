@@ -225,9 +225,9 @@ async fn retained_progress_replay_freshness_and_close_are_exact() {
             .expect("exact retry"),
         ArtifactCommandWorkStep::Progress { .. }
     ));
-    assert_eq!(replayed.close_step(close_grant(0)), InteractiveJobCloseStep::Blocked);
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(0), |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
     replayed.begin_close();
-    assert_eq!(replayed.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(replayed.terminal_is_empty());
 }
 
@@ -299,7 +299,7 @@ async fn retained_migrated_turns_stay_below_eight_milliseconds() {
             best = best.min(slowest);
             if !refused {
                 work.begin_close();
-                assert_eq!(work.close_step(close_grant(1)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+                assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(1), |cx| work.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
             }
             if best < INTERACTIVE_TURN_CEILING {
                 break;
@@ -467,10 +467,10 @@ async fn ingest_operations_is_idempotent() {
     assert!(!envelopes.is_empty(), "the rename reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = app().await;
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
     let once = receiver.snapshot().expect("projection");
     assert_eq!(once.objects[0].name, "Hero", "the replayed rename applies");
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("projection"), once, "feeding the same operation twice must not double-apply");
 }
 
@@ -486,7 +486,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_mesh_out_produces_mesh_document_payload() {
     let mut a: LowpolyApp = app().await;
-    let media = ::semio_framework_async::poll::resolve_ready(a.export_media("mesh:out")).expect("export mesh:out");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut a.0, "mesh:out", a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export mesh:out");
     assert_eq!(media.media_type, MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh });
     match media.payload {
         MediaPayload::Structured { schema, .. } => assert_eq!(schema, "mesh.document"),

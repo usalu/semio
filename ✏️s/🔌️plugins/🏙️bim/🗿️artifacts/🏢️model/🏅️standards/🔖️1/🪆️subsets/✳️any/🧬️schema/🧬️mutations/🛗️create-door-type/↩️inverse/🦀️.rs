@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_door_type::DeleteDoorType;
 use crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateDoorType, base: &ModelSnapshot) -> Vec<Op>
 where

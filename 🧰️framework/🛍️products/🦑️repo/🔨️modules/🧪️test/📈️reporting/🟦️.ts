@@ -5,13 +5,13 @@
 
 //#region 🔌️Adapters
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { type ComparisonProfile, type Implementation, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type PlatformId, EVIDENCE_CLASSES } from "@semio-tech/framework/test/adapter";
+import { type ComparisonProfile, type Implementation, type TestEvidence, type EvidenceClass, type MutationOutcomeClass, type PlatformId, currentPlatform, EVIDENCE_CLASSES } from "@semio-tech/framework/test/adapter";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type ComparisonVerdict } from "../🟰️comparison/🟦️.ts";
 import { type DiscoveredCase, repoRootFromHere } from "../🧭️case-discovery/🟦️.ts";
-import { currentPlatform, isWildcardSubsetFor, subsetCoordinate, surfaceCoordinate } from "../🪆️subset-policy/🟦️.ts";
+import { isWildcardSubsetFor, subsetCoordinate, surfaceCoordinate } from "../🪆️subset-policy/🟦️.ts";
 import { engineFamilyId, isQualifyingOracleKind, type OracleKind, owningSubsetOf, type RuntimeMutationInventory } from "../📑️mutation-manifest/🟦️.ts";
 import { type TestResult } from "../📤️results/🟦️.ts";
 import { loadOracleRegistry, type OracleRegistry } from "../🤝️contributions/🟦️.ts";

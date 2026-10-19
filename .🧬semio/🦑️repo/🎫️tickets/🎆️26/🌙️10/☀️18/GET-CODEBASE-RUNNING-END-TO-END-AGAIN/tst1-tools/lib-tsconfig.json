@@ -1,0 +1,196 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/tsconfig.json",
+ "compilerOptions": {
+  "paths": {
+   "jsonc-parser": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/jsonc-parser@3.3.1/node_modules/jsonc-parser"
+   ],
+   "jsonc-parser/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/jsonc-parser@3.3.1/node_modules/jsonc-parser/*"
+   ],
+   "minimatch": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/minimatch@9.0.3/node_modules/minimatch"
+   ],
+   "minimatch/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/minimatch@9.0.3/node_modules/minimatch/*"
+   ],
+   "pathe": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/pathe@2.0.3/node_modules/pathe"
+   ],
+   "pathe/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/pathe@2.0.3/node_modules/pathe/*"
+   ],
+   "fast-json-stable-stringify": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fast-json-stable-stringify@2.1.0/node_modules/fast-json-stable-stringify"
+   ],
+   "fast-json-stable-stringify/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fast-json-stable-stringify@2.1.0/node_modules/fast-json-stable-stringify/*"
+   ],
+   "immer": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/immer@10.1.1/node_modules/immer"
+   ],
+   "immer/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/immer@10.1.1/node_modules/immer/*"
+   ],
+   "string-argv": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/string-argv@0.4.0/node_modules/string-argv"
+   ],
+   "string-argv/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/string-argv@0.4.0/node_modules/string-argv/*"
+   ],
+   "diff": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/diff@8.0.4/node_modules/diff"
+   ],
+   "diff/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/diff@8.0.4/node_modules/diff/*"
+   ],
+   "yargs-parser": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/yargs-parser@21.1.1/node_modules/yargs-parser"
+   ],
+   "yargs-parser/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/yargs-parser@21.1.1/node_modules/yargs-parser/*"
+   ],
+   "mdast-util-from-markdown": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/mdast-util-from-markdown@2.1.0+759ce506b1ed1a42/node_modules/mdast-util-from-markdown"
+   ],
+   "mdast-util-from-markdown/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/mdast-util-from-markdown@2.1.0+759ce506b1ed1a42/node_modules/mdast-util-from-markdown/*"
+   ],
+   "ignore": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/ignore@7.0.12/node_modules/ignore"
+   ],
+   "ignore/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/ignore@7.0.12/node_modules/ignore/*"
+   ],
+   "smol-toml": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/smol-toml@1.6.1/node_modules/smol-toml"
+   ],
+   "smol-toml/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/smol-toml@1.6.1/node_modules/smol-toml/*"
+   ],
+   "es-module-lexer": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/es-module-lexer@2.3.2/node_modules/es-module-lexer"
+   ],
+   "es-module-lexer/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/es-module-lexer@2.3.2/node_modules/es-module-lexer/*"
+   ],
+   "commander": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/commander@13.1.0/node_modules/commander"
+   ],
+   "commander/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/commander@13.1.0/node_modules/commander/*"
+   ],
+   "@noble/hashes": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@noble+hashes@2.4.0/node_modules/@noble/hashes"
+   ],
+   "@noble/hashes/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@noble+hashes@2.4.0/node_modules/@noble/hashes/*"
+   ],
+   "zod": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/zod@4.6.7/node_modules/zod"
+   ],
+   "zod/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/zod@4.6.7/node_modules/zod/*"
+   ],
+   "resolve.exports": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/resolve.exports@2.0.3/node_modules/resolve.exports"
+   ],
+   "resolve.exports/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/resolve.exports@2.0.3/node_modules/resolve.exports/*"
+   ],
+   "postcss": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/postcss@8.5.30/node_modules/postcss"
+   ],
+   "postcss/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/postcss@8.5.30/node_modules/postcss/*"
+   ],
+   "iconv-lite": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/iconv-lite@0.7.3/node_modules/iconv-lite"
+   ],
+   "iconv-lite/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/iconv-lite@0.7.3/node_modules/iconv-lite/*"
+   ],
+   "fflate": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fflate@0.8.3/node_modules/fflate"
+   ],
+   "fflate/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fflate@0.8.3/node_modules/fflate/*"
+   ],
+   "fast-check": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fast-check@3.23.2/node_modules/fast-check"
+   ],
+   "fast-check/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/fast-check@3.23.2/node_modules/fast-check/*"
+   ],
+   "@vitejs/plugin-react": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@vitejs+plugin-react@5.2.0+60fd74b210b9e34f/node_modules/@vitejs/plugin-react/dist/index.d.ts"
+   ],
+   "@vitejs/plugin-react/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@vitejs+plugin-react@5.2.0+60fd74b210b9e34f/node_modules/@vitejs/plugin-react/*"
+   ],
+   "@tailwindcss/vite": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@tailwindcss+vite@4.3.3+68e8dd19ebed4dd8/node_modules/@tailwindcss/vite/dist/index.d.mts"
+   ],
+   "@tailwindcss/vite/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@tailwindcss+vite@4.3.3+68e8dd19ebed4dd8/node_modules/@tailwindcss/vite/*"
+   ],
+   "yaml": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/yaml@2.9.0/node_modules/yaml"
+   ],
+   "yaml/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/yaml@2.9.0/node_modules/yaml/*"
+   ],
+   "i18next": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/i18next@25.10.10+1fb4c65d43e298b9/node_modules/i18next"
+   ],
+   "i18next/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/i18next@25.10.10+1fb4c65d43e298b9/node_modules/i18next/*"
+   ],
+   "react-i18next": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/react-i18next@16.6.6+ca482a211e0864f4/node_modules/react-i18next"
+   ],
+   "react-i18next/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/react-i18next@16.6.6+ca482a211e0864f4/node_modules/react-i18next/*"
+   ],
+   "@xyflow/react": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@xyflow+react@12.12.0+2636bd30e81ba56a/node_modules/@xyflow/react"
+   ],
+   "@xyflow/react/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@xyflow+react@12.12.0+2636bd30e81ba56a/node_modules/@xyflow/react/*"
+   ],
+   "@react-three/fiber": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@react-three+fiber@9.8.2+64bd877211673a21/node_modules/@react-three/fiber"
+   ],
+   "@react-three/fiber/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@react-three+fiber@9.8.2+64bd877211673a21/node_modules/@react-three/fiber/*"
+   ],
+   "lodash": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@types+lodash@4.17.24/node_modules/@types/lodash"
+   ],
+   "lodash/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@types+lodash@4.17.24/node_modules/@types/lodash/*"
+   ],
+   "three": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@types+three@0.180.0/node_modules/@types/three"
+   ],
+   "three/*": [
+    "/Users/ueli/Documents/semio/node_modules/.bun/@types+three@0.180.0/node_modules/@types/three/*"
+   ]
+  },
+  "baseUrl": "/",
+  "types": [
+   "bun",
+   "node"
+  ]
+ },
+ "include": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*.ts"
+ ],
+ "exclude": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/node_modules/**",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/dist/**",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/📤️dist/**",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🗑️generated/**",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/🤖️generated/**"
+ ]
+}

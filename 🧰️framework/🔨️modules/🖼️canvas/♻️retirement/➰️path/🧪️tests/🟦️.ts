@@ -8,7 +8,7 @@ import example from "./🧫️fixtures/🔣️.json";
 import { retirementContractSchema as contract } from "@semio-tech/value-ts/retirement/contract/schema";
 import { orderedRetirementSchema as ordered } from "@semio-tech/value-ts/ordered/retirement/schema";
 import drawList from "../../../🧬️schema/🎬️draw-list/🔣️.json";
-import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("Canvas path retirement preserves original capacities under canonical supplied grants",()=>{
  const ajv=new Ajv({strict:false});ajv.addSchema(ordered);ajv.addSchema(contract);

@@ -26,7 +26,7 @@ semio-framework-schema-registry = { path = "../../../🧬️schema/📇️regist
 semio-framework-ui-locale = { path = "../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
-ui_wgpu = { path = "../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

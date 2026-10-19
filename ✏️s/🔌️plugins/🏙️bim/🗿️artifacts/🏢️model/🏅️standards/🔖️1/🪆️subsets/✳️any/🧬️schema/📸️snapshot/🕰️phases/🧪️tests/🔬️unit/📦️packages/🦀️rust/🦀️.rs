@@ -26,7 +26,6 @@ pub mod standards {
                         pub mod gbxml {
                             #[path = "."]
                             pub mod codec {
-                                pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::*;
                                 #[cfg(test)]
                                 #[path = "../../../../../../../🚪️io/📤️export/🌿️gbxml/🧱️codec/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
@@ -36,14 +35,12 @@ pub mod standards {
                         pub mod energy {
                             #[path = "."]
                             pub mod target {
-                                pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::*;
                                 #[cfg(test)]
                                 #[path = "../../../../../../../🚪️io/📤️export/🔋️energy/🧬️target/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
                             }
                             #[path = "."]
                             pub mod pairs {
-                                pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs::*;
                                 #[cfg(test)]
                                 #[path = "../../../../../../../🚪️io/📤️export/🔋️energy/🔗️pairs/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
@@ -56,7 +53,6 @@ pub mod standards {
                         pub mod ifc {
                             #[path = "."]
                             pub mod frames {
-                                pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::*;
                                 #[cfg(test)]
                                 #[path = "../../../../../../../🚪️io/📥️import/🏗️ifc/🧭️frames/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;
@@ -68,10 +64,8 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod snapshot {
-                        pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
                         #[path = "."]
                         pub mod phases {
-                            pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::phases::*;
                             #[cfg(test)]
                             #[path = "../../🦀️.rs"]
                             pub mod tests;

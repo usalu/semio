@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
+import { type BreachRecord } from "@semio-tech/repo-lib/policy";
 //#endregion 🔌️Adapters
 
 //#region 🧾️Contract

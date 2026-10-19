@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import{expect,test}from"bun:test";
 import{Database}from"bun:sqlite";
 import Ajv from"ajv";
@@ -29,7 +29,6 @@ test("CAD retained media source pricing preserves exact UTF-8 bytes and ordered 
 
 import nativeSchema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from"../../../../🧬️schema/🔣️.json";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {binary64} from "@semio-tech/framework/value/ieee754";
@@ -160,11 +159,11 @@ test("CAD ordered brep event payload matches independent JSON schema admission",
 
 test("CAD GraphQL siblings declare neutral persisted topology and canonical event union",async()=>{
  const {parse,Kind,buildASTSchema,validateSchema}=await import("graphql");
- const refs=await Bun.file(frameworkSourceUrl("🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql")).text(),children=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql")).text(),artifact=await Bun.file(new URL("../../../../🧬️schema/🔗️.graphql",import.meta.url)).text();
+ const refs=await Bun.file(frameworkSourceUrl("🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql")).text(),children=await Bun.file(frameworkSourceUrl("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql")).text(),artifact=await Bun.file(new URL("../../../../🧬️schema/🔗️.graphql",import.meta.url)).text();
  for(const [path,typeName] of [["../../../../🧬️schema/🔗️.graphql","CadArtifact"],["../../../../🧬️schema/📸️snapshot/🔗️.graphql","CadSnapshot"],["../../../../🧬️schema/🔺️diff/🔗️.graphql","CadDiff"]] as const){
   const document=parse(await Bun.file(new URL(path,import.meta.url)).text()),type=document.definitions.find(def=>def.kind===Kind.OBJECT_TYPE_DEFINITION&&def.name.value===typeName);
   if(!type||type.kind!==Kind.OBJECT_TYPE_DEFINITION)throw new Error("CAD GraphQL type missing "+typeName);
-  expect(type.fields?.map(field=>field.name.value)).toEqual(typeName==="CadDiff"?["artifact",...fixture.publicSchemas.fields]:fixture.publicSchemas.fields);
+  expect(type.fields?.map(field=>field.name.value)).toEqual(fixture.publicSchemas.fields);
   const source=await Bun.file(new URL(path,import.meta.url)).text(),schema=buildASTSchema(parse(fixture.publicSchemas.graphqlContext+"\n"+refs+"\n"+children+"\n"+(typeName==="CadDiff"?artifact+"\n":"")+source+"\ntype Query { value: "+typeName+" }"));
   expect(validateSchema(schema)).toEqual([]);
 
@@ -185,7 +184,7 @@ test("CAD Protobuf siblings resolve canonical imports and exact neutral event ta
  root.resolvePath=(_origin,target)=>resolve(workspace,target);
  const paths=["../../../../🧬️schema/🛰️.proto","../../../../🧬️schema/📸️snapshot/🛰️.proto","../../../../🧬️schema/🔺️diff/🛰️.proto","../../../../🧬️schema/🧬️mutations/🛰️.proto"];
  await root.load(paths.map(path=>fileURLToPath(new URL(path,import.meta.url))));root.resolveAll();
- for(const [name,offset]of [["artifact.CadArtifact",0],["snapshot.CadSnapshot",0],["diff.CadDiff",1]] as const){const type=root.lookupType("semio.s.cad.cad."+name);expect(type.fieldsArray.map(field=>field.name)).toEqual(offset?["artifact",...fixture.publicSchemas.fields]:fixture.publicSchemas.fields);expect(type.fieldsArray.map(field=>field.id)).toEqual(Array.from({length:fixture.publicSchemas.fields.length+offset},(_,index)=>index+1));}
+ for(const name of ["artifact.CadArtifact","snapshot.CadSnapshot","diff.CadDiff"] as const){const type=root.lookupType("semio.s.cad.cad."+name);expect(type.fieldsArray.map(field=>field.name)).toEqual(fixture.publicSchemas.fields);expect(type.fieldsArray.map(field=>field.id)).toEqual(Array.from({length:fixture.publicSchemas.fields.length},(_,index)=>index+1));}
  const mutation=root.lookupType("semio.s.cad.cad.mutation.CadMutation");
  expect(mutation.oneofs.mutation!.oneof).toEqual(fixture.publicSchemas.mutationTypes.map(name=>name[0]!.toLowerCase()+name.slice(1)));
  for(const [index,name]of fixture.publicSchemas.mutationTypes.entries()){const field=mutation.fieldsArray[index]!;expect(field.id).toBe(index+1);expect(field.type).toBe(name);const payload=root.lookupType("semio.s.cad.cad.mutation."+name);expect(payload.fieldsArray.map(field=>field.name)).toEqual(fixture.publicSchemas.mutationFields[name as keyof typeof fixture.publicSchemas.mutationFields]);expect(payload.fieldsArray.map(field=>field.id)).toEqual(Array.from({length:payload.fieldsArray.length},(_,index)=>index+1));}

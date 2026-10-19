@@ -6,8 +6,9 @@
 //! addresses the cell (`curtain_panel_overrides`, keyed by wall, `u` and `v`); overrides outside the grid and grid lines outside the extent are reported, never dropped silently.
 
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainGrid, CurtainPanel};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

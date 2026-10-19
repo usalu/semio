@@ -258,6 +258,9 @@ func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPS
 
 // RunMcpServerFor starts the MCP stdio server for the given kind.
 func RunMcpServerFor(kind McpClientKind, toolTimeout time.Duration) error {
+	if err := BindWorkingDirectory(); err != nil {
+		return err
+	}
 	s := CreateMcpServer(kind, toolTimeout)
 	return server.ServeStdio(s)
 }

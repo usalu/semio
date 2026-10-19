@@ -3,7 +3,9 @@
 //! Set `BIM_BLESS=1` to (re)write the `after` snapshot and the `diff` of applied cases from the code under test;
 //! a blessed fixture is then reviewed by hand and cross-checked by the independent oracles.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{Mutation, MutationDiff};
 use semio_framework_diagnostic::Severity;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};

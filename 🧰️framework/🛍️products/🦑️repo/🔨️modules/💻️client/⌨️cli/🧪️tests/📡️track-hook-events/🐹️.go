@@ -201,7 +201,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}
 	tmpDir, ticketJSON := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"test-session-1","llm":"opus-4-6","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := HookContext{
 		Event:    HookAgentPromptSubmitting,
@@ -301,7 +301,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 func TestTrackHookSearchingPattern(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
 	RunHook(HookContext{
 		Event:    HookAgentPromptSubmitting,
@@ -354,7 +354,7 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 func TestTrackHookBlockedEvent(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
 	RunHook(HookContext{
 		Event:    HookAgentPromptSubmitting,
@@ -413,7 +413,7 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 func TestTrackHookTerminalEvents(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
 	RunHook(HookContext{
 		Event:    HookAgentPromptSubmitting,
@@ -486,7 +486,7 @@ func TestTrackHookTerminalEvents(t *testing.T) {
 
 func TestTrackHookTranscriptInSession(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	RunHook(HookContext{
 		Event:    HookAgentPromptSubmitting,
 		Client:   "copilot-chat",
@@ -507,7 +507,7 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
 	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
 	if err := os.MkdirAll(filepath.Dir(tsFile), 0755); err != nil {

@@ -1,8 +1,8 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Profile;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops;
-use crate::standards::v1::subsets::any::schema::authored::profile::*;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_polygon, profile_extents};
 
 #[test]
 fn profiles_flatten_to_centred_counter_clockwise_outlines() {

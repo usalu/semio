@@ -22,8 +22,8 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "../../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import type { UiPreferences } from "../../../../../../../🔨️modules/🎚️config/🧬️schema/🟦️.ts";
-import { applyUiPreferencesConfigMutation, inverseUiPreferencesConfigMutation, type UiPreferencesConfigMutation } from "../../../../../../../🔨️modules/🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
+import type { UiPreferences } from "@semio-tech/framework/config/schema";
+import { applyUiPreferencesConfigMutation, inverseUiPreferencesConfigMutation, type UiPreferencesConfigMutation } from "@semio-tech/framework/config/mutations";
 // #endregion 🔌️Adapters
 
 // #region 🔖️Fixtures

@@ -33,6 +33,12 @@
       "capacityBytes": 2147483648,
       "maximumLogicalBytes": 2146435072
     },
+    "nx": {
+      "directory": ".cache/b/n",
+      "capacityBytes": 1610612736,
+      "maximumArtifactBytes": 536870912,
+      "maximumLogicalBytes": 1609564160
+    },
     "leases": {
       "directory": ".cache/b/l",
       "capacityBytes": 67108864,

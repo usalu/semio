@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerAdmissionBudgetV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { join, resolve, dirname } from "node:path";
 import {createBuildBootstrapCapabilitiesV1} from "./📥️caller/📤️child/🟦️.ts";
+import {issueRepositoryScriptProvidersV1} from "../🏃️process/🔌️providers/🟦️.ts";
 import { readScriptPolicy,Script, ScriptRouter, findWorkspaceRoot, scriptInvocationBudget, scriptInvocationEnvironment,checkScriptInvocation,advanceScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -12,7 +13,7 @@ import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦
 import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
 import bazelTestSchema from "./🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json";
-import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset} from "../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const bazelTestContract=compileJsonSchemaSubset(bazelTestSchema);
 
 /** 🧪️ Selects closed independently bounded Bazel contracts without replacing their Original. */
@@ -163,7 +164,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     const {withRepositoryBuildGraphArtifactV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts");
     await withRepositoryBuildGraphArtifactV1(root,graph,invocation,rustPhase,async(pinned,artifactPhase)=>{
     process.env.SEMIO_BUILD_GRAPH_PATH=pinned.path;process.env.SEMIO_BUILD_GRAPH_DIGEST=pinned.digest;process.env.SEMIO_BUILD_REUSE_GRAPH="true";
-    if(command==="watch"){const selection=await import("./🧭️selection/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation,artifactPhase);return;}
+    if(command==="watch"){const selection=await import("./🧭️selection/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("./📥️caller/📤️child/🟦️.ts");await selection.watchBuildInvocationV1(root,graph,resolved.args,invocation,artifactPhase,{child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});return;}
     if(selected.tool==="nx"){
       const {runOwnedNxInvocationV1,publishBootstrapSources}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");
       publishBootstrapSources(root);
@@ -184,10 +185,10 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     if(resolved.watch){
-      const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+      const controller=new AbortController(),{withRequestedIssuedResourceControlV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts"),{runOwnedBuildChildInvocationV1}=await import("./📥️caller/📤️child/🟦️.ts");
       await withRequestedIssuedResourceControlV1(artifactPhase,0,async childPhase=>{let watching:Promise<void>|undefined;
       try{
-        await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,childPhase,{initial:true});watching.catch(error=>controller.abort(error));});
+        await adapter.runBazelTasksV1(root,graph,request,invocation,childPhase,()=>{watching=selection.watchBuildInvocationV1(root,graph,["watch","--all","--include-global-files","--",process.execPath,join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"),"repo","run",resolved.watch!,"--output=stream"],invocation,childPhase,{initial:true,child:{readOwnedBuildInvocationV1,runOwnedBuildChildInvocationV1}});watching.catch(error=>controller.abort(error));});
       }finally{controller.abort();await watching?.catch(error=>{if(!controller.signal.aborted)throw error;});}},controller.signal);
       return;
     }
@@ -203,6 +204,7 @@ export function readDefaultBuildCliPolicyV1(){return readScriptPolicy(Object.fre
 
 /** 🚪️ Admits the original authored CLI policy and resources before any backend or installed application launch. */
 export async function runBuildCliV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Promise<void> {
+  issueRepositoryScriptProvidersV1(environment);
   const {createScriptProcessEnvelope,readScriptProcessEnvelope,readScriptPolicy,withScriptProcessEnvelope,SCRIPT_PROCESS_INVOCATION_ENV}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
   const wire=environment[SCRIPT_PROCESS_INVOCATION_ENV];
   const incoming=wire===undefined?undefined:readScriptProcessEnvelope(JSON.parse(wire),Date.now());

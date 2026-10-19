@@ -4,9 +4,9 @@ import { mkdtempSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 export default defineConfig({
-  root: resolve(import.meta.dir, "../.."),
+  root: resolve(import.meta.dirname, "../.."),
   test: {
-    root: resolve(import.meta.dir, "../.."),
+    root: resolve(import.meta.dirname, "../.."),
     name: "@semio-tech/s-gis-services-native",
     environment: "node",
     include: ["🧪️tests/🧷️untrusted-content/🟦️.ts"],

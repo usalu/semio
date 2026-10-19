@@ -2,10 +2,10 @@
 //! grid lines with their intersections and the orthogonal directions from the last point of a chain. Candidates compete by kind (a corner beats a midpoint beats a grid line ...)
 //! inside a pixel tolerance expressed in metres; nothing within reach leaves the pointer free.
 
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
 use std::f64::consts::FRAC_PI_4;
 use value_derive::{FromValue, ToValue};

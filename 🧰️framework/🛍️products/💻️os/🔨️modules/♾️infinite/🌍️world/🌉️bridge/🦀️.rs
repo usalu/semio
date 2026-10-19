@@ -8,14 +8,18 @@ use semio_framework_os_infinite_world_model::{quarantine_world_owner, World3dBui
 use semio_framework_os_infinite_world_components::{GumballHandle, mesh_vertex, pick_targets_instance, World3dCameraFitOwner, World3dCameraFitRequest, World3dSceneGumballConfigRecord, World3dSnapshotApplyCursor, world_component_preview_target, world_mesh_component_id, world_mesh_triangle, WorldCameraState, WorldGumballState, WorldMeshBuffers, WorldNavigationSnapshot, WorldOverlayState, WorldSceneState, WorldSelectionState};
 use semio_framework_os_infinite_world_cursors::{CLICK_DRAG_THRESHOLD_PX, live_world3d_mesh_version, pointer_in_pick_rect, world3d_gumball_config, WorldBrushCommitJob, WorldComponentMarqueePublishJob, WorldComponentPickCursor, WorldGumballCommitJob, WorldGumballPickCursor, WorldInteractionAuthorityStep, WorldMarqueePickCursor, WorldMarqueePublishJob, WorldObjectPickCursor, WorldRayPickCursor};
 use semio_framework_os_infinite_world_scene::{environment_outline_color, GUMBALL_PLANE_MESH, mesh_id_from_url, mesh_style_paint, parse_color, publish_world3d_mesh_lease, resolve_mesh_style, retire_world_pixels, scene_lod, world3d_scene_digest, world_instance_style, WorldAssetsState};
-use ui_wgpu::wgpu::{ActionDescriptor, Camera3d, CameraProjection3d, ComponentSource3d, gumball_extent, gumball_eye, Instance3d, LineVertex3d, lod_grid_step_world, Mat4, Mesh3dField, Mesh3dLease, quat_from_basis, ray_plane_point, ray_segment_distance, Rect, Rgba, rotate_vector, SceneColorSource3d, SceneDraw3d, SceneRasterLease, SceneRasterPool, Theme, Vec3, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use ui_scene::math::{Camera3d, CameraProjection3d, ComponentSource3d, gumball_extent, gumball_eye, Instance3d, LineVertex3d, lod_grid_step_world, Mat4, Mesh3dField, Mesh3dLease, quat_from_basis, ray_plane_point, ray_segment_distance, rotate_vector, SceneColorSource3d, SceneDraw3d, Vec3};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_raster_owner::{SceneRasterLease, SceneRasterPool};
+use semio_framework_ui_declaration::ui::{World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind};
 use serde::Deserialize;
 use std::collections::HashSet;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::SceneMaterial3d;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::SceneMaterial3d;
 use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
-use ui_wgpu::wgpu::kernel_3d_scene::Mesh3dResourceLoan as WorldNativeMeshLoan;
+use ui_scene::math::Mesh3dResourceLoan as WorldNativeMeshLoan;
 use semio_framework_ui_runtime::UiNativeMeshResource as WorldNativeMeshResource;
 use semio_framework_ui_contract::UiRevision as WorldNativeUiRevision;
 use serde_json::json;

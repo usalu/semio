@@ -181,7 +181,7 @@ describe("framework source topology", () => {
 });
 
 test("Hub WGPU command vectors retain source laws without corpus schema authority", async () => {
-  const owner = "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu", path = resolve(repoRoot, owner), source = readFileSync(resolve(path, "📜️script.ts"), "utf8"), vectors = JSON.parse(readFileSync(resolve(path, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
+  const owner = "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu", path = resolve(repoRoot, owner), source = readFileSync(resolve(path, "📜️script.ts"), "utf8"), vectors = JSON.parse(readFileSync(resolve(path, "🧫️fixtures/🔣️.json"), "utf8"));
   const parsed = ts.createSourceFile("📜️script.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), classes = new Map(parsed.statements.filter(ts.isClassDeclaration).map(node => [node.name?.text, node.getText(parsed)]));
   const routes = new Map<string, string>();
   const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments.length === 2 && ts.isStringLiteral(node.arguments[0]!) && ts.isIdentifier(node.arguments[1]!)) routes.set(node.arguments[0]!.text, node.arguments[1]!.text); ts.forEachChild(node, visit); };

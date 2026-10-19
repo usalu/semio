@@ -32,7 +32,7 @@ import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/fra
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
-import { createFrameworkOsHostPortsV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, type DemonstratorPaneSpec } from "./🪧️brand.ts";

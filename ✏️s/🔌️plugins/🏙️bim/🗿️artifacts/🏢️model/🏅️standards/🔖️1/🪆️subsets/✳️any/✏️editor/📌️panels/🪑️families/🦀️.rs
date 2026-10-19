@@ -2,14 +2,16 @@
 //! matches (command `searchFamilies`); while a family is selected a details section names its category, parameters, solids, size and volume (read off the `families` inference, the same values the family preview draws)
 //! and offers the rows that place it with the component tool or open it in the family editor. Everything is a labelled input or row, reachable from the keyboard.
 
-use crate::editor::bim::entities::components::{placeable, wall_mounted};
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
-use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{placeable, wall_mounted};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 use crate::editor::bim::panels::properties::input_row;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
-use crate::standards::v1::subsets::any::schema::{snapshot::{FamilyCategory, ModelSnapshot}, inferences::ModelInference};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::Buildable;

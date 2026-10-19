@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-forms-forms-commands-try"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-forms-forms: commands, the try-wizard family"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-s-artifact-forms-forms-config = { path = "../../../../🎚️config/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-definition = { path = "../../../../../🧬️schema/📝️definition/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-mutations = { path = "../../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-snapshot = { path = "../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-tests = { path = "../../../../../🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-tests-2 = { path = "../../../../../🧬️schema/📨️response/🧪️tests/🔬️events/📦️packages/🦀️rust" }

@@ -29,7 +29,8 @@ use semio_framework_value::DslValue;
 use serde::Deserialize;
 use std::collections::VecDeque;
 use store_sync::sync::{ArtifactDocumentKey, PersistenceBinding};
-use ui_wgpu::wgpu::{ActionDescriptor, UiButtonNode, UiNode, UiPresence, UiStackNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📂️doc-open/🧬️component/🦀️.rs"]
 mod staged_doc_open__component;

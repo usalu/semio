@@ -195,6 +195,9 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packa
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
 package = "semio-framework-value-derive"
 
+[workspace.dependencies.semio-s-artifact-raster-raster]
+path = "📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-raster-raster-diff]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
 

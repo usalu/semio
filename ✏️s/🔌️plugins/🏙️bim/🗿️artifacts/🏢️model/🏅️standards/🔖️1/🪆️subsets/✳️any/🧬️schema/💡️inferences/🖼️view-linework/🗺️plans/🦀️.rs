@@ -3,10 +3,11 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{plan_at, Inputs, PlanLinework, PlanStyle, PlanVertex, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::filters::{crop_plan, lets_through};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::{view_cut_height, ModelSnapshot, View, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{view_cut_height, ModelSnapshot, View};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_geometry::Point;
 
 fn mirrored(style: PlanStyle) -> PlanStyle {

@@ -3,9 +3,9 @@
  * plan had no module source at all in the browser — these are the laws that source must keep. */
 
 import { describe, expect, it } from "vitest";
-import { createLazyPluginInstallDoor, type LazyPluginInstallPhase } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts";
-import { WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL, WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL, admitWgpuDynamicExtension, installWgpuDynamicExtensionDoor } from "../../🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts";
-import extensionFixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧪️tests/🧫️fixtures/🔣️.json";
+import { createLazyPluginInstallDoor, type LazyPluginInstallPhase } from "@semio-tech/framework-renderer-wgpu/frame-worker/lazy-install";
+import { WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL, WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL, admitWgpuDynamicExtension, installWgpuDynamicExtensionDoor } from "@semio-tech/framework-renderer-wgpu/dynamic-extension";
+import extensionFixture from "@semio-tech/plugin-extension-store/installation/testing/fixtures.json";
 
 type Deferred = { readonly promise: Promise<unknown>; resolve: (value: unknown) => void; reject: (error: Error) => void };
 

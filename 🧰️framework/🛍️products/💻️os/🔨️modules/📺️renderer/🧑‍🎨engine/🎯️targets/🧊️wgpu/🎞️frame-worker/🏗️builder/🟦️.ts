@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { renderWgpuPackageArtifacts } from "../../📽️projection/🟦️.ts";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
 /** 🧵️ Renders the frame worker through the schema-owned package projection. */
 export async function renderFrameWorker(bundleRoot: string): Promise<{ path: string; content: string }> {

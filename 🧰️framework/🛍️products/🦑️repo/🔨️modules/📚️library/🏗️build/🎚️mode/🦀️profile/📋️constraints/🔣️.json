@@ -1281,7 +1281,7 @@
     "✏️s/🔌️plugins/🧱️block/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/Cargo.toml": "runtime",
-    "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.toml": "runtime",
+    "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/Cargo.toml": "runtime",
     "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/Cargo.toml": "runtime",

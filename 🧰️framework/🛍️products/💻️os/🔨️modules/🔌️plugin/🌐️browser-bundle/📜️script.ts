@@ -1,7 +1,6 @@
-import {readNativeCallerAuthorityV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { readNativeCallerAuthorityV1, bundleVirtualJavaScript } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { bundleVirtualJavaScript } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withIssuedResourceOperationV1,withScriptInvocationSignalV1,SCRIPT_PROCESS_INVOCATION_ENV,createScriptProcessEnvelope,receiveScriptProcessInvocation,withScriptProcessEnvelope} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -17,8 +16,8 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
-import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
+import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type BrowserComponentFactoryControl = Readonly<{ importInterfaces?: readonly string[]; cancelled?: () => boolean; progress?: (completedBytes: number, totalBytes: number) => void }>;

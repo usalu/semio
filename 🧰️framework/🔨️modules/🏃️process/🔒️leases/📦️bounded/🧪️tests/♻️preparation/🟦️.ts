@@ -7,7 +7,7 @@ import{fileURLToPath}from"node:url";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
 import capacitySchema from"../../🧬️schema/🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../🎛️owned-execution/📥️capture/🟦️.ts";
 const path=(name:string)=>fileURLToPath(new URL(name,import.meta.url)),routing=path("../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts");

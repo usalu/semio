@@ -7,7 +7,7 @@
  * (`🔌️PluginRuntime/🟦️.tsx`). Nothing here touches React, the DOM or a `Worker`, so the accounting is
  * testable on its own — see `🧪️tests/🫀️plugin-load-progress/🟦️.ts`. */
 
-import { SHARD_LIVENESS_POLICY } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { SHARD_LIVENESS_POLICY } from "@semio-tech/framework-actor/shard-client";
 
 /** 🫀️ Both numbers come from the ONE schema-owned liveness policy — never a literal here.
  * `pluginLoadIdleTimeoutMs` is an IDLE budget, not a total one: the deadline is pushed forward every

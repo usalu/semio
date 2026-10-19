@@ -4,16 +4,18 @@
 //! annotation writes one history row of `create-*` mutations; the first annotation of a model also creates the standard annotation style in the same row. The preview shows the printed value as it
 //! will read.
 
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::gestures::plane::{angle, dist, point2, same, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::gestures::snap::SnapHit;
-use crate::editor::bim::entities::notations::standard_style;
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reference};
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{dimensions, Inputs};
-use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, Dimension, Leader, ModelSnapshot, Point2, Tag, TagCategory, TextNote, WallSide}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, point2, same, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::notations::standard_style;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reference};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::{dimensions, Inputs};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnchorEnd, AnnotationAnchor, Point2, TagCategory, WallSide};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Dimension, Leader, ModelSnapshot, Tag, TextNote};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 /// 📏️ The grid every offset snaps to, in metres.
@@ -64,7 +66,7 @@ pub fn pick_anchor(ctx: &ToolContext<'_>, pointer: &Pointer) -> Picked {
         let snapshot = ctx.snapshot;
         for (id, wall) in snapshot.walls.iter().filter(|(_, wall)| wall.storey == storey) {
             let (start, end) = match &wall.axis {
-                crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. } => (p2(*start), p2(*end)),
+                semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start, end } | semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { start, end, .. } => (p2(*start), p2(*end)),
             };
             offer(0, dist(at, start), AnnotationAnchor::WallEnd { wall: id.clone(), end: AnchorEnd::Start }, start);
             offer(0, dist(at, end), AnnotationAnchor::WallEnd { wall: id.clone(), end: AnchorEnd::End }, end);
@@ -72,7 +74,7 @@ pub fn pick_anchor(ctx: &ToolContext<'_>, pointer: &Pointer) -> Picked {
         for (id, column) in snapshot.columns.iter().filter(|(_, column)| column.storey == storey) {
             offer(1, dist(at, p2(column.position)), AnnotationAnchor::ColumnCentre { column: id.clone() }, p2(column.position));
         }
-        for (id, frame) in ctx.inference.opening_frames.iter().filter(|(id, frame)| frame.host_length > 0.0 && crate::editor::bim::entities::storey_of(snapshot, id).as_deref() == Some(storey)) {
+        for (id, frame) in ctx.inference.opening_frames.iter().filter(|(id, frame)| frame.host_length > 0.0 && semio_s_artifact_bim_model_entities::editor::bim::entities::storey_of(snapshot, id).as_deref() == Some(storey)) {
             offer(2, dist(at, p2(frame.point)), AnnotationAnchor::OpeningCentre { opening: id.clone() }, p2(frame.point));
         }
         let building = snapshot.storeys.get(storey).map(|row| row.building.as_str());
@@ -82,7 +84,7 @@ pub fn pick_anchor(ctx: &ToolContext<'_>, pointer: &Pointer) -> Picked {
         for (id, wall) in snapshot.walls.iter().filter(|(_, wall)| wall.storey == storey) {
             let Some(layout) = ctx.inference.wall_layout.get(id).filter(|layout| !layout.footprint.is_empty()) else { continue };
             for (side, face) in [(WallSide::Left, layout.left_face), (WallSide::Right, layout.right_face)] {
-                if face.bulge == 0.0 && !matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { .. }) {
+                if face.bulge == 0.0 && !matches!(wall.axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Arc { .. }) {
                     offer(4, segment_distance(p2(face.start), p2(face.end), at), AnnotationAnchor::WallFace { wall: id.clone(), side }, at);
                 }
             }
@@ -143,7 +145,7 @@ pub fn offset_for(ctx: &ToolContext<'_>, anchors: &[AnnotationAnchor], turn: f64
 }
 
 /// 🎨️ The style an annotation uses: the selected library entry or the first of the model, else the standard style, created in the same row.
-fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, crate::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, String) {
+fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, String) {
     match ctx.library_type(&ctx.snapshot.annotation_styles) {
         Some(id) => (None, id),
         None => {
@@ -155,12 +157,12 @@ fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, crate::standards::v1
 }
 
 /// 🛡️ The step writing `created` after the style it may need: the model must accept the style, and the annotation on top of it.
-fn write(ctx: &ToolContext<'_>, style: Option<(String, crate::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, created: ModelMutation) -> Step {
+fn write(ctx: &ToolContext<'_>, style: Option<(String, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, created: ModelMutation) -> Step {
     use protocol::Mutation;
     let mut base: ModelSnapshot = ctx.snapshot.clone();
     let mut mutations = Vec::new();
     if let Some((id, annotation_style)) = style {
-        let make = ModelMutation::CreateAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle { id: id.clone(), annotation_style: annotation_style.clone() });
+        let make = ModelMutation::CreateAnnotationStyle(semio_s_artifact_bim_model_mut_any_94::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle { id: id.clone(), annotation_style: annotation_style.clone() });
         if !ctx.accepts(&make) {
             return Step::refuse(REJECTED);
         }
@@ -203,7 +205,7 @@ impl Annotate {
         let name = ctx.name_of(|labels| labels.kind_dimension, count);
         let id = ctx.mint("dimension");
         let dimension = Dimension { storey, anchors: self.picks.clone(), angle: turn, offset, style: style_id, lock: None, name };
-        let step = write(ctx, style, ModelMutation::CreateDimension(crate::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension { id, dimension }));
+        let step = write(ctx, style, ModelMutation::CreateDimension(semio_s_artifact_bim_model_mut_any_138::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension { id, dimension }));
         if step.refused.is_none() {
             self.reset();
         }
@@ -214,7 +216,7 @@ impl Annotate {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let Some(plan) = ctx.inference.plan_linework.get(&storey) else { return Step::default() };
         let reach = pointer.tolerance * PICK_PIXELS;
-        let Some((element, origin)) = crate::editor::bim::modes::edit::windows::plan::pick(plan, (pointer.at[0], pointer.at[1]), reach).and_then(|element| reference_point(ctx.snapshot, &element).map(|origin| (element, origin))) else { return Step::default() };
+        let Some((element, origin)) = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pick(plan, (pointer.at[0], pointer.at[1]), reach).and_then(|element| reference_point(ctx.snapshot, &element).map(|origin| (element, origin))) else { return Step::default() };
         let category = if ctx.snapshot.spaces.contains_key(&element) {
             TagCategory::Number
         } else if ctx.snapshot.openings.contains_key(&element) {
@@ -226,7 +228,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("tag");
         let tag = Tag { storey, element, category, offset, style: style_id };
-        write(ctx, style, ModelMutation::CreateTag(crate::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag { id, tag }))
+        write(ctx, style, ModelMutation::CreateTag(semio_s_artifact_bim_model_mut_any_139::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag { id, tag }))
     }
 
     fn note(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -237,7 +239,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("text-note");
         let note = TextNote { storey, position: point2(at), text, rotation: 0.0, style: style_id };
-        write(ctx, style, ModelMutation::CreateTextNote(crate::standards::v1::subsets::any::schema::mutations::create_text_note::CreateTextNote { id, text_note: note }))
+        write(ctx, style, ModelMutation::CreateTextNote(semio_s_artifact_bim_model_mut_any_140::standards::v1::subsets::any::schema::mutations::create_text_note::CreateTextNote { id, text_note: note }))
     }
 
     fn leader(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -258,7 +260,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("leader");
         let leader = Leader { storey, anchor, offset, text, style: style_id };
-        let step = write(ctx, style, ModelMutation::CreateLeader(crate::standards::v1::subsets::any::schema::mutations::create_leader::CreateLeader { id, leader }));
+        let step = write(ctx, style, ModelMutation::CreateLeader(semio_s_artifact_bim_model_mut_any_141::standards::v1::subsets::any::schema::mutations::create_leader::CreateLeader { id, leader }));
         if step.refused.is_none() {
             self.reset();
         }
@@ -334,7 +336,7 @@ impl Tool for Annotate {
         match self.kind {
             Kind::Dimension if !self.picks.is_empty() => {
                 if let Some((_, _, draft)) = self.draft(ctx, hover) {
-                    let layout = dimensions::layout_of(ctx.snapshot, &inputs(ctx), &draft);
+                    let layout = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::dimensions::layout_of(ctx.snapshot, &inputs(ctx), &draft);
                     if layout.complete && (self.placing || draft.anchors.len() >= 2) {
                         for segment in &layout.segments {
                             marks.push(Mark::path(&[p2(segment.from), p2(segment.to)], false, Style::Ghost));

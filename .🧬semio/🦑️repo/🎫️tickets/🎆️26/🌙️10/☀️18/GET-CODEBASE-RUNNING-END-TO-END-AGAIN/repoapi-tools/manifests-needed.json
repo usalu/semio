@@ -1,0 +1,4 @@
+{
+ "note": "dependencies the importers' nearest package.json should list once the freeze lifts (bare workspace specifiers)",
+ "manifests": {}
+}

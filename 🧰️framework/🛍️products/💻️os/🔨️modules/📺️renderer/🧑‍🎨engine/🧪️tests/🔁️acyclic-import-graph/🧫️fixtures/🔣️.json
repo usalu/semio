@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "id": "value-only-pair", "files": { "a.ts": "import { b } from \"./b.ts\";\nexport const a = b;\n", "b.ts": "import { a } from \"./a.ts\";\nexport const b = a;\n" }, "modules": ["a.ts", "b.ts"] },
+    { "id": "type-only-back-edge", "files": { "state.ts": "import type { Owner } from \"./owner.ts\";\nexport type State = { owner: Owner | null };\n", "owner.ts": "import type { State } from \"./state.ts\";\nexport class Owner { constructor(readonly state: State) {} }\n" }, "modules": ["owner.ts", "state.ts"] },
+    { "id": "slot-augmentation-is-acyclic", "files": { "state.ts": "export interface Slots {}\nexport type State = { owner: Slots[\"owner\"] | null };\n", "owner.ts": "import type { State } from \"./state.ts\";\ndeclare module \"./state.ts\" { interface Slots { owner: Owner } }\nexport class Owner { constructor(readonly state: State) {} }\n" }, "modules": [] },
+    { "id": "triangle-with-dynamic-edge", "files": { "a.ts": "import \"./b.ts\";\n", "b.ts": "import \"./c.ts\";\n", "c.ts": "export const load = () => import(\"./a.ts\");\n" }, "modules": ["a.ts", "b.ts", "c.ts"] },
+    { "id": "diamond-without-cycle", "files": { "top.ts": "import \"./left.ts\";\nimport \"./right.ts\";\n", "left.ts": "import \"./base.ts\";\n", "right.ts": "import \"./base.ts\";\n", "base.ts": "export const base = 1;\n" }, "modules": [] },
+    { "id": "in-source-test-registry-is-exempt", "files": { "owner.ts": "export const owner = 1;\nif (import.meta.vitest) await import(\"./🧪️tests/suite/🟦️.ts\");\n", "🧪️tests/suite/🟦️.ts": "import { owner } from \"../../owner.ts\";\nexport const suite = owner;\n" }, "modules": [] },
+    { "id": "cycle-through-a-test-module-still-counts", "files": { "a.ts": "import \"./b.ts\";\n", "b.ts": "import \"./🧪️tests/t.ts\";\n", "🧪️tests/t.ts": "import \"../a.ts\";\n" }, "modules": ["a.ts", "b.ts"] },
+    { "id": "directory-specifier-with-explicit-entry", "files": { "host/🟦️.tsx": "import { leaf } from \"./leaf/🟦️.ts\";\nexport const host = leaf;\n", "host/leaf/🟦️.ts": "import type { host } from \"../🟦️.tsx\";\nexport const leaf = 1;\nexport type Back = typeof host;\n" }, "modules": ["host/leaf/🟦️.ts", "host/🟦️.tsx"] }
+  ]
+}

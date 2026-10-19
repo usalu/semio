@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { createWgpuPageHostIo } from "../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts";
+import { createWgpuPageHostIo } from "@semio-tech/framework-renderer-wgpu/host-io";
 import {
   WGPU_HOST_STORAGE_KEYS,
   WGPU_HOST_STORAGE_KEY_PREFIXES,
@@ -7,7 +7,7 @@ import {
   WGPU_HOST_STORAGE_VALUE_MAX_BYTES,
   readWgpuHostStorageSnapshot,
   wgpuHostStorageCarriesKey,
-} from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+} from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 
 /** 🗄️ The PAGE half of packet W5a's preference door, tested where it runs. The Rust half's own
  * laws live in `🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs`; what only this suite can

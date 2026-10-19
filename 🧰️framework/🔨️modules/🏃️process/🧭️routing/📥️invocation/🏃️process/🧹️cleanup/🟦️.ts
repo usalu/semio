@@ -1,4 +1,4 @@
-import type {ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
 
 declare const cleanupBrand:unique symbol;
 /** 🛟️ Identifies one privately accepted, nonrenewable physical operation in the canonical process owner. */

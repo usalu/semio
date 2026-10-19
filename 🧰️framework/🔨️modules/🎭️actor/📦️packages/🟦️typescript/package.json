@@ -19,7 +19,19 @@
     "./shard-client": "./📮️shard-client/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./turn-scheduler": "./🧵️turn-scheduler/🟦️.ts",
-    "./wire-turn": "./🖼️wire-turn/🟦️.ts"
+    "./wire-turn": "./🖼️wire-turn/🟦️.ts",
+    "./activation/instance/output": "./🪪️activation/🚪️instance/📥️output/🟦️.ts",
+    "./diagnostics": "./🩺️diagnostics/🟦️.ts",
+    "./mailbox": "./📬️mailbox/🟦️.ts",
+    "./retained-turn/bootstrap/port": "./🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts",
+    "./return": "./📤️return/🟦️.ts",
+    "./return/response": "./📤️return/📨️response/🟦️.ts",
+    "./shard-client/activation": "./📮️shard-client/🔐️activation/🟦️.ts",
+    "./shard-client/heartbeat": "./📮️shard-client/💓️heartbeat/🟦️.ts",
+    "./shard-client/quota": "./📮️shard-client/🚨️quota/🟦️.ts",
+    "./shard-client/ui-patch": "./📮️shard-client/🩹️ui-patch/🟦️.ts",
+    "./shard-client/wire": "./📮️shard-client/📜️wire/🟦️.ts",
+    "./shard-runtime": "./🧵️shard-runtime/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-actor:test"
@@ -34,7 +46,8 @@
   "devDependencies": {
     "@semio-tech/process": "workspace:*",
     "@semio-tech/schema-ts": "workspace:*",
-    "immer": "10.1.1"
+    "immer": "10.1.1",
+    "tree-sitter-wasms": "0.1.13"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*",

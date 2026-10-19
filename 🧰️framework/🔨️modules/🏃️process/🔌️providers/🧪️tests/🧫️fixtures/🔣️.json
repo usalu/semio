@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "designations": [
+    { "id": "one-provider", "value": { "version": 1, "providers": { "cargo-admission": "/abs/provider.ts" } }, "valid": true },
+    { "id": "two-providers", "value": { "version": 1, "providers": { "cargo-admission": "/abs/a.ts", "wasm-build": "/abs/b.ts" } }, "valid": true },
+    { "id": "no-providers", "value": { "version": 1, "providers": {} }, "valid": false },
+    { "id": "wrong-version", "value": { "version": 2, "providers": { "cargo-admission": "/abs/provider.ts" } }, "valid": false },
+    { "id": "upper-case-name", "value": { "version": 1, "providers": { "Cargo": "/abs/provider.ts" } }, "valid": false },
+    { "id": "empty-path", "value": { "version": 1, "providers": { "cargo-admission": "" } }, "valid": false },
+    { "id": "extra-key", "value": { "version": 1, "providers": { "cargo-admission": "/abs/provider.ts" }, "extra": true }, "valid": false },
+    { "id": "numeric-path", "value": { "version": 1, "providers": { "cargo-admission": 1 } }, "valid": false }
+  ],
+  "names": [
+    { "name": "cargo-admission", "valid": true },
+    { "name": "wasm-build", "valid": true },
+    { "name": "a", "valid": true },
+    { "name": "-lead", "valid": false },
+    { "name": "trail-", "valid": false },
+    { "name": "double--dash", "valid": false },
+    { "name": "Upper", "valid": false },
+    { "name": "", "valid": false }
+  ]
+}

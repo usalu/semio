@@ -45,7 +45,6 @@ export interface PrunePlan {
   readonly generatedAtMs: number;
   readonly areas: readonly AreaPlan[];
 }
-export{planCachePressurePruneV1,type CachePressurePolicyV1,type CachePressurePlanV1}from"./📉️pressure/🟦️.ts";
 
 /** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
 export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl;wait:boolean}>,run:()=>Promise<T>):Promise<T>{

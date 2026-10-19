@@ -1,6 +1,9 @@
 //! 🕹️ `set-opening` payload. Sparsely changes an opening: kind or type, sill override (an assigned null returns to the sill of the type), width and height overrides (an assigned null clears an override), hand and facing flips, name, reveal (an assigned null clears the authored reveal depth, which centres the frame, or the reveal material, which leaves the jambs in the material of the wall layers).
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff}, snapshot::{ModelSnapshot, OpeningKind}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

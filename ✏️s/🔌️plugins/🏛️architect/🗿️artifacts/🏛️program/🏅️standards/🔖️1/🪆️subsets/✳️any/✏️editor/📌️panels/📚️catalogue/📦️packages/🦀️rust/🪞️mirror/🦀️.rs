@@ -93,7 +93,7 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod architect {
-        pub use semio_s_artifact_architect_program_snapshot::editor::architect::base;
+        pub use semio_s_artifact_architect_program_snapshot::editor::architect::editor_vocabulary;
         #[path = "../../../../../🔧️behavior/🦀️.rs"]
         pub mod behavior;
         #[path = "."]

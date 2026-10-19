@@ -1,8 +1,8 @@
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"@semio-tech/process/compiler-capacity";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
 import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
 import { BundleScript } from "@semio-tech/framework/process/routing";
 import { compileSchemaScopeExport } from "@semio-tech/framework/schema/oracles/validator";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
@@ -13,7 +13,7 @@ const GIS_MAP_SCHEMA_DEPENDENCIES = [
   frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"),
   frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔣️.json"),
   frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"),
-  frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"),
+  frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"),
   "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🔣️.json",
 ] as const;
 
@@ -89,7 +89,7 @@ export class MapCreateRegionGroupCheckScript extends BundleScript {
 export class MapCreateRegionGroupNativeCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveGisMapCreateRegionGroup(this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],  progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.root, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features"], laws: ["standards::v1::subsets::any::schema::inferences::component::tests::map_create_region_group_work_stabilizes_parent_drawing_value_without_image"] }],  progress(event) { console.log(`gis-map-create-region-group ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });
     for (const receipt of receipts) console.log(`gis-map-create-region-group-receipt: ${JSON.stringify(receipt)}`);
   }
 }

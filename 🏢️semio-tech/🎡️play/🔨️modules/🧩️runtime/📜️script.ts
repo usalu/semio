@@ -1,18 +1,17 @@
 #!/usr/bin/env bun
 import {scriptCompilerAdmissionControlV1} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {frameworkOsViteArtifactInputsV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import {repositoryCachePartitionRootV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {frameworkOsViteArtifactInputsV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import { repositoryCachePartitionRootV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import {readBuildMode} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { serveVite } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
-import { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
+import { serveVite, closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { PLAY_RUNTIME_PANES, playRuntimeModuleLayout } from "./🟦️.ts";
 import { readPlayActivation } from "./♻️activation/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
 
 /** 🎡️ Verifies every runtime component the outer preparation graph staged into the one plugin-modules root. */
 class PreparationScript extends BundleScript {

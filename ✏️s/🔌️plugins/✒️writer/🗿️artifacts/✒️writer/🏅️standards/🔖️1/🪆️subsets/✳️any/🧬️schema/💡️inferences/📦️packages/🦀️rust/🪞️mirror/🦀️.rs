@@ -81,7 +81,7 @@ pub mod standards {
                                     pub mod v1_4 {
                                         #[path = "."]
                                         pub mod base {
-                                            #[path = "../../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
+                                            #[path = "../../../../../🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️pdf-page-text/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }
@@ -150,7 +150,7 @@ pub mod standards {
                                     pub mod v1_4 {
                                         #[path = "."]
                                         pub mod base {
-                                            #[path = "../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
+                                            #[path = "../../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️pdf-page-text/🦀️.rs"]
                                             mod component;
                                             pub use component::*;
                                         }
@@ -217,8 +217,8 @@ pub mod snapshot {
 pub mod editor {
     #[path = "."]
     pub mod writer {
-        #[path = "../../../../../✏️editor/🧱️base/🦀️.rs"]
-        pub mod base;
+        #[path = "../../../../../✏️editor/🧱️editor-vocabulary/🦀️.rs"]
+        pub mod editor_vocabulary;
         #[path = "."]
         pub mod terminology {
             pub use semio_s_artifact_writer_writer_tests::editor::writer::terminology::*;

@@ -1,0 +1,8 @@
+{
+ "name": "lfix2",
+ "crates": [
+  "semio-s-artifact-norm-en1995-editor",
+  "semio-s-artifact-puzzle-2d-unit-tests"
+ ],
+ "note": "LFIX2 probe: one norm crate and the puzzle 2d unit tests"
+}

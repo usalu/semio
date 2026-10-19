@@ -3,12 +3,11 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{artifact::{Cell, RowWriter}, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
 
 fn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string())) }
 fn identity(row: &SqliteRow, columns: usize) -> Result<(),ValueError> { if row.rowid <= 0 || row.integer(0)? != row.rowid || row.values.len() != columns { Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio value identity or columns")) } else { Ok(()) } }
-fn null(row: &SqliteRow, index: usize) -> Result<(),ValueError> { if row.values.get(index) == Some(&SqliteValue::Null) { Ok(()) } else { Err(ValueError::new(ValueRefusalKind::InvalidValue,"unexpected Semio value variant field")) } }
 /// 🧩️ Explicit entity names for genuinely shared, typed SemioValue fields.
 #[derive(Clone, Copy)]
 pub struct ValueSqliteTables { pub value: &'static str, pub list_element: &'static str, pub map_entry: &'static str }
@@ -18,8 +17,10 @@ pub const VALUE_TABLES: ValueSqliteTables = ValueSqliteTables { value: "semio_va
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 #[path="🧮️semantic/🦀️.rs"]
 pub mod semantic;
+#[path="🫙️projection/🦀️.rs"]
+pub mod projection;
 /// 🎟️ Admits every typed cell before native forecasting or allocation.
-pub(crate)fn admit_values(snapshot:&SemioValueSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
+pub(crate)fn admit_values(snapshot:&SemioValueSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;projection::admit(snapshot,phase,control)}
 /// 🏛️ Checks the exact authored layout before native ownership.
 pub(crate)fn admit_layout(limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
 /// 📦️ Counts actual binary primitive cells before typed construction.
@@ -56,52 +57,6 @@ pub fn project_value_tree(value: &SemioValue, tables: ValueSqliteTables, nodes: 
     Ok(root)
 }
 
-/// 🌳️ Reconstructs raw value9 ownership with concrete admitted reference and value slots.
-pub fn reconstruct_value_forest(database:&SqliteDatabase,tables:ValueSqliteTables,roots:&[i64],names:Option<&[(i64,&str)]>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SemioValue>,ValueError>{
- use semio_framework_os_kernel::sqlite_snapshot::transfer::reserve;
- let source=&database.table(tables.value)?.rows;let mut rows=reserve(source.len(),control)?;for(index,row)in source.iter().enumerate(){identity(row,8)?;rows.push(row);if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,source.len())?;}}
- semio_framework_os_kernel::sqlite_snapshot::transfer::heap_sort(&mut rows,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.rowid.cmp(&b.rowid)))?;if rows.windows(2).any(|pair|pair[0].rowid==pair[1].rowid){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio value identity"))}
- let locate=|id:i64|rows.binary_search_by_key(&id,|row|row.rowid).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio value ownership edge"));
- let list=&database.table(tables.list_element)?.rows;let map=&database.table(tables.map_entry)?.rows;
- let links_count=list.len().checked_add(map.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value relationship count overflow"))?;
- let mut links=reserve(links_count,control)?;
- for(map_member,source)in [(false,list),(true,map)]{
-  let mut ids=reserve(source.len(),control)?;
-  for(index,row)in source.iter().enumerate(){identity(row,if map_member{5}else{4})?;ids.push(row.rowid);let parent=row.integer(1)?;let kind=rows[locate(parent)?].text(1)?;if kind!=if map_member{"map"}else{"list"}{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio value relationship has wrong parent kind"))}
-   let ordinal=row.integer(2)?;let child=row.integer(if map_member{4}else{3})?;locate(child)?;links.push((parent,ordinal,child,if map_member{Some(row.text(3)?)}else{None}));
-   if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,source.len())?;}
-  }
-  semio_framework_os_kernel::sqlite_snapshot::transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;if ids.windows(2).any(|pair|pair[0]==pair[1]){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio value relationship identifier"))}
- }
- semio_framework_os_kernel::sqlite_snapshot::transfer::heap_sort(&mut links,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok((a.0,a.1).cmp(&(b.0,b.1))))?;let mut parent=None;let mut ordinal=0;
- for(index,link)in links.iter().enumerate(){if parent!=Some(link.0){parent=Some(link.0);ordinal=0;}if link.1!=number(ordinal)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio value member ordinals must be contiguous"))}ordinal+=1;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index+1,links.len())?;}
- let mut seen=reserve(rows.len(),control)?;seen.resize(rows.len(),false);let mut complete=Owned::new(reserve(rows.len(),control)?);for _ in 0..rows.len(){complete.get_mut().push(None);}
- let mut restored=Owned::new(reserve(roots.len(),control)?);let mut pending=reserve(1,control)?;let mut count=0usize;
- for &root in roots{
-  value_push(&mut pending,(root,false),control)?;
-  while let Some((id,exit))=pending.pop(){
-   count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value reconstruction work overflow"))?;if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}
-   let index=locate(id)?;let row=rows[index];let start=links.partition_point(|link|link.0<id);let end=links.partition_point(|link|link.0<=id);let children=&links[start..end];
-   if !exit{if seen[index]{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"cyclic or multiply owned Semio value"))}seen[index]=true;value_push(&mut pending,(id,true),control)?;for child in children.iter().rev(){value_push(&mut pending,(child.2,false),control)?;}continue;}
-   let active=match row.text(1)?{"null"|"list"|"map"=>None,"bool"=>Some(2),"int"=>Some(3),"float"=>Some(4),"str"=>Some(5),"bytes"=>Some(6),"ref"=>Some(7),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio value kind"))};
-   for column in 2..8{if Some(column)!=active{null(row,column)?;}}
-   let value=match row.text(1)?{
-    "null"=>SemioValue::Null,"bool"=>SemioValue::Bool{value:match row.integer(2)?{0=>false,1=>true,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio boolean"))}},
-    "int"=>SemioValue::Int{lexeme:reconstruct_text(control,row.text(3)?)?},"float"=>SemioValue::Float{lexeme:reconstruct_text(control,row.text(4)?)?},"str"=>SemioValue::Str{value:reconstruct_text(control,row.text(5)?)?},"bytes"=>SemioValue::Bytes{value:reconstruct_blob(control,row.blob(6)?)?},
-    "ref"=>SemioValue::Ref{id:ValueId{value:match names{Some(names)=>{let id=row.integer(7)?;let index=names.binary_search_by_key(&id,|entry|entry.0).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio value graph reference"))?;reconstruct_text(control,names[index].1)?},None=>reconstruct_text(control,row.text(7)?)?}}},
-    "list"=>{let mut items=Owned::new(reserve(children.len(),control)?);for child in children{let value=complete.get_mut()[locate(child.2)?].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing completed Semio list child"))?;items.get_mut().push(value);}SemioValue::List{items:items.take()}},
-    "map"=>{let mut entries=Owned::new(reserve(children.len(),control)?);for child in children{let mut entry=Owned::new(SemioValueEntry{key:String::new(),value:SemioValue::Null});entry.get_mut().key=reconstruct_text(control,child.3.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing Semio map key"))?)?;entry.get_mut().value=complete.get_mut()[locate(child.2)?].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing completed Semio map child"))?;entries.get_mut().push(entry.take());}SemioValue::Map{entries:entries.take()}},
-    _=>return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"validated Semio variant disappeared"))
-   };complete.get_mut()[index]=Some(value);
-  }
-  let value=complete.get_mut()[locate(root)?].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"missing completed Semio root"))?;restored.get_mut().push(value);
- }
- if seen.iter().any(|seen|!*seen)||complete.get_mut().iter().any(Option::is_some){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unowned Semio value"))}
- control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,count)?;Ok(restored.take())
-}
-fn value_push<T>(frontier:&mut Vec<T>,value:T,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
- if frontier.len()==frontier.capacity(){let count=frontier.capacity().max(1).checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio value frontier backing overflow"))?;let mut replacement=semio_framework_os_kernel::sqlite_snapshot::transfer::reserve(count,control)?;for(index,item)in frontier.drain(..).enumerate(){replacement.push(item);if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,0)?;}}*frontier=replacement;}frontier.push(value);Ok(())
-}
 
 impl ArtifactSqliteSnapshotHost for SemioValueSnapshot {
 fn retire_sqlite_snapshot(self){drop(Owned::new(self));}
@@ -156,13 +111,14 @@ impl SemioValueSnapshot {
 
 impl SemioValueSnapshot{
 /// 🧮️ Projects owned semantic rows under the caller's typed resource control.
-pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()} 
+pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(control.limits())?;projection::project(self,Self::SQLITE_SCHEMA,control)} 
 }
 
 
 
 #[path = "💰️reconstruction/🦀️.rs"]
 mod reconstruction;
+pub use reconstruction::{ValueForestStorage,reconstruct_value_forest_into};
 
 #[path = "🛫️native/🦀️.rs"]
 pub mod native_encoding;

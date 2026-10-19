@@ -1,5 +1,5 @@
 # 🧬️ Procedure durable artifact composed from shared flow and text child identities.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 type ProcedureArtifact {
   schema: String! @state(class: ARTIFACT)
   flow: ArtifactChild! @state(class: ARTIFACT)

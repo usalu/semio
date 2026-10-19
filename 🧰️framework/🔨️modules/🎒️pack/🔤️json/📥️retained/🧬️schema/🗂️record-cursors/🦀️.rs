@@ -66,6 +66,15 @@ pub struct OwnedSchemaRecordCursor {
     delimiters: [OwnedSchemaTokenKind; 256],
 }
 
+#[cfg(any(test, feature = "testkit"))]
+impl OwnedSchemaRecordCursor {
+    /// 🪝️ Test hook: the fixed page owner this cursor reads, for identity and extent witnesses of the Store companions.
+    #[doc(hidden)]
+    pub fn decode_pages(&self) -> &OwnedSchemaDecodePages {
+        &self.tokens.pages
+    }
+}
+
 impl OwnedSchemaRecordCursor {
     /// 🧬️ Couples fixed schema authority to the fixed-page token cursor.
     pub fn try_new(spec: OwnedSchemaRecordSpec, tokens: OwnedSchemaTokenCursor) -> Result<Self, (OwnedSchemaTokenCursor, &'static str)> {

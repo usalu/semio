@@ -7,9 +7,10 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Duct_(flow)>, <https://en.wikipedia.org/wiki/Cable_tray>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem, ModelSnapshot, Point3};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 
 #[path = "💥️clash/🦀️.rs"]

@@ -227,7 +227,7 @@ fn rebased_scene_key(key: &str, authored_host: &str, retained_host: &str) -> Str
 fn accept_table_editable_text_cells(window_id: &str, node: NodeId, epoch: u64) {
     let retained = retained_scene(window_id, node);
     semio_framework_os_renderer_wgpu_scene_state::remember_scene_theme(&Theme::default());
-    let cells = semio_framework_os_renderer_wgpu_scene_tables::table_editable_text_accessibility_cells(&retained, Rect::new(0.0, 0.0, 200.0, 200.0), ui_wgpu::wgpu::UiDriverDrag::Handle);
+    let cells = semio_framework_os_renderer_wgpu_scene_tables::table_editable_text_accessibility_cells(&retained, Rect::new(0.0, 0.0, 200.0, 200.0), semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle);
     assert!(!cells.is_empty(), "the seeded Table paints its editable cells");
     semio_framework_os_renderer_wgpu_scene_feeds::stage_table_editable_text_accessibility_cells(&retained.host_id, cells);
     semio_framework_os_renderer_wgpu_scene_feeds::seal_table_editable_text_accessibility_candidates(epoch);
@@ -407,13 +407,13 @@ fn stage_ink_intent_document(window_id: &str, generation: u64, witness: u64, chi
     UI_ENGINE.with(|cell| cell.borrow().candidate_tree(window_id).and_then(focus_rebase_node).expect("candidate Ink intent receiver"))
 }
 
-fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::PointerId, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn begin_pending_ink_intent(window_id: &str, node: NodeId, pointer: ui_render::PointerId, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
         Rect::new(0.0, 0.0, 320.0, 240.0),
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 220.0, y: 190.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 220.0, y: 190.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(pointer),
         input,
     );

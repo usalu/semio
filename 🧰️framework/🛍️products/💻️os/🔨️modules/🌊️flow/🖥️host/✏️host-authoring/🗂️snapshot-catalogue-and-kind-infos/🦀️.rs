@@ -150,7 +150,7 @@ impl FlowHost {
     }
 
     /// 🧠️ Same as `set_neuron_kind_infos_json` but over the typed `NodeGraphScene.operators` records.
-    pub fn set_neuron_kind_infos(&mut self, infos: &[ui_wgpu::wgpu::NodeGraphOperatorRecord]) {
+    pub fn set_neuron_kind_infos(&mut self, infos: &[semio_framework_ui_declaration::ui::NodeGraphOperatorRecord]) {
         self.install_kind_infos(Arc::new(infos.iter().map(|record| (record.id.clone(), node_graph_operator_record_to_operator_info(record))).collect()));
     }
 

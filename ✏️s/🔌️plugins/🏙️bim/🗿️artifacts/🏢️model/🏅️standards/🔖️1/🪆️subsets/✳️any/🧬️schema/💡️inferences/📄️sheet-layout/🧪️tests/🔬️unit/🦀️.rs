@@ -1,16 +1,18 @@
 //! 🧪️ The layout of a sheet: where the frame, the windows, the title block and the revision table go, which findings it raises and what its dependency reads.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
-use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, IsoSize, Orientation, Paper, Point2, Sheet, SheetRevision, View, Viewport};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, IsoSize, Orientation, Paper, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Sheet, SheetRevision, View, Viewport};
 
 fn drawing(view: &str, bounds: (f64, f64, f64, f64)) -> ViewLinework {
     let stroke = PlanPolyline { id: "l-1".into(), element: "w-1".into(), kind: PlanKind::WallOutline, style: PlanStyle::Cut, closed: false, vertices: vec![PlanVertex { x: bounds.0, y: bounds.1, bulge: 0.0 }, PlanVertex { x: bounds.2, y: bounds.3, bulge: 0.0 }] };

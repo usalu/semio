@@ -1,9 +1,10 @@
-use crate::editor::bim::entities::{kind_of, kind_holding, ENTITIES};
-use crate::editor::bim::entities::zoning::{available_usages, available_zones, create_area_scheme, create_zone, write_scheme_zones};
-use crate::editor::bim::entities::FieldRow;
-use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_of, kind_holding, ENTITIES};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::zoning::{available_usages, available_zones, create_area_scheme, create_zone, write_scheme_zones};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -19,7 +20,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 #[semio_framework_async_macros::async_test]

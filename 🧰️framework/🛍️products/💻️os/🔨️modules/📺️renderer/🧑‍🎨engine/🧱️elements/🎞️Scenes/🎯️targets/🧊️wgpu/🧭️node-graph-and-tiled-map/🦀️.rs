@@ -45,7 +45,7 @@ pub fn query_map_feature_hits(host: &semio_framework_surface::tiled_map::MapHost
  * under the point as a `ContextMenuHit`, plus the live feature selection grouped per pickable overlay
  * granularity. Port of `onContextMenu` in `🧭️TiledMapHost/🟦️.tsx` — every domain is an overlay
  * layer's granularity, and the groups decide whether the app's `clearSelection` row renders enabled. */
-pub fn tiled_map_context_menu_target(surface_id: &str, inner: Rect, x: f32, y: f32) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
+pub fn tiled_map_context_menu_target(surface_id: &str, inner: Rect, x: f32, y: f32) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
     #[derive(Deserialize)]
     struct HitRow {
         kind: String,
@@ -53,13 +53,13 @@ pub fn tiled_map_context_menu_target(surface_id: &str, inner: Rect, x: f32, y: f
     }
     let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-    let hits = serde_json::from_str::<Option<HitRow>>(&hit_json).ok().flatten().map(|row| ui_wgpu::wgpu::ContextMenuHit { domain: row.kind, id: row.id, label: None }).into_iter().collect();
-    let selection: Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup> = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| {
+    let hits = serde_json::from_str::<Option<HitRow>>(&hit_json).ok().flatten().map(|row| semio_framework_ui_declaration::ui::ContextMenuHit { domain: row.kind, id: row.id, label: None }).into_iter().collect();
+    let selection: Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup> = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(surface_id, |host| {
         host.pickable_overlays()
             .filter_map(|layer| layer.granularity.as_deref())
             .filter_map(|granularity| {
                 let ids: Vec<String> = host.selected_ids(granularity).map(str::to_owned).collect();
-                (!ids.is_empty()).then(|| ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: granularity.into(), ids })
+                (!ids.is_empty()).then(|| semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: granularity.into(), ids })
             })
             .collect()
     })
@@ -77,9 +77,9 @@ const MAP_HOVER_CHANNEL: &str = "pointer";
 
 /// 🎯️ `interactionSelect`'s `targets` are JSON TEXT, not a node array — the wire shape
 /// `mapFeatureSelectionActionArgs`/`select_feature_action_args` both build.
-fn map_feature_targets_json(ids: impl Iterator<Item = impl AsRef<str>>) -> Result<String, ui_wgpu::wgpu::BoundedActionFault> {
+fn map_feature_targets_json(ids: impl Iterator<Item = impl AsRef<str>>) -> Result<String, semio_framework_ui_action::BoundedActionFault> {
     let rows: Vec<Value> = ids.map(|id| serde_json::json!({ "granularity": MAP_FEATURE_GRANULARITY, "id": id.as_ref() })).collect();
-    serde_json::to_string(&rows).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    serde_json::to_string(&rows).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)
 }
 
 /// 🕹️ A map pick/marquee release: `interactionSelect` against the `"features"` domain, or
@@ -88,17 +88,17 @@ fn map_feature_targets_json(ids: impl Iterator<Item = impl AsRef<str>>) -> Resul
 /// The bespoke `setFeatureSelection` this used to publish was DELETED from the map apps (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): every such dispatch was refused.
 fn write_tiled_map_selection(
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
     controller_id: &str,
     surface_id: &str,
     ids: &[String],
     merge: &str,
     method: &str,
     commit: impl FnOnce(),
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     if ids.is_empty() {
-        let action = ui_wgpu::wgpu::tiled_map_actions::CLEAR_SELECTION;
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id])?;
+        let action = semio_framework_ui_declaration::ui::tiled_map_actions::CLEAR_SELECTION;
+        let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id])?;
         let mut reservation = input.reserve_action(controller_id, action, bytes)?;
         let builder = reservation.builder();
         builder.begin_object(None)?;
@@ -107,11 +107,11 @@ fn write_tiled_map_selection(
         return reservation.publish_with(commit);
     }
     let targets = map_feature_targets_json(ids.iter())?;
-    if targets.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+    if targets.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
+        return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
     }
     let action = "interactionSelect";
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "domainId", MAP_INTERACTION_DOMAIN, "targets", targets.as_str(), "merge", merge, "method", method])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "domainId", MAP_INTERACTION_DOMAIN, "targets", targets.as_str(), "merge", merge, "method", method])?;
     let mut reservation = input.reserve_action(controller_id, action, bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -126,13 +126,13 @@ fn write_tiled_map_selection(
 
 /// 🐁️ `interactionHover` on the `"pointer"` channel — `mapFeatureHoverActionArgs`'s twin; a cleared
 /// hover publishes an EMPTY `targets` array, which is what clears the guest's hover.
-fn write_tiled_map_hover(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, controller_id: &str, surface_id: &str, hover: Option<(&str, &str)>, commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_tiled_map_hover(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, controller_id: &str, surface_id: &str, hover: Option<(&str, &str)>, commit: impl FnOnce()) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let targets = map_feature_targets_json(hover.map(|(_, id)| id).into_iter())?;
-    if targets.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+    if targets.len() > semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY {
+        return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
     }
     let action = "interactionHover";
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "domainId", MAP_INTERACTION_DOMAIN, "channel", MAP_HOVER_CHANNEL, "targets", targets.as_str()])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "domainId", MAP_INTERACTION_DOMAIN, "channel", MAP_HOVER_CHANNEL, "targets", targets.as_str()])?;
     let mut reservation = input.reserve_action(controller_id, action, bytes)?;
     let builder = reservation.builder();
     builder.begin_object(None)?;
@@ -212,8 +212,8 @@ pub fn tiled_map_touch_pointer_up_into(
     host_id: &str,
     controller_id: &str,
     pointer_id: ui_render::PointerId,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     match touch_pointer_up(host_id, pointer_id) {
         GestureVerdict::Single => Ok(false),
         GestureVerdict::PinchEnd => semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_publish_camera_into(host_id, controller_id, input).map(|_| true),
@@ -231,13 +231,13 @@ pub fn tiled_map_pointer_down_into(
     shift: bool,
     ctrl_or_meta: bool,
     selection_method: &str,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
     let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if button == 0 {
         if selection_method.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+            return Err(semio_framework_ui_action::BoundedActionFault::StringCredits);
         }
         mutate_scene_state(host_id, |state| {
             state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_owned(), merge_mode: semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_marquee_mode(shift, ctrl_or_meta).to_owned() } });
@@ -283,8 +283,8 @@ pub fn tiled_map_pointer_move_into(
     x: f32,
     y: f32,
     down: bool,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let host_id = owner.host_id.as_str();
     let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     if down {
@@ -320,7 +320,7 @@ pub fn tiled_map_pointer_move_into(
         id: String,
     }
     let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-    let hover = serde_json::from_str::<Option<HoverRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let hover = serde_json::from_str::<Option<HoverRow>>(&hit_json).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)?;
     let hover_json = hover.as_ref().map(|row| format!("{}:{}", row.kind, row.id)).unwrap_or_else(|| "null".into());
     if scene_state(host_id).map_last_hover_json.as_deref() == Some(hover_json.as_str()) {
         return Ok(false);
@@ -336,7 +336,7 @@ pub fn tiled_map_pointer_move_into(
 
 /// 🛑️ Cancels only the active Map gesture: pan settles its retained camera once, while marquee
 /// cancellation is local and cannot publish a selection.
-pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(drag) = SCENE_STATE.with(|cell| cell.borrow().get(host_id).and_then(|state| state.drag.clone())) else {
         return Ok(false);
     };
@@ -358,7 +358,7 @@ pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: 
 }
 
 /// 👋️ Publishes one empty Map hover transition from the cached non-null witness.
-pub fn tiled_map_pointer_leave_into(host_id: &str, surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn tiled_map_pointer_leave_into(host_id: &str, surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     if !SCENE_STATE.with(|cell| cell.borrow().get(host_id).is_some_and(|state| state.map_last_hover_json.as_deref().is_some_and(|hover| hover != "null"))) {
         return Ok(false);
     }
@@ -373,7 +373,7 @@ pub fn tiled_map_pointer_leave_into(host_id: &str, surface_id: &str, controller_
 
 /// 🎯️ `method` is `"pick"` for a click and the marquee's own method for a drag — the exact
 /// split `emitFeatureSelection`'s two call sites make in `🧭️TiledMapHost/🟦️.tsx`.
-pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     let state = scene_state(host_id);
     let Some(drag) = state.drag.as_ref() else {
@@ -405,7 +405,7 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
                     id: String,
                 }
                 let hit_json = semio_framework_os_renderer_wgpu_engine_board::tiled_map::with_map_host(host_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
-                if let Some(hit) = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)? {
+                if let Some(hit) = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| semio_framework_ui_action::BoundedActionFault::Structure)? {
                     ids.push(hit.id);
                 }
             }

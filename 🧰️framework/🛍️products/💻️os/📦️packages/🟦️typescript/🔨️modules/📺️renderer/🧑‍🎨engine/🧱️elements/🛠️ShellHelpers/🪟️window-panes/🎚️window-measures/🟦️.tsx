@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/ShellHelpers/window-panes/window-measures` entry: explicit re-exports of the source module that owns each member. */
+export { qualifyWindowMeasureIds, renderWindowMeasuresTree, windowMeasureDomId, windowMeasureTreeContainsId } from "../../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/🎚️window-measures/🟦️.tsx";

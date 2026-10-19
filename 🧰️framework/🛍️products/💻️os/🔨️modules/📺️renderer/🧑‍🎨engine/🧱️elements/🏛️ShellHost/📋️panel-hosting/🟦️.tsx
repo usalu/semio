@@ -45,7 +45,7 @@ import { InterpretedUiNode } from "../../🗣️Interpreter/🟦️.tsx";
 import { TreeWindowContext } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
 import { MediaTransportOwnerContext, type MediaTransportOwner } from "../../🎬️MediaTransportHost/🟦️.tsx";
 import { resolveBootExampleId } from "../../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { World3dWindowViewStoreContext } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel, WindowInstanceIdContext } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { FRAMEWORK_CATEGORY_COMMAND_ID } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";

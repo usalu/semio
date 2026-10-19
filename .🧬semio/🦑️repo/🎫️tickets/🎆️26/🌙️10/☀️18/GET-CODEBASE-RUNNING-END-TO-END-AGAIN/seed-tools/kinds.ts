@@ -1,0 +1,12 @@
+const R = "/Users/ueli/Documents/semio/";
+const m = await import(R + "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts");
+const taxonomy = m.loadCatalogTaxonomy();
+const walk = (names: string[]) => { let kind: string | undefined; const out: string[] = []; for (const n of names) { kind = m.semanticDirectoryKindId(n, taxonomy, { parentKindId: kind }); out.push(`${n}=${kind}`); } return out; };
+const base = ["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🏗️authoring"];
+console.log(walk([...base, "📦️crate-tree", "🚀️launch-routes"]).slice(4).join("  "));
+console.log(walk([...base, "🚀️launch-catalog"]).slice(4).join("  "));
+console.log(walk([...base, "🚀️launch-catalog", "🧬️schema"]).slice(4).join("  "));
+console.log(walk(["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🧪️tests", "🚀️launch-catalog"]).slice(4).join("  "));
+console.log(walk(["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🧪️tests", "📦️crate-tree", "🚀️launch-routes"]).slice(4).join("  "));
+console.log(walk(["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🧪️tests", "🧫️fixtures", "🚀️launch-catalog"]).slice(4).join("  "));
+console.log(walk(["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🧪️tests", "🧫️fixtures", "🏗️regeneration-commands"]).slice(4).join("  "));

@@ -1,11 +1,12 @@
 //! 🪟️ `setView`: sets one named view parameter of the addressed window, persisted in that window's own config: the plan and section windows' authored view, the world's projection, storey
 //! isolation and visibility and section plane. It never touches the document. Choosing a plan view shares its storey as the working storey in presence.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -44,7 +45,7 @@ fn membership_view(payload: &SetView, snapshot: &ModelSnapshot, options: &mut st
     Ok(false)
 }
 
-fn plan_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &mut BimDispatchCtx) -> Result<plan::config::BimPlanWindowConfig, Fault> {
+fn plan_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &mut BimDispatchCtx) -> Result<semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig, Fault> {
     let mut config = ctx.plan.clone();
     if membership_view(payload, snapshot, &mut config.selected_options, &mut config.workset_visibility)? { return Ok(config); }
     match payload.field.as_str() {
@@ -54,17 +55,17 @@ fn plan_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &mut BimDispatchC
             config.framed = false;
             ctx.presence_out.push(ctx.presence.on_storey(&storey));
         }
-        other => return Err(unknown(plan::WINDOW_KIND_ID, other)),
+        other => return Err(unknown(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
 
-fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<world::config::BimWorldWindowConfig, Fault> {
+fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig, Fault> {
     let mut config = ctx.world.clone();
     if membership_view(payload, snapshot, &mut config.selected_options, &mut config.workset_visibility)? { return Ok(config); }
     match payload.field.as_str() {
         "projection" => {
-            if !world::PROJECTION_KINDS.contains(&payload.value.as_str()) {
+            if !semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::PROJECTION_KINDS.contains(&payload.value.as_str()) {
                 return Err(fault("bim.view.value-invalid", format!("'{}' is not a projection of the 3D window", payload.value)));
             }
             config.projection.kind = payload.value.clone();
@@ -94,15 +95,15 @@ fn world_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx)
         "energy_overlay" => config.energy_overlay = flag(payload)?,
         "structural_overlay" => config.structural_overlay = flag(payload)?,
         "energy_mode" => {
-            let mode = crate::render::envelope::Mode::parse(&payload.value).ok_or_else(|| fault("bim.view.value-invalid", format!("'{}' is not an envelope overlay mode", payload.value)))?;
+            let mode = semio_s_artifact_bim_model_modify::render::envelope::Mode::parse(&payload.value).ok_or_else(|| fault("bim.view.value-invalid", format!("'{}' is not an envelope overlay mode", payload.value)))?;
             config.energy_mode = mode.key().to_string();
         }
-        other => return Err(unknown(world::WINDOW_KIND_ID, other)),
+        other => return Err(unknown(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
 
-fn section_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<section::config::BimSectionWindowConfig, Fault> {
+fn section_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig, Fault> {
     let mut config = ctx.section.clone();
     if membership_view(payload, snapshot, &mut config.selected_options, &mut config.workset_visibility)? { return Ok(config); }
     match payload.field.as_str() {
@@ -113,12 +114,12 @@ fn section_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCt
             config.view = payload.value.clone();
             config.framed = false;
         }
-        other => return Err(unknown(section::WINDOW_KIND_ID, other)),
+        other => return Err(unknown(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
 
-fn schedule_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<schedule::config::BimScheduleWindowConfig, Fault> {
+fn schedule_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig, Fault> {
     let mut config = ctx.schedule.clone();
     match payload.field.as_str() {
         "schedule" => {
@@ -129,12 +130,12 @@ fn schedule_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchC
             config.editing = false;
         }
         "editing" => config.editing = flag(payload)? && snapshot.schedules.contains_key(&config.schedule),
-        other => return Err(unknown(schedule::WINDOW_KIND_ID, other)),
+        other => return Err(unknown(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
 
-fn sheet_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<sheet::config::BimSheetWindowConfig, Fault> {
+fn sheet_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx) -> Result<semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig, Fault> {
     let mut config = ctx.sheet.clone();
     match payload.field.as_str() {
         "sheet" => {
@@ -144,7 +145,7 @@ fn sheet_view(payload: &SetView, snapshot: &ModelSnapshot, ctx: &BimDispatchCtx)
             config.sheet = payload.value.clone();
             config.framed = false;
         }
-        other => return Err(unknown(sheet::WINDOW_KIND_ID, other)),
+        other => return Err(unknown(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID, other)),
     }
     Ok(config)
 }
@@ -159,11 +160,11 @@ pub fn handle(payload: &SetView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
     let view = ctx.view.clone().ok_or_else(|| fault("bim.view.window-required", "a view parameter belongs to one open window"))?;
     let mut emit = Emit::default();
     let mutation = match ctx.window_kind.as_str() {
-        plan::WINDOW_KIND_ID => plan::config::addressed(&view, plan_view(payload, doc.snapshot, ctx)?)?,
-        world::WINDOW_KIND_ID => world::config::addressed(&view, world_view(payload, doc.snapshot, ctx)?)?,
-        section::WINDOW_KIND_ID => section::config::addressed(&view, section_view(payload, doc.snapshot, ctx)?)?,
-        schedule::WINDOW_KIND_ID => schedule::config::addressed(&view, schedule_view(payload, doc.snapshot, ctx)?)?,
-        sheet::WINDOW_KIND_ID => sheet::config::addressed(&view, sheet_view(payload, doc.snapshot, ctx)?)?,
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::addressed(&view, plan_view(payload, doc.snapshot, ctx)?)?,
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::addressed(&view, world_view(payload, doc.snapshot, ctx)?)?,
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::addressed(&view, section_view(payload, doc.snapshot, ctx)?)?,
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::WINDOW_KIND_ID => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::addressed(&view, schedule_view(payload, doc.snapshot, ctx)?)?,
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::addressed(&view, sheet_view(payload, doc.snapshot, ctx)?)?,
         other => return Err(fault("bim.view.window-unsupported", format!("the window '{other}' has no view parameters"))),
     };
     emit.window_config_mutations.push(mutation);

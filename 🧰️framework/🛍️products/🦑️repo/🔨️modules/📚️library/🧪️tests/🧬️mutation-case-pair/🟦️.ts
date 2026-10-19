@@ -17,7 +17,7 @@ test("the canonical mutation case pair vectors satisfy their schema (Ajv)", () =
 
 for (const pair of vector.cases)
   test(`canonical mutation pairs remain normalized at their schema and fixture owners: ${pair.id}`, () => {
-    const implementationRoot = `${pair.subset}/${pair.implementationRoot}`, fixtureRoot = `${pair.subset}/${pair.fixtureRoot}`, fixtureMirror = `${pair.subset}/🧫️fixtures/🧬️mutations`;
+    const implementationRoot = `${pair.subset}/${pair.implementationRoot}`, fixtureRoot = `${pair.subset}/${pair.fixtureRoot}`, fixtureMirror = `${pair.subset}/🧪️tests/🧫️fixtures/🧬️mutations`;
     const inventory = inventoryTaxonomy({ repoRoot, scope: pair.subset, workers: 1 });
     const nodes = (root: string) => inventory.entries.filter((entry) => entry.sourcePath === root || entry.sourcePath.startsWith(`${root}/`));
     const implementation = nodes(implementationRoot), fixtures = nodes(fixtureRoot);

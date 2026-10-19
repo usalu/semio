@@ -33,7 +33,7 @@ test("member opening admits original sources then funds tickets before snapshot 
   const memberBase=new URL("../../../../../🏗️initialization/🏠️owners/🏭️member/🧬️schema/",import.meta.url);
   const contract=await Bun.file(new URL("🦀️.rs",memberBase)).text();
   const schema=await Bun.file(new URL("🔣️.json",memberBase)).json();
-  const original=await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json",memberBase)).json();
+  const original=await Bun.file(new URL("../🧪️tests/🧫️fixtures/🔣️.json",memberBase)).json();
   const oracle=new Ajv({strict:true,allErrors:true}).compile(schema);
   expect(oracle(original)).toBe(true);
   for(const refused of [{selection:"snapshot-owned-default"},{custody:"cloned-source-receipt"},{grant:"renewed-capacity"},{body:"substitute-zero-body"}])expect(oracle({...original,...refused})).toBe(false);

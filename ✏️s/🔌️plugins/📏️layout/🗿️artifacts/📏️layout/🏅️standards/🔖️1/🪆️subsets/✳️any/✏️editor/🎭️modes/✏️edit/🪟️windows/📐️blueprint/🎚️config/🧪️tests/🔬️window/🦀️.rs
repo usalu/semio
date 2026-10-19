@@ -31,19 +31,18 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
             use semio_s_artifact_layout_layout_editor_commands::editor::layout::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-            async fn dispatch(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, command: LayoutCommand, view: &ViewModel) -> Result<(usize, usize), String> {
+            async fn dispatch(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, command: LayoutCommand, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(usize, usize), String> {
                 let meta = ActionMeta { instance_id: 81, view_state: Some(view.clone()), ..artifact_app_laws::meta("layout-window-ownership") };
-                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                 Ok((
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowTransient).count(),
                 ))
             }
 
-            async fn scene(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene, String> {
-                let tree = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, view).await.map_err(|error| format!("{error:?}"))?;
-                let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+            async fn scene(app: &mut VcsArtifactApp<EditorApp<LayoutPlayApp>>, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin::Canvas2dScene, String> {
+                let json = artifact_app_laws::render_registered_fixture_app(app, LAYOUT_PLAY_BODY_BLUEPRINT, view, cx).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::decode_fixture_scene(&json).map_err(str::to_string)
             }
 
@@ -58,6 +57,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
             };
             let left = view.for_window_instance("layout-left").unwrap();
             let right = view.for_window_instance("layout-right").unwrap();
+            let mut scope = artifact_app_laws::OriginalFixtureScope::admit();
             let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<LayoutPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(81).await;
             let outcome: Result<(), String> = async {
@@ -67,16 +67,16 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                     (&left, LayoutCamera { x: 12.0, y: -8.0, zoom: 2.0 }),
                     (&right, LayoutCamera { x: -21.0, y: 5.0, zoom: 0.75 }),
                 ] {
-                    let next = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera }), context).await?;
+                    let next = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera }), context, scope.cx()).await?;
                     lanes.0 += next.0;
                     lanes.1 += next.1;
                 }
-                let next = dispatch(&mut app, LayoutCommand::EngagementInput(engagement_input::EngagementInput { value: "export png".into() }), &left).await?;
+                let next = dispatch(&mut app, LayoutCommand::EngagementInput(engagement_input::EngagementInput { value: "export png".into() }), &left, scope.cx()).await?;
                 lanes.0 += next.0;
                 lanes.1 += next.1;
                 if lanes != (2, 1) { return Err(format!("Layout exact-window lane count changed: {lanes:?}")); }
-                let left_scene = scene(&mut app, &left).await?;
-                let right_scene = scene(&mut app, &right).await?;
+                let left_scene = scene(&mut app, &left, scope.cx()).await?;
+                let right_scene = scene(&mut app, &right, scope.cx()).await?;
                 if (left_scene.camera_x, left_scene.camera_y, left_scene.zoom) != (12.0, -8.0, 2.0)
                     || (right_scene.camera_x, right_scene.camera_y, right_scene.zoom) != (-21.0, 5.0, 0.75)
                 {
@@ -85,7 +85,7 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Layout window publication changed document bytes".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let cleared = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("Layout transient owner missing after reload")?;
                 if cleared.get::<LayoutBlueprintWindowTransientOwner>() != Some(&LayoutWindowTransient::default()) { return Err("Layout transient survived same-byte reload".into()); }
                 for context in [&left, &right] {
@@ -94,9 +94,9 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<LayoutPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(82).await;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
-                let reopened_left = scene(&mut reopened, &left).await?;
-                let reopened_right = scene(&mut reopened, &right).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                let reopened_left = scene(&mut reopened, &left, scope.cx()).await?;
+                let reopened_right = scene(&mut reopened, &right, scope.cx()).await?;
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).map_err(|error| format!("{error:?}"))?;
                 if reopened_left.camera_x != left_scene.camera_x || reopened_right.camera_x != right_scene.camera_x { return Err("Layout config changed during restore".into()); }
                 let stale = ViewModel { window_id: Some("lost-layout".into()), window_instances: view.window_instances.clone(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 if addressed(&stale, LayoutWindowConfig::default()).is_ok() { return Err("Layout accepted stale window identity".into()); }
@@ -106,7 +106,8 @@ fn layout_window_ownership_runtime_isolates_restores_and_resets_exact_windows() 
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Layout exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+            scope.retire();
             outcome.expect("Layout exact-window runtime law");
         }))
         .expect("spawn Layout window ownership law")

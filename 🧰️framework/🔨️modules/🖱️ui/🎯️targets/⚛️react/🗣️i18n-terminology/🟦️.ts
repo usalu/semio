@@ -1,6 +1,6 @@
 import type { AssertUiRibbonParentKeysCovered, UiRibbonParentCategory, AssertUiSettingsLanguageKeysCovered, UiLocale, AssertUiSettingsTerminologyKeysCovered, UiChromeTerminologyId } from "../../../🧱️elements/📚️I18n/🟦️.tsx";
 import { uiChromeTranslationBundles } from "../🌐️i18n/🟦️.ts";
-import type { ShellLocale } from "@semio-tech/framework";
+import type { ShellLocale } from "@semio-tech/framework/manifest/generated/ui-axes";
 import { UI_TERMINOLOGY_NATIVE } from "../../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;

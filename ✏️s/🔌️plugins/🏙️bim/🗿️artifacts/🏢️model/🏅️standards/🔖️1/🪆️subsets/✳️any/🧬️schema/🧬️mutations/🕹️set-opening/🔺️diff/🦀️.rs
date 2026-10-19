@@ -2,10 +2,13 @@
 //! must name existing types, a sill override must not be negative, size overrides must be positive, and a change of kind or width must
 //! still fit the host axis and clear the neighbours. Clearing an override (`width: {"value": null}`) falls back to the kind's size, clearing the sill override to the sill of the type. An authored reveal (depth not negative, material existing) is checked; clearing it centres the frame and leaves the jambs in the wall layers.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::reveal_flaw;
-use crate::standards::v1::subsets::any::schema::mutations::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::reveal_flaw;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
 use crate::standards::v1::subsets::any::schema::mutations::set_opening::SetOpening;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::OpeningPatch, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetOpening, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

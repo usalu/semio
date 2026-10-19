@@ -28,7 +28,7 @@ pub struct ChromeGroupItem<'a> {
 /// scalar also no longer inflates its chip by its UTF-8 length.
 pub fn retained_chrome_group_item_width(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
     let label = item.label.unwrap_or("");
-    if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+    if label.len() > semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
         return None;
     }
     let icon_w = item.icon_id.map(|_| CHROME_ICON_TINY + theme.gap_standard).unwrap_or(0.0);

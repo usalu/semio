@@ -322,7 +322,7 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(render.app_instance_id, render.base_revision.0, render.generation.0)))
 }
 
-fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let Some(index) = registry.retiring.iter().position(|shell| shell.is_some_and(|shell| registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(|state| state.identity.app_instance_id == app_instance_id))))
@@ -336,7 +336,7 @@ fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycl
                 Err(_) => return PluginLifecycleStep::Blocked { reason: "mounted FEM job owner is checked out by its worker turn" },
             };
             let Some(state) = owner.as_mut() else { return PluginLifecycleStep::Complete(RetainedCloneProgress::default()) };
-            state.close_step(grant)
+            state.close_step(cx, grant)
         };
         if matches!(step, PluginLifecycleStep::Complete(_)) {
             let terminal = registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_some_and(MountedState::terminal_is_empty));
@@ -353,8 +353,8 @@ fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycl
     })
 }
 
-pub fn maintenance_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
-    retire_one(app_instance_id, grant)
+pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    retire_one(app_instance_id, cx, grant)
 }
 
 /// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
@@ -366,7 +366,7 @@ pub fn close_demands(app_instance_id: u32) -> RetirementDemand {
     }
 }
 
-pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+pub fn close_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let slot = app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
@@ -397,7 +397,7 @@ pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLife
             return session_pending(1, 0);
         }
         drop(registry);
-        retire_one(app_instance_id, grant)
+        retire_one(app_instance_id, cx, grant)
     })
 }
 

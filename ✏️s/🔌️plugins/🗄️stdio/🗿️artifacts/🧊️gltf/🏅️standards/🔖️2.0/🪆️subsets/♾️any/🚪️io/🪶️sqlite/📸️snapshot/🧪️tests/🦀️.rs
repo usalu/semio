@@ -443,7 +443,7 @@ fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records() {
 
 #[test]
 fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state() {
-    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(&std::fs::read(fixture_path!("../../../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).expect("the committed fixture is readable")[..]).unwrap();
+    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(&std::fs::read(fixture_path!("../../../../../../🖼️assets/🌱️metabolism/🏙️metabolism-model/🧊️.glb")).expect("the committed fixture is readable")[..]).unwrap();
     let bytes = include_bytes!("../../../../📚️examples/🌱️metabolism/🖼️assets/🎒️.pack.semio");
     assert!(pack::snapshot::ArtifactPack::encode_pack(&snapshot).as_slice() == bytes, "curated metabolism Pack must match the actual current owned native record graph");
     assert_eq!(<GltfSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).unwrap(), snapshot);

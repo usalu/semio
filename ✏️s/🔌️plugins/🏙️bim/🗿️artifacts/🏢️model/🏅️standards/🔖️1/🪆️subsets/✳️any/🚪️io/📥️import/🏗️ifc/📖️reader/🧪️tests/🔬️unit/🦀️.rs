@@ -1,11 +1,11 @@
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::frames::{bulge_of, Rigid};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::{bulge_of, Rigid};
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::part21::Part21Instance;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{Doc, Section};
 use semio_s_artifact_stdio_contract::part21::parse_part21;
 
 const SAMPLE: &str = "ISO-10303-21;

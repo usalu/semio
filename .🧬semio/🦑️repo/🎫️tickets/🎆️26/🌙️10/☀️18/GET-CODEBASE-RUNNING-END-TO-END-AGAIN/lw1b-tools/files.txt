@@ -1,0 +1,8 @@
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔮️oracle-source-ownership/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️norm-definition-ownership/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts
+✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/📜️script.ts
+✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/📜️script.ts
+✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts

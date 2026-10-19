@@ -22,7 +22,7 @@ consumes = ["flow.extension"]
 variant = "flow"
 compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
 ports = { react = 6016, wgpu = 6116 }
-engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"]
+engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust"]
 
 [package.metadata.semio.sources]
 artifacts = ["../../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts"]

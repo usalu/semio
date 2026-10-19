@@ -99,7 +99,8 @@ enum BorrowedFrame<'a> {
 /// 🔒️ Private lifetime projection anchored exclusively to a frozen Store-owned Box or Arc root.
 /// Both sealer and reader declare this field before their root, so unwind retires frames first.
 /// No frame or projected reference can leave this module; public checkpoints carry only replay data.
-pub(super) struct ArtifactCanonicalEditEncoder {
+#[doc(hidden)]
+pub struct ArtifactCanonicalEditEncoder {
     pub frames: Vec<Option<BorrowedFrame<'static>>>,
     pub depth: usize,
     root_address: usize,

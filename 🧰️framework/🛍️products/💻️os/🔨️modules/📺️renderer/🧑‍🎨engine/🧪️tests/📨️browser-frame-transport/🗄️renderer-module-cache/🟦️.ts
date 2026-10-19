@@ -1,6 +1,6 @@
 /** 🗄️ Renderer module cache: the server asserted artifact identity and the fail-soft cache. */
 import { describe, expect, it } from "vitest";
-import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
+import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "@semio-tech/framework-renderer-wgpu/wasm-module-cache";
 import { stubFetch } from "../../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
 describe("wgpu renderer module cache", () => {

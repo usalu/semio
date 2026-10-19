@@ -156,9 +156,19 @@ fn vertex_attribute_offsets_fit_declared_stride() {
 /// `semio-framework-ui` (the dependency runs the other way for every other seam), so the law below
 /// reads that crate's source text instead of its constants — the only way to tie two copies of the
 /// same WGSL together without inverting the crate graph.
-const WGPU_TARGET_SHADERS_SOURCE: &str = include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
+const WGPU_TARGET_SHADERS_SOURCES: [&str; 4] = [
+    include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"),
+    include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🖼️ui-vector-glass-and-raster-mip-shaders/🦀️.rs"),
+    include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🌍️world3d-shader-and-edits/🦀️.rs"),
+    include_str!("../../../🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/✨️world3d-effect-shaders/🦀️.rs"),
+];
 const D3D12_HLSL_SOURCE: &str = include_str!("../../🎯️targets/🪟️d3d12/✨️hlsl/🦀️.rs");
 const METAL_MSL_SOURCE: &str = include_str!("../../🎯️targets/🍎️metal/✨️msl/🦀️.rs");
+
+/// ✂️ Lifts a raw string const out of the wgpu target's shader module and its children.
+fn wgpu_target_const(name: &str) -> Option<String> {
+    WGPU_TARGET_SHADERS_SOURCES.iter().find_map(|source| raw_string_const(source, name))
+}
 
 /// ✂️ Lifts `pub const <name>: &str = r#"…"#;` out of Rust source text.
 fn raw_string_const(source: &str, name: &str) -> Option<String> {
@@ -176,13 +186,13 @@ fn raw_string_const(source: &str, name: &str) -> Option<String> {
 /// untinted on all four other backends with nothing failing. Whoever edits one edits both.
 #[test]
 fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
-    let target = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_SHADER").expect("wgpu target declares WORLD3D_SHADER as a raw string const");
+    let target = wgpu_target_const("WORLD3D_SHADER").expect("wgpu target declares WORLD3D_SHADER as a raw string const");
     assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
-    let target_lines = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
+    let target_lines = wgpu_target_const("WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
     assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
-    let target_grid = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_GRID_SHADER").expect("wgpu target declares WORLD3D_GRID_SHADER as a raw string const");
+    let target_grid = wgpu_target_const("WORLD3D_GRID_SHADER").expect("wgpu target declares WORLD3D_GRID_SHADER as a raw string const");
     assert_eq!(target_grid, WORLD3D_GRID_SHADER, "WORLD3D_GRID_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
-    let target_textured = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
+    let target_textured = wgpu_target_const("WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
     assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders and ✨️shader-contract");
 }
 
@@ -335,13 +345,13 @@ fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
 #[test]
 fn every_world3d_wgsl_variant_parses_and_validates_with_naga() {
     for (label, name, canonical) in [("mesh", "WORLD3D_SHADER", WORLD3D_SHADER), ("lines", "WORLD3D_LINES_SHADER", WORLD3D_LINES_SHADER), ("textured", "WORLD3D_TEXTURED_SHADER", WORLD3D_TEXTURED_SHADER)] {
-        let target = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, name).unwrap_or_else(|| panic!("wgpu target is missing {name}"));
+        let target = wgpu_target_const(name).unwrap_or_else(|| panic!("wgpu target is missing {name}"));
         for (owner, source) in [("contract", canonical), ("target", target.as_str())] {
             let module = naga::front::wgsl::parse_str(source).unwrap_or_else(|error| panic!("{owner} {label} WGSL parse failed: {error}"));
             naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all()).validate(&module).unwrap_or_else(|error| panic!("{owner} {label} WGSL validation failed: {error}"));
         }
     }
-    let postprocess = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_POSTPROCESS_SHADER").expect("wgpu target is missing WORLD3D_POSTPROCESS_SHADER");
+    let postprocess = wgpu_target_const("WORLD3D_POSTPROCESS_SHADER").expect("wgpu target is missing WORLD3D_POSTPROCESS_SHADER");
     let module = naga::front::wgsl::parse_str(&postprocess).unwrap_or_else(|error| panic!("target World postprocess WGSL parse failed: {error}"));
     naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
         .validate(&module)

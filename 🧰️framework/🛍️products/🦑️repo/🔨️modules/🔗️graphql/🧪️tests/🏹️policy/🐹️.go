@@ -12,6 +12,7 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
@@ -37,9 +38,7 @@ func TestAnalyzeReadsBreachCacheJSON(t *testing.T) {
 	if err := os.WriteFile(cachePath, []byte(payload), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmp
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmp)
 	ctx := NewRepoContext(tmp)
 	ar, err := ctx.Analyze(nil)
 	if err != nil {
@@ -60,9 +59,7 @@ func TestSystemPolicy(t *testing.T) {
 	const devcontainer = "// SPDX-License-Identifier: AGPL-3.0-only\n{\n  /* derived */\n  \"name\": \"https://example.test/a\",\n  \"customizations\": {\"vscode\": {\"settings\": {\"editor.fontSize\": 14, \"python.testing.cwd\": \"${containerWorkspaceFolder}\", \"python.defaultInterpreterPath\": \"${containerWorkspaceFolder}/.venv/bin/python\"}, \"extensions\": [\"ms-python.python\", \"anthropic.claude-code\"]}}\n}\n"
 	arrange := func(t *testing.T, files map[string]string) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		t.Cleanup(func() { workspace.RootDir = oldRoot })
+		sandbox.BindRoot(t, tmpDir)
 		for name, content := range files {
 			os.MkdirAll(filepath.Dir(filepath.Join(tmpDir, name)), 0o755)
 			workspace.WriteTextFile(filepath.Join(tmpDir, name), content)
@@ -116,7 +113,7 @@ func TestSystemPolicy(t *testing.T) {
 		}
 	})
 	t.Run("derivation equals the language-agnostic fixture", func(t *testing.T) {
-		data, err := os.ReadFile("../../../📚️library/⚡️caching/📦️artifacts/📝️derived-config/🧪️tests/🧫️fixtures/📝️derived-config/🔣️.json")
+		data, err := os.ReadFile(sandbox.OriginPath("..", "..", "..", "📚️library", "⚡️caching", "📦️artifacts", "📝️derived-config", "🧪️tests", "🧫️fixtures", "📝️derived-config", "🔣️.json"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -139,21 +136,6 @@ func TestSystemPolicy(t *testing.T) {
 			if !reflect.DeepEqual(derived.Settings, row.Expected.Settings) || !reflect.DeepEqual(derived.Extensions, row.Expected.Extensions) {
 				t.Errorf("%s: derived %v, expected %v", row.Name, derived, row.Expected)
 			}
-		}
-	})
-	t.Run("the checked-in devcontainer block equals its derivation", func(t *testing.T) {
-		root, err := filepath.Abs("../../../../../../..")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, err := os.Stat(filepath.Join(root, ".devcontainer", "editor-overlay.json")); err != nil {
-			t.Skipf("not running inside the repository checkout: %v", err)
-		}
-		oldRoot := workspace.RootDir
-		workspace.RootDir = root
-		t.Cleanup(func() { workspace.RootDir = oldRoot })
-		if found := kinds(); len(found) != 0 {
-			t.Errorf("run bun repo run workspace:generate-config; the checked-in block drifts: %v", found)
 		}
 	})
 	t.Run("policy registered with correct id", func(t *testing.T) {

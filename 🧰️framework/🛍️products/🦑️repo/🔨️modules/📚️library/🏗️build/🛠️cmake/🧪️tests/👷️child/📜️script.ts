@@ -1,7 +1,7 @@
 /** 👷️ Child: child-process script that receives the issued script-process invocation and runs the case its arguments select. */
 import{join}from"node:path";
 import{existsSync}from"node:fs";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"@semio-tech/process/routing";
 import{withCmakeInputsV1,cmakeInputFactsV1,type CmakeInputsV1}from"../../📥️inputs/🟦️.ts";
 import{runCmakeOwnedStageV1}from"../../🎬️stage/🟦️.ts";
 const root=process.argv[2],kind=process.argv[3];if(!root||!['error','undefined','cancel'].includes(kind??''))throw Error("Closed CMake ordinary failure required");const primary=kind==="undefined"?undefined:Error("Exact ordinary CMake primary"),cancel=new AbortController();let escaped:CmakeInputsV1|undefined,late=false;

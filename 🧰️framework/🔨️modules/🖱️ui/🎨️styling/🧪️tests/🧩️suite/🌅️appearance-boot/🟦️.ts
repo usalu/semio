@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it, expect } from "bun:test";
 import { PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT } from "../../../🏗️builder/🌐️vite/🚀️boot-html/🟦️.ts";
-import { repoRoot } from "../🧰️shared/🟦️.ts";
+import { repoRoot } from "../🧰️suite-build-server/🟦️.ts";
 
 /**
  * 🌓️ The pre-paint appearance bootstrap, answered by EXECUTING the shipped inline script.

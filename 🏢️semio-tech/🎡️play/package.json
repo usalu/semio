@@ -24,11 +24,30 @@
     "test:release:routing": "bun --cwd \"../..\" repo run @semio-tech/semio-tech-play:test-release-routing"
   },
   "devDependencies": {
+    "@semio-tech/assets": "workspace:*",
+    "@semio-tech/framework-actor": "workspace:*",
+    "@semio-tech/framework-canvas-ts": "workspace:*",
+    "@semio-tech/framework-os-dev": "workspace:*",
+    "@semio-tech/framework-plugin": "workspace:*",
+    "@semio-tech/plugin-registry": "workspace:*",
+    "@semio-tech/repo-lib": "workspace:*",
+    "@semio-tech/s-dev-catalog-ts": "workspace:*",
+    "@semio-tech/schema-validator-rs": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
+    "@types/pngjs": "6.0.5",
     "@vitejs/plugin-react": "^5.1.2",
+    "ajv": "8.20.0",
+    "es-module-lexer": "2.3.2",
+    "glob": "13.0.6",
+    "http-cache-semantics": "^4.2.0",
+    "jsonc-parser": "3.3.1",
+    "pngjs": "7.0.0",
     "typescript": "^5.9.3",
+    "undici": "7.30.1",
     "vite": "^7.3.1",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "yargs-parser": "21.1.1"
   },
   "license": "AGPL-3.0-or-later",
   "repository": {

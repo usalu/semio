@@ -19,7 +19,7 @@ pub fn label() -> LocalizedLabel {
 pub const ICON: &str = "cube";
 
 /// 🔏️ The digest sidecar of the real `.glb` fixture (genuine glTF 2.0, KHR material extensions declared, 271 meshes/nodes, 1095 accessors, embedded BIN chunk buffer): its repository-relative name, exact byte length and SHA-256, one per line. The fixture itself is no longer compiled in; the descriptor declares the example by this sidecar and the host verifies the delivered file against the same three values.
-pub const BASE_GLB_DIGEST: &[u8] = include_bytes!("../../🖼️assets/🌱️metabolism/🏙️base/🔏️.digest");
+pub const BASE_GLB_DIGEST: &[u8] = include_bytes!("../../🖼️assets/🌱️metabolism/🏙️metabolism-model/🔏️.digest");
 
 /// 📦️ What the digest sidecar of the real `.glb` fixture (genuine glTF 2.0, KHR material extensions declared, 271 meshes/nodes, 1095 accessors, embedded BIN chunk buffer) says: the package asset name, its exact size and its SHA-256.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

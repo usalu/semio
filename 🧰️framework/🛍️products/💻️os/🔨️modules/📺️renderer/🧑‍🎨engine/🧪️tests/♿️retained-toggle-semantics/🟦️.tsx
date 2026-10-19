@@ -15,7 +15,7 @@ import type { Component, UiNodeRecord, UiSnapshot } from "@semio-tech/framework"
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { interpretUiNode } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { type UiInterpreterContext } from "../../🧱️elements/🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
-import { createAccessibilityMirror } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
+import { createAccessibilityMirror } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
 import { uiAccessibilityProjectionNodeV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
 import { retainedToggleSemanticsFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 

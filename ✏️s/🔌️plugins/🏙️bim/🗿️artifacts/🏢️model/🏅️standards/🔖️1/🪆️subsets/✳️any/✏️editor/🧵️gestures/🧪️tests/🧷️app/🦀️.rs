@@ -1,7 +1,5 @@
-use crate::editor::bim::commands::{arm_utility, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, world_pointer_down};
-use crate::editor::bim::modes::edit::windows::{plan, world};
-use crate::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
-use crate::editor::bim::BimCommand;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch_in, history_verb, view, world_scene};
+use semio_s_artifact_bim_model_bim::editor::bim::BimCommand;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{Effect, PluginApp, ViewModel};
 use semio_framework_ui_locale::Locale;
@@ -25,7 +23,7 @@ fn on_a_big_stack<F: std::future::Future<Output = ()>>(test: impl FnOnce() -> F 
 }
 
 fn armed(utility: &str) -> ViewModel {
-    ViewModel { active_utility_id: Some(utility.into()), ..view(Locale::En, &[(WINDOW, plan::WINDOW_KIND_ID)], Some(WINDOW)) }
+    ViewModel { active_utility_id: Some(utility.into()), ..view(Locale::En, &[(WINDOW, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID)], Some(WINDOW)) }
 }
 
 fn at(x: f64, y: f64) -> (f64, f64) {
@@ -34,17 +32,17 @@ fn at(x: f64, y: f64) -> (f64, f64) {
 
 fn press(x: f64, y: f64) -> BimCommand {
     let (x, y) = at(x, y);
-    BimCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x, y, width: 800.0, height: 600.0, ..Default::default() })
+    BimCommand::CanvasPointerDown(semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_down::CanvasPointerDown { x, y, width: 800.0, height: 600.0, ..Default::default() })
 }
 
 fn hover(x: f64, y: f64) -> BimCommand {
     let (x, y) = at(x, y);
-    BimCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, ..Default::default() })
+    BimCommand::CanvasPointerMove(semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, ..Default::default() })
 }
 
 fn release(x: f64, y: f64) -> BimCommand {
     let (x, y) = at(x, y);
-    BimCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x, y, width: 800.0, height: 600.0, ..Default::default() })
+    BimCommand::CanvasPointerUp(semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_up::CanvasPointerUp { x, y, width: 800.0, height: 600.0, ..Default::default() })
 }
 
 #[test]
@@ -59,8 +57,8 @@ fn two_clicks_of_the_wall_tool_write_one_wall_in_one_undoable_row_through_the_mo
         assert!(second.edited_document(), "the second click writes the wall");
         let snapshot = app.snapshot().expect("snapshot");
         assert_eq!(snapshot.walls.len(), 5);
-        let created = snapshot.walls.values().find(|row| row.name.starts_with("Wall ") && row.storey == "st-ground" && crate::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [10.0, 10.0]).expect("the drawn wall");
-        assert_eq!((crate::editor::bim::gestures::plane::axis_ends(&created.axis).1, created.wall_type.as_str()), ([14.0, 10.0], "wt-300"));
+        let created = snapshot.walls.values().find(|row| row.name.starts_with("Wall ") && row.storey == "st-ground" && semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [10.0, 10.0]).expect("the drawn wall");
+        assert_eq!((semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&created.axis).1, created.wall_type.as_str()), ([14.0, 10.0], "wt-300"));
         history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "the click is one history row and its inverse removes the wall");
     });
@@ -77,7 +75,7 @@ fn a_move_shows_the_preview_in_the_window_transient_and_never_touches_the_docume
         assert!(moved.wrote(TypedOperationResultLane::WindowTransient) && !moved.edited_document(), "a move writes the window transient only");
         let after = app.document_pack().await.expect("pack");
         assert!(before.pack == after.pack && before.spr == after.spr, "a preview never changes document bytes");
-        let scene = canvas_scene(&mut app, plan::BODY_KEY, &wall).await;
+        let scene = canvas_scene(&mut app, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY, &wall).await;
         assert!(scene.layers_json.contains("preview:"), "the rubber band is painted over the plan");
         assert!(scene.layers_json.contains("3.00 m"), "with its length");
     });
@@ -89,10 +87,10 @@ fn escape_cancels_the_chain_and_a_double_click_ends_it() {
         let mut app = bim_app().await;
         let wall = armed("wall");
         dispatch_in(&mut app, press(10.0, 10.0), &wall).await;
-        dispatch_in(&mut app, BimCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &wall).await;
+        dispatch_in(&mut app, BimCommand::CanvasEscape(semio_s_artifact_bim_model_gestures::editor::bim::commands::canvas_escape::CanvasEscape {}), &wall).await;
         assert!(!dispatch_in(&mut app, press(14.0, 10.0), &wall).await.edited_document(), "after escape the next click starts a chain");
         let (x, y) = at(14.0, 10.0);
-        dispatch_in(&mut app, BimCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick { x, y, width: 800.0, height: 600.0, ..Default::default() }), &wall).await;
+        dispatch_in(&mut app, BimCommand::CanvasDoubleClick(semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_double_click::CanvasDoubleClick { x, y, width: 800.0, height: 600.0, ..Default::default() }), &wall).await;
         assert!(!dispatch_in(&mut app, press(18.0, 10.0), &wall).await.edited_document(), "after a double click the next click starts a chain");
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4);
     });
@@ -114,9 +112,9 @@ fn the_select_utility_selects_the_wall_under_the_press_and_a_hotkey_arms_a_utili
         let mut app = bim_app().await;
         let selected = dispatch_in(&mut app, press(4.0, 0.0), &armed("select")).await;
         assert!(!selected.edited_document());
-        let selection = app.interaction_state().await.selection.get(crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
+        let selection = app.interaction_state().await.selection.get(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default();
         assert_eq!(selection, vec!["w-south".to_string()], "the press selected the wall through the framework's own interaction lane");
-        let armed_wall = dispatch_in(&mut app, BimCommand::ArmWall(arm_utility::ArmWall {}), &armed("select")).await;
+        let armed_wall = dispatch_in(&mut app, BimCommand::ArmWall(semio_s_artifact_bim_model_coordination::editor::bim::commands::arm_utility::ArmWall {}), &armed("select")).await;
         assert!(armed_wall.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { window_id, utility_id } if window_id == WINDOW && utility_id == "wall")));
     });
 }
@@ -125,9 +123,9 @@ fn the_select_utility_selects_the_wall_under_the_press_and_a_hotkey_arms_a_utili
 fn the_world_window_draws_with_the_ground_point_of_its_ray() {
     on_a_big_stack(|| async {
         let mut app = bim_app().await;
-        let windows = [("bim-world", world::WINDOW_KIND_ID)];
+        let windows = [("bim-world", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID)];
         let wall = ViewModel { active_utility_id: Some("wall".into()), ..view(Locale::En, &windows, Some("bim-world")) };
-        let down = |x: f64, y: f64| BimCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: vec![x, y, 0.0], ..Default::default() });
+        let down = |x: f64, y: f64| BimCommand::WorldPointerDown(semio_s_artifact_bim_model_gestures::editor::bim::commands::world_pointer_down::WorldPointerDown { position: vec![x, y, 0.0], ..Default::default() });
         assert!(!dispatch_in(&mut app, down(10.0, 10.0), &wall).await.edited_document());
         assert!(dispatch_in(&mut app, down(14.0, 10.0), &wall).await.edited_document(), "two ground points write a wall");
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 5);
@@ -135,11 +133,11 @@ fn the_world_window_draws_with_the_ground_point_of_its_ray() {
 }
 
 fn typed_in(value: &str) -> BimCommand {
-    BimCommand::EngagementInput(crate::editor::bim::commands::engagement_input::EngagementInput { value: value.into() })
+    BimCommand::EngagementInput(semio_s_artifact_bim_model_gestures::editor::bim::commands::engagement_input::EngagementInput { value: value.into() })
 }
 
 fn submitted(value: &str) -> BimCommand {
-    BimCommand::EngagementSubmit(crate::editor::bim::commands::engagement_submit::EngagementSubmit { value: value.into() })
+    BimCommand::EngagementSubmit(semio_s_artifact_bim_model_gestures::editor::bim::commands::engagement_submit::EngagementSubmit { value: value.into() })
 }
 
 #[test]
@@ -154,12 +152,12 @@ fn a_wall_is_typed_through_the_entry_field_of_the_mounted_window_and_escape_empt
         let second = dispatch_in(&mut app, submitted("@4<0"), &wall).await;
         assert!(second.edited_document(), "the polar offset writes the wall");
         let snapshot = app.snapshot().expect("snapshot");
-        let created = snapshot.walls.values().find(|row| crate::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [20.0, 20.0]).expect("the typed wall");
-        assert_eq!(crate::editor::bim::gestures::plane::axis_ends(&created.axis).1, [24.0, 20.0]);
+        let created = snapshot.walls.values().find(|row| semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [20.0, 20.0]).expect("the typed wall");
+        assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&created.axis).1, [24.0, 20.0]);
         history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "a typed point is one undoable row like a click");
         dispatch_in(&mut app, typed_in("3, 3"), &wall).await;
-        let escaped = dispatch_in(&mut app, BimCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &wall).await;
+        let escaped = dispatch_in(&mut app, BimCommand::CanvasEscape(semio_s_artifact_bim_model_gestures::editor::bim::commands::canvas_escape::CanvasEscape {}), &wall).await;
         assert!(escaped.wrote(TypedOperationResultLane::WindowTransient) && escaped.wrote(TypedOperationResultLane::Presence), "escape empties the line it had kept");
     });
 }
@@ -168,12 +166,12 @@ fn a_wall_is_typed_through_the_entry_field_of_the_mounted_window_and_escape_empt
 fn the_gesture_in_progress_shows_in_the_3d_window_as_its_engagement_preview() {
     on_a_big_stack(|| async {
         let mut app = bim_app().await;
-        let windows = [("bim-world", world::WINDOW_KIND_ID)];
+        let windows = [("bim-world", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID)];
         let wall = ViewModel { active_utility_id: Some("wall".into()), ..view(Locale::En, &windows, Some("bim-world")) };
         assert!(world_scene(&mut app, &wall).await.engagement_preview_json.is_none(), "nothing in progress, nothing shown");
-        let down = |x: f64, y: f64| BimCommand::WorldPointerDown(world_pointer_down::WorldPointerDown { position: vec![x, y, 0.0], ..Default::default() });
+        let down = |x: f64, y: f64| BimCommand::WorldPointerDown(semio_s_artifact_bim_model_gestures::editor::bim::commands::world_pointer_down::WorldPointerDown { position: vec![x, y, 0.0], ..Default::default() });
         dispatch_in(&mut app, down(10.0, 10.0), &wall).await;
-        let moved = BimCommand::WorldPointerMove(crate::editor::bim::commands::world_pointer_move::WorldPointerMove { pane: "bim-world".into(), position: vec![13.0, 10.0, 0.0] });
+        let moved = BimCommand::WorldPointerMove(semio_s_artifact_bim_model_gestures::editor::bim::commands::world_pointer_move::WorldPointerMove { pane: "bim-world".into(), position: vec![13.0, 10.0, 0.0] });
         dispatch_in(&mut app, moved, &wall).await;
         let preview = world_scene(&mut app, &wall).await.engagement_preview_json.expect("the rubber band shows in 3D");
         assert!(preview.contains("segment") && preview.contains("13"), "{preview}");
@@ -182,7 +180,7 @@ fn the_gesture_in_progress_shows_in_the_3d_window_as_its_engagement_preview() {
 
 #[test]
 fn a_wall_is_drawn_with_the_arrow_keys_alone_through_the_mounted_window() {
-    use crate::editor::bim::commands::cursor_keys::{CursorLeft, CursorPlace, CursorRightFar, CursorUp};
+    use semio_s_artifact_bim_model_gestures::editor::bim::commands::cursor_keys::{CursorLeft, CursorPlace, CursorRightFar, CursorUp};
     on_a_big_stack(|| async {
         let mut app = bim_app().await;
         let wall = armed("wall");
@@ -199,8 +197,8 @@ fn a_wall_is_drawn_with_the_arrow_keys_alone_through_the_mounted_window() {
         let second = dispatch_in(&mut app, BimCommand::CursorPlace(CursorPlace {}), &wall).await;
         assert!(second.edited_document(), "the second place writes the wall");
         let snapshot = app.snapshot().expect("snapshot");
-        let created = snapshot.walls.values().find(|row| crate::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [1.0, 0.0]).expect("the wall drawn from the keyboard cursor");
-        assert_eq!(crate::editor::bim::gestures::plane::axis_ends(&created.axis).1, [3.9, 0.1], "three coarse steps right, one fine step up and one fine step left from the anchor");
+        let created = snapshot.walls.values().find(|row| semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&row.axis).0 == [1.0, 0.0]).expect("the wall drawn from the keyboard cursor");
+        assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_ends(&created.axis).1, [3.9, 0.1], "three coarse steps right, one fine step up and one fine step left from the anchor");
         history_verb(&mut app, "undo").await;
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 4, "a placed cursor point is one undoable row like a click");
     });
@@ -217,7 +215,7 @@ fn an_offset_previews_in_the_window_transient_and_its_closing_click_writes_one_u
         assert!(moved.wrote(TypedOperationResultLane::WindowTransient) && !moved.edited_document(), "a move writes the window transient only");
         let after = app.document_pack().await.expect("pack");
         assert!(before.pack == after.pack && before.spr == after.spr, "a preview never changes document bytes");
-        let scene = canvas_scene(&mut app, plan::BODY_KEY, &offset).await;
+        let scene = canvas_scene(&mut app, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::BODY_KEY, &offset).await;
         assert!(scene.layers_json.contains("preview:") && scene.layers_json.contains("1.50 m"), "the parallel wall and its distance are painted over the plan");
         assert!(dispatch_in(&mut app, press(4.0, 1.5), &offset).await.edited_document(), "the closing click writes the offset wall");
         assert_eq!(app.snapshot().expect("snapshot").walls.len(), 5);
@@ -231,13 +229,12 @@ fn debug_stack_probe() {
     let phase: usize = std::env::var("BIM_PHASE").ok().and_then(|v| v.parse().ok()).unwrap_or(99);
     let mb: usize = std::env::var("BIM_STACK_MB").ok().and_then(|v| v.parse().ok()).unwrap_or(2);
     std::thread::Builder::new().name("probe".into()).stack_size(mb * 1024 * 1024).spawn(move || {
-        use crate::editor::bim as b;
         match phase {
             1 => {}
-            2 => { let _ = b::modes::edit::definition(); }
-            3 => { let _ = b::modes::edit::windows::plan::definition(); let _ = b::modes::edit::windows::world::definition(); let _ = b::modes::edit::windows::sheet::definition(); let _ = b::modes::edit::windows::schedule::definition(); let _ = b::modes::edit::windows::family::definition(); let _ = b::modes::edit::windows::section::definition(); }
-            4 => { let _ = b::create_bim_app(); }
-            5 => { let d = b::create_bim_app(); let _ = semio_framework_plugin::AppActionRegistry::from_definition(&d); }
+            2 => { let _ = semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::definition(); }
+            3 => { let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::definition(); let _ = semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::definition(); let _ = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::definition(); }
+            4 => { let _ = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app(); }
+            5 => { let d = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app(); let _ = semio_framework_plugin::AppActionRegistry::from_definition(&d); }
             _ => {}
         }
     }).unwrap().join().unwrap();

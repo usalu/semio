@@ -6,10 +6,8 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_os_spr::MutationId;
 use semio_framework_os_store_retirement::resident_backing::{PagedSourceIterator, SourceIterator, close_deque, close_history, close_vec, denied, deque_demand, released, vec_demand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_ephemeral::SNAPSHOT_READ_RELEASE_PAGE_BYTES;
 use std::collections::VecDeque;
 use semio_framework_os_store_document::create_document_envelope;
-use super::{fixture_mutations, snapshot_read, resident_backing_tests as tests};
 
 #[test]
 fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup(){
@@ -139,10 +137,10 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
     let oracle = std::sync::Mutex::new(());
     let registry = SnapshotReadLeaseRegistry::new();
     let standard = oracle.try_lock().unwrap();
-    let actual = registry.state.try_lock().unwrap();
+    let actual = registry.state_lock().try_lock().unwrap();
     assert_eq!(fixture["registryLockStates"][0], "available");
     assert!(matches!(oracle.try_lock(), Err(std::sync::TryLockError::WouldBlock)));
-    assert!(matches!(registry.state.try_lock(), Err(std::sync::TryLockError::WouldBlock)));
+    assert!(matches!(registry.state_lock().try_lock(), Err(std::sync::TryLockError::WouldBlock)));
     assert_eq!(fixture["registryLockStates"][1], "busy");
     drop((standard, actual));
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -150,11 +148,11 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
         panic!("standard registry poison witness");
     })).is_err());
     assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let _guard = registry.state.try_lock().unwrap();
+        let _guard = registry.state_lock().try_lock().unwrap();
         panic!("actual registry poison witness");
     })).is_err());
     assert!(matches!(oracle.try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
-    assert!(matches!(registry.state.try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
+    assert!(matches!(registry.state_lock().try_lock(), Err(std::sync::TryLockError::Poisoned(_))));
     assert_eq!(fixture["registryLockStates"][2], "poisoned");
 }
 
@@ -162,8 +160,8 @@ fn artifact_store_resident_registry_lock_matches_standard_contention_and_poison_
 fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole_funding() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let mut owner = SnapshotReadLeaseRegistryOwner::new();
-    let original = owner.0.as_ref().unwrap().identity();
-    let alias = owner.0.as_ref().unwrap().alias_handle().clone();
+    let original = owner.alias_custody().unwrap().identity();
+    let alias = owner.alias_custody().unwrap().alias_handle().clone();
     assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
     loop {
         let slots = owner.empty_backing_demands().unwrap();
@@ -181,7 +179,7 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!(owner.0.as_ref().unwrap().identity(), original);
+    assert_eq!(owner.alias_custody().unwrap().identity(), original);
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
     assert_eq!(step.unwrap(), released(extent, false));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));

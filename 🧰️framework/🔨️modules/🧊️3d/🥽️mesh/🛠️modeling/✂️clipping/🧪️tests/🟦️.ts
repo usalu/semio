@@ -1,6 +1,7 @@
 /** 🧪️ Clipping: 13 tests covering retained clipping edge vectors agree with schema Three and SQLite; real mesh packages consume an acyclic canonical contract and retained clipping owner; actual extracted Rust Source parses and each n… */
 import "../../../🧪️tests/📦️targets/🧪️packaging/🟦️.ts";
 import Parser from"web-tree-sitter";
+import{readModuleTreeSource}from"@semio-tech/framework-compiler-ts/syntax/module-tree";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
@@ -34,7 +35,7 @@ test("retained clipping edge vectors agree with schema Three and SQLite",()=>{
  }finally{db.close();}
 });
 test("real mesh packages consume an acyclic canonical contract and retained clipping owner",()=>{
- const root=resolve(import.meta.dir,"../../../../../../.."),mesh=resolve(root,"🧰️framework/🔨️modules/🧊️3d/🥽️mesh"),read=(path:string)=>readFileSync(path,"utf8");
+ const root=resolve(import.meta.dir,"../../../../../../.."),mesh=resolve(root,"🧰️framework/🔨️modules/🧊️3d/🥽️mesh"),read=(path:string)=>path.endsWith(".rs")?readModuleTreeSource(path):readFileSync(path,"utf8");
  const model=read(resolve(mesh,"🛠️modeling/🦀️.rs"));expect(model.includes("struct Clip {")).toBe(false);
  const facade=parse(read(resolve(mesh,"../📦️packages/🦀️rust/Cargo.toml"))),clip=parse(read(resolve(mesh,"🛠️modeling/✂️clipping/📦️packages/🦀️rust/Cargo.toml"))),contract=parse(read(resolve(mesh,"🧬️contract/📦️packages/🦀️rust/Cargo.toml")));
  const document=read(resolve(mesh,"🦀️.rs")),algorithm=read(resolve(mesh,"🛠️modeling/✂️clipping/🦀️.rs"));
@@ -63,9 +64,9 @@ test("actual extracted Rust Source parses and each new compilation root stays fi
 
 test("real document owner defines topology and conversion below modeling extension",()=>{
  const root=resolve(import.meta.dir,"../../../../../../.."),mesh=resolve(root,"🧰️framework/🔨️modules/🧊️3d/🥽️mesh");
- const facade=readFileSync(resolve(mesh,"🦀️.rs"),"utf8"),model=readFileSync(resolve(mesh,"🛠️modeling/🦀️.rs"),"utf8");
+ const facade=readModuleTreeSource(resolve(mesh,"🦀️.rs")),model=readModuleTreeSource(resolve(mesh,"🛠️modeling/🦀️.rs"));
  expect(facade.includes("pub struct HalfedgeMesh")).toBe(false);
- const document=readFileSync(resolve(mesh,"📄️document/🦀️.rs"),"utf8");
+ const document=readModuleTreeSource(resolve(mesh,"📄️document/🦀️.rs"));
  expect(document).toContain("pub struct HalfedgeMesh");expect(document.includes("mod modeling;")).toBe(false);
  expect(model.includes("impl MeshModelingOps for HalfedgeMesh")).toBe(true);expect(model.includes("impl HalfedgeMesh {")).toBe(false);
  expect(document.includes("pub fn box_prim(")).toBe(false);expect(model.includes("fn box_prim(")).toBe(true);
@@ -89,8 +90,8 @@ test("all cfg-possible document mounts and actual extension callers parse below 
  try{parser.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm",root)));
  for(const path of seen){const source=readFileSync(path,"utf8");bytes+=Buffer.byteLength(source);lines+=source.split("\n").filter(line=>line.trim()).length;const tree=parser.parse(source);try{expect(tree.rootNode.hasError()).toBe(false);}finally{tree.delete();}for(const match of source.matchAll(/include_str!\("([^"]+)"\)/g)){const included=match[1];if(!included)throw Error("Literal fixture path required");expect(readFileSync(resolve(dirname(path),included)).length).toBeGreaterThan(0);}}
  expect(bytes).toBeLessThanOrEqual(262144);expect(lines).toBeLessThanOrEqual(4000);expect(seen.size).toBeLessThanOrEqual(32);
- for(const relative of callers){const source=readFileSync(resolve(root,relative),"utf8"),tree=parser.parse(source);try{expect(tree.rootNode.hasError()).toBe(false);}finally{tree.delete();}expect(source.includes("MeshModelingOps")).toBe(true);const inner=source.lastIndexOf("#!["),imported=source.indexOf("use semio_framework_3d::mesh");if(inner>=0&&imported>=0)expect(imported).toBeGreaterThan(inner);}
- const document=readFileSync(resolve(mesh,"📄️document/🦀️.rs"),"utf8"),model=readFileSync(resolve(mesh,"🛠️modeling/🦀️.rs"),"utf8"),facade=readFileSync(resolve(mesh,"🦀️.rs"),"utf8");
+ for(const relative of callers){const source=readFileSync(resolve(root,relative),"utf8"),tree=parser.parse(source);try{expect(tree.rootNode.hasError()).toBe(false);}finally{tree.delete();}expect(readModuleTreeSource(resolve(root,relative)).includes("MeshModelingOps")).toBe(true);const inner=source.lastIndexOf("#!["),imported=source.indexOf("use semio_framework_3d::mesh");if(inner>=0&&imported>=0)expect(imported).toBeGreaterThan(inner);}
+ const document=readModuleTreeSource(resolve(mesh,"📄️document/🦀️.rs")),model=readModuleTreeSource(resolve(mesh,"🛠️modeling/🦀️.rs")),facade=readModuleTreeSource(resolve(mesh,"🦀️.rs"));
  expect(document.includes("semio_framework_3d::")).toBe(false);expect(document.includes("semio_framework_3d_mesh_clipping")).toBe(false);expect(facade.includes("#[path = \"🧩️tessellation")).toBe(false);
  expect(model.includes("trait MeshModelingInternals")).toBe(true);expect(model.includes("pub trait MeshModelingOps: Sized")).toBe(true);
  const manifest=parse(readFileSync(resolve(mesh,"📄️document/📦️packages/🦀️rust/Cargo.toml"),"utf8"));
@@ -104,7 +105,7 @@ test("actual Rust extension declarations and implementations have identical cont
  const root=resolve(import.meta.dir,"../../../../../../.."),mesh=resolve(root,"🧰️framework/🔨️modules/🧊️3d/🥽️mesh");
  await Parser.init({wasmBinary:readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm",root))});const parser=new Parser();
  try{parser.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm",root)));
- const source=readFileSync(resolve(mesh,"🛠️modeling/🦀️.rs"),"utf8"),tree=parser.parse(source);
+ const source=readFileSync(resolve(mesh,"🛠️modeling/🧰️modeling-operations/🦀️.rs"),"utf8"),tree=parser.parse(source);
  try{const trait=tree.rootNode.descendantsOfType("trait_item").find(node=>node.childForFieldName("name")?.text==="MeshModelingOps"),implementation=tree.rootNode.descendantsOfType("impl_item").find(node=>node.childForFieldName("trait")?.text==="MeshModelingOps");if(!trait||!implementation)throw Error("Actual trait and implementation required");
  const normalize=(text:string)=>text.replace(/(?<!&)\bmut (\w+)/g,"$1").replace(/\s+/g,"");
  const contract=(node:Parser.SyntaxNode)=>["name","type_parameters","parameters","return_type","where_clause"].map(field=>normalize(node.childForFieldName(field)?.text??"")).join("|");
@@ -150,9 +151,9 @@ test("actual reconstruction closure is bounded private and fully retired without
  const dynamic=/Vec\s*<|HistoryFold|HalfedgeMesh|Soup|String|PolygonMeshSource|MeshSourceSnapshot|MeshTopologyBuild|MeshSourceRemap|Coplanar|SourceValueEquality|SourceEqualityTask/;
  for(const name of["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild","MeshSourceSnapshot","Coplanar","SourceValueEquality"]){const body=retirement(name);for(const field of find(name).descendantsOfType("field_declaration")){const type=field.childForFieldName("type")?.text??"",key=field.childForFieldName("name")?.text;if(!key)throw Error("Actual field key required");if(type==="MeshSourceRemapData"){for(const nested of find(type).descendantsOfType("field_declaration")){if(dynamic.test(nested.childForFieldName("type")?.text??""))expect([body.includes("deferred(self.data."+nested.childForFieldName("name")?.text+")"),body.includes("deferred_birth_bytes_for(&self.data."+nested.childForFieldName("name")?.text+")")]).toEqual([true,true]);}}else if(dynamic.test(type))expect([body.includes("deferred(self."+key+")"),body.includes("deferred_birth_bytes_for(&self."+key+")")]).toEqual([true,true]);}}
  const equalityRetirement=retirement("SourceEqualityTask");for(const variant of["Node","Sequence","Text"])expect(equalityRetirement.includes("Self::"+variant+"(path")).toBe(true);expect(equalityRetirement.includes("deferred(path)")).toBe(true);expect(equalityRetirement.includes("deferred_birth_bytes_for(path)")).toBe(true);
- expect(source.includes("mesh_weld_key(self.snapshot.soup.positions[self.cursor],self.threshold)?")).toBe(true);expect(source.includes("if self.phase!=0")).toBe(true);for(const name of["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild"]){const owner=tree.rootNode.descendantsOfType("impl_item").filter(node=>node.childForFieldName("type")?.text===name);const advance=owner.flatMap(node=>node.descendantsOfType("function_item")).find(node=>node.childForFieldName("name")?.text==="advance");if(!advance)throw Error("Actual advance required");expect(advance.text.includes("self.phase>=254")).toBe(true);expect(advance.text.includes("advance_owned(")).toBe(true);}expect(source.includes("semio_framework_3d::")).toBe(false);
+ expect(source.includes("let point=self.snapshot.soup.positions[self.cursor];let key=mesh_weld_key(point,self.threshold)?;")).toBe(true);expect(source.includes("if self.phase!=0")).toBe(true);for(const name of["MeshMergeJob","MeshImportJob","MeshSourceRemap","MeshTopologyBuild"]){const owner=tree.rootNode.descendantsOfType("impl_item").filter(node=>node.childForFieldName("type")?.text===name);const advance=owner.flatMap(node=>node.descendantsOfType("function_item")).find(node=>node.childForFieldName("name")?.text==="advance");if(!advance)throw Error("Actual advance required");expect(advance.text.includes("self.phase>=254")).toBe(true);expect(advance.text.includes("advance_owned(")).toBe(true);}expect(source.includes("semio_framework_3d::")).toBe(false);
  }finally{tree.delete();}
- const parent=read(resolve(mesh,"🛠️modeling/🦀️.rs"));expect(parent.includes("work.snapshot_frontier()")).toBe(true);expect(parent.includes("work.transfer_remaining_assets(&mut mesh)?")).toBe(true);expect(parent.includes("Import::indexed(")).toBe(true);expect(parent.includes("configuration_mut()?")).toBe(true);
+ const parent=readModuleTreeSource(resolve(mesh,"🛠️modeling/🦀️.rs"));expect(parent.includes("work.snapshot_frontier()")).toBe(true);expect(parent.includes("work.transfer_remaining_assets(&mut mesh)?")).toBe(true);expect(parent.includes("Import::indexed(")).toBe(true);expect(parent.includes("configuration_mut()?")).toBe(true);
  const jobs=read(resolve(mesh,"🧪️tests/🔬️jobs/🦀️.rs")),jobsTree=parser.parse(jobs);try{expect(jobsTree.rootNode.hasError()).toBe(false);}finally{jobsTree.delete();}expect(jobs.includes("snapshot()()")).toBe(false);expect(jobs).toContain("snapshot.state()");expect(jobs).toContain("snapshot.scratch_corners()");expect(jobs).toContain("build.state().used_empty");
  const manifest=parse(read(resolve(family,"📦️packages/🦀️rust/Cargo.toml"))),deps=manifest.dependencies;if(!deps||typeof deps!=="object"||Array.isArray(deps))throw Error("Family dependencies required");expect(Object.keys(deps).sort()).toEqual(["semio-framework-3d-mesh-contract","semio-framework-3d-mesh-document","semio-framework-mesh-engine","semio-framework-value"].sort());
  }finally{parser.delete();}

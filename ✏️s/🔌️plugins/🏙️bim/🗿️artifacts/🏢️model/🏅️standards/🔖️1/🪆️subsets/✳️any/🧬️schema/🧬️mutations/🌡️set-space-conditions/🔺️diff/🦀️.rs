@@ -2,7 +2,9 @@
 //! resulting conditions must be writable (see `conditions_problem`); providing only equal values is a no-op.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
-use crate::standards::v1::subsets::any::schema::{snapshot::{conditions_problem, ModelSnapshot, SpaceConditions}, diff::{Entry, ModelDiff, Patch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{conditions_problem, ModelSnapshot, SpaceConditions};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSpaceConditions, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

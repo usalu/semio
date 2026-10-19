@@ -1,25 +1,33 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{DimensionUnit, ModelSnapshot, Point2};
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::Reason;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DimensionUnit, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::Reason;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, Terminator};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnnotationAnchor, Terminator};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::EPS;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::EPS;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{finding};
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::*;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
-use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, StoreyPatch, WallPatch}, Entry, ModelDiff}, snapshot::Axis, inferences::ModelInference};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::finding;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::{StoreyAnnotations, dimensions, print, StyleMarks, is_annotated, face_walls, metrics_json};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::AnnotationStylePatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::ColumnPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -212,8 +220,8 @@ fn the_node_exists_only_for_annotated_storeys_and_names_its_face_walls_as_parent
     let snapshot = room();
     assert!(is_annotated(&snapshot, "st-ground") && !is_annotated(&snapshot, "st-first"));
     assert_eq!(face_walls(&snapshot, "st-ground").into_iter().collect::<Vec<_>>(), vec!["w-east", "w-north", "w-south"]);
-    let steps = crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, crate::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(crate::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ANNOTATIONS));
-    let node = steps.iter().find(|step| matches!(&step.key, crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode::Annotation(_))).expect("planned");
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ANNOTATIONS));
+    let node = steps.iter().find(|step| matches!(&step.key, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode::Annotation(_))).expect("planned");
     assert_eq!(node.parents.len(), 3, "the layouts of the three walls whose faces are measured: {:?}", node.parents);
 }
 

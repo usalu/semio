@@ -1,5 +1,5 @@
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 
 /** 🧫️ Holds bounded Source bytes for one real Cargo argument observation. */
 export interface CargoProfileFixtureV1{readonly files:readonly Readonly<{path:string;content:string}>[];readonly crates:readonly string[]}

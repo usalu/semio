@@ -8,12 +8,12 @@
   ],
   "artifactPaths": [
     {
-      "packageName": "semio-hub-gis",
+      "packageName": "semio-hub-gis-component",
       "profile": "release",
       "expectedRelativePath": "wasm32-wasip2/release/semio_hub_gis_component.wasm"
     },
     {
-      "packageName": "semio-hub-gis",
+      "packageName": "semio-hub-gis-component",
       "profile": "prototype",
       "expectedRelativePath": "wasm32-wasip2/prototype/semio_hub_gis_component.wasm"
     }

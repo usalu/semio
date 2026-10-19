@@ -318,9 +318,9 @@ pub struct WorldFaceOverlayMeshCursor {
 }
 
 impl WorldFaceOverlayMeshCursor {
-    pub fn new(surface_id: &str, generation: u64, revision: u64, draw_generation: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+    pub fn new(surface_id: &str, generation: u64, revision: u64, draw_generation: u64) -> Result<Self, ui_scene::math::Mesh3dFault> {
         if surface_id.len().checked_add("component-face-overlay::2".len()).is_none_or(|bytes| bytes > WORLD_DYNAMIC_ID_BYTE_CAPACITY) {
-            return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity);
+            return Err(ui_scene::math::Mesh3dFault::ByteCapacity);
         }
         Ok(Self {
             surface_id: surface_id.to_owned(),
@@ -349,10 +349,10 @@ impl WorldFaceOverlayMeshCursor {
         format!("component-face-overlay:{}:{}:{index}", self.surface_id, self.generation)
     }
 
-    pub fn token(&self) -> Result<Mesh3dWriteToken, ui_wgpu::wgpu::Mesh3dFault> {
+    pub fn token(&self) -> Result<Mesh3dWriteToken, ui_scene::math::Mesh3dFault> {
         match self.owner {
             WorldPlaceholderOwner::Writing(token) => Ok(token),
-            _ => Err(ui_wgpu::wgpu::Mesh3dFault::Stale),
+            _ => Err(ui_scene::math::Mesh3dFault::Stale),
         }
     }
 
@@ -382,7 +382,7 @@ impl WorldFaceOverlayMeshCursor {
         }
     }
 
-    pub fn step_live(&mut self, selection_state: &WorldSelectionState, gumball_state: &WorldGumballState, scene_state: &WorldSceneState, overlay_state: &WorldOverlayState) -> Result<WorldFaceOverlayMeshStep, ui_wgpu::wgpu::Mesh3dFault> {
+    pub fn step_live(&mut self, selection_state: &WorldSelectionState, gumball_state: &WorldGumballState, scene_state: &WorldSceneState, overlay_state: &WorldOverlayState) -> Result<WorldFaceOverlayMeshStep, ui_scene::math::Mesh3dFault> {
         match self.phase {
             WorldFaceOverlayPhase::Count => match self.scan.step(selection_state, gumball_state, scene_state) {
                 WorldFaceOverlayScanStep::Pending => {}
@@ -392,7 +392,7 @@ impl WorldFaceOverlayMeshCursor {
                         self.order[usize::from(self.order_len)] = found.category;
                         self.order_len += 1;
                     }
-                    self.counts[category] = self.counts[category].checked_add(1).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
+                    self.counts[category] = self.counts[category].checked_add(1).ok_or(ui_scene::math::Mesh3dFault::ItemCapacity)?;
                 }
                 WorldFaceOverlayScanStep::Complete => {
                     self.scan.reset();
@@ -404,18 +404,18 @@ impl WorldFaceOverlayMeshCursor {
                     self.phase = WorldFaceOverlayPhase::Complete;
                 } else {
                     let count = self.counts[usize::from(self.order[usize::from(self.bucket)])];
-                    let vertices = count.checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-                    let indices = count.checked_mul(6).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-                    let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(), 0, 1);
+                    let vertices = count.checked_mul(3).ok_or(ui_scene::math::Mesh3dFault::ItemCapacity)?;
+                    let indices = count.checked_mul(6).ok_or(ui_scene::math::Mesh3dFault::ItemCapacity)?;
+                    let grant = world_mesh_ownership_grant(0, ui_scene::math::mesh3d_begin_capacity_byte_demand(), 0, 1);
                     let (token, progress) = mesh3d_begin(self.generation + u64::from(self.bucket), self.revision, Mesh3dSchema::triangle_mesh(vertices, indices), grant)?;
                     self.owner = WorldPlaceholderOwner::Writing(token);
-                    if !progress.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity); }
+                    if !progress.fits(grant) { return Err(ui_scene::math::Mesh3dFault::ByteCapacity); }
                     self.phase = WorldFaceOverlayPhase::Allocate;
                 }
             }
             WorldFaceOverlayPhase::Allocate => {
                 let token = self.token()?;
-                let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_allocate_capacity_byte_demand(token)?, 0, 1);
+                let grant = world_mesh_ownership_grant(0, ui_scene::math::mesh3d_allocate_capacity_byte_demand(token)?, 0, 1);
                 if world_mesh_ownership_complete(grant, mesh3d_allocate_step(token, grant)?)? {
                     self.scan.reset();
                     self.phase = WorldFaceOverlayPhase::Geometry;
@@ -439,7 +439,7 @@ impl WorldFaceOverlayMeshCursor {
                     match self.scan.step(selection_state, gumball_state, scene_state) {
                         WorldFaceOverlayScanStep::Pending => {}
                         WorldFaceOverlayScanStep::Match(found) if found.category == self.order[usize::from(self.bucket)] => {
-                            self.geometry = Some(face_overlay_geometry(scene_state, found).ok_or(ui_wgpu::wgpu::Mesh3dFault::Stale)?);
+                            self.geometry = Some(face_overlay_geometry(scene_state, found).ok_or(ui_scene::math::Mesh3dFault::Stale)?);
                         }
                         WorldFaceOverlayScanStep::Match(_) => {}
                         WorldFaceOverlayScanStep::Complete => {
@@ -465,7 +465,7 @@ impl WorldFaceOverlayMeshCursor {
                 self.phase = WorldFaceOverlayPhase::Publish;
             }
             WorldFaceOverlayPhase::Publish => {
-                let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(ui_wgpu::wgpu::Mesh3dFault::Stale) };
+                let WorldPlaceholderOwner::Ready(lease) = self.owner else { return Err(ui_scene::math::Mesh3dFault::Stale) };
                 self.owner = WorldPlaceholderOwner::Empty;
                 self.phase = WorldFaceOverlayPhase::NextBucket;
                 let index = usize::from(self.bucket);
@@ -491,14 +491,14 @@ impl WorldFaceOverlayMeshCursor {
             WorldPlaceholderOwner::Writing(token) => {
                 if !self.close_started {
                     match mesh3d_abort(token) {
-                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
-                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Ok(()) | Err(ui_scene::math::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_scene::math::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
                         Err(_) => return false,
                     }
                     return false;
                 }
-                match ui_wgpu::wgpu::mesh3d_abort_demands(token, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_abort_step(token, grant)?) }) {
-                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                match ui_scene::math::mesh3d_abort_demands(token, ui_scene::math::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_scene::math::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_abort_step(token, grant)?) }) {
+                    Ok(true) | Err(ui_scene::math::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
                     Ok(false) | Err(_) => return false,
                 }
                 false
@@ -506,14 +506,14 @@ impl WorldFaceOverlayMeshCursor {
             WorldPlaceholderOwner::Ready(lease) => {
                 if !self.close_started {
                     match mesh3d_begin_close(lease) {
-                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => self.close_started = true,
-                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                        Ok(()) | Err(ui_scene::math::Mesh3dFault::Closing) => self.close_started = true,
+                        Err(ui_scene::math::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
                         Err(_) => return false,
                     }
                     return false;
                 }
-                match ui_wgpu::wgpu::mesh3d_close_demands(lease, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(lease, grant)?) }) {
-                    Ok(true) | Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
+                match ui_scene::math::mesh3d_close_demands(lease, ui_scene::math::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_scene::math::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(lease, grant)?) }) {
+                    Ok(true) | Err(ui_scene::math::Mesh3dFault::Stale) => self.owner = WorldPlaceholderOwner::Empty,
                     Ok(false) | Err(_) => return false,
                 }
                 false

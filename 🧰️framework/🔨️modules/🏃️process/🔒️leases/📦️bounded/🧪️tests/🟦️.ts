@@ -9,7 +9,7 @@ import schema from"../🧬️schema/🔣️.json";
 import{acquireResourceLease,resourceLeaseMaximumPagesV1,acquireQueuedResourceLease,retireResourceQueueClaimsV1,resourceQueueClaimV1,resourceQueueTicketV1,resourceLeasePathV1,type ResourceLease}from"../../🟦️.ts";
 import catalogLaw from"./🎟️catalog.json";
 import authoritySchema from"../../🧬️schema/📜️ticket.json";
-import{registerBuildTestLawV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../🎛️owned-execution/📥️capture/🟦️.ts";
 const retention=authoritySchema.definitions.ClaimRetentionPolicy;

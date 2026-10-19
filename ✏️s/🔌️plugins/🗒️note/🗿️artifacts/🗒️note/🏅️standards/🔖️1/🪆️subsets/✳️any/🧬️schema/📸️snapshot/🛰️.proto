@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.note.note;
 import "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message NoteSnapshot {
   string schema = 1;
   string id = 2;
@@ -16,5 +16,5 @@ message NoteSnapshot {
   optional double pencil_width = 11;
   optional double eraser_radius = 12;
   map<string, NoteImageAsset> assets = 13;
-  optional semio.os.store.ArtifactLink linked_artifact = 14;
+  optional semio.framework.schema.artifact_link.ArtifactLink linked_artifact = 14;
 }

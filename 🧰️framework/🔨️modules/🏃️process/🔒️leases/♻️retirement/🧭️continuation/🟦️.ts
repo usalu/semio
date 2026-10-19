@@ -1,6 +1,6 @@
 /** ♻️ Continuation: module exporting `resourceLeaseContinuationPolicyV1`, `ResourceLeaseContinuationKindV1`, `ResourceLeaseTransactionPhaseV1`, `requireResourceLeaseContinuationCatalogV1` and more. */
 import{types}from"node:util";
-import{compileJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{ResourceLeaseDatabaseV1}from"../🟦️.ts";
 import authority from"../../🧬️schema/📜️ticket.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json" with{type:"json"};

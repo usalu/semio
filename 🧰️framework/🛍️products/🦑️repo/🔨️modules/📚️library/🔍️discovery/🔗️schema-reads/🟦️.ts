@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { posix } from "node:path";
-import { ecmaProgram, ecmaStringValue, ecmaTokens, type EcmaExpression, type EcmaStatement } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
+import { ecmaProgram, ecmaStringValue, ecmaTokens, type EcmaExpression, type EcmaStatement } from "@semio-tech/compiler-syntax-ecma-ts";
 import type { SchemaReadIssue, SchemaReadProgress, SchemaSourceOrigin, SchemaValidationRead, SchemaValidationReadIndex, SchemaValidationReadReport } from "./🧬️schema/🟦️.ts";
 export type { SchemaReadIssue, SchemaReadProgress, SchemaSourceOrigin, SchemaValidationRead, SchemaValidationReadIndex, SchemaValidationReadReport } from "./🧬️schema/🟦️.ts";
 

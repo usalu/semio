@@ -29,7 +29,7 @@ fn drill_step(id: &str) -> ProcessStep {
 /// catalog `Process3dPlayApp::build_document_store_owners` hands the runtime, which in turn obliges
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
-    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
+    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
 }
@@ -172,7 +172,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 //#region 🔖️DocumentTextTests
 #[semio_framework_async_macros::async_test]
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
-    let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
+    let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = Process3dStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store

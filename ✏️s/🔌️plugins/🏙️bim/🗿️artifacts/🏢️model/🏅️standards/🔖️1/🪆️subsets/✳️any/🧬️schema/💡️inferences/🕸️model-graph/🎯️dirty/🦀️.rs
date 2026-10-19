@@ -6,9 +6,10 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::element_storey;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use protocol::TouchedPaths;
 
 struct Regions<'a>(&'a TouchedPaths);
@@ -135,7 +136,7 @@ pub fn touched(snapshot: &ModelSnapshot, key: &ModelNode, touched: &TouchedPaths
         ModelNode::Quantity(id) => quantity(&regions, snapshot, id),
         ModelNode::Component(id) => regions.row("components", id) || regions.collection("component_overrides") || regions.collection("families") || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials") || regions.collection("walls"),
         ModelNode::Mep(id) => regions.row("mep_elements", id),
-        ModelNode::StructuralAnalysis => crate::standards::v1::subsets::any::schema::inferences::analytical_members::READS.iter().any(|field| regions.collection(field)),
+        ModelNode::StructuralAnalysis => semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::READS.iter().any(|field| regions.collection(field)),
         ModelNode::MepClash(_) => false,
         ModelNode::Family(id) => regions.row("families", id) || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials"),
         ModelNode::Totals(_) | ModelNode::DiagnosticIndex => false,

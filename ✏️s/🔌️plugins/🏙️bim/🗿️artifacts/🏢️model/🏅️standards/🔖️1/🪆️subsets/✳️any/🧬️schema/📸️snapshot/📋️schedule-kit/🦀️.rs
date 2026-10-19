@@ -2,7 +2,7 @@
 //! of a schedule definition (`create-schedule` and `set-schedule` refuse exactly what it names) and the presets the library creates. Everything here is a pure function of authored values.
 
 use crate::standards::v1::subsets::any::schema::snapshot::entities::Schedule;
-use crate::standards::v1::subsets::any::schema::snapshot::values::{ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
 
 //#region 🔖️Fields
 
@@ -87,7 +87,7 @@ pub const PRESETS: [&str; 7] = ["door", "window", "room", "finish", "envelope", 
 /// 📋️ The preset schedule `key` under `name` (`None` for an unknown key): `door` lists every door with its type, size and swing, `window` every window, `room` the spaces grouped by storey with area and volume totals, `envelope` every window with its type, size, area, U-value and g-value, `finish` the floor, wall and ceiling finish of every room grouped by storey with the finish areas summed,
 /// `wall` the walls grouped by type with length, area and volume totals, `material` the material take-off collapsed per material.
 pub fn preset(key: &str, name: &str) -> Option<Schedule> {
-    use ScheduleField::*;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleField::*;
     let schedule = |category, columns: Vec<ScheduleColumn>, sort: Vec<ScheduleSort>, filter: Vec<ScheduleFilter>, group: Vec<ScheduleGroup>, itemize| Schedule { name: name.to_string(), category, columns, sort, filter, group, itemize, storeys: Vec::new(), phases: Vec::new() };
     Some(match key {
         "door" => schedule(ScheduleCategory::Door, vec![column(Name, false), column(Type, false), column(Storey, false), column(Width, false), column(Height, false), column(Leaves, false), column(Swing, false), column(Count, true)], vec![ascending(Storey), ascending(Name)], Vec::new(), Vec::new(), true),

@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 /** 📦️ gltf Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runDefinitionChecks } from "../../🧪️tests/📜️definition/🟦️.ts";
 import { runBorrowedCarrierChecks } from "../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧪️tests/🫳️borrowed-carriers/🟦️.ts";
 import { BundleScript, createIssuedResourceControlV1, createRequestedIssuedResourceControlV1, scriptInvocationEnvironment } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import {prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import {repositoryCargoPreparationStorageV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { devToolingEnv } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { prepareCargoWorkspaceInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+
+import { devToolingEnv } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { lstatSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 
@@ -38,7 +38,7 @@ class NativeSchemaScript extends BundleScript {
     ];
     const args = ["test", "--offline", "--manifest-path", manifest, ...[...new Set(laws.map(([name]) => name))].flatMap((name) => ["-p", name]), "--lib"];
     const budget = buildBudgetMs() || 1_200_000, phaseControl = createIssuedResourceControlV1(this.invocation, "gltf:native-schema", 0);
-    await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(workspace),workspace,args,workspace,scriptInvocationEnvironment(this.invocation, process.env),createRequestedIssuedResourceControlV1(phaseControl, budget));
+    await prepareCargoWorkspaceInvocation(workspace,args,workspace,scriptInvocationEnvironment(this.invocation, process.env),createRequestedIssuedResourceControlV1(phaseControl, budget));
     const controller = new AbortController(), abort = () => controller.abort(), timer = setTimeout(abort, budget);
     process.once("SIGINT", abort); process.once("SIGTERM", abort);
     let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;

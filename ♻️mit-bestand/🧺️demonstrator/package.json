@@ -26,8 +26,14 @@
     "test:e2e": "bun --cwd \"../..\" repo run @semio-tech/mit-bestand-demonstrator:test-e2e"
   },
   "devDependencies": {
+    "@iarna/toml": "2.2.5",
+    "@semio-tech/framework-os": "workspace:*",
+    "@semio-tech/framework-plugin": "workspace:*",
+    "@semio-tech/plugin-registry": "workspace:*",
+    "@semio-tech/repo-lib": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "^5.1.2",
+    "ajv": "8.20.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "@semio-tech/process": "workspace:*",

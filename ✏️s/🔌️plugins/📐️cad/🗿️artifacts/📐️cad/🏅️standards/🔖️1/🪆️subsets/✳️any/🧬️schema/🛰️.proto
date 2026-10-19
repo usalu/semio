@@ -1,15 +1,15 @@
 syntax = "proto3";
 package semio.s.cad.cad.artifact;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message CadArtifact {
   string schema = 1;
   string id = 2;
-  optional semio.os.store.ArtifactChild shape_model = 3;
-  optional semio.os.store.ArtifactChild building_model = 4;
-  optional semio.os.store.ArtifactChild energy_model = 5;
-  optional semio.os.store.ArtifactChild structure_classic_model = 6;
-  repeated semio.os.store.ArtifactChild drawings = 7;
-  repeated semio.os.store.ArtifactChild breps = 8;
+  optional semio.framework.schema.artifact_child.ArtifactChild shape_model = 3;
+  optional semio.framework.schema.artifact_child.ArtifactChild building_model = 4;
+  optional semio.framework.schema.artifact_child.ArtifactChild energy_model = 5;
+  optional semio.framework.schema.artifact_child.ArtifactChild structure_classic_model = 6;
+  repeated semio.framework.schema.artifact_child.ArtifactChild drawings = 7;
+  repeated semio.framework.schema.artifact_child.ArtifactChild breps = 8;
   map<string, CadReferenceList> references_by_model_definition_id = 9;
   repeated CadNode nodes = 10;
 }

@@ -1,0 +1,10 @@
+import { resolve } from "node:path";
+import { writeScriptProviderMapV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts";
+import { EXTENSION_PACKAGE_PROVIDER_V1, packageAdmittedExtensionComponentV1 } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { loadScriptProviderV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔌️providers/🟦️.ts";
+import designation from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🔣️.json" with { type: "json" };
+const base = resolve(import.meta.dir, "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/");
+const path = resolve(base, (designation.providers as Record<string, string>)["extension-package"]!);
+const env = { SEMIO_SCRIPT_PROVIDERS: writeScriptProviderMapV1({ "extension-package": path }) };
+const provider = await loadScriptProviderV1(EXTENSION_PACKAGE_PROVIDER_V1, env as never);
+console.log("extension-package provider loaded:", typeof provider.packageComponent, path, typeof packageAdmittedExtensionComponentV1);

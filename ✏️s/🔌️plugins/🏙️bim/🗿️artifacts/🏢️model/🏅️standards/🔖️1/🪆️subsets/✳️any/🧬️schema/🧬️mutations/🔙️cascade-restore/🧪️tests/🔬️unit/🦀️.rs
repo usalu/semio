@@ -1,6 +1,6 @@
 //! 🧪️ The restoring list of the aggregate covers every collection the removal closure can name: for each cascading delete case the rows the aggregate states equal the rows the closure counts.
 
-use crate::standards::v1::subsets::any::schema::mutations::cascade::{closure, RemovalInverse};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::{closure, RemovalInverse};
 use crate::standards::v1::subsets::any::schema::mutations::{kit, ModelMutation};
 
 #[test]

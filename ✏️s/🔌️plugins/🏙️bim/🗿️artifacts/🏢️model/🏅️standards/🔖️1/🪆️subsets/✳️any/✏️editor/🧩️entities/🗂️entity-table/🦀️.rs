@@ -1,6 +1,58 @@
 //! 🗂️ Entity table of the BIM entity table: the one static table of every entity kind. See [`super`].
 
 use crate::editor::bim::entities::*;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{create_site, create_building, create_storey, create_grid, create_wall, create_curtain_wall, create_column, create_beam, create_slab, create_roof, create_opening, create_stair, create_railing, create_space, create_material, create_wall_type, create_slab_type, create_roof_type, create_column_type, create_beam_type, create_window_type, create_door_type};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::frame;
+use semio_s_artifact_bim_model_mut_any_101::standards::v1::subsets::any::schema::mutations::delete_area_scheme;
+use semio_s_artifact_bim_model_mut_any_67::standards::v1::subsets::any::schema::mutations::delete_beam;
+use semio_s_artifact_bim_model_mut_any_71::standards::v1::subsets::any::schema::mutations::delete_beam_type;
+use semio_s_artifact_bim_model_mut_any_59::standards::v1::subsets::any::schema::mutations::delete_building;
+use semio_s_artifact_bim_model_mut_any_90::standards::v1::subsets::any::schema::mutations::delete_ceiling;
+use semio_s_artifact_bim_model_mut_any_89::standards::v1::subsets::any::schema::mutations::delete_ceiling_type;
+use semio_s_artifact_bim_model_mut_any_148::standards::v1::subsets::any::schema::mutations::delete_classification_system;
+use semio_s_artifact_bim_model_mut_any_65::standards::v1::subsets::any::schema::mutations::delete_column;
+use semio_s_artifact_bim_model_mut_any_70::standards::v1::subsets::any::schema::mutations::delete_column_type;
+use semio_s_artifact_bim_model_mut_any_83::standards::v1::subsets::any::schema::mutations::delete_curtain_wall;
+use semio_s_artifact_bim_model_mut_any_73::standards::v1::subsets::any::schema::mutations::delete_door_type;
+use semio_s_artifact_bim_model_mut_any_149::standards::v1::subsets::any::schema::mutations::delete_family;
+use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::delete_family_solid;
+use semio_s_artifact_bim_model_mut_any_82::standards::v1::subsets::any::schema::mutations::delete_grid_line;
+use semio_s_artifact_bim_model_mut_any_74::standards::v1::subsets::any::schema::mutations::delete_material;
+use semio_s_artifact_bim_model_mut_any_78::standards::v1::subsets::any::schema::mutations::delete_opening;
+use semio_s_artifact_bim_model_mut_any_108::standards::v1::subsets::any::schema::mutations::delete_property_template;
+use semio_s_artifact_bim_model_mut_any_62::standards::v1::subsets::any::schema::mutations::delete_railing;
+use semio_s_artifact_bim_model_mut_any_92::standards::v1::subsets::any::schema::mutations::delete_ramp;
+use semio_s_artifact_bim_model_mut_any_69::standards::v1::subsets::any::schema::mutations::delete_roof;
+use semio_s_artifact_bim_model_mut_any_77::standards::v1::subsets::any::schema::mutations::delete_roof_type;
+use semio_s_artifact_bim_model_mut_any_102::standards::v1::subsets::any::schema::mutations::delete_schedule;
+use semio_s_artifact_bim_model_mut_any_58::standards::v1::subsets::any::schema::mutations::delete_site;
+use semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab;
+use semio_s_artifact_bim_model_mut_any_76::standards::v1::subsets::any::schema::mutations::delete_slab_type;
+use semio_s_artifact_bim_model_mut_any_64::standards::v1::subsets::any::schema::mutations::delete_space;
+use semio_s_artifact_bim_model_mut_any_80::standards::v1::subsets::any::schema::mutations::delete_stair;
+use semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey;
+use semio_s_artifact_bim_model_mut_any_93::standards::v1::subsets::any::schema::mutations::delete_view;
+use semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall;
+use semio_s_artifact_bim_model_mut_any_111::standards::v1::subsets::any::schema::mutations::delete_wall_sweep;
+use semio_s_artifact_bim_model_mut_any_75::standards::v1::subsets::any::schema::mutations::delete_wall_type;
+use semio_s_artifact_bim_model_mut_any_72::standards::v1::subsets::any::schema::mutations::delete_window_type;
+use semio_s_artifact_bim_model_mut_any_99::standards::v1::subsets::any::schema::mutations::delete_zone;
+use semio_s_artifact_bim_model_mut_any_10::standards::v1::subsets::any::schema::mutations::set_beam_type;
+use semio_s_artifact_bim_model_mut_any_25::standards::v1::subsets::any::schema::mutations::set_ceiling_type;
+use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system;
+use semio_s_artifact_bim_model_mut_any_9::standards::v1::subsets::any::schema::mutations::set_column_type;
+use semio_s_artifact_bim_model_mut_any_12::standards::v1::subsets::any::schema::mutations::set_door_type;
+use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family;
+use semio_s_artifact_bim_model_mut_any_43::standards::v1::subsets::any::schema::mutations::set_family_solid;
+use semio_s_artifact_bim_model_mut_any_13::standards::v1::subsets::any::schema::mutations::set_material;
+use semio_s_artifact_bim_model_mut_any_40::standards::v1::subsets::any::schema::mutations::set_property_template;
+use semio_s_artifact_bim_model_mut_any_16::standards::v1::subsets::any::schema::mutations::set_roof_type;
+use semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule;
+use semio_s_artifact_bim_model_mut_any_15::standards::v1::subsets::any::schema::mutations::set_slab_type;
+use semio_s_artifact_bim_model_mut_any_28::standards::v1::subsets::any::schema::mutations::set_view;
+use semio_s_artifact_bim_model_mut_any_14::standards::v1::subsets::any::schema::mutations::set_wall_type;
+use semio_s_artifact_bim_model_mut_any_11::standards::v1::subsets::any::schema::mutations::set_window_type;
 
 //#region 🔖️Table
 /// 🧩️ Every entity kind, structure first (site to space), then the library (materials and types). A new mutation kind is one row.
@@ -20,7 +72,7 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_wall::DeleteWall), rename: Some(rename_element), create: Some(create_wall), fields: WALL_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("curtain-wall", "panels-top-left", false, kind_curtain_wall, group_curtain_walls, curtain_walls . name, parent: |s, id| s.curtain_walls.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_curtain_wall::DeleteCurtainWall), rename: Some(rename_element), create: Some(create_curtain_wall), fields: CURTAIN_WALL_FIELDS, inferred: QUANTITY_INFERRED),
-    frame::CURTAIN_PANEL_OVERRIDE,
+    semio_s_artifact_bim_model_viewer::editor::bim::entities::frame::CURTAIN_PANEL_OVERRIDE,
     kind!("column", "columns", false, kind_column, group_columns, columns . name, parent: |s, id| s.columns.get(id).map(|row| row.storey.clone()),
         delete: delete!(delete_column::DeleteColumn), rename: Some(rename_element), create: Some(create_column), fields: COLUMN_FIELDS, inferred: QUANTITY_INFERRED),
     kind!("beam", "minus", false, kind_beam, group_beams, beams . name, parent: |s, id| s.beams.get(id).map(|row| row.storey.clone()),
@@ -79,7 +131,7 @@ pub static ENTITIES: &[EntityKind] = &[
         delete: delete!(delete_roof_type::DeleteRoofType), rename: renaming!(set_roof_type::SetRoofType), create: Some(create_roof_type), fields: ROOF_TYPE_FIELDS, inferred: &[]),
     kind!("column-type", "columns", true, kind_column_type, group_column_types, column_types . name, parent: |_, _| None,
         delete: delete!(delete_column_type::DeleteColumnType), rename: renaming!(set_column_type::SetColumnType), create: Some(create_column_type), fields: COLUMN_TYPE_FIELDS, inferred: &[]),
-    frame::CURTAIN_WALL_TYPE,
+    semio_s_artifact_bim_model_viewer::editor::bim::entities::frame::CURTAIN_WALL_TYPE,
     kind!("beam-type", "minus", true, kind_beam_type, group_beam_types, beam_types . name, parent: |_, _| None,
         delete: delete!(delete_beam_type::DeleteBeamType), rename: renaming!(set_beam_type::SetBeamType), create: Some(create_beam_type), fields: BEAM_TYPE_FIELDS, inferred: &[]),
     kind!("window-type", "app-window", true, kind_window_type, group_window_types, window_types . name, parent: |_, _| None,

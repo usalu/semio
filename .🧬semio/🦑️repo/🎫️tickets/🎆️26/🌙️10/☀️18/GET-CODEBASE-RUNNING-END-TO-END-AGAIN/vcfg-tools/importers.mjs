@@ -1,0 +1,12 @@
+import { createRequire } from "node:module";
+import { readFileSync } from "node:fs";
+const require = createRequire("/Users/ueli/Documents/semio/package.json");
+const { build } = require("esbuild");
+const root = process.cwd();
+const contract = JSON.parse(readFileSync("🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/⚙️config-graph.json", "utf8"));
+const externalize = { name: "x", setup(b) { b.onResolve({ filter: /^[^.#].*/ }, ({ path, kind }) => (kind === "entry-point" || path.startsWith("/") ? null : { external: true })); } };
+const r = await build({ entryPoints: [root + "/" + contract.entry], bundle: true, write: false, metafile: true, platform: "node", format: "esm", logLevel: "silent", absWorkingDir: root, plugins: [externalize] });
+const inputs = r.metafile.inputs;
+const short = (p) => p.replace("🧰️framework/🛍️products/", "").replace("🧰️framework/", "F/").split("/").slice(-3).join("/");
+const needle = process.argv[2];
+for (const k of Object.keys(inputs)) for (const i of inputs[k].imports) if (!i.external && i.path.includes(needle)) console.log(short(k), "->", i.kind[0], short(i.path));

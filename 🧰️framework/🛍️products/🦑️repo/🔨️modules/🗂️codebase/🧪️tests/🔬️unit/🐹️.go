@@ -5,42 +5,23 @@ package codebase
 import (
 	os "os"
 	filepath "path/filepath"
-	runtime "runtime"
 	strings "strings"
 	testing "testing"
 
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
-func findTestRepoRoot(start string) string {
-	for _, candidate := range []string{start, func() string {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			return ""
-		}
-		return filepath.Dir(file)
-	}()} {
-		dir := candidate
-		if dir == "" {
-			continue
-		}
-		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
-				return dir
-			}
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-				return dir
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return start
+const statuteFixtureRoot = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures"
+
+// 🧫️withStatuteFixtures materialises the statutes module's shared fixtures inside a repository this test owns and binds it as the root.
+func withStatuteFixtures(t *testing.T) string {
+	t.Helper()
+	root := sandbox.NewRepository(t)
+	sandbox.CopyTree(t, sandbox.OriginPath("..", "..", "..", "📜️statutes", "🧪️tests", "🧫️fixtures"), filepath.Join(root, filepath.FromSlash(statuteFixtureRoot)))
+	return root
 }
 
 func TestFileHeaderId(t *testing.T) {
@@ -68,9 +49,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("shebang ts file becomes script", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		filePath := "tools/build.ts"
 		absPath := filepath.Join(tmpDir, filePath)
@@ -87,9 +66,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("shebang py file becomes script", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		filePath := "scripts/run.py"
 		absPath := filepath.Join(tmpDir, filePath)
@@ -106,9 +83,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("code ts without shebang stays code", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		filePath := "src/index.ts"
 		absPath := filepath.Join(tmpDir, filePath)
@@ -133,10 +108,7 @@ func TestFileHeaderId(t *testing.T) {
 }
 
 func TestFixNonAutofixableNotFixed(t *testing.T) {
-	cwd, _ := os.Getwd()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = findTestRepoRoot(cwd)
-	defer func() { workspace.RootDir = oldRoot }()
+	withStatuteFixtures(t)
 
 	bundles := LoadBundles()
 	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
@@ -185,6 +157,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
+	withStatuteFixtures(t)
 	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
 	bundles := LoadBundles()
 	scope := workspace.Scope{Kind: workspace.ScopeFile, FilePath: path}
@@ -212,6 +185,7 @@ func TestFixtureBreachsGroupedInline(t *testing.T) {
 }
 
 func TestFixtureBreachsByLanguage(t *testing.T) {
+	withStatuteFixtures(t)
 	bundles := LoadBundles()
 	fixtures := []struct {
 		path          string

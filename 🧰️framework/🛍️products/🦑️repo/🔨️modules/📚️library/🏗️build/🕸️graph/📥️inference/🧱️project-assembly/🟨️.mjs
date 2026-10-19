@@ -1,6 +1,6 @@
 /** 🧱️ Normalizes one project's targets and named inputs into its generated Build configuration. */
-import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
-import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { declaredNativeOwnerCommandV1, bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";

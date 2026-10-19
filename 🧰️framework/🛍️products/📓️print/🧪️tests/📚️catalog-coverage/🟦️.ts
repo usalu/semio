@@ -9,7 +9,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import MarkdownIt from "markdown-it";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { loadVizCatalog, loadVizSchema, marksItselfGenerated } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { vizGeneratedFiles } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";
@@ -18,7 +18,7 @@ import { registeredVizFamilies, vizCoverageReport, vizApiReferenceFindings } fro
 import type { LocalizedText } from "../../🧬️schema/🟦️.ts";
 import { vizOptionList } from "../../🧬️schema/🟦️.ts";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const productRoot = join(repoRoot, "🧰️framework/🛍️products/📓️print");
 const LATEX_DIR = join(productRoot, "🖋️latex");
 const LEAF_KINDS = new Set(["mark", "chart", "layout", "axis", "scale"]);

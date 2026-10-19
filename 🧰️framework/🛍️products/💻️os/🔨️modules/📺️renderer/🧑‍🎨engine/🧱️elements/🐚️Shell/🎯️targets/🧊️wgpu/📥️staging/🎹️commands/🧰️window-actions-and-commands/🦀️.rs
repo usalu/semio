@@ -18,7 +18,7 @@ const WINDOW_SEARCH_SUGGESTIONS_CONTROL_ID: &str = "ui.windowSearch.suggestions"
 /// line's OWN ranker, higher-is-better, `-1` for no match. Deliberately NOT `rank_fuzzy_items`: that
 /// is the ⌘️K palette's ranker (`//#region 🔎️FuzzyRankingParity`), and React's window search never
 /// calls it, so borrowing it here would order the two shells' suggestion lists differently.
-fn search_possible_rank_score(query: &str, possible: &ui_wgpu::wgpu::WindowEngagementPossible) -> i32 {
+fn search_possible_rank_score(query: &str, possible: &semio_framework_ui_declaration::layout::WindowEngagementPossible) -> i32 {
     let needle = normalize_engagement_action_text(query).to_lowercase();
     if needle.is_empty() {
         return -1;
@@ -75,11 +75,11 @@ pub fn normalize_engagement_action_text(text: &str) -> String {
 
 /// 🔎️ React's `filterSearchPossibles`: an empty query keeps the host's own order, otherwise the rows
 /// that score at all, best first.
-pub fn filter_search_possibles<'a>(query: &str, possibles: &'a [ui_wgpu::wgpu::WindowEngagementPossible]) -> Vec<&'a ui_wgpu::wgpu::WindowEngagementPossible> {
+pub fn filter_search_possibles<'a>(query: &str, possibles: &'a [semio_framework_ui_declaration::layout::WindowEngagementPossible]) -> Vec<&'a semio_framework_ui_declaration::layout::WindowEngagementPossible> {
     if normalize_engagement_action_text(query).is_empty() {
         return possibles.iter().collect();
     }
-    let mut scored: Vec<(i32, usize, &ui_wgpu::wgpu::WindowEngagementPossible)> = possibles.iter().enumerate().map(|(index, possible)| (search_possible_rank_score(query, possible), index, possible)).filter(|(score, _, _)| *score >= 0).collect();
+    let mut scored: Vec<(i32, usize, &semio_framework_ui_declaration::layout::WindowEngagementPossible)> = possibles.iter().enumerate().map(|(index, possible)| (search_possible_rank_score(query, possible), index, possible)).filter(|(score, _, _)| *score >= 0).collect();
     scored.sort_by(|left, right| right.0.cmp(&left.0).then(left.1.cmp(&right.1)));
     scored.into_iter().map(|(_, _, possible)| possible).collect()
 }
@@ -128,11 +128,11 @@ impl CommandState {
             on_submit: input.on_submit.clone(),
             on_abort: input.on_abort.clone(),
             on_repeat_last: (!session_active).then(|| input.on_repeat_last.clone()).flatten(),
-            presence: UiPresence { state: if input.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+            presence: UiPresence { state: if input.disabled.unwrap_or(false) { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
             menu: None,
             ..Default::default()
         })];
-        let possibles: &[ui_wgpu::wgpu::WindowEngagementPossible] = engagement.possible_engagements.as_deref().unwrap_or(&[]);
+        let possibles: &[semio_framework_ui_declaration::layout::WindowEngagementPossible] = engagement.possible_engagements.as_deref().unwrap_or(&[]);
         if !possibles.is_empty() {
             let open = self.search_possibles_open.get(window_id).copied().unwrap_or(false);
             children.push(UiNode::Toggle(UiToggleNode {
@@ -211,7 +211,7 @@ pub const FUZZY_SEARCH_LIMIT: usize = 20;
 
 /// 🔎️ `normalizeFuzzyText` — lowercase, marks stripped, trimmed, bounded.
 pub fn normalize_fuzzy_text(value: &str) -> String {
-    ui_wgpu::wgpu::normalize_nfkd_text(value, false, FUZZY_TEXT_LIMIT)
+    semio_framework_ui_select_behavior::normalize_nfkd_text(value, false, FUZZY_TEXT_LIMIT)
 }
 
 /// 🔎️ `boundedDamerauLevenshtein` — edit distance with transpositions, abandoned past `maximum`.

@@ -90,6 +90,11 @@ func (c *defaultContext) Analyze(scope *string) (*model.AnalyzeResult, error) {
 	return &model.AnalyzeResult{Breachs: []*model.Breach{}, Metrics: &model.AnalyzeMetrics{}}, nil
 }
 
+// 🩹️Fix performs the fix operation on the default context.
+func (c *defaultContext) Fix(scope *string) (*model.FixResult, error) {
+	return &model.FixResult{Breachs: []*model.Breach{}}, nil
+}
+
 // 💙️TicketOpen MUST return a non-nil error when the operation fails.
 // 🍁️TicketOpen performs the ticket open operation on the default context.
 func (c *defaultContext) TicketOpen(input model.TicketOpenInput) (*model.Ticket, error) {

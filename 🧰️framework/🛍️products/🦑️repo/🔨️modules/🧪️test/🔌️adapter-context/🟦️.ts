@@ -5,12 +5,10 @@
 
 //#region 🔌️Adapters
 import { type AdapterContext, type TestCasePlan, type FeatureScenario, type TestRole, type AdapterOutcome, type TestAdapter } from "@semio-tech/framework/test/adapter";
-import { constants, cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { constants, cpSync, mkdirSync, readFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join } from "node:path";
 import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { ResourceLeaseControl } from "@semio-tech/process/leases";
-import { digest } from "../🔢️digests/🟦️.ts";
-import { TEST_INPUT_URI_RE } from "../📥️fixture-inputs/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Adapters
@@ -25,20 +23,6 @@ import { TEST_INPUT_URI_RE } from "../📥️fixture-inputs/🟦️.ts";
 
 /** 🧭️ Declares a TypeScript adapter. The coordinator validates the registration against the feature. */
 
-
-/**
- * 📦️ The answer of a READER oracle whose expected state is committed, not computed: the one fixture the scenario's
- * steps name whose URI ends with `/<leaf>`, copied into the artifact bundle under `role` for the case's comparison
- * pipeline, with its URI and digest as the projection. A scenario naming no such fixture, or more than one, is an error.
- */
-export function committedArtifact(ctx: AdapterContext, leaf: string, role: string, mediaType: string): AdapterOutcome {
-  const uris = [...new Set(ctx.scenario.steps.flatMap((step) => [step.text, step.docString ?? ""]).flatMap((text) => [...text.matchAll(TEST_INPUT_URI_RE)].map((match) => match[0])))].filter((uri) => uri.endsWith(`/${leaf}`));
-  if (uris.length !== 1) throw new Error(`scenario ${ctx.scenario.id} names ${uris.length} committed fixture(s) ending in /${leaf}; a reader oracle answers with exactly one`);
-  const bytes = ctx.inputBytes(uris[0]!);
-  const path = ctx.artifact(role, leaf);
-  writeFileSync(path, bytes);
-  return { projection: { role, uri: uris[0], sha256: digest(bytes) }, artifacts: [{ role, path, mediaType }] };
-}
 
 /** 🧭️ Checks a registration against the plan: no unknown scenario, no unregistered scenario. */
 export function validateRegistration(plan: TestCasePlan, adapter: TestAdapter, role: TestRole): string[] {

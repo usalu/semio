@@ -1,13 +1,11 @@
 #!/usr/bin/env bun
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {join} from "node:path";
-import {runRepositoryPublishedCargoExecutableV1} from "../../../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
+import { runRepositoryPublishedCargoExecutableV1, runDeclaredRustBuildV1, runRepositoryCargoTests } from "../../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { runDeclaredRustBuildV1 } from "../../../../📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-coordinator-rs` router: `bun ./📜️script.ts build|test|run`. */
-import { runRepositoryCargoTests } from "../../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

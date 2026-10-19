@@ -5,9 +5,9 @@ import Ajv from"ajv";
 import ts from"typescript";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
-import{withBuildTestInvocationV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import fixture from"./🔣️.json";
 import schema from"./🧬️schema/🔣️.json";
 /** 🧮️ Independently projects reducing JSON and exact FD/namespace window DATA. */

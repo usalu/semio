@@ -2,14 +2,16 @@
 //! an elevation is a plane outside the building looking at one of its sides, and `elevations` creates the four of them at once, south, east, north and west; a camera orbits the building. Every view is
 //! one ordinary `create-view` mutation with concrete values, so the command writes no more than a person could author, and it binds the addressed window to the view it made.
 
-use crate::editor::bim::entities::ordered_storeys;
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::kit::{fault, select_effect, IdMint};
-use crate::editor::bim::modes::edit::windows::{plan, section};
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, View, ViewCamera, ViewKind, ViewPlane};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect, IdMint};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, ViewCamera, ViewKind, ViewPlane};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -105,13 +107,13 @@ fn building_of(snapshot: &ModelSnapshot, parent: &str, selected: &[String]) -> O
             .then(|| id.to_string())
             .or_else(|| snapshot.storeys.get(id).map(|storey| storey.building.clone()))
             .or_else(|| snapshot.views.get(id).map(|view| view.building.clone()))
-            .or_else(|| crate::editor::bim::entities::storey_of(snapshot, id).and_then(|storey| snapshot.storeys.get(&storey).map(|row| row.building.clone())))
+            .or_else(|| semio_s_artifact_bim_model_entities::editor::bim::entities::storey_of(snapshot, id).and_then(|storey| snapshot.storeys.get(&storey).map(|row| row.building.clone())))
     };
     of(parent).or_else(|| selected.iter().find_map(|id| of(id))).or_else(|| snapshot.buildings.keys().next().cloned())
 }
 
 fn storey_of(snapshot: &ModelSnapshot, building: &str, parent: &str, selected: &[String]) -> Option<String> {
-    let of = |id: &str| -> Option<String> { snapshot.storeys.contains_key(id).then(|| id.to_string()).or_else(|| crate::editor::bim::entities::storey_of(snapshot, id)) };
+    let of = |id: &str| -> Option<String> { snapshot.storeys.contains_key(id).then(|| id.to_string()).or_else(|| semio_s_artifact_bim_model_entities::editor::bim::entities::storey_of(snapshot, id)) };
     of(parent).or_else(|| selected.iter().find_map(|id| of(id))).or_else(|| ordered_storeys(snapshot, building).into_iter().next())
 }
 
@@ -175,20 +177,20 @@ pub fn handle(payload: &CreateView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg:
     let mut mutations = Vec::new();
     let mut made = Vec::new();
     for mut view in views {
-        view.name = crate::editor::bim::entities::views::unique_name(&taken, &building, &view.name);
-        let id = mint.mint("view", |id| crate::editor::bim::entities::id_taken(snapshot, id));
+        view.name = semio_s_artifact_bim_model_entities::editor::bim::entities::views::unique_name(&taken, &building, &view.name);
+        let id = mint.mint("view", |id| semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken(snapshot, id));
         taken.views.insert(id.clone(), view.clone());
         made.push((view.kind, id.clone()));
-        mutations.push(ModelMutation::CreateView(crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id, view }));
+        mutations.push(ModelMutation::CreateView(semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id, view }));
     }
     let mut emit = Emit::mutations(mutations);
     if let Some((kind, id)) = made.first() {
         emit.effects.push(select_effect(BIM_ELEMENT_DOMAIN, &[("view".to_string(), id.clone())], "replace"));
         if let Some(view) = ctx.view.clone() {
-            if kind.is_plan() && ctx.window_kind == plan::WINDOW_KIND_ID {
-                emit.window_config_mutations.push(plan::config::addressed(&view, plan::config::BimPlanWindowConfig { view: id.clone(), framed: false, ..ctx.plan.clone() })?);
-            } else if kind.is_vertical() && ctx.window_kind == section::WINDOW_KIND_ID {
-                emit.window_config_mutations.push(section::config::addressed(&view, section::config::BimSectionWindowConfig { view: id.clone(), framed: false, ..ctx.section.clone() })?);
+            if kind.is_plan() && ctx.window_kind == semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID {
+                emit.window_config_mutations.push(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::addressed(&view, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig { view: id.clone(), framed: false, ..ctx.plan.clone() })?);
+            } else if kind.is_vertical() && ctx.window_kind == semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID {
+                emit.window_config_mutations.push(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::addressed(&view, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig { view: id.clone(), framed: false, ..ctx.section.clone() })?);
             }
         }
     }

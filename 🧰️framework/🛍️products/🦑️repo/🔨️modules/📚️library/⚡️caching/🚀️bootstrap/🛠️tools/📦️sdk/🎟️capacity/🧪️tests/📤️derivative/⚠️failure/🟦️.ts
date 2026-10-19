@@ -1,20 +1,21 @@
 import{createIssuedResourceControlV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{requireToolingPublicationValueV1}from"../../../../../🧹️retention/📏️headroom/🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{test,expect}from"bun:test";
 import{join,dirname,basename}from"node:path";
 import{lstat,mkdtemp,realpath,rm}from"node:fs/promises";
 import type{BigIntStats}from"node:fs";
 import corpus from"./🔣️.json"with{type:"json"};
 import{captureNxSdkPublicationInputsV1,withNxSdkDerivativePublicationV1,requireNxSdkClonePublicationV1,type NxSdkClonePublicationV1}from"../../../📥️physical/🟦️.ts";
-import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,type NxSdkDerivativeProjectionV1}from"../../../../📥️source/🔗️derivative/🟦️.ts";
+import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}from"../../../../📥️source/🔗️derivative/🟦️.ts";
+import type{NxSdkDerivativeProjectionV1}from"../../../../📥️source/🔗️derivative/📋️projection/🟦️.ts";
 import{receiveScriptProcessInvocation}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withResourceLeases,resourceLeasePathV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withResourceLeases,resourceLeasePathV1}from"@semio-tech/process/leases";
 import{readPhysicalCargoSourceV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import{withRepositoryToolingStoreV1,type RepositoryToolingStoreV1}from"../../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{readNativeCallerAuthorityV1}from"../../../../../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{withManagedToolingProvisionV1}from"../../../../../🧹️retention/📥️physical/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 /** 🔬️ Asks independent SQLite connections whether the exact registry and base inodes remain excluded. */
 async function exclusions(workspace:string,store:RepositoryToolingStoreV1,snapshot:string):Promise<{registry:boolean;base:boolean}>{
@@ -38,7 +39,7 @@ async function failureLaw(kind:"publication"|"issuer"):Promise<void>{
      return withManagedToolingProvisionV1(workspace,store,store.control,{version:1,minimumAvailableBytes:1},(publish,control)=>withNxSdkDerivativePublicationV1(workspace,store,current,captureNxSdkPublicationInputsV1(inputs),store.control,async issued=>{quote=issued;let ready!:(value:void)=>void,decline!:(error:unknown)=>void;const entered=new Promise<void>((accept,reject)=>{ready=accept;decline=reject;});
       const publication=publish(async()=>{destination=await mkdtemp(join(store.root,"nx",".stage-drv-failure-"));owned=await lstat(destination,{bigint:true});accepted=issued.clone(destination,control);events.push("copy-accepted");void accepted.then(()=>{copySettled=true;events.push("copy-settled");},()=>{copySettled=true;events.push("copy-rejected");});expect(await exclusions(workspace,store,snapshot)).toEqual(corpus.held);expect(copySettled).toBe(false);events.push(kind+"-thrown");ready();if(kind==="publication")throw marker;},issued).then(requireToolingPublicationValueV1);void publication.catch(decline);
       if(kind==="publication")await publication;else{await entered;throw marker;}
-     }).finally(()=>{events.push("quote-released");})).finally(()=>{events.push("registry-released");});
+     },{requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}).finally(()=>{events.push("quote-released");})).finally(()=>{events.push("registry-released");});
     }).finally(()=>{events.push("base-released");});
    }catch(error){failedScope=error;expect(copySettled).toBe(true);expect(error).toBe(marker);expect(await exclusions(workspace,store,snapshot)).toEqual(corpus.released);await expect(requireNxSdkClonePublicationV1(store,quote)).rejects.toThrow("released");await expect(requireNxSdkDerivativeProjectionV1(workspace,store,projection)).rejects.toThrow("released");expect((await lstat(join(destination!,"node_modules/nx/package.json"))).isFile()).toBe(true);throw error;}
    finally{await accepted?.catch(()=>{});if(destination&&owned)await withResourceLeases({directory,resources:[{resource:"nx-tooling-provision",mode:"exclusive"}],control:store.control,signal:store.control.signal},async()=>{const actual=await lstat(destination!,{bigint:true});if(dirname(destination!)!==join(store.root,"nx")||!basename(destination!).startsWith(".stage-drv-failure-")||!actual.isDirectory()||actual.isSymbolicLink()||actual.dev!==owned!.dev||actual.ino!==owned!.ino)throw Error("Exact owned failure fixture staging identity required");await rm(destination!,{recursive:true});});}
@@ -47,4 +48,4 @@ async function failureLaw(kind:"publication"|"issuer"):Promise<void>{
  await expect(received).rejects.toBe(marker);expect(failedScope).toBe(marker);expect(events.filter(event=>corpus.terminalOrder.includes(event))).toEqual(corpus.terminalOrder);
 }
 
-for(const row of corpus.cases)test(row.pattern,()=>{if(row.kind!=="publication"&&row.kind!=="issuer")throw Error("Closed derivative failure kind required");if(process.env.SEMIO_DERIVATIVE_FAILURE_CHILD===row.kind)return failureLaw(row.kind);return withBuildTestInvocationV1(async original=>{const {captureOwnedCommandResultV1}=await import("../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts"),{scriptCompilerAdmissionControlV1}=await import("../../../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts"),{scriptInvocationEnvironment}=await import("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),result=await captureOwnedCommandResultV1(process.execPath,["test",import.meta.path,"--test-name-pattern",row.pattern],process.cwd(),{control:scriptCompilerAdmissionControlV1(original,"sdk:derivative-failure:"+row.kind,corpus.maximumElapsedMilliseconds),env:scriptInvocationEnvironment(original,{...process.env,SEMIO_DERIVATIVE_FAILURE_CHILD:row.kind}),output:{maximumBytes:1048576,maximumLines:8192}});process.stdout.write(result.stdout);process.stderr.write(result.stderr);expect(result.status,result.stderr).toBe(0);expect(result.signal).toBe(null);});},corpus.maximumElapsedMilliseconds);
+for(const row of corpus.cases)test(row.pattern,()=>{if(row.kind!=="publication"&&row.kind!=="issuer")throw Error("Closed derivative failure kind required");if(process.env.SEMIO_DERIVATIVE_FAILURE_CHILD===row.kind)return failureLaw(row.kind);return withBuildTestInvocationV1(async original=>{const {captureOwnedCommandResultV1}=await import("@semio-tech/process/execution"),{scriptCompilerAdmissionControlV1}=await import("@semio-tech/process/compiler-capacity"),{scriptInvocationEnvironment}=await import("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),result=await captureOwnedCommandResultV1(process.execPath,["test",import.meta.path,"--test-name-pattern",row.pattern],process.cwd(),{control:scriptCompilerAdmissionControlV1(original,"sdk:derivative-failure:"+row.kind,corpus.maximumElapsedMilliseconds),env:scriptInvocationEnvironment(original,{...process.env,SEMIO_DERIVATIVE_FAILURE_CHILD:row.kind}),output:{maximumBytes:1048576,maximumLines:8192}});process.stdout.write(result.stdout);process.stderr.write(result.stderr);expect(result.status,result.stderr).toBe(0);expect(result.signal).toBe(null);});},corpus.maximumElapsedMilliseconds);

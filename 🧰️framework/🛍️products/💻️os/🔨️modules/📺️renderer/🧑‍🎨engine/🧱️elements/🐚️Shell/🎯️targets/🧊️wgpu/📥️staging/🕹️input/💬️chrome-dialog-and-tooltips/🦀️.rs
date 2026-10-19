@@ -58,8 +58,8 @@ impl ShellInputState {
     /// On a reference field Enter/Space stage the current selection and Backspace/Delete drop the last
     /// reference; on a chip Enter/Space/Backspace/Delete remove it. Always consumes the key — a modal never
     /// lets one fall through to the shell behind it.
-    pub fn handle_chrome_dialog_key(&mut self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
-        use ui_wgpu::wgpu::KeyAction;
+    pub fn handle_chrome_dialog_key(&mut self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chrome: &mut ChromeState, settle: &mut SettleState) -> bool {
+        use semio_framework_ui_wgpu_input::KeyAction;
         let selection = self.interaction_selection.clone();
         let Some(request) = chrome.chrome_build.dialog_stack.last_mut() else { return false };
         let stop = request.focused();

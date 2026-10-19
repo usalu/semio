@@ -4,6 +4,7 @@
 import { expect, test, spyOn, beforeAll } from "bun:test";
 import * as rawFs from "node:fs";
 import { createHash } from "node:crypto";
+import { brotliCompressSync, brotliDecompressSync } from "node:zlib";
 import { createRequire } from "node:module";
 import ts from "typescript";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -15,7 +16,7 @@ import fastGlob from "fast-glob";
 type Scenario = { id: string; mutation: { op: "none" | "write" | "replace-directory-with-file"; path?: string; content?: string }; expected: "hit" | "miss" };
 const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { schemaVersion: number; files: Record<string, string>; scenarios: Scenario[];corruption:{value:string;computations:number};races:{before:string;after:string;entry:string;directory:string;conflict:string;text:string;ports:string[]};semantic:{parentValidation:{projects:number;expectedReads:number};provider:{id:string;revision:string;nextRevision:string};before:string;bodyChanged:string;importsChanged:string;expected:string[];changedExpected:string[];cacheMaximumBytes:number;oversizedCharacters:number;malformedFactPatches:unknown[][];nested:{path:string;before:string;after:string;missing:string};replayError:string} };
 const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8")));
-const { observedFs, observeInference } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
+const { observedFs, observeInference, inferenceHeaderLine } = await import(new URL("../🟨️.mjs", import.meta.url).href) as typeof import("../🟨️.mjs");
 beforeAll(async()=>{const root=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(root,{recursive:true});await observeInference({cachePath:join(root,"observation-test-load.json"),key:"observation-test-load"},()=>undefined);});
 
 test("Rust and native closure memo hits retain every receiving scope's source facts",async()=>{
@@ -45,7 +46,7 @@ test("invocation memo replays complete current observations into every receiving
   const compute=()=>api.memoizedObservedComputationV1(cache,path,()=>{calls++;return JSON.parse(api.observedFs.readFileSync(path,"utf8"));});
   const first=await api.captureObservedSourceInputsV1(compute,undefined,false);counts.push(calls);
   const second=await api.captureObservedSourceInputsV1(compute,undefined,false);counts.push(calls);
-  expect(first.value).toEqual(JSON.parse(row.before));expect(second.observations).toEqual(first.observations);
+  expect(first.value).toEqual(JSON.parse(row.before));{const canonical=(rows:readonly{kind:string;path?:string}[])=>[...rows].sort((a,b)=>(a.kind+"\0"+(a.path??"")).localeCompare(b.kind+"\0"+(b.path??"")));expect(canonical(second.observations)).toEqual(canonical(first.observations));}
   writeFileSync(path,row.after);
   const changed=await api.captureObservedSourceInputsV1(compute,undefined,false);counts.push(calls);
   expect(changed.value).toEqual(JSON.parse(row.after));expect(counts).toEqual(row.expectedCalls);
@@ -60,7 +61,7 @@ test("project observations await asynchronous JSON computation before admission"
   writeFileSync(path,JSON.stringify(row.projectResult));
   const compute=()=>api.observeProjectInferenceV1({cachePath:join(root,"image.json"),key:"async-project",owner:root},async()=>JSON.parse(await api.observedFs.readFile(path,"utf8")));
   const first=await api.captureObservedSourceInputsV1(compute,undefined,false),second=await api.captureObservedSourceInputsV1(compute,undefined,false);
-  expect(first.value).toEqual(row.projectResult);expect(second.value).toEqual(row.projectResult);expect(second.observations).toEqual(first.observations);
+  expect(first.value).toEqual(row.projectResult);expect(second.value).toEqual(row.projectResult);{const canonical=(rows:readonly{kind:string;path?:string}[])=>[...rows].sort((a,b)=>(a.kind+"\0"+(a.path??"")).localeCompare(b.kind+"\0"+(b.path??"")));expect(canonical(second.observations)).toEqual(canonical(first.observations));}
   expect(api.projectInferenceCountsV1()[root]).toBe(1);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -91,7 +92,7 @@ for (const scenario of fixture.scenarios) test(`observed inference reuse: ${scen
   const compute = (): Readonly<Record<string, unknown>> => { computations++; return probe(root); };
   const first = await observeInference({ cachePath, key: ["law", scenario.id] }, compute);
   expect(computations).toBe(1);
-  const header = JSON.parse(readFileSync(cachePath, "utf8").split("\n")[0]!);
+  const header = JSON.parse(inferenceHeaderLine(cachePath)!);
   expect(validate(header), JSON.stringify(validate.errors)).toBe(true);
   expect(first.listing).toEqual((await fastGlob("*", { cwd: join(root, "a"), onlyFiles: false })).sort());
   if (scenario.mutation.op === "write") { mkdirSync(join(root, scenario.mutation.path!, ".."), { recursive: true }); writeFileSync(join(root, scenario.mutation.path!), scenario.mutation.content!); }
@@ -115,7 +116,7 @@ const { memoizedFileRecord, observationsHold, observeDependencies } = await impo
 for (const scenario of fixture.scenarios) test(`non-blocking validation agrees with reuse: ${scenario.id}`, async () => {
   const root = workspace(), cachePath = join(root, ".cache", "inference.json");
   await observeInference({ cachePath, key: ["hold", scenario.id] }, () => probe(root));
-  const header = JSON.parse(readFileSync(cachePath, "utf8").split("\n")[0]!) as { observations: unknown[] };
+  const header = JSON.parse(inferenceHeaderLine(cachePath)!) as { observations: unknown[] };
   if (scenario.mutation.op === "write") { mkdirSync(join(root, scenario.mutation.path!, ".."), { recursive: true }); writeFileSync(join(root, scenario.mutation.path!), scenario.mutation.content!); }
   if (scenario.mutation.op === "replace-directory-with-file") { rmSync(join(root, scenario.mutation.path!), { recursive: true }); writeFileSync(join(root, scenario.mutation.path!), "file"); }
   expect(await observationsHold(header.observations), scenario.id).toBe(scenario.expected === "hit");
@@ -131,7 +132,7 @@ test("a per-file analysis is memoized across inference misses by content digest 
   const second = await run("two");
   expect(second).toEqual(first);
   expect(analyses).toBe(1);
-  const header = JSON.parse(readFileSync(cachePath, "utf8").split("\n")[0]!) as { observations: { kind: string; path: string }[] };
+  const header = JSON.parse(inferenceHeaderLine(cachePath)!) as { observations: { kind: string; path: string }[] };
   expect(header.observations.some((row) => row.kind === "file" && row.path === file)).toBe(true);
   writeFileSync(file, "changed bytes\n");
   Bun.sleepSync(2200);
@@ -155,7 +156,7 @@ test("a dependency receipt names the persisted inference records this process us
   rmSync(root, { recursive: true, force: true });
 }, 30_000);
 
-test("persisted inference body corruption requires original source recomputation",async()=>{const root=workspace(),cachePath=join(root,"cache.json");let computations=0;try{const compute=()=>{computations++;return probe(root);};const before=await observeInference({cachePath,key:"corruption"},compute),bytes=readFileSync(cachePath,"utf8"),split=bytes.indexOf("\n");writeFileSync(cachePath,bytes.slice(0,split+1)+JSON.stringify({...before,one:fixture.corruption.value}));expect(await observeInference({cachePath,key:"corruption"},compute)).toEqual(before);expect(computations).toBe(fixture.corruption.computations);}finally{rmSync(root,{recursive:true,force:true});}});
+test("persisted inference body corruption requires original source recomputation",async()=>{const root=workspace(),cachePath=join(root,"cache.json");let computations=0;try{const compute=()=>{computations++;return probe(root);};const before=await observeInference({cachePath,key:"corruption"},compute),bytes=brotliDecompressSync(readFileSync(cachePath)).toString("utf8"),split=bytes.indexOf("\n");writeFileSync(cachePath,brotliCompressSync(Buffer.from(bytes.slice(0,split+1)+JSON.stringify({...before,one:fixture.corruption.value}))));expect(await observeInference({cachePath,key:"corruption"},compute)).toEqual(before);expect(computations).toBe(fixture.corruption.computations);}finally{rmSync(root,{recursive:true,force:true});}});
 
 const {captureObservedSourceInputsV1,observeProjectInferenceV1,observedTypeScriptHost}=await import(new URL("../🟨️.mjs",import.meta.url).href) as typeof import("../🟨️.mjs");
 const digest=(value:string|Buffer)=>createHash("sha256").update(value).digest("hex");
@@ -183,7 +184,7 @@ test("conflicting repeated actual reads are retained and inference is refused",a
 
 test("captures original facts inherited from cached project inference",async()=>{
  const root=workspace(),path=join(root,"a/one.txt"),cachePath=join(root,"project.json");let computations=0;
- try{const run=()=>observeProjectInferenceV1({cachePath,key:"cached-project",owner:root},()=>{computations++;return probe(root);});await run();const actual=await captureObservedSourceInputsV1(run);expect(computations).toBe(1);expect(actual.value).toEqual(probe(root));expect(actual.observations.some(row=>row.kind==="file"&&row.path===path)).toBe(true);expect(await observationsHold(actual.observations)).toBe(true);const header=JSON.parse(readFileSync(cachePath,"utf8").split("\n")[0]!);expect(validate(header),JSON.stringify(validate.errors)).toBe(true);}finally{rmSync(root,{recursive:true,force:true});}
+ try{const run=()=>observeProjectInferenceV1({cachePath,key:"cached-project",owner:root},()=>{computations++;return probe(root);});await run();const actual=await captureObservedSourceInputsV1(run);expect(computations).toBe(1);expect(actual.value).toEqual(probe(root));expect(actual.observations.some(row=>row.kind==="file"&&row.path===path)).toBe(true);expect(await observationsHold(actual.observations)).toBe(true);const header=JSON.parse(inferenceHeaderLine(cachePath)!);expect(validate(header),JSON.stringify(validate.errors)).toBe(true);}finally{rmSync(root,{recursive:true,force:true});}
 },20000);
 
 test("conflicting cached project facts cannot overwrite a parent's consumed read",async()=>{

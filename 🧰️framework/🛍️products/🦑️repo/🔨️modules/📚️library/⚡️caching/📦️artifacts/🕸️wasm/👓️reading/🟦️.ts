@@ -1,8 +1,8 @@
-import {withArtifactDescriptorSlotV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type CompilerAdmissionControl} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {withRepositoryCacheStoreV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../📋️native-orchestration/📥️invocation/🟦️.ts";
 import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../👓️reading/🟦️.ts";

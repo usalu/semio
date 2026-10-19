@@ -33,7 +33,13 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-arena = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-engine = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-engine-surface = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
@@ -41,4 +47,9 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modul
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-ui-retained-tree = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine", "testkit"], package = "semio-framework-ui" }
+semio-framework-ui-arena = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌳️retained/🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-engine = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-wgpu-engine-surface = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }

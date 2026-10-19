@@ -21,7 +21,7 @@ fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
                 Some(SnapshotRead::new(owner, lease))
             })
             .collect();
-        registry.state.try_lock().unwrap().cleanup_cursor = row["cursor"].as_u64().unwrap() as usize;
+        registry.state_lock().try_lock().unwrap().set_cleanup_cursor(row["cursor"].as_u64().unwrap() as usize);
         for index in row["returned"].as_array().unwrap() {
             drop(leases[index.as_u64().unwrap() as usize].take());
         }

@@ -1,6 +1,6 @@
 # 🧬️ Raster artifact schema — every field with its state class.
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 
 type RasterArtifact {
   schema: String! @state(class: ARTIFACT)

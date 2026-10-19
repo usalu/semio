@@ -2,6 +2,13 @@
   "schema": "semio.app.publication-authority.v1",
   "owner": "EquationPlayApp",
   "source": "🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mounted": [
+    "📄️document-io-algorithm-and-geometry-json/🦀️.rs",
+    "📏️retained-command-limits-and-work-state/🦀️.rs",
+    "🛠️retained-command-work-and-job-factory/🦀️.rs",
+    "📬️store-preparation/🦀️.rs",
+    "🎛️play-app-editor-and-constructor/🦀️.rs"
+  ],
   "routes": [
     {
       "id": "editEquation",

@@ -1,5 +1,5 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import type { PendingEntry, ShardSlot } from "../🔐️activation/🟦️.ts";
 import { describeShardSilence, evaluateShardLiveness } from "../💓️heartbeat/🟦️.ts";
 import type { ShardMetricsSample } from "../📜️wire/🟦️.ts";
@@ -7,7 +7,8 @@ import type { ShardMetricsSample } from "../📜️wire/🟦️.ts";
 /** ⏱️ Folds every sign of life into the per-shard heartbeat state and terminates and rebuilds a silent shard. */
 export class ShardWatchdog {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   /** 🫀️ Every inbound message is proof this worker's event loop is running — a start-of-request
    * heartbeat, one of the generated worker's `module-fetch`/`module-ready`/`actor-ready`/`progress`

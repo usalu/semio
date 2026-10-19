@@ -202,14 +202,3 @@ export function bootstrapCadModules(contributionsJson?: string): void {
 
 export { spatialShape, aecBuilding, aecBuildingEnergy, aecBuildingStructure };
 
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts`. */
-export type RuntimeTestDependencies = {
-  readonly bootstrapCadModules: typeof bootstrapCadModules;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-runtime/🟦️.ts");
-  await registerTests1(import.meta.vitest, { bootstrapCadModules }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

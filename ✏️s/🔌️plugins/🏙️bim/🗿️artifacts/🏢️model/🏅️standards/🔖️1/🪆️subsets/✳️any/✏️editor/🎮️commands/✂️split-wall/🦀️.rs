@@ -1,11 +1,12 @@
 //! ✂️ `splitWall`: splits the given walls, or the selected walls, at one fraction of their axis through one `split-wall` mutation each, in one gesture and so one history row. The
 //! fraction is typed as `0.25`, `0,25` or `25%` and is empty for the middle; the new halves get ids minted from the authoring seed and the result selects both parts.
 
-use crate::editor::bim::entities::id_taken;
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::kit::{fault, select_effect, IdMint};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect, IdMint};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -33,7 +34,7 @@ pub fn fraction(text: &str) -> Option<f64> {
 pub fn handle(payload: &SplitWallAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let t = fraction(&payload.at).ok_or_else(|| fault("bim.split.fraction-invalid", format!("'{}' is not a fraction strictly between 0 and 1", payload.at)))?;
-    let walls = crate::editor::bim::commands::flip_walls::walls_of(snapshot, &payload.ids, &ctx.selected);
+    let walls = semio_s_artifact_bim_model_coordination::editor::bim::commands::flip_walls::walls_of(snapshot, &payload.ids, &ctx.selected);
     if walls.is_empty() {
         return Err(fault("bim.split.target-missing", "no wall to split among the targets"));
     }
@@ -44,7 +45,7 @@ pub fn handle(payload: &SplitWallAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
         let new_id = mint.mint("wall", |id| id_taken(snapshot, id));
         parts.push(("wall".to_string(), wall.clone()));
         parts.push(("wall".to_string(), new_id.clone()));
-        mutations.push(ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: wall.clone(), t, new_id }));
+        mutations.push(ModelMutation::SplitWall(semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: wall.clone(), t, new_id }));
     }
     let mut emit = Emit::mutations(mutations);
     emit.effects.push(select_effect(BIM_ELEMENT_DOMAIN, &parts, "replace"));

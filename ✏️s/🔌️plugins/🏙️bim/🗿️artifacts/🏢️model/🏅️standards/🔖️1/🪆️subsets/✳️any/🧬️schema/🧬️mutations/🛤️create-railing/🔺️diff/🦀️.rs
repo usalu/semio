@@ -1,10 +1,12 @@
 //! 🔺️ Diff constructor for `CreateRailing`: one created railing entry. The storey and the material must exist, the path needs at
 //! least two finite points that are not all the same (a hosted railing has none: it names a stair, ramp or slab edge of the same building instead), height and post spacing are positive lengths, the rail and post sections, the baluster row and the infill are sound. Posts, rails and extent are inferred.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
 use crate::standards::v1::subsets::any::schema::mutations::create_railing::CreateRailing;
-use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{railing_construction_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn traceable(path: &[Point2]) -> bool {
@@ -17,7 +19,7 @@ fn positive(value: f64) -> bool {
 
 pub fn diff(payload: &CreateRailing, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let railing = &payload.railing;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.storeys.contains_key(&railing.storey) {

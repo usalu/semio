@@ -1,8 +1,10 @@
-use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
-use crate::editor::bim::fixture::room;
-use crate::editor::bim::fixture::Rig;
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
-use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, Point2, TagCategory, WallSide}, inferences::ModelInference, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, ToolEvent};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::room;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::Rig;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnchorEnd, AnnotationAnchor, Point2, TagCategory, WallSide};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::Inference;
 
 fn annotations(rig: &Rig) -> StoreyAnnotations {

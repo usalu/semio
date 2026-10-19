@@ -186,6 +186,48 @@ export function cleanIsWindowsIllegalName(name: string): boolean {
 /** 🏪️ Reserves authored enforcing stores for their original physical retirement owners. */
 export function cleanManagedStoragePrefixes(root:string):string[]{const budget=repositoryCacheBudgetV1(root);return [...Object.values(budget.partitions).map(partition=>partition.directory),budget.controlDirectory];}
 
+/** 🏪️ Native image backing names owned by the storage layer: only its canonical retirement may remove them. */
+export const CLEAN_NATIVE_IMAGE_BACKING_NAMES: ReadonlySet<string> = new Set(["fixed.dmg", "fixed.img", "fixed.vhd"]);
+
+/** 🏪️ True when a path is a native image backing file, its receipt or mount directory, or any directory holding that pair, wherever it lives. */
+export function cleanIsNativeImagePath(abs: string): boolean {
+  const resolved = resolve(abs);
+  const holdsImage = (directory: string): boolean => existsSync(join(directory, "image.json")) && [...CLEAN_NATIVE_IMAGE_BACKING_NAMES].some((name) => existsSync(join(directory, name)));
+  const name = resolved.split(sep).pop() ?? "";
+  if (CLEAN_NATIVE_IMAGE_BACKING_NAMES.has(name)) return true;
+  if (holdsImage(resolved)) return true;
+  const parent = dirname(resolved);
+  return parent !== resolved && holdsImage(parent);
+}
+
+/** 🎫️ A generated-output directory of an open ticket holds live evidence: protects the candidate when it is, lies inside, or contains one. Closed tickets stay removable. */
+export function cleanOpenTicketGeneratedOutputProtection(root: string, candidate: string, view: CleanProtectionView = CLEAN_PROTECTION_VIEW): string[] {
+  const target = resolve(root, candidate);
+  const ticket = cleanTicketFolderForPath(root, target);
+  if (ticket && !cleanTicketManifestIsClosed(ticket, view)) {
+    const inside = relative(ticket, target).split(sep);
+    if (inside.some((segment) => cleanIsTicketGeneratedOutputDir(segment))) return [target];
+  }
+  if (view.kind(target) !== "directory") return [];
+  const stack = [target];
+  while (stack.length > 0) {
+    const directory = stack.pop()!;
+    const names = view.children(directory);
+    if (!names) return [directory];
+    for (const name of names) {
+      const child = join(directory, name);
+      if (view.kind(child) !== "directory") continue;
+      if (cleanIsTicketGeneratedOutputDir(name)) {
+        const owner = cleanTicketFolderForPath(root, child);
+        if (owner && !cleanTicketManifestIsClosed(owner, view)) return [child];
+        continue;
+      }
+      stack.push(child);
+    }
+  }
+  return [];
+}
+
 export function cleanProtectedPrefixes(root: string): string[] {
   const semio = getSemioRoot(root);
   return [join(semio, MAP_CACHE_DIR_NAME), join(semio, HUB_DATA_DIR_NAME), join(semio, SPACE_DATA_DIR_NAME), join(getRepoMetaDir(root), CLEAN_CACHE_DIR_NAME),...cleanManagedStoragePrefixes(root)].map((p) => resolve(p));
@@ -276,6 +318,7 @@ export function cleanRemovalProtection(root: string, candidate: string, view: Cl
   const local = relative(workspace, target);
   if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return [target];
   if(cleanIntersectsProtected(target,cleanManagedStoragePrefixes(workspace)))return [target];
+  if (cleanIsNativeImagePath(target)) return [target];
   const protectedPaths = new Set<string>(),
     closedTickets = new Set<string>();
   const ancestors: { path: string; kind: CleanProtectionNodeKind }[] = [{ path: workspace, kind: "directory" }];
@@ -335,6 +378,15 @@ export function cleanProjectRemovals(root: string, removals: readonly CleanRemov
         const allowed = cleanIsRustIncrementalRemovalPath(root, absolute, cleanRustIncrementalSearchRoots(root));
         if (!allowed) onProtected?.(absolute);
         return allowed;
+      }
+      if (cleanIsNativeImagePath(absolute)) {
+        onProtected?.(absolute);
+        return false;
+      }
+      const openGenerated = cleanOpenTicketGeneratedOutputProtection(root, absolute, view);
+      if (openGenerated.length !== 0) {
+        for (const path of openGenerated) onProtected?.(path);
+        return false;
       }
       const allowedOpenTicket =
         row.kind === "ticket-generated" || row.kind === "ticket-file" || row.kind === "ticket-dir" || row.kind === "gitignore"

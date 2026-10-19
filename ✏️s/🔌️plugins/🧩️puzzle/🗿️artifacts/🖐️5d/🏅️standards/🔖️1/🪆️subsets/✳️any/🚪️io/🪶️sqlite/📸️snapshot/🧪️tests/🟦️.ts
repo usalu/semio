@@ -21,7 +21,7 @@ import type {RotateSelection3d as StandaloneRotate3d} from "../../../../🧬️s
 import type {ScaleSelection3d as StandaloneScale3d} from "../../../../🧬️schema/🧬️mutations/🔍️scale-selection3d/🦠️mutation/🟦️.ts";
 import type {CreatePart,AddPartGrip,CreateTargetVolume} from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
-import { sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { sliceModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 function specimen(bits:bigint):snapshot.Puzzle5dSnapshot {
  const word={bits};
  const part:snapshot.Puzzle5dPart={id:'',partKind:null,anchor:'derived','2d':{x:word,y:word,shape:'',radius:word,width:null,height:word,text:null,iconKind:'',hidden:null,locked:false},'3d':{origin:[word,word,word],meshUrl:'',orientation:[word,word,word,word],scale:word,label:null},grips:[{id:'',gripKind:'unresolved','2d':{angle:word,gripKind:null,radius:word},'3d':{position:[word,word,word],direction:[word,word,word],radius:null,label:''}}]};

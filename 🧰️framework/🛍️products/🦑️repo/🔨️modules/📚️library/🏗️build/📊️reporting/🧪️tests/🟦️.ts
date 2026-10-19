@@ -1,5 +1,5 @@
-import {acquireResourceLease} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {acquireResourceLease} from "@semio-tech/process/leases";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {readFileSync,rmSync,readdirSync} from "node:fs";
 import {dirname,join} from "node:path";
 import {randomBytes} from "node:crypto";

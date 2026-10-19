@@ -1,7 +1,7 @@
 import * as ModuleUnderTest from "../../🟦️.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { loadKernelPollCompositionFixture, loadKernelPollCompositionDocument, loadKernelPollCompositionSchema } from "../../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadKernelPollCompositionFixture, loadKernelPollCompositionDocument, loadKernelPollCompositionSchema } from "@semio-tech/framework-kernel/testing/fixtures";
 
 type TestSource = { readonly url: string };
 

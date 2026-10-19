@@ -1,6 +1,10 @@
 {
   "name": "@semio-tech/schema-validator-rs",
   "private": true,
+  "exports": {
+    "./package.json": "./package.json",
+    "./index": "./🟦️.ts"
+  },
   "scripts": {
     "test": "bun --cwd \"../../../../../..\" repo run @semio-tech/schema-validator-rs:test"
   },

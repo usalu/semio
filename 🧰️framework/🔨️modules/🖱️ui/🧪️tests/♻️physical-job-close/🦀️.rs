@@ -1,37 +1,6 @@
 use super::{ClipboardIoJob, ClipboardIoOperation};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Step, RetainedCloneGrant, RetainedCloneProgress};
-use std::alloc::{GlobalAlloc, Layout};
-use std::cell::Cell;
-
-thread_local! {
-    static OBSERVATION: Cell<Option<(usize, usize)>> = const { Cell::new(None) };
-}
-
-struct PhysicalAllocator;
-
-unsafe impl GlobalAlloc for PhysicalAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let pointer = unsafe { semio_framework_trace::HeapWitness.alloc(layout) };
-        if !pointer.is_null() {
-            let _ = OBSERVATION.try_with(|state| if let Some((births, frees)) = state.get() { state.set(Some((births + layout.size(), frees))) });
-        }
-        pointer
-    }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
-        let _ = OBSERVATION.try_with(|state| if let Some((births, frees)) = state.get() { state.set(Some((births, frees + layout.size()))) });
-        unsafe { semio_framework_trace::HeapWitness.dealloc(pointer, layout) }
-    }
-}
-
-#[global_allocator]
-static ALLOCATOR: PhysicalAllocator = PhysicalAllocator;
-
-pub(crate) fn measured<T>(operation: impl FnOnce() -> T) -> (T, usize, usize) {
-    OBSERVATION.with(|state| { assert!(state.get().is_none()); state.set(Some((0, 0))); });
-    let result = operation();
-    let (births, frees) = OBSERVATION.with(|state| state.replace(None).unwrap());
-    (result, births, frees)
-}
+use super::physical_allocator::measured;
 
 fn grant(copy: usize, release: usize) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: release, maximum_depth: 1 }
@@ -39,7 +8,7 @@ fn grant(copy: usize, release: usize) -> RetainedCloneGrant {
 
 #[test]
 fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     for (index, content) in fixture["texts"].as_array().unwrap().iter().enumerate() {
         let text = content.as_str().unwrap();
         let oracle: String = serde_json::from_value(content.clone()).unwrap();
@@ -86,9 +55,9 @@ fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical(
 #[test]
 fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and_paid_close() {
     use semio_framework_job::{StepContextOwner, StepBudget, OperationId, Generation, JobOutcomeKind, JobOutcomeView};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["clipboardOutcome"];
-    let original: serde_json::Value = serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let original: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy = &original["policy"];
     let supplied = RetainedCloneGrant { maximum_items: policy["items"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["copy"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["capacity"].as_u64().unwrap() as usize, maximum_release_bytes: policy["release"].as_u64().unwrap() as usize, maximum_depth: policy["depth"].as_u64().unwrap() as usize };
     let (mut owner, _) = StepContextOwner::new(OperationId(1), Generation(1), supplied).unwrap();
@@ -127,7 +96,8 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
     assert_eq!(descriptor.acknowledge(supplied).progress().copied_items, law["acknowledgementItems"].as_u64().unwrap() as usize);
     drop(descriptor);
     job.begin_close();
-    let (closed, born, freed) = measured(|| job.close_step(grant(0, capacity)));
+    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+    let (closed, born, freed) = measured(|| self_funded.turn(grant(0, capacity), |cx| job.close_step(cx)).expect("original fixture close turn"));
     assert!(matches!(closed, Step::Complete { .. }));
     assert_eq!((born, freed), (0, capacity));
     assert_eq!(closed.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..Default::default() });
@@ -138,8 +108,8 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
 #[test]
 fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     use semio_framework_job::{InteractiveJob,StepContextOwner,StepBudget,OperationId,Generation,JobOutcomeView,RetainedCloneGrant,RetainedCloneProgress};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
+    let original:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&original["policy"];
     let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
     let(mut owner,_)=StepContextOwner::new(OperationId(1),Generation(1),grant).unwrap();
@@ -152,7 +122,7 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,..Default::default()});drop(cx);
     let(view,born,freed)=measured(||job.borrow_outcome(&descriptor).unwrap());assert!(matches!(view,JobOutcomeView::Cancelled{..}));assert_eq!((born,freed),(0,0));
     assert_eq!(descriptor.acknowledge(grant).progress().copied_items,1);drop(descriptor);
-    job.begin_close();let closed=job.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1});assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(job.terminal_is_empty());
+    job.begin_close();let closed=semio_framework_job::close_with_self_funded_context(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1}, |cx| job.close_step(cx)).expect("original fixture close turn");assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(job.terminal_is_empty());
     while !owner.terminal_is_empty(){assert!(owner.close_step(grant).progress().fits(grant))}
 }
 
@@ -161,8 +131,9 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
 fn original_clipboard_session_admission_is_paid_before_birth_and_preserves_denied_owners() {
     use semio_framework_job::{Generation,InteractiveJob,InteractiveStage,OperationId,RetainedCloneGrant,RetainedCloneProgress,StepBudget,StepContextOwner};
 use semio_framework_job_worker::{WorkerJobSession};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let original:serde_json::Value=serde_json::from_str(include_str!("../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+use semio_framework_test_fixtures::fixture_text;
+    let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
+    let original:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../../🧵️job/📬️outcome/🤝️loan/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let policy=&original["policy"];
     let supplied=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
     let demand=WorkerJobSession::<ClipboardIoJob>::admission_demand();

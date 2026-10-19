@@ -459,7 +459,7 @@ fn german(entry: &semio_framework::kernel::HistoryEntry) -> String {
 }
 
 /// 📍️ One part's `(flat x, flat y, world origin)`.
-fn part_poses(app: &Puzzle5dApp, id: &str) -> (f64, f64, [f64; 3]) {
+fn part_poses(app: &Puzzle5dTestApp, id: &str) -> (f64, f64, [f64; 3]) {
     let projection = projection_of(app);
     let row = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id))).expect("part row").clone();
     let flat = |key: &str| row.get("2d").and_then(|flat| flat.get(key)).and_then(Value::as_f64).unwrap_or_default();

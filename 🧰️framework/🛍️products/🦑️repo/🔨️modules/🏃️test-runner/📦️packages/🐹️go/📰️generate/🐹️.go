@@ -40,7 +40,7 @@ func findTechnologyByName(name string) *model.Technology {
 func walkTechnologyFiles(technology *model.Technology) []model.File {
 	var files []model.File
 	for _, bundle := range technology.Bundles {
-		bundleRoot := filepath.Join(workspace.RootDir, bundle.Root)
+		bundleRoot := filepath.Join(workspace.GetRootDir(), bundle.Root)
 		err := filepath.WalkDir(bundleRoot, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return nil
@@ -52,7 +52,7 @@ func walkTechnologyFiles(technology *model.Technology) []model.File {
 				}
 				return nil
 			}
-			relPath, _ := filepath.Rel(workspace.RootDir, path)
+			relPath, _ := filepath.Rel(workspace.GetRootDir(), path)
 			relPath = workspace.NormalizePath(relPath)
 			if workspace.IsGitIgnored(path) || model.IsGenerated(path) {
 				return nil
@@ -88,7 +88,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 		return fmt.Errorf("technology %q not found", technologyName)
 	}
 	var entries []EntityEntry
-	technologyReadmePath := filepath.Join(workspace.RootDir, technology.Root, "README.md")
+	technologyReadmePath := filepath.Join(workspace.GetRootDir(), technology.Root, "README.md")
 	if content, err := workspace.ReadTextFile(technologyReadmePath); err == nil {
 		requirements := ExtractMarkdownSection(content, "Requirements")
 		if requirements != "" {
@@ -97,7 +97,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 		}
 	}
 	for _, bundle := range technology.Bundles {
-		readmePath := filepath.Join(workspace.RootDir, bundle.Root, "README.md")
+		readmePath := filepath.Join(workspace.GetRootDir(), bundle.Root, "README.md")
 		if content, err := workspace.ReadTextFile(readmePath); err == nil {
 			requirements := ExtractMarkdownSection(content, "Requirements")
 			if requirements != "" {
@@ -106,7 +106,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 		}
 		folderReadmes := findFolderReadmes(bundle.Root)
 		for _, frp := range folderReadmes {
-			if content, err := workspace.ReadTextFile(filepath.Join(workspace.RootDir, frp)); err == nil {
+			if content, err := workspace.ReadTextFile(filepath.Join(workspace.GetRootDir(), frp)); err == nil {
 				requirements := ExtractMarkdownSection(content, "Requirements")
 				if requirements != "" {
 					folderPath := filepath.Dir(frp)
@@ -125,7 +125,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 		if headerRequirements != "" {
 			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: headerRequirements})
 		}
-		absPath := filepath.Join(workspace.RootDir, file.Path)
+		absPath := filepath.Join(workspace.GetRootDir(), file.Path)
 		content, err := workspace.ReadTextFile(absPath)
 		if err != nil {
 			continue
@@ -176,7 +176,7 @@ func GenerateTechnologyRequirements(technologyName string) error {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
 	}
-	outputPath := filepath.Join(workspace.RootDir, technology.Root, "SPECS.md")
+	outputPath := filepath.Join(workspace.GetRootDir(), technology.Root, "SPECS.md")
 	return workspace.WriteTextFile(outputPath, sb.String())
 }
 
@@ -187,7 +187,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 		return fmt.Errorf("technology %q not found", technologyName)
 	}
 	var entries []EntityEntry
-	technologyReadmePath := filepath.Join(workspace.RootDir, technology.Root, "README.md")
+	technologyReadmePath := filepath.Join(workspace.GetRootDir(), technology.Root, "README.md")
 	if content, err := workspace.ReadTextFile(technologyReadmePath); err == nil {
 		docs := ExtractMarkdownSection(content, "Docs")
 		if docs != "" {
@@ -196,7 +196,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 		}
 	}
 	for _, bundle := range technology.Bundles {
-		readmePath := filepath.Join(workspace.RootDir, bundle.Root, "README.md")
+		readmePath := filepath.Join(workspace.GetRootDir(), bundle.Root, "README.md")
 		if content, err := workspace.ReadTextFile(readmePath); err == nil {
 			docs := ExtractMarkdownSection(content, "Docs")
 			if docs != "" {
@@ -205,7 +205,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 		}
 		folderReadmes := findFolderReadmes(bundle.Root)
 		for _, frp := range folderReadmes {
-			if content, err := workspace.ReadTextFile(filepath.Join(workspace.RootDir, frp)); err == nil {
+			if content, err := workspace.ReadTextFile(filepath.Join(workspace.GetRootDir(), frp)); err == nil {
 				docs := ExtractMarkdownSection(content, "Docs")
 				if docs != "" {
 					folderPath := filepath.Dir(frp)
@@ -224,7 +224,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 		if summary != "" {
 			entries = append(entries, EntityEntry{ID: file.ID, URI: file.URI, Text: summary})
 		}
-		absPath := filepath.Join(workspace.RootDir, file.Path)
+		absPath := filepath.Join(workspace.GetRootDir(), file.Path)
 		content, err := workspace.ReadTextFile(absPath)
 		if err != nil {
 			continue
@@ -290,7 +290,7 @@ func GenerateTechnologyDocs(technologyName string) error {
 		}
 		sb.WriteString(text + "\n")
 	}
-	outputPath := filepath.Join(workspace.RootDir, technology.Root, "DOCS.md")
+	outputPath := filepath.Join(workspace.GetRootDir(), technology.Root, "DOCS.md")
 	return workspace.WriteTextFile(outputPath, sb.String())
 }
 
@@ -302,7 +302,7 @@ func GenerateTechnologyTodos(technologyName string) error {
 	}
 	var entries []EntityEntry
 	for _, bundle := range technology.Bundles {
-		bundleRoot := filepath.Join(workspace.RootDir, bundle.Root)
+		bundleRoot := filepath.Join(workspace.GetRootDir(), bundle.Root)
 		todos := todospkg.LocateTodosOnDisk(bundleRoot, todospkg.ScanTodos(todospkg.NewFsTodoTree(bundleRoot)))
 		for _, todo := range todos {
 			if todo.Location != nil && workspace.IsGitIgnored(todo.Location.FilePath) {
@@ -314,12 +314,12 @@ func GenerateTechnologyTodos(technologyName string) error {
 			title := todo.Name
 			desc := todo.Description
 			parentPath := todo.ParentID
-			relParent, _ := filepath.Rel(workspace.RootDir, parentPath)
+			relParent, _ := filepath.Rel(workspace.GetRootDir(), parentPath)
 			relParent = workspace.NormalizePath(relParent)
 			entityID := relParent
 			entityURI := model.BuildFileUriFromPath(relParent)
 			if todo.Location != nil {
-				relLoc, _ := filepath.Rel(workspace.RootDir, todo.Location.FilePath)
+				relLoc, _ := filepath.Rel(workspace.GetRootDir(), todo.Location.FilePath)
 				relLoc = workspace.NormalizePath(relLoc)
 				entityID = relLoc
 				entityURI = model.BuildFileUriFromPath(relLoc)
@@ -337,14 +337,14 @@ func GenerateTechnologyTodos(technologyName string) error {
 		sb.WriteString("\n## [" + e.ID + "](" + e.URI + ")\n\n")
 		sb.WriteString(e.Text + "\n")
 	}
-	outputPath := filepath.Join(workspace.RootDir, technology.Root, "TODOS.md")
+	outputPath := filepath.Join(workspace.GetRootDir(), technology.Root, "TODOS.md")
 	return workspace.WriteTextFile(outputPath, sb.String())
 }
 
 // 📁️findFolderReadmes holds the data fields for a findFolderReadmes record.
 func findFolderReadmes(bundleRoot string) []string {
 	var readmes []string
-	absRoot := filepath.Join(workspace.RootDir, bundleRoot)
+	absRoot := filepath.Join(workspace.GetRootDir(), bundleRoot)
 	filepath.WalkDir(absRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
@@ -357,7 +357,7 @@ func findFolderReadmes(bundleRoot string) []string {
 			return nil
 		}
 		if d.Name() == "README.md" {
-			relPath, _ := filepath.Rel(workspace.RootDir, path)
+			relPath, _ := filepath.Rel(workspace.GetRootDir(), path)
 			relPath = workspace.NormalizePath(relPath)
 			if relPath != workspace.NormalizePath(filepath.Join(bundleRoot, "README.md")) {
 				readmes = append(readmes, relPath)

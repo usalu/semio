@@ -3,9 +3,10 @@
 //! window configuration (orbit, projection preset bank, hidden storeys) and its chrome (projection tree, storey visibility toggles); the
 //! camera and the other configuration verbs travel the retained window-config route declared by the viewer root.
 
-use crate::render::world::{scene, WorldView};
-use crate::viewer::bim::terminology::BimViewerLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests_5::render::world::{scene, WorldView};
+use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]
@@ -59,7 +60,7 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &con
 //#region 🔖️Measures
 /// 🎚️ The window chrome: the projection preset tree and one visibility toggle per storey.
 pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerWorldWindowConfig, labels: &BimViewerLabels, action: impl Fn(&str, Option<semio_framework_plugin::DslValue>) -> ActionDescriptor + Copy) -> Vec<WindowMeasure> {
-    let toggles = crate::render::storeys(snapshot)
+    let toggles = semio_s_artifact_bim_model_tests_5::render::storeys(snapshot)
         .into_iter()
         .map(|row| WindowMeasure::Toggle {
             id: format!("{MEASURE_PREFIX}-measure-storey-{}", row.id),

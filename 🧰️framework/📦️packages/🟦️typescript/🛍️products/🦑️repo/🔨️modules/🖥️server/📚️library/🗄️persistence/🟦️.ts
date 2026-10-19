@@ -1,3 +1,3 @@
-/** 🗄️ Public entry `@semio-tech/framework/products/repo/modules/server/library/persistence`: the explicit surface that importers outside the module use. */
+/** 🧩️ Public `@semio-tech/framework/products/repo/modules/server/library/persistence` entry: explicit re-exports of the source module that owns each member. */
 export { createApiKey, createDeveloper, getDeveloperByEmail, getTicket, insertAuditLog, insertTicketFiles, listBreaches, listClaimsByTicket, listConflicts, listEvents, listScopesByFile, listTickets, listWarnings, newId, removeContributorWorkForCheckpoint, replaceScopes, replaceWarnings, revokeApiKey, upsertClaim, upsertTicket } from "../../../../../../../../🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts";
 export type { Scope, Ticket, Warning } from "../../../../../../../../🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts";

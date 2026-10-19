@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, wgpuReadinessBeacon } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, wgpuReadinessBeacon } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 
 /** 🚦️ LAW: the wgpu page publishes React's own readiness beacon — `data-semio-os-ready` /
  * `data-semio-os-error` on the document element, each carrying the plugin id and each clearing the

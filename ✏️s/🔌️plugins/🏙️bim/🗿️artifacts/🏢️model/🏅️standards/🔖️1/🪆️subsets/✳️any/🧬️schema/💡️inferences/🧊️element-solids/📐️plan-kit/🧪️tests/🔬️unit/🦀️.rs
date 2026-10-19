@@ -1,21 +1,25 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Layer;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Profile, StairFlight, Vertex as PlanVertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, StairFlight, Vertex as PlanVertex};
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::Vertex;
 #[allow(unused_imports)]
 use semio_framework_geometry::Vec2;
-use crate::standards::v1::subsets::any::io::text::inferences::element_solids::planar_projection_json;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{case, close};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::io::text::inferences::element_solids::planar_projection_json;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{case, close};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{stack, placed, rectangle, layer_thicknesses, is_curved};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 
 static COLUMNS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"));
@@ -37,7 +41,7 @@ fn a_loop_is_rotated_about_the_origin_and_then_moved() {
 
 #[test]
 fn layer_thicknesses_clamp_negative_values_to_zero() {
-    let layer = |thickness: f64| Layer { material: String::new(), thickness, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure };
+    let layer = |thickness: f64| Layer { material: String::new(), thickness, function: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Structure };
     assert_eq!(layer_thicknesses(&[layer(0.1), layer(-0.3)]), vec![0.1, 0.0]);
 }
 

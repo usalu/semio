@@ -1,5 +1,5 @@
 /** 🎨️ Prepared local-space paint with stable stops and logarithmic lookup. */
-import type {Color,Fill,Stop} from "../🟦️.ts";
+import type { Color, Fill, Stop } from "../🖌️paint-model/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 
 type PaintStop={readonly offset:number;readonly color:Readonly<Color>};

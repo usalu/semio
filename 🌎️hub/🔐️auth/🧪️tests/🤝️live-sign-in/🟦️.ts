@@ -9,7 +9,7 @@
  * `--hold` keeps the hub running and prints its origin instead of running the transcript, so the
  * browser phase can drive the same live hub. Every step prints one line; a failed expectation exits
  * non-zero with the observed value, so this file is a gate, not a log. */
-import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withBuiltLocalHubHostV1,startLocalHub,waitForReadiness,waitForLocalHubExitV1} from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";

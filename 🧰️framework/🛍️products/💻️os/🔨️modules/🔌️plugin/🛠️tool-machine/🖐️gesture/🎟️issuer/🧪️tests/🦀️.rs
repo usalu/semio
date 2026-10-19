@@ -2,7 +2,7 @@
 use semio_framework_plugin_decl_views::gesture_contract::{GestureCapture, GestureSlot};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::retirement::shared::sealed::SealedShared;
+use semio_framework_value::retirement::arc_custody::sealed::SealedShared;
 use crate::tool_jobs_tool_machine::gesture_issuer::{issue_live, reserve_live};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[doc(hidden)]

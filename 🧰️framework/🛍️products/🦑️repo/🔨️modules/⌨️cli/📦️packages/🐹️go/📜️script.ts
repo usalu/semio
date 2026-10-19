@@ -1,13 +1,11 @@
 #!/usr/bin/env bun
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `repo-cli-go` router: `bun ./📜️script.ts test`. */
-import type { FileLinter } from "../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { defineLint } from "../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { goCoverageArgs } from "../../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
-import { goLevelTestArgs } from "../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
-import { runCanonicalGoTests } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
+import type { FileLinter } from "../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { defineLint } from "../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { goCoverageArgs, goLevelTestArgs, runCanonicalGoTests } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepoScriptMain } from "../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { runRepoScriptMain } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 

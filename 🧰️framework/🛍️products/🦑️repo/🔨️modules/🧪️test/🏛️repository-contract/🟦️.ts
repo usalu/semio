@@ -7,8 +7,8 @@
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, dirname, join, relative, sep } from "node:path";
-import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
-import { getRepoMetaDir } from "../../📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
+import { type BreachRecord } from "@semio-tech/repo-lib/policy";
+import { getRepoMetaDir } from "@semio-tech/repo-lib/inventory";
 import { isExcludedTestPath, isTestOraclePath, TEST_DOMAIN_REL_PATH, testFilenameForKind, testLocationPath, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { type DiscoveredCase, discoverTestCases, walkDirectories } from "../🧭️case-discovery/🟦️.ts";
 import { oraclePackages } from "../🗃️oracle-registry/🟦️.ts";
@@ -18,7 +18,6 @@ import { discoverTestContributions, loadOracleRegistry, type OracleRegistry } fr
 import { binaryProtocolDriftBreaches } from "../🌿️mutation-leaves/🟦️.ts";
 import { dependencyEcosystemOf, externalOracleHostPackages, importProbe } from "../🔒️oracle-dependencies/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
-import { inPackageTestImplementation } from "../🗺️test-layout/🟦️.ts";
 import { capabilityManifestBreaches, fixtureProvenanceBreaches, isolationBreaches, mutationFixtureBreaches, mutationInventoryBreaches, nativeSecondImplementationBreaches, noOracleMisuseBreaches, registryRecordBreaches, reimplementationOracleBreaches, stubDeserializerBreaches, stubSerializerBreaches } from "../🚧️mutation-gates/🟦️.ts";
 import { validateCaseContract } from "../📃️case-contract/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -89,10 +88,9 @@ export function oracleImportsInProduction(repoRoot: string, registry: OracleRegi
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
     if (isTestOwned(rel)) return "skip";
     if (!inScope(rel)) return aboveScope(rel) ? "enter" : "skip";
-    const entries = readdirSync(abs, { withFileTypes: true }), siblingNames = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+    const entries = readdirSync(abs, { withFileTypes: true });
     for (const entry of entries) {
       if (!entry.isFile() || !/\.(rs|ts|tsx|js|jsx|mjs|cjs|go|py|cs)$/.test(entry.name)) continue;
-      if (inPackageTestImplementation(entry.name, siblingNames, taxonomy)) continue;
       const filePath = `${rel}/${entry.name}`;
       let content: string;
       try {

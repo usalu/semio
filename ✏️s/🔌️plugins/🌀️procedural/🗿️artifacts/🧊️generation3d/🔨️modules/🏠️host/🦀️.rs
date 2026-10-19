@@ -82,19 +82,21 @@ impl semio_framework_job_registry::FixedOperationOwner for Generation3dPublicati
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        if self.terminal {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < size_of::<Self>() {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        self.terminal = true;
-        InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: size_of::<Self>(), ..Default::default() } }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            if !self.closing {
+                return Ok(InteractiveJobCloseStep::Blocked);
+            }
+            if self.terminal {
+                return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+            }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_release_bytes < size_of::<Self>() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            self.terminal = true;
+            Ok(InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: size_of::<Self>(), ..Default::default() } })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -808,7 +810,7 @@ pub fn generation3d_copy_generation(source: &semio_framework_artifact_playbook_p
 
 
 #[cfg(any(test, feature = "testkit"))]
-pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3dMutation> {
+pub fn generation3d_all_retained_mutation_fixtures_for_test(corpus: &str) -> Vec<Generation3dMutation> {
     let synapse = semio_framework_artifact_flow_flow::SynapseSpec { id: "retained-synapse".into(), from: "retained-a".into(), to: "retained-b".into(), from_port: "out".into(), to_port: "in".into() };
     let mut values: semio_framework_artifact_playbook_playbook::PlaybookValues = semio_framework_artifact_playbook_playbook::PlaybookValues::new();
     values.insert(
@@ -848,7 +850,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: Some("Retained preview \u{1F600}".into()) }),
         Generation3dMutation::ChangeGenerationPreview(ChangeGenerationPreview { text: None }),
     ];
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🧫️fixtures/🧬️semantic-wire/🔣️.json")).expect("semantic wire corpus");
+    let corpus: serde_json::Value = serde_json::from_str(corpus).expect("semantic wire corpus");
     for case in corpus["cases"].as_array().expect("semantic wire cases") {
         mutations.push(<Generation3dMutation as semio_framework_value::FromValue>::from_value(case["mutation"].clone().into()).expect("authored semantic mutation"));
     }

@@ -37,7 +37,7 @@ semio-framework-ui-contract = { path = "../../../../🖱️ui/🧬️contract/�
 semio-framework-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
-ui_wgpu = { path = "../../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 replication = { package = "semio-framework-replication", path = "../../../../📡️replication/📦️packages/🦀️rust" }

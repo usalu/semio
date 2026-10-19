@@ -1,5 +1,5 @@
-import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
+import type {ScriptInvocation} from "@semio-tech/process/routing";
 import { CargoMetadataCaptureBudget } from "./⏱️budget/🟦️.ts";
 import { startNativeProgress } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { discoverCargoWorkspaces, prepareCargoWorkspaceInvocation } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { cargoDirectionInventory, cargoDirectionMetadata, cargoDependencyDirectionReport, type CargoDirectionPolicy } from "../🟦️.ts";
 
 /** 🦀️ Checks every authored Cargo declaration with independent manifest and metadata inventories. */
-export async function verifyCargoDependencyDirection(repoRoot:string,invocation:ScriptInvocation,control:import("../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts").ResourceLeaseControl):Promise<void>{
+export async function verifyCargoDependencyDirection(repoRoot:string,invocation:ScriptInvocation,control:import("@semio-tech/process/leases").ResourceLeaseControl):Promise<void>{
  return withRepositoryCargoPreparationV1(repoRoot,repoRoot,invocation,control,process.env,async(environment,phase)=>{
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
   const policy: CargoDirectionPolicy = { areaLayers: taxonomy.areaLayers, ...taxonomy.cargoDependencyDirections };

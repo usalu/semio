@@ -3,7 +3,7 @@ import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoad
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
 import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🧱️instance-layers/🪟️instance-chrome-store/🟦️.ts";
-import type { GumballPose } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧿️gumball-model/🟦️.ts";
+import type { GumballPose } from "@semio-tech/ui-react";
 import { resolveClickInstanceIdFromProjected, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick } from "../../🧱️elements/🌐️World3dHost/🎯️marquee-and-bridges/🟦️.tsx";
 import { world3dInstancePickUsesInteractionDomain, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, mergeWorldSelectionWithLeftoverV1, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";
 import { world3dFrameCameraFromBounds, world3dFrameCameraFromInstances } from "../../🧱️elements/🌐️World3dHost/🔭️scene-schema/🟦️.ts";

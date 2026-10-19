@@ -1,5 +1,5 @@
 use super::foreground_on_fill;
-use crate::wgpu::theme::Theme;
+use semio_framework_ui_theme::Theme;
 
 #[test]
 fn hover_fill_lifts_resting_gray_to_emphasized_ink() {

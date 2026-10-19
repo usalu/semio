@@ -2444,9 +2444,16 @@
     {
       "name": "newline unsupported selected field",
       "format": "newline-pn",
-      "stdout": "p71\nf3\nn/outside\n",
+      "stdout": "p71\ntREG\nn/outside\n",
       "guardPaths": [],
       "accepted": false
+    },
+    {
+      "name": "newline descriptor marker",
+      "format": "newline-pn",
+      "stdout": "p71\nf3\nn/outside\n",
+      "guardPaths": [],
+      "accepted": true
     },
     {
       "name": "newline ownerless name",

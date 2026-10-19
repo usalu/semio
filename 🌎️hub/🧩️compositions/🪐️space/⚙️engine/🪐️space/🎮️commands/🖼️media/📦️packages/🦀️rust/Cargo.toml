@@ -28,7 +28,7 @@ semio-framework-async = { path = "../../../../../../../../../🧰️framework/�
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-space-space = { workspace = true }
-semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework = { workspace = true }

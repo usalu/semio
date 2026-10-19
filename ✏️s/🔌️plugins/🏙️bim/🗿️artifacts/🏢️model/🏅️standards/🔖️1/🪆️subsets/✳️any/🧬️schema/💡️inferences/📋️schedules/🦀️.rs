@@ -6,7 +6,8 @@
 //! presets of the library are authored values and live with the snapshot (`crate::standards::v1::subsets::any::schema::snapshot::schedule_kit`).
 
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule, ScheduleKey};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleKey;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

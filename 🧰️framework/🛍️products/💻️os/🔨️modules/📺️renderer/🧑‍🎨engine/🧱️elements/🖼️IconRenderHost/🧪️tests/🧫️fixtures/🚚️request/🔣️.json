@@ -3,7 +3,7 @@
   "cases": [
     {
       "url": "/mesh/🧊️base.glb",
-      "transport": "/mesh/🌱️metabolism/🧱️bases/⬛️base/🧊️base.glb"
+      "transport": "/mesh/🌱️metabolism/🧱️bases/⬛️plain-shape/🧊️base.glb"
     },
     {
       "url": "https://assets.example/mesh.glb",

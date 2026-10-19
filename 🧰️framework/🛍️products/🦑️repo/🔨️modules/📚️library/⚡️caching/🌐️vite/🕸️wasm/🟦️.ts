@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { readBuildMode, type BuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { readWasmPackageOwnerV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import type { OwnedBuildPlugin } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
+import type { OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
 
 /** 🕸️ Resolves browser builds to canonical WASM snapshots instead of the active package projection. */
 export function canonicalWasmBuildVitePlugin(workspace: string, mode: BuildMode): OwnedBuildPlugin {

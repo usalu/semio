@@ -1,12 +1,11 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 /** 🌱️ Tests the actual neutral value package under its explicitly supplied native policy. */
@@ -117,7 +116,7 @@ class DecodeOwnershipTestScript extends BundleScript {
 class SharedFactoryRetirementTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-shared-factory-retirement");
-  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🔗️shared/🏭️factory/🧪️tests/🟦️.ts")],this.repoRoot,"value:shared-factory:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🔗️arc-custody/🏭️factory/🧪️tests/🟦️.ts")],this.repoRoot,"value:shared-factory:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
  }
 }
 

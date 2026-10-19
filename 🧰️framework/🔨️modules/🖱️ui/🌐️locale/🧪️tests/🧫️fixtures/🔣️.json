@@ -1671,8 +1671,18 @@
     }
   ],
   "ownership": {
-    "uiManifest": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml",
+    "uiTree": "🧰️framework/🔨️modules/🖱️ui",
+    "localeOwners": [
+      "🧰️framework/🔨️modules/🖱️ui/📜️declaration",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout",
+      "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪶️light"
+    ],
     "uiRoot": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🦀️.rs",
+    "wgpuTree": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu",
     "wgpuRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs",
     "axisProjection": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/📽️projection/🟦️.ts",
     "wireTest": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-component-ui-ui-node-wire-format/🦀️.rs",

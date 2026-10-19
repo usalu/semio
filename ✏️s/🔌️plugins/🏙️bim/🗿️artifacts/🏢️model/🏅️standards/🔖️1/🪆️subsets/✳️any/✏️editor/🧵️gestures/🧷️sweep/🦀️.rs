@@ -2,14 +2,16 @@
 //! wall base. Its profile is the section of the selected beam or column type of the library, else a baseboard; its material is the selected material, else the first of the project. The ghost is the band the sweep covers along the face; it turns to
 //! a warning when the model would refuse it. One click writes the sweep.
 
-use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::entities::wall_sweeps::baseboard;
-use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, Wall, WallSide, WallSweep}};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::baseboard;
+use semio_s_artifact_bim_model_mut_any_186::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, WallSide};
 
 /// 📏️ The metres between two samples of the ghost along an arc wall.
 const STEP: f64 = 0.25;

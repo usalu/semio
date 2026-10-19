@@ -26,7 +26,7 @@ export function testJackDocumentContract(): void {
     invalidDiffs: unknown[];
   };
   const ioSchema = schema(frameworkSourceUrl("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
-  const childSchema = schema(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
+  const childSchema = schema(frameworkSourceUrl("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"));
   const artifactSchema = schema(new URL("../../🔣️.json", import.meta.url));
   const snapshotSchema = schema(new URL("../../📸️snapshot/🔣️.json", import.meta.url));
   const diffSchema = schema(new URL("../../🔺️diff/🔣️.json", import.meta.url));

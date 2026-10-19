@@ -33,37 +33,29 @@ pub mod standards {
                             #[path = "../../../../../../🔺️diff/🩹️patches/🏢️site-and-spaces/🦀️.rs"]
                             pub mod site_and_spaces;
                         }
-                        pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra;
                     }
                     #[path = "."]
                     pub mod authored {
                         #[path = "."]
                         pub mod references {
-                            pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::*;
                             #[cfg(test)]
                             #[path = "../../🦀️.rs"]
                             pub mod tests;
                         }
                         #[path = "."]
                         pub mod sizes {
-                            pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes::*;
                             #[cfg(test)]
                             #[path = "../../../../../🪟️sizes/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
                         #[path = "."]
                         pub mod storeys {
-                            pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::*;
                             #[cfg(test)]
                             #[path = "../../../../../🪜️storeys/🧪️tests/🔬️unit/🦀️.rs"]
                             pub mod tests;
                         }
                     }
-                    #[path = "."]
-                    pub mod snapshot {
-                        pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::*;
-                        pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
-                    }
+                    
                 }
             }
         }

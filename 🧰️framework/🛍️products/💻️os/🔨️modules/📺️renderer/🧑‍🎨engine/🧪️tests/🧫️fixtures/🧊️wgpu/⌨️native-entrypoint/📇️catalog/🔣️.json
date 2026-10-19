@@ -9,7 +9,7 @@
     "react",
     "wgpu"
   ],
-  "flowProducer": "semio-framework-os-flow-core:wasm",
+  "flowProducer": "semio-framework-os-flow-browser-package:wasm",
   "nativeArgs": [
     "--example",
     "🎬️demo",

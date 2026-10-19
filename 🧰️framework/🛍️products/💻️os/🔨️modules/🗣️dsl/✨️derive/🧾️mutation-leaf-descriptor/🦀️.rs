@@ -19,7 +19,8 @@ enum MutationLeafComposition { Atomic, Composite }
 enum MutationLeafLanguageSurface { Rust, Typescript, Graphql, Protobuf, JsonSchema, Text, Binary }
 
 #[derive(Debug, PartialEq, Eq)]
-pub(super) struct MutationLeafJson {
+#[doc(hidden)]
+pub struct MutationLeafJson {
     schema_version: u32,
     pub(super) owner: String,
     pub(super) semantic_kind: String,

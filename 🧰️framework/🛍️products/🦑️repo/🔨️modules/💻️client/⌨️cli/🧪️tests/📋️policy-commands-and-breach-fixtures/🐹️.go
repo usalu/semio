@@ -82,6 +82,7 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy breach list test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolPolicyBreachList("code")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyBreachList returned error: %s", result.Error)
@@ -89,8 +90,9 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
+	root := withStatuteFixtures(t)
 	path := "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🧫️fixtures/📁️some/📁️folder/🧪️file-invalid/🟦️.tsx"
-	if _, err := os.Stat(filepath.Join(GetRootDir(), path)); err != nil {
+	if _, err := os.Stat(filepath.Join(root, path)); err != nil {
 		t.Fatalf("fixture input does not resolve: %v", err)
 	}
 	bundles := LoadBundles()
@@ -119,6 +121,7 @@ func TestFixtureBreachsGroupedInline(t *testing.T) {
 }
 
 func TestFixtureBreachsByLanguage(t *testing.T) {
+	withStatuteFixtures(t)
 	bundles := LoadBundles()
 	fixtures := []struct {
 		path          string
@@ -248,6 +251,22 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		header := lang.FormatHeader("💻️test/file", "repo://file/💻️test", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header != "" {
 			t.Errorf("%s: FormatHeader should return empty for non-header language", lang.Name())
+		}
+	}
+}
+
+func TestToolPolicyListIsSortedByIdentifier(t *testing.T) {
+	result := ToolPolicyList()
+	if result.Error != "" {
+		t.Fatalf("ToolPolicyList returned error: %s", result.Error)
+	}
+	policies := sortedRegisteredPolicies()
+	if len(policies) < 2 {
+		t.Fatalf("expected at least two registered policies, got %d", len(policies))
+	}
+	for index := 1; index < len(policies); index++ {
+		if policies[index].ID < policies[index-1].ID {
+			t.Errorf("policy %q is listed after %q", policies[index].ID, policies[index-1].ID)
 		}
 	}
 }

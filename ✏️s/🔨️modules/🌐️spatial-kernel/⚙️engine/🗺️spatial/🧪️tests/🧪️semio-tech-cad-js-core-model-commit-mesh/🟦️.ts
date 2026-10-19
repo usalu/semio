@@ -6,6 +6,8 @@ import { preciseSpatialKernelMath } from "../../../🧮️preview/🟦️.ts";
 import { solidRef } from "@semio-tech/framework-3d-js";
 import type { TypologyRef } from "../../../📐️geometry/🟦️.ts";
 import type { MeshTransfer } from "@semio-tech/framework-3d-js";
+import * as vitestRuntime from "vitest";
+
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const M = preciseSpatialKernelMath;
@@ -83,3 +85,5 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>):
   });
 
 }
+
+await registerTests1(vitestRuntime);

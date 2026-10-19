@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import {build} from "esbuild";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {scriptInvocationEnvironment} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {captureOwnedCommandV1,captureOwnedCommandResultV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";

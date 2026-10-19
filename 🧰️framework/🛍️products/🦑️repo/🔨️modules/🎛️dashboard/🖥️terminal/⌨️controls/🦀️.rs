@@ -8,11 +8,12 @@ use super::launcher::{Input, LauncherState, Outcome};
 use super::windows::{Body, ContextMenu, Dashboard, Effect, Kind, LinkState, Place};
 use dashboard_preferences::Change;
 use dashboard_preferences::keymap::{KeyName, KeySpec, Scope};
-use ui_tui::tui::engine::Tui;
-use ui_tui::tui::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
-use ui_tui::tui::layout::{reorder_stack_tab, resize_split, resize_window, zoom_window};
-use ui_tui::tui::scene::NodeId;
-use ui_tui::tui::widget::{WidgetSignal, WidgetState};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_frame::layout::{reorder_stack_tab, resize_split, resize_window, zoom_window};
+use semio_framework_ui_tui_frame::scene::NodeId;
+use semio_framework_ui_tui_core::signal::WidgetSignal;
+use semio_framework_ui_tui_widgets::widget::WidgetState;
 
 const GROW_STEP: f64 = 0.1;
 const PREFIX_PATIENCE: std::time::Duration = std::time::Duration::from_secs(3);
@@ -61,10 +62,10 @@ fn class_of(body: &Body) -> Class {
 pub(super) enum Flow { Continue, Quit }
 
 /// 📏️ The leading hints that fit whole beside a status that keeps up to a third of the row (the footer draws ` key ` and `label ` per hint).
-pub(super) fn fit_hints(hints: Vec<ui_tui::tui::chrome::KeyHint>, width: u16) -> Vec<ui_tui::tui::chrome::KeyHint> {
+pub(super) fn fit_hints(hints: Vec<semio_framework_ui_tui_frame::chrome::KeyHint>, width: u16) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
     let mut room = i32::from(width) - i32::from(width / 3) - 1;
     hints.into_iter().take_while(|hint| {
-        room -= i32::from(ui_tui::tui::text::display_width(&hint.key)) + i32::from(ui_tui::tui::text::display_width(&hint.label)) + 3;
+        room -= i32::from(semio_framework_ui_tui_core::text::display_width(&hint.key)) + i32::from(semio_framework_ui_tui_core::text::display_width(&hint.label)) + 3;
         room >= 0
     }).collect()
 }
@@ -340,8 +341,8 @@ impl Dashboard {
     }
 
     /// 📋️ Opens the context menu of a window, a tab chip or a terminal; every row names its keys from the keymap.
-    fn open_context_menu(&mut self, tui: &mut Tui, pos: ui_tui::tui::geometry::Pos, item: Option<usize>, window: Option<usize>) {
-        use ui_tui::tui::menu::MenuItem;
+    fn open_context_menu(&mut self, tui: &mut Tui, pos: semio_framework_ui_tui_core::geometry::Pos, item: Option<usize>, window: Option<usize>) {
+        use semio_framework_ui_tui_widgets::menu::MenuItem;
         let Some(window) = window else { return };
         let target = item.and_then(|tab| self.tab_window(window, tab)).unwrap_or(window);
         let output = self.windows[target].is_output();
@@ -465,7 +466,7 @@ impl Dashboard {
             if let Some(node) = node { if tui.scene.node(node).visible != shown { tui.scene.node_mut(node).set_visible(shown); } }
         }
         let caption_text = if browse {
-            match &tui.scene.node(tree).content { ui_tui::tui::scene::NodeContent::Widget(WidgetState::Tree(state)) => launcher.caption(state), _ => String::new() }
+            match &tui.scene.node(tree).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Tree(state)) => launcher.caption(state), _ => String::new() }
         } else {
             launcher.set_page(usize::from(tui.scene.rect(list).height).max(1));
             let screen = launcher.screen();
@@ -475,7 +476,7 @@ impl Dashboard {
         };
         window.editor_slot = editor_slot;
         if let Some(node) = caption {
-            let changed = matches!(&tui.scene.node(node).content, ui_tui::tui::scene::NodeContent::Widget(WidgetState::Label(label)) if label.text != caption_text);
+            let changed = matches!(&tui.scene.node(node).content, semio_framework_ui_tui_frame::scene::NodeContent::Widget(WidgetState::Label(label)) if label.text != caption_text);
             if changed { if let Some(WidgetState::Label(label)) = tui.scene.node_mut(node).widget() { label.text = caption_text; } }
         }
     }
@@ -492,15 +493,15 @@ impl Dashboard {
         let hints = self.footer_hints(tui);
         let status = self.footer_status(tui);
         let node = self.shell.footer;
-        let same = matches!(&tui.scene.node(node).content, ui_tui::tui::scene::NodeContent::Chrome(ui_tui::tui::chrome::ChromeState::Footer(footer)) if footer.status == status && footer.hints.len() == hints.len() && footer.hints.iter().zip(&hints).all(|(a, b)| a.key == b.key && a.label == b.label));
+        let same = matches!(&tui.scene.node(node).content, semio_framework_ui_tui_frame::scene::NodeContent::Chrome(semio_framework_ui_tui_frame::chrome::ChromeState::Footer(footer)) if footer.status == status && footer.hints.len() == hints.len() && footer.hints.iter().zip(&hints).all(|(a, b)| a.key == b.key && a.label == b.label));
         if same { return; }
-        if let Some(ui_tui::tui::chrome::ChromeState::Footer(footer)) = tui.scene.node_mut(node).chrome() { footer.hints = hints; footer.status = status; }
+        if let Some(semio_framework_ui_tui_frame::chrome::ChromeState::Footer(footer)) = tui.scene.node_mut(node).chrome() { footer.hints = hints; footer.status = status; }
     }
 
     /// 💡️ The footer hints, generated from the keymap and the text catalogue; nothing is spelled twice. Only
     /// hints that fit whole next to the status are returned, most important first, so none is ever cut.
-    pub fn footer_hints(&self, tui: &Tui) -> Vec<ui_tui::tui::chrome::KeyHint> {
-        use ui_tui::tui::chrome::KeyHint;
+    pub fn footer_hints(&self, tui: &Tui) -> Vec<semio_framework_ui_tui_frame::chrome::KeyHint> {
+        use semio_framework_ui_tui_frame::chrome::KeyHint;
         let text = self.text();
         let hint = |scope: Scope, action: &str| self.keymap.keys_label(scope, action).map(|keys| KeyHint { key: keys, label: text.action(action).to_string() });
         let wanted: Vec<KeyHint> = if self.armed {

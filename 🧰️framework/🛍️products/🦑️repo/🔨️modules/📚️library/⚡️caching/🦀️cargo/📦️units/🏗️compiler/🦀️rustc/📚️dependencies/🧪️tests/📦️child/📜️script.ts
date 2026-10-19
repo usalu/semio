@@ -9,7 +9,7 @@ import*as api from"../../🟦️.ts";
 import fixture from"../../../../../🧪️tests/🧫️fixtures/🔣️.json";
 import type corpus from"../🔣️.json";
 import{receiveScriptProcessInvocation,withIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{withResourceLeases,resourceLeasePathV1,type ResourceLeaseControl}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withResourceLeases,resourceLeasePathV1,type ResourceLeaseControl}from"@semio-tech/process/leases";
 const root=process.argv[2],encoded=process.argv[3];if(!root||resolve(root)!==root||!encoded||process.argv.length!==4)throw Error("Exact owned dependency fixture arguments required");
 const row=JSON.parse(encoded)as typeof corpus.current[number],directory=join(root,"a"),ledger=join(root,"l"),resource="rust-unit:"+directory,primary=row.body==="undefined"?undefined:Object.freeze(Error("Exact current dependency body")),result={entered:0,readers:0,released:0,failed:false,exact:false,error:"",wire:"",boundDigest:"",blockedInBody:null as boolean|null,blockedAfter:null as boolean|null,resourceRefinement:false,value:null as string|null};
 function probe():boolean{const db=new Database(resourceLeasePathV1(ledger,resource));try{db.exec("pragma busy_timeout=0;begin exclusive");db.exec("rollback");return false;}catch(error){if(/busy|locked/iu.test(String(error)))return true;throw error;}finally{db.close();}}

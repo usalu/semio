@@ -5,7 +5,8 @@ import Ajv from "ajv";
 import cases from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/🧹️retire/🔣️.json";
 import sources from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
-import {DocumentSceneJob,type DocumentScenePlan} from "../../../📋️prepare/🟦️.ts";
+import { DocumentSceneJob } from "../../../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan } from "../../../🗺️plan-model/🟦️.ts";
 import {ScenePlanCloseJob} from "../../🟦️.ts";
 import {binary64} from "@semio-tech/framework/value/ieee754";
 function lift(value:any):any{return typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,lift(v)])):value;}

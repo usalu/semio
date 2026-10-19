@@ -6,7 +6,7 @@ export async function registerPollAndSmokeTests(vitest: NonNullable<ImportMeta["
   const { describe, expect, it } = vitest;
   const { devContractModule } = createTestKit(vitest, dependencies, source);
 
-  type SpawnDaemonHandle = import("../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts").SpawnDaemonHandle;
+  type SpawnDaemonHandle = import("@semio-tech/repo-lib/process").SpawnDaemonHandle;
 
   //#region 🔖️PollHelpers-tests
   describe("awaitTcpReady (W6 poll-census helper)", () => {

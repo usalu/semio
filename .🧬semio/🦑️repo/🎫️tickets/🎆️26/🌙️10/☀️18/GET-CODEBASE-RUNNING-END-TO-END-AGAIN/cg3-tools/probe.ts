@@ -22,18 +22,16 @@ const targets = all.filter((c) => c.dir.startsWith(`${art}/`));
 for (const c of targets) universe.root(c.ident);
 console.error(`[DEBUG] crates ${all.length} targets ${targets.length} files ${universe.files.size}`);
 const engine = new Unmirror(universe, { apiRoots: facadeIdents(all), targets: new Set(targets.map((c) => c.ident)), editable: () => true });
-const orig = universe.member.bind(universe);
-let calls = 0;
-const counts = new Map<string, number>();
-(universe as any).member = (node: any, name: string, from: any, stack?: Set<string>) => {
-  calls += 1;
-  const k = `${node.crate.ident}:${node.name}/${name}`;
-  counts.set(k, (counts.get(k) ?? 0) + 1);
-  if (calls % 200000 === 0) { console.error(`[DEBUG] member calls ${calls} depth ${stack?.size} rss ${(process.memoryUsage().rss / 1e9).toFixed(2)}G`); const top = [...counts].sort((a, b) => b[1] - a[1]).slice(0, 8); console.error(top.map(([a, b]) => `${b} ${a}`).join("\n")); }
-  if (calls > 1500000) process.exit(4);
-  return orig(node, name, from, stack);
-};
 const path = process.argv[2] ?? `${art}/🦀️.rs`;
 const t = Date.now();
+if (process.argv[3] === "col") {
+  const root = universe.files.get(path)!.nodes[0]!;
+  for (const bound of root.uses) {
+    const hits = universe.leafHits(bound);
+    console.error(`[DEBUG] use ${bound.leaf.path.join("::")}${bound.leaf.glob ? "::*" : ""} -> ${hits.map((h) => `${h.kind}@${h.node.crate.ident}:${h.node.file.slice(-40)}:${h.node.name}`).join(" | ")}`);
+    if (bound.leaf.glob) for (const hit of hits) if (hit.kind === "module") { const m = universe.member(hit.node, "Column", root); console.error(`[DEBUG]   Column in ${hit.node.name}: ${m.length}; ignoring: ${universe.memberIgnoringVisibility(hit.node, "Column", root).length}; items ${hit.node.items.size} uses ${hit.node.uses.length}`); }
+  }
+  process.exit(0);
+}
 engine.processFile(path);
-console.error(`[DEBUG] done ${path} ${Date.now() - t}ms calls ${calls} edits ${engine.report.edits.size}`);
+console.error(`[DEBUG] done ${path} ${Date.now() - t}ms lookups ${lookups} edits ${engine.report.edits.size}`);

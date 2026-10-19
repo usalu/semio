@@ -1,11 +1,11 @@
 // #region chrome
 //! 🎛️ Bordered chrome primitives shared by widgets and shell renderers.
 
-use crate::wgpu::draw_types::DrawList;
-use crate::wgpu::draw_types::IconAtlas;
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::theme::{Rgba, Theme};
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_draw_contract::IconAtlas;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::{Rgba, Theme};
 
 pub use semio_framework_ui_theme::metrics::{ICON_TINY, SIZE_TINY, ICON_TREE_ROW};
 

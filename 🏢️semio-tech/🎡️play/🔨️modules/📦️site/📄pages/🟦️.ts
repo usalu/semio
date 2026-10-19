@@ -2,13 +2,13 @@ import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";
-import { copyBrowserArtifacts } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { copyBrowserArtifacts } from "@semio-tech/framework-plugin/browser-bundle/distribution";
+import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-rs/index";
 import { playRuntimeAssetSources } from "../../🧩️runtime/📦️assets/🟦️.ts";
 import runtimeSchema from "../../🧩️runtime/🧬️schema/🔣️.json";
-import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { publishedPageUrl } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🌐️published-page/🟦️.ts";
+import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "@semio-tech/plugin-registry/deployment";
+import { publishedPageUrl } from "@semio-tech/assets/published-page";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
 /** 📦 One CDN deployment of play. Each page stays under {@link PLAY_PAGE_BUDGET_BYTES}. */

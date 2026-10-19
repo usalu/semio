@@ -2,7 +2,11 @@
   "name": "@semio-tech/repo-coordinator",
   "version": "1.0.0",
   "exports": {
-    "./ports": "./🔌️ports/🟦️.ts"
+    "./ports": "./🔌️ports/🟦️.ts",
+    "./builder/mode": "./🏗️builder/🎚️mode/🟦️.ts",
+    "./builder/storage": "./🏗️builder/💾️storage/🟦️.ts",
+    "./builder/inputs/nx": "./🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+    "./builder/publication": "./🏗️builder/📦️publication/🟦️.ts"
   },
   "$schema": "https://json.schemastore.org/package.json",
   "sourceRoot": "repo/server/coordinator",

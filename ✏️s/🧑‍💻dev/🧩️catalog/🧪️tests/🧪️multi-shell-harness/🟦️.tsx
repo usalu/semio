@@ -9,7 +9,7 @@ import "@semio-tech/framework-os-dev";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { composeSpecificOsCatalogV1 } from "../../🟦️.ts";
 import { FrameworkOsShell } from "@semio-tech/framework-renderer-react";
-import { createFrameworkOsHostPortsV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 
@@ -34,7 +34,7 @@ const MULTI_HARNESS_HOST_PORTS = createFrameworkOsHostPortsV1();
 
 function MultiShellHarnessPane({ pane }: { readonly pane: MultiHarnessPane }): React.ReactElement {
   const [mounted, setMounted] = React.useState(true);
-  const catalog = React.useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
+  const catalog = React.useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const boot = React.useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: "1 1 0", minWidth: 0 }}>

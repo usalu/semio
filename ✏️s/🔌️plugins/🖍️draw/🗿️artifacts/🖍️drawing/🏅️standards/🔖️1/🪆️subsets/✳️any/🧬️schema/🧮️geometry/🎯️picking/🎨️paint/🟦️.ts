@@ -4,7 +4,7 @@ import {StrokeOutlineJob,type StrokeGeometryStyle} from "@semio-tech/framework/2
 import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
 import type {PathSegment} from "@semio-tech/framework/2d";
 import type {PathGeometrySegment} from "../../../🟦️.ts";
-import type {DocumentSceneNode} from "../../../🎬️scene/📋️prepare/🟦️.ts";
+import type { DocumentSceneNode } from "../../../🎬️scene/🗺️plan-model/🟦️.ts";
 type Point=readonly [number,number];
 export type PaintedPathStroke={width:number;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";dash:readonly number[]};
 export type PaintedPathQuery={point:Point;transform:readonly number[];tolerance:number;flatness:number;fill:boolean;fillRule:"nonzero"|"evenodd";stroke:PaintedPathStroke|null};

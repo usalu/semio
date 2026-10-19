@@ -1,9 +1,9 @@
 import * as ModuleUnderTest from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts";
 import * as Dep0 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts";
-import * as Dep1 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts";
-import * as Dep2 from "../../../../../../../../🔨️modules/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts";
-import { decodeAppCommand as Dep3decodeAppCommand } from "../../../../../../../../🔨️modules/🧾️app-channel/🎛️command-codec/🟦️.ts";
-import * as Dep4 from "../../../../../../../../🔨️modules/🎁️packs/🟦️.ts";
+import * as Dep1 from "@semio-tech/framework/browser-bundle/action-handoff/command";
+import * as Dep2 from "@semio-tech/framework/browser-bundle/action-handoff/intent";
+import { decodeAppCommand as Dep3decodeAppCommand } from "@semio-tech/framework/app-channel";
+import * as Dep4 from "@semio-tech/framework/packs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 

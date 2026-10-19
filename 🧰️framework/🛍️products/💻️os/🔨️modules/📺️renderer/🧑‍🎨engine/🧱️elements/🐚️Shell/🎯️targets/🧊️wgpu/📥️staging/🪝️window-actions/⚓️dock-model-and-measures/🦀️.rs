@@ -37,7 +37,7 @@ pub fn operation_publication_refresh(publication: &semio_framework_os_renderer_w
         return publication.ui_scope.clone();
     }
     if publication.completed && publication.history_patch.is_some() {
-        return UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false };
+        return UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: vec![semio_framework_ui_declaration::layout::FRAMEWORK_HISTORY_BODY_KEY.to_string()], utilities: false, tools: false, engagements: false, measures: false, labels: false };
     }
     UiDirtyScope::None
 }

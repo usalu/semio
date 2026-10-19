@@ -1,9 +1,11 @@
 //! 📌️ `create-column` / `authored-top-is-stored`: the authored top constraint is stored verbatim, no derived height is stored with it, and a taller storey changes nothing stored.
 
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
-use crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn;
-use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Column, ModelSnapshot, Point2, TopConstraint}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_mut_any_159::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn;
+use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, TopConstraint};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -12,7 +14,7 @@ static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| f
 #[semio_framework_async_macros::async_test]
 async fn the_authored_top_is_stored_and_a_taller_storey_changes_nothing_stored() {
     let before: ModelSnapshot = from_json_str((*BEFORE), JsonMemberPolicy::Reject).expect("before snapshot decodes");
-    let created = Column { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-ground".into(), column_type: "ct-400".into(), position: Point2 { x: 6.0, y: 0.0 }, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.25 }, name: "New".into() };
+    let created = Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-ground".into(), column_type: "ct-400".into(), position: Point2 { x: 6.0, y: 0.0 }, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.25 }, name: "New".into() };
     let stored = apply_model_mutation(&before, &ModelMutation::CreateColumn(CreateColumn { id: "c-new".into(), column: created.clone() })).expect("the column is created");
     assert_eq!(stored.columns["c-new"].top, TopConstraint::StoreyTop { offset: 0.25 });
     let wire: serde_json::Value = serde_json::from_str(&to_json_string(&stored.columns["c-new"])).expect("the column encodes as JSON");

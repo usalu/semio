@@ -4,7 +4,7 @@ use std::{fmt,mem::size_of,sync::{LazyLock,Mutex}};
 pub use semio_framework_ui_contract_budget::*;
 pub use semio_framework_ui_contract_text::{UiText,UiTextOriginalCopy,UI_TEXT_CLIP_MARK};
 pub use semio_framework_ui_contract_identity::{UiNodeId,UiRevision,SurfaceId};
-const UI_VALUE_NONE:usize=usize::MAX;
+pub const UI_VALUE_NONE:usize=usize::MAX;
 use semio_framework_value::list as fixed_list_storage;
 pub use fixed_list_storage::{PagedListAllocationError,PagedListError,PagedListProgress,PagedListRefusalKind};
 
@@ -22,8 +22,6 @@ use collection_arena::{
     with_ui_value_arena, UiCollectionHandle, UiCollectionKind, UiPageValue, UiValueArena,
     UI_VALUE_ARENA,
 };
-#[cfg(test)]
-use collection_arena::{UiCollectionSlot, UiPageSlot};
 pub use collection_arena::{
     close_ui_value_page_one, resident_static_backing_bytes, ui_value_headroom, UiValueHeadroom,
     UI_VALUE_AGGREGATE_BYTES,
@@ -113,13 +111,12 @@ pub mod copy_protocol;
 pub mod compare_protocol;
 pub use copy_protocol::UiComponentCopyProgress;
 pub use compare_protocol::UiComponentCompareProgress;
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path="📋️list/🧪️tests/📋️list/🦀️.rs"]
-mod fixed_list_storage_tests;
 
 #[cfg(any(test,feature="testkit"))]
 #[path="🧪️observer/🦀️.rs"]
 pub mod test_observer;
+
+#[cfg(any(test, feature = "testkit"))]
+pub mod testkit {
+    pub use super::{fixed_list::*, fixed_map_and_bytes::*, collection_arena::*, ui_list::*, ui_map::*, retirement::*};
+}

@@ -1,7 +1,7 @@
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::components;
-use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::components;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4};
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem};
 
 #[test]
 fn the_routed_elements_survive_the_round_trip_exactly_in_both_schemas() {
@@ -16,9 +16,10 @@ fn the_routed_elements_survive_the_round_trip_exactly_in_both_schemas() {
 
 #[test]
 fn a_foreign_segment_is_read_along_its_extrusion_with_the_system_of_its_group() {
-    use crate::standards::v1::subsets::any::io::export::ifc::codec::encode_document;
-    use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, reals, refs, rf, unset};
-    use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_document;
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, real, reals, refs, rf, unset};
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21;
+    use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
     use semio_s_artifact_stdio_contract::part21::Part21Instance;
     let model = components();
     let (mut document, _) = model_to_part21(Schema::Ifc2x3, &model).expect("the export");
@@ -36,7 +37,7 @@ fn a_foreign_segment_is_read_along_its_extrusion_with_the_system_of_its_group() 
     let (placement3, e) = add("IFCAXIS2PLACEMENT3D", vec![rf(point3), unset(), unset()]);
     let (direction, f) = add("IFCDIRECTION", vec![reals(&[1.0, 0.0, 0.0])]);
     let (solid, g) = add("IFCEXTRUDEDAREASOLID", vec![rf(profile), rf(placement3), rf(direction), real(5.0)]);
-    let (representation, h) = add("IFCSHAPEREPRESENTATION", vec![rf(context), crate::standards::v1::subsets::any::io::export::ifc::writer::text("Body"), crate::standards::v1::subsets::any::io::export::ifc::writer::text("SweptSolid"), refs(&[solid])]);
+    let (representation, h) = add("IFCSHAPEREPRESENTATION", vec![rf(context), semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::text("Body"), semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::text("SweptSolid"), refs(&[solid])]);
     let (shape, k) = add("IFCPRODUCTDEFINITIONSHAPE", vec![unset(), unset(), refs(&[representation])]);
     let supply = document.instances.iter_mut().find(|instance| instance.entity("IFCFLOWSEGMENT").is_some_and(|args| args[7].as_str() == Some("mep-supply"))).expect("the duct");
     supply.entities[0].1[6] = rf(shape);

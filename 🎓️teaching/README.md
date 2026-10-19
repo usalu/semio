@@ -7,7 +7,7 @@ the proctor, and one site per subject; each site offers a catalog of quizzes who
 
 | Path | What lives there |
 |---|---|
-| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, nx `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://semio.iek.uni-hannover.de`. |
+| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, project `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://semio.iek.uni-hannover.de`. |
 | `🏛️architecture/` | The site `https://quizze.architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
 | `🏛️architecture/❓️quiz/` | The site's catalog `🔣️.json`, its web package `@teaching/architecture-quiz` (a static build published to a CDN) and its deployment files. |
 | `🏛️architecture/<domain>/<topic>/❓️quiz/🔣️.json` | One quiz per topic leaf. |

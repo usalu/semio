@@ -18,8 +18,8 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 /// opens, reads and closes its document through the artifact's owners.
 #[semio_framework_async_macros::async_test]
 async fn the_viewer_opens_and_closes_its_document_through_the_artifacts_owners() {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::artifact_app_laws::new_viewer::<Generation2dViewer>(semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
-    let tree = semio_framework_plugin::PluginApp::render(&mut app, preview::BODY_KEY, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("the viewer renders its default document");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("the preview projects");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, preview::BODY_KEY, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), scope.cx()).await.expect("the viewer renders and projects its default document");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }

@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import {verifyCapturedCargoArtifactsV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -11,18 +10,15 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd, runCargo, runProbe, runRepositoryCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, MCP_GATEWAY_PACKAGES, readMcpGatewaySource, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts";
 
-import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { packageNativeRelease, signExecutableForDistribution } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as {
@@ -90,7 +86,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -105,7 +101,7 @@ class BuildScript extends BundleScript {
 class BuildReleaseScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
+    await buildAdmittedCargoArtifactsV1(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
     const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
     if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
     signExecutableForDistribution(staged);
@@ -139,7 +135,7 @@ class InstalledServiceCheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -158,7 +154,7 @@ class OriginalInferenceSourceScript extends BundleScript {
 class OriginalInferenceNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Original inference native law has a fixed selector");
-    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--offline", "--lib", "original_mcp_", "--", "--nocapture"]);
+    await runAdmittedCargoPackageTestsV1([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--offline", "--lib", "original_mcp_", "--", "--nocapture"]);
   }
 }
 
@@ -174,7 +170,7 @@ class ProbeSqliteSourceScript extends BundleScript {
 class ProbeSqliteNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite native law has a fixed original selector");
-    await runRepositoryCargoTests([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
+    await runAdmittedCargoPackageTestsV1([...MCP_GATEWAY_PACKAGES], this.repoRoot, this.invocation, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
   }
 }
 

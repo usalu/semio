@@ -3,8 +3,10 @@
 //! list, because columns, sort keys, filters and grouping levels are one ordered definition and not addressable records.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule;
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSchedule, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

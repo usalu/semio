@@ -8,7 +8,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[cfg(any(test, feature = "testkit"))]
 use semio_framework_os_infinite_world_interaction::merge_u32_ids;
 use semio_framework::{HierarchyProvider, MergeMode, SelectionMethod};
-use ui_wgpu::wgpu::Rgba;
+use semio_framework_ui_theme::Rgba;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
 

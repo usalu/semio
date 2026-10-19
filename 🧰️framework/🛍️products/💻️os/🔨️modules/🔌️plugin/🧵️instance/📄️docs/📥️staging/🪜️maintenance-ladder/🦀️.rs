@@ -25,6 +25,18 @@ use semio_framework_ui_contract::*;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
+/// 🚦️ The actual caller turn answers the parent history decoder's yield and cancellation checkpoints.
+struct StepTurn<'a, 'b>(&'a semio_framework_job::StepContext<'b>);
+
+impl protocol::RetainedHistoryTurn for StepTurn<'_, '_> {
+    fn should_yield(&self) -> bool {
+        self.0.should_yield()
+    }
+    fn is_cancelled(&self) -> bool {
+        self.0.is_cancelled()
+    }
+}
+
 #[doc(hidden)]
 pub fn item() -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, ..Default::default() }
@@ -107,15 +119,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
             return Ok(item);
         }
         Ok(match active.phase {
-            ActiveDocumentArchiveLoadPhase::DecodeParent => RetirementDemand { copy_bytes: 1, ..item },
-            ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary => {
-                if active.retained_pending.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&active.retained_pending)?
-                } else if let Some(retained) = active.retained.as_ref() {
-                    store::os_store::snapshot_read::artifact_retirement_box_demands(retained, body)?
-                } else {
-                    item
-                }
+            ActiveDocumentArchiveLoadPhase::DecodeParent => {
+                let quote = active.history.as_ref().map_or_else(|| Ok(RetirementDemand::default()), |history| history.demands(body))?;
+                RetirementDemand { copy_bytes: quote.copy_bytes.max(1), capacity_bytes: quote.capacity_bytes, release_bytes: quote.release_bytes, depth: quote.depth.max(item.depth) }
             }
             ActiveDocumentArchiveLoadPhase::MergeParent | ActiveDocumentArchiveLoadPhase::Terminal => RetirementDemand::default(),
             ActiveDocumentArchiveLoadPhase::HydrateParent => {
@@ -194,45 +200,36 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M
             ActiveDocumentArchiveLoadPhase::DecodeParent => {
                 let archive = active.archive.as_ref().ok_or_else(|| missing("recursive document archive parent input owner is absent"))?;
                 let decoder = active.history.as_mut().ok_or_else(|| missing("recursive document archive parent history decoder is absent"))?;
-                match decoder.step(&archive.parent_spr, grant.maximum_copy_bytes, 1).map_err(|error| document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {error}")))? {
-                    protocol::RetainedHistoryDecodeStep::Pending { decoded_records, .. } => {
-                        let copied_bytes = grant.maximum_copy_bytes.min(archive.parent_spr.len());
-                        let discovered = if active.merge { 0 } else { decoded_records.saturating_sub(active.decoded) };
-                        active.decoded = decoded_records;
-                        active.completed = active.completed.saturating_add(discovered);
-                        active.total = active.total.saturating_add(discovered);
-                        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_bytes, ..item }))
-                    }
-                    protocol::RetainedHistoryDecodeStep::Ready => {
-                        active.decoded_history = decoder.take_ready();
+                let rejected = |error: ValueError| {
+                    let progress = error.retained_progress();
+                    document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {error}")).with_retained_progress(progress)
+                };
+                let step = decoder.step(&archive.parent_spr, &StepTurn(&*cx), grant, &mut active.decoded_history).map_err(rejected)?;
+                let progress = decoder.take_receipt().map_or_else(RetainedCloneProgress::default, |(_, progress)| progress);
+                match step {
+                    protocol::RetainedHistorySourceStep::Fault => Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {:?}", decoder.fault())).with_retained_progress(progress).into()),
+                    protocol::RetainedHistorySourceStep::Ready => {
                         if active.decoded_history.is_none() {
                             return Err((missing("ready recursive document archive history retained no decoded owner")).into());
                         }
-                        let auxiliary = decoder.take_auxiliary_owners();
-                        active.retained_pending = Some((None, Some(auxiliary)));
                         let decoder = active.history.take().ok_or_else(|| missing("ready recursive document archive history decoder changed before terminal transfer"))?;
                         if !decoder.terminal_is_empty() {
                             active.history = Some(decoder);
                             return Err((missing("ready recursive document archive history decoder retained an untransferred owner")).into());
                         }
                         drop(decoder);
-                        active.phase = ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary;
-                        Ok(PluginLifecycleStep::Progress(item))
+                        active.phase = if active.merge { ActiveDocumentArchiveLoadPhase::MergeParent } else { ActiveDocumentArchiveLoadPhase::HydrateParent };
+                        Ok(PluginLifecycleStep::Progress(progress))
+                    }
+                    protocol::RetainedHistorySourceStep::Closed => Err((missing("recursive document archive history decoder closed before its log was ready")).into()),
+                    protocol::RetainedHistorySourceStep::Progress | protocol::RetainedHistorySourceStep::Blocked => {
+                        let discovered = if active.merge { 0 } else { progress.copied_items as u64 };
+                        active.decoded = active.decoded.saturating_add(progress.copied_items as u64);
+                        active.completed = active.completed.saturating_add(discovered);
+                        active.total = active.total.saturating_add(discovered);
+                        Ok(PluginLifecycleStep::Progress(progress))
                     }
                 }
-            }
-            ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary => {
-                let step = if active.retained_pending.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut active.retained_pending, &mut active.retained, grant).map_err(plugin_retirement_fault)?
-                } else if active.retained.is_some() {
-                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active.retained, grant).map_err(plugin_retirement_fault)?
-                } else {
-                    RetainedCloneStep::Progress(item)
-                };
-                if active.retained_pending.is_none() && active.retained.is_none() {
-                    active.phase = if active.merge { ActiveDocumentArchiveLoadPhase::MergeParent } else { ActiveDocumentArchiveLoadPhase::HydrateParent };
-                }
-                Ok(progressed(step))
             }
             ActiveDocumentArchiveLoadPhase::MergeParent => Ok(PluginLifecycleStep::Progress(empty)),
             ActiveDocumentArchiveLoadPhase::HydrateParent => {

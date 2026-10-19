@@ -1,6 +1,8 @@
 //! 🦚️ `set-wall-location` payload. Chooses which face or line of the wall its axis denotes: centre, interior, exterior or core centre.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{LocationLine, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LocationLine;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

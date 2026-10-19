@@ -8,14 +8,14 @@
 //! An authored property of that name (on the element, or on the type of a window or door) wins and is written as before; every derived row is listed in the `DerivedRows` row of the element so the importer does not read it back as an authored property.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifckernel/pset/pset_spacethermalrequirements.htm
 
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote, schema_of, Cell};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
-use crate::standards::v1::subsets::any::io::export::ifc::Schema;
-use crate::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
-use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
 
@@ -199,7 +199,7 @@ pub fn thermal_json(document: &Part21Document) -> String {
 }
 
 /// 📊️ The thermal report of the export of `model` in `schema`.
-pub fn thermal_report(schema: Schema, model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> Result<String, String> {
+pub fn thermal_report(schema: Schema, model: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> Result<String, String> {
     crate::standards::v1::subsets::any::io::export::ifc::model_to_part21(schema, model).map(|(document, _)| thermal_json(&document))
 }
 //#endregion 🔖️Report

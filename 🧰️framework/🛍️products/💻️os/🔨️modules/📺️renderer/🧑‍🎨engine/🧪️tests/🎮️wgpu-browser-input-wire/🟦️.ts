@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 // @vitest-environment jsdom
 /**
  * 🎮️ TypeScript twin over `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json`.
@@ -16,19 +16,11 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import {
-  BrowserFrameTransport,
-  browserFrameEventFromDom,
-  browserFrameEventIsReplaceable,
-  browserFramePointerDomEvent,
-  browserFrameWheelDomEvent,
-  type BrowserFrameDomEvent,
-  type BrowserFrameUiMessage,
-  type BrowserFrameWorkerMessage,
-  type BrowserFrameWorkerPort,
-} from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
-import { browserClipboardPasteCandidate } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/dom-events";
+import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
+import { browserClipboardPasteCandidate } from "@semio-tech/framework-renderer-wgpu/input-wire";
 import type { OrderedScrollEvent, OrderedScrollFixture } from "../../../../../../../🔨️modules/🖱️ui/🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🔬️ordered-scroll/🟦️.ts";
 import { inputOrderedScrollFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 

@@ -2,21 +2,19 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { readNativeCallerAuthorityV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import { type CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
-import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory, runCmd, runProbe } from "@semio-tech/process/execution";
 import { decodeClientFrame, decodePresencePeer, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer } from "@semio-tech/framework-replication";
 import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
-import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { freeLoopbackPort, hubBinaryPath } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { browserDocumentOpenFixture, type BrowserDocumentOpenFixture } from "../📄️browser-document-open/🟦️.ts";

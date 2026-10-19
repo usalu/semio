@@ -244,7 +244,7 @@ async fn a_finalized_simulation_run_recolours_the_three_d_model_window() {
         // satisfied by the completing tick's payload and would say nothing about whether the window
         // recolours DURING the run — which is the half the tick-interval republish exists for.
         let running = matches!(state_of(&app), Some("starting" | "running"));
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("driver turn");
         drain_ui_scopes(&mut app, &mut scopes);
         if running && scopes.iter().any(|scope| scope_covers(scope, model_window::BODY_KEY)) && painted_while_running.len() < 2 {
             let live = render_text(&mut app, model_window::BODY_KEY).await;

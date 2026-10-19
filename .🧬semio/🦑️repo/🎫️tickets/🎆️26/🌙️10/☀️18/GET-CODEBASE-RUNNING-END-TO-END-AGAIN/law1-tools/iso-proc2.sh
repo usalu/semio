@@ -1,0 +1,23 @@
+#!/bin/zsh
+cd /Users/ueli/Documents/semio
+export LAW1_MAX_MS=3600000
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🛟️custodian/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🏗️build/🎟️capacity/🧪️tests/🪆️scope/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📥️parent/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/📦️owner/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📥️operation/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🧪️tests/📥️consumers/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🎯️target/🧪️tests/📋️callers/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🧪️tests/🏎️overlap/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/📦️artifacts/💾️cache/🧹️retirement/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🔒️leases/♻️retirement/🧪️tests/📋️inventory/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎟️admission/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🍎️image.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🏃️execution/🧪️tests/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/📥️preparation/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts"
+python3 ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18/GET-CODEBASE-RUNNING-END-TO-END-AGAIN/law1-tools/iso.py" "🧰️framework/🔨️modules/🏃️process/🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts"

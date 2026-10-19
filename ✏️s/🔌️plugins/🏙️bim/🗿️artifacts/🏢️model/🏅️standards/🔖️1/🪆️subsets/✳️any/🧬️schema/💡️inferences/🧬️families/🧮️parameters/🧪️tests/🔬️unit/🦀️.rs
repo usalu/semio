@@ -1,25 +1,25 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ParameterKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
 use semio_framework_expression::Value;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode};
-use crate::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::ResolvedParameter;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::ResolvedParameter;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::FamilyParameter;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::FamilyParameter;
 #[allow(unused_imports)]
 use semio_framework_expression::{evaluate_all_declared, parse, print, Expr, Kind};
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
-use crate::standards::v1::subsets::any::schema::inferences::families::parameters::*;
-use crate::standards::v1::subsets::any::schema::inferences::families::tests::kit;
-use crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::parameters::{Resolution, resolve, authored, stored};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory;
 
 fn table() -> ModelSnapshot {
-    let mut snapshot = kit::model();
-    kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
     snapshot
 }
 
@@ -30,13 +30,13 @@ fn find<'a>(resolution: &'a Resolution, subject: &str) -> Vec<&'a FamilyIssue> {
 #[test]
 fn parameters_resolve_in_dependency_order_whatever_their_names() {
     let mut snapshot = table();
-    kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "2 * base + 40 mm");
-    kit::parameter(&mut snapshot, "fam-table", "base", ParameterKind::Length, "500 mm");
-    kit::parameter(&mut snapshot, "fam-table", "ratio", ParameterKind::Real, "width / base");
-    kit::parameter(&mut snapshot, "fam-table", "tall", ParameterKind::Boolean, "width > 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "turn", ParameterKind::Angle, "90 deg");
-    kit::parameter(&mut snapshot, "fam-table", "label", ParameterKind::Text, "\"oak\"");
-    kit::parameter(&mut snapshot, "fam-table", "legs", ParameterKind::Integer, "round(width / 100 mm)");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "2 * base + 40 mm");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "base", ParameterKind::Length, "500 mm");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "ratio", ParameterKind::Real, "width / base");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "tall", ParameterKind::Boolean, "width > 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "turn", ParameterKind::Angle, "90 deg");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "label", ParameterKind::Text, "\"oak\"");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "legs", ParameterKind::Integer, "round(width / 100 mm)");
     let resolution = resolve(&snapshot, "fam-table", &BTreeMap::new());
     assert!(resolution.issues.is_empty(), "{:?}", resolution.issues);
     let position = |name: &str| resolution.order.iter().position(|row| row == name).expect(name);
@@ -58,10 +58,10 @@ fn parameters_resolve_in_dependency_order_whatever_their_names() {
 #[test]
 fn a_cycle_gives_one_issue_per_member_and_the_rest_still_resolves() {
     let mut snapshot = table();
-    kit::parameter(&mut snapshot, "fam-table", "a", ParameterKind::Length, "b + 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "b", ParameterKind::Length, "a + 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "c", ParameterKind::Length, "a");
-    kit::parameter(&mut snapshot, "fam-table", "d", ParameterKind::Length, "2 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "a", ParameterKind::Length, "b + 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "b", ParameterKind::Length, "a + 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "c", ParameterKind::Length, "a");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "d", ParameterKind::Length, "2 m");
     let resolution = resolve(&snapshot, "fam-table", &BTreeMap::new());
     for member in ["a", "b"] {
         let issues = find(&resolution, member);
@@ -77,12 +77,12 @@ fn a_cycle_gives_one_issue_per_member_and_the_rest_still_resolves() {
 #[test]
 fn unknown_syntax_zero_and_kind_faults_are_issues_not_values() {
     let mut snapshot = table();
-    kit::parameter(&mut snapshot, "fam-table", "ghosted", ParameterKind::Length, "ghost + 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "broken", ParameterKind::Length, "2 *");
-    kit::parameter(&mut snapshot, "fam-table", "after", ParameterKind::Length, "broken + 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "zero", ParameterKind::Real, "1 / 0");
-    kit::parameter(&mut snapshot, "fam-table", "mixed", ParameterKind::Length, "1 m + 30 deg");
-    kit::parameter(&mut snapshot, "fam-table", "wrong", ParameterKind::Length, "2");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "ghosted", ParameterKind::Length, "ghost + 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "broken", ParameterKind::Length, "2 *");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "after", ParameterKind::Length, "broken + 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "zero", ParameterKind::Real, "1 / 0");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "mixed", ParameterKind::Length, "1 m + 30 deg");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "wrong", ParameterKind::Length, "2");
     let resolution = resolve(&snapshot, "fam-table", &BTreeMap::new());
     let code = |subject: &str| find(&resolution, subject).first().map(|issue| issue.code);
     assert_eq!(code("ghosted"), Some(FamilyIssueCode::Unknown));
@@ -99,9 +99,9 @@ fn unknown_syntax_zero_and_kind_faults_are_issues_not_values() {
 #[test]
 fn integer_and_material_parameters_check_their_value() {
     let mut snapshot = table();
-    kit::parameter(&mut snapshot, "fam-table", "legs", ParameterKind::Integer, "2.5");
-    kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Material, "\"m-ghost\"");
-    kit::parameter(&mut snapshot, "fam-table", "frame", ParameterKind::Material, "\"m-steel\"");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "legs", ParameterKind::Integer, "2.5");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Material, "\"m-ghost\"");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "frame", ParameterKind::Material, "\"m-steel\"");
     let resolution = resolve(&snapshot, "fam-table", &BTreeMap::new());
     assert_eq!(find(&resolution, "legs")[0].code, FamilyIssueCode::Kind);
     assert_eq!(find(&resolution, "top")[0].code, FamilyIssueCode::Unknown);
@@ -113,8 +113,8 @@ fn integer_and_material_parameters_check_their_value() {
 #[test]
 fn overrides_replace_formulas_and_a_broken_override_is_a_syntax_issue_of_that_name() {
     let mut snapshot = table();
-    kit::parameter(&mut snapshot, "fam-table", "base", ParameterKind::Length, "500 mm");
-    kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "2 * base");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "base", ParameterKind::Length, "500 mm");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "2 * base");
     let replaced = resolve(&snapshot, "fam-table", &BTreeMap::from([("base".to_string(), "0.6m".to_string())]));
     assert!(replaced.issues.is_empty());
     assert_eq!(replaced.parameters["base"].formula, "0.6 m");
@@ -127,10 +127,10 @@ fn overrides_replace_formulas_and_a_broken_override_is_a_syntax_issue_of_that_na
 #[test]
 fn only_the_parameters_of_the_family_count() {
     let mut snapshot = table();
-    kit::family(&mut snapshot, "fam-other", FamilyCategory::Generic);
-    kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "1 m");
-    kit::parameter(&mut snapshot, "fam-other", "width", ParameterKind::Length, "9 m");
-    kit::parameter(&mut snapshot, "fam-other", "extra", ParameterKind::Length, "width");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-other", FamilyCategory::Generic);
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "width", ParameterKind::Length, "1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-other", "width", ParameterKind::Length, "9 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-other", "extra", ParameterKind::Length, "width");
     assert_eq!(authored(&snapshot, "fam-table").len(), 1);
     assert_eq!(resolve(&snapshot, "fam-table", &BTreeMap::new()).parameters.len(), 1);
     assert_eq!(resolve(&snapshot, "fam-other", &BTreeMap::new()).parameters["extra"].value, Some(ParameterValue::Length { value: 9.0 }));

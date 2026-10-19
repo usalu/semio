@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/World3dHost/interaction-domain-args` entry: explicit re-exports of the source module that owns each member. */
+export { world3dHoverActionArgs, world3dSelectionActionArgs, world3dSelectionTargetsActionArgs } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🖱️interaction-domain-args/🟦️.ts";

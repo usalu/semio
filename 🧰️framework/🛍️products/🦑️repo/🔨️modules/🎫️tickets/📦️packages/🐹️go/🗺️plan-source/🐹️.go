@@ -44,7 +44,7 @@ func PlanClientTag(kind providers.McpClientKind) string {
 // 🏠️HostPlanRoots are the plan roots of the repository and the user the process runs as.
 func HostPlanRoots() PlanRoots {
 	home, _ := os.UserHomeDir()
-	return PlanRoots{RepoRoot: workspace.RootDir, HomeDir: home}
+	return PlanRoots{RepoRoot: workspace.GetRootDir(), HomeDir: home}
 }
 
 // 🗺️ResolvePlanSource resolves a plan or spec id to a store path, per IDE.

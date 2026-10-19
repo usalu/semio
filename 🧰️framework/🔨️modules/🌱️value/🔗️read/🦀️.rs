@@ -1,6 +1,6 @@
 //! 🔗️ Typed fixed read leases retain original roots through independently admitted ownership closure.
 
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::SharedControlledRetirement}};
+use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::SharedControlledRetirement}};
 use std::{cell::UnsafeCell,mem::ManuallyDrop,sync::{Arc,atomic::{AtomicBool,AtomicU64,AtomicUsize,Ordering}}};
 
 #[path="🪪️authority/🦀️.rs"]
@@ -51,7 +51,7 @@ impl<T> Drop for StateGuard<'_,T> {fn drop(&mut self){if !self.panicking&&std::t
 /// 🔗️ Fixed typed roots and inline return flags retain exact immutable read authority.
 pub struct ReadOwnershipRegistry<T:RetireOwned+Sync> {state:StateLock<T>,returned:AtomicUsize,sequence:AtomicU64,generation:AtomicU64,revision:[AtomicU64;4]}
 impl<T:RetireOwned+Sync> ReadOwnershipRegistry<T> {
-    pub fn constructor_capacity_bytes()->usize {crate::retirement::shared::arc_bytes::<Self>()+size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}
+    pub fn constructor_capacity_bytes()->usize {crate::retirement::arc_custody::arc_bytes::<Self>()+size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}
     pub fn admit(grant:RetainedCloneGrant)->Result<(Arc<Self>,RetainedCloneProgress),ValueError> {
         if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"read roots require controlled typed retirement"));}
         if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"read registry constructor requires an admitted item"));}
@@ -176,7 +176,7 @@ impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
     fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.registry.is_none()&&self.closing.is_none()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(0),SharedControlledRetirement::next_copy_byte_demand)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(0),|close|close.next_capacity_byte_demand(copy))}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {if self.owner.is_some(){return Ok(0);}self.closing.as_ref().map_or_else(||Ok(if self.registry.is_some(){crate::retirement::shared::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0}),SharedControlledRetirement::next_release_byte_demand)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {if self.owner.is_some(){return Ok(0);}self.closing.as_ref().map_or_else(||Ok(if self.registry.is_some(){crate::retirement::arc_custody::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0}),SharedControlledRetirement::next_release_byte_demand)}
     fn next_depth_demand(&self)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(usize::from(!self.terminal_is_empty())),SharedControlledRetirement::next_depth_demand)}
 }
 impl<T:RetireOwned+Sync> Drop for ReadLease<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"read lease must finish explicitly granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.closing);}}}}

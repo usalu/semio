@@ -9,6 +9,7 @@
     "./renderer-work": "./🧵️renderer-work/🟦️.ts",
     "./runtime-assets": "./🔌️runtime-assets/🟦️.ts",
     "./runtime-assets/staging": "./🔌️runtime-assets/🚚️staging/🟦️.ts",
+    "./runtime-assets/staging/testing.json": "./🔌️runtime-assets/🚚️staging/🧪️testing/🔣️json/🟦️.ts",
     "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
     "./testing/fixtures/demand-frames": "./🧪️testing/🧫️fixtures/🪶️demand-frames/🟦️.ts"
   },

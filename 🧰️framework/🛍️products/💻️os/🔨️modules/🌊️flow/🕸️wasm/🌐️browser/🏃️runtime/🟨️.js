@@ -28,7 +28,7 @@ export async function createFlowBrowserRuntime({ source, imports = {}, instantia
       exports = (instantiated?.instance ?? instantiated)?.exports;
     } else {
       if (Reflect.ownKeys(imports).length !== 0) throw new Error("custom Flow imports require their exact embedding initializer");
-      const core = await import("../../../🫀️core/🕸️bindings/flow_core.js");
+      const core = await import("../../../🎁️browser-package/🕸️bindings/flow_core.js");
       surfaceBindings ??= core;
       exports = await core.default({ module_or_path: source?.module_or_path ?? source });
     }

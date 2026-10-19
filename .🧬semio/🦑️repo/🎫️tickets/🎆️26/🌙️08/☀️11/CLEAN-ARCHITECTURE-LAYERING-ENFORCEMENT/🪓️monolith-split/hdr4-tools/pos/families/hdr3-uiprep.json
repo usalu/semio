@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-uiprep",
+ "crates": ["semio-framework-ui-prepared", "semio-framework-ui-prepared-laws"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-ui-prepared"]},
+ "note": "HDR-3: ui prepared laws to a companion"
+}

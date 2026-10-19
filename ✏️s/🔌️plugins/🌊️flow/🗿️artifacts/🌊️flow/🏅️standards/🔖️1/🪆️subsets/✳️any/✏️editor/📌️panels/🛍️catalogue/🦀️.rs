@@ -4,7 +4,7 @@ use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host::with_host_from_snapshot;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
-use crate::editor::flow::base::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
+use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_ui_contract::Label;

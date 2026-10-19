@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { join } from "node:path";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
@@ -7,17 +7,17 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🧰️fram
 import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 /** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
-import { runRepositoryCargoTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts";
-import { runBun } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { packageAdmittedExtensionComponentV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/📤️publication/🟦️.ts";
+import { runBun } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-plugin-playbook-procedural"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-s-plugin-playbook-procedural"], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -25,7 +25,7 @@ class GeometryContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("geometry-contract accepts no arguments");
     runBun(["test", "./✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧪️tests/🔬️geometry-lifetime/🟦️.ts"], this.repoRoot);
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-s-plugin-playbook-procedural", target: { kind: "lib" }, laws: [
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-s-plugin-playbook-procedural", target: { kind: "lib" }, laws: [
         "instance_geometry_admits_session_shell_before_terminal",
         "instance_geometry_replays_durable_sources_and_preserves_preview_authority",
         "preview_body_emits_world_scene",
@@ -41,7 +41,7 @@ class GeometryContractScript extends BundleScript {
 class PackageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("package writes the build-owned deliverable and accepts no output override");
-    await runExtensionComponentPackage({ invocation: this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
+    await packageAdmittedExtensionComponentV1({ invocation: this.invocation, control: scriptCompilerAdmissionControlV1(this.invocation, "component:package", 0), componentDir: join(import.meta.dir, "../../🧩️component/📦️packages/🦀️rust"), repoRoot: this.repoRoot });
   }
 }
 

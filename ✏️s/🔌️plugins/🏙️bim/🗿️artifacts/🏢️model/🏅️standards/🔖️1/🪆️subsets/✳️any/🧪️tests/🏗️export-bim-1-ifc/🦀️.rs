@@ -11,8 +11,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::projection::projection;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 
     fn export(ctx: &Context) -> Result<Outcome, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
@@ -65,18 +65,19 @@ mod subject {
 
     /// 📚️ The report of the IFC4 template library of the committed psets model: counts, property set templates with their simple property templates, classification systems with their parent chains and the declarations.
     pub fn export_ifc_library(ctx: &Context) -> Result<Outcome, String> {
-        use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::ifc4::{library_report, library_to_part21};
+        use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+        use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{ifc4::library_report, model_to_part21};
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
         let snapshot = decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)?;
-        let table = library_report(&library_to_part21(&snapshot).0);
+        let table = library_report(&model_to_part21(Schema::Ifc4, &snapshot)?.0);
         let parsed = parse_json(&table)?;
         Ok(Outcome::with_raw(table.into_bytes(), parsed))
     }
 
     /// ⏳️ The house report of the file the stepped export job writes: a first job is cancelled half-way, a second one runs to its end on the same session and its file is read back.
     pub fn export_ifc_stepped(ctx: &Context) -> Result<Outcome, String> {
-        use semio_s_artifact_bim_model::editor::bim::commands::export_model::{Advance, ExportJob};
-        use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::{codec, projection::report};
+        use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model::{Advance, ExportJob};
+        use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::report;
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
         let snapshot = decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)?;
         let mut cancelled = ExportJob::with_steps("ifc2x3", Some(41), 2);
@@ -90,7 +91,7 @@ mod subject {
                 break output;
             }
         };
-        let document = codec::decode_document(output.data.as_bytes())?;
+        let document = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_document(output.data.as_bytes())?;
         let table = report(&snapshot, &document).to_json();
         let parsed = parse_json(&table)?;
         Ok(Outcome::with_raw(table.into_bytes(), parsed))

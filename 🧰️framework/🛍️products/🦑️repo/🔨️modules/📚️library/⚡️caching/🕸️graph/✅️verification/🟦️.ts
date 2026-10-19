@@ -3,8 +3,8 @@ import{readFileSync}from"node:fs";
 import{join}from"node:path";
 import{createHash}from"node:crypto";
 import{BundleScript,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{loadBuildGraphV1,workspaceBuildFilesV1,buildGraphMembersV1,neutralBuildTargetV1}from"../../../🏗️build/🕸️graph/🟦️.ts";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
+import{loadBuildGraphV1,workspaceBuildFilesV1,buildGraphMembersV1,neutralBuildTargetV1,type BuildTargetV1}from"../../../🏗️build/🕸️graph/🟦️.ts";
 import{readBuildGraphSelectionV1,readBuildOwnerRegistryV1}from"../../../🏗️build/🕸️graph/🚪️admission/🟦️.ts";
 import{discoverBuildProjectsV1}from"../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
@@ -23,7 +23,7 @@ export class GraphScript extends BundleScript{
    for(const[,contribution]of declared)for(const[name,project]of Object.entries(contribution.projects)){
     checkResourceLeaseControl(actual);const resolved=graph.projects[name];assert.ok(resolved,`Graph omitted ${name}`);
     for(const[targetName,target]of Object.entries(project.targets)){
-     checkResourceLeaseControl(actual);const expected=neutralBuildTargetV1(target,`${name}:${targetName}`),current=resolved.targets[targetName];assert.ok(current,`Graph omitted ${name}:${targetName}`);
+     checkResourceLeaseControl(actual);const expected=neutralBuildTargetV1(target,`${name}:${targetName}`),current:BuildTargetV1|undefined=resolved.targets[targetName];assert.ok(current,`Graph omitted ${name}:${targetName}`);
      for(const property of["cache","outputs","dependsOn"]as const)if(Object.hasOwn(expected,property))assert.deepEqual(current[property],expected[property],`Graph precedence changed ${name}:${targetName}.${property}`);
     }
    }

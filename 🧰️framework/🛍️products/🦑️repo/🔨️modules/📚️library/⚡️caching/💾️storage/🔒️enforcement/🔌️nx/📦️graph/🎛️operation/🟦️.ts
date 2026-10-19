@@ -1,8 +1,8 @@
 import{AsyncLocalStorage}from"node:async_hooks";
 import{requireIssuedScriptInvocationDescendantV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withScriptInvocationSignalV1,withRequestedIssuedResourceControlV1,type ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 🏦️ Separates actual allocation custody from a genuinely issued live effect phase. */
 export interface NxGraphRetainedAuthorityV1{readonly storage:NativeStorageReservationV1;readonly control:ResourceLeaseControl;readonly invocation:ScriptInvocation;recheck():Promise<void>}

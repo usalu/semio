@@ -1,11 +1,9 @@
-import {withRepositoryArtifactV1,withRepositoryArtifactTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts";
-import {withArtifactDescriptorSlotV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
-import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { withRepositoryArtifactV1, withRepositoryArtifactTaskV1, readNativeCallerAuthorityV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
+import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import {copyFile} from "node:fs/promises";
 import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
 import { checkResourceLeaseControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, compilerCapacityWorkerCountV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -16,14 +14,12 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withRepositoryArtifactDestinationV1, stageRepositoryArtifacts} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
-import type { ComponentSourceOwnerV1 } from "../../../📇️registry/🔎️discovery/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
+import type { ComponentSourceOwnerV1 } from "@semio-tech/plugin-registry/discovery";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
-import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "@semio-tech/plugin-registry/catalog-verification";
 import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
 import { artifactFiles, fileDigest,readArtifactBytesV1 } from "../../📦️distribution/📋️inventory/🟦️.ts";
 import { ensureGuestSlimTypstFontsAt } from "../🔤️guestslim-fonts/🟦️.ts";
@@ -37,7 +33,6 @@ import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from
 import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 /** ⏱️ Upper bound of one guest `describe()` probe over a transpiled module. */
 const DESCRIPTOR_PROBE_BUDGET_MS = 120_000;

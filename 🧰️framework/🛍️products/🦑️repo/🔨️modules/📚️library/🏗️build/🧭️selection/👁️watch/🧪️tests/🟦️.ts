@@ -1,7 +1,7 @@
 import "./🎟️phase/🟦️.ts";
 import {test,expect} from "bun:test";
 import {join,resolve} from "node:path";
-import {mkdtemp,rm,readFile} from "node:fs/promises";
+import {mkdtemp,mkdir,rm,readFile} from "node:fs/promises";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import corpus from "./🔣️.json";
@@ -10,9 +10,9 @@ import {watchBuildChildArgumentsV1} from "../🟦️.ts";
 import {validateBuildTaskArgumentsV1} from "../../🟦️.ts";
 import {createBuildBootstrapCapabilitiesV1} from "../../../📥️caller/📤️child/🟦️.ts";
 import {createNativeBuildCallerCapabilitiesV1} from "../../../📥️caller/🟦️.ts";
-import {registerBuildTestLawV1} from "../../../🧪️tests/📥️invocation/🟦️.ts";
+import {registerBuildTestLawV1} from "@semio-tech/process/testing/invocation";
 import {readIssuedScriptProcessEnvelopeV1,scriptProcessEnvironment,createIssuedResourceControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {captureOwnedCommandResultV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import {captureOwnedCommandResultV1} from "@semio-tech/process/execution";
 
 const root=process.cwd();
 test("portable watch rejects missing callbacks before graph admission",()=>{
@@ -31,10 +31,10 @@ test("portable watch declares exact literal and convenience descendants before b
  }finally{db.close();}
 });
 
-registerBuildTestLawV1("actual watch child retains Original bounds, coalesces events and drains cancellation","watch-lifecycle",async original=>{
+registerBuildTestLawV1("actual watch child retains Original bounds, coalesces events and drains cancellation","sdk-runtime",async original=>{
  const directory=await mkdtemp(join(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!),'watch-authority-')),envelope=readIssuedScriptProcessEnvelopeV1(original),base=createNativeBuildCallerCapabilitiesV1(root,corpus.cases[0]!.parent,'bazel',process.env),native=(envelope.capabilities as any).native??base.native,capabilities=await createBuildBootstrapCapabilitiesV1(root,corpus.cases[0]!.parent,{...process.env,SEMIO_BUILD_TOOL:'bazel',SEMIO_SCRIPT_CAPABILITIES:JSON.stringify({...base,native})}),environment=scriptProcessEnvironment({...envelope,capabilities},{...process.env,SEMIO_BUILD_TOOL:'bazel',SEMIO_SCRIPT_CAPABILITIES:undefined});
  let failed=false;try{
-  const result=await captureOwnedCommandResultV1(process.execPath,[join(import.meta.dir,'📜️script.ts'),'authority',directory],root,{control:createIssuedResourceControlV1(original,"watch:actual-authority",10000),env:environment,output:{maximumBytes:262144,maximumLines:2048}});expect(result.status).toBe(1);expect(result.signal).toBeNull();
-  const receipt=JSON.parse(await readFile(join(directory,'law.json'),'utf8'));expect(receipt).toMatchObject({version:1,strictReceiver:true,coalesced:true,childrenDrained:true,parentActive:true,errorDrain:true,undefinedPrimary:true,overflowRefused:true,cancelledChildRejected:true,policy:envelope.policy,deadline:envelope.deadlineEpochMilliseconds,native});
+  const childFunding=25000,parts:object[]=[];for(const mode of ['authority','fault-error','fault-undefined','fault-overflow']){const own=join(directory,mode);await mkdir(own);const result=await captureOwnedCommandResultV1(process.execPath,[join(import.meta.dir,'📜️script.ts'),mode,own],root,{control:createIssuedResourceControlV1(original,"watch:actual-"+mode,childFunding),env:environment,output:{maximumBytes:262144,maximumLines:2048}});expect(result.status,mode).toBe(mode==='authority'?1:0);expect(result.signal).toBeNull();parts.push(JSON.parse(await readFile(join(own,'law-'+(mode==='authority'?mode:mode.slice(6))+'.json'),'utf8')));}
+  const receipt=Object.assign({},...parts);expect(receipt).toMatchObject({version:1,strictReceiver:true,coalesced:true,childrenDrained:true,parentActive:true,errorDrain:true,undefinedPrimary:true,overflowRefused:true,cancelledChildRejected:true,policy:{...envelope.policy,maximumElapsedMilliseconds:childFunding},deadline:expect.any(Number),native});
  }catch(error){failed=true;throw error;}finally{try{await rm(directory,{recursive:true,force:true});}catch(error){if(!failed)throw error;}}
 });

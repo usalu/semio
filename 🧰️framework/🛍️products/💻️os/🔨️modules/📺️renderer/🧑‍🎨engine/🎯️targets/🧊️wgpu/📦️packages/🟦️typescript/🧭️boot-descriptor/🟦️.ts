@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-renderer-wgpu/boot-descriptor` entry: explicit re-exports of the source module that owns each member. */
+export { WGPU_HOST_STORAGE_KEYS, WGPU_HOST_STORAGE_KEY_PREFIXES, WGPU_HOST_STORAGE_SNAPSHOT_MAX_BYTES, WGPU_HOST_STORAGE_VALUE_MAX_BYTES, WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, wgpuHostStorageCarriesKey, wgpuReadinessBeacon } from "../../../🧭️boot-descriptor/🟦️.ts";
+export type { WgpuBootDescriptor, WgpuBootOverrides, WgpuHostAppearance, WgpuHostStorageSnapshot } from "../../../🧭️boot-descriptor/🟦️.ts";

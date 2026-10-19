@@ -1,6 +1,7 @@
 //! 💧️ `create-mep-element` payload. Routes a duct, pipe or cable tray: a storey, a system, a cross-section in metres and a path of at least two distinct points whose height is measured above the storey.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateMepElement {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateMepElement
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateMepElement> + From<crate::standards::v1::subsets::any::schema::mutations::delete_mep_element::DeleteMepElement>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateMepElement> + From<semio_s_artifact_bim_model_mut_any_123::standards::v1::subsets::any::schema::mutations::delete_mep_element::DeleteMepElement>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "mep-element", kind: "create-mep-element", record: "CreateMepElement" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

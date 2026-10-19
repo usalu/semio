@@ -3,7 +3,7 @@
 //! primitive is the colour of the system, `mep[id].colour` of the inference (the primitives carry the id of the element).
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, PlanKind, PlanVertex, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::mep::{MepSectionKind, MepSegment, MepValue, EPS};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::{MepSectionKind, MepSegment, MepValue, EPS};
 
 /// 📏️ The smallest cosine of the half bend angle: a sharper turn is mitred as if it were this one.
 const MITRE_LIMIT: f64 = 0.2;

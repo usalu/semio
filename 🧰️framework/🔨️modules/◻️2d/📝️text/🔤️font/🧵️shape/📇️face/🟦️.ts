@@ -1,11 +1,11 @@
 /** 📇️ One original font source must cover an entire admitted Unicode grapheme before layout begins. */
 import {type FontFace,type FontOutlineLimits,type FontProgress} from "../../🟦️.ts";
-import {type UnicodeProperty,type UnicodeData} from "../🌐️unicode/🟦️.ts";
+import {type UnicodeData} from "../🌐️unicode/🟦️.ts";
 import type {NormalizedScalar} from "../🌐️unicode/🧵️normalize/🟦️.ts";
 import type {UnicodeCluster} from "../🌐️unicode/🧵️cluster/🟦️.ts";
-import {FontCanonicalScalarJob} from "./🧵️scalar/🟦️.ts";
+import {FontCanonicalScalarJob,type FontMappedScalar} from "./🧵️scalar/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "../../../../🧹️retire/🟦️.ts";
-export type FontMappedScalar={glyph:number;scalar:number;sourceAt:number;property:UnicodeProperty};
+export type {FontMappedScalar};
 export type FontClusterMapping={face:number;glyphs:FontMappedScalar[]};
 export class FontClusterFaceJob{
  private phase="font";private faceAt:number;private mapAt=0;private work=0;private aborted=false;private transferred=false;private failure:unknown=null;private scalarJob:FontCanonicalScalarJob|null=null;private scalarOutput:FontMappedScalar[]|null=null;private copyAt=0;private scalarOutputs:FontMappedScalar[][]=[];private children:WorkRetirement[]=[];private output:FontClusterMapping;private failed:FontMappedScalar[][]=[];

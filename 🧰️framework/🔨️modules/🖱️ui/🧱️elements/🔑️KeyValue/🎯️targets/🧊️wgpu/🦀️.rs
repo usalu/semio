@@ -10,10 +10,10 @@
 //! Not to be confused with the `Field` element (a single labeled-field wrapper) — `KeyValue` renders
 //! a table of label→value rows.
 
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::widgets::{draw_text, measure_text_width, KeyValueEntry, WidgetContext};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_widget_kit::{draw_text, measure_text_width, KeyValueEntry, WidgetContext};
 
-pub(crate) fn render_key_value<E>(entries: &[KeyValueEntry], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_key_value<E>(entries: &[KeyValueEntry], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let label_w = entries.iter().map(|e| measure_text_width(ctx, &e.label, ctx.theme.font_size_small)).fold(0.0f32, f32::max);
     let value_x = bounds.x + label_w + ctx.theme.gap_standard * 2.0;
     let row_h = ctx.theme.control_height;

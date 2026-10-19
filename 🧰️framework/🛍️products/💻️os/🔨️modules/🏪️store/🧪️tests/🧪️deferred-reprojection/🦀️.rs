@@ -584,9 +584,9 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     let law: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️reprojection-operation-authority.json")).unwrap();
     let count = law["mutationCount"].as_u64().unwrap() as usize;
     let (author, _) = authored("operation-authority", Some(0), (0..count).map(|_| vec![add(1)]).collect(), &mut identity).await;
-    let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.envelope.vcs.edits).unwrap();
+    let make = || EditReplay::new(ReplayMode::Report, Arc::new(DemoSnapshot { n: Some(0) }), author.log.applied_edit_ids.iter().cloned().collect(), 0, "demo/v1", Default::default(), &author.log.envelope.vcs.edits).unwrap();
     let mut replay = make();
-    assert!(matches!(replay.step_operations(&author.envelope.vcs.edits, 0, &mut || false).unwrap(), ReplayStep::Pending(_)));
+    assert!(matches!(replay.step_operations(&author.log.envelope.vcs.edits, 0, &mut || false).unwrap(), ReplayStep::Pending(_)));
     assert_eq!(replay.state.as_ref().unwrap().n, Some(0));
     assert_eq!(replay.progress(), ReplayProgress { done: 0, total: count as u32 });
     let mut checks = 0;
@@ -594,7 +594,7 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     for _ in 0..law["maximumTurns"].as_u64().unwrap() {
         let before = replay.state.as_ref().unwrap().n.unwrap();
         let before_progress = replay.progress();
-        let step = replay.step_operations(&author.envelope.vcs.edits, law["operationCap"].as_u64().unwrap() as usize, &mut || { checks += 1; false }).unwrap();
+        let step = replay.step_operations(&author.log.envelope.vcs.edits, law["operationCap"].as_u64().unwrap() as usize, &mut || { checks += 1; false }).unwrap();
         assert!(replay.state.as_ref().unwrap().n.unwrap() - before <= 1);
         assert_eq!(replay.progress().total, count as u32);
         assert!(replay.progress().done - before_progress.done <= law["operationCap"].as_u64().unwrap() as u32);
@@ -605,7 +605,7 @@ async fn operation_capped_reprojection_preserves_structural_deadlines_and_exact_
     assert!(checks > count, "structural checks remain distinct from folded operations");
     let mut deadline = make();
     let mut deadline_checks = 0;
-    assert!(matches!(deadline.step_operations(&author.envelope.vcs.edits, count, &mut || { deadline_checks += 1; true }).unwrap(), ReplayStep::Pending(_)));
+    assert!(matches!(deadline.step_operations(&author.log.envelope.vcs.edits, count, &mut || { deadline_checks += 1; true }).unwrap(), ReplayStep::Pending(_)));
     assert_eq!(deadline_checks, 1);
     assert_eq!(deadline.state.as_ref().unwrap().n, Some(1));
     replay.retire_unscheduled().expect("the capped replay retires from its own quoted demands");

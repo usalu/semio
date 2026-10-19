@@ -138,9 +138,9 @@ export { EveryLanguage, LOCALE_NAMES, LanguageChoice, LanguageSwitch, Preference
 export type { QuizPreferences, TextSize, ThemeChoice } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 export { OTHERS_CHOICE_LABELS, PET_CHOICE_LABELS, withPets } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 export { PET_CHOICES, PetTopic, PetsPlay, PetsSwitch, QuizPets, QuizPetsProvider, effectivePetMode, petProp, switchedPets, usePetCast, usePetTopic, usePetsForced, usePetsReduced } from "./🔨️modules/🐾️pets/🟦️.tsx";
-export type { PetChoice, PetLiveliness, PetPlay, PetPlayer, QuizPetsSource, QuizPetsStage, ShownPets } from "./🔨️modules/🐾️pets/🟦️.tsx";
+export type { PetChoice, PetLiveliness, QuizPetsSource, ShownPets } from "./🔨️modules/🐾️pets/🟦️.tsx";
 export { PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PET_HOME_SCENE, PetsPlayground, QUIZ_PETS_TEMPO, QUIZ_PET_CONTROLS, QUIZ_PET_KEEPOUTS, QUIZ_PET_PROPS, QUIZ_PET_SURFACES, QuizPetLayer, peerGlances, petNames, petPlayers, petScene, petsTempo } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
-export type { PetDeed } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
+export type { PetDeed, PetPlay, PetPlayer, QuizPetsStage, StagedPets } from "./🔨️modules/🐾️pets/🎪️stage/🟦️.tsx";
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
 export { DROP_ZONE_CLASS, DragGrip, GuessField, HINT_SYMBOL, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, exampleGuess, hintName, hintTerm, useFocusAfterRender, useHintAnnouncement } from "./🔨️modules/🧩️task/🟦️.tsx";
 export type { TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";

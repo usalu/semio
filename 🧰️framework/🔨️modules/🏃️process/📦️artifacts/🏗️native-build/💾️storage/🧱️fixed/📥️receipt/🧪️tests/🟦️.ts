@@ -5,7 +5,7 @@ import{createHash}from"node:crypto";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{withBuildTestInvocationV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import*as routing from"../../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔒️leases/🟦️.ts";
 import{readNativeFixedPreparationMetadataV1,nativeFixedPreparationMetadataScriptV1}from"../🟦️.ts";
@@ -44,7 +44,7 @@ test("Windows ordinary native receipt equality agrees with independent Python fu
 
 
 
-import{registerBuildTestLawV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import*as ordinaryLeasesV1 from"../../../../../../🔒️leases/🟦️.ts";
 import{mkdtempSync,writeFileSync,openSync,closeSync,fstatSync,rmSync,readFileSync as readOrdinaryFileV1}from"node:fs";
 import{join,resolve}from"node:path";

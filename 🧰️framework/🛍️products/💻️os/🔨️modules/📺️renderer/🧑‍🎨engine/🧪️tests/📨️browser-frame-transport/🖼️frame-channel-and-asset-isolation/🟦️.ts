@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { browserAssetFailureDisposition } from "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-failure/🟦️.ts";
+import { browserAssetFailureDisposition } from "@semio-tech/framework-renderer-wgpu/frame-worker/asset-failure";
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
+import { readFrameWorkerSource } from "../📖️frame-worker-source/🟦️.ts";
 
 describe("browser frame worker transport", () => {
   it("forwards changed accepted World3d diagnostic receipts onto the page channel", () => {
@@ -39,8 +40,8 @@ describe("browser frame worker transport", () => {
 
   it("wakes the frame owner after a handled asset refusal so the next asset is polled", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
-    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const workerSource = readFrameWorkerSource(root);
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function requestHostIo"));
     const caught = pump.slice(pump.lastIndexOf("  } catch (error) {"), pump.lastIndexOf("  } finally {"));
     const reject = caught.indexOf('ownedStep("asset-reject"');
     const wake = caught.indexOf('post({ kind: "wake", lifecycle })');
@@ -68,8 +69,8 @@ describe("browser frame worker transport", () => {
       const error = row.errorType === "typeError" ? new TypeError(row.detail) : row.errorType === "abortError" ? new DOMException(row.detail, "AbortError") : new Error(row.detail);
       expect(browserAssetFailureDisposition(error, row.referenceImage)).toBe(row.disposition);
     }
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
-    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const workerSource = readFrameWorkerSource(root);
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function requestHostIo"));
     const caught = pump.slice(pump.lastIndexOf("  } catch (error) {"), pump.lastIndexOf("  } finally {"));
     expect(caught).toContain('activeRequest && disposition === "missing"');
     expect(caught).toContain('ownedStep("asset-reject"');
@@ -80,10 +81,10 @@ describe("browser frame worker transport", () => {
 
   it("streams decoded references as cancellable row-aligned strips before the exact seal", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     const decoderSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts"), "utf8");
     const rustSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"), "utf8");
-    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function requestHostIo"));
     const begin = pump.indexOf('ownedStep("reference-image-begin"');
     const stage = pump.indexOf("referenceImageBitmapForStage(");
     const push = pump.indexOf("streamReferenceImageBitmapRows(");

@@ -153,8 +153,8 @@ async fn ingest_operations_is_idempotent() {
     let operations = envelopes;
 
     let mut receiver = app();
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(board_snapshot_nodes(&fixture_of(&receiver)).len(), 1, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
     close_app(&mut receiver);

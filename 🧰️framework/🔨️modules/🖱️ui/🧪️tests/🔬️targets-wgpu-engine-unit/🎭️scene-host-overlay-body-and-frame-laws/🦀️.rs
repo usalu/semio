@@ -129,7 +129,7 @@ fn scene_at_is_read_only_where_a_press_is_not() {
 //#region 🪟️OverlayBodyTests
 /// 🪟️ The first `ComponentScene` leaf's arena id — overlay tests need a real content root and the
 /// façade exposes node ids only through the tree itself.
-fn first_component_scene_node(ui: &Ui, window_id: &str) -> crate::wgpu::arena::NodeId {
+fn first_component_scene_node(ui: &Ui, window_id: &str) -> semio_framework_ui_arena::NodeId {
     let tree = ui.tree(window_id).expect("window has a tree");
     let root = tree.root.expect("tree has a root");
     let mut stack = vec![root];
@@ -270,7 +270,7 @@ fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
     ui.apply_tree("atomic-frame", &stack_ui(vec![UiNode::Text(UiTextNode { value: Label::data("Accepted label"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })]));
     drive_layout(&mut ui, "atomic-frame", body.w, body.h, &mut atlas);
     let mut target = DrawList::default();
-    target.push_solid([1.0, 2.0, 3.0, 4.0], crate::wgpu::theme::Rgba::new(0.1, 0.2, 0.3, 1.0));
+    target.push_solid([1.0, 2.0, 3.0, 4.0], semio_framework_ui_theme::Rgba::new(0.1, 0.2, 0.3, 1.0));
     let baseline_layers = target.layers.len();
     let baseline_quads = target.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>();
     let mut prior_progress = None;
@@ -300,7 +300,7 @@ fn frame_into_step_publishes_one_atomic_candidate_only_when_ready() {
 
 #[test]
 fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_external_work() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     assert_eq!(fixture["sceneBackpressure"]["externalCompleted"], serde_json::json!([0, 0, 1]));
     let body = Rect::new(0.0, 0.0, 240.0, 160.0);
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
@@ -335,7 +335,7 @@ fn retained_frame_progress_ignores_unchanged_scene_backpressure_and_observes_ext
 
 #[test]
 fn same_size_moved_viewport_discards_the_old_origin_candidate_before_atomic_publication() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧱️retained-frame-progress/🔣️.json")).expect("retained frame fixture");
     let rect = |value: &serde_json::Value| {
         let values = value.as_array().expect("fixture rect");
         Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32)

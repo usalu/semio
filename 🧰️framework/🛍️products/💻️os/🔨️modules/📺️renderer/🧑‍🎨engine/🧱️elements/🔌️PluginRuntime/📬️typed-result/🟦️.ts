@@ -3,7 +3,7 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
  */
 
-import { type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
 import {
   TYPED_OPERATION_LANE_FAULT,
   TYPED_OPERATION_LANE_TERMINAL,

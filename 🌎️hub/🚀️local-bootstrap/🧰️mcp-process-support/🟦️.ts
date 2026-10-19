@@ -6,8 +6,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { requireMcpBinary } from "@semio-tech/framework-os-mcp";
-import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { cargoTargetDirectory, runCmd, orchestratorBudgetOpts } from "@semio-tech/process/execution";
 import { deliverCredentialEnvelopeToChild } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { LOCAL_READINESS_STALL_BOUND_MS, type LocalHubRun } from "../🏃️execution/🟦️.ts";
 

@@ -35,7 +35,7 @@ import {
   type WorldReferenceRelocatePayload,
   type OrbitCameraViewId,
   type WorldCanvasProps
-} from "@semio-tech/infinite-world-r3f";
+} from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { solidRef, type FaceInfo, type MeshTransfer, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { type InteractionSpec } from "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec";
@@ -43,7 +43,7 @@ import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geomet
 import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { type InteractionEvent, type SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
 import { type SpatialPreviewKernel, type ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import { type DisplayModel } from "../../🎬️actions/🟦️.ts";
+import type { DisplayModel } from "../../🎬️actions/🖼️display-model/🟦️.ts";
 import { cadGumballConfigVisible, type CadGumballConfig } from "../../🎬️actions/🧲️selection-targets/🟦️.ts";
 import { type InteractionRuntimeOptions, type InteractionSnapshot } from "../../🗿️artifact/📨️interaction-model/🟦️.ts";
 import { createInteractionRuntime, type InteractionRuntime } from "../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
@@ -372,7 +372,7 @@ export interface InteractionSpatialViewProps {
   readonly showOrbitViewGizmo?: boolean;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onProjectionSpecChange?: (spec: WorldProjectionSpec) => void;
-  readonly onOrbitCameraChange?: (state: import("@semio-tech/infinite-world-r3f").WorldCameraState) => void;
+  readonly onOrbitCameraChange?: (state: import("../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts").WorldCameraState) => void;
   /** 🖼️ Grid reference planes persisted beside the CAD model. */
   readonly worldReferences?: readonly WorldReferenceProps[];
   readonly selectedReferenceIds?: ReadonlySet<string>;

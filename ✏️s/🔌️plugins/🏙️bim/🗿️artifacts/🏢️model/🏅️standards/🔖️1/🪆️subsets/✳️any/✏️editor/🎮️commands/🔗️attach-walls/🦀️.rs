@@ -2,10 +2,11 @@
 //! one named by `target`, else the first roof, slab or ceiling of the selection; the offset stays what the wall already has over a surface (zero for a free top). Anything that is not a wall is skipped; with no wall among the targets, or
 //! no surface to attach to, the command is refused instead of doing nothing silently.
 
-use crate::editor::bim::entities::wall_sweeps::write_top_attach;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::write_top_attach;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

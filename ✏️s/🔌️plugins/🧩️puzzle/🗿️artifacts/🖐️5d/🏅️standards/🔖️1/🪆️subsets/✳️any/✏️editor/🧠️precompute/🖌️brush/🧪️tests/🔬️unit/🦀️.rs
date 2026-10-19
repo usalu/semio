@@ -3,7 +3,7 @@ use crate::editor::puzzle5d::modes::edit::windows::world3d;
 use crate::editor::puzzle5d::precompute::fill::tests::{committed, host_turn, tool_run_action, FILL_RUN_TURNS};
 use crate::editor::puzzle5d::precompute::PUZZLE5D_PLANNER_TRACE_TWIN_BIT;
 use crate::editor::puzzle5d::entities::puzzle5d_grip_full_id;
-use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, dispatch_armed, projection_of, window_view, Puzzle5dApp};
+use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, dispatch_armed, projection_of, window_view, Puzzle5dTestApp};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactApp, PluginApp};
 use semio_framework_tool_run::{ToolRunTraceDelta, ToolRunTraceStore, ToolRunTraceSubject, ToolRunVerdict};
@@ -16,7 +16,7 @@ fn armed_view() -> semio_framework_plugin::ViewModel {
 }
 
 /// 🎣️ Points the armed brush at `grip` (or at nothing) and pumps the refresh effects and host turns until `until`.
-fn target(app: &mut Puzzle5dApp, grip: Option<&str>, what: &str, until: impl Fn(Option<&protocol::PresenceToolRun>) -> bool) {
+fn target(app: &mut Puzzle5dTestApp, grip: Option<&str>, what: &str, until: impl Fn(Option<&protocol::PresenceToolRun>) -> bool) {
     let args = grip.map_or_else(|| semio_framework_pack_json::json!({}), |grip| semio_framework_pack_json::json!({ "fullId": grip }));
     dispatch_armed(app, "targetBrushSuggestions", Some(&args), world3d::WINDOW_KIND_ID, UTILITY_ID).expect("targetBrushSuggestions");
     for _ in 0..FILL_RUN_TURNS {
@@ -37,7 +37,7 @@ fn settled(presence: Option<&protocol::PresenceToolRun>) -> bool {
     presence.is_some_and(|presence| presence.state == protocol::PresenceToolRunState::Running && presence.total.is_some_and(|total| total > 0 && presence.completed == total))
 }
 
-fn trace(app: &Puzzle5dApp) -> (u64, HashMap<u64, (ToolRunVerdict, ToolRunTraceSubject)>) {
+fn trace(app: &Puzzle5dTestApp) -> (u64, HashMap<u64, (ToolRunVerdict, ToolRunTraceSubject)>) {
     let encoded = app.tool_run_trace_delta(None).expect("a live trace");
     let delta = ToolRunTraceDelta::decode(&semio_framework_io_base64::base64_url_decode(encoded).expect("base64url")).expect("trace delta");
     let mut store = ToolRunTraceStore::new(delta.identity);
@@ -85,7 +85,7 @@ fn select_view() -> semio_framework_plugin::ViewModel {
 }
 
 /// 🎣️ The world pane's published `suggestionMenu` record, read off a real render of the world body.
-fn suggestion_menu(app: &mut Puzzle5dApp) -> serde_json::Value {
+fn suggestion_menu(app: &mut Puzzle5dTestApp) -> serde_json::Value {
     let rendered = crate::editor::puzzle5d::testkit::render_body_with_view(app, world3d::BODY_KEY, &select_view());
     let scene: serde_json::Value = serde_json::from_str(&rendered).expect("world scene json");
     let interaction: serde_json::Value = serde_json::from_str(scene["scene"]["interactionJson"].as_str().expect("the world scene carries interactionJson")).expect("interactionJson parses");

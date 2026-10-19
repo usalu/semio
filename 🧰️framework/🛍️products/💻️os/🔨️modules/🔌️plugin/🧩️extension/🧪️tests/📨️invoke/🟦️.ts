@@ -4,8 +4,8 @@ import {resolve} from "node:path";
 import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
-import { valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl, cloneWireProgressSchemaUrl } from "@semio-tech/value-rs/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 /** 📨️ The original invoke caller owns pending raw bytes and lends one unchanged scheduler wallet. */
 export function extensionInvokeCallerOracle(repoRoot:string):number{

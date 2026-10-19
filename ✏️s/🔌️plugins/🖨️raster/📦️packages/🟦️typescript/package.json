@@ -9,7 +9,7 @@
   "exports": {
     "./artifacts/raster/standards/1/subsets/any/schema": "./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
     "./artifacts/raster/standards/1/subsets/any/schema/diff": "./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
-    "./artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image": "./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️testing/🧫️fixtures/🔬️contract/🖼️decoded-image/🟦️.ts"
+    "./artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image": "./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🔬️contract/🖼️decoded-image/🟦️.ts"
   },
   "scripts": {
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/raster-js:test"

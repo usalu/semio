@@ -12,6 +12,7 @@
         "CLEAN_CANONICAL_REPO_DIR",
         "CLEAN_CANONICAL_TICKETS_DIR",
         "CLEAN_PROTECTION_VIEW",
+        "CLEAN_RUST_INCREMENTAL_MAX_BYTES",
         "CLEAN_TICKET_GENERATED_OUTPUT_DIRS",
         "CLEAN_TICKET_GENERATED_PROBE_PREFIXES",
         "CLEAN_WINDOWS_FORBIDDEN_CHARS",
@@ -20,6 +21,9 @@
         "CleanProtectionView",
         "CleanRemoval",
         "CleanRemovalKind",
+        "CleanRustIncrementalCrate",
+        "CleanRustIncrementalDirectory",
+        "cleanChildDirectories",
         "cleanDedupePreferShallowest",
         "cleanEndsWithAscii",
         "cleanIntersectsProtected",
@@ -31,25 +35,22 @@
         "cleanIsMisplacedRepoDir",
         "cleanIsMisplacedTicketsDir",
         "cleanIsProtected",
+        "cleanIsRootTransientName",
+        "cleanIsRustIncrementalRemovalPath",
         "cleanIsSemioRootName",
         "cleanIsTicketFolderBoundary",
         "cleanIsTicketGeneratedOutputDir",
         "cleanIsWindowsIllegalName",
+        "cleanManagedStoragePrefixes",
         "cleanProjectRemovals",
         "cleanProtectedPrefixes",
         "cleanRemovalProtection",
+        "cleanRustIncrementalHasWorkingSession",
+        "cleanRustIncrementalSearchRoots",
+        "cleanSelectHugeRustIncremental",
         "cleanTicketFolderForPath",
         "cleanTicketGeneratedOutputTicketRoot",
-        "cleanTicketManifestIsClosed",
-        "cleanIsRootTransientName",
-        "CLEAN_RUST_INCREMENTAL_MAX_BYTES",
-        "CleanRustIncrementalCrate",
-        "CleanRustIncrementalDirectory",
-        "cleanSelectHugeRustIncremental",
-        "cleanRustIncrementalSearchRoots",
-        "cleanIsRustIncrementalRemovalPath",
-        "cleanRustIncrementalHasWorkingSession",
-        "cleanChildDirectories"
+        "cleanTicketManifestIsClosed"
       ]
     },
     {
@@ -99,7 +100,8 @@
       "parentKindId": "repo-workspace-cleanup",
       "kindId": "repo-workspace-cleanup-command",
       "declarations": [
-        "CleanScript"
+        "CleanScript",
+        "readWorkspaceCleanupEntryV1"
       ]
     },
     {
@@ -143,11 +145,16 @@
       "parentKindId": "repo-authoring",
       "kindId": "repo-authoring-mutation-tree",
       "declarations": [
+        "MutationCrateBudgetAssessment",
+        "NewMutationFamilyPlan",
         "NewMutationScaffoldOptions",
         "NewMutationScaffoldOwnedPath",
         "NewMutationSemanticParts",
+        "assessMutationCrateBudget",
         "newMutationCheckCancellation",
         "newMutationDescriptor",
+        "newMutationFamilyPlan",
+        "newMutationFamilyRoot",
         "newMutationRustLeaf",
         "newMutationScaffoldEnsureParents",
         "newMutationScaffoldLstat",
@@ -157,7 +164,9 @@
         "newMutationScaffoldRemoveOwnedFile",
         "newMutationSemanticParts",
         "newMutationUpdateAggregate",
-        "newScaffoldMutationTree"
+        "newScaffoldMutationTree",
+        "readWorkspacePointer",
+        "registerMutationFamilyCrate"
       ]
     },
     {
@@ -167,6 +176,7 @@
       "kindId": "repo-authoring-command",
       "declarations": [
         "CleanMechanismNewScript",
+        "crateBudgetFlags",
         "newScaffoldDestinationV1"
       ]
     },
@@ -255,11 +265,11 @@
     {
       "directoryName": "🏃️process",
       "parentKindId": "members-of-modules",
-      "kindId": "repo-process"
+      "kindId": "process"
     },
     {
       "directoryName": "🌿️environment",
-      "parentKindId": "repo-process",
+      "parentKindId": "process",
       "kindId": "repo-process-environment"
     },
     {

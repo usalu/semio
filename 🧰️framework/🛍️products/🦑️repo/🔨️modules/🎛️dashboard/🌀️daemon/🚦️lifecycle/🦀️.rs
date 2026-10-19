@@ -27,7 +27,7 @@ pub fn serve(root: &Path, running: &AtomicBool) -> std::io::Result<()> {
     write_pid(root)?;
     let listener = Listener::bind(root)?;
     let mut supervisor = Supervisor::new(root, Some(listener))?;
-    let interrupts = ui_tui::tui::pty::interrupts();
+    let interrupts = semio_framework_ui_tui_terminal::pty::interrupts();
     while running.load(Ordering::SeqCst) && !supervisor.is_shutdown() {
         if interrupts.load(Ordering::SeqCst) > 0 { supervisor.shut_down(); }
         supervisor.turn(Duration::from_millis(250))?;
@@ -38,7 +38,7 @@ pub fn serve(root: &Path, running: &AtomicBool) -> std::io::Result<()> {
 
 /// 🚀 Starts a detached daemon process (`semio daemon serve --root …`) and waits until it answers; the answer is its pid.
 pub fn spawn_daemon(root: &Path, executable: &Path) -> std::io::Result<u32> {
-    let spawned = ui_tui::tui::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["SEMIO_BUILD_INVOCATION_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
+    let spawned = semio_framework_ui_tui_terminal::pty::spawn_detached(&executable.to_string_lossy(), &["daemon", "serve", "--root", &root.display().to_string()], &["SEMIO_BUILD_INVOCATION_PID"], root).map_err(|error| std::io::Error::other(error.message))?;
     let deadline = Instant::now() + Duration::from_secs(5);
     while Instant::now() < deadline {
         if let Ok(connection) = Connection::connect(root) { return Ok(connection.daemon_pid()); }

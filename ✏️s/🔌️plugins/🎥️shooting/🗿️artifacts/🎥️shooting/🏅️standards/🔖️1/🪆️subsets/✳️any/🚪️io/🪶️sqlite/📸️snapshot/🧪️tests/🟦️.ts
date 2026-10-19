@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {fileURLToPath as shootingIndependentFixturePath} from "node:url";
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -9,7 +9,6 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as sqliteOwner from "../🟦️.ts";

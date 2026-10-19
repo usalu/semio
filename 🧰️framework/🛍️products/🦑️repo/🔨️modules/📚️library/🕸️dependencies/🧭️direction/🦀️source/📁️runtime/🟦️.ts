@@ -1,4 +1,4 @@
-import type { RustPathLiteral } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
+import type { RustPathLiteral } from "@semio-tech/compiler-syntax-rust-ts/paths";
 import { dependencyDirectionPathMatches as matches, type DependencyDirectionRule } from "../../🟦️.ts";
 
 /** 🪪️ A syntactic owner boundary reference with exact argument provenance. */

@@ -1,5 +1,5 @@
 /** 🧪️ The `@semio-tech/cad-js/core` interaction suite: bootstraps the cad modules once, then registers each interaction group in its original order. */
-import type { ArtifactTestDependencies } from "../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 import { registerTransformInteractionTests } from "./🕹️transforms/🟦️.ts";
 import { registerRegistryTests } from "./🗂️registries/🟦️.ts";
 import { registerBoxLengthEntryTests } from "./📦️box-length/🟦️.ts";

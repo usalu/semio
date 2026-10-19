@@ -7,7 +7,10 @@
     "./framework_os_node_graph.js": {
       "types": "./📥️runtime/🟦️.d.mts",
       "default": "./🕸️bindings/framework_os_node_graph.js"
-    }
+    },
+    "./testing/fixtures/pick-target.json": "./🧪️testing/🧫️fixtures/🔣️json/pick-target/🟦️.ts",
+    "./wasm-graph-surface": "./🧭️wasm-graph-surface/🟦️.tsx",
+    "./index": "./🟦️.tsx"
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"

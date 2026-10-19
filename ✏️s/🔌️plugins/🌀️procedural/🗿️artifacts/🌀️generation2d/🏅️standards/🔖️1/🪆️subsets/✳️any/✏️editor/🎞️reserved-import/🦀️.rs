@@ -194,8 +194,9 @@ impl Generation2dImportJob {
     }
 }
 
-impl InteractiveJob for Generation2dImportJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl Generation2dImportJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.delivered {
             let step = self.publication.close_step(cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
@@ -256,6 +257,10 @@ impl InteractiveJob for Generation2dImportJob {
         self.completed = true;
         JobOutcomeBorrow::admit_complete(cx, None, None)
     }
+}
+
+impl InteractiveJob for Generation2dImportJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -286,14 +291,16 @@ impl InteractiveJob for Generation2dImportJob {
         Ok(self.close_demands(0)?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        self.closing = true;
-        match self.close_turn(grant) {
-            Ok(progress) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress },
-            Ok(progress) => InteractiveJobCloseStep::Pending { progress },
-            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            self.closing = true;
+            Ok(match self.close_turn(grant) {
+                Ok(progress) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress },
+                Ok(progress) => InteractiveJobCloseStep::Pending { progress },
+                Err(error) => return Err(error),
+            })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {

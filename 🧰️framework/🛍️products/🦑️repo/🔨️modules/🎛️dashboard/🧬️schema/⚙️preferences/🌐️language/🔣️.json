@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Dashboard Language Chain",
+  "description": "Where the dashboard takes its language from when no preference event, environment override or argument names one. `systemVariables` are read in order and the first one that names a supported language wins (`de_DE.UTF-8`, `de-AT` and `de@euro` all name `de`; `C` and `POSIX` name none). `fallback` lists supported languages in preference order and the first one is used when the system names none; the code holds no language of its own.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["systemVariables", "fallback"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "systemVariables": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+    },
+    "fallback": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["en", "de"] }
+    }
+  }
+}

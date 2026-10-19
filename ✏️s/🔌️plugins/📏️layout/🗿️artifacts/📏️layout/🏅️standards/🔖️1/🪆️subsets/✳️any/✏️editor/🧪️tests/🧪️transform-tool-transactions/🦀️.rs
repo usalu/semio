@@ -9,7 +9,11 @@ use crate::{LayoutCommand, LayoutPlayApp, layout_entity_label};
 use semio_s_artifact_layout_layout_editor_commands::layout_select_action_args;
 use crate::unit_tests::context::{layout_app_with_registry, scene, window_meta, LayoutApp, INSTANCE, WINDOW};
 use semio_framework::kernel::HistoryEntry;
-use semio_framework_plugin::{artifact_app_laws, InvocationResult, PluginApp};
+use semio_framework_plugin::{artifact_app_laws, ArtifactEditor, DslValue, Fault, InvocationResult, PluginApp, INTERACTION_SELECT_ACTION_ID};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_s_artifact_layout_layout_model::Frame;
+use semio_s_artifact_layout_layout_mutations::LayoutMutation;
+use serde_json::Value;
 
 //#region 🔁️Settle
 /// 📄️ Drains everything one settle turn can leave behind — presented pages (ACKed), effects, events, the UI scope,
@@ -53,7 +57,7 @@ async fn drain(app: &mut LayoutApp, result: &mut InvocationResult, fault: &mut O
 }
 
 /// 🔁️ Drives the dispatch's typed operation to quiescence, collecting what it published.
-async fn settle(app: &mut LayoutApp, result: Result<InvocationResult, Fault>) -> InvocationResult {
+async fn settle<E: std::fmt::Debug>(app: &mut LayoutApp, result: Result<InvocationResult, E>) -> InvocationResult {
     let mut result = result.unwrap_or_else(|fault| panic!("the dispatch is admitted: {fault:?}"));
     let mut fault = None;
     for _ in 0..1_048_576 {
@@ -62,23 +66,27 @@ async fn settle(app: &mut LayoutApp, result: Result<InvocationResult, Fault>) ->
             assert!(fault.is_none(), "the operation faulted: {fault:?}");
             return result;
         }
-        PluginApp::maintenance_step(&mut app.0, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("publication");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("publication");
         drain(app, &mut result, &mut fault).await.expect("drain");
     }
     panic!("the layout operation did not settle")
 }
 
 async fn run(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
-    let result = app.0.dispatch_typed(command, &window_meta(WINDOW), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let result = app.0.dispatch_typed(command, &window_meta(WINDOW), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     settle(app, result).await
+}
+
+/// 🎟️ One framework verb through the borrowed action endpoint under the app's original caller, its pending turns driven to the admitted result.
+async fn act(app: &mut LayoutApp, action: &str, args: Option<DslValue>) -> Result<InvocationResult, semio_framework_job::OriginalTurnFailure> {
+    artifact_app_laws::dispatch_fixture_action(&mut app.0, action, args, &window_meta(WINDOW), &mut artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await
 }
 
 /// 🕰️ A framework-reserved verb (`undo`, `hostEvent`, …) from the Blueprint window.
 async fn reserved(app: &mut LayoutApp, action: &str, args: Option<Value>) -> InvocationResult {
-    let meta = window_meta(WINDOW);
     let args = args.map(|value| DslValue::from(&value));
-    let admitted = app.0.handle_action(action, args.as_ref(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action} is admitted: {fault:?}"));
+    let admitted = act(app, action, args).await.unwrap_or_else(|fault| panic!("{action} is admitted: {fault:?}"));
     let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
     settle(app, result).await
 }
@@ -151,7 +159,7 @@ async fn one_gumball_drag_is_one_edit_one_row_and_one_transaction() {
     assert_eq!(painted(&mut app, "frame-1").await, (before.0 + 30.0, before.1 - 6.0), "the window paints the committed document");
     reserved(&mut app, "undo", None).await;
     assert_eq!(origin(&app, "frame-1"), before, "one undo takes the whole gesture back");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 🧯️ A cancelled gesture leaves zero trace — the overlay's own `abort` phase and every window fact the host forwards
@@ -172,7 +180,7 @@ async fn a_cancelled_gesture_leaves_zero_trace() {
         let late = run(&mut app, phase("commit", None)).await;
         assert_zero_trace(&mut app, &late, before, &format!("a commit after {kind}")).await;
     }
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ✌️ Two gestures are two transactions: two edits, two rows, two distinct transaction ids — never merged into one
@@ -192,7 +200,7 @@ async fn two_gestures_are_two_transactions() {
     assert_eq!(origin(&app, "frame-1"), (before.0 + 13.0, before.1));
     reserved(&mut app, "undo", None).await;
     assert_eq!(origin(&app, "frame-1"), (before.0 + 5.0, before.1), "one undo takes back exactly the second gesture");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 🔃️ One-shot turn and scaling verbs (palette, agent) are each one transaction yielding their parametric leaf about the
@@ -220,7 +228,7 @@ async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     reserved(&mut app, "undo", None).await;
     reserved(&mut app, "undo", None).await;
     assert_eq!(app.0.snapshot().expect("the undone head"), before, "two undos restore both frames exactly through their multi-row inverses");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 🧲️ A streamed gumball drag of two frames is one transaction holding ONE `drag-frames` leaf over both targets — one row,
@@ -238,7 +246,7 @@ async fn a_streamed_drag_of_two_frames_is_one_transaction() {
     assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), ((before.0 .0 + 10.0, before.0 .1 + 3.0), (before.1 .0 + 10.0, before.1 .1 + 3.0)));
     reserved(&mut app, "undo", None).await;
     assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), before, "one undo restores both frames");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 📐️ A document edit landing under an open gesture aborts it (`baseMoved`): the commit that finds it publishes
@@ -254,7 +262,7 @@ async fn a_document_moved_under_an_open_gesture_aborts_it() {
     assert!(edit_rows(&late).is_empty(), "the gesture opened on the old base publishes nothing");
     assert_eq!(origin(&app, "frame-1"), before);
     assert_eq!(origin(&app, "frame-text-1").1, 77.0);
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 //#endregion 🌊️Gestures
 
@@ -262,7 +270,7 @@ async fn a_document_moved_under_an_open_gesture_aborts_it() {
 /// ⏪️ One `historyEdit*` verb from the Blueprint window, refused verbs failing the law.
 async fn history_edit(app: &mut LayoutApp, verb: &str, args: Value) {
     let args = DslValue::from(&args);
-    let result = app.0.handle_action(verb, Some(&args), &window_meta(WINDOW), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = act(app, verb, Some(args)).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -276,7 +284,7 @@ async fn pump(app: &mut LayoutApp, done: impl Fn(Option<semio_framework::kernel:
         if done(time_travel(app).await.map(|status| status.stage)) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled: {:?}", time_travel(app).await);
@@ -348,14 +356,14 @@ async fn a_gumball_drag_and_its_downstream_turn_edited_in_time_travel_replay_exa
     assert_eq!(app.0.snapshot().expect("edited head"), folded(&[drag_leaf(-5.0), turn_leaf(0.0, 30.0)]), "an edited pivot replays exactly");
     let ids: Vec<_> = document_rows(&mut app).await[rows_before..].iter().map(|row| row.mutations[0].mutation_id.clone()).collect();
     assert_eq!(ids, vec![drag, turn], "editing never re-mints the gestures' mutations or rows");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 🎯️ Selects `ids` in the elements domain, as a canvas click does — interaction verbs keep working during time travel.
 async fn select(app: &mut LayoutApp, ids: &[&str]) {
     let ids: Vec<String> = ids.iter().map(|id| id.to_string()).collect();
     let args = layout_select_action_args(&ids, "replace");
-    let admitted = app.0.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &window_meta(WINDOW), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
+    let admitted = act(app, INTERACTION_SELECT_ACTION_ID, Some(args)).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
     let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
     settle(app, result).await;
 }
@@ -391,7 +399,7 @@ async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_ar
     pump(&mut app, |stage| stage.is_none()).await;
     assert_eq!(app.0.snapshot().expect("head"), committed, "exit leaves zero trace");
     assert_eq!(document_rows(&mut app).await.len(), rows_before + 1, "no row was added or removed");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// 🪧️ The editor's reference chips name a frame by its kind, its content and its page in every locale — what "Use

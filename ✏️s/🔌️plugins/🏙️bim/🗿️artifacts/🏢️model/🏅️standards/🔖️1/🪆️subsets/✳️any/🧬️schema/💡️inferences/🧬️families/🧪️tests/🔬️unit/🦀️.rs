@@ -1,17 +1,23 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, ParameterKind, Profile, Railing};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Railing};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::inferences::families::*;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, ExprPoint3, Family, FamilyParameter, FamilySolid, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssueCode, IssueOwner};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ExprPoint3, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Family, FamilyParameter, FamilySolid};
 
 /// 🧰️ Builders of authored families for the tests of this module and its children.
 pub mod kit {
     use super::*;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Family, FamilyParameter, FamilySolid};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind, ExprPoint3, ExprPoint, ParametricProfile, SolidShape};
+    use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
 
     pub fn model() -> ModelSnapshot {
         let mut snapshot = ModelSnapshot::default();
-        snapshot.materials.insert("m-steel".into(), crate::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Metal, color: crate::standards::v1::subsets::any::schema::snapshot::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
+        snapshot.materials.insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
         snapshot
     }
 
@@ -20,7 +26,7 @@ pub mod kit {
     }
 
     pub fn parameter(snapshot: &mut ModelSnapshot, family: &str, name: &str, kind: ParameterKind, value: &str) {
-        snapshot.family_parameters.insert(formula::parameter_id(family, name), FamilyParameter { family: family.into(), name: name.into(), kind, value: value.into() });
+        snapshot.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(family, name), FamilyParameter { family: family.into(), name: name.into(), kind, value: value.into() });
     }
 
     pub fn point3(x: &str, y: &str, z: &str) -> ExprPoint3 {
@@ -177,20 +183,20 @@ fn the_value_survives_the_wire_form() {
     assert_eq!(back, value);
 }
 
-fn railing(profile: Profile, post: Profile, baluster: Option<Profile>) -> crate::standards::v1::subsets::any::schema::snapshot::Railing {
-    crate::standards::v1::subsets::any::schema::snapshot::Railing {
+fn railing(profile: Profile, post: Profile, baluster: Option<Profile>) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing {
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing {
         storey: "st-ground".into(),
         path: Vec::new(),
         height: 1.0,
         post_spacing: 1.0,
         profile,
         post_profile: post,
-        baluster: baluster.map(|profile| crate::standards::v1::subsets::any::schema::snapshot::Baluster { profile, spacing: 0.12 }),
-        infill: crate::standards::v1::subsets::any::schema::snapshot::Infill::None,
+        baluster: baluster.map(|profile| semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Baluster { profile, spacing: 0.12 }),
+        infill: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Infill::None,
         material: "m-steel".into(),
         base_offset: 0.0,
         host: None,
-        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
+        phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New,
         name: "Rail".into(),
     }
 }

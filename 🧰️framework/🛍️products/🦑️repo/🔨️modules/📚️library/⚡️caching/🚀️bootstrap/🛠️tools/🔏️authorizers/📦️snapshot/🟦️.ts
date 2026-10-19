@@ -1,4 +1,4 @@
-import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"../📦️workspace/🟦️.ts";
 import {createHash} from "node:crypto";
 import {isBuiltin} from "node:module";
@@ -7,8 +7,8 @@ import {nxAuthorizerCapturedBytesV1,nxAuthorizerExternalModulesV1,type NxAuthori
 import manifestContract from "../🧬️schema/🔣️.json";
 import snapshotContract from "./🧬️schema/🔣️.json";
 import snapshotPolicy from "./🔣️policy.json";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 const manifestSchema=JSON.parse(JSON.stringify(manifestContract))as typeof manifestContract,schema=JSON.parse(JSON.stringify(snapshotContract))as typeof snapshotContract,policy=Object.freeze({...snapshotPolicy});
 const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex"),namespace="semio-captured-source";
 /** 📦️ Carries bounded, exact admitted bytes through a compiler process boundary. */

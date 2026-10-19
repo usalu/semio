@@ -211,11 +211,11 @@ func jsonToYaml(jsonStr string) (string, error) {
 
 // 💿️gql holds the data fields for a gql record.
 func gql(query string, variables map[string]interface{}) (string, error) {
-	ensureExecutor()
-	if executor == nil {
-		return "", fmt.Errorf("GraphQL executor not initialized")
+	bound, err := boundExecutor()
+	if err != nil {
+		return "", err
 	}
-	return executor.ExecuteJSON(context.Background(), query, variables)
+	return bound.ExecuteJSON(context.Background(), query, variables)
 }
 
 // ⏹️renderPromptTemplate holds the data fields for a renderPromptTemplate record.

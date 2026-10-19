@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `SetBeam`: a sparse beam patch naming only the fields that really change. The beam type must exist and both top offsets must be finite
 //! (the end offset is assigned: none makes the beam level again). The axis is the business of `set-beam-axis`; no elevation is written, it is inferred.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::offsets_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::offsets_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetBeam, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

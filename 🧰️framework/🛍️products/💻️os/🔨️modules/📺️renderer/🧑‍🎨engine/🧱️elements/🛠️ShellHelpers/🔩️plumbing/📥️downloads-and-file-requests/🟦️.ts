@@ -1,6 +1,6 @@
 /** 📥️ Shell plumbing, downloads and file requests: the media-export and data-url downloads, the backbone file and folder path requests, the file open and selection requests and the bounded blob reads. */
 import { mediaExportBytes } from "../../../../../../../../../🔨️modules/🎠️kernel/🎬️media-export/🟦️.ts";
-import { wireMediaExportEncoding } from "../../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { wireMediaExportEncoding } from "@semio-tech/framework-actor/wire-turn";
 import { segmentedDownloadSinkFactory, type SegmentedDownloadSinkFactory } from "../../../📤️SegmentedDownload/🟦️.ts";
 
 //#region ShellHelpers

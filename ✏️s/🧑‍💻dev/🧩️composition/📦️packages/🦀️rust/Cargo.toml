@@ -89,12 +89,13 @@ semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 parry3d = "0.17"
 fnv = "1.0.7"
+ui_scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-ui-declaration = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [[test]]
 name = "generation3d-example-geometry"

@@ -1,6 +1,6 @@
 //! 🪟️ LAW: a new window template lands through the same tab/split/root-split zones as a dock drag.
 use semio_framework_os_renderer_wgpu_dock::*;
-use ui_wgpu::wgpu::WindowStackCorner;
+use semio_framework_ui_declaration::layout::WindowStackCorner;
 
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;

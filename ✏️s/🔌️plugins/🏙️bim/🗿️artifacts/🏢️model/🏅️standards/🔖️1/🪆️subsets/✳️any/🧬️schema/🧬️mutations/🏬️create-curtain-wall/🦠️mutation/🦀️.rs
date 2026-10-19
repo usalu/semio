@@ -1,6 +1,7 @@
 //! 🏬️ `create-curtain-wall` payload. Brings a new curtain wall onto a storey; its height is never stored, it is inferred from the top constraint, its grid, mullions and panels from its type.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainWall, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateCurtainWall {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateCurtainWall
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCurtainWall> + From<crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCurtainWall> + From<semio_s_artifact_bim_model_mut_any_83::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "curtain-wall", kind: "create-curtain-wall", record: "CreateCurtainWall" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

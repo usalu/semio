@@ -53,18 +53,18 @@ impl ExportProducer{
   Ok(false)
  }
  pub fn begin_close(&mut self){self.closing=true;if let Some(job)=self.vector.take(){let(close,plan)=job.into_retirement();self.vector_close=Some(close);if let Some(plan)=plan{if let Some(output)=self.output.original_mut(){output.plan=Some(plan);}}}if let Some(job)=self.raster.take(){let(close,image)=job.into_retirement();self.raster_close=Some(close);if let Some(image)=image{if let Some(output)=self.output.original_mut(){output.image=Some(image);}}}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{
-  use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return InteractiveJobCloseStep::Blocked;}
-  if !self.output.terminal_is_empty(){return match self.output.step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}
-  if self.read_close.is_some()||self.read.is_some(){let step=if self.read_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read,&mut self.read_close,grant)};return match step{Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}
-  if let Some(close)=&mut self.vector_close{if grant.maximum_items==0||grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked;}if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}return match close.close_step(grant){Ok(step)=>{let progress=step.progress();if close.terminal_is_empty(){self.vector_close=None;}InteractiveJobCloseStep::Pending{progress}},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)-> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+  use semio_framework_job::InteractiveJobCloseStep;if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}
+  if !self.output.terminal_is_empty(){return Ok(match self.output.step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>return Err(error)});}
+  if self.read_close.is_some()||self.read.is_some(){let step=if self.read_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.read_close,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read,&mut self.read_close,grant)};return Ok(match step{Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>return Err(error)});}
+  if let Some(close)=&mut self.vector_close{if grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked);}if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});}return Ok(match close.close_step(grant){Ok(step)=>{let progress=step.progress();if close.terminal_is_empty(){self.vector_close=None;}InteractiveJobCloseStep::Pending{progress}},Err(error)=>return Err(error)});}
   if let Some(close)=&mut self.raster_close{
-   if grant.maximum_items==0||grant.maximum_depth==0{return InteractiveJobCloseStep::Blocked;}
-   if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}
-   return match close.close_step(grant){Ok(step)=>{let progress=step.progress();if close.terminal_is_empty(){self.raster_close=None;}InteractiveJobCloseStep::Pending{progress}},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};
+   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(InteractiveJobCloseStep::Blocked);}
+   if let Some(read)=close.take_snapshot_read(){self.read=Some(read);return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});}
+   return Ok(match close.close_step(grant){Ok(step)=>{let progress=step.progress();if close.terminal_is_empty(){self.raster_close=None;}InteractiveJobCloseStep::Pending{progress}},Err(error)=>return Err(error)});
   }
   
-  InteractiveJobCloseStep::Complete{progress:Default::default()}
+  Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
  }
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
@@ -102,11 +102,16 @@ impl DrawingOwnedSerializerJob{
   }
  }
 }
+impl DrawingOwnedSerializerJob{
+ /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+ fn step_value<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{let turn=self.turn(cx);self.outcomes.lend(turn,cx)}
+}
+
 impl InteractiveJob for DrawingOwnedSerializerJob{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{let turn=self.turn(cx);self.outcomes.lend(turn,cx)}
+ fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{self.outcomes.borrow_outcome(descriptor)}
  fn begin_close(&mut self){self.closing=true;self.producer.begin_close();}
- fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep{if !self.closing{return InteractiveJobCloseStep::Blocked;}if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}if !self.metadata.terminal_is_empty(){return match self.metadata.step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}};}self.producer.close_step(grant)}
+ fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|grant|{if !self.closing{return Ok(InteractiveJobCloseStep::Blocked);}if !self.outcomes.terminal_is_empty(){return self.outcomes.close_job_step(grant);}if !self.metadata.terminal_is_empty(){return Ok(match self.metadata.step(grant){Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>return Err(error)});}self.producer.close_step(grant)})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}

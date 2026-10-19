@@ -1,7 +1,8 @@
 //! ↩️ Inverse of `SetSlab`: an absolute `SetSlab` carrying the base values of exactly the provided fields, none when the slab is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_slab::SetSlab;
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetSlab, base: &ModelSnapshot) -> Vec<Op>
 where

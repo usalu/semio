@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 📏️ The independently bounded wire bytes and decoded UTF-16 units of one response. */

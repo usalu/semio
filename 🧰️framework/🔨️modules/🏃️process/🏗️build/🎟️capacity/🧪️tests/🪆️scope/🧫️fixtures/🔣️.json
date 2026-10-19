@@ -82,8 +82,8 @@
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🐹️go-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
     "🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
-    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🔷️dotnet/📜️script.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
@@ -249,12 +249,12 @@
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts",
         "literalCalls": 2,
         "forwarded": []
       },
       {
-        "path": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
         "literalCalls": 1,
         "forwarded": []
       },

@@ -7,8 +7,8 @@ use semio_framework_plugin::NoConfig;
 use crate::editor::flow::modes::edit::windows::compiled;
 use crate::editor::flow::modes::generate::commands::{add_generation, remove_generation, rename_generation, select_generation, update_generation_values};
 use crate::editor::flow::modes::{edit, generate};
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
 use crate::editor::flow::host::flow_removal_leaves;
 use crate::editor::flow::host::{host_from_snapshot, sync_host_selection_domains};
 use crate::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
@@ -41,7 +41,8 @@ pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
 /// witness". Dereferences to the app and drains the exact retained close ladder
 /// (`PluginApp::close_step`) on the way out — the same law the runtime uses. Mirrors generation3d's
 /// `Generation3dAppFixture` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub struct FlowAppFixture(FlowApp);
+/// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct FlowAppFixture(pub FlowApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
 impl std::ops::Deref for FlowAppFixture {
     type Target = FlowApp;
@@ -61,7 +62,7 @@ impl Drop for FlowAppFixture {
         if std::thread::panicking() || self.0.close_terminal_is_empty() {
             return;
         }
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -73,9 +74,11 @@ pub async fn flow_app_closing() -> FlowAppFixture {
     install_first_party_light_flow_extensions_for_tests();
     let definition = create_flow_app();
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(meta("local").instance_id).await;
-    FlowAppFixture(app)
+    semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    FlowAppFixture(app, scope)
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("flow", FlowPlayApp, || semio_framework_plugin::App { definition: create_flow_app(), examples: Vec::new() }, "../..");
@@ -141,9 +144,11 @@ pub async fn flow_app_with_actor(actor: semio_framework_os_kernel::ActorId) -> F
     install_first_party_light_flow_extensions_for_tests();
     let definition = create_flow_app();
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, actor).await;
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, actor, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(meta("local").instance_id).await;
-    FlowAppFixture(app)
+    semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    FlowAppFixture(app, scope)
 }
 
 pub fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
@@ -159,21 +164,21 @@ pub fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
     }
 }
 
-pub async fn dispatch(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-    app.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
+pub async fn dispatch(app: &mut FlowAppFixture, command: FlowCommand) -> InvocationResult {
+    app.0.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
 }
 
-pub async fn dispatch_with_registry(app: &mut FlowApp, command: FlowCommand) -> InvocationResult {
-    app.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch")
+pub async fn dispatch_with_registry(app: &mut FlowAppFixture, command: FlowCommand) -> InvocationResult {
+    app.0.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
 }
 
-pub async fn settle(app: &mut FlowApp) {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained Flow command publication");
+pub async fn settle(app: &mut FlowAppFixture) {
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained Flow command publication");
 }
 
 /// 🚫️ Settles a refused retained command while preserving its typed code and message.
-pub async fn settle_refusal(app: &mut FlowApp) -> semio_framework_plugin::Fault {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.err().expect("the handler refuses by name")
+pub async fn settle_refusal(app: &mut FlowAppFixture) -> semio_framework_plugin::Fault {
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("the handler refuses by name")
 }
 
 /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —
@@ -187,17 +192,16 @@ pub async fn composed_scene(app: &FlowApp) -> semio_framework_artifact_flow_flow
     FlowSnapshot { schema: snapshot.schema.clone(), content: crate::flow_content_child_handle_and_cache(widgets, synapses, layout) }.to_host_snapshot()
 }
 
-pub async fn render_with_view(app: &mut FlowApp, body_key: &str, view: &ViewModel) -> String {
-    let tree = app.render(body_key, None, view).await.expect("render");
-    semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+pub async fn render_with_view(app: &mut FlowAppFixture, body_key: &str, view: &ViewModel) -> String {
+    semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("rendered fixture observation and retirement")
 }
 
-pub async fn render(app: &mut FlowApp, body_key: &str) -> String {
+pub async fn render(app: &mut FlowAppFixture, body_key: &str) -> String {
     let view = flow_main_window_meta().view_state.expect("Flow main window view");
     render_with_view(app, body_key, &view).await
 }
 
-pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
+pub async fn main_window_measures(app: &mut FlowAppFixture) -> Vec<WindowMeasure> {
     let window = semio_framework_plugin::ViewWindowInstance { id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() };
     let view = ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     app.window_measures(&view).await.get(FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
@@ -209,11 +213,11 @@ pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
 /// select against). `node_ids`/`edge_ids` are raw widget/synapse ids, converted to the row-id-
 /// prefixed `InteractionTarget` ids the document panel tree/`interaction_topology` both use (see
 /// `flow_graph_node_target_id`/`flow_graph_edge_target_id`).
-pub async fn select_graph(app: &mut FlowApp, node_ids: &[&str], edge_ids: &[&str]) {
+pub async fn select_graph(app: &mut FlowAppFixture, node_ids: &[&str], edge_ids: &[&str]) {
     let mut targets: Vec<Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
     targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
     let targets_json = serde_json::to_string(&targets).expect("targets json");
     let args = semio_framework_value::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
-    let admitted = app.handle_action("interactionSelect", Some(&args), &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("interactionSelect admission");
-    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.expect("interactionSelect reserved-job commit");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect admission");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
 }

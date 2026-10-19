@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.dag.dag.snapshot;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message DagSnapshot {
   string schema = 1;
-  semio.os.store.ArtifactChild content = 2;
+  semio.framework.schema.artifact_child.ArtifactChild content = 2;
 }

@@ -1,5 +1,5 @@
 /** 🎟️ The activation lease tests. */
-import { loadActorActivationFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadActorActivationFixture } from "@semio-tech/framework-actor/testing/fixtures";
 import { FakeShardWorker, afterSettle, flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { OutboundMessage, ShardClient, ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 

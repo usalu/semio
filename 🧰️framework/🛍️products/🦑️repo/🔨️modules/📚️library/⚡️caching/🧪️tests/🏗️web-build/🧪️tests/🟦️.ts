@@ -6,7 +6,7 @@ import ts from "typescript";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {typeScriptLibraryFilesV1} from "../../../../🏗️build/🟦️typescript/📚️libraries/🟦️.ts";
 import corpus from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️schema.json" with {type:"json"};

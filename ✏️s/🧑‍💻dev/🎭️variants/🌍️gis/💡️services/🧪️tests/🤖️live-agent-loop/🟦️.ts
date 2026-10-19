@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";
 /** 🤖️ The live agent loop, end to end, with nothing mocked on either side: a real `semio-os-mcp`
  * stdio gateway launched exactly as `.mcp.json` launches it, a real React `dev` session in a real
@@ -44,7 +44,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { inflateRawSync, inflateSync } from "node:zlib";
 import { chromium, type Page } from "playwright";
-import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 
 const REPO_ROOT = findWorkspaceRoot(import.meta.dir);
 const PROTOCOL_VERSION = "2025-06-18";

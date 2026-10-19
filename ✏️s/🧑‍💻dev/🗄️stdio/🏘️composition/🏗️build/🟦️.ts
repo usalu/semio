@@ -1,6 +1,6 @@
 import{resolve}from"node:path";
-import type{ScriptInvocation}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{buildArtifactTypeScriptPackageV1,checkArtifactTypeScriptSourceV1}from"../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import type{ScriptInvocation}from"@semio-tech/process/routing";
+import { buildArtifactTypeScriptPackageV1, checkArtifactTypeScriptSourceV1 } from "@semio-tech/repo-lib/artifacts";
 import{COMPOSITION_TYPESCRIPT_NAME}from"../🪪️identity/🟦️.ts";
 
 /** 🧾️ Checks real composition Source through the bounded shared no-output compiler. */

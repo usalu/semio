@@ -1,4 +1,4 @@
-use crate::editor::flow::base::FLOW_PLAY_WINDOW_MAIN;
+use crate::editor::flow::editor_vocabulary::FLOW_PLAY_WINDOW_MAIN;
 use crate::editor::flow::modes::edit::windows::compiled;
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main;

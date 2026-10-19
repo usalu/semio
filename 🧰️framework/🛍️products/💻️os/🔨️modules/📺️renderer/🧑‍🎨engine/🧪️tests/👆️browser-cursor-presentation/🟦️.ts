@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -6,8 +6,9 @@ import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { uiWgpuCursorFixture as fixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 
 type CursorCase = { readonly cursor: string; readonly themeDark: boolean; readonly css: string };
 

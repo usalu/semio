@@ -1,5 +1,5 @@
 //! 📊️ Native JSON inference table projection.
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ModelQuantities, QuantityKind, summarise};
 
 /// 🧾️ The table the third-party oracle reproduces: the elements whose measures follow in closed form from the authored values (walls, slabs, columns, beams, spaces), summed again without the other kinds.

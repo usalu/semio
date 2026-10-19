@@ -1,13 +1,13 @@
-import{readNativeStorageReservationPolicyV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
 import {testWebFixtureContractsV1,testWebDeclarationDataV1} from "./🧪️tests/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1,type ArtifactDestinationV1,type ArtifactDestinationContextV1} from "../../📦️artifacts/💾️storage/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 /** 🛟️ Keeps each compiler fixture inside its actual accepted product sink through consumption. */
 async function withWebCompilerFixtureV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,mode:"prototype"|"release",body:(destination:ArtifactDestinationV1,sink:ArtifactDestinationContextV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);return withRepositoryCacheStoreV1(workspace,"products",invocation,phaseControl,(store,actualPhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:actualPhase,request:{version:1,mode,owner:relative(workspace,import.meta.dir).replaceAll("\\","/")}},destination=>withArtifactDestinationTaskV1(destination,invocation,sink=>body(destination,sink))));}
 import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { nextPublicationFiles } from "../../../../🖥️server/🎛️coordinator/🏗️builder/📦️publication/🟦️.ts";
+import { nextPublicationFiles } from "@semio-tech/repo-coordinator/builder/publication";
 import bunWorkerSchema from "../../📦️bundle/🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
 import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import bundleSchema from "../../📦️bundle/🧬️schema/🔣️.json" with { type: "json" };
@@ -15,8 +15,9 @@ import { bundleJavaScript, bundleVirtualJavaScript, readBunBundleFiles, withWhol
 import { scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runInNewContext } from "node:vm";
 import { availableParallelism } from "node:os";
-import { coordinatorBuildPolicy } from "../../../../🖥️server/🎛️coordinator/🏗️builder/🎚️mode/🟦️.ts";
-import { extensionBuildConfig } from "../../../../💻️client/🧩️vscode/🏗️builder/🟦️.ts";
+import { buildModePolicy } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { coordinatorBuildPolicy } from "@semio-tech/repo-coordinator/builder/mode";
+import { extensionBuildConfig } from "repo-vscode/builder";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
@@ -37,15 +38,15 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
  await testWebFixtureContractsV1(invocation,phaseControl);testWebDeclarationDataV1();
  const vitePhase=phaseControl;
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️cases.json"), "utf8"));
-  const { semioViteBuild } = await import("../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
+  const { semioViteBuild } = await import("@semio-tech/ui-styling/builder/vite");
   for (const row of fixture.modes) {
-    const policy = semioViteBuild(undefined, row.mode), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
+    const policy = semioViteBuild(undefined, buildModePolicy(row.mode)), extension = extensionBuildConfig(workspace, "entry.ts", "out", "extension.cjs", row.mode), coordinator = coordinatorBuildPolicy(row.mode, 2);
     assert.equal(extension.build.minify, row.minify); assert.equal(extension.build.sourcemap, row.sourcemap);
     assert.equal(policy.rollupOptions.treeshake, row.mode === "release"); assert.equal(extension.build.rollupOptions.treeshake, row.mode === "release");
     assert.equal(coordinator.output, `.cache/b/p/m/next/${row.mode}/out`); assert.equal(coordinator.optimization.minimize, row.mode === "release"); assert.equal(coordinator.workers, 2);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(policy[key], row[key]);
   }
-  for (const mode of fixture.invalidModes) assert.throws(() => semioViteBuild(undefined, mode));
+  for (const mode of fixture.invalidModes) assert.throws(() => semioViteBuild(undefined, buildModePolicy(mode)));
   const stateSchema = JSON.parse(readFileSync(join(workspace, "🧰️framework/🔨️modules/🏃️process/🏗️build/🗃️state/🧬️schema/🔣️.json"), "utf8"));
   const require = createRequire(join(workspace, "package.json")), { resolveConfig } = await import("vite"), typescript = require("typescript");
   assert.equal(require("jsonschema").validate(fixture.bundle, bundleSchema).valid, true);
@@ -64,7 +65,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
 
   if (availableParallelism() > 1) await assert.rejects(withWholeHostCompilerCapacity(leaseDirectory, createRequestedIssuedResourceControlV1(phaseControl,10_000), async () => { throw Error("Unadmitted Bun compiler started"); }, { SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: "1" }), /complete host worker reservation/);
   for (const row of fixture.modes) {
-    const oracle = await resolveConfig({ configFile: false, build: semioViteBuild(undefined, row.mode) }, "build", row.mode);
+    const oracle = await resolveConfig({ configFile: false, build: semioViteBuild(undefined, buildModePolicy(row.mode)) }, "build", row.mode);
     for (const key of ["minify", "cssMinify", "sourcemap"] as const) assert.equal(oracle.build[key], row[key]);
     assert.equal(oracle.build.rollupOptions.treeshake, row.mode === "release");
   }
@@ -126,9 +127,9 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
   await writeFile(join(packageRoot, "fixture.js"), 'export const wasmIntent = "active-projection";');
   for (const row of fixture.modes) { const directory = join(wasmOwner, "dist/wasm", row.mode); await mkdir(directory, { recursive: true }); await writeFile(join(directory, "fixture.js"), `export const wasmIntent = ${JSON.stringify(row.mode)};`); }
   await writeFile(join(app, "entry.js"), 'import { wasmIntent } from "@semio-tech/fixture-wasm"; document.body.dataset.intent = wasmIntent;' + fixture.source);
-  const config = join(app, "🟦️.ts"), policyPath = join(workspace, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
+  const config = join(app, "🟦️.ts"), modePolicyPath = join(workspace, "🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts"), policyPath = join(workspace, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts");
   const wasmPluginPath = join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts");
-  await writeFile(config, `import { semioViteBuild } from ${JSON.stringify(policyPath)}; import { canonicalWasmBuildVitePlugin } from ${JSON.stringify(wasmPluginPath)}; export default ({ mode }) => ({ plugins: [canonicalWasmBuildVitePlugin(${JSON.stringify(workspace)}, mode)], publicDir: false, logLevel: "silent", cacheDir: process.env.SEMIO_VITE_CACHE_DIRECTORY, build: semioViteBuild(undefined, mode) });`);
+  await writeFile(config, `import { semioViteBuild } from ${JSON.stringify(policyPath)}; import { buildModePolicy } from ${JSON.stringify(modePolicyPath)}; import { canonicalWasmBuildVitePlugin } from ${JSON.stringify(wasmPluginPath)}; export default ({ mode }) => ({ plugins: [canonicalWasmBuildVitePlugin(${JSON.stringify(workspace)}, mode)], publicDir: false, logLevel: "silent", cacheDir: process.env.SEMIO_VITE_CACHE_DIRECTORY, build: semioViteBuild(undefined, buildModePolicy(mode)) });`);
   const options = { invocation, control:createRequestedIssuedResourceControlV1(phaseControl,0), root: app, workspace, config, owner: fixture.owner };
   const sizes = new Map<string, number>();
   try {

@@ -7,7 +7,7 @@ import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGenerated
 import { parseDeployedRegistryEntryV1 } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
   entries: DeployedRegistryEntryV1[];
@@ -95,7 +95,7 @@ describe("registry rust artifacts projection", () => {
     process.env.CARGO_TARGET_DIR = "/tmp/semio-private-uplift-must-not-land-in-catalog";
     try {
       const note = { pluginId: "note", cratePath: "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_hub_note_component.wasm" };
-      const body = emitRustArtifacts([note], getWorkspaceRoot());
+      const body = emitRustArtifacts([note], findWorkspaceRoot());
       expect(body).toContain('pub fn plugin_component_directory(mode: &str)');
       expect(body).toContain('"prototype" => Ok("dist/components/prototype")');
       expect(body).toContain('"release" => Ok("dist/components/release")');

@@ -69,7 +69,7 @@ type g1Fixture struct {
 
 func loadG1Fixture(t *testing.T) g1Fixture {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("🧪️tests", "🧫️fixtures", "1️⃣g1-contract.json"))
+	data, err := os.ReadFile(moduleFixturePath("🧪️tests", "🧫️fixtures", "1️⃣g1-contract.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

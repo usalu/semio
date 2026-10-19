@@ -27,7 +27,7 @@ import (
 func ToolSectionCreate(filePath, sectionPath string) workspace.ToolResult {
 	events.Emit(events.EventSectionCreateStarting, "repo-cli", events.SectionPayload{File: filePath, Name: sectionPath})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
@@ -87,7 +87,7 @@ func ToolSectionCreate(filePath, sectionPath string) workspace.ToolResult {
 func ToolSectionMove(filePath, oldPath, newPath string) workspace.ToolResult {
 	events.Emit(events.EventSectionMoveStarting, "repo-cli", events.SectionPayload{File: filePath, Name: newPath, OldName: oldPath})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
@@ -167,7 +167,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) workspace.ToolResult {
 func ToolSectionDelete(filePath, sectionPath string) workspace.ToolResult {
 	events.Emit(events.EventSectionDeleteStarting, "repo-cli", events.SectionPayload{File: filePath, Name: sectionPath})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, filePath)
+	absPath := filepath.Join(workspace.GetRootDir(), filePath)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
@@ -228,7 +228,7 @@ func ToolSectionList(filePath string) workspace.ToolResult {
 	if scope.Kind != workspace.ScopeFile && scope.Kind != workspace.ScopeSection {
 		return workspace.ToolErrorMsg("Scope must be a file or section")
 	}
-	absPath := filepath.Join(workspace.RootDir, scope.FilePath)
+	absPath := filepath.Join(workspace.GetRootDir(), scope.FilePath)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", scope.FilePath))
 	}
@@ -258,7 +258,7 @@ func ToolSectionList(filePath string) workspace.ToolResult {
 func ToolDefinitionList(filePath string) workspace.ToolResult {
 	output := workspace.NewOutput()
 	scope := workspace.ParseScope(filePath)
-	absPath := filepath.Join(workspace.RootDir, scope.FilePath)
+	absPath := filepath.Join(workspace.GetRootDir(), scope.FilePath)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", scope.FilePath))
 	}

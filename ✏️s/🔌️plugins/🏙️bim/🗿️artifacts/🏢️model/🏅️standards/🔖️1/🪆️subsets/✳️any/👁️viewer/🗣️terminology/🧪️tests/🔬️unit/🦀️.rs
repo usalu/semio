@@ -1,4 +1,4 @@
-use crate::viewer::bim::terminology::*;
+use semio_s_artifact_bim_model_tests::viewer::bim::terminology::{BimViewerLabels, bim_viewer_labels};
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 

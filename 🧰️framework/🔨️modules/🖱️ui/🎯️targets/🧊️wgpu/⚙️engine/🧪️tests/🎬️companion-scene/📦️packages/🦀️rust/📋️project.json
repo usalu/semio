@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-wgpu-engine-scene-laws-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

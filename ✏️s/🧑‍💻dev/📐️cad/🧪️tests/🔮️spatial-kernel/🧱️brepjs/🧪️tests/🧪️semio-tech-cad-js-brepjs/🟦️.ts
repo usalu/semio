@@ -1,9 +1,20 @@
 import { aabbVolume } from "@semio-tech/s-spatial-kernel-ts/preview/aabb";
-import type { BrepjsTestDependencies } from "../../🟦️.ts";
+import type { BrepjsTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 import type { ModelSpaceJson } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
-import type { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
+import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/preview/brep-records";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
+import * as vitestRuntime from "vitest";
+import { BrepjsKernel, deserializeWorkerValue, serializeWorkerValue } from "../../📨️worker-and-kernel/🟦️.ts";
+import { ModelSpace } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
+import { aabbDifferencePieces, aabbIntersect, modelObjectAabb } from "@semio-tech/s-spatial-kernel-ts/preview/aabb";
+import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
+import { boxModelDiff } from "@semio-tech/s-spatial-kernel-ts/preview";
+import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
+import { face, mesh } from "@semio-tech/cad-engine-ts/brepjs";
+import { faceCentroid, fuseSolidsToExternalFaces } from "@semio-tech/s-spatial-kernel-ts/preview/face-geometry";
+import { geom } from "@semio-tech/s-spatial-kernel-ts/preview/brep-records";
+import { kernelGeometry, solidRef } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 
@@ -500,3 +511,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const dependencies: BrepjsTestDependencies = { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef };
+await registerTests1(vitestRuntime, dependencies, { url: new URL("../../🟦️.ts", import.meta.url).href });

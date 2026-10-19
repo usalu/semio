@@ -1,11 +1,12 @@
 //! 🎯️ `selectFindings`: selects the elements a finding of the diagnostics names in the framework `elements` domain, which the plan, the 3D view and the outliner share. Selection is framework state, so the command writes no
 //! mutation; ids that no collection holds (a finding about a missing reference) are skipped and a finding whose elements are all gone is refused instead of silently selecting nothing.
 
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

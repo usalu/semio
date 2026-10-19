@@ -1,5 +1,5 @@
 /** 📖️ Authoritative numeric scene resources emit paged COS bodies and exact xref entries. */
-import type {DocumentScenePlan,DocumentSceneNode} from "../../../../../../../../🧬️schema/🎬️scene/📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode } from "../../../../../../../../🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts";
 import {ScenePlanCloseJob} from "../../../../../../../../🧬️schema/🎬️scene/🧹️retire/🟦️.ts";
 import {arcGeometry,arcPoint,type ArcGeometry,type Point} from "../../../../../../../../🧬️schema/🧮️geometry/🟦️.ts";
 import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";

@@ -2,9 +2,9 @@
 //! where the plane passes through a riser, and the up arrow along the walking line.
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::bodies::rectangle as footprint;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun, StairWinder};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::rectangle as footprint;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun, StairWinder};
 use semio_framework_geometry::bulge::bulge_from_sweep;
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;

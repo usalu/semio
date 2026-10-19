@@ -1,6 +1,6 @@
 /** 📸️ Playbook persisted snapshot shares the document's exact field contract. */
 import { parsePlaybookArtifact } from "../🟦️.ts";
-import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface PlaybookSnapshot {
   /** @state artifact */

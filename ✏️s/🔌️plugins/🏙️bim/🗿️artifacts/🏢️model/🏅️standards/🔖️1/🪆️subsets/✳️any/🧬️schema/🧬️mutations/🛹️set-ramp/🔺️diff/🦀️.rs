@@ -3,9 +3,11 @@
 //! exists, a top storey of the same building); providing only equal values is a no-op. Whole-list ruling: the path is ONE centre line, the geometry of the
 //! ramp, so a provided path replaces the path as one field. The slope the ramp ends up with is inferred and checked by diagnostics, never refused here.
 
-use crate::standards::v1::subsets::any::schema::mutations::placement::{ramp_issue, refuse_stair};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{ramp_issue, refuse_stair};
 use crate::standards::v1::subsets::any::schema::mutations::set_ramp::SetRamp;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetRamp, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

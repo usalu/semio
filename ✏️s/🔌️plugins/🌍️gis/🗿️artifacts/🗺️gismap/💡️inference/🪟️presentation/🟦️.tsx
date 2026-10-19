@@ -1,9 +1,8 @@
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, type DocumentScope, type ArtifactFrontier } from "@semio-tech/framework/document/scope";
 import { decodePackValue } from "@semio-tech/framework/packs";
-import type { ServiceMountedViewV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
 import React from "react";
 import { GIS_MAP_INFERENCE_PORT_CODE_TEXT_V1, GIS_MAP_INFERENCE_PORT_CONTROL_TEXT_V1, GIS_MAP_INFERENCE_PORT_TEXT_V1, gisMapInferencePortAffordancesV1, gisMapInferencePortRoleV1, gisMapInferencePortTerminalV1, projectGisMapInferencePreviewOverlayV1, parseGisMapInferencePortStatusV1, type GisMapInferencePortStatusV1 } from "../🧬️schema/🟦️.ts";
-import type { InferencePortUiAction, InstalledServicePresentationV1 } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
+import type { InferencePortUiAction, InstalledServicePresentationV1, ServiceMountedViewV1 } from "@semio-tech/framework/inference/service";
 /** ♿ Bilingual host-owned inference port. Work in flight announces politely, every terminal
  * asserts, progress is a real `<progress>` with the server's own bounded counters, and Cancel and
  * Approve are ordinary keyboard-reachable buttons — Approve exists only while a proposal is
@@ -63,7 +62,7 @@ export function InferencePortPanel({
 }
 
 /** 🌍 GIS owns status decoding, controls, geometry projection and bilingual presentation. */
-export const GIS_INFERENCE_PRESENTATION_V1: InstalledServicePresentationV1 = {
+export const GIS_INFERENCE_PRESENTATION_V1: InstalledServicePresentationV1<React.ReactNode> = {
   probe: mountedGisMapProbeV1,
   owner: "gis", serviceId: "s.gis.gismap.inference",
   render(payload, locale, onAction) { return <InferencePortPanel status={parseGisMapInferencePortStatusV1(payload)} locale={locale} onAction={onAction} />; },

@@ -17,7 +17,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Browser } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult } from "@semio-tech/repo-test/acceptance/orchestration";
 

@@ -1,8 +1,8 @@
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧩️composition/🟦️.ts";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { assetsTileProxySchema as schema, assetsTileProxyFixture as corpus } from "../../../../../../../../🔨️modules/🖼️assets/🧪️tests/🧫️fixtures/🟦️.ts";
-import { parseTileProxyAssetSpecV1 } from "../../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
+import { assetsTileProxySchema as schema, assetsTileProxyFixture as corpus } from "@semio-tech/assets/testing/fixtures";
+import { parseTileProxyAssetSpecV1 } from "@semio-tech/assets/tile-proxy";
 
 /** 🧪️ Compares the owner-neutral portable transport corpus with independent Ajv and JSON oracles. */
 export function proveTileProxyAssetCorpusV1(): number {
@@ -44,7 +44,7 @@ export async function proveTileProxyTransportV1(artifactRoot: string): Promise<v
   const { once } = (await import("node:events")).default;
   const { mkdtempSync, mkdirSync, rmSync, readFileSync, existsSync } = await import("node:fs");
   const { join } = await import("node:path");
-  const { createAssetHttpServerV1 } = await import("../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts");
+  const { createAssetHttpServerV1 } = await import("@semio-tech/assets/resolver/dispatch");
   mkdirSync(artifactRoot, { recursive: true });
   const root = mkdtempSync(join(artifactRoot, "neutral-tile-transport-"));
   let calls = 0;

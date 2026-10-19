@@ -204,25 +204,25 @@ async fn the_viewer_declares_its_page_feed_as_a_chrome_only_transient_route() {
 async fn a_viewer_page_publishes_only_its_transient_item() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::PluginApp;
-    let mut app = semio_framework_plugin::VcsArtifactApp::<ViewerApp<HomeViewer>>::with_registry(Default::default(), semio_framework_plugin::AppActionRegistry::from_definition(&create_home_viewer().await), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<ViewerApp<HomeViewer>, _>(async { semio_framework_plugin::App { definition: create_home_viewer().await, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../🧪️tests/🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");
     let meta = semio_framework_plugin::ActionMeta { actor: "local".into(), instance_id: 1, view_state: Some(home_view()) };
     for page in pages {
         let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(semio_framework_pack_json::to_json_string(&feed_page(&fixture, page))))]);
-        app.handle_action("applyDirectoryEventPage", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the viewer admits a sealed page");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the page settles");
+        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "applyDirectoryEventPage", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("the viewer admits a sealed page");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the page settles");
         assert!(settled.lanes.iter().all(|lane| !matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Draft | TypedOperationResultLane::Config)), "a viewer page never writes the document, draft or config: {:?}", settled.lanes);
         assert!(settled.lanes.contains(&TypedOperationResultLane::Transient));
         assert!(settled.events.iter().any(|event| event.kind == crate::editor::home::transient::DirectoryProjectionReceiptV1::SCHEMA));
     }
-    let rendered = app.render(main::S_HOME_VIEW_BODY, None, &home_view()).await.expect("host-facing viewer render");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(rendered).expect("viewer projection");
+    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, main::S_HOME_VIEW_BODY, &home_view(), scope.cx()).await.expect("viewer projection");
     for space in pages.iter().flat_map(|page| page["spaces"].as_array().expect("page spaces")) {
         let name = space["name"].as_str().expect("space name");
         assert!(json.contains(name), "the viewer lists every folded space ({name}): {json}");
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }
 //#endregion 📬️DirectoryFeed

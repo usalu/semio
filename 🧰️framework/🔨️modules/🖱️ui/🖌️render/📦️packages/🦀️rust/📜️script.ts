@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
 import{scriptCompilerAdmissionControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
 import { mkdirSync, mkdtempSync } from "node:fs";
 import { captureOwnedProcess } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-render` suite, the browser-target gate, and the dependency
@@ -49,7 +47,7 @@ class TestScript extends BundleScript {
 //#region 🔖️check-wasm
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"],packageRoot,process.env,buildBudgetMs());
+    await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-render", "--target", "wasm32-unknown-unknown"],packageRoot,process.env,buildBudgetMs());
   }
 }
 //#endregion 🔖️check-wasm

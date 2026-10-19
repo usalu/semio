@@ -4,7 +4,7 @@ use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::viewer::bim::modes::view::windows::world::config::*;
-use crate::render::window_config::assert_window_config_laws;
+use semio_s_artifact_bim_model_tests::render::window_config::assert_window_config_laws;
 
 fn arguments(pairs: &[(&str, semio_framework_value::DslValue)]) -> semio_framework_pack_json::Value {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::DslValue::object(pairs.iter().map(|(name, value)| (name.to_string(), value.clone()))))

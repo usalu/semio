@@ -2,9 +2,10 @@
 //! stands on the storey of its wall, so it cannot change its storey unless it changes its wall with it, and a component that changes its family keeps only overrides the new family can evaluate. Moving to
 //! another storey keeps the elevation. Providing only equal values, or no field, is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::component_rules;
 use crate::standards::v1::subsets::any::schema::mutations::set_component::SetComponent;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetComponent, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -15,11 +16,11 @@ pub fn diff(payload: &SetComponent, base: &ModelSnapshot) -> MutationOutcome<Mod
     if let Some(wall) = next.host.as_ref().filter(|wall| record.host.as_ref() == Some(*wall) && next.storey != record.storey) {
         return MutationOutcome::refuse(OutcomeCode::Invariant, format!("Component \"{}\" is mounted on wall \"{wall}\" and stands on its storey.", payload.id), ["storey"]);
     }
-    if let Some(fault) = component_rules::component_fault(base, &next) {
+    if let Some(fault) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules::component_fault(base, &next) {
         return MutationOutcome::refuse(fault.code, fault.message.clone(), fault.path(None));
     }
     if next.family != record.family {
-        if let Some(fault) = component_rules::family_swap_fault(base, &payload.id, &next.family) {
+        if let Some(fault) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules::family_swap_fault(base, &payload.id, &next.family) {
             return MutationOutcome::refuse(fault.code, fault.message.clone(), fault.path(None));
         }
     }

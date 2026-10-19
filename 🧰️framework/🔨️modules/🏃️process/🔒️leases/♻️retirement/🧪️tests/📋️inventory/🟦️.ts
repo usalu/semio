@@ -8,7 +8,7 @@ import{fileURLToPath}from"node:url";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
 import authoritySchema from"../../../🧬️schema/📜️ticket.json";
-import{registerBuildTestLawV1}from"../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation}from"../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../🎛️owned-execution/📥️capture/🟦️.ts";

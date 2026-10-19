@@ -1,10 +1,10 @@
 /** 🎮️ Projects playground catalog rows into session, preparation, activation, serving and site targets. */
-import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { catalogBuildContributionForManifestV1 } from "../../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
-import { frameworkOsEngineSourceOwnersV1 } from "../../../../../../../💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import { frameworkOsEngineSourceOwnersV1 } from "../../../../../../../💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import { observedSourceAnalysisV1, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 const { existsSync, lstatSync, readFileSync } = observedFs;
 
@@ -67,11 +67,20 @@ export function pluginSiteTargetsForCrate(root, allPlaygrounds, stagingProjectRo
   return targets;
 }
 
+/** 🧊️ Admits one owner registry object once; its canonical declaration is immutable for the lifetime of that object. */
+const admittedRegistries=new WeakMap();
+function admittedRegistry(registry){
+ if(registry===null||typeof registry!=="object")return createRequire(import.meta.url)("../../🚪️admission/🟦️.ts").readBuildOwnerRegistryV1(registry);
+ let declaration=admittedRegistries.get(registry);
+ if(!declaration){declaration=createRequire(import.meta.url)("../../🚪️admission/🟦️.ts").readBuildOwnerRegistryV1(registry);admittedRegistries.set(registry,declaration);}
+ return declaration;
+}
+
 /** 🏞️ Constructs admitted site targets only through their physical canonical release producer. */
 export function playgroundSiteTargetsForAdmissionV1(root,playgrounds,workspaceRoot,registry,selectedTargets){
  const rows=playgrounds.filter(row=>row.cratePath===root),names=new Set(["build",...rows.map(row=>"build-"+row.variant+"-site")]);
  if(!rows.length||selectedTargets!==undefined&&!selectedTargets.some(name=>names.has(name)))return {};
- const declaration=createRequire(import.meta.url)("../../🚪️admission/🟦️.ts").readBuildOwnerRegistryV1(registry),owner=declaration.owners.find(owner=>owner.name==="@semio-tech/framework-os-dev");
+ const declaration=admittedRegistry(registry),owner=declaration.owners.find(owner=>owner.name==="@semio-tech/framework-os-dev");
  if(!owner||owner.manifest!==(owner.root==="."?PROJECT_BASENAME:owner.root+"/"+PROJECT_BASENAME))throw Error("Playground site output requires the release producer's staging project");
  const project=JSON.parse(readPhysicalSource(join(workspaceRoot,owner.manifest)).toString("utf8"));
  if(project.name!==owner.name||project.root!==undefined&&project.root!==owner.root)throw Error("Canonical playground release staging producer differs");
@@ -144,7 +153,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
 
   const wgpuRoot = buildPath("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript"), wgpuProject = projectAt(wgpuRoot);
   if (!wgpuProject?.name || !["prototype","release"].every(mode=>wgpuProject.targets?.wasm?.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode)) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
-  const flowRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", flowProject=projectAt(flowRoot);
+  const flowRoot="🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust", flowProject=projectAt(flowRoot);
   if(!flowProject?.name || !flowProject.targets?.wasm)throw new Error(`Flow must name its authored browser producer: ${flowRoot}`);
   const enginePrerequisites = owners => owners.map(root=>{const project=projectAt(root);if(!project?.name||!project.targets?.wasm)throw Error(`Engine must name its authored producer: ${root}`);return `${project.name}:wasm`;});
   const rendererEngines=enginePrerequisites(frameworkOsEngineSourceOwnersV1("renderer")),distributionEngines=enginePrerequisites(frameworkOsEngineSourceOwnersV1("distribution"));

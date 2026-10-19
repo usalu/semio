@@ -1,2 +1,4 @@
 export { wasmCompilerSelectionArgumentsV1,withProducedWasmPackageTaskV1,verifyProducedWasmPackageV1,buildWasmWebV1, readWasmPackageOwnerV1, readWasmBuildPolicyV1, wasmBuildArguments, wasmOutputDirectory } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 export type { WasmCompilerSelectionV1,ProducedWasmPackageV1,ProducedWasmPackageViewV1,WasmPackageOwnerV1, WasmBuildPolicyV1, WasmPackWebBuildOptions, WasmPackWebPkg, WasmBuildExecutionPortV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+export { WASM_BUILD_PROVIDER_V1, buildAdmittedWasmWebV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+export type { WasmBuildProviderV1, WasmWebBuildRequestV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";

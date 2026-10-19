@@ -749,7 +749,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
 pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &Option<Arc<T>>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     if pending.is_none() { return Ok(Default::default()); }
     if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "shared lease has no controlled owner authority")); }
-    Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
+    Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
 }
 
 pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -761,7 +761,7 @@ pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retireme
     if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
     if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
     let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-    match semio_framework_value::retirement::shared::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true) {
+    match semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true) {
         Ok((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
         Err((error, original)) => { *pending = Some(original); Err(error) }
     }
@@ -826,3 +826,54 @@ mod presence_read_tests;
 #[cfg(test)]
 #[path="../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🦀️.rs"]
 mod returned_retirement_tests;
+
+#[cfg(any(test, feature = "testkit"))]
+impl SnapshotReadLeaseRegistry {
+    /// 🪝️ Test hook: the contention lock of the fixed registry state, held by the Store companions to witness fail-closed admission.
+    #[doc(hidden)]
+    pub fn state_lock(&self) -> &SnapshotReadLeaseStateLock {
+        &self.state
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl SnapshotReadLeaseRegistryState {
+    /// 🪝️ Test hook: positions the returned-owner cleanup visit order.
+    #[doc(hidden)]
+    pub fn set_cleanup_cursor(&mut self, cursor: usize) {
+        self.cleanup_cursor = cursor;
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl SnapshotReadLeaseRegistryOwner {
+    /// 🪝️ Test hook: the registry's own alias custody, absent after the exact owned close.
+    #[doc(hidden)]
+    pub fn alias_custody(&self) -> Option<&SnapshotReadRegistryAliasRetirement> {
+        self.0.as_ref()
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl SnapshotReadLease {
+    /// 🪝️ Test hook: the fixed registry slot of this lease.
+    #[doc(hidden)]
+    pub fn slot_index(&self) -> u16 {
+        self.index
+    }
+
+    /// 🪝️ Test hook: the generation mark of this lease.
+    #[doc(hidden)]
+    pub fn slot_generation(&self) -> u64 {
+        self.generation
+    }
+}
+
+#[cfg(any(test, feature = "testkit"))]
+impl ErasedSnapshotRead {
+    /// 🪝️ Test hook: swaps the erased owner, returning the previous custody.
+    #[doc(hidden)]
+    pub fn swap_owner(&mut self, owner: Option<Arc<dyn std::any::Any + Send + Sync>>) -> Option<Arc<dyn std::any::Any + Send + Sync>> {
+        std::mem::replace(&mut self.owner, owner)
+    }
+}

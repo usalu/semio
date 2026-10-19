@@ -27,7 +27,6 @@ semio-framework-os-infinite-directed-presentation = { path = "../../../../../../
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-procedural-2d-model = { workspace = true }
@@ -37,6 +36,7 @@ semio-s-artifact-procedural-2d-mut-synapses = { workspace = true }
 semio-s-artifact-procedural-2d-mut-widgets = { workspace = true }
 semio-s-artifact-procedural-2d-mutations = { workspace = true }
 semio-s-procedural-core-generation-sqlite-native = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

@@ -1,26 +1,15 @@
 import { DirectoryClient, documentRuntimeKeyV1, createSocketGrantIssuerV1, HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS, DirectoryCommandError } from "../../../../🟦️";
-import type { DirectoryAcknowledgedStream, DirectoryEventPageAckV1, DocumentScope, DirectoryCommand } from "../../../../🟦️";
+import type { DirectoryEventPageAckV1, DocumentScope, DirectoryCommand } from "../../../../🟦️";
 import type { DirectoryEvent } from "@semio-tech/framework/directory/schema";
 import { retryWithJitteredBackoff } from "@semio-tech/framework";
 import { parseDirectoryEventPageV1 } from "@semio-tech/framework/directory/io/text";
 import type { DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
 import { sealDirectoryCommandRequestV1, directoryCommandRequestJson } from "@semio-tech/framework/directory/io/text";
-import { type DirectoryEventPageBootstrapV1, browserDirectoryRequest, directoryBootstrap, directorySessionEpoch, directoryStatus, directoryWorkerEpoch, fetchDirectoryBootstrapPage, flushDirectoryQueue, openDirectoryBootstrapLive, requestSocketGrant, scheduleDirectoryBootstrapRetry, settleDirectoryCommand, spaceDirectoryLanes } from "../🔐️hub-session/🟦️.ts";
+import { type DirectoryBootstrapOwner, type DirectoryBootstrapTransition, type DirectoryEventPageBootstrapV1, browserDirectoryRequest, directoryBootstrap, directorySessionEpoch, directoryStatus, directoryWorkerEpoch, fetchDirectoryBootstrapPage, flushDirectoryQueue, openDirectoryBootstrapLive, requestSocketGrant, scheduleDirectoryBootstrapRetry, settleDirectoryCommand, spaceDirectoryLanes } from "../🔐️hub-session/🟦️.ts";
 import { post } from "../🧾️document-state/🟦️.ts";
-import { closeArtifactRuntime, directoryCommandOperations, directoryCommandQueue, scopedDirectoryStreams } from "../🛑️session-teardown/🟦️.ts";
+import { type DirectoryCommandTransportOperationV1, closeArtifactRuntime, directoryCommandOperations, directoryCommandQueue, scopedDirectoryStreams } from "../🛑️session-teardown/🟦️.ts";
 import { revokeDirectoryAdministrationForScope } from "../🛡️directory-administration/🟦️.ts";
-import { DIRECTORY_COMMAND_TRANSPORT_CAPACITY, type DirectoryCommandTransportOperationV1 } from "../📇️space-artifact-creation/🟦️.ts";
-
-export type DirectoryBootstrapTransition = { readonly kind: "fetch"; readonly after: number } | { readonly kind: "live"; readonly since: number };
-
-export type DirectoryBootstrapOwner = {
-  readonly machine: DirectoryEventPageBootstrapV1;
-  readonly client: DirectoryClient;
-  readonly abort: AbortController;
-  stream: DirectoryAcknowledgedStream | null;
-  retry: ReturnType<typeof setTimeout> | null;
-  fetching: boolean;
-};
+import { DIRECTORY_COMMAND_TRANSPORT_CAPACITY } from "../📇️space-artifact-creation/🟦️.ts";
 
 export function acknowledgeDirectoryBootstrap(ack: DirectoryEventPageAckV1): void {
   const owner = directoryBootstrap;

@@ -1,7 +1,6 @@
 /** 🧬️ Canonical Layout document schema. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
-import { parseArtifactLink, type ArtifactLink } from "@semio-tech/framework-os/modules/store/link/schema";
+import { parseArtifactChild, type ArtifactChild, parseArtifactLink, type ArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 export type { ArtifactChild, ArtifactLink };
 import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "@semio-tech/framework/value/ieee754";
 import {embeddedChildSlotV1} from "@semio-tech/framework/io/ports";

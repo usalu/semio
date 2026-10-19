@@ -1,11 +1,13 @@
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{density};
-use crate::standards::v1::subsets::any::io::text::inferences::quantities::table_json;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, ModelQuantities, QuantityKind, group_volumes, solid_rows, upward_area};
-use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, OpeningKind, Ramp, Slab, Vertex};
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Building, Column, ColumnType, DoorLeaves, DoorType, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Profile, Railing, Rgb, Site, SlabType, Slope, SpaceBoundary, Stair, StairFlight, Storey, Swing, Wall, WallType, WindowType};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::density;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::io::text::inferences::quantities::table_json;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, ModelQuantities, QuantityKind, group_volumes, solid_rows, upward_area};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, OpeningKind, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Ramp, Slab};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, DoorLeaves, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, Slope, SpaceBoundary, StairFlight, Swing};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, BeamType, Building, Column, ColumnType, DoorType, Material, Opening, Railing, Site, SlabType, Stair, Storey, Wall, WallType, WindowType};
 use protocol::Inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities;
 use semio_framework_test_fixtures::fixture_text;
 
 fn close(left: f64, right: f64) -> bool {
@@ -45,7 +47,7 @@ fn base() -> ModelSnapshot {
     snapshot.materials.insert("m-brick".into(), material(1800.0));
     snapshot.materials.insert("m-wool".into(), material(40.0));
     snapshot.materials.insert("m-concrete".into(), material(2400.0));
-    snapshot.wall_types.insert("wt".into(), crate::standards::v1::subsets::any::schema::snapshot::WallType { name: "Brick 300".into(), layers: vec![layer("m-brick", 0.2, LayerFunction::Structure), layer("m-wool", 0.1, LayerFunction::Insulation)] });
+    snapshot.wall_types.insert("wt".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallType { name: "Brick 300".into(), layers: vec![layer("m-brick", 0.2, LayerFunction::Structure), layer("m-wool", 0.1, LayerFunction::Insulation)] });
     snapshot.slab_types.insert("slt".into(), SlabType { name: "Slab 250".into(), layers: vec![layer("m-concrete", 0.25, LayerFunction::Structure)] });
     snapshot.column_types.insert("ct".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
     snapshot.beam_types.insert("bt".into(), BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
@@ -72,7 +74,7 @@ fn with_openings() -> ModelSnapshot {
 }
 
 fn quantities(snapshot: &ModelSnapshot) -> ModelQuantities {
-    crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("infers").quantities
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("infers").quantities
 }
 
 #[semio_framework_async_macros::async_test]
@@ -92,7 +94,7 @@ async fn a_wall_measures_length_faces_openings_volume_layers_and_mass() {
 #[semio_framework_async_macros::async_test]
 async fn the_wall_volume_agrees_with_the_mesh_of_its_solid() {
     let snapshot = with_openings();
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let solid = &inferred.element_solids["w"];
     assert!(near(inferred.quantities.elements["w"].net_volume, solid.volume, 1e-6), "quantity {} against mesh {}", inferred.quantities.elements["w"].net_volume, solid.volume);
     let rows = solid_rows(&snapshot, solid);
@@ -127,8 +129,8 @@ async fn curved_walls_use_the_arc_length_and_the_layer_areas_of_the_annulus() {
 #[semio_framework_async_macros::async_test]
 async fn a_slab_with_a_hole_and_a_slope() {
     let mut snapshot = base();
-    snapshot.slabs.insert("sl".into(), Slab { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    snapshot.slabs.insert("sl".into(), Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), slab_type: "slt".into(), boundary: vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 4.0), corner(0.0, 4.0)], holes: vec![vec![corner(1.0, 1.0), corner(2.0, 1.0), corner(2.0, 2.0), corner(1.0, 2.0)]], offset: 0.0, slope: Some(Slope { direction: 0.0, angle: 0.1 }), name: "Slab".into() });
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let slab = &inferred.quantities.elements["sl"];
     assert!(close(slab.gross_area, 24.0) && close(slab.net_area, 23.0) && close(slab.perimeter, 20.0 + 4.0) && close(slab.width, 0.25));
     assert!(close(slab.surface_area, 23.0 / 0.1f64.cos()) && close(slab.net_volume, 23.0 * 0.25) && close(slab.gross_volume, 24.0 * 0.25));
@@ -139,11 +141,11 @@ async fn a_slab_with_a_hole_and_a_slope() {
 #[semio_framework_async_macros::async_test]
 async fn columns_beams_stairs_railings_and_spaces() {
     let mut snapshot = single_wall();
-    snapshot.columns.insert("c".into(), Column { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
-    snapshot.beams.insert("b".into(), Beam { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), beam_type: "bt".into(), axis: crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 3.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: 0.0 } }, top_offset: 0.0, end_top_offset: None, name: "Beam".into() });
-    snapshot.stairs.insert("s".into(), Stair { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
-    snapshot.railings.insert("r".into(), Railing { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: crate::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: crate::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, host: None, name: "Railing".into() });
-    snapshot.spaces.insert("sp".into(), crate::standards::v1::subsets::any::schema::snapshot::Space { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+    snapshot.columns.insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.4, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.beams.insert("b".into(), Beam { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), beam_type: "bt".into(), axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 0.0, y: 3.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: 0.0 } }, top_offset: 0.0, end_top_offset: None, name: "Beam".into() });
+    snapshot.stairs.insert("s".into(), Stair { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), start: point(1.0, 2.0), direction: 0.0, width: 1.0, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: 0.1875, min_tread: 0.25, stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() });
+    snapshot.railings.insert("r".into(), Railing { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), path: vec![point(0.0, 0.0), point(3.0, 0.0), point(3.0, 4.0)], height: 1.0, post_spacing: 1.0, profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material: "m-concrete".into(), base_offset: 0.0, host: None, name: "Railing".into() });
+    snapshot.spaces.insert("sp".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), number: "1".into(), name: "Hall".into(), boundary: SpaceBoundary::Explicit { outline: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)] }, usage: "hall".into(), zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
     let found = quantities(&snapshot);
     let (column, beam, stair, railing, space) = (&found.elements["c"], &found.elements["b"], &found.elements["s"], &found.elements["r"], &found.elements["sp"]);
     assert!(close(column.length, 2.5) && close(column.gross_area, 0.09) && close(column.net_volume, 0.225) && close(column.mass, 0.225 * 2400.0) && close(column.perimeter, 1.2));
@@ -156,13 +158,13 @@ async fn columns_beams_stairs_railings_and_spaces() {
 }
 
 fn stair_tread(snapshot: &ModelSnapshot) -> f64 {
-    crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("infers").stair_runs["s"].tread
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("infers").stair_runs["s"].tread
 }
 
 #[semio_framework_async_macros::async_test]
 async fn totals_add_up_per_kind_type_material_storey_building_and_project() {
     let mut snapshot = with_openings();
-    snapshot.columns.insert("c".into(), Column { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
+    snapshot.columns.insert("c".into(), Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(1.0, 1.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: "Column".into() });
     snapshot.walls.insert("w-up".into(), Wall { storey: "st-1".into(), ..wall(line((0.0, 0.0), (2.0, 0.0))) });
     let found = quantities(&snapshot);
     let walls: Vec<&ElementQuantity> = found.elements.values().filter(|element| element.kind == QuantityKind::Wall).collect();
@@ -208,13 +210,13 @@ async fn the_default_and_determinism_laws_hold() {
     assert_eq!(quantities(&ModelSnapshot::default()), ModelQuantities::default());
     let snapshot = with_openings();
     assert_eq!(quantities(&snapshot), quantities(&snapshot));
-    assert_eq!(quantities(&snapshot), compute_quantities(&snapshot, &crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers")));
+    assert_eq!(quantities(&snapshot), compute_quantities(&snapshot, &semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers")));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn group_volumes_split_a_solid_by_material() {
     let snapshot = single_wall();
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let solid = &inferred.element_solids["w"];
     let volumes = group_volumes(solid);
     assert!(close(volumes.iter().sum::<f64>(), solid.volume) && volumes.len() == 2);
@@ -228,15 +230,15 @@ static BUILDING_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
     let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*BUILDING), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*BUILDING_TABLE), &table_json(&snapshot, &inferred.quantities));
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let problems = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*BUILDING_TABLE), &table_json(&snapshot, &inferred.quantities));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn openings_stairs_curtain_walls_and_roofs_agree_with_their_solids() {
     let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*BUILDING), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     for (id, element) in &inferred.quantities.elements {
         if let Some(solid) = inferred.element_solids.get(id) {
             if matches!(element.kind, QuantityKind::Wall) {
@@ -264,7 +266,7 @@ async fn two_overlapping_windows_are_cut_by_neither_and_subtracted_by_neither() 
     let mut snapshot = with_openings();
     snapshot.openings.get_mut("o-door").expect("opening").kind = OpeningKind::Window { window_type: "win".into() };
     snapshot.openings.get_mut("o-door").expect("opening").offset = 2.0;
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert!(inferred.opening_frames.values().all(|frame| !frame.valid), "both overlap each other");
     assert!(close(inferred.quantities.elements["w"].opening_area, 0.0));
     assert!(close(inferred.element_solids["w"].volume, inferred.quantities.elements["w"].net_volume), "the solid and the take-off agree: no hole");
@@ -272,7 +274,7 @@ async fn two_overlapping_windows_are_cut_by_neither_and_subtracted_by_neither() 
 
 #[semio_framework_async_macros::async_test]
 async fn the_take_off_subtracts_exactly_the_holes_the_solid_cuts() {
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&with_openings()).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&with_openings()).expect("infers");
     let wall = &inferred.quantities.elements["w"];
     let cut = inferred.element_solids["w"].volume;
     assert!(close(cut, wall.net_volume), "solid volume {cut} against net volume {}", wall.net_volume);
@@ -282,21 +284,24 @@ async fn the_take_off_subtracts_exactly_the_holes_the_solid_cuts() {
 async fn a_window_flush_with_the_wall_end_is_reported_and_not_cut() {
     let mut snapshot = single_wall();
     snapshot.openings.insert("o-win".into(), Opening { host: "w".into(), kind: OpeningKind::Window { window_type: "win".into() }, offset: 0.6, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() });
-    let flush = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
-    assert_eq!(flush.opening_frames["o-win"].issues, vec![crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::OutsideTrimmedExtent]);
+    let flush = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    assert_eq!(flush.opening_frames["o-win"].issues, vec![semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue::OutsideTrimmedExtent]);
     assert!(close(flush.quantities.elements["w"].opening_area, 0.0) && close(flush.element_solids["w"].volume, flush.quantities.elements["w"].gross_volume));
-    assert!(flush.diagnostics.iter().any(|row| row.code == crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::OpeningOutsideTrimmed));
+    assert!(flush.diagnostics.iter().any(|row| row.code == semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode::OpeningOutsideTrimmed));
     snapshot.openings.get_mut("o-win").expect("opening").offset = 0.7;
-    let clear = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let clear = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert!(clear.opening_frames["o-win"].valid && close(clear.quantities.elements["w"].opening_area, 1.2));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_density_edit_recomputes_only_the_quantities_that_use_the_material_and_a_height_edit_follows() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     let mut snapshot = with_openings();
-    snapshot.columns.insert("c".into(), crate::standards::v1::subsets::any::schema::snapshot::Column { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(8.0, 8.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: String::new() });
+    snapshot.columns.insert("c".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-0".into(), column_type: "ct".into(), position: point(8.0, 8.0), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, name: String::new() });
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).quantities.clone();
     let wool = ModelDiff::materials("m-wool", Entry::Patched(MaterialPatch { density: Some(80.0), ..Default::default() }));
@@ -311,11 +316,11 @@ async fn a_density_edit_recomputes_only_the_quantities_that_use_the_material_and
     assert!(close(third.elements["w"].height, 3.0) && close(third.elements["c"].height, 3.0), "the take-off follows the storey height");
 }
 
-fn ramp(path: Vec<Vertex>, top: TopConstraint) -> crate::standards::v1::subsets::any::schema::snapshot::Ramp {
-    crate::standards::v1::subsets::any::schema::snapshot::Ramp { storey: "st-0".into(), path, width: 1.2, landing_start: 1.5, landing_end: 1.5, landing_turn: 1.5, max_slope: 1.0 / 12.0, thickness: 0.2, material: "m-concrete".into(), base_offset: 0.0, top, railing_left: false, railing_right: false, name: "Ramp".into() }
+fn ramp(path: Vec<Vertex>, top: TopConstraint) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp {
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp { storey: "st-0".into(), path, width: 1.2, landing_start: 1.5, landing_end: 1.5, landing_turn: 1.5, max_slope: 1.0 / 12.0, thickness: 0.2, material: "m-concrete".into(), base_offset: 0.0, top, railing_left: false, railing_right: false, name: "Ramp".into() }
 }
 
-fn with_ramp(ramp: crate::standards::v1::subsets::any::schema::snapshot::Ramp) -> ModelSnapshot {
+fn with_ramp(ramp: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp) -> ModelSnapshot {
     let mut snapshot = base();
     snapshot.ramps.insert("rp".into(), ramp);
     snapshot
@@ -338,7 +343,7 @@ async fn a_ramp_measures_its_path_strip_rise_slab_walking_surface_and_mass() {
 #[semio_framework_async_macros::async_test]
 async fn the_side_railings_of_a_ramp_do_not_count_as_slab() {
     let bare = quantities(&with_ramp(ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 })));
-    let railed = quantities(&with_ramp(crate::standards::v1::subsets::any::schema::snapshot::Ramp { railing_left: true, railing_right: true, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
+    let railed = quantities(&with_ramp(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp { railing_left: true, railing_right: true, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
     assert!(close(railed.elements["rp"].net_volume, bare.elements["rp"].net_volume) && close(railed.elements["rp"].mass, bare.elements["rp"].mass));
 }
 
@@ -346,7 +351,7 @@ async fn the_side_railings_of_a_ramp_do_not_count_as_slab() {
 async fn a_bent_ramp_measures_the_mitred_strip_and_a_descending_ramp_a_negative_rise() {
     let bent = quantities(&with_ramp(ramp(vec![corner(0.0, 0.0), corner(6.0, 0.0), corner(6.0, 5.0)], TopConstraint::Unconnected { height: 0.6 })));
     assert!(close(bent.elements["rp"].length, 11.0) && close(bent.elements["rp"].gross_area, 13.2) && close(bent.elements["rp"].net_volume, 2.64));
-    let down = quantities(&with_ramp(crate::standards::v1::subsets::any::schema::snapshot::Ramp { base_offset: 0.5, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: -0.5 }) }));
+    let down = quantities(&with_ramp(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp { base_offset: 0.5, ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: -0.5 }) }));
     assert!(close(down.elements["rp"].height, -0.5) && close(down.elements["rp"].net_volume, 2.4));
 }
 
@@ -367,6 +372,6 @@ async fn ramps_join_the_totals_and_follow_the_storey_they_climb_to() {
 async fn a_ramp_without_a_path_or_on_a_missing_storey_has_no_volume_or_no_row() {
     let found = quantities(&with_ramp(ramp(vec![corner(1.0, 1.0), corner(1.0, 1.0)], TopConstraint::Unconnected { height: 0.3 })));
     assert!(close(found.elements["rp"].net_volume, 0.0) && close(found.elements["rp"].length, 0.0) && close(found.elements["rp"].gross_area, 0.0));
-    let lost = quantities(&with_ramp(crate::standards::v1::subsets::any::schema::snapshot::Ramp { storey: "st-nowhere".into(), ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
+    let lost = quantities(&with_ramp(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp { storey: "st-nowhere".into(), ..ramp(vec![corner(0.0, 0.0), corner(10.0, 0.0)], TopConstraint::Unconnected { height: 0.5 }) }));
     assert!(!lost.elements.contains_key("rp"));
 }

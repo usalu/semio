@@ -1,6 +1,7 @@
 //! 🪜️ `create-storey` payload. Brings a new storey into a building; its level index is unique within the building.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Storey}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Storey};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateStorey {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateStorey
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateStorey> + From<crate::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateStorey> + From<semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "storey", kind: "create-storey", record: "CreateStorey" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

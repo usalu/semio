@@ -15,12 +15,7 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules;
-                    }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
+                    
                     #[path = "."]
                     pub mod mutations {
                         #[path = "../../🦀️.rs"]

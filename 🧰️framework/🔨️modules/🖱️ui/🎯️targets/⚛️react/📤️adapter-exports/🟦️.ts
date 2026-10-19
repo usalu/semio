@@ -87,11 +87,12 @@ export { menuListItemClassName };
 export { shellFloorPaints, shellFloorFillClass };
 export { chromeControlItemBaseClass, chromeControlItemClass, chromeControlTabItemClass, modeDockTabClassName, windowPaneChromeToggleClass, chromeControlGroupShellClass, chromeControlGroupClass, chromeControlItemOnClass, chromeControlTabActiveClass };
 
-export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework";
+export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+export { canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts";
 export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "../../../🔨️modules/🆔️element-identity/🟦️.ts";
-export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
+export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 export type { DockSkeleton, DockTabSkeleton } from "../../../🔨️modules/🐳️dock-skeleton/🟦️.ts";
-export type { IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
+export type { IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 setThemedIconCatalog({ has: isMetabolismIconName, svg: resolveMetabolismIconSvgFromTheme });
 export {
   setThemedIconCatalog,

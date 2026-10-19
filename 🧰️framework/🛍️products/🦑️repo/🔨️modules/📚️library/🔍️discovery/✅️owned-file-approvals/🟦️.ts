@@ -1,6 +1,6 @@
 import { parseGeneratorPreviewLiteralCommandV1 } from "../../🏭️generator/👁️preview/🔤️arguments/🟦️.ts";
-import { reservedDocumentationBasename } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
-import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { reservedDocumentationBasename } from "@semio-tech/framework/identity/path";
+import { ephemeralMap } from "@semio-tech/framework/transient";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync, readSync } from "node:fs";

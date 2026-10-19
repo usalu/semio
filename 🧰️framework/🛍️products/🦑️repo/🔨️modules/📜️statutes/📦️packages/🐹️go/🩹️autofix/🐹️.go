@@ -13,17 +13,17 @@ import (
 
 // 🔧️runFormatterAfterAutofix holds the data fields for a runFormatterAfterAutofix record.
 func RunFormatterAfterAutofix(relPath string, language languages.LanguagePlugin) error {
-	absPath := filepath.Join(workspace.RootDir, relPath)
+	absPath := filepath.Join(workspace.GetRootDir(), relPath)
 	langName := ""
 	if language != nil {
 		langName = language.Name()
 	}
 	plans := workspace.FormatterPlansForLanguage(langName, relPath)
 	for _, plan := range plans {
-		if !workspace.IsFormatterPlanAvailable(plan, workspace.RootDir) {
+		if !workspace.IsFormatterPlanAvailable(plan, workspace.GetRootDir()) {
 			continue
 		}
-		if err := workspace.FormatterCommandRun(plan.Binary, plan.Args, workspace.RootDir); err == nil {
+		if err := workspace.FormatterCommandRun(plan.Binary, plan.Args, workspace.GetRootDir()); err == nil {
 			return nil
 		}
 	}
@@ -48,10 +48,10 @@ func RunFormatterForFile(relPath string) {
 	}
 	plans := workspace.FormatterPlansForLanguage(langName, relPath)
 	for _, plan := range plans {
-		if !workspace.IsFormatterPlanAvailable(plan, workspace.RootDir) {
+		if !workspace.IsFormatterPlanAvailable(plan, workspace.GetRootDir()) {
 			continue
 		}
-		if err := workspace.FormatterCommandRun(plan.Binary, plan.Args, workspace.RootDir); err == nil {
+		if err := workspace.FormatterCommandRun(plan.Binary, plan.Args, workspace.GetRootDir()); err == nil {
 			return
 		}
 	}

@@ -81,7 +81,7 @@ export async function registerGisPeerRebootstrapTests(vitest: Vitest, dependenci
       const welcome = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
       if (!("Welcome" in welcome) || typeof welcome.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in welcome.Welcome.bootstrap)) throw new Error("peer bootstrap fixture");
       const bootstrap = welcome.Welcome.bootstrap.ArtifactBootstrap;
-      const { UiDocumentStore } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
+      const { UiDocumentStore } = await import("@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore");
       const priorPost = testSeams.workerPostTestSink;
       const results: { clientInstanceId: string; pack: number[]; spr: number[]; frontier: WireFrontierSummary; node: unknown; closeCount: number }[] = [];
       try {

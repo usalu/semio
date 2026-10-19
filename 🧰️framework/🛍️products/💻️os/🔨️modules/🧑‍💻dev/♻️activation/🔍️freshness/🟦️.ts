@@ -1,27 +1,27 @@
-import {runtimeCatalogBuildInventoryV1} from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
 
 /** 🧩️ Semantic activation freshness owner. */
 
-import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "../../../🔌️plugin/🏗️build/🔍️freshness/🟦️.ts";
+import { resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, writeStagedSourceContentHash } from "@semio-tech/framework-plugin/build/freshness";
 import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, activationSourceFreshnessKey, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, builtPluginModulesRootIn, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "@semio-tech/plugin-registry/catalog-view";
 
-import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery";
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "@semio-tech/plugin-registry/deployment";
 
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
-import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { resolveCatalogFilterPluginId } from "@semio-tech/framework-plugin/build/plan";
 
 
 

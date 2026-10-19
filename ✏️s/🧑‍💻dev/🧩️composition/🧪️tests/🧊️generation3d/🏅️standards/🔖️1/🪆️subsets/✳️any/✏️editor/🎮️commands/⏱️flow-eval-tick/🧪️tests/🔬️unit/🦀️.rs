@@ -200,6 +200,6 @@ async fn a_second_refresh_starts_no_second_run() {
     assert_eq!(receipt.run_actions.iter().filter(|action| *action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID).count(), 1, "one run start in the whole drive: {receipt:?}");
     assert_eq!(receipt.state.as_deref(), Some("finalized"));
     println!("[STATS] run start: first={first:?} hops={} answered={} refreshes={owed_per_refresh:?}", receipt.hops, receipt.answered);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔒️RunStart

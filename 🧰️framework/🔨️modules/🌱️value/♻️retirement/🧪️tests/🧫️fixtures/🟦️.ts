@@ -4,7 +4,7 @@
  * @see ./📏️copy-demand/🔣️.json
  * @see ./⚖️physical-work/🔣️.json */
 import { readFileSync } from "node:fs";
-import { fixtureUrl } from "../../../../🧪️test/📖️source-text/🟦️.ts";
+import { fixtureUrl } from "@semio-tech/framework/test/source-text";
 
 export type RetirementCopyKind = "u32" | "text" | "u32-list";
 

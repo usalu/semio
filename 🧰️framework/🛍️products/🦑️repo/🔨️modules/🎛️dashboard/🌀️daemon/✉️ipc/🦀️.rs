@@ -441,7 +441,7 @@ pub fn log_dir(root: &Path) -> PathBuf { daemon_dir(root).join("logs") }
 /// #️⃣ The hash every persistent name of the dashboard derives from: XXH3 with the default secret, which is the
 /// same value on every platform, toolchain and run, unlike the standard library's randomised hasher.
 ///
-/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️core/🦀️.rs
+/// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️invocation-catalog/🦀️.rs
 pub fn stable_hash(bytes: &[u8]) -> u64 {
     dashboard_core::xxh3_64(bytes)
 }
@@ -465,7 +465,7 @@ pub fn workspace_key_of(root: &Path, instance: Option<&str>) -> String {
 pub fn runtime_dir() -> PathBuf {
     match std::env::var_os("SEMIO_DASHBOARD_RUNTIME_DIR").filter(|value| !value.is_empty()) {
         Some(directory) => PathBuf::from(directory),
-        None => PathBuf::from("/tmp").join(format!("semio-dashboard-{}", ui_tui::tui::pty::user_id())),
+        None => PathBuf::from("/tmp").join(format!("semio-dashboard-{}", semio_framework_ui_tui_terminal::pty::user_id())),
     }
 }
 

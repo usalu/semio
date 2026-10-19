@@ -8,7 +8,8 @@ use super::{Data, DeriveInput, Fields, MutationAggregateSourceAuthority, Path, T
 /// attrs for `#[derive(Mutations)]` — see that macro's doc. `retire_cold` names a `fn(Self)` that
 /// disposes an operation owning fail-closed roots; the generated `Mutation::retire_cold` calls it.
 #[derive(Default)]
-struct MutationsAttrs {
+#[doc(hidden)]
+pub struct MutationsAttrs {
     pub(super) snapshot: Option<Type>,
     pub(super) diff: Option<Type>,
     pub(super) schema: Option<String>,

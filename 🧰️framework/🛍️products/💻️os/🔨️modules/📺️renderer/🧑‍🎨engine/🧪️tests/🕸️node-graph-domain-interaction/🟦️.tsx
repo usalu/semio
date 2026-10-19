@@ -8,7 +8,7 @@ import {
   nodeGraphHoverActionArgs,
   nodeGraphSelectionActionArgs,
   nodeGraphSurfaceSelectionDomV1,
-} from "../../🧱️elements/🕸️NodeGraph/🟦️.tsx";
+} from "@semio-tech/framework-os-node-graph-rs/index";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

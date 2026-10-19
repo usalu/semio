@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::authored::storeys::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Storey;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::{elevation, stacking};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey;
 
 fn storey(level: i32, height: f64) -> Storey {
     Storey { building: "b".into(), name: format!("level {level}"), level, height, cut_height: None }

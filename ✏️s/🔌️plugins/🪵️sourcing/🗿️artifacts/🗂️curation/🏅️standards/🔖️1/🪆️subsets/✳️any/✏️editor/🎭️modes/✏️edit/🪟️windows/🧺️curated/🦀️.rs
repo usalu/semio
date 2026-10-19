@@ -2,7 +2,7 @@
 
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
-use crate::editor::sourcing::base::{sourcing_table, sourcing_table_action, sourcing_table_row};
+use crate::editor::sourcing::editor_vocabulary::{sourcing_table, sourcing_table_action, sourcing_table_row};
 use crate::{CuratedItem, CurationSnapshot, ObjectKind, SortDirection};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

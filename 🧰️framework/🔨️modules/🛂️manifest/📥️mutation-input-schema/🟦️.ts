@@ -1,6 +1,6 @@
 /** 📥️ The mutation input schema: the resolver and error types, the input vocabulary sets, the localized text, glossary, shape and numeric transport helpers, the definitions, audit and instance entry points and the reader that turns one input schema into action argument definitions. */
 import { SHELL_LOCALES, isShellLocale, SHELL_TERMINOLOGIES, isShellTerminology, type ShellLocale, type ShellTerminology, type LocalizedLabel } from "../🤖️generated/🎚️ui-axes/🟦️.ts";
-import inputLabelGlossaryDocument from "../🔣️input-labels.json";
+import inputLabelGlossaryDocument from "../🔣️input-labels.json" with { type: "json" };
 import { valueSchema as numericTransportSchemaDocument } from "@semio-tech/value-ts/schema";
 import type { ActionArgDef, ActionArgOption, ArgPresentation, ArgSchema, NumberScale, OptionSource, ReferenceIdType, SnapSource } from "../🎬️action-types-and-semantics/🟦️.ts";
 
@@ -16,12 +16,14 @@ export type InputSchemaErrorCode = "malformed" | "refUnresolved" | "uiInvalid" |
 
 /** 🚫️ Why a mutation payload schema yields no input descriptors: `code` and the RFC 6901 `pointer` of the input in the payload. */
 export class InputSchemaError extends Error {
+  readonly code: InputSchemaErrorCode;
+  readonly pointer: string;
   constructor(
-    readonly code: InputSchemaErrorCode,
-    readonly pointer: string,
+    code: InputSchemaErrorCode,
+    pointer: string,
     detail: string,
   ) {
-    super(`${code} at ${JSON.stringify(pointer)}: ${detail}`);
+    super(`${code} at ${JSON.stringify(pointer)}: ${detail}`); this.code = code; this.pointer = pointer;
   }
 }
 

@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type SubsetTarget, type PlatformId } from "@semio-tech/framework/test/adapter";
+import { type SubsetTarget } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
@@ -15,16 +15,6 @@ import { rawTaxonomy } from "../📐️schema-contracts/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🪆️Subset
-/** 🖥️ A supported execution platform, the last coordinate of every coverage row. */
-
-
-/** 🖥️ This process's platform coordinate. Never inferred from a hostname or a CI variable. */
-export function currentPlatform(): PlatformId {
-  const os = process.platform === "win32" ? "win32" : process.platform === "darwin" ? "darwin" : "linux";
-  const arch = process.arch === "arm64" ? "arm64" : "x64";
-  return `${os}-${arch}` as PlatformId;
-}
-
 /**
  * 🪆️ The SMALLEST semantic subset one mutation owns, plus the selector addressing the entity inside
  * it. There is deliberately no wildcard: an operation that spans subsets declares an explicit typed

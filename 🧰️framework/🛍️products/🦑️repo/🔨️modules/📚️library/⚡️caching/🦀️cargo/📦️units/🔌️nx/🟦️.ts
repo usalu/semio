@@ -1,8 +1,8 @@
 /** 🔌️ Nx: module exporting `rustUnitNxProjectV1`, `rustUnitNxProjectsV1`, `rustUnitDigestEnvironmentV1`. */
 import{createHash}from"node:crypto";
 import{dirname}from"node:path";
-import{planRustUnitsV1,type RustUnitPlanV1}from"../🟦️.ts";
-import{requireRustUnitPlanV1}from"../📋️plan/🟦️.ts";
+import{ planRustUnitsV1 }from"../🟦️.ts";
+import{ requireRustUnitPlanV1, type RustUnitPlanV1 }from"../📋️plan/🟦️.ts";
 import{isRustUnitPathV1}from"../🧬️definition/🟦️.ts";
 const refuse=():never=>{throw Error("Complete closed Rust Nx projection required");};
 

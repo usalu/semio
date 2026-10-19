@@ -116,8 +116,11 @@ async fn gis_map_document_vcs_replays_operations() {
     assert_eq!(store.snapshot().expect("snapshot").positions.len(), 1);
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
+    let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..100_000 {
-        if matches!(disposer.close_step(&mut store, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS document store close step"), semio_framework_plugin::PluginCloseStep::Complete) {
+        let demand = disposer.retirement_demands(&store, page).expect("GIS document store quotes its close turn");
+        let close = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes.max(page), maximum_depth: demand.depth.max(1) };
+        if matches!(disposer.close_step(&mut store, close).expect("GIS document store close step"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
     }

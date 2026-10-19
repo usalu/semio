@@ -1,8 +1,11 @@
 //! 🔺️ Diff constructor for `FlipWall`: a one-field wall patch writing the reversed axis. A wall whose axis is its own reverse is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
 use crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &FlipWall, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

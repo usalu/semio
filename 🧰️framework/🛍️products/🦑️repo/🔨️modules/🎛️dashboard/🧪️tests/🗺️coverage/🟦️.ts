@@ -11,7 +11,7 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
+import { buildGraphPathV1 } from "@semio-tech/repo-lib/build";
 import { dashboard, pool, repository, semio, type Run } from "../🧭️journeys/🧰️support/🟦️.ts";
 import { Oracle, compare, runArguments, type Json, type Launch, type Selection } from "./🔮️oracle/🟦️.ts";
 

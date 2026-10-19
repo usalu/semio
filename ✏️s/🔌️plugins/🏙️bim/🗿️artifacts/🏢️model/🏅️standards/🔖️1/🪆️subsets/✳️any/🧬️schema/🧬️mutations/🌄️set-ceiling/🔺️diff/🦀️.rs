@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `SetCeiling`: a sparse ceiling patch of exactly the provided fields that differ. A new ceiling type must exist, the
 //! drop is finite and a slope (set or cleared) stays within [0, 89 degrees); providing only equal values, or no field, is a no-op.
 
-use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
 use crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCeiling, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

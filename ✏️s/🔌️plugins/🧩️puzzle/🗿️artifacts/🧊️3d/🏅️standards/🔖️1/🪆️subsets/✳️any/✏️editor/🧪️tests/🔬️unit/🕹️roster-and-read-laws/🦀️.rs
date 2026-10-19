@@ -59,7 +59,8 @@ async fn read_local_interaction_while_rendering(app: &mut Puzzle3dApp, request_i
             drop(render_composite(app).await);
         }
         app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("the live-cleanup clock keeps ticking during a read");
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one local interaction publication unit");
+        let (raw, cx) = app.parts();
+        raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one local interaction publication unit");
         let mut frames = Vec::new();
         app.publish_local_interaction_query_reply(&mut frames, LOCAL_INTERACTION_READ_FRAMES);
         for frame in &frames {
@@ -150,7 +151,8 @@ async fn local_interaction_query_return_does_not_fault_the_next_maintenance_step
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
     read_local_interaction(&mut app, 1).await;
-    semio_s_plugin_puzzle_jobs::testing::maintain(&mut *app, 4096).expect("maintenance step after a returned snapshot read lease must not fault");
+    let (raw, cx) = app.parts();
+    semio_s_plugin_puzzle_jobs::testing::maintain(raw, 4096, cx).expect("maintenance step after a returned snapshot read lease must not fault");
 }
 //#endregion 🕹️LocalInteractionRead
 
@@ -178,7 +180,8 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
         let mut app = app().await;
         let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
         let action_meta = app.meta("local");
-        app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("setActiveExample mints its retained whole-document operation");
+        let (raw, cx) = app.parts();
+        raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("setActiveExample mints its retained whole-document operation");
         for _ in 0..MAINTENANCE_BUDGET_TURNS {
             if !app.has_pending_typed_operations() {
                 break;
@@ -198,7 +201,8 @@ async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
 /// runtime drives, minus any assertion on the operation's own outcome lane.
 async fn measured_host_turn(app: &mut Puzzle3dApp) {
     app.measure_maintenance_step(1, RUNTIME_LIVE_CLEANUP_BYTES_PER_STEP).expect("a live-cleanup maintenance unit never faults");
-    app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("advance one typed operation publication unit");
+    let (raw, cx) = app.parts();
+    raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
     if let Some(page) = app.take_typed_operation_result_page(instance_id) {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");

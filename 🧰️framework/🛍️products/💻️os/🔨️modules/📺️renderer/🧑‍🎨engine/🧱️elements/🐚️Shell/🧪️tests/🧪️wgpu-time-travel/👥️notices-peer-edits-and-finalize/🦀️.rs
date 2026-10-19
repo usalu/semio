@@ -142,7 +142,7 @@ fn the_roster_badges_and_announces_an_editing_peer_and_notes_its_rows() {
     shell.prefs.locale_id = "de".into();
     let rows = PanelsViewCtx::of(&mut shell).footer_presence_rows();
     assert_eq!(rows.iter().map(|row| (row.actor.as_str(), row.activity.as_ref().map(|activity| activity.badge.as_str()))).collect::<Vec<_>>(), [("actor-ada", Some("⏪")), ("actor-cy", None), ("actor-bo", Some("⏪"))]);
-    assert_eq!(ui_wgpu::wgpu::presence_bar_chip_text(&rows, None, Locale::De), "Ada ⏪ · Cy · Bo ⏪");
+    assert_eq!(semio_framework_ui_wgpu_light::presence_bar::presence_bar_chip_text(&rows, None, Locale::De), "Ada ⏪ · Cy · Bo ⏪");
     let announced = PanelsViewCtx::of(&mut shell).footer_status_chips().into_iter().find(|(key, _)| *key == "s-presence-peers").expect("the roster is announced").1;
     assert_eq!(announced, "Ada (Ada bearbeitet Skalieren im Verlauf) · Cy · Bo (Bo bearbeitet Drehen im Verlauf)");
     let expected: Vec<(String, String)> = case["expect"]["de"]["notes"].as_array().expect("notes").iter().map(|note| (note["key"].as_str().expect("key").into(), note["text"].as_str().expect("text").into())).collect();
@@ -165,7 +165,7 @@ fn open_finalize_prompt(shell: &mut ShellState, name: &str) {
     assert!(shell.chrome.chrome_build.dialog_open(), "the prompt opened from the session's dialogs");
 }
 
-fn key(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action: ui_wgpu::wgpu::KeyAction) {
+fn key(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>, action: semio_framework_ui_wgpu_input::KeyAction) {
     semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &PointerModifiers::default(), input)).expect("the key routes");
 }
 
@@ -183,8 +183,8 @@ fn the_finalize_prompt_is_operated_by_keyboard_alone() {
 
     open_finalize_prompt(&mut shell, "Edited history");
     assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(|request| request.fields[0].draft.clone()), Some("Edited history".to_string()), "the runtime's default name seeds the field");
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Char("!".into()));
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Char("!".into()));
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Enter);
     assert!(!shell.chrome.chrome_build.dialog_open());
     let submit = shell.settle.deferred_actions.pop().expect("the submit dispatched");
     assert_eq!((submit.controller_id.as_str(), submit.action.as_str()), ("test", "historyEditCommit"));
@@ -192,18 +192,18 @@ fn the_finalize_prompt_is_operated_by_keyboard_alone() {
 
     open_finalize_prompt(&mut shell, "Edited history");
     for _ in 0.."Edited history".len() {
-        key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Backspace);
+        key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Backspace);
     }
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Enter);
     assert!(shell.chrome.chrome_build.dialog_open(), "a cleared name gates the new alternative");
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Tab);
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Tab);
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Enter);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Tab);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Tab);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Enter);
     let overwrite = shell.settle.deferred_actions.pop().expect("the overwrite choice dispatched without a name");
     assert_eq!(serde_json::to_value(overwrite.args.expect("args")).expect("wire"), serde_json::json!({ "generation": choosing.generation, "choice": "overwrite" }));
 
     open_finalize_prompt(&mut shell, "Edited history");
-    key(&mut shell, &mut input, ui_wgpu::wgpu::KeyAction::Escape);
+    key(&mut shell, &mut input, semio_framework_ui_wgpu_input::KeyAction::Escape);
     assert!(!shell.chrome.chrome_build.dialog_open());
     let back = shell.settle.deferred_actions.pop().expect("Escape answered");
     assert_eq!((back.action.as_str(), back.args), ("historyEditBack", None), "Escape goes back to reviewing — it never discards");

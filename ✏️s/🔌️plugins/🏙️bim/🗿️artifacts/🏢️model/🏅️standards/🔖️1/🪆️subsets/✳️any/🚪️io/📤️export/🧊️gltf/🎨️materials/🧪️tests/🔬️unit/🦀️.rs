@@ -1,16 +1,16 @@
-use crate::render::world::family_color;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
-use crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory;
+use semio_s_artifact_bim_model_tests_5::render::world::family_color;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gltf::document::GltfMaterial;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfMaterial;
 #[allow(unused_imports)]
-use crate::render::world::group_color;
+use semio_s_artifact_bim_model_tests_5::render::world::group_color;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::gltf::materials::*;
-use crate::standards::v1::subsets::any::io::export::gltf::testkit::house;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::gltf::materials::{key_of, MaterialKey, Palette};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::house;
 
 fn group(part: &str, material: &str) -> SolidGroup {
     SolidGroup { part: part.into(), material: material.into(), layer: 0 }
@@ -31,7 +31,7 @@ fn the_palette_numbers_materials_in_order_of_first_use_and_reuses_them() {
     let model = house();
     let known = model.materials.keys().next().expect("a material").clone();
     let mut palette = Palette::default();
-    let glass = palette.index_of(&model, SolidFamily::Window, &group(parts::GLASS, ""));
+    let glass = palette.index_of(&model, SolidFamily::Window, &group(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS, ""));
     let wall = palette.index_of(&model, SolidFamily::Wall, &group("layer", &known));
     assert_eq!((glass, wall), (0, 1));
     assert_eq!(palette.index_of(&model, SolidFamily::Door, &group(parts::GLASS, "")), 0);
@@ -51,7 +51,7 @@ fn model_materials_take_their_colour_and_glazing_is_translucent() {
         assert_eq!(defined.blend, material.category == MaterialCategory::Glass);
         assert_eq!(defined.metallic, if material.category == MaterialCategory::Metal { 1.0 } else { 0.0 });
     }
-    let index = palette.index_of(&model, SolidFamily::Window, &group(parts::GLASS, ""));
+    let index = palette.index_of(&model, SolidFamily::Window, &group(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS, ""));
     let glazing = &palette.materials[index];
     assert!(glazing.blend && glazing.color[3] < 1.0 && glazing.roughness < 0.2);
 }

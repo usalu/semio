@@ -13,35 +13,6 @@ import (
 	model "github.com/usalu/semio/repo/model"
 )
 
-func findTestRepoRoot(start string) string {
-	for _, candidate := range []string{start, func() string {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			return ""
-		}
-		return filepath.Dir(file)
-	}()} {
-		dir := candidate
-		if dir == "" {
-			continue
-		}
-		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
-				return dir
-			}
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-				return dir
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return start
-}
-
 func TestHookEventKind(t *testing.T) {
 	cases := []struct {
 		name   string
@@ -93,9 +64,22 @@ func shellCommand(t *testing.T, scriptPath string) *exec.Cmd {
 	return exec.Command(shell, filepath.ToSlash(scriptPath))
 }
 
+const stubMicroCommitHook = `#!/usr/bin/env sh
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+GK_TEMPLATE="$GIT_DIR/gkcommittemplate.txt"
+: >"$GK_TEMPLATE"
+git config --local commit.template "$GK_TEMPLATE"
+for msg in COMMIT_EDITMSG MERGE_MSG SQUASH_MSG; do
+  if [ -f "$GIT_DIR/$msg" ]; then
+    : >"$GIT_DIR/$msg"
+  fi
+done
+exit 0
+`
+
+// 🪝️TestMicroCommitPostCommitHookResetsTemplates proves the installer puts executable hook sources into the git hooks dir and git runs the installed hook. The checked-in hook sources are held by the checked-in asset contracts law.
 func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 	repoRoot := t.TempDir()
-	sourceRepoRoot := findTestRepoRoot(".")
 	initGit := exec.Command("git", "init")
 	initGit.Dir = repoRoot
 	if out, err := initGit.CombinedOutput(); err != nil {
@@ -111,12 +95,7 @@ func TestMicroCommitPostCommitHookResetsTemplates(t *testing.T) {
 		t.Fatalf("mkdir repo hooks: %v", err)
 	}
 	for _, hookName := range []string{"prepare-commit-msg", "post-commit", "post-checkout", "post-merge", "post-rewrite"} {
-		hookSrc := filepath.Join(sourceRepoRoot, "🧰️framework", "🛍️products", "🦑️repo", "🪝️hooks", hookName)
-		data, err := os.ReadFile(hookSrc)
-		if err != nil {
-			t.Fatalf("read hook source %s: %v", hookName, err)
-		}
-		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), data, 0o755); err != nil {
+		if err := os.WriteFile(filepath.Join(hookSourcesDir, hookName), []byte(stubMicroCommitHook), 0o755); err != nil {
 			t.Fatalf("write hook source %s: %v", hookName, err)
 		}
 	}

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/inference-provider-inputs-corpus/v1",
+  "title": "Build inference provider input corpus",
+  "description": "A language-agnostic scenario: a workspace of files, a provider designation, command entries that load providers or not, and the input relations every implementation must reproduce: designated modules and their import closures are inputs of exactly the entries that load providers, and editing one changes the input hash of exactly those entries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "designation", "files", "cases", "edits"],
+  "properties": {
+    "version": { "const": 1 },
+    "designation": { "$ref": "#/definitions/Designation" },
+    "files": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "directory", "loadsProviders", "includes", "excludes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "directory": { "type": "string", "minLength": 1 },
+          "loadsProviders": { "type": "boolean" },
+          "includes": { "type": "array", "items": { "type": "string" } },
+          "excludes": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "edits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "file", "changes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "file": { "type": "string", "minLength": 1 },
+          "content": { "type": "string" },
+          "designation": { "$ref": "#/definitions/Designation" },
+          "changes": { "type": "array", "items": { "type": "string" } },
+          "gains": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Designation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "providers"],
+      "properties": {
+        "version": { "const": 1 },
+        "providers": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "string" } }
+      }
+    }
+  }
+}

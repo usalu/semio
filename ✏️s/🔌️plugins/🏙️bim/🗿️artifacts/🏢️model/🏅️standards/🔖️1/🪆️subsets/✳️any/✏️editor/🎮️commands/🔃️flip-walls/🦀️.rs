@@ -1,9 +1,10 @@
 //! 🔃️ `flipWalls`: reverses the direction of the given walls, or of the selected walls, through one `flip-wall` mutation each, in one gesture and so one history row. Anything that
 //! is not a wall is skipped; with no wall among the targets the command is refused instead of doing nothing silently.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -24,7 +25,7 @@ pub fn handle(payload: &FlipWalls, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: 
     if walls.is_empty() {
         return Err(fault("bim.flip.wall-missing", "no wall to flip among the targets"));
     }
-    Ok(Emit::mutations(walls.into_iter().map(|id| ModelMutation::FlipWall(crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall { id: id.clone() })).collect()))
+    Ok(Emit::mutations(walls.into_iter().map(|id| ModelMutation::FlipWall(semio_s_artifact_bim_model_mut_any_162::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall { id: id.clone() })).collect()))
 }
 
 

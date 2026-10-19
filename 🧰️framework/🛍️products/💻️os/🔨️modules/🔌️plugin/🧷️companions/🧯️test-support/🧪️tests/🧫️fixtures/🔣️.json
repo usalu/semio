@@ -182,5 +182,44 @@
       },
       "error": "Rust module tree mount missing"
     }
+  ],
+  "families": [
+    {
+      "id": "path-order-interleaves-folders-and-files-by-utf16-name",
+      "directory": "family",
+      "files": {
+        "family/b/🦀️.rs": "pub fn b() {}\n",
+        "family/a/🦀️.rs": "pub fn a() {}",
+        "family/🧵️x/🦀️.rs": "pub fn x() {}\n",
+        "family/♻️y/🦀️.rs": "pub fn y() {}\n",
+        "family/🦀️.rs": "pub fn root() {}\n",
+        "family/Ａ/🦀️.rs": "pub fn wide() {}\n",
+        "family/note.txt": "not rust\n",
+        "family/b/readme.md": "not rust\n"
+      },
+      "expected": [
+        "family/a/🦀️.rs",
+        "family/b/🦀️.rs",
+        "family/♻️y/🦀️.rs",
+        "family/🦀️.rs",
+        "family/🧵️x/🦀️.rs",
+        "family/Ａ/🦀️.rs"
+      ]
+    },
+    {
+      "id": "canonical-tests-testing-and-node-modules-stay-out",
+      "directory": "family",
+      "files": {
+        "family/🦀️.rs": "pub fn root() {}\n",
+        "family/🧪️tests/🦀️.rs": "fn t() {}\n",
+        "family/a/🧪️testing/🦀️.rs": "fn t() {}\n",
+        "family/a/🦀️.rs": "pub fn a() {}\n",
+        "family/node_modules/p/🦀️.rs": "fn p() {}\n"
+      },
+      "expected": [
+        "family/a/🦀️.rs",
+        "family/🦀️.rs"
+      ]
+    }
   ]
 }

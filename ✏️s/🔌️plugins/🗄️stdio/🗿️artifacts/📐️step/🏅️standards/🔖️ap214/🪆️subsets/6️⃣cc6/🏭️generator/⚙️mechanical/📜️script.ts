@@ -23,7 +23,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { type Kernel, type Recipe, call } from "../📜️script.ts";
+import { call } from "../📇️recipe-contract/🟦️.ts";
+import type { Kernel, Recipe } from "../📇️recipe-contract/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧰️Finders

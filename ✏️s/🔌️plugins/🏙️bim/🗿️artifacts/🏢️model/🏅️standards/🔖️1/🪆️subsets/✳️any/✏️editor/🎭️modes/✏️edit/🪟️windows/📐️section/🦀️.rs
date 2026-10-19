@@ -5,10 +5,12 @@
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, text_record};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, ViewPlane}};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewPlane;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;
@@ -47,7 +49,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️View
 /// 📐️ Every section and elevation view of the model in browser order: by building, sections before elevations, then name.
 pub fn vertical_views(snapshot: &ModelSnapshot) -> Vec<String> {
-    let mut rows: Vec<(&String, bool, &String, &String)> = snapshot.views.iter().filter(|(_, view)| view.kind.is_vertical() && view.plane.is_some()).map(|(id, view)| (&view.building, view.kind == crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Elevation, &view.name, id)).collect();
+    let mut rows: Vec<(&String, bool, &String, &String)> = snapshot.views.iter().filter(|(_, view)| view.kind.is_vertical() && view.plane.is_some()).map(|(id, view)| (&view.building, view.kind == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Elevation, &view.name, id)).collect();
     rows.sort();
     rows.into_iter().map(|row| row.3.clone()).collect()
 }
@@ -68,11 +70,11 @@ pub fn plane_of(snapshot: &ModelSnapshot, config: &config::BimSectionWindowConfi
 
 //#region 🔖️Render
 /// 🎨️ The records of the section: the layers of the view's drawing (selection in the accent colour), then the utility meta record.
-pub fn records(drawing: Option<&crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework>, selection: &[String], utility: &str, labels: &BimLabels) -> Vec<DslValue> {
+pub fn records(drawing: Option<&semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework>, selection: &[String], utility: &str, labels: &BimLabels) -> Vec<DslValue> {
     let mut records = vec![meta_record(utility)];
     match drawing {
-        Some(drawing) => records.extend(crate::render::plan::layers(&drawing.lines, selection)),
-        None => records.push(text_record("empty", (0.0, 0.0), labels.empty_section.as_str(), crate::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0])),
+        Some(drawing) => records.extend(semio_s_artifact_bim_model_plan_linework::render::plan::layers(&drawing.lines, selection)),
+        None => records.push(text_record("empty", (0.0, 0.0), labels.empty_section.as_str(), semio_s_artifact_bim_model_plan_linework::render::plan::TEXT_SIZE * 2.0, [0.22, 0.24, 0.28, 1.0])),
     }
     records
 }
@@ -87,7 +89,7 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &con
 #[allow(clippy::too_many_arguments)]
 pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config: &config::BimSectionWindowConfig, selection: &[String], utility: &str, revision: u32, labels: &BimLabels, overlay: &[DslValue]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let drawing = active_view(snapshot, config).and_then(|view| inference.view_linework.get(&view));
-    let framing = drawing.filter(|_| !config.framed).and_then(|drawing| crate::render::plan::canvas_bounds(&drawing.lines)).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 });
+    let framing = drawing.filter(|_| !config.framed).and_then(|drawing| semio_s_artifact_bim_model_plan_linework::render::plan::canvas_bounds(&drawing.lines)).map(|bounds| semio_framework_plugin::Canvas2dFraming { revision, bounds, padding: 48.0 });
     let mut records = records(drawing, selection, utility, labels);
     records.extend(overlay.iter().cloned());
     canvas_surface(SURFACE_ID, config.viewport, framing, &records)

@@ -99,7 +99,7 @@ func BuildCodebase(ctx *CodebaseContext) *model.Codebase {
 // 📸️BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
 // 🟧️BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
 func BuildCodebaseSnapshot(files []string, bundles []model.Bundle, checkpoint string) (*model.Codebase, error) {
-	ctx := &CodebaseContext{RootDir: workspace.RootDir, RootURI: "file://" + workspace.NormalizePath(workspace.RootDir)}
+	ctx := &CodebaseContext{RootDir: workspace.GetRootDir(), RootURI: "file://" + workspace.NormalizePath(workspace.GetRootDir())}
 	ctx.Bundles = bundles
 	ctx.Files = files
 	ctx.Policies = statutes.GetPolicies()
@@ -116,7 +116,7 @@ func BuildCodebaseSnapshot(files []string, bundles []model.Bundle, checkpoint st
 // ⬛️GetFolderChildren MUST retrieve the requested value or return an error.
 // ⬛️GetFolderChildren retrieves and returns the folder children.
 func GetFolderChildren(folderPath string, bundleID *string) ([]*model.Folder, error) {
-	absPath := filepath.Join(workspace.RootDir, folderPath)
+	absPath := filepath.Join(workspace.GetRootDir(), folderPath)
 	entries, err := os.ReadDir(absPath)
 	if err != nil {
 		return []*model.Folder{}, nil
@@ -149,7 +149,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*model.Folder, er
 		child := &model.Folder{
 			ID:       model.BuildFolderID(c.relPath, bundleID),
 			Path:     c.relPath,
-			URI:      fmt.Sprintf("file://%s/%s", workspace.RootDir, c.relPath),
+			URI:      fmt.Sprintf("file://%s/%s", workspace.GetRootDir(), c.relPath),
 			Name:     c.name,
 			BundleID: bundleID,
 		}
@@ -161,7 +161,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*model.Folder, er
 // ⬜️GetFolderFiles MUST retrieve the requested value or return an error.
 // ⬜️GetFolderFiles retrieves and returns the folder files.
 func GetFolderFiles(folderPath string, bundleID *string) ([]*model.File, error) {
-	absPath := filepath.Join(workspace.RootDir, folderPath)
+	absPath := filepath.Join(workspace.GetRootDir(), folderPath)
 	entries, err := os.ReadDir(absPath)
 	if err != nil {
 		return []*model.File{}, nil
@@ -188,7 +188,7 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*model.File, error) 
 		files = append(files, &model.File{
 			ID:        model.BuildFileID(relPath, bundleID),
 			Path:      relPath,
-			URI:       fmt.Sprintf("file://%s/%s", workspace.RootDir, relPath),
+			URI:       fmt.Sprintf("file://%s/%s", workspace.GetRootDir(), relPath),
 			Name:      filepath.Base(relPath),
 			Extension: filepath.Ext(relPath),
 			FolderID:  folderID,

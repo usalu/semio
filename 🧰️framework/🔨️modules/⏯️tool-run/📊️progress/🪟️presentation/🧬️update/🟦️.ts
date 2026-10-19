@@ -4,7 +4,7 @@ import { type ToolRunProgress, type ToolRunStep, type ToolRunStepArg, type ToolR
 import {ToolRunProgressClone} from "../../📸️clone/🟦️.ts";
 import {ToolRunStepRingInsert} from "../../💍️steps/➕️insert/🟦️.ts";
 import {ToolRunEntityProvenanceEdit,type EntityMark} from "../../../👥️entities/🧾️provenance/🟦️.ts";
-import {ToolRunPresentation} from "../🟦️.ts";
+import {ToolRunPresentation} from "../📸️capture/🟦️.ts";
 export type ToolRunPresentationFields={toolId:string,progress:ToolRunProgress,provenance:{marks:readonly EntityMark[],entities:readonly string[]},payload?:Uint8Array};
 export type ToolRunPresentationDelta={identity?:ToolRunIdentity,sequence:bigint,progress?:ToolRunProgress,steps:ToolRunStep[],retractTo:number|null,end:number,append:readonly string[],payload?:Uint8Array};
 export class ToolRunPresentationUpdate{

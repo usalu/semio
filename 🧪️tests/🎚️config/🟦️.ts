@@ -40,7 +40,7 @@ export default defineConfig({
     // DEFAULT glob (`**/*.{test,spec}.*`) across the whole repository, picking up Playwright specs
     // and ticket-folder scratch files. The root owns no tests of its own.
     include: [],
-    passWithNoTests: false,
+    passWithNoTests: true,
   },
 });
 

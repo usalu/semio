@@ -136,7 +136,7 @@ func filePolicy(ctx *PolicyContext) []model.Breach {
 	if err != nil {
 		return breachs
 	}
-	_ = filepath.WalkDir(workspace.RootDir, func(path string, d fs.DirEntry, err error) error {
+	_ = filepath.WalkDir(workspace.GetRootDir(), func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}

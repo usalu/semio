@@ -33,7 +33,7 @@ pub mod editor {
         #[cfg(test)]
         #[path = "../../../🦀️.rs"]
         pub mod original_command_retirement_tests;
-        pub use semio_s_artifact_flow_flow_inferences::editor::flow::base;
+        pub use semio_s_artifact_flow_flow_inferences::editor::flow::editor_vocabulary;
         pub use semio_s_artifact_flow_flow_mutations::editor::flow::host;
         #[path = "."]
         pub mod presence {

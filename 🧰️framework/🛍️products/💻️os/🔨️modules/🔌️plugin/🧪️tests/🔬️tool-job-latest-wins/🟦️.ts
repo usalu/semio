@@ -4,10 +4,9 @@ import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/m
 import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
-import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { toolJobRustBlock, toolJobProductionSource } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
-import { toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobMountedDispatchOneTurnExact } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts";
-import { retainedCloneWireSchemaUrl } from "../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobRustBlock, toolJobProductionSource, toolJobPublicationFreshnessBeforeEveryTurn, toolJobRetainedDispatchSetup, toolJobTypedRouteFailsClosedBeforePreparation, toolJobTypedPersistentFoundation, toolJobEphemeralOneItemPublicationBounded, toolJobStoreBatchPublicationBounded, toolJobMountedDispatchOneTurnExact, toolJobPluginInstanceSource, toolJobSourceMutation, toolJobStoreSource } from "@semio-tech/repo-lib/laws";
+import { retainedCloneWireSchemaUrl } from "@semio-tech/value-rs/testing/fixtures";
 
 /** 🧪️ Cross-checks full-domain scope fixtures with system deep equality and semantic Ajv scope validation and guards the active retained admission/publication seam. */
 export function toolJobLatestWinsSelfTests(): number {
@@ -35,7 +34,7 @@ export function toolJobLatestWinsSelfTests(): number {
   }
   if (Buffer.byteLength(integration.keyRetirement.text, "utf8") !== integration.keyRetirement.utf8Bytes
     || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
-  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const source = toolJobPluginInstanceSource(WORKSPACE_ROOT);
   const contractRoot = join(base, "🧪️tests");
   const runtimeContractTests = readdirSync(contractRoot).filter((name) => name.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((name) => readModuleTreeSource(join(contractRoot, name, "🦀️.rs"))).join("\n");
   const body = (text: string, name: string): string => {
@@ -50,48 +49,49 @@ export function toolJobLatestWinsSelfTests(): number {
     ["publish_mounted_typed_operation_unit", "ToolCancellationLease::try_claim_publication"],
     ["reject_cancelled_publication", "pending.begin_close()"],
     ["reject_cancelled_publication", "self.publication = completion.take()?"],
-    ["advance_latest_wins_command_one", "self.latest_wins_order.items.front().copied()"],
-    ["advance_latest_wins_command_one", "self.start_typed_command_operation(command, admission"],
+    ["advance_latest_wins_command_one", "self.tools.latest_wins_order.items.front().copied()"],
+    ["advance_latest_wins_command_one", "self.as_dispatch().start_typed_command_operation(command, admission"],
+    ["advance_latest_wins_command_one", "pending.admit_original_lease(&mut self.tools.tool_cancellations,cx)"],
     ["advance_latest_wins_admission_unit", "pending.restarting=true"],
     ["advance_latest_wins_admission_unit", "self.latest_wins_keys.begin(operation,key,pending.lease.as_ref()"],
     ["advance_latest_wins_admission_unit", "registration.latest_wins_target"],
     ["advance_latest_wins_admission_unit", "ToolLatestWinsKeyCopy::admit_original(pending.meta.instance_id,parts,retained)"],
     ["dispatch_typed_command_inner", "key_copy: None"],
     ["dispatch_typed_command_inner", "registration.latest_wins_command_disposer"],
-    ["dispatch_typed_command_inner", "self.tool_cancellations.begin_keyed"],
-    ["dispatch_typed_command_inner", "self.latest_wins_order.push(operation_id.0)"],
-    ["dispatch_typed_command_inner", "self.admit_typed_operation_slot()"],
-    ["admit_typed_operation_slot", "!self.latest_wins_order.allocation_admitted"],
-    ["admit_typed_operation_slot", "self.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["admit_typed_operation_slot", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.typed_operation_slot_is_vacant(*slot))?"],
+    ["dispatch_typed_command_inner", "self.tools.latest_wins_order.push(operation_id.0)"],
+    ["dispatch_typed_command_inner", "self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)"],
+    ["admit_typed_operation_slot", "!tools.latest_wins_order.allocation_admitted"],
+    ["admit_typed_operation_slot", "tools.latest_wins_order.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["admit_typed_operation_slot", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find(|slot| self.typed_operation_slot_is_vacant(pending, tools, *slot))?"],
     ["admit_typed_operation_slot", "allocate_operation_id_in_slot(ARTIFACT_LIVE_OUTPUT_SLOTS as u64, slot as u64)"],
-    ["typed_operation_slot_is_vacant", "self.tool_operations.slot_is_vacant(slot)"],
-    ["typed_operation_slot_is_vacant", "self.typed_operation_reservations[slot].is_none()"],
-    ["typed_operation_slot_is_vacant", "self.latest_wins_commands.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "tools.tool_operations.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "tools.typed_operation_reservations[slot].is_none()"],
+    ["typed_operation_slot_is_vacant", "tools.latest_wins_commands.slot_is_vacant(slot)"],
+    ["typed_operation_slot_is_vacant", "pending.pending_reserved.slot_is_vacant(slot)"],
     ["typed_operation_slot_is_vacant", "self.segmented_downloads.slot_is_vacant(slot)"],
     ["typed_operation_slot_is_vacant", "self.segmented_closures.slot_is_vacant(slot)"],
     ["advance_latest_wins_admission_unit", ".rebind_keyed(base_revision,generation)?"],
-    ["rebind_keyed", "scope.operation != self.key"],
+    ["rebind_keyed", "scope.operation != original.key"],
     ["rebind_keyed", "scope.operation.generation = generation"],
-    ["advance_typed_operation_publication_unit", "self.next_advanceable_typed_operation()"],
-    ["advance_typed_operation_publication_unit", "self.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["advance_typed_operation_publication_unit", "self.tools.next_advanceable_typed_operation()"],
+    ["advance_typed_operation_publication_unit", "self.tools.typed_publication_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
     ["next_advanceable_typed_operation", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
     ["next_advanceable_typed_operation", "(self.typed_publication_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
     ["next_advanceable_typed_operation", "self.tool_operations.entry(index)"],
     ["next_advanceable_typed_operation", "operation.stage != MountedTypedCommandFullOperationStage::AwaitingAck"],
     ["next_advanceable_typed_operation", ".map(|(id, _)| (index, *id))"],
     ["take_typed_operation_result_page", "(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|"],
-    ["take_typed_operation_result_page", "(self.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["take_typed_operation_result_page", "self.tool_operations.entry(index)"],
+    ["take_typed_operation_result_page", "(self.tools.typed_result_cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["take_typed_operation_result_page", "self.tools.tool_operations.entry(index)"],
     ["take_typed_operation_result_page", "operation.meta.instance_id == receiver"],
     ["take_typed_operation_result_page", "!operation.result_page_presented && operation.result_page.is_some()"],
-    ["take_typed_operation_result_page", "self.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
-    ["take_typed_operation_result_page", "self.tool_operations.get_mut(operation_id)?.take_result_page()"],
+    ["take_typed_operation_result_page", "self.tools.typed_result_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS"],
+    ["take_typed_operation_result_page", "self.tools.tool_operations.get_mut(operation_id)?.take_result_page()"],
     ["take_result_page", "if self.result_page_presented"],
     ["take_result_page", "return None"],
-    ["has_runnable_typed_operations", "!self.tool_operations.is_empty()"],
-    ["cleanup_finished_slot", "scope.publication_claim.is_finished()"],
-    ["release_current", "std::sync::Arc::ptr_eq(&scope.publication_claim, &self.publication_claim)"],
+    ["has_runnable_typed_operations", "!self.tools.tool_operations.is_empty()"],
+    ["cleanup_slot", "scope.publication_claim.is_finished()"],
+    ["rebind_keyed", "PublicationClaimHandle::same_original(&scope.publication_claim, &original.publication_claim)"],
     ["try_claim_publication", "self.handle.publication_scope.try_claim()?"],
     ["try_claim_publication", "self.publication_claim.try_claim()?"],
   ];
@@ -99,18 +99,19 @@ export function toolJobLatestWinsSelfTests(): number {
     let previous = -1;
     return tokens.every((token) => { const index = scope.indexOf(token); const valid = index > previous; previous = index; return valid; });
   };
+  const publicationClaim = readFileSync(join(base, "../../../../🔨️modules/⏳️async/♻️cancel-return/📬️claim/🦀️.rs"), "utf8");
   const exact = (text: string): boolean => obligations.every(([name, token]) => body(text, name).includes(token))
     && !body(text, "publish_mounted_typed_operation_unit").includes("dispatch_emit_group(")
-    && text.includes("self.token.child_now()")
-    && text.includes("compare_exchange(0, 1, std::sync::atomic::Ordering::AcqRel")
+    && text.includes("admit_child(grant)")
+    && publicationClaim.includes("compare_exchange(0,1,Ordering::AcqRel,Ordering::Acquire)")
     && text.includes("scope.operation")
-    && ["retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close", "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work", "a_status_only_host_call_finishes_every_typed_operation_it_admitted"].every((name) => runtimeContractTests.includes(`async fn ${name}()`))
-    && ordered(body(text, "dispatch_typed_command_inner"), ["self.live_runtime_instance_id != Some(meta.instance_id)", "self.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.admit_typed_operation_slot()", "registration.latest_wins_command_disposer", "self.tool_cancellations.begin_keyed", "self.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.latest_wins_order.push(operation_id.0)"]);
+    && ["retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close", "retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document", "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work", "a_status_only_host_call_finishes_every_typed_operation_it_admitted"].every((name) => runtimeContractTests.includes(`async fn ${name}()`))
+    && ordered(body(text, "dispatch_typed_command_inner"), ["self.tools.live_runtime_instance_id != Some(meta.instance_id)", "self.media.require_complete_tool_operation_pipeline(&admission)?", "admission.verb != verb", "self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)", "registration.latest_wins_command_disposer", "self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(operation_id.0)", "self.tools.latest_wins_order.push(operation_id.0)"]);
 
   if (!exact(source)) throw new Error("latest-wins production admission/publication authority is incomplete");
   for (const [, token] of obligations) if (exact(source.replaceAll(token, "unqualified_authority"))) throw new Error(`latest-wins accepts missing authority: ${token}`);
   const dispatch = body(source, "dispatch_typed_command_inner");
-  const admissionToken = "self.admit_typed_operation_slot()";
+  const admissionToken = "self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)";
   const reordered = source.replace(dispatch, dispatch.replace(admissionToken, "unqualified_authority()") + admissionToken);
   if (reordered === source || exact(reordered)) throw new Error("latest-wins accepts slot admission after cancellation binding and enqueue");
   if (body(source, "publish_mounted_typed_operation_unit").includes(".await")) throw new Error(`latest-wins publication awaits while holding app/document/operation claims; ${obligations.length} current authority obligations, their removal controls, and admission ordering control passed`);
@@ -118,28 +119,28 @@ export function toolJobLatestWinsSelfTests(): number {
   const taskFixture = JSON.parse(readFileSync(join(base, "⚛️reactor/🧵️task/🧪️tests/🧫️fixtures/📥️admission/🔣️.json"), "utf8"));
   const validateTask = ajv.compile(taskSchema);
   if (!validateTask(taskFixture) || new Set(taskFixture.observations.map((row: { phase: string }) => row.phase)).size !== 7) throw new Error("task admission fixture violates its synchronous ownership boundary");
-  const reactor = readFileSync(join(base, "⚛️reactor/🦀️.rs"), "utf8");
+  const reactor = ["⚛️reactor/⏲️tasks/🧵️task-lane/🦀️.rs", "⚛️reactor/⏲️tasks/🔗️extension-continuation/🦀️.rs", "📜️declaration/📨️emission/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8")).join("\n");
   const host = readFileSync(join(base, "🌐host/🦀️.rs"), "utf8");
   const taskAdmissionExact = (main: string, tasks: string, handles: string): boolean => {
-    const start = tasks.indexOf("pub(crate) fn spawn_task<");
+    const start = tasks.indexOf("pub fn spawn_task<");
     const block = start < 0 ? undefined : toolJobRustBlock(tasks, tasks.indexOf("{", start));
     const installed = block?.body.indexOf("reservation.install(Box::pin(async move {") ?? -1;
     if (!block || installed < 0) return false;
     const admission = block.body.slice(0, installed);
     const execution = block.body.slice(installed);
     return !main.includes("async fn publish_mounted_typed_operation_unit")
-      && !main.includes("pub(crate) async fn into_parts") && main.includes("pub(crate) fn into_parts")
+      && !tasks.includes("pub async fn into_parts") && tasks.includes("pub fn into_parts(self)")
       && !tasks.includes("async fn instance_task_quota") && tasks.includes("fn instance_task_quota")
       && !tasks.includes("pub async fn host_for_instance") && tasks.includes("pub fn host_for_instance")
       && !handles.includes("pub async fn new(registry:") && handles.includes("pub fn new(registry:")
       && !admission.includes(".await") && !admission.includes("run(ctx)")
-      && execution.includes("let future = run.run(ctx);") && execution.includes("future.await")
+      && execution.includes("let future = cold_run.take().run(ctx);") && execution.includes("future.await")
       && ordered(admission, ["instance_task_quota(instance)", "if live >= quota", "task.into_parts()", "executor.reserve()", "insert_admitted(task_id"]);
   };
   if (!taskAdmissionExact(source, reactor, host)) throw new Error("task publication invokes or polls user work before releasing its synchronous admission claim");
   const taskHostiles = [
     [source.replace("fn publish_mounted_typed_operation_unit", "async fn publish_mounted_typed_operation_unit"), reactor, host],
-    [source, reactor.replace("pub(crate) fn spawn_task<", "pub(crate) async fn spawn_task<"), host],
+    [source, reactor.replace("pub fn spawn_task<", "pub async fn spawn_task<"), host],
     [source, reactor.replace("reservation.install(Box::pin(async move {", "let future = run.run(ctx); reservation.install(Box::pin(async move {"), host],
     [source, reactor, host.replace("pub fn new(registry:", "pub async fn new(registry:")],
   ] as const;
@@ -147,23 +148,23 @@ export function toolJobLatestWinsSelfTests(): number {
   const rawFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/🚪️raw-allocation-close.json"), "utf8"));
   for (const law of rawFixture.cases) {
     const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
-    if (law.initializedBytes > law.capacity || oracle.byteLength !== law.expectedCopiedBytes || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
+    if (law.initializedBytes > law.capacity || oracle.byteLength !== law.initializedBytes || law.expectedCopiedBytes !== 0 || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
   }
   const rawSource = readModuleTreeSource(join(base, "🧵️retained-command/🦀️.rs"));
+  const rawCloseSignature = "fn close_one_original(&mut self,cx:&mut StepContext<'_>,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>";
   const rawCloseBlock = (text: string) => {
-    const owner = text.indexOf("impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A>");
-    const start = owner < 0 ? -1 : text.indexOf("fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep", owner);
-    return start < 0 ? undefined : toolJobRustBlock(text, text.indexOf("{", start));
+    const start = text.indexOf(rawCloseSignature);
+    return start < 0 ? undefined : toolJobRustBlock(text, text.indexOf("{", start + rawCloseSignature.length - 1));
   };
   const rawClose = (text: string): boolean => {
     const close = rawCloseBlock(text)?.body;
     const releaseStart = close?.indexOf("if self.raw.capacity()!=0{") ?? -1;
     const release = close && releaseStart >= 0 ? toolJobRustBlock(close, close.indexOf("{", releaseStart))?.body : undefined;
     return !!close && !close.includes("self.raw.is_empty()") && !close.includes("self.raw.truncate(") && !close.includes("self.raw.clear()") && !close.includes("self.raw.len().min(grant.maximum_copy_bytes)")
-      && !!release && release.includes("let bytes=self.raw.capacity();if grant.maximum_release_bytes<bytes")
+      && !!release && release.includes("let bytes=self.raw.capacity();")
       && release.includes("drop(std::mem::take(&mut self.raw))") && release.includes("released_bytes:bytes")
-      && !close.includes("copied_bytes:bytes")
-      && !close.includes("grant.maximum_copy_bytes<self.raw.capacity()")
+      && !release.includes("maximum_copy_bytes") && !close.includes("copied_bytes:bytes")
+      && text.includes("RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()}")
       && text.includes("fn test_raw_allocation_close<A: ArtifactApp>()")
       && text.includes("assert_eq!(heap.released_bytes,progress.released_bytes)");
   };
@@ -174,10 +175,11 @@ export function toolJobLatestWinsSelfTests(): number {
     return rawSource.replace(close.body, close.body.replace(before, after));
   };
   const rawHostiles = [
-    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);self.raw.truncate(self.raw.len()-bytes);return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}};}if self.raw.capacity()!=0{"),
-    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){self.raw.clear();return InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}};}if self.raw.capacity()!=0{"),
-    mutateRawClose("if grant.maximum_release_bytes<bytes", "if grant.maximum_copy_bytes<self.raw.capacity()"),
+    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){let bytes=self.raw.len().min(grant.maximum_copy_bytes);self.raw.truncate(self.raw.len()-bytes);return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}});}if self.raw.capacity()!=0{"),
+    mutateRawClose("if self.raw.capacity()!=0{", "if !self.raw.is_empty(){self.raw.clear();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}});}if self.raw.capacity()!=0{"),
+    mutateRawClose("let bytes=self.raw.capacity();", "let bytes=self.raw.capacity();if grant.maximum_copy_bytes<self.raw.capacity(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()});}"),
     mutateRawClose("released_bytes:bytes", "released_bytes:0"),
+    rawSource.replace("RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()}", "RetirementDemand{copy_bytes:self.raw.capacity(),depth:1,..Default::default()}"),
     rawSource.replace("assert_eq!(heap.released_bytes,progress.released_bytes)", "assert_eq!(heap.released_bytes,0)"),
   ];
   for (const hostile of rawHostiles) if (hostile === rawSource || rawClose(hostile)) throw new Error("retained raw close accepts lost physical custody or capacity-sized copy deadlock");
@@ -191,7 +193,8 @@ export function toolJobLatestWinsSelfTests(): number {
   }
   if (JSON.stringify(childCloseFixture.children.map((child: { id: string }) => child.id).reverse()) !== JSON.stringify(childCloseFixture.expectedRetirementOrder)) throw new Error("retained child close LIFO oracle diverged");
   if (childCloseFixture.children.some((child: { slot: string; childId: string; value: string }) => [child.slot, child.childId, child.value].some(value => Buffer.byteLength(value, "utf8") <= value.length))) throw new Error("retained child close fixture lost its multibyte scalar oracle");
-  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
+  const childMain = [source, ...["📜️declaration/📨️emission/🦀️.rs", "📜️declaration/👷️job/🎯️completion-and-owned-context/🦀️.rs"].map((file) => readFileSync(join(base, file), "utf8"))].join("\n");
+  const childCloseExact = (main: string, retained: string): boolean => main.includes("pub fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>")
     && main.includes("pub fn close_child_one(&mut self, grant: RetainedCloneGrant) -> Result<Option<PluginLifecycleStep>, Fault>")
     && retained.includes("emit.close_child_one(child)")
     && retained.includes("InteractiveJobCloseStep::Pending{progress}")
@@ -199,43 +202,43 @@ export function toolJobLatestWinsSelfTests(): number {
     && retained.includes("self.ephemeral = Some(rejected.ephemeral)")
     && main.split("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:").length - 1 === 2
     && main.includes("mounted owned child group requires its one exact admitted typed source family");
-  if (!childCloseExact(source, rawSource)) throw new Error("retained ChildEmit full grant, physical receipt and rejected completion handback are incomplete");
+  if (!childCloseExact(childMain, rawSource)) throw new Error("retained ChildEmit full grant, physical receipt and rejected completion handback are incomplete");
   const childCloseHostiles = [
-    [source.replace("pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant)", "fn close_one(&mut self, grant: RetainedCloneGrant)"), rawSource],
-    [source, rawSource.replace("emit.close_child_one(child)", "drop(self.emit.take())")],
-    [source, rawSource.replace("self.emit = rejected.emit.ok()", "drop(rejected.emit)")],
-    [source.replace("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:", "return Err(ArtifactToolCompletionRejection { emit: discarded_emit, ephemeral, fault:"), rawSource],
-    [source.replace("mounted owned child group requires its one exact admitted typed source family", "typed child output is accepted"), rawSource],
+    [childMain.replaceAll("pub fn close_one(&mut self, grant: RetainedCloneGrant)", "fn close_one(&mut self, grant: RetainedCloneGrant)"), rawSource],
+    [childMain, rawSource.replace("emit.close_child_one(child)", "drop(self.emit.take())")],
+    [childMain, rawSource.replace("self.emit = rejected.emit.ok()", "drop(rejected.emit)")],
+    [childMain.replace("return Err(ArtifactToolCompletionRejection { emit, ephemeral, fault:", "return Err(ArtifactToolCompletionRejection { emit: discarded_emit, ephemeral, fault:"), rawSource],
+    [childMain.replace("mounted owned child group requires its one exact admitted typed source family", "typed child output is accepted"), rawSource],
   ] as const;
   for (const [hostileMain, hostileRetained] of childCloseHostiles) if (childCloseExact(hostileMain, hostileRetained)) throw new Error("retained ChildEmit close oracle accepted lost ownership or bounded-factory publication");
-  for (const path of ["🦀️.rs", "🧩️composition/📨️emission/📦️preparation/🦀️.rs", "🧵️retained-command/🦀️.rs", "🧪️tests/🧩️composition/📨️emission/🦀️.rs"]) {
-    const result = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", join(base, path)], { stdio: ["ignore", "ignore", "pipe"], timeout: 5000 });
-    if (result.status !== 0) throw new Error(`original child source grammar refused ${path}: ${result.stderr?.toString()}`);
+  for (const path of ["🦀️.rs", "📜️declaration/📨️emission/🦀️.rs", "🧵️retained-command/🦀️.rs", "🧪️tests/🧩️composition/📨️emission/🦀️.rs"]) {
+    const result = spawnSync("rustfmt", ["--edition", "2021", "--emit", "stdout", "--config", "skip_children=true", join(base, path)], { stdio: ["ignore", "ignore", "pipe"], timeout: 60000 });
+    if (result.status !== 0) throw new Error(`original child source grammar refused ${path}: status ${result.status} signal ${result.signal} ${result.error?.message ?? ""} ${result.stderr?.toString()}`);
   }
-  const storeSource = readFileSync(join(base, "../🏪️store/🦀️.rs"), "utf8");
+  const storeSource = toolJobStoreSource(WORKSPACE_ROOT);
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit(");
   const mutatePublisher = (before: string, after: string): string => source.slice(0, publisherStart) + source.slice(publisherStart).replace(before, after);
   const admittedBatchSourceExact = (text: string): boolean => {
     const publisher = body(text, "publish_mounted_typed_operation_unit").replace(/\s+/gu, ""), lanes = {store:"artifact_mutations",config_store:"config_mutations",draft_store:"draft_mutations"};
-    const calls = [...publisher.matchAll(/self\.(store|config_store|draft_store)\.admit_apply_batch\((.*?)\)\.map_err/gu)].map(call => {
+    const calls = [...publisher.matchAll(/self\.stores\.(store|config_store|draft_store)\.admit_apply_batch\((.*?)\)\.map_err/gu)].map(call => {
       const [text, lane, args] = call;
       if (text === undefined || args === undefined || call.index === undefined || (lane !== "store" && lane !== "config_store" && lane !== "draft_store")) throw new Error("Exact mounted publication source match required");
       return { text, lane, args, index: call.index } as const;
     });
-    return text.replace(/\s+/gu, "").includes("self.publish_mounted_typed_operation_unit(mounted,crate::plugin_runtime::original_plugin_turn_grant(self.mounted_policy.preparation,retained))?") && calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call.args.includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && !publisher.includes(`emit.${lane}.clear()`) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call.args.includes(`&mutemit.${lanes[call.lane]},HistoryLane::Document`) && call.args.endsWith("retained") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index+call.text.length))?.body??"").includes("mounted.publication_ownership_progress=Some((retained,ownership))"));
+    return text.replace(/\s+/gu, "").includes("self.publish_mounted_typed_operation_unit(mounted,semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent))))?") && calls.length > 0 && !publisher.includes(".await") && !publisher.includes(".last().cloned()") && Object.values(lanes).every(lane => calls.some(call => call.args.includes(`&mutemit.${lane},HistoryLane::Document`)) && !publisher.includes(`emit.${lane}.clone()`) && publisher.split(`emit.${lane}.clear()`).length - 1 === Number(lane === "artifact_mutations" && publisher.includes("pending_transaction_proposal=Some(TransactionProposalDraft{local_ops,foreign});emit.artifact_mutations.clear();")) && !publisher.includes(`drop(std::mem::take(&mutemit.${lane}))`)) && calls.every(call => call.args.includes(`&mutemit.${lanes[call.lane]},HistoryLane::Document`) && call.args.endsWith("retained") && (toolJobRustBlock(publisher,publisher.indexOf("{",call.index+call.text.length))?.body??"").includes("mounted.publication_ownership_progress=Some((retained,ownership))"));
   };
   const ingress = body(storeSource, "admit_apply_batch"), admission = ingress.indexOf("if grant.maximum_items==0"), transfer = ingress.indexOf("std::mem::take(mutations)");
   if (admission < 0 || transfer <= admission || !["grant.maximum_copy_bytes<copied_bytes", "grant.maximum_capacity_bytes<retained_capacity_bytes", "grant.maximum_depth==0", "transaction:transaction.take()", "RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0}"].every(marker => ingress.includes(marker)) || ingress.includes("mutations.clone()")) throw new Error("actual borrowed batch ingress loses funded original custody or its receipt");
   const mountedChecks: Array<[string, (text: string) => boolean, string]> = [
     ["synchronous funded original unit", (text) => { const publisher = body(text, "publish_mounted_typed_operation_unit"); return text.includes("fn publish_mounted_typed_operation_unit") && !text.includes("async fn publish_mounted_typed_operation_unit") && admittedBatchSourceExact(text) && ["presence", "transient"].every(lane => publisher.includes(`ephemeral.${lane}.pop()`) && publisher.includes(`ephemeral.${lane}.push(mutation)`)); }, mutatePublisher("fn publish_mounted_typed_operation_unit", "async fn publish_mounted_typed_operation_unit")],
     ["synchronous fresh publisher", toolJobPublicationFreshnessBeforeEveryTurn, mutatePublisher("typed_operation_document_is_fresh(&mounted.operation", "accept_stale_operation(&mounted.operation")],
-    ["exact extracted setup", (text) => !!toolJobRetainedDispatchSetup(text), source.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.unchecked_command_operation(command, admission, meta, operation_id, None).await")],
+    ["exact extracted setup", (text) => !!toolJobRetainedDispatchSetup(text), source.replace("self.as_dispatch().start_typed_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await", "self.as_dispatch().unchecked_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await")],
     ["unsupported generic reducer denial", toolJobTypedRouteFailsClosedBeforePreparation, source.replace("QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => {", "QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::Bounded(_) => { return Ok(());")],
-    ["mounted persistent operation", toolJobTypedPersistentFoundation, source.replace("session.pump_one(pool, semio_framework_async::Lane::Interactive)", "session.run_to_terminal(pool)")],
-    ["full maintenance eligibility scan", toolJobTypedPersistentFoundation, source.replace("for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS", "for offset in 0..1")],
-    ["worker input-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(_) => Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits its next outcome" })', 'Ok(_) => Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits its next outcome" })')],
-    ["transient scheduler-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })', 'Ok(PluginCloseStep::Blocked { reason: "typed operation mounted worker awaits transient scheduler authority" })')],
-    ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
+    ["mounted persistent operation", toolJobTypedPersistentFoundation, toolJobSourceMutation(source, "pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>)", "session.pump_one_for_interactive_turn(same)", "session.run_to_terminal(same)")],
+    ["full maintenance eligibility scan", toolJobTypedPersistentFoundation, toolJobSourceMutation(source, "fn maintenance_tool_selection(&self) -> MaintenanceTool", "for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS", "for offset in 0..1")],
+    ["worker input-wait classification", toolJobTypedPersistentFoundation, source.replace('Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"})', 'Ok(_)=>Ok(PluginLifecycleStep::Blocked{reason:"typed operation mounted worker awaits its next outcome"})')],
+    ["unbounded host worker turn", toolJobTypedPersistentFoundation, toolJobSourceMutation(source, "pub fn drive_typed_operation_worker(", "for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS", "loop")],
+    ["retained ephemeral publisher", (text) => toolJobEphemeralOneItemPublicationBounded(storeSource, text), source.replace("self.stores.presence_one_item_factory.as_deref()", "A::build_presence_store_one_item_preparation_factory()")],
   ];
   const [firstCheck] = mountedChecks;
   if (firstCheck === undefined) throw new Error("Mounted publication baseline required");
@@ -250,7 +253,7 @@ export function toolJobLatestWinsSelfTests(): number {
     if (hostile === source || check(hostile)) throw new Error(`mounted source binding accepted hostile ${name}`);
   }
   if (!toolJobStoreBatchPublicationBounded(storeSource, source)) throw new Error("mounted Store source binding lost its retained owned-preparation helper");
-  const replayingOwnedBegin = storeSource.replace("let footprint = match source.footprint(lane) {", "replay_mutations(); let footprint = match source.footprint(lane) {");
+  const replayingOwnedBegin = toolJobSourceMutation(storeSource, "pub fn admit_apply_batch(", "let factory=factory.ok_or_else(", "replay_mutations(); let factory=factory.ok_or_else(");
   if (replayingOwnedBegin === storeSource || toolJobStoreBatchPublicationBounded(replayingOwnedBegin, source)) throw new Error("mounted Store source binding accepted replay inside extracted preparation");
   const dispatchFixture = JSON.parse(readFileSync(join(base, "🧵️retained-command/🧪️tests/🧫️fixtures/📌️mounted-dispatch-binding.json"), "utf8"));
   
@@ -258,22 +261,23 @@ export function toolJobLatestWinsSelfTests(): number {
   const validDispatch = ajv.compile({ const: "none" });
   const production = toolJobProductionSource(source);
   const mutateFunction = (text: string, name: string, before: string, after: string): string => {
-    const start = text.lastIndexOf(`async fn ${name}(`);
+    const start = text.lastIndexOf(`fn ${name}(`);
     const block = start < 0 ? undefined : toolJobRustBlock(text, text.indexOf("{", start));
     if (!block) throw new Error(`mounted dispatch hostile target missing: ${name}`);
     return text.slice(0, start) + text.slice(start, block.end).replace(before, after) + text.slice(block.end);
   };
+  const pipelineGuard = "self.media.require_complete_tool_operation_pipeline(&admission)?";
   const mutations: Record<string, (text: string) => string> = {
     none: (text) => text,
-    "wrong-helper": (text) => text.replace("self.start_typed_command_operation(command, admission, meta, operation_id, None).await", "self.other_command_operation(command, admission, meta, operation_id, None).await"),
+    "wrong-helper": (text) => text.replace("self.as_dispatch().start_typed_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await", "self.as_dispatch().other_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await"),
     "missing-helper": (text) => text.replace("async fn start_typed_command_operation(", "async fn unrelated_command_operation("),
     "duplicate-helper": (text) => `${text}\nasync fn start_typed_command_operation() {}`,
-    "missing-pipeline-guard": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "self.accept_incomplete_pipeline(&admission)?"),
-    "duplicate-session": (text) => mutateFunction(text, dispatchFixture.helper, "let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new", "semio_framework_job::MountedWorkerJobSession::try_new(extra, params); let (session, session_rejected) = match semio_framework_job::MountedWorkerJobSession::try_new"),
-    "duplicate-pump": (text) => mutateFunction(text, dispatchFixture.helper, "let _ = active.drive_worker_step(&pool,", "let _ = active.drive_worker_step(&pool, rejected_grant)?; let _ = active.drive_worker_step(&pool,"),
-    "direct-reducer": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "A::handle(&command).await; self.require_complete_tool_operation_pipeline(&admission)?"),
-    "direct-dispatch": (text) => mutateFunction(text, dispatchFixture.dispatcher, "self.require_complete_tool_operation_pipeline(&admission)?", "self.tool_jobs.dispatch(operation_spec); self.require_complete_tool_operation_pipeline(&admission)?"),
-    "run-to-completion": (text) => mutateFunction(text, dispatchFixture.helper, "let _ = active.drive_worker_step(&pool,", "let _ = active.run_to_completion(&pool)?; let _ = active.drive_worker_step(&pool,"),
+    "missing-pipeline-guard": (text) => mutateFunction(text, dispatchFixture.dispatcher, pipelineGuard, "self.media.accept_incomplete_pipeline(&admission)?"),
+    "duplicate-session": (text) => mutateFunction(text, dispatchFixture.helper, "RefusedWorkerSource::pending(dispatch.job,", "RefusedWorkerSource::pending(extra.job,identity)); let _again=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(dispatch.job,"),
+    "duplicate-pump": (text) => mutateFunction(text, "drive_worker_step", "|same|session.pump_one_for_interactive_turn(same)", "|same|{session.pump_one_for_interactive_turn(same);session.pump_one_for_interactive_turn(same)}"),
+    "direct-reducer": (text) => mutateFunction(text, dispatchFixture.dispatcher, pipelineGuard, `A::handle(&command).await; ${pipelineGuard}`),
+    "direct-dispatch": (text) => mutateFunction(text, dispatchFixture.dispatcher, pipelineGuard, `self.tools.tool_jobs.dispatch(operation_spec); ${pipelineGuard}`),
+    "run-to-completion": (text) => mutateFunction(text, "drive_worker_step", "let step_fuel=", "session.run_to_completion();let step_fuel="),
   };
   if (new Set(dispatchFixture.cases.map((law: { mutation: string }) => law.mutation)).size !== Object.keys(mutations).length) throw new Error("mounted dispatch fixture omits an exact hostile case");
   for (const law of dispatchFixture.cases) {

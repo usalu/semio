@@ -5,8 +5,8 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 import Ajv from "ajv";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runCargo } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { mutationSchemaDocumentIndexProjection } from "../../🗂️schema-index/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -80,7 +80,7 @@ class CheckGeneratedScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation, rest);
   }
 }
 

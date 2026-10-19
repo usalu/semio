@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::render::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 
 fn demo() -> ModelSnapshot {
     parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")

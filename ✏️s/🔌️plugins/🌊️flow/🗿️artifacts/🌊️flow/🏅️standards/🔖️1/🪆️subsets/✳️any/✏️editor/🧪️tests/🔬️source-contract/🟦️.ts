@@ -5,12 +5,10 @@ import { createHash } from "node:crypto";
 import stableStringify from "fast-json-stable-stringify";
 import { applyPatches, enablePatches, produceWithPatches } from "immer";
 import { encodeScalarRecordFixture } from "@semio-tech/framework/pack/value/scalar-witness/testing";
-import { testBuiltTreeRetirementFixture } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import { fileURLToPath } from "node:url";
 
-testBuiltTreeRetirementFixture();
 
 //#region 🧬️OwnedSchemaExports
 /** 🧬️ Editor fixture contracts remain separate from the persisted artifact schema. */

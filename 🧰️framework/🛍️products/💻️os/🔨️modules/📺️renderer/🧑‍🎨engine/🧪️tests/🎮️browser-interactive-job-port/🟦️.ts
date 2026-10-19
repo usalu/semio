@@ -7,8 +7,8 @@ import {
   type InteractiveJobPage,
   type InteractiveJobUiMessage,
   type InteractiveJobWorkerMessage,
-} from "../../🎯️targets/🧊️wgpu/🔌️browser-interactive-job-port/🟦️.ts";
-import { InteractiveWorkerScheduler, type InteractiveWorkerDescriptor, type InteractiveWorkerJob, type InteractiveWorkerStep } from "../../🎯️targets/🧊️wgpu/📇️interactive-job-registry/🟦️.ts";
+} from "@semio-tech/framework-renderer-wgpu/browser-interactive-job-port";
+import { InteractiveWorkerScheduler, type InteractiveWorkerDescriptor, type InteractiveWorkerJob, type InteractiveWorkerStep } from "@semio-tech/framework-renderer-wgpu/interactive-job-registry";
 
 const page = (complete = true): InteractiveJobPage => ({ itemCount: 1, byteLength: 8, payload: { value: 1 }, complete });
 const descriptor = (operation: number, kind = "alpha", generation = 1): InteractiveJobDescriptor => ({ kind, operation, generation, inputItems: 1, inputBytes: 32, outputItems: 1, outputBytes: 32, inputPageItems: 1, outputPageItems: 1, pageBytes: 16, payload: { kind, generation } });

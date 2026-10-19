@@ -1,5 +1,6 @@
 import { parseFormsDefinition, type FormsDefinition } from "../../../🧬️schema/📝️definition/🟦️.ts";
-import type { FormQuestion, FormStep, FormsMutation } from "../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormsMutation } from "../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormQuestion, FormStep } from "../../../🧬️schema/🧱️form-model/🟦️.ts";
 
 /** 🎯️ Computes the insertion index in the destination after a same-page source is removed. */
 export function questionInsertIndex(definition: FormsDefinition, stepId: string, targetId: string, position: string, movingId: string | null): number {

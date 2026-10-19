@@ -1,16 +1,24 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule, ScheduleKey};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ScheduleKey;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::schedule_kit::{items, scheduled};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::*;
-use crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{OpeningPatch, SchedulePatch, WallPatch}}, inferences::ModelInference, snapshot::TopConstraint};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::schedule_kit::{items, scheduled};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{ScheduleTable, table, ScheduleCell};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::SchedulePatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use protocol::Inference;
 
 fn scheduled_count() -> usize {
@@ -99,10 +107,9 @@ async fn a_schedule_leaves_the_graph_with_its_definition() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_schedule_over_a_deleted_storey_is_removed_with_it_and_comes_back_with_it() {
-    use crate::standards::v1::subsets::any::schema::mutations::cascade;
     let mut snapshot = scheduled();
     snapshot.schedules.get_mut("sch-door").expect("the door schedule").storeys = vec!["st-first".into()];
-    let removal = cascade::closure(&snapshot, &["st-first".to_string()]).unwrap_or_else(|refusal| panic!("{}", refusal.message));
+    let removal = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::closure(&snapshot, &["st-first".to_string()]).unwrap_or_else(|refusal| panic!("{}", refusal.message));
     assert!(removal.schedules.contains("sch-door") && !removal.schedules.contains("sch-wall"), "only the schedule scoped to the storey leaves");
     let diff = removal.diff();
     let after = protocol::apply_diff(&diff, &snapshot).expect("the removal applies");

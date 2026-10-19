@@ -5,7 +5,7 @@ import {tmpdir} from "node:os";
 import {stripVTControlCharacters} from "node:util";
 import {join} from "node:path";
 import {ReadinessMatcherV1,admitReadinessDeclarationV1,probeReadinessV1,readinessMarkerV1,readReadinessDeclarationV1,resolveReadinessV1,watchReadinessV1,type ReadinessV1} from "../🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import schema from "../../🧬️schema/🔣️.json";
 import projectSchema from "../../🧬️schema/📋️project/🔣️.json";
 
@@ -66,7 +66,7 @@ test("the build schema validates the declaration vectors like Ajv validates the 
 });
 
 test("the graph schema and the project schema carry the dashboard declaration of readiness",()=>{
- const dashboard=read("../../../../🎛️dashboard/🧬️schema/🎮️registry/🔣️.json").$defs.ReadyDeclaration,strip=(value:Record<string,unknown>)=>{const {description:_description,...rest}=value;return rest;};
+ const dashboard=read("../../../../🎛️dashboard/🧬️schema/🎮️registry/🔣️.json").$defs.ReadyDeclaration,strip=(value:Record<string,unknown>)=>{const {description:_description,...rest}=value;return rest as {properties:Record<string,{type?:string}>;anyOf?:unknown};};
  const fromDashboard=strip(dashboard),fromGraph=strip(schema.$defs.ReadyDeclaration),fromProject=strip(projectSchema.$defs.ReadyDeclaration);
  for(const key of ["port","portEnv","path"] as const){
   expect(fromGraph.properties[key],key).toEqual(fromDashboard.properties[key]);
@@ -131,7 +131,7 @@ test("a closed port, a foreign host and a cancelled probe are not ready",async()
 });
 
 test("a watch becomes ready only after the announced server answers",async()=>{
- const probe=Bun.serve({hostname:"127.0.0.1",port:0,fetch:()=>new Response("")}),port=probe.port;
+ const probe=Bun.serve({hostname:"127.0.0.1",port:0,fetch:()=>new Response("")}),port=probe.port as number;
  await probe.stop(true);
  const watch=watchReadinessV1({port,path:"/health"},new AbortController().signal);
  let answered:string|undefined;void watch.ready.then(address=>{answered=address;});

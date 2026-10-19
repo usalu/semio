@@ -71,12 +71,6 @@ func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Breachs: []*Breach{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
-// 💜️Fix MUST return a non-nil error when the operation fails.
-// 🪷️Fix performs the fix operation on the default context.
-func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
-	return &FixResult{Breachs: []*Breach{}}, nil
-}
-
 // 💙️TicketOpen MUST return a non-nil error when the operation fails.
 // 🍁️TicketOpen performs the ticket open operation on the default context.
 func (c *defaultContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {

@@ -11,6 +11,7 @@ import { configureHostPorts, uiI18n } from "@semio-tech/ui-react";
 import { afterEach, expect, it } from "vitest";
 import { IconRenderHost } from "../../🟦️.tsx";
 import fixture from "../🧫️fixtures/🖼️frame-presentation/🔣️.json";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 afterEach(cleanup);
 
@@ -114,7 +115,7 @@ it("measures actual IconRenderHost frame, content and footer in Chromium", async
 
 it("renders the production World mask and scene clear without painting outside the Icon viewport", async () => {
   const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
-  const shader = readFileSync(path, "utf8").match(/pub const WORLD3D_POSTPROCESS_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
+  const shader = readModuleTreeSource(path).match(/pub const WORLD3D_POSTPROCESS_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
   const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {
     const page = await browser.newPage();
@@ -192,7 +193,7 @@ it("renders the production World mask and scene clear without painting outside t
 
 it("renders the production UI shader with the same ellipse badge clipping as Chromium", async () => {
   const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
-  const shader = readFileSync(path, "utf8").match(/pub const UI_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
+  const shader = readModuleTreeSource(path).match(/pub const UI_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
   const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {
     const page = await browser.newPage();

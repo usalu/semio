@@ -1,5 +1,6 @@
 //! 🧭️ delete-design-option authored mutation.
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -9,7 +10,7 @@ pub struct DeleteDesignOption {
 }
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteDesignOption
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteDesignOption> + From<crate::standards::v1::subsets::any::schema::mutations::create_design_option::CreateDesignOption> + From<crate::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteDesignOption> + From<crate::standards::v1::subsets::any::schema::mutations::create_design_option::CreateDesignOption> + From<semio_s_artifact_bim_model_mut_any_50::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "design-option", kind: "delete-design-option", record: "DeleteDesignOption" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_design_option::diff::diff(self, base) }

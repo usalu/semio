@@ -85,7 +85,8 @@ fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutat
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
-        if matches!(disposer.close_step(&mut store, 1, PROCESS3D_OWNER_BYTES), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
+        let demand = disposer.retirement_demands(&store, PROCESS3D_OWNER_BYTES).expect("the store quotes its next close turn");
+        if matches!(disposer.close_step(&mut store, process3d_demand_grant(demand)), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }
@@ -225,22 +226,23 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
     process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
     let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
-    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     let mut complete = false;
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
         let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-        match measure_phase(budget, 0, || semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context)) {
-            semio_framework_job::StepOutcome::Complete(_) => {
-                complete = true;
-                break;
-            }
-            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
-            semio_framework_job::StepOutcome::Cancelled => panic!("fixture initializer cancelled"),
-            semio_framework_job::StepOutcome::Fault(_) => panic!("fixture initializer faulted"),
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
+        let turn = measure_phase(budget, 0, || match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("fixture initializer turn") {
+            Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(true),
+            Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("fixture initializer cancelled"),
+            Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("fixture initializer faulted"),
+            _ => None,
+        });
+        if turn == Some(true) {
+            complete = true;
+            break;
         }
     }
     assert!(complete, "fixture initializer must converge");
@@ -264,7 +266,7 @@ fn retained_initializer_replays_every_neutral_timeline_mutation() {
         let after = std::fs::read_to_string(folder.join("📸️snapshot/➡️after/🔣️.json")).unwrap();
         let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, case, snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, case, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.cursor = None;
         envelope.vcs.edits.try_push(protocol::Edit { id: format!("timeline-{index}"), actor: Some("neutral-law".into()), line: None, forwards: vec![mutation], inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 1, started_at: "1".into(), finished_at: None }).unwrap();
         let operation = semio_framework_job::OperationId(u64::MAX - 4_000 - index as u64);
@@ -276,11 +278,11 @@ fn retained_initializer_replays_every_neutral_timeline_mutation() {
         let mut complete = false;
         for _ in 0..100_000 {
             let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
-            match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context) {
-                semio_framework_job::StepOutcome::Complete(_) => { complete = true; break; }
-                semio_framework_job::StepOutcome::Fault(fault) => panic!("neutral initializer refused {case}: {fault:?}"),
-                semio_framework_job::StepOutcome::Cancelled => panic!("neutral initializer cancelled"),
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
+            match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("neutral initializer turn") {
+                Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => { complete = true; break; }
+                Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("neutral initializer refused {case}"),
+                Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("neutral initializer cancelled"),
                 _ => {}
             }
         }
@@ -460,7 +462,8 @@ fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
     let mut displaced = displaced;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
-        if matches!(measure_phase(&mut budget, 2, || disposer.close_step(&mut displaced, 1, PROCESS3D_OWNER_BYTES)), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
+        let demand = disposer.retirement_demands(&displaced, PROCESS3D_OWNER_BYTES).expect("the displaced store quotes its next close turn");
+        if matches!(measure_phase(&mut budget, 2, || disposer.close_step(&mut displaced, process3d_demand_grant(demand))), Ok(semio_framework_plugin::PluginLifecycleStep::Complete(_))) {
             break;
         }
     }

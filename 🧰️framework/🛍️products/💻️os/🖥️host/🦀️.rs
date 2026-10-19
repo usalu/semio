@@ -47,5 +47,4 @@ pub use registry::{
 };
 pub use semio_framework::*;
 pub use store::{os_store::store_schema::document_backbone_ref, os_store::backbone::set_host_backbone_port, os_store::store_schema::ArtifactBackboneRef, os_store::store_schema::ArtifactCommand, os_store::backbone::LocalStorageBackbonePort, os_store::backbone::MemoryBackbonePort};
-pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};

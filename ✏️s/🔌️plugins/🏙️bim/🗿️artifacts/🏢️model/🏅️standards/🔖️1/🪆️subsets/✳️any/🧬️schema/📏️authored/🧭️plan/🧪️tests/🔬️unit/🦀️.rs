@@ -1,9 +1,9 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
 use semio_framework_geometry::Point;
-use crate::standards::v1::subsets::any::schema::authored::plan::*;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{axis_length, mark, point};
 
 #[test]
 fn a_line_axis_is_as_long_as_its_chord() {

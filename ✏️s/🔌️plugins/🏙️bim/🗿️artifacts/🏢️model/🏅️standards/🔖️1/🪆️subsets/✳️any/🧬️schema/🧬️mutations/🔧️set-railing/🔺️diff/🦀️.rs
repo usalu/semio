@@ -3,9 +3,13 @@
 //! height and post spacing are positive, the rail and post sections, the baluster row and the infill must be sound, the material must exist; providing only equal values is a no-op.
 //! Whole-list ruling: the path is ONE polyline, the geometry of the railing, so a provided path replaces the path as one field.
 
-use crate::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
 use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
-use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff, Patch, patches::RailingPatch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{railing_construction_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RailingPatch;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn traceable(path: &[Point2]) -> bool {
@@ -16,7 +20,7 @@ fn positive(value: f64) -> bool {
     value.is_finite() && value > 0.0
 }
 
-fn construction_issue(patch: &RailingPatch, railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Option<(&'static str, &'static str)> {
+fn construction_issue(patch: &RailingPatch, railing: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing) -> Option<(&'static str, &'static str)> {
     railing_construction_problem(&patch.write(railing))
 }
 

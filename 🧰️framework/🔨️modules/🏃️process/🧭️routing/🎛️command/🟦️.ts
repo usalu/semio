@@ -11,9 +11,9 @@ import {readCargoArtifactBuildPolicyV1,type CargoArtifactBuildPolicyV1} from "..
 import {inheritedCargoExecutionCustodyV1} from "./🎟️custody/🟦️.ts";
 import {isDeepStrictEqual} from "node:util";
 import {scriptInvocationEnvironment} from "../📥️invocation/🏃️process/🟦️.ts";
+import type {CommandRequestV1} from "./📥️request/🟦️.ts";
 
-/** 🎛️ Declares exact executable ownership and required semantic preparation. */
-export type CommandRequestV1=Readonly<{version:1;cwd:string;command:string;args:readonly string[];manifests:readonly string[];preparation:"none"|"required"}>;
+export type {CommandRequestV1};
 /** 📋️ Composes the existing defining policies with bounded evidence custody. */
 export type CommandPolicyV1=Readonly<{version:1;context:ProcessOwnerContextV1;budgetMs:number;maximumOutputBytes:number;artifactDirectory:string;retainArtifacts:boolean;cargoPolicies:readonly CargoTestPolicyV1[];vitestPolicy:VitestPolicyV1|null;cargoArtifactPolicy:CargoArtifactBuildPolicyV1|null}>;
 /** 📊️ Reports command admission, queue waits and completion to its caller. */

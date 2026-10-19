@@ -27,7 +27,7 @@ impl WindowState {
     }
 
     pub fn window_topology_publication_has_credit(&self) -> bool {
-        self.window_topology_publications.len() < ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY
+        self.window_topology_publications.len() < semio_framework_ui_action::ACTION_QUEUE_ITEM_CAPACITY
     }
 
     /// 🪟️ Commits one already-admitted roster mutation and arms its required Full refresh.
@@ -41,8 +41,8 @@ impl WindowState {
 
     /// 🧾️ Reserves and builds one physical transfer note before the dock tree can change.
     /// The returned token binds release to this exact owner even when later bodies publish first.
-    pub fn reserve_window_topology_action(&mut self, action: ActionDescriptor) -> Result<u64, ui_wgpu::wgpu::BoundedActionFault> {
-        match self.window_topology_actions.reserve(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY) {
+    pub fn reserve_window_topology_action(&mut self, action: ActionDescriptor) -> Result<u64, semio_framework_ui_action::BoundedActionFault> {
+        match self.window_topology_actions.reserve(&action.controller_id, &action.action, semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY) {
             Ok(mut reservation) => action.args.as_ref().map_or(Ok(()), |args| reservation.builder().value(None, args)).and_then(|()| reservation.publish()),
             Err(error) => Err(error),
         }?;
@@ -52,7 +52,7 @@ impl WindowState {
         Ok(token)
     }
 
-    pub fn take_window_topology_action(&mut self, token: u64) -> Option<ui_wgpu::wgpu::BoundedAction> {
+    pub fn take_window_topology_action(&mut self, token: u64) -> Option<semio_framework_ui_action::BoundedAction> {
         let index = self.window_topology_action_tokens.iter().position(|candidate| *candidate == token)?;
         debug_assert_eq!(self.window_topology_action_tokens.remove(index), Some(token));
         self.window_topology_actions.remove_at(index)

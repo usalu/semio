@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import ts from "typescript";
 import { createRequire } from "node:module";
 import { readUiAxes } from "../../🎚️axes/📥️source/🟦️.ts";
@@ -12,7 +12,7 @@ const repoRoot = join(import.meta.dir, "../../../../..");
 
 describe("UI axes source and projections", () => {
   test("the axes command producer has only neutral runtime inputs", async () => {
-    const source = join(import.meta.dir, "../../🎚️axes/🏃️execution/🟦️.ts");
+    const source = join(import.meta.dir, "../../🎚️axes/📜️script.ts");
     const syntax = ts.createSourceFile(source, readFileSync(source, "utf8"), ts.ScriptTarget.Latest, true);
     const imports = syntax.statements.filter(ts.isImportDeclaration).map(row => ts.isStringLiteral(row.moduleSpecifier) ? row.moduleSpecifier.text : "");
     expect(imports.every(path => !path.includes("🛍️products"))).toBe(true);
@@ -54,7 +54,7 @@ describe("UI axes source and projections", () => {
       ]);
       expect(uiAxesPreview(root, targets).nodes).toHaveLength(2);
       expect(staleUiAxesTargets(targets)).toEqual(targets.map(({ path }) => path));
-      publishUiAxes(targets);
+      publishUiAxes(targets, (path, content) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, content); });
       expect(staleUiAxesTargets(targets)).toEqual([]);
       expect(readFileSync(targets[0]!.path, "utf8")).toBe(targets[0]!.content);
       expect(readFileSync(targets[1]!.path, "utf8")).toBe(targets[1]!.content);
@@ -65,7 +65,7 @@ describe("UI axes source and projections", () => {
 
   test("the registered producer and both implementation consumers name the semantic owners", () => {
     const project = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📋️project.json"), "utf8")) as { namedInputs: { default: string[] } };
-    const requiredInputs = ["🎚️axes/🔣️.json", "🎚️axes/📥️source/🟦️.ts", "🎚️axes/📽️projection/🟦️.ts", "🎚️axes/📋️plan/🟦️.ts", "🎚️axes/📤️publication/🟦️.ts", "🎚️axes/🏃️execution/🟦️.ts", "🧪️tests/🎚️axes/🟦️.ts"];
+    const requiredInputs = ["🎚️axes/🔣️.json", "🎚️axes/📥️source/🟦️.ts", "🎚️axes/📽️projection/🟦️.ts", "🎚️axes/📋️plan/🟦️.ts", "🎚️axes/📤️publication/🟦️.ts", "🎚️axes/📜️script.ts", "🧪️tests/🎚️axes/🟦️.ts"];
     for (const suffix of requiredInputs) expect(project.namedInputs.default.some((path) => path.endsWith(suffix))).toBe(true);
     const rustConsumer = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🦀️.rs"), "utf8");
     const typescriptConsumer = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");

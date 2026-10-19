@@ -7,6 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_audio_mut_family::schema::mutations::{insert_channel, insert_tag, remove_channel, remove_tag, set_channel_samples, set_format, set_sample_rate, set_tag_value};
 use semio_s_artifact_stdio_semio_audio_model::schema::diff;
 use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioChannelDiff;
 use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;

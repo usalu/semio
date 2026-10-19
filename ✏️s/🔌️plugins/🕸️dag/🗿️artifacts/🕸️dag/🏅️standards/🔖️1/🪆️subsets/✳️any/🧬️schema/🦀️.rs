@@ -3,7 +3,7 @@
 use crate::{DagContentChild, DagMutation, DagNodeKind, DagPreviewContent, DagScene, DagSnapshot, IoPortSpec, SemioGraphMutation};
 use framework_schema::ArtifactSchema;
 use infinite_board_port_directed_dag::{fit_node_size, note_widget_size, preview_widget_size, would_create_cycle};
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 //#region 🔖️Artifact
 /// 🧬️ DAG document artifact state.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, ArtifactSchema)]

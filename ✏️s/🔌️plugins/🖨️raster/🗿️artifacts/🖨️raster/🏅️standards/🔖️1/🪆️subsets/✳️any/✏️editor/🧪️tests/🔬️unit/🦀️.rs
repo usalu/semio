@@ -12,7 +12,8 @@ pub mod context {
     /// dropped fixture panics with "artifact store reached Drop without its exact terminal-empty
     /// shallow-shell witness". Dereferences to the app and drains the exact retained close ladder on
     /// the way out — the same law the runtime uses, and the same shape `mounted_app` already had.
-    pub struct RasterAppFixture(RasterApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct RasterAppFixture(pub RasterApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for RasterAppFixture {
         type Target = RasterApp;
@@ -30,7 +31,7 @@ pub mod context {
     impl Drop for RasterAppFixture {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                artifact_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -53,9 +54,10 @@ pub mod context {
     /// every typed command until the app carries the live runtime instance the `ActionMeta` names, so
     /// an unmounted fixture can construct and render but never mutate.
     pub async fn app() -> RasterAppFixture {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(artifact_laws::meta("local").instance_id).await;
-        RasterAppFixture(app)
+        RasterAppFixture(app, scope)
     }
 
     /// 🪟️ The view state the runtime always carries: the composite window INSTANCE the action is
@@ -74,11 +76,11 @@ pub mod context {
     /// and nothing reaches the document until the host continuation settles it. A test that stopped at
     /// `dispatch_typed` read an unchanged document, which made every action test below look like a
     /// silent no-op.
-    pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
+    pub async fn dispatch(app: &mut RasterAppFixture, command: RasterCommand) -> InvocationResult {
         let mut action = artifact_laws::meta("local");
         action.view_state = Some(raster_view_state());
-        let mut result = app.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        let settled = artifact_laws::settle_registered_typed_operation(app, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = artifact_laws::settle_registered_typed_operation(&mut app.0, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
     }
@@ -87,20 +89,19 @@ pub mod context {
     /// comes back as a `SpawnJob` receipt the caller must commit before the store ever sees
     /// `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it with a
     /// bare `handle_action` reads back as a silent no-op on a MOUNTED app.
-    pub async fn history(app: &mut RasterApp, action: &str) {
-        artifact_laws::settle_history_verb(app, action, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    pub async fn history(app: &mut RasterAppFixture, action: &str) {
+        artifact_laws::settle_history_verb(&mut app.0, action, artifact_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
-    pub async fn render(app: &mut RasterApp, body_key: &str) -> String {
+    pub async fn render(app: &mut RasterAppFixture, body_key: &str) -> String {
         render_with_view(app, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await
     }
     
-    pub async fn render_with_view(app: &mut RasterApp, body_key: &str, view_state: &ViewModel) -> String {
-        let tree = app.render(body_key, None, view_state).await.expect("render");
-        artifact_laws::project_and_retire_fixture_tree(tree).expect("rendered fixture observation and retirement")
+    pub async fn render_with_view(app: &mut RasterAppFixture, body_key: &str, view_state: &ViewModel) -> String {
+        artifact_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("rendered fixture observation and retirement")
     }
     
-    pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
+    pub async fn main_window_measures(app: &mut RasterAppFixture) -> Vec<WindowMeasure> {
         app.window_measures(&raster_view_state()).await.remove(semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
     }
     
@@ -118,7 +119,7 @@ pub mod context {
         let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_raster_envelope(envelope);
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load semio");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("load semio");
         app
     }
 }

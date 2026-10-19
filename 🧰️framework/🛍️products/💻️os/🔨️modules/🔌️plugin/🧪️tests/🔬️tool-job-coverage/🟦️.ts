@@ -1,17 +1,18 @@
-import { toolJobMemberStoreProducerExact } from "../../../🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
-import { memberStoreProducerSourceSelfTests } from "../../../🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️tests/🟦️.ts";
+import { toolJobMemberStoreProducerExact } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { memberStoreProducerSourceSelfTests } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source/testing";
 import { toolJobCheckpointSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-checkpoint/🟦️.ts";
 import { toolJobScalarConfigCohortSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-scalar-config-cohort/🟦️.ts";
-import { storeCanonicalEditSealerSelfTests } from "../../../🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts";
+import { storeCanonicalEditSealerSelfTests } from "@semio-tech/framework-os/modules/store/canonical-edit/testing/store-canonical-edit-sealer";
 import { toolJobOwnerFactoryResolutionSelfTests } from "../../🧵️retained-command/🧪️tests/🔬️tool-job-owner-factory-resolution/🟦️.ts";
 import { toolJobFactoryProofJoinSelfTests } from "../🔬️tool-job-factory-proof-join/🟦️.ts";
 import { toolJobLatestWinsSelfTests } from "../🔬️tool-job-latest-wins/🟦️.ts";
 import { toolJobMicrosecondBudgetSelfTests } from "../../../../../../🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts";
+import { toolJobMicrosecondWorkerBindingSelfTests } from "@semio-tech/repo-lib/laws";
 import { toolJobTelemetryContentionSelfTests } from "../../../../../../🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts";
-import { toolJobCooperativeMaintenanceSelfTests } from "../../../../../../🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts";
-import { proceduralGenerationRootSelfTests } from "../../../📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️tests/🔬️procedural-generation-root/🟦️.ts";
-import { flowTypedRetirementSelfTests } from "../../../🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
-import { flowSelectedCopySelfTests } from "../../../🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️tests/🔬️flow-selected-copy/🟦️.ts";
+import { toolJobCooperativeMaintenanceSelfTests } from "@semio-tech/framework-async/cooperative/testing/tool-job-cooperative-maintenance";
+import { proceduralGenerationRootSelfTests } from "@semio-tech/framework-os/modules/playbook/artifacts/playbook/generation/testing/procedural-generation-root";
+import { flowTypedRetirementSelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/testing/flow-typed-retirement";
+import { flowSelectedCopySelfTests } from "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/copy/testing/flow-selected-copy";
 import { admissionOrderAndBoundedPreparationChecks, interactiveJobEvaluationFixtures, proofCatalogEvaluationChecks } from "./🧾️proof-catalog-and-admission/🟦️.ts";
 import { actorProgressOverlayChecks, fem2dMountedSessionChecks, globalPayloadStoreInventoryChecks } from "./🧯️payload-store-progress-and-mounted-session/🟦️.ts";
 import { ephemeralPublicationChecks, freshTurnAndHostOnlyPublicationChecks, retainedPublicationChecks } from "./📤️publication-contracts/🟦️.ts";
@@ -57,5 +58,5 @@ export function toolJobCoverageSelfTests(): number {
   layoutAndColdRelayRetainedChecks();
   const scalarConfig = toolJobScalarConfigCohortSelfTests();
   const sealer = storeCanonicalEditSealerSelfTests();
-  return fixtures.length + 394 + memberProducerChecks + checkpointChecks + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.editHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapEditHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
+  return fixtures.length + 394 + memberProducerChecks + checkpointChecks + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobMicrosecondWorkerBindingSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.editHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapEditHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
 }

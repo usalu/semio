@@ -12,8 +12,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 import { Board2dHost } from "../../🟦️.tsx";
 import { BOARD_2D_ZOOM_BOUNDS, board2dPinchCamera } from "../../📍️drop-and-camera/🟦️.ts";
-import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
+import { BoardSessionFactoryContext, createBoardPeerScope } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 import surfacePinchFixture from "../../../../🧪️tests/🧫️fixtures/🤏️surface-pinch/🔣️.json";
+import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 // #endregion 🔌️Adapters
 
 // #region 🧪️Harness

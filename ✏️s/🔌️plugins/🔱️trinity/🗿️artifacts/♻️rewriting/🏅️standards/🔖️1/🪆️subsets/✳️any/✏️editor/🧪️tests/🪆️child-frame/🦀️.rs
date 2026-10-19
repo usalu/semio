@@ -6,7 +6,9 @@ use {semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot, s
 use semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json;
 use semio_s_artifact_stdio_semio_graph::io::text::snapshot::encode_semio_graph_snapshot_json;
 type RichFrameMembers=semio_s_artifact_stdio_semio::SemioMembers;
-type RichFrameApp=VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>;
+struct RichFrameApp(pub VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>,pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+impl std::ops::Deref for RichFrameApp{type Target=VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>;fn deref(&self)->&Self::Target{&self.0}}
+impl std::ops::DerefMut for RichFrameApp{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
 fn full_frame_contract()->serde_json::Value{
  serde_json::from_str(runtime_fixture_text("../../🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/🧵️lifetime/🔣️.json")).expect("closed frame input")
 }
@@ -19,7 +21,8 @@ fn full_frame_child(contract:&serde_json::Value,next:bool)->SemioGraphSnapshot{
 }
 async fn full_frame_app()->RichFrameApp{
  let contract=full_frame_contract();
- let mut app=artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>(trinity_rewriting_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+ let scope=semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+ let mut app=artifact_app_laws::new_app_with_registry_and_members::<EditorApp<TrinityRewritingPlayApp>,RichFrameMembers>(trinity_rewriting_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
  app.bind_instance_id(REWRITING_TEST_INSTANCE).await;
  let mut parent=app.snapshot().expect("actual parent");
  let logical=contract["childId"].as_str().expect("declared member key").to_owned();
@@ -32,7 +35,7 @@ async fn full_frame_app()->RichFrameApp{
  let mut child=store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("actual rich member store");
  store::install_funded_member_store_owners(&mut child,&::semio_s_artifact_stdio_semio_base::SemioMemberStoreProducer::<SemioGraphSnapshot,SemioGraphMutation>::new()).expect("funded member catalog");
  app.register_child("workingGraph",logical,dialect,RichFrameMembers::Graph(Box::new(child))).await.expect("publish complete member");
- app
+ RichFrameApp(app,scope)
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
@@ -62,19 +65,19 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
   assert_eq!(encode_semio_graph_snapshot_json(&read).expect("complete current typed owner"),encode_semio_graph_snapshot_json(&full_frame_child(&contract,true)).expect("complete declared next owner"));
  }
  let policy=semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy();
- assert!(matches!(PluginApp::close_step(&mut app,semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..policy.close}).expect("zero close grant"),PluginLifecycleStep::Progress(progress) if progress==Default::default()));
+ assert!(matches!(PluginApp::close_step(&mut app.0, app.1.cx(), semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..policy.close}).expect("zero close grant"),PluginLifecycleStep::Progress(progress) if progress==Default::default()));
  assert_eq!(encode_semio_graph_snapshot_json(&old).expect("zero grant retains child"),expected);
  let mut blocked=false;
- for _ in 0..65536{let demand=PluginApp::close_retirement_demands(&app,policy.close.maximum_copy_bytes).expect("close quote");if matches!(PluginApp::close_step(&mut app,semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand)).expect("bounded close"),PluginLifecycleStep::Blocked{..}){blocked=true;break}}
+ for _ in 0..65536{let demand=PluginApp::close_retirement_demands(&app.0,policy.close.maximum_copy_bytes).expect("close quote");if matches!(PluginApp::close_step(&mut app.0, app.1.cx(), semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand)).expect("bounded close"),PluginLifecycleStep::Blocked{..}){blocked=true;break}}
  assert!(blocked,"captured full existing registry owner blocks actual close");
- drop(old);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app,semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
- assert!(PluginApp::close_terminal_is_empty(&app));
+ drop(old);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(), app.1.cx()).expect("original caller paid app close");
+ assert!(PluginApp::close_terminal_is_empty(&app.0));
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_rewriting_real_command_reads_exact_declared_full_child(){
  let mut app=full_frame_app().await;
- app.dispatch_typed(TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()},&meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("admit actual document command");
- artifact_app_laws::settle_registered_typed_operation(&mut app,REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("actual reducer obtains the declared full child without local Any materialization");
+ app.0.dispatch_typed(TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()}, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("admit actual document command");
+ artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("actual reducer obtains the declared full child without local Any materialization");
  let view=app.test_child_content_view();
  let id=full_frame_contract()["childId"].as_str().expect("declared member key").to_owned();
  let child=view.typed_read::<SemioGraphSnapshot>("workingGraph",&id).expect("actual published child edit");
@@ -88,7 +91,7 @@ async fn sqlite_snapshot_rewriting_real_command_reads_exact_declared_full_child(
  assert_eq!(child.nodes[0].ports,expected.nodes[0].ports);
  assert_eq!(child.edges,expected.edges);
  assert_eq!(encode_semio_graph_snapshot_json(&child).expect("complete retained command owner"),encode_semio_graph_snapshot_json(&expected).expect("complete declared command owner"));
- drop(child);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app,semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy());
+ drop(child);drop(view);artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::content::trinity_mounted_owner_policy(), app.1.cx()).expect("original caller paid app close");
 }
 
 fn runtime_fixture_text(relative: &str) -> &'static str {

@@ -13,7 +13,7 @@ export {
   testAdapterFilenames, testFeatureFilename, testFilenameForKind, testLocationPath, testTaxonomy,
 } from "../../🗂️taxonomy/🟦️.ts";
 export type {
-  ComparisonProfileSpec, TestInPackageImplementation, TestTaxonomy,
+  ComparisonProfileSpec, TestTaxonomy,
 } from "../../🗂️taxonomy/🟦️.ts";
 export {
   digest, fileDigest, setDigest,
@@ -50,7 +50,7 @@ export type {
   MutationCatalog, MutationVector, MutationVectorScenario,
 } from "../../🧮️mutation-catalog/🟦️.ts";
 export {
-  currentPlatform, declaredSubsetPolicies, declaredSubsets, isWildcardSubset, isWildcardSubsetFor, subsetCoordinate, subsetCoordinatesOfOwner,
+  declaredSubsetPolicies, declaredSubsets, isWildcardSubset, isWildcardSubsetFor, subsetCoordinate, subsetCoordinatesOfOwner,
   subsetPolicyIsSingle, surfaceCoordinate, surfaceProblem, WILDCARD_SUBSET_IDS,
 } from "../../🪆️subset-policy/🟦️.ts";
 export type {
@@ -163,7 +163,7 @@ export type {
   TestingBreachKind,
 } from "../../🚨️breaches/🟦️.ts";
 export {
-  assessTestImplementationPath, inPackageTestImplementation, inspectTestLayoutSources, scanTestLayout, TEST_LAYOUT_FINDING_CODES,
+  assessTestImplementationPath, inspectTestLayoutSources, scanTestLayout, TEST_LAYOUT_FINDING_CODES,
   testImplementationFilenames, testLayoutBreaches,
 } from "../../🗺️test-layout/🟦️.ts";
 export type {
@@ -189,7 +189,7 @@ export {
   buildCasePlan, evaluateCrossSubjectParity, evaluateParity, levelsUpTo, markRunComplete, planExecution, subjectRawInputsByScenario, testId,
 } from "../../🎬️execution-plan/🟦️.ts";
 export {
-  committedArtifact, makeAdapterContext, registeredHandler, validateRegistration,
+  makeAdapterContext, registeredHandler, validateRegistration,
 } from "../../🔌️adapter-context/🟦️.ts";
 export {
   cleanTestOutputs, collectGarbage, formatCleanReport, formatGcReport, markReferencedBlobs,

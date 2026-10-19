@@ -3,9 +3,9 @@
 //! answers the same id, so the file is as small as the model is repetitive and its order is the order of first use.
 //! 📎 ISO 6946 <https://www.iso.org/standard/65708.html>
 
-use crate::standards::v1::subsets::any::io::export::energy::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
-use crate::standards::v1::subsets::any::schema::snapshot::Layer;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🌡️ The thermal absorptance of every surface, the default of EnergyPlus.

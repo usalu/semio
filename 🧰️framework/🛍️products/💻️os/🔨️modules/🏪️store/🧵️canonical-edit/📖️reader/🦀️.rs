@@ -10,7 +10,8 @@ pub struct ArtifactCanonicalJsonReader<T> {
     pub owned: ManuallyDrop<ReaderState<T>>,
 }
 
-struct ReaderState<T> {
+#[doc(hidden)]
+pub struct ReaderState<T> {
     pub encoder: ArtifactCanonicalEditEncoder,
     pub root: Option<Arc<T>>,
     pub retirement: Option<Arc<dyn SnapshotRetirementFactory<T>>>,

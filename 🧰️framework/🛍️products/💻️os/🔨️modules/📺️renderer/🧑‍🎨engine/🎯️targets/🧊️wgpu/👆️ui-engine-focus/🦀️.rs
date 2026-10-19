@@ -9,7 +9,10 @@ use crate::ink_and_vfs_focus::complete_pending_native_ink_clipboard;
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 use crate::ink_and_vfs_focus::{complete_pending_native_text_editor_clipboard, PendingNativeInkClipboardToken, PendingNativeTextEditorClipboardToken};
 use semio_framework_os_renderer_wgpu_contracts::{ScenePointerOwner, UI_ENGINE};
-use ui_wgpu::wgpu::{ActionDescriptor, NodeId, Rect, UiNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::UiNode;
 
 #[path = "../../../🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/✍️text-and-table-focus/🦀️.rs"]
 pub mod text_and_table_focus;

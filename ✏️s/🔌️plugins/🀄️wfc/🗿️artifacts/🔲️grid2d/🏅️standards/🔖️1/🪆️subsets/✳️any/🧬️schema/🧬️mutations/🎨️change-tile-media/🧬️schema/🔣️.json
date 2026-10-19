@@ -689,7 +689,7 @@
           }
         },
         "child": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json",
           "x-semio-ui": {
             "widget": "hidden",
             "role": "value",

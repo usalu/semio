@@ -1,6 +1,8 @@
 //! 🎡️ `rotate-elements` payload. Turns placed elements counter-clockwise about a pivot, one sparse patch of exactly the placement fields per element; column rotation, stair direction, slab fall and roof ridge direction turn with them and hosted openings follow by inference.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,7 +16,7 @@ pub struct RotateElements {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for RotateElements
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<RotateElements> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<RotateElements> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rotate", entity: "elements", kind: "rotate-elements", record: "RotateElements" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

@@ -1,10 +1,10 @@
 import{rustUnitSourceSnapshotMatchesV1}from"./🔏️snapshot/🟦️.ts";
 import{resolve}from"node:path";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import{readRustSourceClosureV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
-import type{RustUnitV1}from"../🟦️.ts";
+import { type RustUnitV1 } from "../🧬️definition/🟦️.ts";
 import publicSchema from"./🧬️schema/🔣️.json";
 const schema=structuredClone(publicSchema);
 /** 📏️ Admits primitive closed Source bounds before any discovery read; repeated probes receive only their own extent credit. */

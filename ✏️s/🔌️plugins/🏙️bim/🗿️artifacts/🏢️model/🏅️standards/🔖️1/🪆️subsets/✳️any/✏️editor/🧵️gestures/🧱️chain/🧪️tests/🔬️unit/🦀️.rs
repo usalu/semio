@@ -1,13 +1,14 @@
-use crate::editor::bim::gestures::session::TYPE_MISSING;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{model, Rig};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, TopConstraint}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::TYPE_MISSING;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{model, Rig};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, TopConstraint};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 fn line(start: (f64, f64), end: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }
 }
 
-fn created_wall(mutations: &[ModelMutation]) -> &crate::standards::v1::subsets::any::schema::snapshot::Wall {
+fn created_wall(mutations: &[ModelMutation]) -> &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall {
     match mutations {
         [ModelMutation::CreateWall(create)] => &create.wall,
         other => panic!("one create-wall expected, got {other:?}"),

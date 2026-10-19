@@ -49,7 +49,8 @@ semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-framework-ui-host" }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }

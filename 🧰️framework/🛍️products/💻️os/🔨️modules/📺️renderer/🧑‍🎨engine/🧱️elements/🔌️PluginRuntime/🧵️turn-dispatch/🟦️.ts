@@ -4,9 +4,9 @@
  */
 
 // #region 🔌️Adapters
-import { type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts";
-import { type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts";
-import { type ShardBudget, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { type OwnedNativeUiPatchSubmissionReceipt, type OwnedUiPatchAcknowledgementEntry } from "@semio-tech/framework-actor/shard-client/ui-patch";
+import { type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardInstanceOpenInput } from "@semio-tech/framework-actor/shard-client/activation";
+import { type ShardBudget, type ShardCommandIngressPage, type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client/wire";
 // #endregion 🔌️Adapters
 import type { ActorInstanceLifecycleReceipt } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { type OwnedUiInstanceRetirement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";

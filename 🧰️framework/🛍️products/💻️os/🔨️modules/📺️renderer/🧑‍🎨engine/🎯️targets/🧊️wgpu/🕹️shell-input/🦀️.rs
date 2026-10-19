@@ -18,7 +18,12 @@ use semio_framework_ui_locale::Label;
 use semio_framework_value::{DslValue, FromValue};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{ActionDescriptor, HitKind, HitTarget, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent, WidgetInteractionMaps, WindowStackCorner};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowStackCorner};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers, TreeDragState};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow, UiTreeWindowRowExtent};
+use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🕹️input/🧬️component/🦀️.rs"]
 mod staged_input__component;

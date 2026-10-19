@@ -2,11 +2,13 @@
 //! history row. They are the keyboard and menu counterpart of dropping an outliner row on a storey. Anything that stands on no storey (an opening follows its host) is skipped; with no movable target or no
 //! storey beyond one of them the command is refused whole instead of moving part of the targets.
 
-use crate::editor::bim::entities::{fields_of, kind_holding, ordered_storeys};
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

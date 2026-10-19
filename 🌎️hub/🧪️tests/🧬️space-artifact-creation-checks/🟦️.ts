@@ -2,16 +2,16 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { descriptorDigestEncodingV1 } from "@semio-tech/framework-os/modules/directory/io/binary/descriptor-digest";
 import { parseSpaceArtifactCreateJsonV1, parseSpaceArtifactCreationCatalogJsonV1, parseSpaceArtifactCreationStatusJsonV1 } from "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1";
-import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { type ExactCargoLawGroup } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import type { PackValue } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
@@ -19,8 +19,8 @@ import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/fram
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
 import { foldAll as foldDirectoryIndexEvents } from "@semio-tech/framework/directory";
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1, validDocumentIndexEntryV1 } from "@semio-tech/framework/directory/schema";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
@@ -233,7 +233,7 @@ export class SpaceArtifactCreationCheckScript extends BundleScript {
           laws: ["tests::document_open_and_execution_target_refuse_descriptor_or_index_without_genesis", "tests::socket_grant_directory_route_uses_credential_free_hello_and_revokes_live"],
         });
       }
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups,progress(event) { console.log(`space-artifact-creation ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups,progress(event) { console.log(`space-artifact-creation ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
       for (const receipt of receipts) console.log(`space-artifact-creation-receipt: ${JSON.stringify(receipt)}`);
     }
   }

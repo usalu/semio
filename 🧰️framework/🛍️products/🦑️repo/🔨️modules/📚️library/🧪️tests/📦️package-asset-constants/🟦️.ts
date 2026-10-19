@@ -12,7 +12,7 @@ const CONSTANT_LEAVES: readonly Readonly<{ file: string; prefix: string }>[] = [
 
 /** 🔏️ The digest sidecars (`name`, `size`, `sha256` per asset, three lines each) that a deferred example or a served schema document embeds in place of its payload. */
 const DIGEST_SIDECARS: readonly string[] = [
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️base/🔏️.digest",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️metabolism-model/🔏️.digest",
   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🖼️assets/🌙️dream/🔏️.digest",
   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔏️.digest",
 ];

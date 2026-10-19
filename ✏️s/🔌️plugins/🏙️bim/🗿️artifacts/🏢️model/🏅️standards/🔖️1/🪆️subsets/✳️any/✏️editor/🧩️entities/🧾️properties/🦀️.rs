@@ -1,14 +1,15 @@
 //! 🧾️ Properties of the BIM entity table: the property types, texts, values and entries. See [`super`].
 
 use crate::editor::bim::entities::*;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::number;
 
 //#region 🔖️Properties
 /// 🏷️ The measure kinds of a typed property value, in the order the entry grammar names them.
 pub const PROPERTY_TYPES: &[&str] = &["text", "real", "integer", "boolean", "length", "area", "volume", "angle"];
 
 /// 🏷️ The kind name of a property value.
-pub fn property_type(value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue) -> &'static str {
-    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
+pub fn property_type(value: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue) -> &'static str {
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue::*;
     match value {
         Text { .. } => "text",
         Real { .. } => "real",
@@ -22,8 +23,8 @@ pub fn property_type(value: &crate::standards::v1::subsets::any::schema::snapsho
 }
 
 /// 🏷️ The text of a property value, without its kind.
-pub fn property_text(value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue) -> String {
-    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
+pub fn property_text(value: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue) -> String {
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue::*;
     match value {
         Text { value } => value.clone(),
         Real { value } | Length { value } | Area { value } | Volume { value } | Angle { value } => number(*value),
@@ -33,8 +34,8 @@ pub fn property_text(value: &crate::standards::v1::subsets::any::schema::snapsho
 }
 
 /// 🏷️ The property value a text names: of the given kind, else inferred (`true` and `false` are flags, whole numbers are integers, other numbers are reals, anything else is text).
-pub fn property_value(text: &str, kind: Option<&str>) -> Option<crate::standards::v1::subsets::any::schema::snapshot::PropertyValue> {
-    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
+pub fn property_value(text: &str, kind: Option<&str>) -> Option<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue> {
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue::*;
     let text = text.trim();
     let measure = || text.parse::<f64>().ok().filter(|value| value.is_finite());
     match kind.map(str::to_lowercase).as_deref() {

@@ -32,7 +32,8 @@ pub(crate) mod context {
     /// `Generation3dAppFixture`, and for the same reason: `VcsArtifactApp`'s `ArtifactStore` owns a
     /// disposer whose `Drop` asserts terminal-empty ownership, so a plainly-dropped harness aborts the
     /// whole test binary (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    pub struct Generation3dViewerFixture(Generation3dViewerHarness);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct Generation3dViewerFixture(pub Generation3dViewerHarness, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for Generation3dViewerFixture {
         type Target = Generation3dViewerHarness;
@@ -49,15 +50,17 @@ pub(crate) mod context {
     
     impl Drop for Generation3dViewerFixture {
         fn drop(&mut self) {
-            let witness = crate::editor_domain::editor_laws::context::close_ladder_witness(&mut self.0);
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Generation3d viewer fixture did not reach its terminal-empty close witness{witness}");
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            }
         }
     }
     
     pub async fn app() -> Generation3dViewerFixture {
-        let mut app = new_app_with_registry::<ViewerApp<Generation3dViewer>>(generation3d_viewer_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = new_app_with_registry::<ViewerApp<Generation3dViewer>>(generation3d_viewer_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
-        Generation3dViewerFixture(app)
+        Generation3dViewerFixture(app, scope)
     }
     
     /// 📸️ Reads the live projection into a self-retiring [`SnapshotRead`] — the read-only
@@ -67,12 +70,12 @@ pub(crate) mod context {
         crate::SnapshotRead::new(app.snapshot().expect("snapshot"))
     }
     
-    pub async fn dispatch(app: &mut Generation3dViewerHarness, command: Generation3dViewCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    pub async fn dispatch(app: &mut Generation3dViewerFixture, command: Generation3dViewCommand) -> InvocationResult {
+        app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
     }
     
-    pub async fn render(app: &mut Generation3dViewerHarness, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
+    pub async fn render(app: &mut Generation3dViewerFixture, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
     
     //#region ⏱️FlowEvalChain
@@ -92,36 +95,36 @@ pub(crate) mod context {
     /// 🏛️ Redispatches one armed `Effect::DispatchAction` exactly the way `makeEffectDispatchOne`
     /// (`🛠️ShellHelpers/🟦️.tsx`) does: an action id the app declares as a COMMAND re-enters the typed
     /// command channel with the shell's own live view attached, never the scoped action channel.
-    pub async fn dispatch_effect_command(app: &mut Generation3dViewerHarness, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
-        crate::brep_extension::dispatch_effect_command(app, command_id, args, action_meta).await
+    pub async fn dispatch_effect_command(app: &mut Generation3dViewerFixture, command_id: &str, args: Option<&semio_framework_value::DslValue>, action_meta: &ActionMeta) -> Result<(), semio_framework_plugin::Fault> {
+        crate::brep_extension::dispatch_effect_command(&mut app.0, command_id, args, action_meta, app.1.cx()).await
     }
     
-    pub async fn dispatch_with_view(app: &mut Generation3dViewerHarness, command: Generation3dViewCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
+    pub async fn dispatch_with_view(app: &mut Generation3dViewerFixture, command: Generation3dViewCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        app.dispatch_typed(command, &action_meta).await?;
-        settle_registered_typed_operation(app, action_meta.instance_id).await
+        app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))?;
+        settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
     }
     
     pub use crate::brep_extension::{run_actions, PreviewRunReceipt};
 
     /// 🚦️ The framework run actions a refresh over `shell_view` owes the `previewEval` run right now.
-    pub async fn owed_run_actions(app: &mut Generation3dViewerHarness, shell_view: &ViewModel) -> Vec<String> {
-        crate::brep_extension::owed_run_actions(app, shell_view).await
+    pub async fn owed_run_actions(app: &mut Generation3dViewerFixture, shell_view: &ViewModel) -> Vec<String> {
+        crate::brep_extension::owed_run_actions(&mut app.0, shell_view).await
     }
 
     /// 🔁️ The served `previewEval` loop on the read-only surface, answered by the in-process kernel
     /// ([`crate::brep_extension::drive_preview_run`]).
-    pub async fn drive_preview_run(app: &mut Generation3dViewerHarness, shell_view: &ViewModel, initial: &[Effect]) -> PreviewRunReceipt {
-        crate::brep_extension::drive_preview_run(app, shell_view, initial, &mut crate::brep_extension::serve).await
+    pub async fn drive_preview_run(app: &mut Generation3dViewerFixture, shell_view: &ViewModel, initial: &[Effect]) -> PreviewRunReceipt {
+        crate::brep_extension::drive_preview_run(&mut app.0, shell_view, initial, &mut crate::brep_extension::serve, app.1.cx()).await
     }
 
-    pub async fn drain_armed_flow_eval_ticks(app: &mut Generation3dViewerHarness, shell_view: &ViewModel) -> usize {
+    pub async fn drain_armed_flow_eval_ticks(app: &mut Generation3dViewerFixture, shell_view: &ViewModel) -> usize {
         drive_preview_run(app, shell_view, &[]).await.hops
     }
 
     /// 🔁️ The same loop, started from an effect list a caller already has in hand — the twin of
     /// [`drain_armed_flow_eval_ticks`] for a gesture's own receipt.
-    pub async fn drain_armed_flow_eval_ticks_from(app: &mut Generation3dViewerHarness, shell_view: &ViewModel, initial: &[Effect]) -> usize {
+    pub async fn drain_armed_flow_eval_ticks_from(app: &mut Generation3dViewerFixture, shell_view: &ViewModel, initial: &[Effect]) -> usize {
         drive_preview_run(app, shell_view, initial).await.hops
     }
 
@@ -138,13 +141,13 @@ pub(crate) mod context {
             .collect()
     }
 
-    pub async fn render_with_view(app: &mut Generation3dViewerHarness, body_key: &str, view_state: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view_state).await.expect("render")).expect("render json")
+    pub async fn render_with_view(app: &mut Generation3dViewerFixture, body_key: &str, view_state: &ViewModel) -> String {
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view_state, app.1.cx()).await.expect("render json")
     }
     
     /// 🧊️ The mesh count a rendered viewer preview body actually carries.
     pub fn preview_mesh_count(projection: &str) -> usize {
-        let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(projection).expect("the viewer preview body must decode as an assembled world-3d scene");
+        let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(projection).expect("the viewer preview body must decode as an assembled world-3d scene");
         let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
         meshes.as_array().map_or(0, Vec::len)
     }

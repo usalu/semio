@@ -1,0 +1,11 @@
+import { toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts";
+import { readSourceFamilySource, readModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readFileSync } from "node:fs";
+const F = "/Users/ueli/Documents/semio/🧰️framework";
+const S = `${F}/🛍️products/💻️os/🔨️modules/🏪️store`;
+const store = readSourceFamilySource(S);
+const retirement = readFileSync(`${S}/👥️presence/♻️retirement/🦀️.rs`, "utf8");
+console.log("commit authority", toolJobPeerCommitAuthorityExact(store, retirement));
+const plugin = readSourceFamilySource(`${F}/🛍️products/💻️os/🔨️modules/🔌️plugin`);
+const channel = readModuleTreeSource(`${F}/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs`) + readSourceFamilySource(`${F}/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel`);
+console.log("interaction roots", toolJobPeerInteractionRootsExact(plugin, store, channel, retirement));

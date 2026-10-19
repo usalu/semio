@@ -6,7 +6,7 @@ import choices from "../🧫️fixtures/🔣️choices.json";
 import choiceSchema from "../../🧬️schema/🔣️choice-edit.json";
 import Ajv from "ajv";
 import { patchChoice, patchQuestion } from "../../🟦️.ts";
-import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧱️form-model/🟦️.ts";
 
 /** 🧪️ Validated field edits match shared vectors and independent JSON Patch application. */
 export function testFormsQuestionPatches(): void {

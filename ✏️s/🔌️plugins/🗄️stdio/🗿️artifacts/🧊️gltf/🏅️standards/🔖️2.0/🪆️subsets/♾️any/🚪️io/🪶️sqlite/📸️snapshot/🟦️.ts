@@ -3,7 +3,7 @@ import {artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/f
 import {validateSqliteDatabaseSchemaControlled,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
 import type { ArtifactDialect } from "@semio-tech/framework/schema/artifact-reference";
 import type {GltfSnapshot} from "../../../🧬️schema/📸️snapshot/🟦️.ts";
-import {Write,Read} from "./🧩️control/🟦️.ts";
+import { Write, Read } from "./🧮️cell-codec/🟦️.ts";
 import * as document from "./📄️document/🟦️.ts";
 import * as node from "./🌳️node/🟦️.ts";
 import * as mesh from "./🏔️mesh/🟦️.ts";

@@ -1,7 +1,7 @@
 import {posix,win32} from "node:path";
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {cargoDepInfoSourcesV1} from "../🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 export interface RustCompilerConsumedFileV1 {readonly path:string;readonly digest:string;readonly bytes:number}
 export interface RustCompilerConsumedBytesV1 {readonly version:1;readonly algorithm:"sha256";readonly files:readonly RustCompilerConsumedFileV1[]}
 interface RequestV1 {version:1;platform:"posix"|"windows";root:string;cwd:string;text:string;expected:RustCompilerConsumedFileV1[]}

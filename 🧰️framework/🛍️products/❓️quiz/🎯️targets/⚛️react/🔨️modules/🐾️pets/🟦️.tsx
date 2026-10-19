@@ -33,13 +33,13 @@
  * @see https://www.w3.org/TR/mediaqueries-5/#prefers-reduced-motion — the device's hint
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentType, type ReactElement, type ReactNode, type RefObject } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from "react";
 import { useMediaQuery } from "@semio-tech/ui-react/chrome";
-import type { Menagerie, PetMode, Slug } from "@semio-tech/pets";
-import type { PetLayerHandle, PetLayerProps } from "@semio-tech/pets-react";
+import type { Menagerie, Slug } from "@semio-tech/pets";
+import type { PetLayerHandle } from "@semio-tech/pets-react";
 import type { QuizLocale, QuizText } from "../🌐️i18n/🟦️.ts";
 import type { QuizState } from "../🧭️session/🧮️state/🟦️.ts";
-import type { PetDeed } from "./🎪️stage/🟦️.tsx";
+import type { PetDeed, PetPlay, QuizPetsStage, StagedPets } from "./🎪️stage/🟦️.tsx";
 
 //#region 🎚️Choice
 /** 🎚️ What a learner may choose for the pets: none at all, motionless, slightly active or busy. */
@@ -65,21 +65,6 @@ export function switchedPets(shown: boolean, before: PetLiveliness): PetChoice {
   return shown ? before : "off";
 }
 //#endregion 🎚️Choice
-
-//#region 🎾️Play
-/** 🐕️ A pet on stage: its species and its display name in the learner's language. */
-export interface PetPlayer {
-  readonly species: Slug;
-  readonly name: string;
-}
-
-/** 🤹️ What the settings need to play with the pets without a pointer: who is on stage, in the order the layer names
- * them, and how to ask one of them for a deed (whether and how it answers is its stage's to decide). */
-export interface PetPlay {
-  readonly players: readonly PetPlayer[];
-  readonly play: (species: Slug, deed: PetDeed) => void;
-}
-//#endregion 🎾️Play
 
 //#region 🗺️Topics
 /** 🔑️ The topic key of `part` within `topic` (`<quiz>` or `<quiz>/<task>`): `<topic>/<part>`, one of the grounds a
@@ -107,9 +92,6 @@ export function usePetTopic(): string | undefined {
  * twice asks twice and drops the first answer), and only when pets are wanted. */
 export type QuizPetsSource = () => Promise<Menagerie>;
 
-/** 🎭️ Where the render target comes from: its pet layer and what that layer keeps clear of by itself. */
-export type QuizPetsStage = () => Promise<{ readonly PetLayer: ComponentType<PetLayerProps>; readonly PET_KEEPOUTS: string }>;
-
 /** 📦️ The render target as a chunk of its own (with its stylesheet), fetched when pets are first wanted. */
 const renderTarget: QuizPetsStage = () => import("@semio-tech/pets-react");
 
@@ -122,17 +104,8 @@ const quizHalf = (): Promise<QuizPetsHalf> => import("./🎪️stage/🟦️.tsx
 /** 🎟️ What the layer shows once the pets came: the species, the render target and the half of the glue that came with
  * them, the scene of the step on screen, how lively the pets are, whether a run asks for quiet, what the learner allows
  * (`play`, `mischief`), the handle the settings ask for deeds by, and where the layer says who is on stage. */
-export interface ShownPets {
-  readonly menagerie: Menagerie;
-  readonly target: Awaited<ReturnType<QuizPetsStage>>;
+export interface ShownPets extends StagedPets {
   readonly half: QuizPetsHalf;
-  readonly scene: string;
-  readonly mode: PetMode;
-  readonly quiet: boolean;
-  readonly play: boolean;
-  readonly mischief: boolean;
-  readonly handle: RefObject<PetLayerHandle | null>;
-  readonly onCast: (species: readonly Slug[]) => void;
 }
 
 type LoadedPets = Pick<ShownPets, "menagerie" | "target" | "half">;

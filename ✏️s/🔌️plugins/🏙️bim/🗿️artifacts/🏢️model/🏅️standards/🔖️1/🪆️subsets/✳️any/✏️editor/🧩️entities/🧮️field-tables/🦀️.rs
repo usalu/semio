@@ -1,8 +1,45 @@
 //! 🧮️ Field tables of the BIM entity table: the authored parameter rows and inferred rows of every entity kind. See [`super`].
 
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, snapshot::OpeningKind, mutations::ModelMutation};
-use crate::standards::v1::subsets::any::schema::diff::Assigned;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
 use crate::editor::bim::entities::*;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, InferredRow};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{number, parse_number, point, parse_point, parse_int, parse_optional_number, parse_text, axis_text, parse_axis, parse_location, top_text, parse_top, join_text, parse_join, slope_text, loop_text, parse_loop, holes_text, parse_holes, roof_shape_text, parse_roof_shape, opening_text, type_sill, parse_flag, flight_text, parse_flight, stringer_text, parse_stringer, parse_riser, profile_text, parse_profile, baluster_text, parse_baluster, infill_text, parse_infill, parse_category, parse_count, parse_leaves, parse_swing};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::{phasing, frame};
+use semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening;
+use semio_s_artifact_bim_model_mut_any_170::standards::v1::subsets::any::schema::mutations::set_beam;
+use semio_s_artifact_bim_model_mut_any_10::standards::v1::subsets::any::schema::mutations::set_beam_type;
+use semio_s_artifact_bim_model_mut_any_19::standards::v1::subsets::any::schema::mutations::set_building;
+use semio_s_artifact_bim_model_mut_any_66::standards::v1::subsets::any::schema::mutations::set_column;
+use semio_s_artifact_bim_model_mut_any_9::standards::v1::subsets::any::schema::mutations::set_column_type;
+use semio_s_artifact_bim_model_mut_any_171::standards::v1::subsets::any::schema::mutations::set_curtain_wall;
+use semio_s_artifact_bim_model_mut_any_12::standards::v1::subsets::any::schema::mutations::set_door_type;
+use semio_s_artifact_bim_model_mut_any_20::standards::v1::subsets::any::schema::mutations::set_grid_line;
+use semio_s_artifact_bim_model_mut_any_13::standards::v1::subsets::any::schema::mutations::set_material;
+use semio_s_artifact_bim_model_mut_any_176::standards::v1::subsets::any::schema::mutations::set_opening;
+use semio_s_artifact_bim_model_mut_any_63::standards::v1::subsets::any::schema::mutations::set_railing;
+use semio_s_artifact_bim_model_mut_any_7::standards::v1::subsets::any::schema::mutations::set_roof_footprint;
+use semio_s_artifact_bim_model_mut_any_8::standards::v1::subsets::any::schema::mutations::set_roof_shape;
+use semio_s_artifact_bim_model_mut_any_16::standards::v1::subsets::any::schema::mutations::set_roof_type;
+use semio_s_artifact_bim_model_mut_any_18::standards::v1::subsets::any::schema::mutations::set_site;
+use semio_s_artifact_bim_model_mut_any_6::standards::v1::subsets::any::schema::mutations::set_slab;
+use semio_s_artifact_bim_model_mut_any_15::standards::v1::subsets::any::schema::mutations::set_slab_type;
+use semio_s_artifact_bim_model_mut_any_4::standards::v1::subsets::any::schema::mutations::set_space;
+use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::set_space_conditions;
+use semio_s_artifact_bim_model_mut_any_81::standards::v1::subsets::any::schema::mutations::set_stair;
+use semio_s_artifact_bim_model_mut_any_24::standards::v1::subsets::any::schema::mutations::set_storey_cut_height;
+use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height;
+use semio_s_artifact_bim_model_mut_any_3::standards::v1::subsets::any::schema::mutations::set_storey_level;
+use semio_s_artifact_bim_model_mut_any_57::standards::v1::subsets::any::schema::mutations::set_type_thermal_data;
+use semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis;
+use semio_s_artifact_bim_model_mut_any_21::standards::v1::subsets::any::schema::mutations::set_wall_base_offset;
+use semio_s_artifact_bim_model_mut_any_23::standards::v1::subsets::any::schema::mutations::set_wall_location;
+use semio_s_artifact_bim_model_mut_any_174::standards::v1::subsets::any::schema::mutations::set_wall_top;
+use semio_s_artifact_bim_model_mut_any_14::standards::v1::subsets::any::schema::mutations::set_wall_type;
+use semio_s_artifact_bim_model_mut_any_22::standards::v1::subsets::any::schema::mutations::set_wall_type_of;
+use semio_s_artifact_bim_model_mut_any_11::standards::v1::subsets::any::schema::mutations::set_window_type;
 
 //#region 🔖️Fields
 pub static SITE_FIELDS: &[FieldRow] = &[
@@ -26,7 +63,7 @@ pub static STOREY_FIELDS: &[FieldRow] = &[
     field!("building", field_building, Text, |s, id| s.storeys.get(id).map(|row| row.building.clone())),
     field!("level", field_level, Number, |s, id| s.storeys.get(id).map(|row| row.level.to_string()), parse_int => set_storey_level::SetStoreyLevel),
     field!("height", field_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.height)), parse_number => set_storey_height::SetStoreyHeight),
-    field!("cut_height", field_cut_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.cut_height.unwrap_or(crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT))), |_, id, value| set!(set_storey_cut_height::SetStoreyCutHeight, id, "cut_height", &Assigned::new(parse_optional_number(value)?))),
+    field!("cut_height", field_cut_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.cut_height.unwrap_or(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT))), |_, id, value| set!(set_storey_cut_height::SetStoreyCutHeight, id, "cut_height", &Assigned::new(parse_optional_number(value)?))),
 ];
 
 pub static GRID_FIELDS: &[FieldRow] = &[
@@ -47,8 +84,8 @@ pub static WALL_FIELDS: &[FieldRow] = &[
     field!("top", field_top, Text, |s, id| s.walls.get(id).map(|row| top_text(&row.top)), parse_top => set_wall_top::SetWallTop),
     field!("top_attach", field_top_attach, Text, |s, id| wall_sweeps::top_attach_text(s, id), choices: wall_sweeps::surface_choices, write: wall_sweeps::write_top_attach),
     field!("base_slab", field_base_slab, Text, |s, id| wall_sweeps::base_slab_text(s, id), choices: wall_sweeps::slab_choices, write: wall_sweeps::write_base_slab),
-    field!("start_join",field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
-    field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
+    field!("start_join",field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
+    field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
 ];
 
 pub static CURTAIN_WALL_FIELDS: &[FieldRow] = &[
@@ -91,8 +128,8 @@ pub static SLAB_FIELDS: &[FieldRow] = &[
     field!("phase", field_phase, Text, |s, id| s.slabs.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("slab_type", field_slab_type, Text, |s, id| s.slabs.get(id).map(|row| row.slab_type.clone()), parse_text => set_slab::SetSlab),
     field!("offset", field_offset, Number, |s, id| s.slabs.get(id).map(|row| number(row.offset)), parse_number => set_slab::SetSlab),
-    field!("boundary", field_boundary, Text, |s, id| s.slabs.get(id).map(|row| loop_text(&row.boundary)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: parse_loop(value)?, holes: s.slabs.get(id)?.holes.clone() }))),
-    field!("holes", field_holes, Text, |s, id| s.slabs.get(id).map(|row| holes_text(&row.holes)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: s.slabs.get(id)?.boundary.clone(), holes: parse_holes(value)? }))),
+    field!("boundary", field_boundary, Text, |s, id| s.slabs.get(id).map(|row| loop_text(&row.boundary)), |s, id, value| Some(ModelMutation::SetSlabBoundary(semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: parse_loop(value)?, holes: s.slabs.get(id)?.holes.clone() }))),
+    field!("holes", field_holes, Text, |s, id| s.slabs.get(id).map(|row| holes_text(&row.holes)), |s, id, value| Some(ModelMutation::SetSlabBoundary(semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: s.slabs.get(id)?.boundary.clone(), holes: parse_holes(value)? }))),
 ];
 
 pub static ROOF_FIELDS: &[FieldRow] = &[
@@ -120,7 +157,7 @@ pub fn opening_kind(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<M
 
 pub static OPENING_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.openings.get(id).map(|row| row.name.clone()), rename),
-    field!("host", field_host, Text, |s, id| s.openings.get(id).map(|row| row.host.clone()), |s, id, value| Some(ModelMutation::MoveOpening(crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.into(), offset: s.openings.get(id)?.offset, host: Some(value.trim().into()) }))),
+    field!("host", field_host, Text, |s, id| s.openings.get(id).map(|row| row.host.clone()), |s, id, value| Some(ModelMutation::MoveOpening(semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.into(), offset: s.openings.get(id)?.offset, host: Some(value.trim().into()) }))),
     field!("kind", field_kind, Text, |s, id| s.openings.get(id).map(|row| opening_text(&row.kind)), |s, id, value| opening_kind(s, id, value)),
     field!("offset", field_offset, Number, |s, id| s.openings.get(id).map(|row| number(row.offset)), parse_number => move_opening::MoveOpening),
     field!("sill_override", field_sill, Number, |s, id| s.openings.get(id).map(|row| number(row.sill_override.unwrap_or_else(|| type_sill(s, &row.kind)))), |_, id, value| set!(set_opening::SetOpening, id, "sill_override", &Assigned::new(parse_optional_number(value)?))),
@@ -267,9 +304,9 @@ pub static QUANTITY_INFERRED: &[InferredRow] = &[
     inferred!("area", field_area, |_, inference, id| inference.quantities.elements.get(id).map(|row| row.area()).filter(|area| *area > 0.0).map(number)),
     inferred!("volume", field_volume, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.net_volume > 0.0).map(|row| number(row.net_volume))),
     inferred!("mass", field_mass, |_, inference, id| inference.quantities.elements.get(id).filter(|row| row.mass > 0.0).map(|row| number(row.mass))),
-    inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Floor)),
-    inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Wall)),
-    inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| zoning::finish_area(inference, id, zoning::FinishSurface::Ceiling)),
+    inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| zoning::finish_area(inference, id, semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface::Floor)),
+    inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| zoning::finish_area(inference, id, semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface::Wall)),
+    inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| zoning::finish_area(inference, id, semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface::Ceiling)),
     inferred!("envelope_surfaces", field_envelope_surfaces, |_, inference, id| energy::envelope(inference, id, |_, facts| facts.surfaces.to_string())),
     inferred!("envelope_area", field_envelope_area, |_, inference, id| energy::envelope(inference, id, |_, facts| energy::fixed(facts.envelope_area))),
     inferred!("glazing_area", field_glazing_area, |_, inference, id| energy::envelope(inference, id, |_, facts| energy::fixed(facts.glazing_area))),

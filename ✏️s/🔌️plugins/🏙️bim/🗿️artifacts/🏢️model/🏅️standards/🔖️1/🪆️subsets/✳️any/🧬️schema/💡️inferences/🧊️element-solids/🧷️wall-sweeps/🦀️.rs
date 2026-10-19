@@ -5,12 +5,14 @@
 //! above the base of the wall (the base profile of an attached base included) and its innermost point `inset` metres inside the face plane, so an inset of zero stands the profile on the face. Every run of the path is a closed body with flat
 //! end caps (a sweep is cut square at the face ends and at openings; it is not mitered around corners). The material of the sweep is the only material of its solid.
 
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
-use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSide, WallSweep};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::WallSide;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::vector::perp;
@@ -73,7 +75,7 @@ fn face_of(sweep: &WallSweep, wall: &Wall, layout: &WallLayout) -> Option<(semio
         WallSide::Left => (layout.offset_left, ends.left, 1.0),
         WallSide::Right => (-layout.offset_right, ends.right, -1.0),
     };
-    Some((seg(&wall.axis).offset(offset)?, range, outward))
+    Some((segment_of(&wall.axis).offset(offset)?, range, outward))
 }
 
 /// ✂️ The runs `(from, to)` of the sweep along the axis (arc-length coordinates): the trimmed face less the cut rectangles of the valid openings that overlap the height range of the sweep.
@@ -183,7 +185,7 @@ pub fn sweep_solid(sweep: &WallSweep, wall: &Wall, layout: &WallLayout, cuts: &[
     for (from, to) in runs(sweep, wall, layout, cuts) {
         mesh.append(&run_mesh(sweep, wall, layout, &section, from, to));
     }
-    builder.add(parts::BODY, &sweep.material, 0, &mesh);
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, &sweep.material, 0, &mesh);
     builder.build()
 }
 

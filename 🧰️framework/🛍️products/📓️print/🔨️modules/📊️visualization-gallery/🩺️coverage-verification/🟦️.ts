@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
-import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { vizOptionList, type VizFamilyOptions } from "../../../🧬️schema/🟦️.ts";
 import { GENERATED_NOTE, loadVizCatalog, loadVizSchema, marksItselfGenerated, parseVizTaxonomyLeaves, productRoot, VIZ_GALLERY_DIR, VIZ_LATEX_DIR, VIZ_TAXONOMY_PATH } from "../🟦️.ts";
 import { type VizApiKey, vizApiReference, vizDocumentHelperScopes, vizDocumentKeyReader, vizDocumentKeyScopes } from "../🧾️api-reference/🟦️.ts";
@@ -177,7 +177,7 @@ export function vizCoverageReport(): {
 export function vizApiReferenceFindings(metadata?: string): readonly string[] {
   const path = "🧰️framework/🛍️products/📓️print/🖼️assets/🔣️viz-api.json";
   const expected = `${JSON.stringify({ _comment: GENERATED_NOTE, ...vizApiReference() }, null, 2)}\n`;
-  const actual = metadata ?? readFileSync(join(getWorkspaceRoot(), path), "utf8");
+  const actual = metadata ?? readFileSync(join(findWorkspaceRoot(), path), "utf8");
   if (actual !== expected) return [`stale ${path}`];
   return marksItselfGenerated(path, actual) ? [] : [`unmarked ${path}`];
 }

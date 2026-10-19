@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 /** 🧺️ The host decoder's half of the turn patch BATCH, as laws.
  *
  * A reactor turn result now carries EVERY surface that was ready and fits the turn's byte budget
@@ -16,13 +16,13 @@ import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/�
  * See `📓️ui-turn-patch-batching-2026-09-15.md`.
  */
 import { describe, expect, it } from "vitest";
-import { MAINTENANCE_LANE_DEFAULT_BUDGET, type ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
+import { MAINTENANCE_LANE_DEFAULT_BUDGET, type ShardEventEnvelope } from "@semio-tech/framework-actor/shard-client";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client";
 import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
-import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 
 const SURFACES = ["window", "panel", "catalogue", "inspection", "measures", "artifact"] as const;
 const GRANT = { maxItems: 1, maxBytes: 4096 };

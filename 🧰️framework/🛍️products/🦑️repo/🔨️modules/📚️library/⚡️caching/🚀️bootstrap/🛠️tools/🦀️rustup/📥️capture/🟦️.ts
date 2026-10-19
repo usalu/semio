@@ -1,12 +1,12 @@
 import{withRepositoryToolingOperationV1}from"../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {constants,type BigIntStats} from "node:fs";
 import {lstat,open,opendir,readlink} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {dirname,join,relative,resolve} from "node:path";
-import {checkResourceLeaseControl,withResourceLeases,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {checkResourceLeaseControl,withResourceLeases,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {repositoryCachePartitionRootV1,repositoryLeaseDirectoryV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import type {RepositoryToolingStoreV1} from "../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {rustupToolchainSealV1,type RustupToolchainSealEntryV1} from "../🟦️.ts";

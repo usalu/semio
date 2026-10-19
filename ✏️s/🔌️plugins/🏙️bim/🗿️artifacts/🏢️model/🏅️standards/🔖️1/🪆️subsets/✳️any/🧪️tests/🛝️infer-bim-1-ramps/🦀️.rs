@@ -11,8 +11,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     fn infer(ctx: &Context) -> Result<Outcome, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;

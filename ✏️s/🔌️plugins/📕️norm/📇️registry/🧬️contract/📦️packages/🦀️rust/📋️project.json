@@ -55,20 +55,6 @@
         "command": "bun ./📜️script.ts test-byte-property",
         "forwardAllArgs": true
       }
-    },
-    "test-definition-ownership": {
-      "executor": "repo:script",
-      "cache": false,
-      "inputs": [
-        "production",
-        "^production",
-        "nativeSources"
-      ],
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-definition-ownership",
-        "forwardAllArgs": true
-      }
     }
   }
 }

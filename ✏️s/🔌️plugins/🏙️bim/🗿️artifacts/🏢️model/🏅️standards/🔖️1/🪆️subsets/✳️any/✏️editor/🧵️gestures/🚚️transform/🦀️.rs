@@ -3,14 +3,13 @@
 //! writes the turn between the two directions, quantised to 15 degrees while shift is held. Both show the plan outline of what moves as a ghost; openings follow their host by
 //! inference, so they are never part of the set.
 
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::editor::bim::gestures::plane::{angle, dist, flatten, point2, quantised, rotate_about, same, translate, P};
-use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, flatten, point2, quantised, rotate_about, same, translate, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::f64::consts::PI;
 
 /// 🖱️ How many pixels a press must travel before it counts as a drag.
@@ -48,12 +47,12 @@ impl Transform {
 
     /// 🎯️ The ids that move: the placed elements of the selection, else the element under `at`.
     fn pick_ids(&self, ctx: &ToolContext<'_>, pointer: &Pointer) -> (Vec<String>, Option<(String, String)>) {
-        let placed = |id: &String| crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some();
+        let placed = |id: &String| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some();
         let selected: Vec<String> = ctx.selected.iter().filter(|id| placed(id)).cloned().collect();
         if !selected.is_empty() {
             return (selected, None);
         }
-        let hit = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey)).and_then(|linework| plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)).filter(placed);
+        let hit = ctx.storey().and_then(|storey| ctx.inference.plan_linework.get(storey)).and_then(|linework| semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pick(linework, (pointer.at[0], pointer.at[1]), pointer.tolerance * PICK_PIXELS)).filter(placed);
         let target = hit.as_ref().and_then(|id| kind_holding(ctx.snapshot, id).map(|row| (row.kind.to_string(), id.clone())));
         (hit.into_iter().collect(), target)
     }
@@ -80,7 +79,7 @@ impl Transform {
             self.reset();
             return Step::default();
         }
-        let step = Step::write(ctx, ModelMutation::MoveElements(crate::standards::v1::subsets::any::schema::mutations::move_elements::MoveElements { ids: self.ids.clone(), vector: point2(vector) }));
+        let step = Step::write(ctx, ModelMutation::MoveElements(semio_s_artifact_bim_model_mut_any_133::standards::v1::subsets::any::schema::mutations::move_elements::MoveElements { ids: self.ids.clone(), vector: point2(vector) }));
         self.reset();
         step
     }
@@ -91,7 +90,7 @@ impl Transform {
             self.reset();
             return Step::default();
         }
-        let step = Step::write(ctx, ModelMutation::RotateElements(crate::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements { ids: self.ids.clone(), pivot: point2(pivot), angle: turn }));
+        let step = Step::write(ctx, ModelMutation::RotateElements(semio_s_artifact_bim_model_mut_any_134::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements { ids: self.ids.clone(), pivot: point2(pivot), angle: turn }));
         self.reset();
         step
     }

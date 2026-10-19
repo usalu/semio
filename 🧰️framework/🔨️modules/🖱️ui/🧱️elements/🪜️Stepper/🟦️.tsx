@@ -13,7 +13,7 @@ import { PropertyValueColumnContext } from "../🌳️Tree/📏️row-alignment/
 import { formatNumber } from "../✏️Input/🟦️.tsx";
 import { roundUiNumber } from "../../🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts";
 import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberFieldKey, uiNumberKeyValue, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
-import type { UiNumberLimits } from "@semio-tech/framework";
+import type { UiNumberLimits } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { borderNormalClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { uiFormControlBrowserDefaultProps } from "../../🔨️modules/📝️form-control-presentation/🟦️.ts";
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";

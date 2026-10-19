@@ -215,8 +215,9 @@ test("three catalog registrations use canonical registry identity without kernel
   expect(read(corpus.ownership.protocolSource)).not.toMatch(/\bKernel(?:FacetLeaves|ArtifactSchemaDescriptor|ArtifactInferenceDescriptor|AppSchemaDescriptor)\b/);
   expect(read(corpus.ownership.schemaComponent)).not.toMatch(/\b(?:facet_leaves|descriptor|inference_descriptor|app_descriptor)_(?:to|from)_kernel\b/);
   const protocol = TOML.parse(read(corpus.ownership.protocolManifest));
-  expect(Object.keys(protocol.dependencies ?? {})).toContain(corpus.providers.registry);
-  expect(Object.keys(protocol.dependencies ?? {})).not.toContain("semio-framework-schema");
+  const protocolDependencies = [...Object.keys(protocol.dependencies ?? {}), ...Object.keys(protocol["dev-dependencies"] ?? {})];
+  expect(protocolDependencies).toContain(corpus.providers.registry);
+  expect(protocolDependencies).not.toContain("semio-framework-schema");
   const registry = TOML.parse(read(corpus.ownership.registryManifest));
   expect(Object.keys(registry.dependencies ?? {})).toEqual([]);
   for (const manifest of [corpus.ownership.registryManifest, corpus.ownership.stateManifest, corpus.ownership.compositionManifest]) {

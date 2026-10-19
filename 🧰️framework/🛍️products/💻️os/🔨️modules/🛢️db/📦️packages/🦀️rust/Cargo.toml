@@ -30,7 +30,7 @@ semio-framework-os-kernel-db-artifact-contract = { path = "../../🗿️artifact
 semio-framework-os-kernel-db-artifact-engine = { path = "../../🗿️artifact/⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-durability = { path = "../../💾️durability/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine = { path = "../../⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../⚙️engine/🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../⚙️engine/🧱️catalog-codec/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-engine-handle = { path = "../../⚙️engine/🎫️handle/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-ids = { path = "../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-io-core = { path = "../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }

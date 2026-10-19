@@ -2,12 +2,12 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
-import { registryModuleDirectories } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
-import { parseComponentPackageId, type DeployedRegistryEntryV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
-import { componentLibraryManifestV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { registryModuleDirectories } from "@semio-tech/plugin-registry/catalog-view";
+import { parseComponentPackageId, type DeployedRegistryEntryV1 } from "@semio-tech/plugin-registry/discovery";
+import { componentLibraryManifestV1 } from "@semio-tech/plugin-registry/projection";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const registry = JSON.parse(readFileSync(join(import.meta.dirname, "../../🤖️generated/🔌️plugins.json"), "utf8")) as readonly DeployedRegistryEntryV1[];
 const catalog = registryModuleDirectories(registry);
 

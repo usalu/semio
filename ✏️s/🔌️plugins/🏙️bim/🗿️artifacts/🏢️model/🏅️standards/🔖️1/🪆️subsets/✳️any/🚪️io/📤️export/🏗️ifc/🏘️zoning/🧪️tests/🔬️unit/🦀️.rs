@@ -1,9 +1,11 @@
-use crate::standards::v1::subsets::any::io::export::ifc::writer::text;
-use crate::standards::v1::subsets::any::io::export::ifc::zoning::{totals};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, zoned};
-use crate::standards::v1::subsets::any::io::export::ifc::zoning::report_json;
-use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, inferences::ModelInference};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::text;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning::totals;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, zoned};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning::report_json;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, ModelSnapshot, Zone};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
 use std::collections::BTreeMap;

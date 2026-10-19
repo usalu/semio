@@ -3,21 +3,20 @@
  * @see ../../📜️script.ts — the package script that registers the commands of this module
  */
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
 import { runBudgetedTestCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import type { SchemaCheck } from "../🧱️script-bases/🟦️.ts";
 
 export class SpaceHistorySqliteNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
 }
 
 export class SpaceHistorySqliteSourceTestScript extends BundleScript {
@@ -53,7 +52,7 @@ export class SnapshotRouteAdmissionScript extends BundleScript {
    assert.throws(()=>oracle.run('UPDATE original_authority SET remaining=? WHERE axis=?',enlarged.original.grant.maximumItems,'maximumItems'));
    assert.deepEqual(oracle.query('SELECT axis,remaining FROM original_authority ORDER BY axis').all(),Object.entries(fixture.original.grant).map(([axis,remaining])=>({axis,remaining})).sort((left,right)=>left.axis.localeCompare(right.axis)));
    oracle.run('CREATE TABLE original_hops(ordinal INTEGER PRIMARY KEY,source TEXT,destination TEXT,is_sqlite INTEGER)');for(const row of fixture.cases){oracle.run('DELETE FROM original_hops');for(const[index,hop]of row.route.hops.entries()){const coordinate=(value:{artifactKind:string;standard:string;subset:string})=>JSON.stringify([value.artifactKind,value.standard,value.subset]);const sqlite=(value:{artifactKind:string;standard:string;subset:string})=>value.artifactKind==='framework.io.sqlite-snapshot'&&value.standard==='1'&&value.subset==='*';oracle.run('INSERT INTO original_hops VALUES(?,?,?,?)',index,coordinate(hop.from),coordinate(hop.into),Number(sqlite(hop.from)||sqlite(hop.into)));}const observed=oracle.query("SELECT CASE WHEN count(*)=0 OR EXISTS(SELECT 1 FROM original_hops a JOIN original_hops b ON b.ordinal=a.ordinal+1 WHERE a.destination<>b.source) THEN 'io_run: route must contain connected hops' WHEN max(is_sqlite)=1 AND (count(*)<>1 OR ?<>'Exact') THEN 'io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops' WHEN max(is_sqlite)=1 AND min(source=destination)=1 THEN 'io_run: inconsistent SQLite snapshot descriptor' ELSE NULL END cause FROM original_hops").get(row.route.fidelity)as{cause:string|null};assert.equal(observed.cause,row.cause,row.id);assert.equal(observed.cause===null,row.accepted,row.id);}}finally{oracle.close();}
-  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_whole_hop_original_route_refusals','--no-fail-fast','--success-output','immediate']);
+  if(segments[0]==='native')await runAdmittedCargoPackageTestsV1(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_whole_hop_original_route_refusals','--no-fail-fast','--success-output','immediate']);
  }
 }
 
@@ -70,7 +69,7 @@ export class SnapshotCodecReceivingScript extends BundleScript {
   assert.equal(fixture.custodyCases.find((row:{id:string})=>row.id==='import-refused-release').recipientOccupied,true);
   const ordered=new Database(':memory:');try{ordered.run('CREATE TABLE original_values(ordinal INTEGER PRIMARY KEY,value INTEGER)');for(const row of fixture.relocationCases){ordered.run('DELETE FROM original_values');for(const[index,value]of row.values.entries())ordered.run('INSERT INTO original_values VALUES(?,?)',index,value);assert.deepEqual(ordered.query<{value:number},[]>('SELECT value FROM original_values ORDER BY ordinal').all().map(value=>value.value),row.values);assert.deepEqual([...row.original,...row.replacement].sort((a:number,b:number)=>a-b),[...row.values].sort((a:number,b:number)=>a-b));if(row.completed)assert.deepEqual(row.original,row.values);}}finally{ordered.close();}
   const defaults=new Database(':memory:');try{defaults.run('CREATE TABLE refusal(ordinal INTEGER PRIMARY KEY,operation TEXT,kind TEXT,cause TEXT)');for(const[index,row]of fixture.defaultRefusalCases.entries())defaults.run('INSERT INTO refusal VALUES(?,?,?,?)',index,row.operation,row.kind,row.cause);assert.deepEqual(defaults.query('SELECT operation,kind,cause FROM refusal ORDER BY ordinal').all(),fixture.defaultRefusalCases.map((row:{operation:string;kind:string;cause:string})=>({operation:row.operation,kind:row.kind,cause:row.cause})));}finally{defaults.close();}
-  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_codec_','--no-fail-fast','--success-output','immediate']);
+  if(segments[0]==='native')await runAdmittedCargoPackageTestsV1(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_codec_','--no-fail-fast','--success-output','immediate']);
  }
 }
 
@@ -79,7 +78,7 @@ export class SnapshotNativeAdmissionTestScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
     if (segments.length === 1 && segments[0] === "portable") return;
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test", "sqlite_snapshot_native_admission", ...rest, ...(rest.includes("--no-fail-fast") ? [] : ["--no-fail-fast"])]);
+    await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test", "sqlite_snapshot_native_admission", ...rest, ...(rest.includes("--no-fail-fast") ? [] : ["--no-fail-fast"])]);
   }
 }
 
@@ -87,7 +86,7 @@ export class SnapshotNativeAdmissionTestScript extends BundleScript {
 export class SnapshotSqliteAdmissionScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
  if(segments.length)throw Error("test-snapshot-sqlite-admission accepts no arguments");
- await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test","sqlite_snapshot_native_admission"]);
+ await runAdmittedCargoPackageTestsV1(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test","sqlite_snapshot_native_admission"]);
  }
 }
 

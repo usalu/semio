@@ -1,4 +1,4 @@
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import {readScriptProcessJsonV1} from "@semio-tech/process/routing/invocation/process/json";
 const policy=Object.freeze({...schema.definitions.Policy.const});
 

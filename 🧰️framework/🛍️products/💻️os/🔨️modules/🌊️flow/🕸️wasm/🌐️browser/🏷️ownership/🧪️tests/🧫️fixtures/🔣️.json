@@ -79,9 +79,9 @@
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🌐️flow-browser.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🖥️flow-host.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/📦️packages/🟨️javascript/📝️flow-browser.d.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️flow-browser.js",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️flow-host.js",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/📝️flow-browser.d.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️flow-browser.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🖥️flow-host.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/📝️flow-browser.d.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi.json",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types.json"
   ],
@@ -164,7 +164,7 @@
     }
   ],
   "package": {
-    "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+    "manifestPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json",
     "name": "@semio-tech/flow-core",
     "files": [
       "flow_core_bg.wasm",
@@ -192,7 +192,7 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏃️runtime/🟨️.js",
       "tokens": [
         "../../🖥️host/🏃️runtime/🟨️.js",
-        "../../../🫀️core/🕸️bindings/flow_core.js"
+        "../../../🎁️browser-package/🕸️bindings/flow_core.js"
       ]
     },
     {
@@ -264,8 +264,8 @@
       "tokens": [
         "../../🖥️host/🏃️runtime/🟨️.js",
         "../../🌐️browser/🏃️runtime/🟨️.js",
-        "../../../🫀️core/🕸️bindings/🖥️host/🟨️.js",
-        "../../../🫀️core/🕸️bindings/🌐️browser/🟨️.js"
+        "../../../🎁️browser-package/🕸️bindings/🖥️host/🟨️.js",
+        "../../../🎁️browser-package/🕸️bindings/🌐️browser/🟨️.js"
       ]
     },
     {
@@ -289,12 +289,12 @@
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
       "tokens": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️browser/🟨️.js",
         "🌊️flow/🌐️browser-[hash].js"
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "tokens": [
         "🌐️browser/📦️publication/🟦️.ts",
         "publishFlowBrowserPackage",
@@ -307,7 +307,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json",
       "tokens": [
         "./🌐️browser/🟨️.js",
         "./🌐️browser/🟦️.d.ts",
@@ -320,7 +320,7 @@
     }
   ],
   "target": {
-    "projectPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
+    "projectPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
     "name": "test-browser-ownership",
     "previewName": "preview-generated",
     "inputs": [
@@ -336,13 +336,13 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🧫️fixtures/📝️browser-types/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📝️declaration/🤖️generated/🟦️.d.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟨️.js",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🖥️host/🟨️.js",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/🌐️browser/🟦️.d.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️browser/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🖥️host/🟨️.js",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/🌐️browser/🟦️.d.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/package.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧪️tests/🌐️browser-declaration/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/⏱️consumed-browser-clock/🟨️.js",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🖥️host/🟨️.js",
@@ -363,10 +363,10 @@
     ]
   },
   "registration": {
-    "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/package.json",
+    "packagePath": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/package.json",
     "packageScript": "test:browser-ownership",
     "previewPackageScript": "preview:browser-package",
-    "packageCommand": "bun repo run semio-framework-os-flow-core:test-browser-ownership",
-    "previewPackageCommand": "bun repo run semio-framework-os-flow-core:preview-generated"
+    "packageCommand": "bun repo run semio-framework-os-flow-browser-package:test-browser-ownership",
+    "previewPackageCommand": "bun repo run semio-framework-os-flow-browser-package:preview-generated"
   }
 }

@@ -7,7 +7,7 @@ impl SessionLivePublication{
  pub(super) fn matches(&self,source:&str)->bool{self.pointer==source.as_ptr()as usize&&self.length==source.len()}
  pub(super) fn demands(&self,source:&str)->Result<RetirementDemand,ValueError>{
   if !self.matches(source){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original session publication source changed"))}
-  Ok(RetirementDemand{copy_bytes:usize::from(self.phase==1&&self.buffer.len()<self.length),capacity_bytes:match self.phase{0=>self.length,3=>semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>(),_=>0},depth:1,..Default::default()})
+  Ok(RetirementDemand{copy_bytes:usize::from(self.phase==1&&self.buffer.len()<self.length),capacity_bytes:match self.phase{0=>self.length,3=>semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>(),_=>0},depth:1,..Default::default()})
  }
  pub(super) fn step(&mut self,source:&str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let d=self.demands(source)?;if grant.maximum_items==0{return Ok(Default::default())}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original session publication requires source depth"))}if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes{return Ok(Default::default())}

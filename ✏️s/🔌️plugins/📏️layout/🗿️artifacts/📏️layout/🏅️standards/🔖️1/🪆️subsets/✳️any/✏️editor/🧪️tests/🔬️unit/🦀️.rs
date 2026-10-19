@@ -7,8 +7,8 @@ pub mod context {
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW};
     use crate::{LayoutCommand, LayoutPlayApp, create_layout_app};
     use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
-    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, render_registered_fixture_app, settle_registered_typed_operation, OriginalFixtureScope};
+    use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// 🪪️ The one live instance every fixture app binds. A registry-backed app refuses every typed
     /// command until it knows its instance (`interactive-job.live-instance`) — `meta("local")`
@@ -21,8 +21,17 @@ pub mod context {
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<LayoutPlayApp>` builds it. The guard exists because the artifact
     /// store's drop witness panics for any fixture that reaches `Drop` without a terminal-empty
-    /// shallow shell — the same guard lowpoly's fixture installs.
-    pub struct LayoutApp(pub VcsArtifactApp<EditorApp<LayoutPlayApp>>);
+    /// shallow shell — the same guard lowpoly's fixture installs. Field `1` is the fixture's ONE original
+    /// caller scope: every typed-operation, render, close and media call of the app threads its `cx`
+    /// (`app.1.cx()`), and the drop guard pays the caller's terminal retirement after the paid app close.
+    pub struct LayoutApp(pub VcsArtifactApp<EditorApp<LayoutPlayApp>>, pub OriginalFixtureScope);
+
+    impl LayoutApp {
+        /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
+        pub fn close_fixture(&mut self) {
+            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+        }
+    }
 
     impl std::ops::Deref for LayoutApp {
         type Target = VcsArtifactApp<EditorApp<LayoutPlayApp>>;
@@ -40,7 +49,8 @@ pub mod context {
     impl Drop for LayoutApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                self.close_fixture();
+                self.1.retire();
             }
         }
     }
@@ -67,7 +77,7 @@ pub mod context {
     pub async fn layout_app_with_registry() -> LayoutApp {
         let mut app = new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(INSTANCE).await;
-        LayoutApp(app)
+        LayoutApp(app, OriginalFixtureScope::admit())
     }
 
     /// 🪟️ The blueprint window instance every fixture dispatch rides. `ShellHost` NEVER dispatches
@@ -123,8 +133,8 @@ pub mod context {
     /// 🎯️ {@link dispatch} addressed to one mounted window instance.
     pub async fn dispatch_in(app: &mut LayoutApp, command: LayoutCommand, window: &str) -> InvocationResult {
         let verb = command.command_id().to_string();
-        let result = app.0.dispatch_typed(command, &window_meta(window), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
-        settle_registered_typed_operation(&mut app.0, INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
+        let result = app.0.dispatch_typed(command, &window_meta(window), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+        settle_registered_typed_operation(&mut app.0, INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} did not settle: {fault:?}"));
         result
     }
 
@@ -141,7 +151,7 @@ pub mod context {
     }
 
     async fn render_in(app: &mut LayoutApp, body_key: &str, view: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.0.render(body_key, None, view).await.expect("render")).expect("fixture projection")
+        render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("fixture projection")
     }
 
     /// 🎬️ The ASSEMBLED canvas scene behind a window body. A built surface carries its scene as a
@@ -172,6 +182,8 @@ use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
 use crate::unit_tests::context::{dispatch, layout_app, layout_app_with_registry, render, test_screen_point};
 use semio_framework_plugin::artifact_app_laws;
 use semio_framework_plugin::PluginApp;
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, DslValue, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType};
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -292,8 +304,6 @@ pub fn every_command() -> Vec<LayoutCommand> {
 //#region 🔖️ContextMenu
 use semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue::FocusPreflightIssue;
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-use semio_s_artifact_layout_layout_editor_panels::preflight::run_layout_preflight;
-use semio_s_artifact_layout_layout_editor_panels::terminology::layout_labels;
 use crate::unit_tests::context::LayoutApp;
 use semio_framework_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
@@ -321,7 +331,7 @@ async fn context_menu_on_empty_canvas_offers_create_verbs_not_delete() {
     assert!(menu.contains(r#""id":"addPage""#), "empty canvas should offer addPage: {menu}");
     assert!(menu.contains(r#""action":"addFrame""#), "empty canvas should offer addFrame kinds: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "empty canvas must not offer deleteSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: a frame selection ends with delete-selection and clearSelection.
@@ -342,7 +352,7 @@ async fn context_menu_on_frame_selection_offers_delete_last() {
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "selection menu must include deleteSelection: {menu}");
     assert!(menu.contains(r#""action":"clearSelection""#), "selection menu must include clearSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: a page-tree row hit offers setActivePage, not canvas delete verbs.
@@ -363,7 +373,7 @@ async fn context_menu_on_page_row_offers_set_active_page() {
     .await;
     assert!(menu.contains(r#""action":"setActivePage""#), "page row menu must set active page: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "page row menu must not delete frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: preview is read-only — selectAll only, no authoring delete/create.
@@ -384,7 +394,7 @@ async fn context_menu_on_preview_surface_is_read_only() {
     assert!(menu.contains(r#""action":"selectAll""#), "preview should offer selectAll: {menu}");
     assert!(!menu.contains(r#""action":"addFrame""#), "preview must not offer addFrame: {menu}");
     assert!(!menu.contains(r#""action":"deleteSelection""#), "preview must not offer deleteSelection: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: multi-frame selection uses a plural delete label and still exposes clipboard verbs.
@@ -406,7 +416,7 @@ async fn context_menu_on_multi_frame_selection_offers_plural_delete() {
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "multi selection must delete: {menu}");
     assert!(menu.contains("frames") || menu.contains("Rahmen"), "multi selection label should mention frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: a links-tree row hit offers interactionSelect over referencing image frames.
@@ -427,7 +437,7 @@ async fn context_menu_on_link_row_offers_select_linked_frames() {
     .await;
     assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "link row must select referencing frames: {menu}");
     assert!(menu.contains("frame-image-1"), "link row must target the demo image frame: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: a preflight issue row hit offers focusPreflightIssue with the issue payload.
@@ -451,7 +461,7 @@ async fn context_menu_on_preflight_row_offers_focus_issue() {
     .await;
     assert!(menu.contains(r#""action":"focusPreflightIssue""#), "preflight row must focus the issue: {menu}");
     assert!(menu.contains(&issue.code), "preflight menu must carry the issue code: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: right-clicking an unselected frame hit offers Select before create verbs.
@@ -472,7 +482,7 @@ async fn context_menu_on_frame_hit_without_selection_offers_select() {
     .await;
     assert!(menu.contains(r#""id":"select-hit""#), "frame hit must offer select: {menu}");
     assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "select must dispatch interactionSelect: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: a single text-frame selection adds a same-kind create row in the create group.
@@ -493,7 +503,7 @@ async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
     .await;
     assert!(menu.contains(r#""id":"add-text-frame""#), "text selection must offer add text frame: {menu}");
     assert!(menu.contains(r#""kind":"text""#), "create row must target text frames: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 
 /// ⚖️ LAW: when the surface carries no selection, the live interaction snapshot supplies element ids.
@@ -504,8 +514,8 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
     app.bind_instance_id(meta.instance_id).await;
-    app.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("select frame");
-    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("focus settles");
+    app.0.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select frame");
+    artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("focus settles");
     let menu = context_menu_json(
         &mut app,
         Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -518,7 +528,7 @@ async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
     )
     .await;
     assert!(menu.contains(r#""action":"deleteSelection""#), "live interaction selection must drive delete menu: {menu}");
-    artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    app.close_fixture();
 }
 //#endregion 🔖️ContextMenu
 //#endregion 🔖️CommandSurface
@@ -735,7 +745,7 @@ async fn export_media_document_out_round_trips_through_pack() {
 async fn import_media_fields_in_sets_typed_dictionary() {
     let mut app = layout_app().await;
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value: semio_framework_value::DslValue::Object(vec![("name".into(),semio_framework_value::DslValue::String("Ada".into()))]) } };
-    app.import_media("fields:in", media, &artifact_app_laws::meta("local")).await.expect("import fields:in");
+    app.0.import_media("fields:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
     assert_eq!(document.data_fields,Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
 }
@@ -790,7 +800,7 @@ fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
 #[semio_framework_async_macros::async_test]
 async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_window() {
     use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
-    use blueprint::transient::LayoutBlueprintWindowTransientOwner;
+    use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::transient::LayoutBlueprintWindowTransientOwner;
     use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
     let view = ViewModel {
@@ -809,8 +819,8 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
                 let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["action"] == action && case["kind"] == kind).unwrap();
                 let args: DslValue = case["args"].clone().into();
                 let command = LayoutPlayApp::command_from_action(action, Some((args).clone()), None).map_err(|error| error.message)?;
-                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 let transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("addressed transient missing")?;
                 let preview = &transient.get::<LayoutBlueprintWindowTransientOwner>().ok_or("blueprint transient missing")?.drop_preview;
                 if action == "canvasDragOver" {
@@ -833,7 +843,7 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
             }
             Ok(())
         }.await;
-        artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        app.close_fixture();
         outcome.unwrap_or_else(|error| panic!("{kind}: {error}"));
     }
 }

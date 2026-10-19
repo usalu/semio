@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises";
 import Ajv from "ajv";
 import fixture from "./🔣️.json";
 import {initializeBazelControlTextV1} from "../../📜️script.ts";
-import {withBuildTestInvocationV1} from "../../../../🧪️tests/📥️invocation/🟦️.ts";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {checkScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 test("Bazel control framing preserves Unicode across actual TCP byte boundaries",async()=>withBuildTestInvocationV1(async original=>{

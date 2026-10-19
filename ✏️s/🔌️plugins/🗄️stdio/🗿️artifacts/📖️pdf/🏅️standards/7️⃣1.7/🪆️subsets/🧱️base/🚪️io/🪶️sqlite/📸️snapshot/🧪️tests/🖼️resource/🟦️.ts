@@ -3,7 +3,8 @@ import { pdfImageFromNativeJson,pdfStateFromNativeJson,pdfFormFromNativeJson,pdf
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
 import type { PdfImage, PdfImageBody, PdfImageMask } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
-import { parsePdfImage, parsePdfExtGState, parsePdfFormXObject, parsePdfShading, parsePdfPattern } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { parsePdfExtGState, parsePdfFormXObject, parsePdfShading, parsePdfPattern } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { parsePdfImage } from "../../../../../🧬️schema/📸️snapshot/🔎️stream-parsers/🟦️.ts";
 import { PdfProjection,PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfImage,readPdfImage,pdfResourceNumberColumns } from "../../🖼️resource/🟦️.ts";

@@ -10,7 +10,7 @@ use super::*;
 /// 🆔️ The content-addressed id of a composed child or persisted scene: `<prefix>-` + the first 16 lowercase hex digits
 /// of SHA-256 over `bytes` (the child schema's `ContentId`). Specified, stable across processes, platforms and
 /// toolchains, and reproducible by any implementation — unlike a `std` hasher, whose algorithm Rust leaves unspecified.
-/// A site that addresses several fields joins them with U+001F. TypeScript twin: `contentId` (`🪆️child/🧬️schema/🟦️.ts`).
+/// A site that addresses several fields joins them with U+001F. TypeScript twin: `contentId` (`🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts`).
 pub fn content_id(prefix: &str, bytes: &[u8]) -> String {
     format!("{prefix}-{}", semio_framework_hash::hex_lower(&semio_framework_hash::Sha256::digest(bytes)[..8]))
 }

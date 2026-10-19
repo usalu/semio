@@ -1,0 +1,10 @@
+{"owner": "semio-framework-ui-contract-values", "suffix": "laws", "kind": "framework", "testkit": true,
+ "new_root": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🦀️.rs", "module_path": "", "mount_name": "tests", "as": "unit"},
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🦀️.rs", "module_path": "", "mount_name": "fixed_list_storage_tests", "as": "fixed_list_storage_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/⚖️compare/🦀️.rs", "module_path": "compare_protocol", "mount_name": "tests", "as": "compare_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/🦀️.rs", "module_path": "retirement", "mount_name": "fixed_list_tests", "as": "retirement_fixed_list_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/🦀️.rs", "module_path": "retirement", "mount_name": "tests", "as": "retirement_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/📮️handback/🦀️.rs", "module_path": "retirement::handback", "mount_name": "tests", "as": "handback_tests"}
+ ]}

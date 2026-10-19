@@ -1,7 +1,8 @@
 //! 🎬️ Bounded media descriptors from GPU-accepted retained geometry.
 
 use serde::{Deserialize, Serialize};
-use ui_wgpu::wgpu::{Rect, UiNode};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::UiNode;
 
 pub const PRESENTED_MEDIA_SLOT_CAPACITY: usize = 32;
 pub const PRESENTED_MEDIA_DESCRIPTOR_BYTES: usize = 65_536;

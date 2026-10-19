@@ -247,6 +247,7 @@
     "maxFiles": 4096,
     "maxBytes": 2097152,
     "maxMs": 30000,
-    "maxWork": 262144
+    "maxWork": 262144,
+    "concurrency": 16
   }
 }

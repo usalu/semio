@@ -4,12 +4,12 @@
 //! importer finds it again; the derived measured total of a dimension is the element quantity `Semio_DimensionValue`.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcannotation.htm
 
-use crate::standards::v1::subsets::any::io::export::ifc::data::{number};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, real, refs, rf, text, unset, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::number;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, real, refs, rf, text, unset, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
 
 fn curve(x: &mut Export<'_>, vertices: &[PlanVertex], closed: bool) -> Option<u64> {
     if vertices.len() == 2 && closed && vertices.iter().all(|vertex| vertex.bulge != 0.0) {

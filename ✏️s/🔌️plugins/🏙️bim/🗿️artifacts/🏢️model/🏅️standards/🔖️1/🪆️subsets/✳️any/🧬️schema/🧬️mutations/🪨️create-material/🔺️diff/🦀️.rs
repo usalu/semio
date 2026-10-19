@@ -1,8 +1,10 @@
 //! 🔺️ Diff constructor for `CreateMaterial`: one created material entry. Density, conductivity and specific heat are finite and non-negative; every colour channel lies in 0..1.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Rgb}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn unit(color: &Rgb) -> bool {
@@ -11,7 +13,7 @@ fn unit(color: &Rgb) -> bool {
 
 pub fn diff(payload: &CreateMaterial, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let material = &payload.material;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     let physical = [("density", material.density), ("conductivity", material.conductivity), ("specific_heat", material.specific_heat)];

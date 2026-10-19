@@ -1,27 +1,29 @@
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::InferenceError;
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, UpdateReport};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, UpdateReport};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, RunProgress, SessionRun};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, RunProgress, SessionRun};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticIndex};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticIndex};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 #[allow(unused_imports)]
 use protocol::{InferenceWorkFailure, Mutation, MutationDiff};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::{lend_handle};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::lend_handle;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::{with_inference, report, record_mutations, DOCUMENT, begin, step, finish, Analysis, probe, probe_rooms, PROBE, shown};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::{Phase, Point2, Space, SpaceBoundary};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, SpaceBoundary};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space;
 use protocol::Inference;
 
 fn demo() -> ModelSnapshot {
@@ -37,11 +39,11 @@ fn mounted() -> ArtifactInstanceOperationOwnerHandle {
 }
 
 fn taller() -> ModelMutation {
-    ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 3.5 })
+    ModelMutation::SetStoreyHeight(semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 3.5 })
 }
 
 fn described() -> ModelMutation {
-    ModelMutation::SetProjectInfo(crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { description: Some("other".into()), name: None, author: None, organization: None, phase_names: None })
+    ModelMutation::SetProjectInfo(semio_s_artifact_bim_model_mut_any_17::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { description: Some("other".into()), name: None, author: None, organization: None, phase_names: None })
 }
 
 fn edited(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
@@ -112,7 +114,7 @@ fn a_recorded_sequence_is_summed_and_a_recorded_diff_that_misses_the_snapshot_is
     record_mutations(Some(&instance), &snapshot, &[taller(), described()]);
     assert_eq!(with_inference(Some(&instance), &both, Clone::clone), fresh(&both));
     assert!(report(Some(&instance)).computed_by_kind.contains_key("wall-layout"));
-    let elsewhere = edited(&both, &ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 4.0 }));
+    let elsewhere = edited(&both, &ModelMutation::SetStoreyHeight(semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 4.0 }));
     record_mutations(Some(&instance), &both, &[described()]);
     assert_eq!(with_inference(Some(&instance), &elsewhere, Clone::clone), fresh(&elsewhere), "the recorded diff does not explain the change, so every node is checked");
 }
@@ -220,11 +222,11 @@ fn an_engine_fault_shows_the_last_complete_inference_and_a_finding_in_both_langu
     let (snapshot, instance) = (demo(), mounted());
     let complete = with_inference(Some(&instance), &snapshot, Clone::clone);
     assert!(!complete.storey_levels.is_empty());
-    let shown_after = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::lend_handle(&instance, DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
+    let shown_after = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::lend_handle(&instance, DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
     assert_eq!(shown_after.storey_levels, complete.storey_levels, "the last complete values stay");
     assert_eq!(shown_after.wall_layout, complete.wall_layout);
     let finding = shown_after.diagnostics.iter().find(|finding| finding.code == DiagnosticCode::InferenceFault).expect("the fault is a finding");
-    assert_eq!(finding.severity, crate::standards::v1::subsets::any::schema::inferences::diagnostics::Severity::Error);
+    assert_eq!(finding.severity, semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Severity::Error);
     assert!(finding.text("en").is_some_and(|text| text.contains("could not be analysed")) && finding.text("de").is_some_and(|text| text.contains("nicht vollständig analysiert")));
     assert_eq!(shown_after.diagnostic_index.total.error, complete.diagnostic_index.total.error + 1, "the problem counters count it");
     assert_eq!(shown_after.diagnostics.len(), complete.diagnostics.len() + 1);

@@ -19,7 +19,7 @@ export type Canvas2dScene = {
 };
 
 export * from "./🧬️schema/🧩️block-list/🟦️.ts";
-import type { SceneLaneRef } from "./🛤️lanes/🟦️.ts";
+import type { SceneLaneRef } from "./🚚️lane-contract/🟦️.ts";
 //#endregion ComponentSceneProtocol
 // #endregion 🎬️Scene
 

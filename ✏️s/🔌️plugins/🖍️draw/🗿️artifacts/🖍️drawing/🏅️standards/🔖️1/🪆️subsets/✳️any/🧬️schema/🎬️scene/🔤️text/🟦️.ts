@@ -1,6 +1,6 @@
 import {DRAWING_FONT_FAMILIES,parseDrawingFontFamily,drawingFontCatalogFamily,type DrawingFontFamily} from "../../📝️text/🔤️family/🟦️.ts";
 /** 🔤️ Original semantic text and paint acquire genuine font outlines before shared scene publication. */
-import type {DocumentScenePlan} from "../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan } from "../🗺️plan-model/🟦️.ts";
 import {ScenePlanCloseJob} from "../🧹️retire/🟦️.ts";
 import {FontCatalogAdmissionJob,type FontByteSource} from "@semio-tech/framework/2d/text/font/catalog";
 import {UnicodeDataAdmissionJob,type UnicodeData} from "@semio-tech/framework/2d/text/font/shape/unicode";

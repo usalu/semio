@@ -1,8 +1,9 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { toolJobRuntimeProofQualified } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts";
+import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobRuntimeProofQualified } from "@semio-tech/repo-lib/laws";
 
 /** 🧪️ Compares the runtime join fixture with an independent Ajv exact-authority oracle and hostile source variants. */
 export function toolJobFactoryProofJoinSelfTests(): number {
@@ -25,7 +26,7 @@ export function toolJobFactoryProofJoinSelfTests(): number {
     else if (law.change !== "none") candidate[field[law.change as keyof typeof field]] = "other-authority";
     if (oracle(candidate) !== law.accepted) throw new Error(`factory runtime oracle disagrees for ${law.id}`);
   }
-  const source = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const source = readSourceFamilySource(base);
   if (!toolJobRuntimeProofQualified(source)) throw new Error("production runtime factory join is not exact");
   const hostile = [
     "A::register_tool_job_factories(&mut app_tool_registry)",

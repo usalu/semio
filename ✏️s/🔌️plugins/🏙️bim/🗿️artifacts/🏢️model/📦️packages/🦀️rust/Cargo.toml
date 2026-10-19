@@ -255,6 +255,9 @@ semio-s-artifact-bim-model-v1 = { path = "../../🏅️standards/🔖️1/📦�
 semio-s-artifact-bim-model-gestures-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-families-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🪑️families/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-bim-model-coordinate-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️coordinate/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model-snapshot = { path = "../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model-snapshot-root = { path = "../../../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🧳️snapshot-root/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-snapshot = { path = "../../../../../🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
 serde_json = { workspace = true, optional = true }
 quick-xml = { version = "0.39.4", optional = true }
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"], optional = true }

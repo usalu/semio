@@ -1,4 +1,4 @@
-import { requireRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord } from "@semio-tech/schema-validator-ts";
 import { type TaxonomyNodeKind } from "../🚪️source-admission/🟦️.ts";
 import { type LoadedTaxonomy, type GeneratorInputTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type GeneratorContractSpec } from "../🔣️taxonomy/🏭️generators-packages/🟦️.ts";

@@ -62,7 +62,8 @@
         "maxFiles",
         "maxBytes",
         "maxMs",
-        "maxWork"
+        "maxWork",
+        "concurrency"
       ],
       "properties": {
         "roots": {
@@ -112,6 +113,11 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 262144
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
         }
       }
     }

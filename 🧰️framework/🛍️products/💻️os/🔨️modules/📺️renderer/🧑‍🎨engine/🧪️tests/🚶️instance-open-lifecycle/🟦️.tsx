@@ -9,14 +9,14 @@ export async function registerInstanceOpenLifecycleTests(vitest: PluginRuntimeVi
   const { encodeFaultBytes } = createPluginRuntimeSupport(dependencies);
     describe("instance-open retained UI lifecycle", () => {
       it("preserves document effects returned by a refresh even before any surface is retained", async () => {
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const response = retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "load-document", val: { docPack: fixture.effects.loadDocument.pack, spr: fixture.effects.loadDocument.spr } }]);
         expect(response.requestedEffects).toEqual([{ loadDocument: fixture.effects.loadDocument }]);
       });
   
       it("reports a refresh fault frame instead of returning an unchanged surface", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(fixture.wire.fault)), report: [] } });
         expect(() => retainedUiRefreshResponse(7, { viewState: {} }, new Map(), [{ tag: "send-message", val: { target: { tag: "shell", val: "7" }, payload } }])).toThrow(fixture.wire.fault);
       });
@@ -28,7 +28,7 @@ export async function registerInstanceOpenLifecycleTests(vitest: PluginRuntimeVi
        * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). The report stays loud; the turn keeps its effects. */
       it("scopes a surface-render fault to its surface and keeps the same turn's other effects", async () => {
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const payload = encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodeFaultBytes(SURFACE_RENDER_FAULT)), report: [] } });
         const reported = vi.spyOn(console, "error").mockImplementation(() => {});
         try {

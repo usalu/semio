@@ -1,5 +1,5 @@
 # import NoteBlockNode, NoteImageAsset, NoteTextChild, NoteTableCell from "../🔗️.graphql"
-# import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
+# import ArtifactLink from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔗️.graphql"
 type NoteDiff {
   schema: String
   id: String

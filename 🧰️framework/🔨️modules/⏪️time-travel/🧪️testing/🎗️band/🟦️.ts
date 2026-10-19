@@ -2,15 +2,14 @@
 import { renderer, t0, currentLocale, chordLocales, page } from "../🧠️state/🟦️.ts";
 import type { Locale } from "../🧠️state/🟦️.ts";
 import { wgpuBand, BAND_WORDS, REVIEW_WORDS, WGPU_BAND_CONTROLS, wgpuPress, mirror, mirrorLocator, mirrorActivate } from "../🧊️wgpu-mirror/🟦️.ts";
-import { evalSafe } from "../📄️page/🟦️.ts";
+import { evalSafe } from "../🔬️probe/🟦️.ts";
 import { log, note, verdict } from "../🧾️report/🟦️.ts";
 import { openPanelTabIds, HISTORY_TAB, inside } from "../🧱️chrome/🟦️.ts";
+import type { Band } from "./📋️readout/🟦️.ts";
+export type { Band };
 
 //#region 🔖️Band
 
-type BandControl = { control: string; disabled: boolean; title: string | null; keys: string | null; text: string; native?: boolean; id?: string };
-
-export type Band = { stage: string; role: string | null; live: string | null; generation: string | null; text: string; review: string | null; outcome: string | null; fault: string | null; target: string | null; progress: string | null; controls: BandControl[] };
 
 /** 🎗️ The time-travel band, or null when no session is live: React's `[data-semio-time-travel]`, wgpu's announced
  * `shell.time-travel.status` with its mirrored controls. */

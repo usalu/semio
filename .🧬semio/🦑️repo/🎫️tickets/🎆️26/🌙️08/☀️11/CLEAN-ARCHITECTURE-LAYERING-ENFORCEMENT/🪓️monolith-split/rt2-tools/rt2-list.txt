@@ -1,4 +1,0 @@
-🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/📦️protocol/🟦️.ts
-🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🧪️tests/🟦️.ts
-🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/🧪️tests/🟦️.ts
-🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts

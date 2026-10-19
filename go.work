@@ -6,6 +6,7 @@ use (
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go
+	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🏖️sandbox
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go
 	./🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go

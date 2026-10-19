@@ -43,6 +43,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	if err := client.BindWorkingDirectory(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	if _, err := runMCPForProfile(context.Background(), stdioTransport{reader: os.Stdin, writer: os.Stdout}, NewClientRepository(profile), profile); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

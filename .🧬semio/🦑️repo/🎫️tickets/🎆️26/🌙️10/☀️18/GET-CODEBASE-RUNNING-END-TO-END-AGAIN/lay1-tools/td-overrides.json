@@ -1,0 +1,16 @@
+{
+"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts": {
+ "parseConstruct": "(text: string, activeModelDefinitionId?: string | null) => ConstructAst",
+ "runConstruct": "(text: string, ctx: ConstructQueryContext) => Promise<ConstructQueryResult>"},
+"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts": {
+ "runSelectionOperationInteraction": "(interactionId: string, opts: InteractionRuntimeOptions & { readonly seedTargets?: readonly SelectionTarget[] }) => Promise<{ readonly response: InteractionResponse; readonly targets: readonly SelectionTarget[] }>"},
+"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts": {
+ "resolveDisplay": "(spec: InteractionSpec, state: string, context: Record<string, unknown>, preview: SpatialPreviewKernel, model?: Model) => DisplayModel"},
+"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts": {
+ "bootstrapCadModules": "(contributionsJson?: string) => void"},
+"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts": {
+ "statelyStateEngineProvider": "StateEngineProvider",
+ "makeAdvanceEvent": "(interactionKind: string, branch: number) => StatelyAdvanceEvent",
+ "buildStatelyMachine": "(spec: InteractionSpec, initial: string) => Machine<StatelyMachineSpec>",
+ "buildSpatialStatelyMachineCatalogView": "(opts: { readonly modelDefinitionId: string; readonly interactionIds?: readonly string[]; readonly generatedAt?: string }) => SpatialStatelyMachineCatalogView"}
+}

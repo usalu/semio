@@ -2,7 +2,7 @@ syntax = "proto3";
 package semio.s.layout.layout.diff;
 import "🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🛰️.proto";
 import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message ParagraphStylePatch { optional string name = 1; optional string font_family = 2; optional double font_size = 3; optional uint32 font_weight = 4; optional double leading = 5; optional double tracking = 6; optional string alignment = 7; }
 message CharacterStylePatch { optional string name = 1; optional string font_family = 2; optional double font_size = 3; optional uint32 font_weight = 4; optional bool italic = 5; optional semio.s.layout.layout.artifact.Rgba color = 6; optional double tracking = 7; }
 message ParentPagePatch { optional string name = 1; optional double width = 2; optional double height = 3; }
@@ -125,6 +125,6 @@ message LayoutDiff {
   optional LayoutDataFieldsDelta data_fields = 12;
   semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 13;
   repeated LayoutDrawingTextRow drawing_texts = 14;
-  semio.os.store.ArtifactLink referenced_model = 15;
+  semio.framework.schema.artifact_link.ArtifactLink referenced_model = 15;
 }
 

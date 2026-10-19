@@ -1,6 +1,6 @@
 import{withCompilerWorkspaceWriteV1}from"../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -16,20 +16,21 @@ import { spawn, spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import { randomUUID } from "node:crypto";
 import {homedir} from "node:os";
-import {CurrentPhysicalOwnerV1} from "../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import {CurrentPhysicalOwnerV1} from "../../../../../📦️packages/🟦️typescript/📁️filesystem/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
-import { cargoDirectories } from "../⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoDirectories } from "../⚡️caching/🦀️cargo/🗂️directories/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
 import {requireIssuedResourceControlInvocationV1,checkScriptInvocation,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requestedCompilerAdmissionControlV1,scriptCompilerAdmissionControlV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {acquireCargoBuildLeaseV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import {cargoArtifactArgumentsV1,readCargoArtifactBuildPolicyV1,type CargoArtifactBuildPolicyV1} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import type { RunCmdOpts } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
@@ -43,16 +44,6 @@ export function budgetTimeoutHint(cmd: string, override?: string): string {
   return cmd === "cargo"
     ? "Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying."
     : "Trim it, or raise its budget (`budgetMs`, `SEMIO_CMD_BUDGET_MS`, `SEMIO_BUILD_BUDGET_MS`).";
-}
-
-export interface RunCmdOpts {
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
-  /** ⏱️Wall-clock budget (ms); zero disables the timeout. Defaults to [[defaultBudgetMs]]. Named wrappers use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]]. */
-  budgetMs?: number;
-  onTimeoutHint?: string;
-  /** 🐚️ Resolve the command through the platform shell — required on native Windows for `.cmd`/`.bat` launchers such as `bunx`. */
-  shell?: boolean;
 }
 
 /** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]] and full CPU [[devToolingEnv]]. */

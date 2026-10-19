@@ -66,7 +66,7 @@ impl ScrollableState {
     }
 }
 
-pub(crate) fn scrollable_on_key(s: &mut ScrollableState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn scrollable_on_key(s: &mut ScrollableState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let page = s.page() as isize;
     match ev.key {
         Key::Up => s.scroll_vertical(-1),
@@ -85,7 +85,7 @@ pub(crate) fn scrollable_on_key(s: &mut ScrollableState, ev: &KeyEvent) -> Optio
     None
 }
 
-pub(crate) fn scrollable_on_mouse(s: &mut ScrollableState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn scrollable_on_mouse(s: &mut ScrollableState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     if !rect.contains(event.pos) {
         return None;
     }
@@ -105,7 +105,7 @@ pub(crate) fn scrollable_on_mouse(s: &mut ScrollableState, rect: Rect, event: &M
     None
 }
 
-pub(crate) fn paint_scrollable(s: &ScrollableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_scrollable(s: &ScrollableState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

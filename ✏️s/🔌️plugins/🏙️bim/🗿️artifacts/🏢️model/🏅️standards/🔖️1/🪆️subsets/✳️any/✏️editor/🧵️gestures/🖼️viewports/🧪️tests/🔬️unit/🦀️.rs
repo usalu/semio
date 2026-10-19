@@ -1,34 +1,35 @@
 //! 🧪️ The sheet tools: standard scales, picking and moving viewports to the whole millimetre, scaling by the corner handle, nothing written for a press that did not travel, the place tool and the ghosts.
 
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::gestures::plane::P;
-use crate::editor::bim::gestures::session::{Pointer, Step, Surface, ToolContext, ToolEvent};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Surface, ToolContext, ToolEvent};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{dist, point2};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{dist, point2};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::{Tool, PICK_PIXELS};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Tool, PICK_PIXELS};
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::sheets::{next_view, scale_of};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::sheets::{next_view, scale_of};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::sheet;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
+use semio_s_artifact_bim_model_mut_any_146::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
+use semio_s_artifact_bim_model_mut_any_37::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, SheetLayout};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, SheetLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{view_is_drawn, Viewport};
-use crate::editor::bim::gestures::viewports::{layout, set};
-use crate::editor::bim::gestures::viewports::*;
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{view_is_drawn, Viewport};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports::{layout, set};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports::{nearest_scale, SERIES, Arrange, handles, Place, VIEW_MISSING};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 fn pointer(at: P) -> Pointer {
     Pointer { at, modifiers: Modifiers::default(), tolerance: 0.5 }
@@ -88,7 +89,7 @@ fn a_press_selects_the_viewport_under_the_pointer_and_a_drag_moves_it_to_the_who
     let released = tool.event(&mut context, &ToolEvent::Up(pointer([start[0] + 20.4, start[1] + 10.2])));
     let [ModelMutation::SetViewport(set)] = released.mutations.as_slice() else { panic!("one set-viewport: {released:?}") };
     assert_eq!(set.id, "vp-ground");
-    assert_eq!((set.position, set.scale), (Some(crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 50.0, y: 40.0 }), None));
+    assert_eq!((set.position, set.scale), (Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 50.0, y: 40.0 }), None));
     assert!(tool.preview(&context).is_empty());
 }
 

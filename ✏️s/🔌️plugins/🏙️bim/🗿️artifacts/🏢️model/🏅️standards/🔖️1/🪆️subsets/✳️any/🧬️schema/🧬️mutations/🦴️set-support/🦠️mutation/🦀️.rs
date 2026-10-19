@@ -1,6 +1,9 @@
 //! 🦴️ Authored set-support semantic leaf.
-use crate::standards::v1::subsets::any::schema::{diff::{patches::StructuralSupportPatch, ModelDiff}, snapshot::ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::snapshot::{StructuralLocation, Restraints, Point3};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::hand_written::StructuralSupportPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralLocation, Restraints};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

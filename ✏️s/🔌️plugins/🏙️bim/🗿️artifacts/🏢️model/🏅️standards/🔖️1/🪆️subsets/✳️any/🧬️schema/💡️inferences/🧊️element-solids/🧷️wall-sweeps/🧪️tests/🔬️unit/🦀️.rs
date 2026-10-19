@@ -1,16 +1,20 @@
-use crate::standards::v1::subsets::any::schema::snapshot::WallSweep;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallSweep;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Wall, WallSide};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::WallSide;
 #[allow(unused_imports)]
 use semio_framework_geometry::mesh::TriMesh;
 #[allow(unused_imports)]
@@ -21,11 +25,13 @@ use semio_framework_geometry::vector::perp;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::*;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::{runs, section_of, section_area, extents_of};
 use protocol::Inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{self, close};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::close;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};
@@ -33,7 +39,7 @@ use serde_json::{json, Value};
 fn model(sweeps: Value, extra: Value) -> ModelSnapshot {
     let mut members = json!({ "wall_sweeps": sweeps });
     members.as_object_mut().expect("members object").extend(extra.as_object().expect("extra object").clone());
-    testing::model(json!({ "w": testing::wall([0.0, 0.0, 8.0, 0.0], json!({ "StoreyTop": { "offset": 0.0 } }), json!({})) }), members)
+    semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::model(json!({ "w": testing::wall([0.0, 0.0, 8.0, 0.0], json!({ "StoreyTop": { "offset": 0.0 } }), json!({})) }), members)
 }
 
 fn baseboard(extra: Value) -> Value {
@@ -84,8 +90,8 @@ async fn a_door_interrupts_a_baseboard_but_a_window_above_it_does_not() {
     let wall = &snapshot.walls["w"];
     let inference = ModelInference::infer(&snapshot).expect("the model infers");
     let layout = &inference.wall_layout["w"];
-    let frames: Vec<&crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame> = inference.opening_frames.values().collect();
-    let cuts = crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of(frames.iter().copied());
+    let frames: Vec<&semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame> = inference.opening_frames.values().collect();
+    let cuts = semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of(frames.iter().copied());
     assert_eq!(cuts.len(), 2, "both openings are valid cuts");
     let runs = runs(&snapshot.wall_sweeps["ws"], wall, layout, &cuts);
     assert_eq!(runs.len(), 2, "{runs:?}");
@@ -100,7 +106,7 @@ async fn the_quantities_of_a_sweep_measure_its_profile_and_path() {
     let snapshot = model(json!({ "ws": baseboard(json!({})) }), json!({}));
     let inference = ModelInference::infer(&snapshot).expect("the model infers");
     let quantity = &inference.quantities.elements["ws"];
-    assert_eq!(quantity.kind, crate::standards::v1::subsets::any::schema::inferences::quantities::QuantityKind::WallSweep);
+    assert_eq!(quantity.kind, semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::QuantityKind::WallSweep);
     assert!(close(quantity.length, 8.0) && close(quantity.width, 0.02) && close(quantity.height, 0.1), "{quantity:?}");
     assert!(close(quantity.gross_area, 0.002) && close(quantity.gross_volume, 0.016) && close(quantity.net_volume, 0.016));
     assert!(close(quantity.perimeter, 0.14) && close(quantity.surface_area, 0.14 * 8.0) && close(quantity.net_area, 0.14 * 8.0), "{quantity:?}");
@@ -113,7 +119,7 @@ async fn a_sweep_on_a_sloped_base_follows_it_with_the_volume_of_the_straight_one
     let slab = json!({ "sl": { "storey": "st", "slab_type": "slt", "boundary": [{ "point": { "x": 0.0, "y": -5.0 }, "bulge": 0.0 }, { "point": { "x": 10.0, "y": -5.0 }, "bulge": 0.0 }, { "point": { "x": 10.0, "y": 5.0 }, "bulge": 0.0 }, { "point": { "x": 0.0, "y": 5.0 }, "bulge": 0.0 }], "holes": [], "offset": 0.0, "slope": { "direction": 0.0, "angle": 0.1 }, "phase": "New", "name": "" } });
     let mut snapshot = model(json!({ "ws": baseboard(json!({})) }), json!({ "slabs": slab }));
     snapshot.walls.get_mut("w").expect("the wall").base_slab = Some("sl".to_string());
-    snapshot.walls.get_mut("w").expect("the wall").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 9.0, y: 0.0 } };
+    snapshot.walls.get_mut("w").expect("the wall").axis = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 1.0, y: 0.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 9.0, y: 0.0 } };
     let solid = &compute_element_solids(&snapshot)["ws"];
     let fall = 0.1f64.tan();
     assert!(close(solid.bounds.min.z, -9.0 * fall) && close(solid.bounds.max.z, -fall + 0.1), "{:?}", solid.bounds);

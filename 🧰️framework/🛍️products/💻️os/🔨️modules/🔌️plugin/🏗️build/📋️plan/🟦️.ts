@@ -3,30 +3,21 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 /** 🧩️ Semantic plugin build plan owner. */
 
 import { newestComponentSourceMtime, stagedModuleMtime } from "../🔍️freshness/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, publishActivationReceipt, readActivationReceipt, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "@semio-tech/framework-os-dev/activation";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { runCmd, runProbe } from "@semio-tech/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { loadFrameworkOsPlaygroundCatalog } from "@semio-tech/repo-lib/dev";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection,readCatalogBuildTargetsV1, runtimeCatalogProjectionRootV1, type CatalogSelection } from "../../📇️registry/📖️catalog-view/🟦️.ts";
+import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGeneratedCatalogProjection,readCatalogBuildTargetsV1, runtimeCatalogProjectionRootV1, type CatalogSelection } from "@semio-tech/plugin-registry/catalog-view";
 
-import { discoverPluginBuildTargets, type ComponentSourceOwnerV1, type PluginBuildTargetV1 } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { discoverPluginBuildTargets, type ComponentSourceOwnerV1, type PluginBuildTargetV1 } from "@semio-tech/plugin-registry/discovery";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
 
 

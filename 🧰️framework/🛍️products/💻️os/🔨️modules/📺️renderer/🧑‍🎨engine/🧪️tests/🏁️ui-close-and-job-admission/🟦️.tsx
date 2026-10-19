@@ -6,7 +6,7 @@ export async function registerUiCloseAndJobAdmissionTests(vitest: PluginRuntimeV
   const { describe, expect, it, vi } = vitest;
   const { leftoverShellInvocationFrames } = dependencies;
   it("validates independent job completion ownership and latest render authority", async () => {
-    const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🏁️job-completion-ownership/🔣️.json");
+    const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures/job-completion-ownership.json");
     for (const row of fixture.cases) {
       const owners = new Map<string, number>();
       const current = new Map<number, string>();

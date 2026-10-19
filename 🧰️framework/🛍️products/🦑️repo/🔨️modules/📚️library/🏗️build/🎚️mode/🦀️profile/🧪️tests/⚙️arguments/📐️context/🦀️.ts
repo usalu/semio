@@ -9,13 +9,13 @@ import TOML from"@iarna/toml";
 import{createCargoContextFixtureV1,applyCargoContextPhaseV1,settleCargoContextObservationV1}from"./🟦️.ts";
 import{readCargoProfileOracleSelectionV1}from"../🧭️selection/🟦️.ts";
 import corpus from"./🔣️.json"with{type:"json"};
-import{registerBuildTestLawV1}from"../../../../../🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withRepositoryCompilerStoreV1}from"../../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import{scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import{runOwnedCommand,captureOwnedCommandV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1,acquireCompilerCapacityLeaseV1}from"@semio-tech/process/compiler-capacity";
+import{runOwnedCommand,captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{scriptInvocationEnvironment}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{readBuildMode}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{readBuildMode}from"@semio-tech/process/build-mode";
 const sha=(bytes:string|Uint8Array)=>createHash("sha256").update(bytes).digest("hex");
 if(readCargoProfileOracleSelectionV1(process.env)==="context")registerBuildTestLawV1("pinned Cargo observes direct rlib context across exact Source edits","profile-oracle",original=>{
  const workspace=process.cwd(),control=scriptCompilerAdmissionControlV1(original,"build-mode:rlib-context-observer",120000),mode=readBuildMode(process.env.SEMIO_BUILD_MODE);

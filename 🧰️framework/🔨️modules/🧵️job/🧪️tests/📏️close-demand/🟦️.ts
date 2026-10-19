@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
 import {Database} from "bun:sqlite";
 import fixture from "../🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
-import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("original job close separates exact independent grants and preserves terminal progress",()=>{
   const demands={maximumItems:fixture.progress.copiedItems,maximumCopyBytes:fixture.progress.copiedBytes,maximumCapacityBytes:fixture.progress.retainedCapacityBytes,maximumReleaseBytes:fixture.progress.releasedBytes,maximumDepth:2};

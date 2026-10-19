@@ -187,7 +187,7 @@ pub mod standards {
                     pub use semio_s_artifact_stdio_svg_schema::standards::v1_1::subsets::base::schema::mutation_support;
                     pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot;
                     pub use semio_s_artifact_stdio_svg_schema::standards::v1_1::subsets::base::schema::inferences;
-                    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff;
+                    pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::schema::diff;
                     pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::base::schema::mutations;
                 }
                 #[path = "."]

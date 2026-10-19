@@ -1,6 +1,6 @@
 //! 🔔️ Original typed wake custody keeps the Waker lease, shared allocation and payload on separate paid frontiers.
 use super::*;
-use semio_framework_value::{ValueError,retirement::{RetireOwned,controlled::ControlledRetirement,shared::shared_retirement_allocation_bytes}};
+use semio_framework_value::{ValueError,retirement::{RetireOwned,controlled::ControlledRetirement,arc_custody::shared_retirement_allocation_bytes}};
 
 pub trait RetainedWorkerWake:Send{
  fn wake_by_ref(&self);

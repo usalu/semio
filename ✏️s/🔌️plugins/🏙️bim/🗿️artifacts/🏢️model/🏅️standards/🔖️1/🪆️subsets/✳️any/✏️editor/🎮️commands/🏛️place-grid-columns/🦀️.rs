@@ -2,11 +2,14 @@
 //! authors nothing new here: every column is an ordinary `create-column` in one history row, with the selected column type of the library, else the first one. A model without a crossing,
 //! without a storey or without a column type is refused with its own code instead of doing nothing silently.
 
-use crate::editor::bim::entities::{id_taken, ordered_storeys};
-use crate::editor::bim::kit::{fault, IdMint};
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Column, GridLine, ModelSnapshot, Phase, Point2, TopConstraint}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::id_taken;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, IdMint};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, GridLine, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, TopConstraint};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -50,7 +53,7 @@ pub fn crossings(lines: &[&GridLine]) -> Vec<(Point2, String)> {
 
 fn storey_of(snapshot: &ModelSnapshot, payload: &PlaceGridColumns, ctx: &BimDispatchCtx) -> Option<String> {
     let holds = |id: &String| snapshot.storeys.contains_key(id);
-    Some(payload.storey.clone()).filter(holds).or_else(|| plan::active_storey(snapshot, &ctx.plan)).filter(holds).or_else(|| snapshot.buildings.keys().find_map(|building| ordered_storeys(snapshot, building).into_iter().next()))
+    Some(payload.storey.clone()).filter(holds).or_else(|| semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_storey(snapshot, &ctx.plan)).filter(holds).or_else(|| snapshot.buildings.keys().find_map(|building| ordered_storeys(snapshot, building).into_iter().next()))
 }
 
 pub fn handle(payload: &PlaceGridColumns, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
@@ -71,7 +74,7 @@ pub fn handle(payload: &PlaceGridColumns, doc: &ArtifactView<'_, ModelSnapshot>,
             .map(|(position, label)| {
                 let id = mint.mint("column", |id| id_taken(snapshot, id));
                 let column = Column { storey: storey.clone(), column_type: column_type.clone(), position, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: format!("{kind} {label}") };
-                ModelMutation::CreateColumn(crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn { id, column })
+                ModelMutation::CreateColumn(semio_s_artifact_bim_model_mut_any_159::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn { id, column })
             })
             .collect(),
     ))

@@ -11,6 +11,7 @@ package client
 import (
 	"fmt"
 	graphql "github.com/usalu/semio/repo/graphql"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,24 +21,34 @@ import (
 
 var (
 	rootDir               string
-	executor              *graphql.Executor
-	executorOnce          sync.Once
+	activeExecutor        *graphql.Executor
+	executorMu            sync.Mutex
+	executorRoot          string
 	formatterBinaryLookup = exec.LookPath
 	formatterCommandRun   = runFormatterCommand
 )
 
-// 🕸️ensureExecutor lazily initializes the GraphQL executor on first use.
-// This avoids the expensive initialization (LoadBundles, schema build) for
-// 🕸️commands that don't need GraphQL (e.g. hook calls).
-func ensureExecutor() {
-	executorOnce.Do(func() {
-		var e error
-		executor, e = graphql.NewExecutor(rootDir)
-		if e != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to initialize GraphQL executor: %v\n", e)
-			executor = nil
+// 🔗️boundExecutor returns the GraphQL executor of the explicitly bound repository root and rebinds it whenever the root changed.
+// 🔗️It refuses to answer while no root is bound, so no query can fall back to the repository the process happens to run in.
+func boundExecutor() (*graphql.Executor, error) {
+	executorMu.Lock()
+	defer executorMu.Unlock()
+	if rootDir == "" {
+		return nil, fmt.Errorf("repository root is not bound: call SetRootDir or BindWorkingDirectory first")
+	}
+	if activeExecutor == nil || executorRoot != rootDir {
+		e, err := graphql.NewExecutor(rootDir)
+		if err != nil {
+			activeExecutor = nil
+			executorRoot = ""
+			return nil, fmt.Errorf("failed to initialize GraphQL executor: %w", err)
 		}
-	})
+		activeExecutor = e
+		executorRoot = rootDir
+	} else if workspace.GetRootDir() != workspace.FindRepoRoot(executorRoot) {
+		workspace.SetRootDir(executorRoot)
+	}
+	return activeExecutor, nil
 }
 
 // ⚠️writeWarningf writes operational diagnostics without contaminating structured stdout.
@@ -45,15 +56,14 @@ func writeWarningf(format string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, "Warning: "+format+"\n", args...)
 }
 
-// 💿️init holds the data fields for a init record.
-func init() {
-	wd, err := os.Getwd()
+// 🧷️BindWorkingDirectory binds the process to the repository containing the working directory; every entry point calls it once per invocation.
+func BindWorkingDirectory() error {
+	cwd, err := os.Getwd()
 	if err != nil {
-		rootDir = "."
-	} else {
-		rootDir = findRepoRoot(wd)
+		return err
 	}
-	SetRootDir(rootDir)
+	SetRootDir(cwd)
+	return nil
 }
 
 // 🏪️GetRootDir MUST return the stored value without modification.
@@ -66,6 +76,7 @@ func GetRootDir() string {
 // 🗺️SetRootDir sets the root dir on the value.
 func SetRootDir(dir string) {
 	rootDir = findRepoRoot(dir)
+	workspace.SetRootDir(rootDir)
 	invalidateGitignore()
 	InvalidateTechnologyCache()
 }
@@ -196,52 +207,7 @@ func (lg LoggingConfig) includeNative() bool {
 	return strings.ToLower(strings.TrimSpace(lg.Detail)) == "full"
 }
 
+// 🔍️findRepoRoot resolves the repository root above startDir through the workspace, which reports every resolution to the hermetic test guard.
 func findRepoRoot(startDir string) string {
-	if strings.TrimSpace(startDir) == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return "."
-		}
-		startDir = cwd
-	}
-	dir, err := filepath.Abs(startDir)
-	if err != nil {
-		return startDir
-	}
-
-	searchDir := dir
-	for {
-		if FileExists(filepath.Join(searchDir, "repo", "cli", "main.go")) {
-			return searchDir
-		}
-		parent := filepath.Dir(searchDir)
-		if parent == searchDir {
-			break
-		}
-		searchDir = parent
-	}
-
-	searchDir = dir
-	for {
-		if _, err := os.Stat(filepath.Join(searchDir, ".git")); err == nil {
-			return searchDir
-		}
-		parent := filepath.Dir(searchDir)
-		if parent == searchDir {
-			break
-		}
-		searchDir = parent
-	}
-
-	searchDir = dir
-	for {
-		if _, err := os.Stat(filepath.Join(searchDir, "go.mod")); err == nil {
-			return searchDir
-		}
-		parent := filepath.Dir(searchDir)
-		if parent == searchDir {
-			return dir
-		}
-		searchDir = parent
-	}
+	return workspace.FindRepoRoot(startDir)
 }

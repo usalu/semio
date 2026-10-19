@@ -19,6 +19,7 @@ for tag in sys.argv[1:]:
     otext = open(os.path.join(HERE, "orig", sp["orig"]), encoding="utf-8").read()
     if sp.get("pre"):
         otext = sp["pre"](otext)
+    os.makedirs(os.path.join(HERE, "fmt-tmp"), exist_ok=True)
     tmp = os.path.join(HERE, "fmt-tmp", f"{tag}.rs")
     open(tmp, "w", encoding="utf-8").write(otext)
     o, ob, ol = hunks(tmp)

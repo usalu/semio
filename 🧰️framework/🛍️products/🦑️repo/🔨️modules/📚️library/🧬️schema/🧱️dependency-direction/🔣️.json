@@ -47,8 +47,10 @@
       "additionalProperties": false,
       "required": [
         "roles",
+        "uiBoundary",
         "rules",
-        "publicApi"
+        "publicApi",
+        "vendoredPaths"
       ],
       "properties": {
         "roles": {
@@ -77,6 +79,43 @@
                   "type": "string",
                   "minLength": 1
                 }
+              }
+            }
+          }
+        },
+        "uiBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "subjectRole",
+            "foundationRoles",
+            "testSupportRoles"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "subjectRole": {
+              "type": "string",
+              "minLength": 1
+            },
+            "foundationRoles": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "testSupportRoles": {
+              "type": "array",
+              "uniqueItems": true,
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
               }
             }
           }
@@ -136,6 +175,14 @@
             "toolingRoles": {
               "const": []
             }
+          }
+        },
+        "vendoredPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

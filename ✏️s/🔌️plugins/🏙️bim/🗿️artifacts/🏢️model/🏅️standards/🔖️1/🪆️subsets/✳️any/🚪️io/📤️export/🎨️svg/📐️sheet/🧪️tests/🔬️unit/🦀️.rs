@@ -1,16 +1,16 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
-use crate::standards::v1::subsets::any::io::export::svg::path::mm_per_metre;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::mm_per_metre;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::path::Frame;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::Frame;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::svg::sheet::*;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::{layout, is_drawn, MARGIN, GAP, PADDING, TITLE_BAND};
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::house;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
 
 #[test]
 fn every_drawn_view_gets_a_slot_plans_highest_level_first_then_ceiling_plans_sections_and_elevations() {
@@ -57,7 +57,7 @@ fn a_slot_is_the_drawing_bounds_at_the_scale_of_its_view_plus_padding_and_the_ti
 
 #[test]
 fn a_model_without_views_has_an_empty_sheet() {
-    let sheet = layout(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &Default::default());
+    let sheet = layout(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &Default::default());
     assert!(sheet.slots.is_empty());
     assert_eq!((sheet.width, sheet.height), (2.0 * MARGIN, 2.0 * MARGIN));
 }

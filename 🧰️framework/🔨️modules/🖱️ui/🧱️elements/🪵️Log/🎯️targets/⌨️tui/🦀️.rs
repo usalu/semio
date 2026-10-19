@@ -72,7 +72,7 @@ impl LogState {
     }
 }
 
-pub(crate) fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
+pub fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
     let page = log.page() as isize;
     match ev.key {
         Key::Up => log.scroll_by(-1),
@@ -85,7 +85,7 @@ pub(crate) fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
     }
 }
 
-pub(crate) fn log_on_mouse(log: &mut LogState, rect: Rect, event: &MouseEvent) {
+pub fn log_on_mouse(log: &mut LogState, rect: Rect, event: &MouseEvent) {
     if let MouseKind::Scroll { dy, .. } = event.kind {
         if dy != 0 && rect.contains(event.pos) {
             log.scroll_by(isize::from(dy) * WHEEL_LINES as isize);
@@ -93,7 +93,7 @@ pub(crate) fn log_on_mouse(log: &mut LogState, rect: Rect, event: &MouseEvent) {
     }
 }
 
-pub(crate) fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_log(log: &LogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

@@ -1,11 +1,14 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::*;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, mutations::ModelMutation};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::{PhaseVisibility, ViewPhase, visibility_of, phase_of, dependency};
+use semio_s_artifact_bim_model_mut_any_103::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
+use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::{Inference, Mutation};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -112,7 +115,7 @@ async fn the_node_is_recomputed_by_a_phase_or_storey_edit_and_by_no_geometry_edi
     session.update(&moved, &diff);
     assert_eq!(session.report().computed_by_kind.get("phase-visibility"), Some(&2), "{:?}", session.report());
 
-    let (shifted, diff) = step(&moved, ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-1".into(), height: 3.4 }));
+    let (shifted, diff) = step(&moved, ModelMutation::SetStoreyHeight(semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-1".into(), height: 3.4 }));
     session.update(&shifted, &diff);
     assert!(!session.report().computed_by_kind.contains_key("phase-visibility"), "a storey height edit leaves the visibility alone: {:?}", session.report());
 }
@@ -135,7 +138,8 @@ async fn the_default_and_determinism_laws_hold() {
     assert_eq!(dependency(&model, "st-0"), dependency(&model, "st-0"));
 }
 
-use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 
 fn phase_view(model: &ModelSnapshot, phase: Option<Phase>) -> ModelSnapshot {
     let mut model = model.clone();

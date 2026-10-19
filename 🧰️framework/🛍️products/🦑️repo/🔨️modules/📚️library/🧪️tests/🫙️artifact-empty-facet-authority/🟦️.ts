@@ -8,6 +8,7 @@ import * as ts from "typescript";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { canonicalTaxonomyEmoji } from "../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 import optionsFixture from "../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json";
 import optionsOracle from "../../🧬️schema/🫙️artifact-empty-facet-authority/☑️options.json";
 
@@ -23,7 +24,7 @@ const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
 const taxonomy = loadCatalogTaxonomy();
-const declarationNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindIds", "semanticDirectoryKindId", "resolveSemanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
+const declarationNames = ["memberPatternEmojiVerdicts", "semanticMemberPatternEmojiAdmitted", "canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindIds", "semanticDirectoryKindId", "resolveSemanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
@@ -41,7 +42,7 @@ function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEm
     expect(matches.length, name).toBe(1);
     return matches[0]!.replace(/^export\s+/u, "");
   }).join("\n");
-  return [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText].map((javascript) => new Function("basename", "dirname", "loadTaxonomy", `${javascript}\nreturn semanticArtifactEmptyFacetProjectionAuthority;`)(basename, dirname, () => { throw new Error("Pure authority unexpectedly requested workspace discovery"); }) as typeof semanticArtifactEmptyFacetProjectionAuthority);
+  return [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText].map((javascript) => new Function("basename", "dirname", "loadTaxonomy", "canonicalTaxonomyEmoji", `${javascript}\nreturn semanticArtifactEmptyFacetProjectionAuthority;`)(basename, dirname, () => { throw new Error("Pure authority unexpectedly requested workspace discovery"); }, canonicalTaxonomyEmoji) as typeof semanticArtifactEmptyFacetProjectionAuthority);
 }
 
 test("retains the original nineteen-case empty-facet input with independent JSON parsing", () => {
@@ -108,7 +109,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   expect(join(repoRoot, vector.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[vector.target]).toBeDefined();
-  expect(project.targets[vector.target]).toEqual({ executor: "nx:run-commands", cache: vector.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
+  expect(project.targets[vector.target]).toEqual({ executor: "repo:script", cache: vector.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[vector.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${vector.target}`);
   const path = join(packageRoot, "📜️script.ts"), source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);

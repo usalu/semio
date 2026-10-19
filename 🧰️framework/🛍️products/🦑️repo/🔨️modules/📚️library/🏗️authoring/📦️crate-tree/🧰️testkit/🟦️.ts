@@ -1,4 +1,4 @@
-import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustFindTopLevel, rustTokenPairs, rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 import { useLeafNames } from "../🌳️module-tree/🟦️.ts";
 
 /** 🧰️ A feature of a carved crate with the entries it enables. */
@@ -224,6 +224,9 @@ export function declaredNames(text: string): Set<string> {
 
 /** 📦️ One external dependency of the pre-carve package manifest. */
 export type ExternalDependency = Readonly<{ key: string; ident: string; dependency: boolean; devOnly: boolean; devFeatures: readonly string[]; devRow: string | null; row: string | null }>;
+
+/** 🚪️ Names behind a feature that a dev-dependency row adds to an external dependency, or `null` when the dependency source is unreadable and every gated name must count as referenced. */
+export type ExternalGateReader = (external: ExternalDependency, feature: string) => ReadonlySet<string> | null;
 
 /** 📦️ Reads the external dependencies of a package manifest: which are normal dependencies, which exist only as dev-dependencies, and the features a dev-dependency row adds. */
 export function externalDependencies(manifestText: string, rows: Readonly<{ dependencies?: readonly string[]; devDependencies: readonly string[] }>): ExternalDependency[] {

@@ -446,7 +446,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<Grid3dEditor>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Grid3dEditor>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<Grid3dEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || <Grid3dEditor as ArtifactEditor>::command_id(input.command) != self.tool_id {
             return Err(Fault::from("wfc.grid3d.retained.route"));
         }
@@ -458,6 +459,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         )?;
         self.completed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

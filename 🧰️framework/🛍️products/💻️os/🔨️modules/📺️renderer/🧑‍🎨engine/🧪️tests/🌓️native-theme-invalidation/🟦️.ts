@@ -1,8 +1,8 @@
 
 import { chromium, type Browser, type Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { resolveElementsSurfaceChromeDark } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
-import { resolveWgpuHostAppearance, WGPU_PREFERS_DARK_MEDIA_QUERY } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { resolveElementsSurfaceChromeDark } from "@semio-tech/ui-react";
+import { resolveWgpuHostAppearance, WGPU_PREFERS_DARK_MEDIA_QUERY } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 import fixture from "../🧫️fixtures/🌓️native-theme-invalidation/🔣️.json";
 
 type ThemeTransition = { readonly from: "light" | "dark"; readonly to: "light" | "dark"; readonly reactDark: boolean };

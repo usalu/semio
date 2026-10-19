@@ -179,7 +179,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * page meant a second wasm flow session, a second canvas and a second wasm-side surface. DOM node
    * identity is the proof: a remount cannot preserve it, and a re-render cannot lose it. */
   describe("🪪️ retained surface host across refreshes", () => {
-    afterEach(() => cleanup());
+    let retireHosts: (() => void) | undefined;
+    afterEach(() => { cleanup(); retireHosts?.(); retireHosts = undefined; });
 
     it("renumbers the surface exactly as the running app does — the hazard the law defends against is real", async () => {
       const { builtNodeToSnapshot } = await import("../../../📃️UiDocumentStore/🟦️.tsx");
@@ -198,6 +199,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it(`keeps ONE surface host across ${retention.refreshes.length} refreshes with changing status maps`, async () => {
       const { builtNodeToSnapshot } = await import("../../../📃️UiDocumentStore/🟦️.tsx");
       const { act } = await import("react");
+      const { NodeGraphHost } = await import("@semio-tech/framework-os-node-graph-rs/index");
+      const { registerComponentSceneHostV1 } = await import("../../🗺️element-host-registry/🟦️.ts");
+      retireHosts = registerComponentSceneHostV1("node-graph", () => NodeGraphHost);
       const store = new UiDocumentStore(retention.surface);
       const load=(index:number)=>{const refresh=retention.refreshes[index];if(!refresh)throw Error("Authored container refresh required");return act(()=>{store.loadSnapshot(builtNodeToSnapshot(retention.surface,builtFromFixture(refresh.body) as any));});};
       load(0);

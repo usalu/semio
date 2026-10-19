@@ -62,6 +62,7 @@ func TestGoalCreateValidation(t *testing.T) {
 }
 
 func TestGoalCreateAndCleanup(t *testing.T) {
+	withTempRepo(t)
 
 	result := ToolGoalCreate("Test Goal Creation", "Test description", "Test prompt for goal", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
 	if result.Error != "" {
@@ -88,9 +89,7 @@ func TestExhaustiveGoalDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow goal document test in short mode")
 	}
-	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-PARENT-GOAL"))
-	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "RENAMED-PARENT"))
-	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
+	withExhaustiveRepo(t)
 
 	parentTitle := "Test Parent Goal"
 	parentRes := ToolGoalCreate(parentTitle, "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
@@ -101,8 +100,6 @@ func TestExhaustiveGoalDocument(t *testing.T) {
 	if !ok {
 		t.Fatalf("Expected *Goal data")
 	}
-
-	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(parent.ID)))
 
 	if parent.ID != "TEST-PARENT-GOAL" {
 		t.Errorf("Expected parent ID 'TEST-PARENT-GOAL', got '%s'", parent.ID)
@@ -137,8 +134,6 @@ func TestExhaustiveGoalDocument(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to update parent title: %v", err)
 	}
-
-	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(parent.ID)))
 
 	if parent.ID != "RENAMED-PARENT" {
 		t.Errorf("Expected renamed parent ID 'RENAMED-PARENT', got '%s'", parent.ID)
@@ -199,7 +194,6 @@ func TestExhaustiveGoalDocument(t *testing.T) {
 		t.Errorf("Child goal file not found at %s after reparenting", rootChildPath)
 	}
 
-	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
 }
 
 func TestGoalList(t *testing.T) {
@@ -227,6 +221,7 @@ func TestGoalList(t *testing.T) {
 }
 
 func TestGoalsMcpResource(t *testing.T) {
+	withExhaustiveRepo(t)
 	req := mcp.ReadResourceRequest{}
 	req.Params.URI = "repo://goals"
 	contents, err := handleGoalsResource(context.Background(), req)
@@ -254,7 +249,7 @@ func TestGoalsMcpResource(t *testing.T) {
 		t.Fatalf("ListGoals failed: %v", err)
 	}
 	if len(goals) == 0 {
-		t.Skip("no goals seeded in repo; cannot assert content")
+		t.Fatal("the fixture repository must hold the seeded goals")
 	}
 	for _, g := range goals {
 		if !strings.Contains(text.Text, g.Title) {

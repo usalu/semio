@@ -2,8 +2,8 @@
 //! (mirror `x`, turn by the yaw, move the origin; a mirror reverses the winding so faces stay outward). Each family solid keeps its evaluated material, so volumes and material rows follow the same rules as every other element.
 
 use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentEntry, ComponentIssueCode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid, SolidBuilder, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_geometry::placement::Affine3;
 
@@ -32,7 +32,7 @@ pub fn component_solid(entry: &ComponentEntry) -> ElementSolid {
     }
     let affine = affine_of(entry);
     for (_, solid) in entry.family.visible().filter(|(_, solid)| !solid.indices.is_empty()) {
-        builder.add(parts::BODY, &solid.material, 0, &mesh_of(solid).transformed(&affine));
+        builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, &solid.material, 0, &mesh_of(solid).transformed(&affine));
     }
     builder.build()
 }

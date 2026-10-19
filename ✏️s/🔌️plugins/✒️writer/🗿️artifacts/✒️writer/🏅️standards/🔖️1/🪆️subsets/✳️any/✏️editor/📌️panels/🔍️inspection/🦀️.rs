@@ -36,21 +36,21 @@ pub fn definition() -> PanelTabDefinition {
 /// section now, so the section always reports how many diagnostics the document really has.
 pub fn render(document: &WriterSnapshot, labels: &WriterPlayLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let text = writer_text(document);
-    let document_items = crate::editor::writer::base::ui_node_list([
-        tree_item("writer-inspector.document.schema", crate::editor::writer::base::ui_label(format!("Schema: {}", document.schema))?),
-        tree_item("writer-inspector.document.id", crate::editor::writer::base::ui_label(format!("Id: {}", document.id))?),
-        tree_item("writer-inspector.document.language", crate::editor::writer::base::ui_label(format!("Language: {}", document.language_id))?),
-        tree_item("writer-inspector.document.uri", crate::editor::writer::base::ui_label(format!("Uri: {}", document.uri))?),
-        tree_item("writer-inspector.document.lines", crate::editor::writer::base::ui_label(format!("Lines: {}", text.lines().count()))?),
+    let document_items = crate::editor::writer::editor_vocabulary::ui_node_list([
+        tree_item("writer-inspector.document.schema", crate::editor::writer::editor_vocabulary::ui_label(format!("Schema: {}", document.schema))?),
+        tree_item("writer-inspector.document.id", crate::editor::writer::editor_vocabulary::ui_label(format!("Id: {}", document.id))?),
+        tree_item("writer-inspector.document.language", crate::editor::writer::editor_vocabulary::ui_label(format!("Language: {}", document.language_id))?),
+        tree_item("writer-inspector.document.uri", crate::editor::writer::editor_vocabulary::ui_label(format!("Uri: {}", document.uri))?),
+        tree_item("writer-inspector.document.lines", crate::editor::writer::editor_vocabulary::ui_label(format!("Lines: {}", text.lines().count()))?),
     ])?;
-    let mut tree = PanelTreeBuilder::new("writer-inspector")?.section("writer-inspector.document", Some(crate::editor::writer::base::ui_label(labels.artifact.as_str())?), true, document_items)?;
+    let mut tree = PanelTreeBuilder::new("writer-inspector")?.section("writer-inspector.document", Some(crate::editor::writer::editor_vocabulary::ui_label(labels.artifact.as_str())?), true, document_items)?;
     if document.language_id == "jack" {
         let graph = example_graph();
         let messages: Vec<String> = lint(&graph, &text).into_iter().map(|diag| diag.message).collect();
         if !messages.is_empty() {
             let indexed: Vec<(usize, &String)> = messages.iter().enumerate().collect();
-            tree = tree.window_section(windows, "writer-inspector.diagnostics", Some(crate::editor::writer::base::ui_label(labels.diagnostics.as_str())?), true, &indexed, |(index, message)| {
-                tree_item(format!("writer-inspector.diagnostics.{index}"), crate::editor::writer::base::ui_label(message.as_str())?)
+            tree = tree.window_section(windows, "writer-inspector.diagnostics", Some(crate::editor::writer::editor_vocabulary::ui_label(labels.diagnostics.as_str())?), true, &indexed, |(index, message)| {
+                tree_item(format!("writer-inspector.diagnostics.{index}"), crate::editor::writer::editor_vocabulary::ui_label(message.as_str())?)
             })?;
         }
     }

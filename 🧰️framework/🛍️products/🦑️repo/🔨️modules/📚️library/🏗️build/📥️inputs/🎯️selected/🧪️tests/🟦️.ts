@@ -5,9 +5,9 @@ import {randomUUID} from "node:crypto";
 import {mkdirSync,rmSync,readFileSync} from "node:fs";
 import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {withRepositoryNxStorageV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
 

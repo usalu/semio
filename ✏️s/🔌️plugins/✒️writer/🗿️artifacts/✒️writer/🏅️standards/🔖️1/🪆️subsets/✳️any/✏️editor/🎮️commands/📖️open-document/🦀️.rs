@@ -1,6 +1,6 @@
 //! ✍️ ✍️ Writer play app commands command — `open-document`.
 
-use crate::editor::writer::base::reset_document_effect;
+use crate::editor::writer::editor_vocabulary::reset_document_effect;
 use crate::op::WriterMutation;
 use crate::{writer_snapshot_with_text, WriterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};

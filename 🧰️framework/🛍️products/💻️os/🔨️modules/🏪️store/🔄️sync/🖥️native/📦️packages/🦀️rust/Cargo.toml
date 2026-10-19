@@ -39,7 +39,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/�
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-os-directory = { path = "../../../../../📇️directory/📦️packages/🦀️rust" }
 semio-framework-os-directory-client = { path = "../../../../../📇️directory/🔌️client/📦️packages/🦀️rust" }
-semio-framework-os-store-blob-identity = { path = "../../../../📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-blob-identity = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 

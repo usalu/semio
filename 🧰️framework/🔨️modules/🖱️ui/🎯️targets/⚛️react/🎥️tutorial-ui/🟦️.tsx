@@ -1,4 +1,4 @@
-import type { TutorialCameraState, TutorialOverlayRect, TutorialGestureCue } from "@semio-tech/framework";
+import type { TutorialCameraState, TutorialOverlayRect, TutorialGestureCue } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { ephemeralMap } from "@semio-tech/framework/transient";
 import * as React from "react";
 import { useSurface, SurfaceScope, Surface } from "../../../🧱️elements/🌈️Surface/🟦️.tsx";

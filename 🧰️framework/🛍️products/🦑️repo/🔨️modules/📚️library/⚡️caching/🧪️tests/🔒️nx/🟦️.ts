@@ -3,9 +3,9 @@ import {join,resolve,basename,relative} from "node:path";
 import {realpath} from "node:fs/promises";
 import {createRequire} from "node:module";
 import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
 import {withRepositoryNxStorageV1} from "../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
-import {withNxToolingUseV1,nxToolingUseStorageV1} from "../../🚀️bootstrap/🛠️tools/📥️use/🟦️.ts";
+import {withNxToolingUseV1,nxToolingUseStorageV1} from "@semio-tech/nx-bootstrap-tools/use";
 import {withRepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../📦️artifacts/💾️storage/🟦️.ts";
 /** 🧷️ Holds the actual product sink and immutable toolkit namespace through every fixture child. */

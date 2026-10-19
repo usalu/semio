@@ -1,5 +1,5 @@
 /** ⏺️ The replay arm: an in-page recorder of the band while a replay runs. */
-import { evalSafe } from "../📄️page/🟦️.ts";
+import { evalSafe } from "../🔬️probe/🟦️.ts";
 import { band } from "../🎗️band/🟦️.ts";
 import { renderer } from "../🧠️state/🟦️.ts";
 import { BAND_WORDS, REVIEW_WORDS } from "../🧊️wgpu-mirror/🟦️.ts";

@@ -27,7 +27,13 @@ testkit = []
 [dependencies]
 semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-os-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

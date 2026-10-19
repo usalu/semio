@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📦️ energy model Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { runWeatherChecks } from "../../../../📦️packages/🟦️typescript/🧩️extensions/🌦️epw/🧪️testing/🔬️unit/🟦️.ts";
 
 /** 🧩️ Every crate of the energy model artifact family (its workspace members), checked and tested together. */

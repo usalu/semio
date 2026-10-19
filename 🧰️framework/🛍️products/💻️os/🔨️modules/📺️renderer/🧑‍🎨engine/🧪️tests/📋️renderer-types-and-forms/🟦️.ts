@@ -9,7 +9,7 @@ import { actionSemanticsForKind } from "@semio-tech/framework";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🎛️declarative-controls/🟦️.tsx";
 import { appBreadcrumb, appWindowLabel, UiDocumentStore, type UiInterpreterContext, UiPresenceOverlayContext, type UiPresenceOverlayEntry, resolveAppBreadcrumb, flattenPanelTabLeaves, interpretUiNode, dagOverlayLabelFill, dagOverlayLabelFillHex } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { CONTRACT_LEAF_LAYOUT, buildContractSnapshot, noopAction, renderContractTree } from "../🧰️engine-contract-helpers/🟦️.ts";
-import { loadKernelHostSlotsFixture, loadKernelExternalSlotsFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadKernelHostSlotsFixture, loadKernelExternalSlotsFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 
 describe("framework renderer types", () => {
   it("matches native action-semantics defaults without claiming migrated interactivity", () => {

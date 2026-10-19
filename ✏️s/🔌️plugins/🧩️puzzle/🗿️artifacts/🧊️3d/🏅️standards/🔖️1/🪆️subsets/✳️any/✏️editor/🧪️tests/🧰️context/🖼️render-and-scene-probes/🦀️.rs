@@ -12,8 +12,7 @@ pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
     let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
-    let tree = app.render(body_key, None, &view).await.expect("render");
-    rendered_body_value(tree)
+    rendered_body_value(app, body_key, &view).await
 }
 
 /// 📌️ One APP-LEVEL PANEL body rendered exactly the way `plugin_refresh_ui` renders it:
@@ -27,8 +26,7 @@ pub async fn render_panel_body(app: &mut Puzzle3dApp, body_key: &str, focused_wi
     }
     let mut view = app.view.clone();
     view.focused_window_id = focused_window_id.map(str::to_string);
-    let tree = app.render(body_key, None, &view.for_panel()).await.expect("render");
-    rendered_body_value(tree)
+    rendered_body_value(app, body_key, &view.for_panel()).await
 }
 
 /// 🪟️ One window INSTANCE rendered exactly the way `plugin_refresh_ui` renders it: the window KIND's
@@ -41,30 +39,40 @@ pub async fn render_panel_body(app: &mut Puzzle3dApp, body_key: &str, focused_wi
 pub async fn render_window_refresh(app: &mut Puzzle3dApp, body_key: &str, window_id: &str) -> Value {
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
-    let tree = app.render(body_key, None, &view).await.expect("render");
-    rendered_body_value(tree)
+    rendered_body_value(app, body_key, &view).await
 }
 
 /// 🖼️ The world-3d scene a rendered tree publishes, else the projected node JSON — the one projection
-/// every render probe in this test context reads.
-fn rendered_body_value(tree: semio_framework_plugin::ComponentTree) -> Value {
-    let mut stack = vec![&tree.root];
-    let mut rendered_scene = None;
-    while let Some(node) = stack.pop() {
-        if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-            if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                let scene: semio_framework_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
-                let world3d = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&scene));
-                rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
-                if scene.interaction_json.is_some() {
-                    break;
+/// every render probe in this test context reads. The tree stays owned by the app's stationary render source; the
+/// scene is read in place and only the node JSON is a second bounded render.
+async fn rendered_body_value(app: &mut Puzzle3dApp, body_key: &str, view: &ViewModel) -> Value {
+    let (raw, cx) = app.parts();
+    let scene = artifact_app_laws::observe_registered_fixture_app(raw, body_key, view, cx, |root| {
+        let mut stack = vec![root];
+        let mut rendered_scene = None;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    let scene: semio_framework_ui_scene::World3dScene = artifact_app_laws::built_surface_scene(node).expect("assemble world scene");
+                    let world3d = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&scene));
+                    rendered_scene = Some(object([("schema".to_string(), Value::from(surface.doc_schema.as_str())), ("world3d".to_string(), world3d)]));
+                    if scene.interaction_json.is_some() {
+                        break;
+                    }
                 }
             }
+            stack.extend(node.children.iter());
         }
-        stack.extend(node.children.iter());
+        rendered_scene
+    })
+    .await
+    .expect("render");
+    if let Some(scene) = scene {
+        return scene;
     }
-    let projected = artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
-    rendered_scene.unwrap_or_else(|| parse(&projected.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node JSON"))
+    let (raw, cx) = app.parts();
+    let projected = artifact_app_laws::render_registered_fixture_app(raw, body_key, view, cx).await.expect("render projection");
+    parse(&projected, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rendered node JSON")
 }
 
 /// 📏️ The packed byte length of the world-3d surface payload this body actually admits, plus the
@@ -75,17 +83,22 @@ pub async fn world_surface_payload_bytes(app: &mut Puzzle3dApp, body_key: &str) 
     let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
-    let tree = app.render(body_key, None, &view).await.expect("render");
-    let mut stack = vec![&tree.root];
-    let mut widest = 0;
-    while let Some(node) = stack.pop() {
-        if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
-            if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
-                widest = widest.max(surface.doc.bytes.as_slice().len());
+    let (raw, cx) = app.parts();
+    let widest = artifact_app_laws::observe_registered_fixture_app(raw, body_key, &view, cx, |root| {
+        let mut stack = vec![root];
+        let mut widest = 0;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema.as_str() == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    widest = widest.max(surface.doc.bytes.as_slice().len());
+                }
             }
+            stack.extend(node.children.iter());
         }
-        stack.extend(node.children.iter());
-    }
+        widest
+    })
+    .await
+    .expect("render");
     assert!(widest > 0, "{body_key} rendered no world-3d surface");
     (widest, semio_framework_ui_contract::UI_FIXED_BYTES)
 }
@@ -139,8 +152,9 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
     let window_id = body_key.split_once(':').map_or(main::WINDOW_KIND_ID, |(_, window)| window);
     app.ensure_window(window_id);
     let view = app.window_view(window_id);
-    let tree = app.render(body_key, None, &view).await.expect("render");
-    let mut stack = vec![&tree.root];
+    let (raw, cx) = app.parts();
+    let census = artifact_app_laws::observe_registered_fixture_app(raw, body_key, &view, cx, |root| {
+    let mut stack = vec![root];
     let mut census = None;
     while let Some(node) = stack.pop() {
         if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
@@ -178,9 +192,11 @@ pub async fn world_surface_carrier_census(app: &mut Puzzle3dApp, body_key: &str)
         }
         stack.extend(node.children.iter());
     }
-    let census = census.unwrap_or_else(|| panic!("{body_key} rendered no world-3d surface"));
-    artifact_app_laws::project_and_retire_fixture_tree(tree).expect("render projection");
     census
+    })
+    .await
+    .expect("render");
+    census.unwrap_or_else(|| panic!("{body_key} rendered no world-3d surface"))
 }
 //#endregion 🚚️WorldSceneCarrierCensus
 

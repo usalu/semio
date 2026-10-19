@@ -2,7 +2,9 @@
 //! `mutation.no-op`.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_sheet_revision::SetSheetRevision;
-use crate::standards::v1::subsets::any::schema::{snapshot::{revision_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{revision_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSheetRevision, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

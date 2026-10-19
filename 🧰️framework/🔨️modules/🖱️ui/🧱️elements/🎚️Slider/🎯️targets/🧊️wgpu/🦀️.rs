@@ -11,17 +11,17 @@
 //! owns how every wgpu slider applies it and paints one tick per snap (`slider_tick_rects`).
 //! Not to be confused with the `Ring` element (a circular value control) — `Slider` is a linear track.
 
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::input::{DragAxis, HitKind, HitTarget};
-use crate::wgpu::theme::Rgba;
-use crate::wgpu::widgets::{draw_text_on, SliderMeta, WidgetContext};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget};
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_wgpu_widget_kit::{draw_text_on, SliderMeta, WidgetContext};
 
 /// 🧲️ One tick per detent on `rail`, at the snap's axis position (`ui_contract::slider_axis_position`, the log
 /// axis for `log`) along the value track — which is left-to-right in every flow, as the thumb is
 /// (`layout::slider_presentation`; an rtl flow only moves the readout cell) — centred on the rail, `thickness` wide
 /// and `height` tall. Every wgpu track slider paints its ticks through this one law, the twin of React's
 /// `slider-tick` spans.
-pub(crate) fn slider_tick_rects(rail: Rect, min: f64, max: f64, scale: ui_contract::UiNumberScale, snaps: &[f64], thickness: f32, height: f32) -> impl Iterator<Item = Rect> + '_ {
+pub fn slider_tick_rects(rail: Rect, min: f64, max: f64, scale: ui_contract::UiNumberScale, snaps: &[f64], thickness: f32, height: f32) -> impl Iterator<Item = Rect> + '_ {
     snaps.iter().map(move |snap| {
         let share = ui_contract::slider_axis_position(*snap, min, max, scale) as f32;
         Rect::new(rail.x + rail.w * share - thickness * 0.5, rail.y + (rail.h - height) * 0.5, thickness, height)
@@ -29,34 +29,34 @@ pub(crate) fn slider_tick_rects(rail: Rect, min: f64, max: f64, scale: ui_contra
 }
 
 /// 🎚️ The value a pointer at `raw` commits: the shared contract law (clamp, step ladder, detents).
-pub(crate) fn slider_pointer_value(raw: f64, min: f64, max: f64, step: f64, snaps: &[f64], scale: ui_contract::UiNumberScale) -> f64 {
+pub fn slider_pointer_value(raw: f64, min: f64, max: f64, step: f64, snaps: &[f64], scale: ui_contract::UiNumberScale) -> f64 {
     ui_contract::slider_pointer_value(raw, min, max, if step.is_finite() { step } else { 0.0 }, snaps.iter().copied(), scale)
 }
 
 /// 🧭️ A dial's face inside a slider's track cell: a circle as tall as the cell, at its start — the twin of React's
 /// `slider-dial` square.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct DialFace {
+pub struct DialFace {
     pub cx: f32,
     pub cy: f32,
     pub radius: f32,
 }
 
 /// ⭕️ The face of a dial drawn in `track`.
-pub(crate) fn dial_face(track: Rect) -> DialFace {
+pub fn dial_face(track: Rect) -> DialFace {
     let radius = (track.h.min(track.w) * 0.5).max(0.0);
     DialFace { cx: track.x + radius, cy: track.y + track.h * 0.5, radius }
 }
 
 /// 📍️ The point at `share` of the radius along a dial's needle angle (`ui_contract::dial_angle`, counter-clockwise from three
 /// o'clock, screen y down).
-pub(crate) fn dial_point(face: DialFace, angle: f64, share: f32) -> (f32, f32) {
+pub fn dial_point(face: DialFace, angle: f64, share: f32) -> (f32, f32) {
     (face.cx + face.radius * share * angle.cos() as f32, face.cy - face.radius * share * angle.sin() as f32)
 }
 
 /// 📡️ One radial tick per detent of a dial, from 62 % to 92 % of its radius at the detent's needle angle — the twin of
 /// React's dial `slider-tick` lines.
-pub(crate) fn dial_tick_lines(face: DialFace, slider: &crate::wgpu::component::ui::UiSliderNode) -> impl Iterator<Item = [f32; 4]> + '_ {
+pub fn dial_tick_lines(face: DialFace, slider: &semio_framework_ui_declaration::ui::UiSliderNode) -> impl Iterator<Item = [f32; 4]> + '_ {
     slider.snaps.iter().map(move |snap| {
         let angle = ui_contract::dial_angle(slider.axis_position(*snap));
         let (x0, y0) = dial_point(face, angle, 0.62);
@@ -68,7 +68,7 @@ pub(crate) fn dial_tick_lines(face: DialFace, slider: &crate::wgpu::component::u
 /// 👆️ The value a press or drag at `(x, y)` over a slider's track cell commits: a track reads the pointer's share of the
 /// cell, a dial its angle about the face (`ui_contract::dial_position`); the axis maps the share onto the travel and the
 /// shared pointer law steps and snaps it.
-pub(crate) fn slider_node_pointer_value(slider: &crate::wgpu::component::ui::UiSliderNode, track: Rect, x: f32, y: f32) -> f64 {
+pub fn slider_node_pointer_value(slider: &semio_framework_ui_declaration::ui::UiSliderNode, track: Rect, x: f32, y: f32) -> f64 {
     let position = match slider.appearance {
         ui_contract::SliderAppearance::Dial => {
             let face = dial_face(track);
@@ -80,9 +80,9 @@ pub(crate) fn slider_node_pointer_value(slider: &crate::wgpu::component::ui::UiS
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
-pub(crate) fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, snaps: &[f64], ready: Option<f64>, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+pub fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, step: f64, snaps: &[f64], ready: Option<f64>, disabled: bool, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
-    let presentation = crate::wgpu::layout::slider_control_presentation(bounds, value, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let presentation = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, value, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
     let range = (max - min).max(f64::EPSILON);
     let mut t = ((value - min) / range).clamp(0.0, 1.0);
     if !disabled && ctx.input.drag.active && ctx.input.drag.target_id.as_deref() == Some(id) {
@@ -91,7 +91,7 @@ pub(crate) fn render_slider<E: Clone>(id: &str, value: f64, min: f64, max: f64, 
     }
     let selectable_max = ready.map_or(max, |extent| extent.clamp(min, max));
     let live = slider_pointer_value(min + t * range, min, max, step, snaps, ui_contract::UiNumberScale::Linear).clamp(min, selectable_max);
-    let live_presentation = crate::wgpu::layout::slider_control_presentation(bounds, live, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let live_presentation = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(bounds, live, min, max, None, ctx.theme.gap_standard, ui_contract::FlowInline::Ltr).slider;
     if !disabled {
         if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
             if let Some(on_change) = on_change {

@@ -81,19 +81,19 @@ pub struct GltfModel {
 //#endregion 🔖️Values
 
 //#region 🔖️Snapshot
-fn json(value: &DslValue) -> codec::Json {
+fn json(value: &DslValue) -> semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson {
     match value {
-        DslValue::Null => codec::Json::Null,
-        DslValue::Bool(flag) => codec::Json::Bool(*flag),
-        DslValue::Number(number) => codec::Json::Number(number.as_f64()),
-        DslValue::String(text) => codec::Json::String(text.clone()),
-        DslValue::Bytes(bytes) => codec::Json::Array(bytes.iter().map(|byte| codec::Json::Number(f64::from(*byte))).collect()),
-        DslValue::Array(items) => codec::Json::Array(items.iter().map(json).collect()),
-        DslValue::Object(rows) => codec::Json::Object(rows.iter().map(|(key, item)| (key.clone(), json(item))).collect()),
+        DslValue::Null => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Null,
+        DslValue::Bool(flag) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Bool(*flag),
+        DslValue::Number(number) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Number(number.as_f64()),
+        DslValue::String(text) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::String(text.clone()),
+        DslValue::Bytes(bytes) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Array(bytes.iter().map(|byte| semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Number(f64::from(*byte))).collect()),
+        DslValue::Array(items) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Array(items.iter().map(json).collect()),
+        DslValue::Object(rows) => semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson::Object(rows.iter().map(|(key, item)| (key.clone(), json(item))).collect()),
     }
 }
 
-fn present(value: &DslValue) -> Option<codec::Json> {
+fn present(value: &DslValue) -> Option<semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfJson> {
     (!value.is_null()).then(|| json(value))
 }
 
@@ -101,62 +101,62 @@ fn wide<const N: usize>(values: [f32; N]) -> [f64; N] {
     values.map(f64::from)
 }
 
-pub fn material(material: &GltfMaterial) -> codec::Material {
-    codec::Material {
+pub fn material(material: &GltfMaterial) -> semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfMaterial {
+    semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfMaterial {
         name: Some(material.name.clone()),
-        pbr_metallic_roughness: Some(codec::Pbr { base_color_factor: wide(material.color), metallic_factor: f64::from(material.metallic), roughness_factor: f64::from(material.roughness), ..codec::Pbr::default() }),
-        alpha_mode: if material.blend { codec::AlphaMode::Blend } else { codec::AlphaMode::Opaque },
-        ..codec::Material::default()
+        pbr_metallic_roughness: Some(semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: wide(material.color), metallic_factor: f64::from(material.metallic), roughness_factor: f64::from(material.roughness), ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfPbrMetallicRoughness::default() }),
+        alpha_mode: if material.blend { semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode::Blend } else { semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode::Opaque },
+        ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfMaterial::default()
     }
 }
 
-fn node(node: &GltfNode) -> codec::Node {
-    codec::Node { name: Some(node.name.clone()), translation: node.translation, rotation: node.rotation, mesh: node.mesh, children: node.children.clone(), extras: present(&node.extras), ..codec::Node::default() }
+fn node(node: &GltfNode) -> semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfNode {
+    semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfNode { name: Some(node.name.clone()), translation: node.translation, rotation: node.rotation, mesh: node.mesh, children: node.children.clone(), extras: present(&node.extras), ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfNode::default() }
 }
 
 #[derive(Default)]
 struct Binary {
     bytes: Vec<u8>,
-    views: Vec<codec::BufferView>,
-    accessors: Vec<codec::Accessor>,
+    views: Vec<semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfBufferView>,
+    accessors: Vec<semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor>,
 }
 
 impl Binary {
     fn view(&mut self, data: &[u8], target: u64) -> usize {
         let offset = self.bytes.len();
         self.bytes.extend_from_slice(data);
-        self.views.push(codec::BufferView { buffer: 0, byte_offset: offset, byte_length: data.len(), byte_stride: None, target: Some(target), name: None, extensions: None, extras: None });
+        self.views.push(semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfBufferView { buffer: 0, byte_offset: offset, byte_length: data.len(), byte_stride: None, target: Some(target), name: None, extensions: None, extras: None });
         self.views.len() - 1
     }
 
-    fn accessor(&mut self, view: usize, component_type: codec::ComponentType, count: usize, kind: codec::AccessorType, range: Option<([f32; 3], [f32; 3])>) -> usize {
+    fn accessor(&mut self, view: usize, component_type: semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType, count: usize, kind: semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType, range: Option<([f32; 3], [f32; 3])>) -> usize {
         let (min, max) = range.map_or((None, None), |(min, max)| (Some(wide(min).to_vec()), Some(wide(max).to_vec())));
-        self.accessors.push(codec::Accessor { buffer_view: Some(view), byte_offset: 0, component_type, normalized: false, count, kind, max, min, sparse: None, name: None, extensions: None, extras: None });
+        self.accessors.push(semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor { buffer_view: Some(view), byte_offset: 0, component_type, normalized: false, count, kind, max, min, sparse: None, name: None, extensions: None, extras: None });
         self.accessors.len() - 1
     }
 
-    fn primitive(&mut self, primitive: &GltfPrimitive) -> codec::Primitive {
+    fn primitive(&mut self, primitive: &GltfPrimitive) -> semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive {
         let bytes = |values: &[f32]| values.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<u8>>();
         let corners = primitive.positions.len() / 3;
         let positions = self.view(&bytes(&primitive.positions), ARRAY_BUFFER);
-        let positions = self.accessor(positions, codec::ComponentType::Float, corners, codec::AccessorType::Vec3, primitive.bounds());
+        let positions = self.accessor(positions, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float, corners, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Vec3, primitive.bounds());
         let normals = self.view(&bytes(&primitive.normals), ARRAY_BUFFER);
-        let normals = self.accessor(normals, codec::ComponentType::Float, corners, codec::AccessorType::Vec3, None);
+        let normals = self.accessor(normals, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float, corners, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Vec3, None);
         let indices = self.view(&primitive.indices.iter().flat_map(|value| value.to_le_bytes()).collect::<Vec<u8>>(), ELEMENT_ARRAY_BUFFER);
-        let indices = self.accessor(indices, codec::ComponentType::UnsignedInt, primitive.indices.len(), codec::AccessorType::Scalar, None);
-        codec::Primitive { attributes: vec![("POSITION".into(), positions), ("NORMAL".into(), normals)], indices: Some(indices), material: Some(primitive.material), mode: Some(TRIANGLES), ..codec::Primitive::default() }
+        let indices = self.accessor(indices, semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::UnsignedInt, primitive.indices.len(), semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Scalar, None);
+        semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive { attributes: vec![("POSITION".into(), positions), ("NORMAL".into(), normals)], indices: Some(indices), material: Some(primitive.material), mode: Some(TRIANGLES), ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive::default() }
     }
 }
 
 impl GltfModel {
     /// 🧾️ The typed `s.stdio.gltf` snapshot of the scene: one scene, the nodes, meshes and materials, and one buffer holding every accessor's data (none for a scene without meshes).
-    pub fn to_snapshot(&self) -> codec::Snapshot {
+    pub fn to_snapshot(&self) -> semio_s_artifact_stdio_gltf_model_snapshot_root::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot {
         let mut binary = Binary::default();
-        let meshes = self.meshes.iter().map(|mesh| codec::Mesh { name: Some(mesh.name.clone()), primitives: mesh.primitives.iter().map(|primitive| binary.primitive(primitive)).collect(), ..codec::Mesh::default() }).collect();
-        let asset = codec::Asset { generator: Some("semio BIM".into()), extras: present(&self.extras), ..codec::Asset::default() };
-        let scene = codec::Scene { nodes: self.roots.clone(), name: Some(self.name.clone()), extensions: None, extras: None };
-        let buffers = if binary.bytes.is_empty() { Vec::new() } else { vec![codec::Buffer { byte_length: binary.bytes.len(), uri: None, name: None, extensions: None, extras: None }] };
-        let document = codec::Document {
+        let meshes = self.meshes.iter().map(|mesh| semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfMesh { name: Some(mesh.name.clone()), primitives: mesh.primitives.iter().map(|primitive| binary.primitive(primitive)).collect(), ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfMesh::default() }).collect();
+        let asset = semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAsset { generator: Some("semio BIM".into()), extras: present(&self.extras), ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfAsset::default() };
+        let scene = semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfScene { nodes: self.roots.clone(), name: Some(self.name.clone()), extensions: None, extras: None };
+        let buffers = if binary.bytes.is_empty() { Vec::new() } else { vec![semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfBuffer { byte_length: binary.bytes.len(), uri: None, name: None, extensions: None, extras: None }] };
+        let document = semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfDocument {
             asset,
             scene: Some(0),
             scenes: vec![scene],
@@ -166,9 +166,9 @@ impl GltfModel {
             accessors: binary.accessors,
             buffer_views: binary.views,
             buffers,
-            ..codec::Document::default()
+            ..semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfDocument::default()
         };
-        codec::Snapshot { document, buffers: if binary.bytes.is_empty() { Vec::new() } else { vec![binary.bytes] }, source_form: codec::SourceForm::Glb, ..codec::Snapshot::default() }
+        semio_s_artifact_stdio_gltf_model_snapshot_root::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot { document, buffers: if binary.bytes.is_empty() { Vec::new() } else { vec![binary.bytes] }, source_form: semio_s_artifact_stdio_gltf_model_snapshot::standards::v2_0::subsets::any::schema::snapshot::GltfSourceForm::Glb, ..semio_s_artifact_stdio_gltf_model_snapshot_root::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot::default() }
     }
 
     /// 📦️ The binary glTF (`model/gltf-binary`) bytes of the scene.

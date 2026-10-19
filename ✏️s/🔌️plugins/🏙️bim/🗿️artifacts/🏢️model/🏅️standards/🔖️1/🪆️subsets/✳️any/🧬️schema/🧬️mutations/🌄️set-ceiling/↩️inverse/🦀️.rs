@@ -1,7 +1,8 @@
 //! ↩️ Inverse of `SetCeiling`: an absolute `SetCeiling` restoring the base value of exactly the fields the forward really changes, none when the ceiling is absent or nothing changes.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling;
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Patch;
 
 pub fn inverse<Op>(payload: &SetCeiling, base: &ModelSnapshot) -> Vec<Op>
 where

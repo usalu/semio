@@ -1,28 +1,27 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode, GltfPrimitive};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode, GltfPrimitive};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gltf::document::GltfMesh;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfMesh;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gltf::materials::Palette;
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::gltf::materials::Palette;
 #[allow(unused_imports)]
-use crate::render::element_name;
+use semio_s_artifact_bim_model_tests_5::render::element_name;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::io::export::gltf::scene::*;
-use crate::standards::v1::subsets::any::io::export::gltf::projection::through;
-use crate::standards::v1::subsets::any::io::export::gltf::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::y_up;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection::through;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit::house;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 
 fn build(snapshot: &ModelSnapshot) -> (GltfModel, Vec<String>) {
-    inference::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inferred| semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
 }
 
 fn parent_of(model: &GltfModel, child: usize) -> Option<usize> {

@@ -3,8 +3,8 @@
 //! groups, the projection preset bank as the camera projection and the storey visibility filter. Editor and viewer call `scene` with their
 //! own window configuration.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid, SolidFamily, SolidGroup};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily, SolidGroup};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_scene, world3d_selection_json_with_granularity, MeshData, World3dScene, WorldProjectionConfig, WorldSunConfig};
 use semio_framework_value::{DslValue, ToValue};
 use std::collections::BTreeMap;
@@ -52,8 +52,8 @@ pub fn family_color(family: SolidFamily) -> [f32; 4] {
 pub fn group_color(snapshot: &ModelSnapshot, family: SolidFamily, group: &SolidGroup) -> [f32; 4] {
     match snapshot.materials.get(&group.material) {
         Some(material) => [material.color.r as f32, material.color.g as f32, material.color.b as f32, 1.0],
-        None if group.part == parts::GLASS => GLASS_COLOR,
-        None if family == SolidFamily::Mep => crate::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).map_or_else(|| family_color(family), |rgb| [rgb[0], rgb[1], rgb[2], 1.0]),
+        None if group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS => GLASS_COLOR,
+        None if family == SolidFamily::Mep => semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).map_or_else(|| family_color(family), |rgb| [rgb[0], rgb[1], rgb[2], 1.0]),
         None => family_color(family),
     }
 }

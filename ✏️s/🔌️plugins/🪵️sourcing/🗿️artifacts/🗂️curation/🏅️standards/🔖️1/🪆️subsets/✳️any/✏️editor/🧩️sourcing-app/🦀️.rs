@@ -2,7 +2,7 @@
 
 use super::*;
 use semio_framework_2d_compute::EngineHandles;
-use crate::editor::sourcing::base::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_ROWS_DOMAIN, reset_document_effect, sourcing_curation_io};
+use crate::editor::sourcing::editor_vocabulary::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_ROWS_DOMAIN, reset_document_effect, sourcing_curation_io};
 
 impl ArtifactEditor for SourcingCurationApp {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.

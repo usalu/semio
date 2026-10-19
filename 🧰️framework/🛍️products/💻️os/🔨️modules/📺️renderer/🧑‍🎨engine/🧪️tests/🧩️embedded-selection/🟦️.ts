@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { resolveEmbeddedWgpuBoot } from "../../🎯️targets/🧊️wgpu/🎬️renderer-boot/🧩️selection/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootOverrides } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { resolveEmbeddedWgpuBoot } from "@semio-tech/framework-renderer-wgpu/renderer-boot/selection";
+import { resolveWgpuBootDescriptor, type WgpuBootOverrides } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
 
 interface SelectionCase { readonly id: string; readonly input: { readonly modules: readonly { readonly pluginId: string }[]; readonly baseUrl: string; readonly hash?: string; readonly overrides?: WgpuBootOverrides }; readonly expected: { readonly variant: string; readonly selection: "all" | "variant" } }
 

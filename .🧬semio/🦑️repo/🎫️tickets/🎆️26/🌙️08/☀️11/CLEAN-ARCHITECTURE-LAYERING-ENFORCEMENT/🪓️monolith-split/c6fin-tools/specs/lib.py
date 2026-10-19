@@ -75,21 +75,23 @@ def empties(tag):
     return tuple(out)
 
 
-def family_prod(file_rel, up=1):
+def family_prod(file_rel, up=1, exclude=()):
     own = os.path.dirname(file_rel)
     top = own
     for _ in range(up):
         top = os.path.dirname(top)
+    skip = {own + '/' + e for e in exclude}
     out = []
     for dp, dn, fn in os.walk(os.path.join(REPO, top)):
         dn[:] = [d for d in dn if d not in ('node_modules', 'target', '.git', '🗑️generated')]
         rel = os.path.relpath(dp, REPO)
-        if rel == own or rel.startswith(own + '/'):
+        if rel in skip or '🧪️tests' in rel.split('/'):
             dn[:] = []
             continue
-        if '🧪️tests' in rel.split('/'):
+        if rel == own and up == 1:
+            dn[:] = []
             continue
         for f in fn:
-            if f.endswith('.rs'):
+            if f.endswith('.rs') and os.path.join(rel, f) != file_rel:
                 out.append(os.path.join(rel, f))
     return sorted(out)

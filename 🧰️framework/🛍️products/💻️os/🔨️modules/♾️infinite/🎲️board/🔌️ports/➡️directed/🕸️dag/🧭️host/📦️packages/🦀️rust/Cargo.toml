@@ -42,10 +42,8 @@ semio-framework-os-infinite-board-dag-model = { path = "../../../🗃️model/�
 semio-framework-os-infinite-board-dag-graph = { path = "../../../🕸️graph/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"

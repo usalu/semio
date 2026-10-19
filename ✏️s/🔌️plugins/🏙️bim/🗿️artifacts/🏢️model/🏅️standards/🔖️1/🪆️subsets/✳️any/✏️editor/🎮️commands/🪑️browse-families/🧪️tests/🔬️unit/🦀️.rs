@@ -1,26 +1,25 @@
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Effect, Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::components::{matching, placeable};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{matching, placeable};
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::select_effect;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::select_effect;
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::family;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::browse_families::*;
-use crate::editor::bim::fixture::placed;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::{ctx, run};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::browse_families::{handle, PlaceComponent, COMPONENT_UTILITY, OpenFamily, SearchFamilies};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::placed;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, run};
 use semio_framework_ui_locale::Locale;
 
 fn selected(emit: &Emit<ModelMutation, NoConfigMutation>) -> String {
@@ -34,7 +33,7 @@ fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<
 #[semio_framework_async_macros::async_test]
 async fn placing_selects_the_family_and_arms_the_component_utility_in_the_addressed_window() {
     let snapshot = placed();
-    let view = view(Locale::En, &[("bim-plan", plan::WINDOW_KIND_ID)], Some("bim-plan"));
+    let view = view(Locale::En, &[("bim-plan", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID)], Some("bim-plan"));
     let mut addressed = BimDispatchCtx::new(Vec::new(), Vec::new(), Some(&view), None, None);
     let emit = run(&snapshot, |doc, cfg| handle(&PlaceComponent { family: "fam-basin".into() }, doc, cfg, &mut addressed)).expect("places");
     let text = selected(&emit);
@@ -61,7 +60,7 @@ async fn opening_selects_the_family_and_asks_the_shell_for_the_family_editor() {
     let snapshot = placed();
     let mut context = ctx(&[]);
     let emit = run(&snapshot, |doc, cfg| handle(&OpenFamily { family: "fam-hea".into() }, doc, cfg, &mut context)).expect("opens a profile too");
-    assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::OpenWindow { kind, .. } if kind.0 == crate::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID)));
+    assert!(emit.effects.iter().any(|effect| matches!(effect, Effect::OpenWindow { kind, .. } if kind.0 == semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID)));
     let ghost = run(&snapshot, |doc, cfg| handle(&OpenFamily { family: "fam-ghost".into() }, doc, cfg, &mut context));
     assert_eq!(code(ghost).as_deref(), Some("bim.family.missing"));
 }

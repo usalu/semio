@@ -1,8 +1,8 @@
 //! ⏸️ An actual caller delegates its remaining wallet once and retains the owned issuing recipient through await.
-use super::{StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,InteractiveJobCloseStep,ValueError,ValueRefusalKind,ClockStride,retained_work::RetainedWorkBudget};
+use super::{StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,InteractiveJobCloseStep,ValueError,ValueRefusalKind,ClockStride};
 use std::mem::ManuallyDrop;
 
-struct OwnedTurnWallet{fuel:u64,deadline:u64,grant:RetainedCloneGrant,clock:fn()->Option<u64>,epoch:u64,clock_observation:ClockStride,payload_page_granted:bool,retained_work:RetainedWorkBudget,stage:&'static str}
+struct OwnedTurnWallet{fuel:u64,deadline:u64,grant:RetainedCloneGrant,clock:fn()->Option<u64>,epoch:u64,clock_observation:ClockStride,payload_page_granted:bool,stage:&'static str}
 
 /// 🧳️ Owns the paid original source alias and one non-renewable wallet before issuing its context.
 pub struct OriginalOwnedCallerTurn{source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
@@ -12,9 +12,9 @@ impl OriginalCallerSourceParent{
     pub fn park_owned_turn(&self,cx:&mut StepContext<'_>)->Result<Option<OriginalOwnedCallerTurn>,OriginalTurnFailure>{
         let epoch=cx.original_source_epoch().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"owned async turn requires its genuinely issued source epoch"))?;
         let Some(loan)=self.admit_loan(cx)?else{return Ok(None)};
-        let grant=cx.retained_grant();let fuel=cx.fuel_remaining();let deadline=cx.deadline_us();let clock=cx.clock_source();let posted=cx.retained_progress();let sequence=std::mem::take(cx.preview_sequence);let clock_observation=cx.clock.get();let payload_page_granted=cx.payload_page_granted;let retained_work=cx.retained_work;let stage=cx.stage;
-        cx.fuel_remaining=0;cx.retained_work=RetainedWorkBudget::new(super::retained_work::NO_RETAINED_WORK);cx.retained=RetainedCloneGrant{maximum_items:posted.copied_items,maximum_copy_bytes:posted.copied_bytes,maximum_capacity_bytes:posted.retained_capacity_bytes,maximum_release_bytes:posted.released_bytes,maximum_depth:0};
-        Ok(Some(OriginalOwnedCallerTurn{source:ManuallyDrop::new(Some(loan.into_borrowed_parent())),loan:ManuallyDrop::new(None),wallet:Some(OwnedTurnWallet{fuel,deadline,grant,clock,epoch,clock_observation,payload_page_granted,retained_work,stage}),sequence,recipient:Default::default(),issued:false,initial_fuel:fuel,work_units_spent:0,receiving_valid:true,initial_grant:grant,deadline,epoch,clock}))
+        let grant=cx.retained_grant();let fuel=cx.fuel_remaining();let deadline=cx.deadline_us();let clock=cx.clock_source();let posted=cx.retained_progress();let sequence=std::mem::take(cx.preview_sequence);let clock_observation=cx.clock.get();let payload_page_granted=cx.payload_page_granted;let stage=cx.stage;
+        cx.fuel_remaining=0;cx.retained=RetainedCloneGrant{maximum_items:posted.copied_items,maximum_copy_bytes:posted.copied_bytes,maximum_capacity_bytes:posted.retained_capacity_bytes,maximum_release_bytes:posted.released_bytes,maximum_depth:0};
+        Ok(Some(OriginalOwnedCallerTurn{source:ManuallyDrop::new(Some(loan.into_borrowed_parent())),loan:ManuallyDrop::new(None),wallet:Some(OwnedTurnWallet{fuel,deadline,grant,clock,epoch,clock_observation,payload_page_granted,stage}),sequence,recipient:Default::default(),issued:false,initial_fuel:fuel,work_units_spent:0,receiving_valid:true,initial_grant:grant,deadline,epoch,clock}))
     }
 }
 
@@ -34,12 +34,12 @@ impl OriginalOwnedCallerTurn{
             match source.borrow_context(budget,wallet.clock,&mut self.sequence,&mut self.recipient){
                 Err(error)=>{self.wallet=Some(wallet);Err(error.into())}
                 Ok(mut cx)=>{
-                    cx.clock.set(wallet.clock_observation);cx.payload_page_granted=wallet.payload_page_granted;cx.retained_work=wallet.retained_work;cx.stage=wallet.stage;let bound=cx.bind_original_source_epoch(wallet.epoch);let identity=OriginalRetainedLoanIdentity::capture(&cx);let cancel=cx.original_cancel_token()as*const _ as usize;
+                    cx.clock.set(wallet.clock_observation);cx.payload_page_granted=wallet.payload_page_granted;cx.stage=wallet.stage;let bound=cx.bind_original_source_epoch(wallet.epoch);let identity=OriginalRetainedLoanIdentity::capture(&cx);let cancel=cx.original_cancel_token()as*const _ as usize;
                     let result=match bound{Ok(())=>run(&mut cx).await,Err(error)=>Err(error.into())};
                     let matched=identity.matches(&cx)&&cx.original_source_epoch()==Some(wallet.epoch)&&cancel==cx.original_cancel_token()as*const _ as usize&&cx.fuel_remaining()<=wallet.fuel;
                     self.work_units_spent=cx.original_work_units_spent();self.receiving_valid=matched;
                     if !matched{receiving_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async producer replaced its actual issuing context"));}
-                    self.wallet=Some(OwnedTurnWallet{fuel:if matched{cx.fuel_remaining()}else{0},clock_observation:cx.clock.get(),payload_page_granted:cx.payload_page_granted,retained_work:cx.retained_work,stage:cx.stage,..wallet});result
+                    self.wallet=Some(OwnedTurnWallet{fuel:if matched{cx.fuel_remaining()}else{0},clock_observation:cx.clock.get(),payload_page_granted:cx.payload_page_granted,stage:cx.stage,..wallet});result
                 }
             }
         };

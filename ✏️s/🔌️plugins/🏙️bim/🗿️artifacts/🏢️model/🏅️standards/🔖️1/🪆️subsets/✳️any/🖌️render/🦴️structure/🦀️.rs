@@ -1,5 +1,6 @@
 //! 🦴️ Shared structural overlay meshes in world coordinates, using distinct geometry as well as colour.
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::Point3};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 use semio_framework_plugin::MeshData;
 use semio_framework_value::DslValue;
 

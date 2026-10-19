@@ -7,10 +7,10 @@
 import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, join, posix, relative, sep } from "node:path";
 import ts from "typescript";
-import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
+import { type BreachRecord } from "@semio-tech/repo-lib/policy";
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
-import { isExcludedTestPath, testFeatureFilename, type TestInPackageImplementation, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
+import { isExcludedTestPath, testFeatureFilename, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { SKIP_DIR_NAMES, testCollectionIndexes, testFixtureCollectionIndex } from "../🧭️case-discovery/🟦️.ts";
 import { breach } from "../🚨️breaches/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -54,34 +54,6 @@ function registeredFileKindFilenames(taxonomy: TestTaxonomy): ReadonlySet<string
   let names = registeredFileKindFilenamesCache.get(taxonomy);
   if (!names) registeredFileKindFilenamesCache.set(taxonomy, names = new Set(Object.values(taxonomy.fileKinds).flatMap((kind) => kind.extensionChains.map((extension) => `${kind.emoji}${extension}`))));
   return names;
-}
-
-/** 🐹️ Names the in-package convention a test source follows when a production source of the same file kind sits beside it. */
-export function inPackageTestImplementation(name: string, siblingNames: Iterable<string>, taxonomy: TestTaxonomy): TestInPackageImplementation | null {
-  for (const entry of taxonomy.testInPackageImplementations) {
-    if (!name.endsWith(entry.filenameSuffix) || name.length === entry.filenameSuffix.length) continue;
-    const extensions = taxonomy.fileKinds[entry.fileKindId]?.extensionChains ?? [];
-    for (const sibling of siblingNames) if (!sibling.endsWith(entry.filenameSuffix) && extensions.some((extension) => sibling.endsWith(extension))) return entry;
-  }
-  return null;
-}
-
-const siblingNamesCache = new WeakMap<ReadonlySet<string>, ReadonlyMap<string, readonly string[]>>();
-
-/** 🗂️ Groups an inventory's file names by directory once per inventory. */
-function siblingNamesOf(path: string, availablePaths: ReadonlySet<string>): readonly string[] {
-  let byDirectory = siblingNamesCache.get(availablePaths);
-  if (!byDirectory) {
-    const grouped = new Map<string, string[]>();
-    for (const entry of availablePaths) {
-      const directory = posix.dirname(entry);
-      const names = grouped.get(directory);
-      if (names) names.push(posix.basename(entry));
-      else grouped.set(directory, [posix.basename(entry)]);
-    }
-    siblingNamesCache.set(availablePaths, byDirectory = grouped);
-  }
-  return byDirectory.get(posix.dirname(path)) ?? [];
 }
 
 /** 📐️ Measures one source path against `<semantic owner>/🧪️tests/<case>/<implementation>`. */
@@ -542,7 +514,6 @@ function inspectTestLayoutSource(taxonomy: TestTaxonomy, entry: TestLayoutSource
     if (extension === ".rs") for (const signal of rustTestSignals(path, entry.source, taxonomy, availablePaths)) if (signal.code === "invalid-test-module-wiring") findings.push({ ...signal, path });
     return findings;
   }
-  if (!assessment.finding && inPackageTestImplementation(name, siblingNamesOf(path, availablePaths), taxonomy)) return findings;
   const signals = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs"].includes(extension) ? javascriptTestSignals(path, entry.source, taxonomy, availablePaths) : conventionalTestSignals(path, entry.source, extension, taxonomy, availablePaths);
   return [...findings, ...signals.map((signal) => ({ ...signal, path }))];
 }

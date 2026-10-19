@@ -1,4 +1,4 @@
-import cargoReferenceSchema from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json";
+import cargoReferenceSchema from "@semio-tech/process/artifacts/native-build/receipt/retention/reference/schema.json";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
@@ -6,7 +6,7 @@ import { resolve, join } from "node:path";
 import ts from "typescript";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 const syntaxErrors=(source:ts.SourceFile)=>ts.transpileModule(source.text,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022},fileName:source.fileName,reportDiagnostics:true}).diagnostics??[];
 const cases=()=>fixture.cases.map(row=>{const value=structuredClone(fixture.evidence);for(const change of row.changes){let parent:Record<string|number,unknown>=value;for(const part of change.path.slice(0,-1))parent=parent[part] as Record<string|number,unknown>;parent[change.path.at(-1)!]=change.value;}return{...row,value};});
 const authority=()=>{const controller=new AbortController(),started=performance.now(),progress:unknown[]=[];return{controller,progress,control:{maxBytes:128*1024*1024,maxWork:65536,chunkBytes:1024*1024,cancelled:()=>controller.signal.aborted,remainingMs:()=>60000-(performance.now()-started),onProgress:(event:unknown)=>{progress.push(event);}}};};
@@ -15,7 +15,7 @@ test("complete neutral selected actor evidence agrees with independent schema an
  for(const row of cases()){expect(oracle(row.value),row.name+JSON.stringify(oracle.errors)).toBe(row.accepted);expect(validateJsonSchemaSubset(schema,row.value,schema,[cargoReferenceSchema]).length===0,row.name).toBe(row.accepted);if(row.accepted)expect(jsonc.parse(JSON.stringify(row.value))).toEqual(row.value);}
 });
 test("required neutral publication port admits typed evidence and keeps acquisition explicit",async()=>{
- const selected=await import("../🧬️schema/🟦️.ts"),owned=authority(),{withBuildTestInvocationV1}=await import("../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts"),issued=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
+ const selected=await import("../🧬️schema/🟦️.ts"),owned=authority(),{withBuildTestInvocationV1}=await import("@semio-tech/process/testing/invocation"),issued=await import("../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");
  await withBuildTestInvocationV1(async invocation=>{const phaseControl=issued.createIssuedResourceControlV1(invocation,"test:actor-port",60000);
  for(const row of cases()){if(row.accepted){const parsed:unknown=await selected.parseSelectedRuntimeActorEvidenceV1(row.value,owned.control);expect(parsed).toEqual(row.value);}else await expect(selected.parseSelectedRuntimeActorEvidenceV1(row.value,owned.control)).rejects.toThrow();}
  const evidence=await selected.parseSelectedRuntimeActorEvidenceV1(fixture.evidence,owned.control),events:string[]=[],port={diagnosticOwner:"neutral/actor-publication",observeCurrent:async(control:typeof owned.control,actualInvocation:typeof invocation,actualPhase:typeof phaseControl)=>{expect(actualInvocation).toBe(invocation);expect(actualPhase).toBe(phaseControl);expect(control).toBe(owned.control);events.push("observe");return{...evidence,recheck:async(control:typeof owned.control)=>{expect(control).toBe(owned.control);events.push("recheck");}};},acquireCurrent:async(control:typeof owned.control,actualInvocation:typeof invocation,actualPhase:typeof phaseControl)=>{expect(actualInvocation).toBe(invocation);expect(actualPhase).toBe(phaseControl);expect(control).toBe(owned.control);events.push("acquire");}};

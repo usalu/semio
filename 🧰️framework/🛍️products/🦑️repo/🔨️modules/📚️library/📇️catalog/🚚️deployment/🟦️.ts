@@ -1,4 +1,4 @@
-import type { InstallationDirectoryV1 } from "../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import type { InstallationDirectoryV1 } from "@semio-tech/framework/identity/installation";
 import { componentDeploymentDirectoryV1 } from "./🟨️.mjs";
 
 /** 🚚️ Reads exactly one optional deployment declaration from bounded owner-authored Cargo bytes. */

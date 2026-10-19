@@ -1,8 +1,8 @@
 import catalog from "./🔣️.json";
-import { runtimeComponentClosure } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLAYGROUND_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/playgrounds";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
-import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
 
 export const DEMONSTRATOR_HOST = catalog.host;
 export const DEMONSTRATOR_ASSETS_DIR = catalog.assetsDirectory;

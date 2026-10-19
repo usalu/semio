@@ -1,6 +1,7 @@
 //! 🛋️ `create-space` payload. Brings a new room onto a storey; a bounded space stores only its seed point, its outline, area and volume are inferred from the walls around it.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Space}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Space};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateSpace {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateSpace
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSpace> + From<crate::standards::v1::subsets::any::schema::mutations::delete_space::DeleteSpace>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSpace> + From<semio_s_artifact_bim_model_mut_any_64::standards::v1::subsets::any::schema::mutations::delete_space::DeleteSpace>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreateSpace" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

@@ -1,13 +1,14 @@
 //! 🔺️ Diff constructor for `CreateZone`: one created zone entry. The id must be free in every collection and the occupancy density a finite,
 //! non-negative number of persons per square metre. The spaces of the zone are not listed here: each space names its zone.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateZone, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !(payload.zone.occupancy_density.is_finite() && payload.zone.occupancy_density >= 0.0) {

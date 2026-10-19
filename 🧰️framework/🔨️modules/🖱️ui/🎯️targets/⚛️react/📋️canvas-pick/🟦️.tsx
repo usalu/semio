@@ -1,4 +1,5 @@
-import { type CanvasPickRequest, type CanvasPickTarget, sortCanvasPickTargetsGeneralFirst, canvasPickTargetKey, type CanvasHoverFocus, canvasHoverFocusFromTarget, CANVAS_HOVER_SOURCE_CANVAS, pickMostSpecificCanvasTarget, CANVAS_HOVER_SOURCE_PICK_MENU } from "@semio-tech/framework";
+import { type CanvasPickRequest, type CanvasPickTarget, type CanvasHoverFocus, CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import { sortCanvasPickTargetsGeneralFirst, canvasPickTargetKey, canvasHoverFocusFromTarget, pickMostSpecificCanvasTarget } from "../../../🔨️modules/🎯️canvas-pick-targets/🟦️.ts";
 import * as React from "react";
 import type { UiLabel } from "../../../🧱️elements/🎗️UiLabel/🟦️.tsx";
 import { useLabel } from "../../../🧱️elements/🏷️Label/🟦️.tsx";

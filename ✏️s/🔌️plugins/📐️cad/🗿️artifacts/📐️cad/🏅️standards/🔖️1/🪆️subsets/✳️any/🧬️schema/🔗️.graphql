@@ -1,5 +1,5 @@
 # 🧬️ CAD document composed from shared stdio model, drawing and topology child identities.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 type CadArtifact {
   schema: String! @state(class: ARTIFACT)
   id: String! @state(class: ARTIFACT)

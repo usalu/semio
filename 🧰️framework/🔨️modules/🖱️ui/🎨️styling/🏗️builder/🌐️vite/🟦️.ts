@@ -15,14 +15,14 @@ import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️valida
 import providerSchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import { contentTypeForStaticDirAsset, serveFileWithValidatorsV1 } from "./📤️file-serving/🟦️.ts";
 import { createTileProxyMiddleware, tileProxyVitePlugin } from "./🛰️tile-proxy/🟦️.ts";
-import { createMeshCollectionMiddleware, meshCollectionVitePlugin } from "./🗺️mesh-collection/🟦️.ts";
+import { createMeshCollectionMiddleware, meshCollectionVitePlugin, type MeshCollectionAssetSpecV1} from "./🗺️mesh-collection/🟦️.ts";
 
 // #endregion 🔌️Adapters
 
 export { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
 
 /** 🥽️ Supplies one owner-authored mesh catalog to its build provider. */
-export type MeshCollectionAssetSpecV1 = { readonly kind: "mesh-collection"; readonly route: string; readonly catalog: string };
+export type { MeshCollectionAssetSpecV1 };
 
 /** 🗂️ Supplies one owner-authored directory to its build provider. */
 export type StaticDirectoryAssetSpecV1 = { readonly kind: "static-dir"; readonly route: string; readonly root: string };

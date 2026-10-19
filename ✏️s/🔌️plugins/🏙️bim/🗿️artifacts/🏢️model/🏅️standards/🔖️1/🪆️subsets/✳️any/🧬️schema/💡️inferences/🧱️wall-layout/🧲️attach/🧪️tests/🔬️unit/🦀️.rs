@@ -1,17 +1,25 @@
-use crate::standards::v1::subsets::any::schema::authored::references::find_cycle;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::find_cycle;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::references::{edges, top_target};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::{edges, top_target};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, slabs};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Wall};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, roofs, Anonymous};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::{self, Vertex};
 #[allow(unused_imports)]
@@ -24,10 +32,10 @@ use semio_framework_geometry::{Point, Vec2};
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{simplified};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::*;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::simplified;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{MIN_HEIGHT, ElevationPoint, elevation_at, restricted};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use serde_json::json;
 
 #[semio_framework_async_macros::async_test]
@@ -127,9 +135,9 @@ fn elevation_edges_interpolate_extend_and_restrict() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_surface_node_is_a_parent_of_the_attached_wall_only() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
     let snapshot = model(json!({ "w-gable": wall([8.0, 0.0, 8.0, 6.0], json!({ "Roof": { "roof": "r", "offset": 0.0 } }), json!({})), "w-plain": wall([0.0, 0.0, 8.0, 0.0], json!({ "StoreyTop": { "offset": 0.0 } }), json!({})) }), json!({ "roofs": gable_roof() }));
-    let steps = plan::build(&snapshot, kinds::closure(kinds::LAYOUTS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LAYOUTS));
     let parents = |id: &str| steps.iter().find(|step| step.key == ModelNode::WallLayout(id.to_string())).map(|step| step.parents.clone()).expect("a layout step");
     assert!(parents("w-gable").contains(&ModelNode::Surface("r".to_string())));
     assert!(!parents("w-plain").iter().any(|node| matches!(node, ModelNode::Surface(_))));

@@ -57,13 +57,19 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use ui_wgpu::wgpu::{ActionDescriptor, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 #[cfg(target_arch = "wasm32")]
 use semio_framework_async::browser::spawn_local;
-use ui_wgpu::wgpu::{apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_edge, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme};
+use semio_framework_ui_wgpu_hosting::cursor::{apply_window_cursor, resolve_semio_cursor, CursorDragState, SemioCursor};
+use semio_framework_ui_text::{fetch_font_bytes, FontAtlas};
+use ui_scene::math::{mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_edge, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::Theme;
 use ui_gpu::{GpuContext};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;

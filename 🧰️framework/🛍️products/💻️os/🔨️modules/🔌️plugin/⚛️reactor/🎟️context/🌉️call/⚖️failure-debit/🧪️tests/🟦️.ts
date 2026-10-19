@@ -17,7 +17,7 @@ import renderInput from "./🧫️fixtures/🎬️render.json";
 import renderSchema from "../🧬️schema/🎬️render.json";
 import serviceInput from "./🧫️fixtures/💡️service.json";
 import serviceSchema from "../🧬️schema/💡️service.json";
-import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readPluginRuntimeSource } from "../../../../🏃️runtime/📖️source-text/🟦️.ts";
 import {pluginSubtreeText, pluginTestTreeText} from "../../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 const original=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
@@ -114,7 +114,7 @@ test("original receiving cancellation closes captured inputs without minting ano
 
 /** 🎯️ Actual addressed actions and deferred fixture callers borrow the received original slots. */
 test("addressed action dispatch forwards original arguments and whole fault through one context",()=>{
- const trait=readFileSync(new URL("../../../../🔌️app/🦀️.rs",import.meta.url),"utf8"),instance=pluginSubtreeText("🧵️instance"),fixture=readFileSync(new URL("../../../../../🧪️testing/🦀️.rs",import.meta.url),"utf8");
+ const trait=readFileSync(new URL("../../../../🔌️app/🦀️.rs",import.meta.url),"utf8"),instance=pluginSubtreeText("🧵️instance"),fixture=readModuleTreeSource(new URL("../../../../../🧪️testing/🦀️.rs",import.meta.url));
  const start=instance.indexOf("async fn handle_action_invocation("),end=instance.indexOf("\n    }\n",start),body=instance.slice(start,end);
  expect(start).toBeGreaterThanOrEqual(0);expect(trait).toContain("address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>");
  expect(body).toContain("dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx)");expect(body).not.toContain("invocation.arguments");expect(body).not.toContain("into_message");expect(body).not.toContain("StepContext::new");

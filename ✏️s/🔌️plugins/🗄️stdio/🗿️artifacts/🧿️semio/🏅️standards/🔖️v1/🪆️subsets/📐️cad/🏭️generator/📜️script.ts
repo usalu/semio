@@ -36,8 +36,8 @@
 //#region 🔌️Adapters
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🗂️Recipes
@@ -71,7 +71,7 @@ const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧪️tests/🧫️fixt
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

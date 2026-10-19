@@ -1,6 +1,6 @@
 /** 📋️ IME, paste and text streams: oversized IME, the chunked paste, the image data url paste target, astral code points and the JSON escaping bound. */
 import { describe, expect, it } from "vitest";
-import { FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
 
 describe("browser frame worker transport", () => {

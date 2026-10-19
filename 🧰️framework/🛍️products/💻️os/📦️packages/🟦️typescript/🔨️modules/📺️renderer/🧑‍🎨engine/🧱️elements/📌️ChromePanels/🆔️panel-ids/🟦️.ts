@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/ChromePanels/panel-ids` entry: explicit re-exports of the source module that owns each member. */
+export { FRAMEWORK_SETTINGS_GENERAL_TAB_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_THEME_TAB_ID } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🆔️panel-ids/🟦️.ts";

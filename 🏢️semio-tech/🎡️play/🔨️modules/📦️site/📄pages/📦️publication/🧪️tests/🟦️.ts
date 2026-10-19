@@ -5,7 +5,7 @@ import Ajv from"ajv";
 import ts from"typescript";
 import{readFileSync,existsSync}from"node:fs";
 import{resolve,join}from"node:path";
-import{repositoryCachePartitionRootDataV1}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
 import pagePublicationSchema from"../🧬️schema/🔣️.json"with{type:"json"};
 const workspace=resolve(import.meta.dir,"../../../../../../..");
 test("neutral Play page cohort has one bounded commit and real shared/exclusive lifetime owners",()=>{
@@ -29,7 +29,7 @@ test("neutral Play cohort readers reject duplicate, mixed, wrong-mode and undecl
 
 
 test("neutral browser production paths carry selected mode inside canonical products and count the actual Pages reader cohort",async()=>{
- const {builtPluginModulesRootIn}=await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts"),{playRuntimeAssetSources}=await import("../../../../🧩️runtime/📦️assets/🟦️.ts");
+ const {builtPluginModulesRootIn}=await import("@semio-tech/framework-os-dev/activation"),{playRuntimeAssetSources}=await import("../../../../🧩️runtime/📦️assets/🟦️.ts");
  for(const mode of["prototype","release"]as const){const rows=playRuntimeAssetSources(workspace,mode),browser=rows.filter(row=>row.owner!=="infinite:fonts"&&!row.owner.startsWith("canvas:"));expect(new Set(browser.map(row=>row.root)).size).toBe(browser.length);expect(builtPluginModulesRootIn(workspace,mode)).toBe(join(repositoryCachePartitionRootDataV1(workspace,"products"),"browser",mode,"modules"));}
 });
 

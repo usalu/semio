@@ -274,6 +274,12 @@ func (run *execution) dispatch(key string, source interface{}, args map[string]i
 			return nil, lift(err)
 		}
 		return analyzeResultSource(result, run.statutes), nil
+	case "mutation.fix":
+		result, err := run.repo.Fix(optionalText("scope"))
+		if err != nil {
+			return nil, lift(err)
+		}
+		return fixResultSource(result, run.statutes), nil
 	case "mutation.syncManagement":
 		done, err := run.repo.SyncManagement()
 		if err != nil {

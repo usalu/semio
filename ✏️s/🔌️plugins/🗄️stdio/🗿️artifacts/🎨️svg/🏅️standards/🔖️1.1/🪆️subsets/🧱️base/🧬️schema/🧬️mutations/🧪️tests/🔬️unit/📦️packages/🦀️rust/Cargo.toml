@@ -42,6 +42,7 @@ semio-s-artifact-stdio-svg-handcrafted-diff-codec-tests = { path = "../../../../
 semio-s-artifact-stdio-svg-mutations = { path = "../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-schema = { path = "../../../../../📦️packages/🦀️rust" }
 semio-s-artifact-stdio-svg-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-svg-diff = { path = "../../../../../🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-xml = { workspace = true }
 
 [dev-dependencies]

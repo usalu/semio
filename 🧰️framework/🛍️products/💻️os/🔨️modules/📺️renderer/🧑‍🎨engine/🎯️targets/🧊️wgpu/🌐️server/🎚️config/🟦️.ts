@@ -1,15 +1,15 @@
-import {frameworkOsViteArtifactPathsV1} from "../../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
-import { resolveAssetDeliveryModeV1 } from "../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import {frameworkOsViteArtifactPathsV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
+import { resolveAssetDeliveryModeV1 } from "@semio-tech/assets/resolver/dispatch";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createWgpuBrowserConfig } from "../🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, builtPluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { semioAssetsVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
-import { semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
-import { semioBackboneVitePlugin } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts";
-import { semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🔖️source-freshness/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
+import { semioAssetsVitePlugin } from "@semio-tech/ui-styling/builder/vite/assets";
+import { semioServeCloseVitePlugin } from "@semio-tech/ui-styling/builder/vite/status-serve";
+import { semioBackboneVitePlugin } from "@semio-tech/framework-os-dev/vite-plugins/backbone-vite-plugin";
+import { semioSourceFreshnessVitePlugins } from "@semio-tech/framework-os-dev/vite-plugins/source-freshness";
 import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -27,7 +27,7 @@ export function wgpuCompletedFrameworkRootsV1(profile: "prototype" | "release") 
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
   };
 }
-export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("@semio-tech/framework/plugin-catalog").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
+export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly nativeCatalog?: NativeCatalogV1; readonly catalog: import("@semio-tech/framework/plugin-catalog").PluginCatalogRowsV1; readonly assets: readonly import("@semio-tech/assets/resolver/dispatch").AssetDeliveryDeclarationV1[] }) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
   const moduleRoot = builtPluginModulesRootIn(workspace,profile);

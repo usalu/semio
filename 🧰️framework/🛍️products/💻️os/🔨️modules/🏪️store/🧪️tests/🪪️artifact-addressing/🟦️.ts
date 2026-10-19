@@ -5,13 +5,9 @@ import { createHash } from "node:crypto";
 import Ajv from "ajv";
 import fixture from "../🧫️fixtures/🪪️artifact-addressing/🔣️.json" with { type: "json" };
 import { ioSchema } from "@semio-tech/framework/io/testing/fixtures";
-import linkSchema from "../../🔗️link/🧬️schema/🔣️.json" with { type: "json" };
-import blobSchema from "../../📦️blob/🧬️schema/🔣️.json" with { type: "json" };
-import { parseArtifactLink } from "../../🔗️link/🧬️schema/🟦️.ts";
-import childSchema from "../../🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import { manifestSchema } from "@semio-tech/framework/manifest/testing/fixtures";
 import { dialectCoordinate, parseDialectCoordinate, artifactRefUri, parseArtifactRefUri } from "@semio-tech/framework-io-schema-ts";
-import { contentId, parseArtifactChild } from "../../🪆️child/🧬️schema/🟦️.ts";
+import { artifactChildSchema as childSchema, artifactLinkSchema as linkSchema, blobRefSchema as blobSchema, contentId, parseArtifactChild, parseArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 import { sha256Hex } from "@semio-tech/framework/hash";
 
 import openingSchema from "../../../../🎚️config/🧬️schema/🔣️.json" with { type: "json" };

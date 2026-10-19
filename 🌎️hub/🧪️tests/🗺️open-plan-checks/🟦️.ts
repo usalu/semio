@@ -6,11 +6,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenIntentV1, parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
-import { componentReceiptBindsV1, componentReceiptValueV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { componentReceiptBindsV1, componentReceiptValueV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { runCargo, runCmd, orchestratorBudgetOpts, runProbe } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { documentOpenNeutralObject, documentOpenNeutralText } from "../../🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts";
 import { readHubBinSource, readTrustedCatalogSource } from "../../🧪️testing/📖️source-readers/🟦️.ts";
 

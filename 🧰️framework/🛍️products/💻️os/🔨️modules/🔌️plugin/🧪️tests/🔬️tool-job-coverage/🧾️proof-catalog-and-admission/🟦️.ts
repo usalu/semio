@@ -1,8 +1,6 @@
 /** 🧾️ The interactive job evaluation fixtures, the proof catalog evaluation checks and the admission order and bounded preparation checks. */
-import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
-import { toolJobProofCatalogFailures, toolJobFrameworkReservedRoutesExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
-import { toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts";
-import { toolJobImportPreparationBounded, toolJobFullOperationBounded } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts";
+import { toolJobStaticRows, toolJobDispositions, toolJobProofs, toolJobScanThenMonolithRows, TOOL_JOB_RESERVED_IDS, toolJobProofCatalogFailures, toolJobFrameworkReservedRoutesExact, toolJobDecodeAfterAdmission, toolJobLimitsMatch, toolJobExternalCancellationOwned, toolJobRuntimeProofQualified, toolJobQualifiedProofBeforeDecode, toolJobLiveInstanceIsolated, toolJobTypedDispatchExact, toolJobWireDispatchExact, toolJobImportPreparationBounded, toolJobFullOperationBounded, toolJobPluginInstanceSource, toolJobSourceMutation } from "@semio-tech/repo-lib/laws";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
 import { evaluateToolJobSources, exactBoundedFirstStepProof } from "../🧮️source-evaluation/🟦️.ts";
 
 /** 🔎 Runs the fixture sources that must leave at least one unmigrated tool job row and returns them for the final count. */
@@ -154,20 +152,19 @@ export function admissionOrderAndBoundedPreparationChecks() {
   if (toolJobFrameworkReservedRoutesExact(postJobMonolith)) throw new Error("[verify interactivity tool-jobs] self-test post-job-monolithic-operation was falsely accepted.");
   const preJobImportSerialization = "async fn dispatch_import_media() { let raw = serde_json::to_vec(&(port, media)); build_artifact_reserved_media_job(port, media, raw); }";
   if (toolJobImportPreparationBounded(preJobImportSerialization)) throw new Error("[verify interactivity tool-jobs] self-test pre-job-import-serialization was falsely accepted.");
-  const escapedTypedPreparation = "async fn dispatch_typed_command_inner() { refresh_cache().await; draft_store.snapshot().await; let session = WorkerJobSession::new(job); dispatch_emit().await; }";
-  if (toolJobFullOperationBounded(escapedTypedPreparation)) throw new Error("[verify interactivity tool-jobs] self-test typed-preparation-and-commit-outside-job was falsely accepted.");
-  const fakePhaseCursor = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); set_stage("typed-command-output-validation"); set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
-  if (toolJobFullOperationBounded(fakePhaseCursor)) throw new Error("[verify interactivity tool-jobs] self-test fake-full-operation-phase-cursor was falsely accepted.");
-  const monolithicHugeOutput = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { cx.is_cancelled(); cx.should_yield(); max_decoded_items; max_output_bytes; PreviewReady; CheckpointReady; validate_commit(base_revision, generation); set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); set_stage("typed-command-output-validation"); serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {} set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
-  if (toolJobFullOperationBounded(monolithicHugeOutput)) throw new Error("[verify interactivity tool-jobs] self-test monolithic-huge-output-and-child-validation was falsely accepted.");
-  const monolithicReducer = 'struct TypedCommandFullOperationJob; impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> { fn step() { cx.is_cancelled(); cx.should_yield(); max_decoded_items; max_output_bytes; PreviewReady; CheckpointReady; validate_commit(base_revision, generation); set_stage("typed-command-prepare"); set_stage("typed-command-reducer"); resolve_ready(A::ephemeral(command, doc)); resolve_ready(A::handle(command, doc)); set_stage("typed-command-output-validation"); set_stage("typed-command-ephemeral"); set_stage("typed-command-emit"); set_stage("typed-command-expose"); } } async fn dispatch_typed_command_inner() { let session = WorkerJobSession::new(job); }';
-  if (toolJobFullOperationBounded(monolithicReducer)) throw new Error("[verify interactivity tool-jobs] self-test one-shot-generic-reducer-inside-worker was falsely accepted.");
-  const boundedFirstStepReducer = monolithicReducer
-    .replace("max_decoded_items; max_output_bytes;", "max_decoded_items; max_work_units_per_step; max_output_bytes; max_step_micros; ToolExecutionShape::BoundedFirstStep;")
-    .replace("async fn dispatch_typed_command_inner()", "fn construct() { match proof { QualifiedToolProof::Bounded(_) => { TypedCommandFullOperationJob::<A>; } } } async fn dispatch_typed_command_inner()");
-  if (!toolJobFullOperationBounded(boundedFirstStepReducer)) throw new Error("[verify interactivity tool-jobs] self-test exact bounded-first-step generic reducer was falsely rejected.");
-  const noStageWatchdog = monolithicHugeOutput.replace("cx.is_cancelled(); cx.should_yield();", "").replace("serde_json::to_vec(&emit.effects); for child in emit.child_emits.iter() {}", "");
-  if (toolJobFullOperationBounded(noStageWatchdog)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stage-watchdog was falsely accepted.");
-  const staleExposure = noStageWatchdog.replace("validate_commit(base_revision, generation);", "").replace("fn step() { ", "fn step() { cx.is_cancelled(); cx.should_yield(); ");
-  if (toolJobFullOperationBounded(staleExposure)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stale-result-validation was falsely accepted.");
+  const instance = toolJobPluginInstanceSource(WORKSPACE_ROOT);
+  const mutateIn = (owner: string, before: string, after: string): string => toolJobSourceMutation(instance, owner, before, after);
+  const job = "impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>";
+  const dispatch = "async fn dispatch_typed_command_inner(";
+  if (!toolJobFullOperationBounded(instance)) throw new Error("[verify interactivity tool-jobs] self-test exact production typed-command full operation was falsely rejected.");
+  const hostiles: [string, string][] = [
+    ["typed-preparation-and-commit-outside-job", mutateIn(dispatch, "self.media.require_complete_tool_operation_pipeline(&admission)?;", "self.as_render().refresh_cache().await?; self.media.require_complete_tool_operation_pipeline(&admission)?;")],
+    ["fake-full-operation-cancellation-cursor", mutateIn(job, "if cx.is_cancelled() {", "if cx.cancelled_flag() {")],
+    ["full-operation-without-stage-watchdog", mutateIn(job, "cx.should_yield() || cx.fuel_remaining() == 0", "cx.fuel_remaining() == 0")],
+    ["monolithic-huge-output-and-child-validation", mutateIn(job, 'cx.set_stage("typed-command-prepare");', 'cx.set_stage("typed-command-prepare"); let _ = serde_json::to_vec(&emit.effects);')],
+    ["one-shot-generic-reducer-inside-worker", mutateIn(job, 'cx.set_stage("typed-command-reducer");', 'cx.set_stage("typed-command-reducer"); resolve_ready(A::handle(command, doc));')],
+    ["generic-proof-without-reducer-fault", mutateIn(job, "generic bounded proof has no resumable app-owned reducer job", "generic bounded proof reduced")],
+    ["full-operation-without-stale-result-validation", mutateIn("fn publish_mounted_typed_operation_unit", "typed_operation_document_is_fresh(&mounted.operation", "accept_stale_operation(&mounted.operation")],
+  ];
+  for (const [name, hostile] of hostiles) if (hostile === instance || toolJobFullOperationBounded(hostile)) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
 }

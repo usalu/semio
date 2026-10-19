@@ -569,8 +569,9 @@ pub fn puzzle5d_planner_tick_pages(tick: ToolRunTick) -> Result<Vec<Vec<u8>>, Fa
     Err(Fault::from("puzzle5d-planner-tick-page-bytes"))
 }
 
-impl InteractiveJob for Puzzle5dPlannerToolRunJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl Puzzle5dPlannerToolRunJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -582,6 +583,10 @@ impl InteractiveJob for Puzzle5dPlannerToolRunJob {
         let turn = self.turn(cx);
         self.outbox.settle(turn, cx)
     }
+}
+
+impl InteractiveJob for Puzzle5dPlannerToolRunJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
@@ -592,25 +597,27 @@ impl InteractiveJob for Puzzle5dPlannerToolRunJob {
         self.inner.begin_close();
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.begin_close();
-        if !self.outbox.terminal_is_empty() {
-            return match self.outbox.close_step(grant) {
-                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
-        }
-        if !self.inner.terminal_is_empty() {
-            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-            return match self.inner.close_step(child) {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
-            };
-        }
-        if self.board.is_some() || !self.pending.is_empty() {
-            self.close_owners.stage(Puzzle5dPlannerOwners { board: self.board.take(), pending: std::mem::take(&mut self.pending) });
-        }
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            self.begin_close();
+            if !self.outbox.terminal_is_empty() {
+                return Ok(match self.outbox.close_step(grant) {
+                    Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+                    Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
+                });
+            }
+            if !self.inner.terminal_is_empty() {
+                let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                return Ok(match cx.with_retained_loan(child, |same| self.inner.close_step(same))? {
+                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                    step => step,
+                });
+            }
+            if self.board.is_some() || !self.pending.is_empty() {
+                self.close_owners.stage(Puzzle5dPlannerOwners { board: self.board.take(), pending: std::mem::take(&mut self.pending) });
+            }
+            self.close_owners.close_step(grant).map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

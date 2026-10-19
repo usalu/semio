@@ -4,11 +4,11 @@ import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "./🔒️preferences/🟦️.ts";
  * `📦️packages/🟦️typescript/🟦️.ts` so a consumer that only needs a port (the styling package's dev
  * servers, and through them `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery`
  * taxonomy walk into its module graph. */
-import { ephemeralBox } from "../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { ephemeralBox } from "@semio-tech/framework";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { declaredWorkspaces, getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "@semio-tech/plugin-registry/catalog-view";
 
 export type PlaygroundHostKind = string;
 

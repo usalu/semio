@@ -4,9 +4,9 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{withBuildTestInvocationV1}from"../../📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import*as routing from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import schema from"./🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 

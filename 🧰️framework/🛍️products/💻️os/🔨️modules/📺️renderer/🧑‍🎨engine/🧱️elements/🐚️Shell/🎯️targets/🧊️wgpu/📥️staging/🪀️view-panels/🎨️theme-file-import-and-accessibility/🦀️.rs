@@ -360,7 +360,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     pub fn footer_status_chips(&self) -> Vec<(&'static str, String)> {
         let mut chips = Vec::new();
         if !self.chrome.mobile_panel_active() {
-            chips.push(("s-presence-peers", ui_wgpu::wgpu::presence_bar_chip_accessible_text(&self.footer_presence_rows(), None, self.prefs.active_locale())));
+            chips.push(("s-presence-peers", semio_framework_ui_wgpu_light::presence_bar::presence_bar_chip_accessible_text(&self.footer_presence_rows(), None, self.prefs.active_locale())));
         }
         chips.push(("s-hub-connection", self.sync.hub_footer_label(&self.prefs, &self.directory)));
         chips

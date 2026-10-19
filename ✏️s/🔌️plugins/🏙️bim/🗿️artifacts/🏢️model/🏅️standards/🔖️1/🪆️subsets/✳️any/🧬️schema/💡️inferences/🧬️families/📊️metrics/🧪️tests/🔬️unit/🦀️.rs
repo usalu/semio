@@ -1,23 +1,22 @@
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyValue, ParameterValue};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::{FamilyValue, ParameterValue};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::ResolvedParameter;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::ResolvedParameter;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops;
-use crate::standards::v1::subsets::any::schema::inferences::families::metrics::*;
-use crate::standards::v1::subsets::any::schema::inferences::families::tests::kit;
-use crate::standards::v1::subsets::any::schema::inferences::families::family_of;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::metrics::{metrics_of, table_json, magnitude};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind};
 
-fn model() -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
-    let mut snapshot = kit::model();
-    kit::hea(&mut snapshot);
-    kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
-    kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Length, "ghost + 1 m");
+fn model() -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::hea(&mut snapshot);
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Length, "ghost + 1 m");
     snapshot
 }
 
-fn values(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> BTreeMap<String, FamilyValue> {
+fn values(snapshot: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> BTreeMap<String, FamilyValue> {
     snapshot.families.keys().map(|id| (id.clone(), family_of(snapshot, id, &BTreeMap::new()))).collect()
 }
 

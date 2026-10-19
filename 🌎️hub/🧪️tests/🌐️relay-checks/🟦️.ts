@@ -2,9 +2,9 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "@semio-tech/gis-gismap-js/inference/schema";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -12,9 +12,9 @@ import Ajv from "ajv";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenIntentV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema/browser-actor";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runVitest } from "@semio-tech/process/vitest";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { localRelayUpstreamPath } from "../../🚀️local-relay/🧭️routing/🟦️.ts";
@@ -546,7 +546,7 @@ export class ExecutionTargetRelayCheckScript extends BundleScript {
     await proveBrowserBrokerRelay(this.repoRoot);
     console.log("execution-target-relay-check: existing browser proof-ratchet runtime regression clean");
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs() },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs() },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-hub-boot-laws",
             target: { kind: "lib" },

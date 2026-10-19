@@ -68,8 +68,8 @@ import {
   type QuizSession,
   type QuizState,
 } from "@semio-tech/quiz-react";
-import { RunScreen } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
-import { ResultsScreen } from "../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx";
+import { RunScreen } from "@semio-tech/quiz-react/modules/run/.tsx";
+import { ResultsScreen } from "@semio-tech/quiz-react/modules/results/.tsx";
 import palette from "../../../../🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css?raw";
 import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import vectors from "../🧫️fixtures/💭️crowd-client/🔣️.json";

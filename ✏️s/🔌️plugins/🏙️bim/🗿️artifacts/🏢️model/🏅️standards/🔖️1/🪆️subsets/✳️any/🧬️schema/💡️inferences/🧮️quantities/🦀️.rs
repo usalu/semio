@@ -19,22 +19,26 @@
 //!   (its volume over its thickness), `balusters` the number of balusters.
 //! * space: `gross_area` the room, `net_area` without columns, `height` the clear height, `net_volume` the room volume, `finishes` the floor, wall and ceiling finish areas of the room (`finishes`).
 
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::standards::v1::subsets::any::schema::inferences::mep::{self, MepValue};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::railings::baluster_count;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{curtain_walls, dep_object, dep_value, parts, rail_hosts, wall_sweeps, walls, ElementSolid};
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::railings::baluster_count;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::{curtain_walls, wall_sweeps};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
 use crate::standards::v1::subsets::any::schema::inferences::finishes::{self, FinishQuantity};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningCut, OpeningFrame};
-use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningCut, OpeningFrame};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, ModelSnapshot, Opening, Railing, Ramp, Roof, Slab, Space, Stair, Wall, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Infill, Layer, OpeningKind, Phase, Vertex};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
@@ -259,8 +263,8 @@ pub fn solid_rows(snapshot: &ModelSnapshot, solid: &ElementSolid) -> Vec<LayerQu
     rows.into_iter().map(|((_, material), volume)| LayerQuantity { mass: volume * density(snapshot, &material), material, thickness: 0.0, area: 0.0, volume }).collect()
 }
 
-fn scale_at(axis: &crate::standards::v1::subsets::any::schema::snapshot::Axis, offset: f64) -> f64 {
-    let segment = seg(axis);
+fn scale_at(axis: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis, offset: f64) -> f64 {
+    let segment = segment_of(axis);
     if segment.bulge == 0.0 || !segment.radius().is_finite() {
         1.0
     } else {
@@ -345,9 +349,9 @@ pub fn wall_quantity(snapshot: &ModelSnapshot, wall: &Wall, layout: &WallLayout,
 /// 🧷️ The quantities of a wall sweep: `length` the path along the face less the stretches its openings interrupt, `width` and `height` the extents of the profile (out of the wall and up), `perimeter` the visible outline of the
 /// profile, `gross_area` the cross-section, `net_area` and `surface_area` the visible surface (outline times length), `gross_volume` the cross-section times the length and `net_volume` the volume of the solid.
 pub fn sweep_quantity(snapshot: &ModelSnapshot, sweep: &WallSweep, wall: &Wall, layout: &WallLayout, frames: &[&OpeningFrame], solid: Option<&ElementSolid>) -> ElementQuantity {
-    let length = wall_sweeps::path_length(sweep, wall, layout, &walls::cuts_of(frames.iter().copied()));
-    let (protrusion, rise) = wall_sweeps::extents_of(sweep);
-    let (section, outline) = (wall_sweeps::section_area(sweep), wall_sweeps::visible_perimeter(sweep));
+    let length = semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::path_length(sweep, wall, layout, &semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of(frames.iter().copied()));
+    let (protrusion, rise) = semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of(sweep);
+    let (section, outline) = (semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::section_area(sweep), semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::visible_perimeter(sweep));
     let volume = solid.map_or(section * length, |solid| solid.volume);
     let rows = vec![LayerQuantity { material: sweep.material.clone(), thickness: protrusion, area: outline * length, volume, mass: volume * density(snapshot, &sweep.material) }];
     ElementQuantity {
@@ -376,7 +380,7 @@ pub fn curtain_quantity(snapshot: &ModelSnapshot, curtain: &CurtainWall, layout:
     let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
     let volume = solid.map_or(0.0, |solid| solid.volume);
     let cuts: Vec<OpeningCut> = frames.iter().filter(|frame| frame.valid).map(|frame| frame.cut).collect();
-    let (panels, mullions) = curtain_walls::takeoff(snapshot, curtain, layout, &cuts, profiles);
+    let (panels, mullions) = semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::takeoff(snapshot, curtain, layout, &cuts, profiles);
     ElementQuantity {
         kind: QuantityKind::CurtainWall,
         type_id: curtain.curtain_wall_type.clone(),
@@ -511,7 +515,7 @@ pub fn beam_quantity_in(snapshot: &ModelSnapshot, beam: &Beam, solid: Option<&El
     let kind = snapshot.beam_types.get(&beam.beam_type)?;
     let outline = profile_loop(&profiles.resolve(&kind.profile));
     let rise = beam.end_top_offset.map_or(0.0, |end| end - beam.top_offset);
-    let (area, length) = (loops::area(&outline), seg(&beam.axis).length().hypot(rise));
+    let (area, length) = (loops::area(&outline), segment_of(&beam.axis).length().hypot(rise));
     let gross = area * length;
     let net = solid.filter(|solid| !solid.is_empty()).map_or(gross, |solid| solid.volume);
     let rows = vec![LayerQuantity { material: kind.material.clone(), thickness: 0.0, area, volume: net, mass: net * density(snapshot, &kind.material) }];
@@ -548,7 +552,7 @@ pub fn stair_quantity(stair: &Stair, run: &StairRun, solid: Option<&ElementSolid
 pub fn ramp_quantity(snapshot: &ModelSnapshot, ramp: &Ramp, run: &RampRun, solid: Option<&ElementSolid>) -> ElementQuantity {
     let outline = strip_of(ramp).outline();
     let (area, perimeter) = (loops::area(&outline), loops::perimeter(&outline));
-    let volume = solid.map_or(0.0, |solid| group_volumes(solid).iter().zip(&solid.groups).filter(|(_, group)| group.part == parts::BODY).map(|(volume, _)| *volume).sum());
+    let volume = solid.map_or(0.0, |solid| group_volumes(solid).iter().zip(&solid.groups).filter(|(_, group)| group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY).map(|(volume, _)| *volume).sum());
     let rows = vec![LayerQuantity { material: ramp.material.clone(), thickness: ramp.thickness, area, volume, mass: volume * density(snapshot, &ramp.material) }];
     ElementQuantity {
         kind: QuantityKind::Ramp,
@@ -569,17 +573,17 @@ pub fn ramp_quantity(snapshot: &ModelSnapshot, ramp: &Ramp, run: &RampRun, solid
     }
 }
 
-fn category_key(category: crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory) -> &'static str {
+fn category_key(category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory) -> &'static str {
     match category {
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Furniture => "furniture",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Equipment => "equipment",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Casework => "casework",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Plumbing => "plumbing",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Lighting => "lighting",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Mechanical => "mechanical",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Electrical => "electrical",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Generic => "generic",
-        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile => "profile",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Furniture => "furniture",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Equipment => "equipment",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Casework => "casework",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Plumbing => "plumbing",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Lighting => "lighting",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Mechanical => "mechanical",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Electrical => "electrical",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Generic => "generic",
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile => "profile",
     }
 }
 
@@ -625,7 +629,7 @@ pub fn mep_quantity(_snapshot: &ModelSnapshot, _id: &str, value: &MepValue, soli
         kind: QuantityKind::Mep,
         storey: value.storey.clone(),
         phase: Phase::New,
-        type_id: mep::key(value.system).to_string(),
+        type_id: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::key(value.system).to_string(),
         count: 1,
         length: value.length,
         width: value.section.width,
@@ -645,7 +649,7 @@ pub fn mep_quantity(_snapshot: &ModelSnapshot, _id: &str, value: &MepValue, soli
 fn infill_area(railing: &Railing, solid: &ElementSolid) -> f64 {
     let (Infill::Glass { thickness } | Infill::Panel { thickness }) = railing.infill else { return 0.0 };
     let volumes = group_volumes(solid);
-    solid.groups.iter().zip(volumes).filter(|(group, _)| group.part == parts::INFILL).map(|(_, volume)| volume).sum::<f64>() / thickness
+    solid.groups.iter().zip(volumes).filter(|(group, _)| group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::INFILL).map(|(_, volume)| volume).sum::<f64>() / thickness
 }
 
 /// 🛤️ The quantities of a railing from its path and solid.
@@ -662,7 +666,7 @@ pub fn hosted_railing_quantity(snapshot: &ModelSnapshot, railing: &Railing, leng
 fn railing_quantity_of(snapshot: &ModelSnapshot, railing: &Railing, length: f64, solid: Option<&ElementSolid>) -> ElementQuantity {
     let rows = solid.map(|solid| solid_rows(snapshot, solid)).unwrap_or_default();
     let volume = solid.map_or(0.0, |solid| solid.volume);
-    let (infill, balusters) = solid.map_or((0.0, 0), |solid| (infill_area(railing, solid), if solid.groups.iter().any(|group| group.part == parts::BALUSTER) { baluster_count(railing) } else { 0 }));
+    let (infill, balusters) = solid.map_or((0.0, 0), |solid| (infill_area(railing, solid), if solid.groups.iter().any(|group| group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BALUSTER) { baluster_count(railing) } else { 0 }));
     ElementQuantity { kind: QuantityKind::Railing, storey: railing.storey.clone(), phase: railing.phase, count: 1, length, height: railing.height, surface_area: infill, gross_volume: volume, net_volume: volume, mass: mass_of(&rows), balusters, layers: rows, ..ElementQuantity::default() }
 }
 
@@ -690,7 +694,7 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
         let kind = snapshot.wall_types.get(&wall.wall_type);
         (dep_value(&Wall { name: String::new(), ..wall.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
     } else if let Some(curtain) = snapshot.curtain_walls.get(id) {
-        (dep_value(&CurtainWall { name: String::new(), ..curtain.clone() }), dep_value(&snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).cloned()), curtain_walls::materials_of(snapshot, id, curtain))
+        (dep_value(&CurtainWall { name: String::new(), ..curtain.clone() }), dep_value(&snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).cloned()), semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::materials_of(snapshot, id, curtain))
     } else if let Some(slab) = snapshot.slabs.get(id) {
         let kind = snapshot.slab_types.get(&slab.slab_type);
         (dep_value(&Slab { name: String::new(), ..slab.clone() }), dep_value(&kind.cloned()), kind.map(|row| materials(&row.layers)).unwrap_or_default())
@@ -720,7 +724,7 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
     } else if let Some(stair) = snapshot.stairs.get(id) {
         (dep_object([("storey", dep_value(&stair.storey)), ("phase", dep_value(&stair.phase))]), DslValue::Null, BTreeSet::new())
     } else if let Some(railing) = snapshot.railings.get(id) {
-        (dep_object([("railing", dep_value(&Railing { name: String::new(), ..railing.clone() })), ("host", rail_hosts::dependency(snapshot, railing))]), DslValue::Null, BTreeSet::from([railing.material.clone()]))
+        (dep_object([("railing", dep_value(&Railing { name: String::new(), ..railing.clone() })), ("host", semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::dependency(snapshot, railing))]), DslValue::Null, BTreeSet::from([railing.material.clone()]))
     } else if let Some(ramp) = snapshot.ramps.get(id) {
         (dep_value(&Ramp { name: String::new(), ..ramp.clone() }), DslValue::Null, BTreeSet::from([ramp.material.clone()]))
     } else if snapshot.components.contains_key(id) {

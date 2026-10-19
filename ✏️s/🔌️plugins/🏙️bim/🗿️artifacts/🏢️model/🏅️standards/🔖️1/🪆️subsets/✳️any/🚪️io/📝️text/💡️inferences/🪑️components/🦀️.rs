@@ -2,13 +2,14 @@
 //! placement of every component with its host fit, footprint, bounds, volume and connector; the section, path, length and closed-form volume of every MEP element; the clashing pairs; the quantities per element and per
 //! group; the findings of the component and MEP codes). The tessellated volumes of the solids are left to the three.js solids oracle.
 
-use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentValue, Connector, HostFit};
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidBounds;
-use crate::standards::v1::subsets::any::schema::inferences::mep::{self, MepValue};
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, Point2, Point3};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::{ComponentValue, Connector, HostFit};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidBounds;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, Point2, Point3};
 use std::collections::BTreeMap;
 
 /// 🪑️ The placement of one component as the oracle reproduces it: the turn as cosine and sine (an angle has two spellings), the rest as inferred.
@@ -131,7 +132,7 @@ fn slugs<'a>(codes: impl Iterator<Item = &'a str>) -> Vec<String> {
 fn mep_row(value: &MepValue) -> MepRow {
     MepRow {
         storey: value.storey.clone(),
-        system: mep::key(value.system).to_string(),
+        system: semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::key(value.system).to_string(),
         colour: value.colour.clone(),
         kind: value.section.kind.key().to_string(),
         label: value.section.label.clone(),

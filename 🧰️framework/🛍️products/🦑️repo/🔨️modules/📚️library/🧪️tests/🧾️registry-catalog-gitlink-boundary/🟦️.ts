@@ -2,7 +2,9 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
+import picomatch from "picomatch";
 import ts from "typescript";
+import { isDiscoverySkipDirectory } from "../../🔍️discovery/🪧️owner-markers/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -13,9 +15,10 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures
   ancestorFile: string;
   siblingFile: string;
   nestedFiles: string[];
+  ownerIndex: { packagesDirName: string; rows: string[]; known: string[]; candidates: string[] };
   execution: { target: string; command: string; cache: boolean };
 };
-const discoveryOwners = ["📇️registry-catalog-inputs", "🔐️taxonomy-authority"].map((owner) => ts.createSourceFile(owner, readFileSync(join(repoRoot, library, "🔍️discovery", owner, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true));
+const discoveryOwners = ["📇️registry-catalog-inputs", "🔐️taxonomy-authority", "🪧️owner-markers"].map((owner) => ts.createSourceFile(owner, readFileSync(join(repoRoot, library, "🔍️discovery", owner, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true));
 const declaration = (name: string): ts.FunctionDeclaration => {
   const rows = discoveryOwners.flatMap((owner) => owner.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name));
   if (rows.length !== 1) throw new Error(`Expected exactly one ${name} implementation`);
@@ -46,7 +49,7 @@ function virtualFilesystem(root: string, files: Record<string, string>) {
 }
 
 test("registry catalog gitlink boundaries parses only stage-zero 160000 index rows, NFC-normalized and cached", () => {
-  const code = declaration("registryCatalogGitlinkBoundaries").getText();
+  const code = declaration("registryCatalogGitlinkBoundaries").getText().replace(/^export /u, "");
   const decomposedPath = "\u267b\ufe0fmit-bestand/re\u0301sistance";
   const rows = [
     "100644 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0\t🔣️top-level.json",
@@ -70,14 +73,40 @@ test("registry catalog gitlink boundaries parses only stage-zero 160000 index ro
   }
 });
 
+test("registry catalog owner index keeps every owner ancestor and prunes tracked directories without an owner beneath them", () => {
+  const code = declaration("registryCatalogOwnerIndex").getText().replace(/^export /u, "");
+  const { packagesDirName, rows, known, candidates } = vector.ownerIndex;
+  const listing = rows.join("\0") + "\0";
+  const oracleOwners = new Set<string>(), oracleKnown = new Set<string>([""]);
+  const isPackageFile = picomatch(`**/${packagesDirName}/**`, { dot: true }), isRootPackageFile = picomatch(`${packagesDirName}/**`, { dot: true });
+  for (const row of rows.map((value) => value.normalize("NFC")).filter((value) => !value.startsWith("."))) {
+    for (let parent = dirname(row).replaceAll("\\", "/"); parent !== "."; parent = dirname(parent).replaceAll("\\", "/")) oracleKnown.add(parent);
+    if (!isPackageFile(row) && !isRootPackageFile(row)) continue;
+    const segments = row.split("/"), owner = segments.slice(0, segments.indexOf(packagesDirName)).join("/");
+    for (let parent = owner; ; parent = dirname(parent).replaceAll("\\", "/")) { oracleOwners.add(parent === "." ? "" : parent); if (parent === "" || parent === ".") break; }
+  }
+  expect([...oracleOwners].sort()).toEqual([...candidates].sort());
+  expect([...oracleKnown].sort()).toEqual([...known].sort());
+  for (const compiled of compilers(code)) {
+    const calls: { command: string; args: string[]; cwd?: string }[] = [];
+    const execFileSyncStub = (command: string, args: string[], options: { cwd?: string }) => { calls.push({ command, args, cwd: options.cwd }); return listing; };
+    const index = new Function("execFileSync", `${compiled}\nreturn registryCatalogOwnerIndex;`)(execFileSyncStub)(repoRoot, packagesDirName);
+    expect([...index.known].sort()).toEqual([...known].sort());
+    expect([...index.candidates].sort()).toEqual([...candidates].sort());
+    expect(calls).toEqual([{ command: "git", args: ["ls-files", "-z", "--cached"], cwd: repoRoot }]);
+    const unavailable = new Function("execFileSync", `${compiled}\nreturn registryCatalogOwnerIndex;`)(() => { throw new Error("no git"); })(repoRoot, packagesDirName);
+    expect(unavailable).toBeUndefined();
+  }
+});
+
 test("registry catalog input view treats a gitlink boundary as a terminal leaf", () => {
-  const code = declaration("registryCatalogInputView").getText().replace(/^export /u, "");
+  const code = ["retryOnEintr", "readdirVanishing", "registryCatalogInputView"].map(name => declaration(name).getText().replace(/^export /u, "")).join("\n");
   const root = join(repoRoot, vector.virtualRoot);
   const files: Record<string, string> = { [vector.ancestorFile]: "{}", [vector.siblingFile]: "{}" };
   for (const path of vector.nestedFiles) files[path] = "{}";
   for (const compiled of compilers(code)) {
     const fs = virtualFilesystem(root, files);
-    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", `${compiled}\nreturn registryCatalogInputView;`)(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, () => false, () => new Set([vector.boundary]));
+    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", "isDiscoverySkipDirectory", `${compiled}\nreturn registryCatalogInputView;`)(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, () => false, () => new Set([vector.boundary]), isDiscoverySkipDirectory);
     const view = factory(root, {});
     expect(view.kind(vector.boundary)).toBe("directory");
     expect(view.entries(vector.boundary)).toEqual([]);

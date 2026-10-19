@@ -73,13 +73,13 @@ impl<P, Mutation> Drop for ArtifactStoreEnvelopeRetirement<P, Mutation> {
 
 pub struct ArtifactGenesisRetirement<P: Send + Sync + 'static> {
     pub snapshot: std::mem::ManuallyDrop<Option<ReturnedSnapshotReadRetirement<P>>>,
-    pub pack: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<Vec<u8>>>>,
+    pub pack: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<Vec<u8>>>>,
 }
 
 impl<P: Send + Sync + 'static> ArtifactGenesisRetirement<P> {
     pub fn new(genesis: AdmittedArtifactGenesis<P>, factory: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>) -> Self {
         let (snapshot, pack) = genesis.into_owners();
-        Self { snapshot: std::mem::ManuallyDrop::new(Some(ReturnedSnapshotReadRetirement::new(snapshot, factory))), pack: std::mem::ManuallyDrop::new(Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(pack))) }
+        Self { snapshot: std::mem::ManuallyDrop::new(Some(ReturnedSnapshotReadRetirement::new(snapshot, factory))), pack: std::mem::ManuallyDrop::new(Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(pack))) }
     }
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.snapshot.is_some() { retirement_owner_demands(&self.snapshot, copy) } else { retirement_owner_demands(&self.pack, copy) }

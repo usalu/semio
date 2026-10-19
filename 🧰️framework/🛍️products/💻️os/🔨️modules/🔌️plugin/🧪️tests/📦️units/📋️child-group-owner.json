@@ -413,7 +413,7 @@
       "functions": [
         {
           "name": "retained_cancellation_publication_boundaries",
-          "sha256": "8af0d34c4436faa7ee28e7383dd7603854855e50eb136ab5cb93b7fb4710df5b"
+          "sha256": "b7a08554ef9577726ebf6d7e7eb8f89eca43e9bb4a754d1a238333dd1273eb24"
         },
         {
           "name": "fixture_latest_wins_key",
@@ -431,7 +431,7 @@
       "functions": [
         {
           "name": "retained_document_cancellation",
-          "sha256": "dbf9647248fb44746aac2314fb751c69b054644445895ee323d1c07c544eba04"
+          "sha256": "6da8a0b6249ebc3fd155b75e6fbe786605a603e68311841666b55ea63e240519"
         },
         {
           "name": "retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire",
@@ -461,7 +461,7 @@
       "functions": [
         {
           "name": "retained_latest_wins_slot_and_publication_fairness",
-          "sha256": "fb79ebef4670ec10ba84fc5aa0a58c9fcc6a94ea1579257426a35875cc8cb2e9"
+          "sha256": "2aedce171830c9ae8a1ff597b966a724cbacaef6e5ec4253e4793f110227204b"
         }
       ]
     },

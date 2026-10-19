@@ -33,7 +33,7 @@ test("Unpaid inherited markers cannot enter while the actual parent owns every C
 
 /** 🗺️ Checks the actual launcher consumes one privately authenticated storage namespace for every global guard. */
 test("neutral actual Cargo launcher shares the issued storage lease namespace",()=>{
- const root=process.cwd(),path=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher"),text=readFileSync(join(path,"🟦️.ts"),"utf8"),source=ts.createSourceFile("launcher.ts",text,ts.ScriptTarget.Latest,true),policy=JSON.parse(readFileSync(join(path,"🔣️policy.json"),"utf8"));
+ const root=process.cwd(),path=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher"),text=readFileSync(join(path,"🟦️.ts"),"utf8"),source=ts.createSourceFile("launcher.ts",text,ts.ScriptTarget.Latest,true),policy=JSON.parse(readFileSync(join(path,"🧬️schema/🔣️.json"),"utf8")).definitions.Configuration.const;
  let authenticatedPolicyReads=0,constantNamespaceUses=0,actualGuardControl=false;
  const walk=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression)&&node.expression.text==="readNativeStorageReservationPolicyV1"){authenticatedPolicyReads++;actualGuardControl=node.arguments.map(argument=>argument.getText(source)).join(",")==="store.storage,store.control";}if(ts.isStringLiteral(node)&&node.text===".cache/b/l/m/data")constantNamespaceUses++;ts.forEachChild(node,walk);};walk(source);
  const observation={version:1,authenticatedPolicyReads,constantNamespaceUses,independentCapacityDirectory:Object.hasOwn(policy,"capacityLeaseDirectory"),actualGuardControl};

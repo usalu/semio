@@ -1,5 +1,5 @@
 import {fileURLToPath} from "node:url";
-import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
+import { observeCargoPreparationSourceV1, observeCargoPreparationInputV1, observeCargoPreparationOutputV1 } from "@semio-tech/process/native-build";
 /** 🏗️ Publishes the concrete Stdio composition from present artifact-owned contributions. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";

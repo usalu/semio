@@ -22,6 +22,7 @@ use semio_framework_plugin_decl_views::child_view::ChildContentRoot;
     use semio_framework_plugin_child::ChildMemberRetirement;
     #[cfg(test)]
 use semio_framework_plugin_document_media::CompositionPinsRetirement;
+use semio_framework_plugin_document_media::document_archive_history_decoder;
     use semio_framework_value::retirement::controlled::ControlledRetirement;
     #[cfg(test)]
 use semio_framework_plugin_ownership::bounded_ownership::DOCUMENT_ARCHIVE_LOAD_SLOTS;

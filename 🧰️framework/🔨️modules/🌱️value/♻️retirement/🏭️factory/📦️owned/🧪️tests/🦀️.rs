@@ -1,6 +1,6 @@
 //! 🧪️ Original send-only payloads and provider-refused values retain exact physical custody.
 use super::*;
-use crate::{observe_retirement_allocations,retirement::{RetireOwned,RetirementCursor,admit_owned_retirement,owned_retirement_birth_bytes,shared::arc_bytes},FactoryPayloadRetirement};
+use crate::{observe_retirement_allocations,retirement::{RetireOwned,RetirementCursor,admit_owned_retirement,owned_retirement_birth_bytes,arc_custody::arc_bytes},FactoryPayloadRetirement};
 use std::sync::atomic::{AtomicBool,Ordering};
 struct RefusingFactory{refuse:AtomicBool}
 impl FactoryPayloadRetirement for RefusingFactory{

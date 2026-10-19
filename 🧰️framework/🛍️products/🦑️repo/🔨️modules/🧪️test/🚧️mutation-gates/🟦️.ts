@@ -7,7 +7,7 @@
 import { type EngineFamily } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
+import { type BreachRecord } from "@semio-tech/repo-lib/policy";
 import { isExcludedTestPath } from "../🗂️taxonomy/🟦️.ts";
 import { isPlainObject } from "../🟰️comparison/🟦️.ts";
 import { walkDirectories } from "../🧭️case-discovery/🟦️.ts";

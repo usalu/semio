@@ -1,7 +1,7 @@
 /** 📦️ Lift kids: module exporting `matchesLift`, `absolutizeBeyond`, `liftModuleKids`. */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { identifierSet, parseRustSourceTree, type RustModuleNode } from "../🌳️module-tree/🟦️.ts";
 import { declaredNames, hostPrivate, prependAfterInner, widenHostItems, type TestTransformResult } from "../🧪️test-closure/🟦️.ts";
 

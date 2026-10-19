@@ -23,6 +23,6 @@ pub fn subset<A: crate::SourcingApplication>() -> SubsetDeclaration<A> {
         io: io::io(),
         viewer: viewer_surface::<viewer::SourcingViewer, A>(viewer::create_sourcing_viewer()),
         editor: editor_surface::<editor::SourcingCurationApp, A>(editor::create_sourcing_curation_app()),
-        examples: editor::base::examples(),
+        examples: editor::editor_vocabulary::examples(),
     }
 }

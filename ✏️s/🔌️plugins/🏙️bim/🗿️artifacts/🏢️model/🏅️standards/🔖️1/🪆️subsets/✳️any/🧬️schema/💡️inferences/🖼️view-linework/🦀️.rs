@@ -12,20 +12,17 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Orthographic_projection>, <https://en.wikipedia.org/wiki/Hidden-line_removal>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{self, Inputs as PlanInputs, PlanKind, PlanLinework, PlanStyle};
-use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip;
-pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::cut;
 #[path = "🔎️filters/🦀️.rs"]
 pub mod filters;
-pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame;
-pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines;
 #[path = "🗺️plans/🦀️.rs"]
 pub mod plans;
 #[path = "🏛️vertical/🦀️.rs"]

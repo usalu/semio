@@ -10,7 +10,7 @@
     "maximumDepth": 64
   },
   "source": "🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs",
-  "engine": "🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
+  "engine": "🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs", "engineSurfaces": "🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/🦀️.rs",
   "preview": "retained-typed-results",
   "fault": "same-producer-payload",
   "acknowledgement": "caller-grant-before-mutable-access",

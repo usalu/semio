@@ -41,7 +41,6 @@ fn close_abandoned_atlas_step() -> bool {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned atlas refused admitted close: {kind:?}, progress: {progress:?}"),
     }
 }
 

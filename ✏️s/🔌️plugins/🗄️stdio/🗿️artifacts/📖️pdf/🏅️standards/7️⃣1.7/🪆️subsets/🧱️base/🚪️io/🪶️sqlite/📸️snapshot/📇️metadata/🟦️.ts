@@ -2,7 +2,7 @@ import { writePdfArtifactReference,readPdfArtifactReference } from "../📦️ar
 /** 📇️ Complete metadata scalars, intrinsic file bytes and viewer ownership. */
 import type { PdfEmbeddedFile, PdfOutputIntent, PdfEncryption, PdfViewerPreferences, PdfMarkInfo, PdfPageMode, PdfPageLayout } from "../../../../🧬️schema/📸️snapshot/📇️metadata/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean } from "../🧩️entity/🟦️.ts";
-import { writePdfDate,readPdfDate } from "./📆️date/🟦️.ts";
+import { writePdfDate, readPdfDate } from "../🗓️date/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 

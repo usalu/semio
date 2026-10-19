@@ -11,14 +11,12 @@ import (
 	testing "testing"
 
 	model "github.com/usalu/semio/repo/model"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestExtractTestStartingFromInputResolvesTestIDs(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	goDir := filepath.Join(tmpDir, "mypackage")
 	os.MkdirAll(goDir, 0755)
@@ -206,9 +204,7 @@ final class ExampleTest extends TestCase {
 
 func TestExtractTestEndedFromInputResolvesFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	goDir := filepath.Join(tmpDir, "pkg")
 	os.MkdirAll(goDir, 0755)

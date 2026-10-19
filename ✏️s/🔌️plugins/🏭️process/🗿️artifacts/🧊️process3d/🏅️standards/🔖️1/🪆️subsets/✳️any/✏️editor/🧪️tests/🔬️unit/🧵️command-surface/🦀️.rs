@@ -180,9 +180,9 @@ async fn retained_resumable_progress_checkpoint_identity_replay_and_close_are_ex
     assert_eq!(uninterrupted_emit.config_mutations, vec![Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: "x".repeat(4_096) })]);
     assert_eq!(replayed_emit.config_mutations, uninterrupted_emit.config_mutations);
     let no_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    assert_eq!(replayed.close_step(no_grant), InteractiveJobCloseStep::Blocked);
+    assert_eq!(semio_framework_job::close_with_self_funded_context(no_grant, |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
     replayed.begin_close();
-    assert_eq!(replayed.close_step(no_grant), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(no_grant, |cx| replayed.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(replayed.terminal_is_empty());
 }
 

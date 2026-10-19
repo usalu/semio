@@ -1,5 +1,5 @@
 //#region 🧬️BindingContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../../🔌️host/🟦️.ts";
 import { OwnedUiNode, type OwnedUiPayload, type RetainedUiComponent, type RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../../📦️wire/🟦️.ts";
 import { OwnedUiSceneCursor, type OwnedUiSceneDocument, type OwnedUiSceneReader } from "../🟦️.ts";
@@ -7,12 +7,12 @@ import { OwnedUiSceneProjectionCursor, type OwnedUiPreparedScene, type OwnedUiPr
 
 export type OwnedUiSceneDiagnostic = { readonly code: "invalid-scene-packet" | "unsupported-scene-schema" | "invalid-scene-fields" };
 type Root = { references: number; readonly usizeBits: 32 | 64; node: OwnedUiNode | null; scene: OwnedUiPreparedScene | null; diagnostic: OwnedUiSceneDiagnostic | null };
-type Retirement = { advance(grant: NumericIndexGrant): RetainedUiWireStep; terminalIsEmpty(): boolean };
+type Retirement = { advance(grant: UiIndexGrant): RetainedUiWireStep; terminalIsEmpty(): boolean };
 type Link = { owner: Retirement | null; next: Link | null };
 type Program = Generator<number, void, void>;
 const GRANT = Object.freeze({ maxItems: 1, maxBytes: 4096 });
 const MINT = Object.freeze({});
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 let own: (root: Root) => OwnedUiSceneBinding;
 let retire: (root: Root) => OwnedUiSceneBindingRetirement;
@@ -43,7 +43,7 @@ export class OwnedUiSceneBindingRetirement {
   #released = false;
   private constructor(mint: object, root: Root) { if (mint !== MINT) throw new Error("Scene binding retirement requires exact mint authority"); this.#root = root; Object.freeze(this); }
   static { retire = root => new OwnedUiSceneBindingRetirement(MINT, root); }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "scene-binding-close");
     if (this.#active) { const current = this.#active.advance(GRANT); if (current.kind === "complete") this.#active = null; return { ...current, kind: "pending" }; }
     if (!this.#root) return step("complete", "scene-binding-close");
@@ -105,7 +105,7 @@ export class OwnedUiSceneBindingCursor {
     this.#projection.beginClose(); yield 32;
     while (this.#projection) { const current = this.#projection.closeStep(GRANT); if (current.kind === "complete") this.#projection = null; yield current.bytes; }
   }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", this.#phase);
     if (this.#closing || this.#taken || this.#failure) return step("rejected", this.#phase);
     if (this.#ready) return step("ready", "scene-binding-ready");
@@ -117,7 +117,7 @@ export class OwnedUiSceneBindingCursor {
     const result = own({ references: 1, usizeBits: this.#profile.usizeBits, node: this.#node, scene: this.#scene, diagnostic: this.#diagnostic }); this.#node = null; this.#scene = null; this.#diagnostic = null; this.#taken = true; return result;
   }
   beginClose(): void { this.#closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!this.#closing || !admitted(grant)) return step("blocked", "scene-binding-close");
     if (this.#program) { this.#program.return(undefined); this.#program = null; return step("pending", "scene-binding-program-close", 128); }
     if (this.#parser) { this.#parser.beginClose(); const current = this.#parser.closeStep(GRANT); if (current.kind === "complete") this.#parser = null; return { ...current, kind: "pending" }; }

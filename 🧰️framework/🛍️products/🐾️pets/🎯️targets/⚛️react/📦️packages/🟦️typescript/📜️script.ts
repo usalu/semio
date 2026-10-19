@@ -3,7 +3,7 @@ import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃�
 import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {join} from "node:path";
 
-import {typecheckRepositoryProjectV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckAdmittedProjectV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 
 import {receiveScriptProcessInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -15,8 +15,8 @@ import {BundleScript, ScriptRouter} from "../../../../../../🔨️modules/🏃�
 
 import {runScriptMain} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import {runViteBunxDev} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import {runVitest} from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { runVitest } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 
 /** 🧪️ `test` — the React suites of the pets product, in jsdom. */
 class TestScript extends BundleScript {
@@ -29,7 +29,7 @@ class TestScript extends BundleScript {
 /** 🪁️ `typecheck` — the target, its stories and its suites against the compiler. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckAdmittedProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 

@@ -11,7 +11,7 @@
 use super::ipc;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use ui_tui::tui::pty::Pty;
+use semio_framework_ui_tui_terminal::pty::Pty;
 
 /// 🎫 What a readiness report is about.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -48,7 +48,8 @@ mod platform {
     use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
     use std::os::unix::io::AsRawFd;
     use std::os::unix::net::{UnixListener, UnixStream};
-    use ui_tui::tui::pty::readiness::{self, Interest};
+    use semio_framework_ui_tui_terminal::pty::readiness;
+use semio_framework_ui_tui_terminal::pty::readiness::Interest;
 
     /// 🔌 A connected unix socket whose reads and writes never wait.
     pub struct Stream {
@@ -135,7 +136,7 @@ mod platform {
             let directory = path.parent().ok_or_else(|| std::io::Error::other("dashboard socket needs a parent directory"))?.to_path_buf();
             std::fs::DirBuilder::new().recursive(true).mode(0o700).create(&directory)?;
             let metadata = std::fs::symlink_metadata(&directory)?;
-            if !metadata.is_dir() || metadata.uid() != ui_tui::tui::pty::user_id() { return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, format!("{} is not a directory of this user", directory.display()))); }
+            if !metadata.is_dir() || metadata.uid() != semio_framework_ui_tui_terminal::pty::user_id() { return Err(std::io::Error::new(std::io::ErrorKind::PermissionDenied, format!("{} is not a directory of this user", directory.display()))); }
             if metadata.mode() & 0o077 != 0 { std::fs::set_permissions(&directory, std::fs::Permissions::from_mode(0o700))?; }
             let lock = path.with_extension("lock");
             let held = lock_runtime_file(&lock)?.ok_or_else(|| std::io::Error::new(std::io::ErrorKind::AlreadyExists, "workspace dashboard daemon is already listening"))?;

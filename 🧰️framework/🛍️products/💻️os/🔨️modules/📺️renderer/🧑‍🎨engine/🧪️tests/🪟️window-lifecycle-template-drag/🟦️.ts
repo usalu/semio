@@ -3,8 +3,8 @@ import { describe, expect, test } from "bun:test";
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { partitionRefreshWindowInstancesV1 } from "../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { partitionRefreshWindowInstancesV1 } from "@semio-tech/framework-kernel";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(import.meta.dir, "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🪟️window-lifecycle-template-drag", "🔣️.json"), "utf8"));

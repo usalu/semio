@@ -7,7 +7,8 @@ import { setInteractiveJobPort, type InteractiveJobPort } from "../../../../🔌
 import { createDiagramLayoutBatchTestJob } from "../../../📐️layout/🟦️.ts";
 import { createDiagramLayoutPublication } from "../../../📐️layout/📢️publication/🟦️.ts";
 
-export const flowCapture = vi.hoisted(() => ({ props: undefined as Record<string, any> | undefined }));
+const hoistedFlowCapture = vi.hoisted(() => ({ props: undefined as Record<string, any> | undefined }));
+export const flowCapture = hoistedFlowCapture;
 export let diagramFrameStack = false;
 /** 🎞️ Lets a test module reset the frame-stack witness, because an imported binding cannot be assigned from outside its module. */
 export function setDiagramFrameStack(value: boolean): void {
@@ -19,7 +20,7 @@ vi.mock("../../../../🔌️Ports/🟦️.tsx", async (importOriginal) => {
   const mocked = {
     ...actual,
     HostReactFlow: (props: Record<string, any>) => {
-      flowCapture.props = props;
+      hoistedFlowCapture.props = props;
       return actual.reactHostPort.createElement(actual.HostReactFlow, props);
     },
   };

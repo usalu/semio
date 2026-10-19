@@ -1,5 +1,5 @@
 /** 📨️ The envelope lane ordering, granted budget, wire adoption, command ingress and frame parity tests. */
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { Lane, ShardBudget, ShardClientSettlementTestKit, ShardEnvelope, ShardFrame } from "../🧰️settlement-test-kit/🟦️.ts";
 

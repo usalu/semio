@@ -95,11 +95,7 @@ impl Fem3dNumericalChild {
         }
         if self.stage == Fem3dNumericalStage::SolidMeshRetire {
             let mesh = self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?;
-            let step = InteractiveJob::close_step(mesh, context.retained_grant());
-            context.consume_retained(step.progress()).map_err(|_| b"fem3d.numerical-solid-mesh-retire-grant".to_vec())?;
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) {
-                return Err(b"fem3d.numerical-solid-mesh-retire-refused".to_vec());
-            }
+            InteractiveJob::close_step(mesh, context).map_err(|_| b"fem3d.numerical-solid-mesh-retire-refused".to_vec())?;
             if InteractiveJob::terminal_is_empty(mesh) {
                 self.mesh = None;
                 self.stage = Fem3dNumericalStage::SolidMaterial;
@@ -645,11 +641,11 @@ impl Fem3dNumericalChild {
         Ok(self.stage == Fem3dNumericalStage::Complete)
     }
 
-    fn close_interactive(step: semio_framework_job::InteractiveJobCloseStep) -> (bool, usize, usize) {
+    fn close_interactive<E>(step: Result<semio_framework_job::InteractiveJobCloseStep, E>) -> (bool, usize, usize) {
         match step {
-            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (false, progress.copied_items, progress.released_bytes),
-            semio_framework_job::InteractiveJobCloseStep::Blocked | semio_framework_job::InteractiveJobCloseStep::Refused { .. } => (false, 0, 0),
-            semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (true, progress.copied_items, progress.released_bytes),
+            Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress }) => (false, progress.copied_items, progress.released_bytes),
+            Ok(semio_framework_job::InteractiveJobCloseStep::Blocked) | Err(_) => (false, 0, 0),
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress }) => (true, progress.copied_items, progress.released_bytes),
         }
     }
 
@@ -683,7 +679,7 @@ impl Fem3dNumericalChild {
             && self.modal_free_mass.terminal_is_empty()
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> (bool, usize, usize) {
         let maximum_bytes = grant.maximum_release_bytes;
         let child = RetainedCloneGrant { maximum_items: 1, ..grant };
         if self.terminal_is_empty() { return (true, 0, 0); }
@@ -707,7 +703,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
+                let step = Self::close_interactive(cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same)));
                 if step.0 {
                     self.mesh = None;
                 }
@@ -762,7 +758,7 @@ impl Fem3dNumericalChild {
                     self.close_lane += 1;
                     return (false, 0, 0);
                 };
-                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
+                let step = Self::close_interactive(cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same)));
                 if step.0 {
                     self.pcg = None;
                 }
@@ -789,7 +785,7 @@ impl Fem3dNumericalChild {
                     self.close_started_jobs |= 1;
                     return (false, 1, 0);
                 }
-                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
+                let step = Self::close_interactive(cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same)));
                 if step.0 {
                     self.ldlt = None;
                 }
@@ -805,7 +801,7 @@ impl Fem3dNumericalChild {
                     self.close_started_jobs |= 2;
                     return (false, 1, 0);
                 }
-                let step = Self::close_interactive(InteractiveJob::close_step(job, child));
+                let step = Self::close_interactive(cx.with_retained_loan(child, |same| InteractiveJob::close_step(job, same)));
                 if step.0 {
                     self.subspace = None;
                 }

@@ -36,8 +36,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import Module from "manifold-3d";
 import type { CrossSection, Manifold, Mesh as ManifoldMesh } from "manifold-3d";
 import * as THREE from "three";
@@ -49,6 +49,7 @@ import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { Family, Recipe } from "./📇️recipe-contract/🟦️.ts";
 
 // 🩹️ three's exporters assume a browser: `PLYExporter`/`GLTFExporter` deliver their result via
 // `requestAnimationFrame`, `GLTFExporter`'s embedded-buffer path reads it back through `FileReader`, and
@@ -75,25 +76,6 @@ class ShimProgressEvent {
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-/** 👪️ The fixture families the corpus is sharded and reported by — never at artifact level. */
-export type Family = "primitives" | "booleans" | "topology" | "scale" | "degenerate";
-
-/** 🧰️ What a recipe is handed to build with: the two manifold-3d entry points a shape needs. */
-export type Toolkit = Readonly<{ Manifold: typeof Manifold; CrossSection: typeof CrossSection }>;
-
-/**
- * 🧪️ One corpus entry. A recipe DESCRIBES a shape; it computes nothing. `build` returns the RESULT to
- * export and measure, plus optionally the named operands that produced it (a boolean's two inputs), so
- * a boolean fixture is reviewable without re-deriving the operands from the chain that built them.
- */
-export type Recipe = Readonly<{
-  id: string;
-  family: Family;
-  tolerance: string;
-  notes: string;
-  build: (t: Toolkit) => { operands?: { role: string; shape: Manifold }[]; result: Manifold };
-}>;
-
 const ENGINE_FAMILY = "manifold";
 const ENGINE_VERSION = "3.5.1";
 const EXPORT_ENGINE_FAMILY = "three";
@@ -473,7 +455,7 @@ async function generateOne(t: NonNullable<typeof toolkit>, recipe: Recipe, outDi
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

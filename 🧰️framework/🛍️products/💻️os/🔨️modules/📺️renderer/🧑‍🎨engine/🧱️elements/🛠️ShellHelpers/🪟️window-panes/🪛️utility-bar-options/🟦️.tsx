@@ -111,6 +111,6 @@ export function utilityBarNode(utilities: readonly UtilityNode[] | undefined, wi
       grouped.push(node);
     }
   }
-  return <UtilityTree id={`ui.utilities.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} />;
+  return <UtilityTree id={`ui.utilities.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} renderSelectionOptions={({ activeUtilityId, windowId: selectionWindowId, generation }) => <SelectionUtilityOptions activeUtilityId={activeUtilityId} windowId={selectionWindowId} onAction={onAction} generation={generation} />} />;
 }
 //#endregion ShellHelpers

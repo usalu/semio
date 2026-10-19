@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");
@@ -173,10 +173,10 @@ describe("wgpu prepared raster residency", () => {
   });
 
   it("wires complete packet ownership before every raster allocation", () => {
-    const drawTypes = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs"), "utf8");
+    const drawTypes = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs"));
     const draw = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"));
     const prepared = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")) + readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🦀️.rs"));
-    const gpu = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs"), "utf8");
+    const gpu = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs"));
     const renderer = readModuleTreeSource(resolve(engineRoot, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
     const canvas = readModuleTreeSource(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));
     for (const source of ["pass.textured_draws", "layer.raster_instances", "layer.overlay_raster_instances"]) expect(drawTypes).toContain(source);

@@ -160,62 +160,26 @@
       ]
     },
     {
-      "id": "go-in-package-tests",
+      "id": "go-test-beside-production-source-is-inline",
       "sources": [
         {
           "path": "🧩️domain/📦️packages/🐹️go/🐹️.go",
-          "source": "package domain\n\nfunc Widget() bool { return true }\n\nfunc TestSelector(selector string) bool { return selector != \"\" }\n"
-        },
-        {
-          "path": "🧩️domain/📦️packages/🐹️go/🔌️helpers.go",
-          "source": "package domain\n\nimport \"testing\"\n\nfunc TestHidden(t *testing.T) {}\n"
+          "source": "package domain\n\nfunc Widget() bool { return true }\n"
         },
         {
           "path": "🧩️domain/📦️packages/🐹️go/🔬️_test.go",
           "source": "package domain\n\nimport \"testing\"\n\nfunc TestWidget(t *testing.T) {\n\tif !Widget() {\n\t\tt.Fatal(\"widget\")\n\t}\n}\n"
         },
         {
-          "path": "🧩️domain/📦️packages/🐹️go/🔭️exhaustive_test.go",
-          "source": "package domain_test\n\nimport \"testing\"\n\nfunc BenchmarkWidget(b *testing.B) {}\n"
-        },
-        {
-          "path": "🧩️domain/📦️packages/🐹️go/🧪️_test.go",
-          "source": "package domain\n\nimport \"testing\"\n\nfunc TestMarked(t *testing.T) {}\n"
-        },
-        {
-          "path": "🧩️orphan/🔬️_test.go",
-          "source": "package orphan\n\nimport \"testing\"\n\nfunc TestOrphan(t *testing.T) {}\n"
-        },
-        {
-          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
-          "source": "package domain\n\nimport \"testing\"\n\nfunc TestCase(t *testing.T) {}\n"
+          "path": "🧩️domain/🧪️tests/🔬️unit/🐹️.go",
+          "source": "package domain\n\nimport \"testing\"\n\nfunc TestWidgetCase(t *testing.T) {}\n"
         }
       ],
       "expected": [
         {
           "code": "inline-test-body",
-          "path": "🧩️domain/📦️packages/🐹️go/🔌️helpers.go",
+          "path": "🧩️domain/📦️packages/🐹️go/🔬️_test.go",
           "line": 5
-        },
-        {
-          "code": "legacy-test-filename",
-          "path": "🧩️domain/📦️packages/🐹️go/🧪️_test.go",
-          "line": null
-        },
-        {
-          "code": "inline-test-body",
-          "path": "🧩️orphan/🔬️_test.go",
-          "line": 5
-        },
-        {
-          "code": "inline-test-body",
-          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
-          "line": 5
-        },
-        {
-          "code": "test-implementation-filename",
-          "path": "🧩️domain/🧪️tests/🧪️case/🔬️_test.go",
-          "line": null
         }
       ]
     },

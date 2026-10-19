@@ -94,7 +94,7 @@ func ToolExport(outputPath string) workspace.ToolResult {
 	eventspkg.Emit(eventspkg.EventExportStarting, "repo-cli", eventspkg.FilePayload{Path: outputPath})
 	output := workspace.NewOutput()
 	output.Info("\n📦️Exporting repo to event log...")
-	result, err := ExportToEventLog(outputPath, graphqlpkg.NewRepoContext(workspace.RootDir))
+	result, err := ExportToEventLog(outputPath, graphqlpkg.NewRepoContext(workspace.GetRootDir()))
 	if err != nil {
 		return workspace.ToolErrorResult(err)
 	}

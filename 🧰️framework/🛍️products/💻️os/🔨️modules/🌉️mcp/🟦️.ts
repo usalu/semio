@@ -18,7 +18,7 @@ import { accessSync, constants as fsConstants, readdirSync, readFileSync, statSy
 import { join, posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
 import type { Readable, Writable } from "node:stream";
-import { cargoTargetDirectory } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
 import { CARGO_BUILD_OWNER_PID_ENV, cargoBinarySourcesFreshnessV1, parseCargoBinarySourcesV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 //#region 🔖️BinaryPath

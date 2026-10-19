@@ -74,65 +74,69 @@ fn visit_rows(snapshot:&SemioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),Valu
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;
 
-/// 🛬️ Decodes the union envelope's native payload by dispatching on its subset tag to that subset's own decoder.
+/// 🛬️ Decodes the union envelope's native payload into one retained envelope whose selected subset is filled by that subset's own borrowed visitor.
 mod union_decoding {
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
-pub(crate) fn decode_snapshot(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<crate::schema::snapshot::SemioSnapshot,ValueError>{super::semantic::layout(control.limits())?;decode(payload,crate::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,binary_snapshot,text_snapshot,native_control)}
-fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::schema::snapshot::SemioSnapshot,ValueError>{
- use crate::schema::snapshot::SemioSubsetSnapshot as S;
- let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;let schema=Owned::new(control.copy_text(schema)?);let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
+use crate::schema::snapshot::{SemioSnapshot,SemioSubsetSnapshot as S};
+macro_rules! select{($output:expr,$variant:ident,$domain:ident,$method:ident,$body:expr,$control:expr,$limits:expr)=>{{$output.subset=S::$variant($domain::io::sqlite::snapshot::native_decoding::empty());let S::$variant(inner)=&mut $output.subset else{unreachable!()};$domain::io::sqlite::snapshot::native_decoding::$method(inner,$body,$control,$limits)?}}}
+pub(crate) fn decode_snapshot(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioSnapshot,ValueError>{super::semantic::layout(control.limits())?;with_body(payload,crate::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA,control,native_control,|body,decoder,limits|workspace::decode(decoder,empty,|output,decoder|match body{Body::Binary(body)=>binary_snapshot(output,body,decoder,limits),Body::Text(body)=>text_snapshot(output,body,decoder,limits)}))}
+/// 🕳️ Starts the retained envelope with a zero-heap placeholder subset replaced once the discriminator is read.
+fn empty()->SemioSnapshot{SemioSnapshot{schema:String::new(),subset:S::Brep(semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_decoding::empty())}}
+fn binary_snapshot(output:&mut SemioSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+ let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio envelope native format"))}let ordinal=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;let schema=control.borrow_text(bytes(&mut reader)?)?;let limits=super::semantic::subset_limits(limits,schema.len(),super::semantic::tag(ordinal)?)?;text_into(&mut output.schema,schema,control)?;let payload=reader.read_bytes(reader.remaining()).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
  let id=match ordinal{0=>"stdio.semio.brep",1=>"stdio.semio.mesh",2=>"stdio.semio.model",3=>"stdio.semio.value",4=>"s.stdio.semio.document",5=>"stdio.semio.cad",6=>"stdio.semio.drawing",7=>"s.stdio.semio.image",8=>"stdio.semio.video",9=>"stdio.semio.audio",10=>"s.stdio.semio.animation",11=>"s.stdio.semio.presentation",12=>"stdio.semio.flow",13=>"s.stdio.semio.text",14=>"s.stdio.semio.table",15=>"s.stdio.semio.graph",16=>"stdio.semio.object",17=>"stdio.semio.kit",_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset ordinal"))};
  let body=store::semio_format::unwrap_binary_controlled(payload,id,store::semio_format::Component::Pack,1,control)?;
- let subset=Owned::new(match ordinal{
- 0=>S::Brep(semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 1=>S::Mesh(semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 2=>S::Model(semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 3=>{let body=control.borrow_text(body)?;S::Value(semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?)},
- 4=>S::Document(semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 5=>S::Cad(semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 6=>S::Drawing(semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 7=>S::Image(semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 8=>S::Video(semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 9=>S::Audio(semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 10=>S::Animation(semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 11=>S::Presentation(semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 12=>S::Flow(semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 13=>S::Text(semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 14=>S::Table(semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 15=>S::Graph(semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 16=>S::Object(semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 17=>S::Kit(semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ match ordinal{
+ 0=>select!(output,Brep,semio_s_artifact_stdio_semio_brep,binary_into,body,control,limits),
+ 1=>select!(output,Mesh,semio_s_artifact_stdio_semio_mesh,binary_into,body,control,limits),
+ 2=>select!(output,Model,semio_s_artifact_stdio_semio_model,binary_into,body,control,limits),
+ 3=>select!(output,Value,semio_s_artifact_stdio_semio_value_model,binary_into,body,control,limits),
+ 4=>select!(output,Document,semio_s_artifact_stdio_semio_document,binary_into,body,control,limits),
+ 5=>select!(output,Cad,semio_s_artifact_stdio_semio_cad,binary_into,body,control,limits),
+ 6=>select!(output,Drawing,semio_s_artifact_stdio_semio_drawing,binary_into,body,control,limits),
+ 7=>select!(output,Image,semio_s_artifact_stdio_semio_image,binary_into,body,control,limits),
+ 8=>select!(output,Video,semio_s_artifact_stdio_semio_video_model,binary_into,body,control,limits),
+ 9=>select!(output,Audio,semio_s_artifact_stdio_semio_audio_model,binary_into,body,control,limits),
+ 10=>select!(output,Animation,semio_s_artifact_stdio_semio_animation,binary_into,body,control,limits),
+ 11=>select!(output,Presentation,semio_s_artifact_stdio_semio_presentation,binary_into,body,control,limits),
+ 12=>select!(output,Flow,semio_s_artifact_stdio_semio_flow,binary_into,body,control,limits),
+ 13=>select!(output,Text,semio_s_artifact_stdio_semio_text_model,binary_into,body,control,limits),
+ 14=>select!(output,Table,semio_s_artifact_stdio_semio_table_model,binary_into,body,control,limits),
+ 15=>select!(output,Graph,semio_s_artifact_stdio_semio_graph,binary_into,body,control,limits),
+ 16=>select!(output,Object,semio_s_artifact_stdio_semio_object,binary_into,body,control,limits),
+ 17=>select!(output,Kit,semio_s_artifact_stdio_semio_kit,binary_into,body,control,limits),
  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset ordinal"))
- });let value=Owned::new(crate::schema::snapshot::SemioSnapshot{schema:schema.take(),subset:subset.take()});control.checkpoint()?;Ok(value.take())
+ }
+ Ok(())
 }
-fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<crate::schema::snapshot::SemioSnapshot,ValueError>{
- use crate::schema::snapshot::SemioSubsetSnapshot as S;
+fn text_snapshot(output:&mut SemioSnapshot,body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  control.scoped_stage(|control|{control.begin_stage(body.len())?;for _ in body.bytes(){control.step()?}Ok::<_,ValueError>(())})?;
- let mut fields=body.splitn(3,'\n');let tag=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope subset"))?.trim().strip_prefix("subset=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires subset header"))?;let schema=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope schema"))?.trim().strip_prefix("schema=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires schema header"))?;let body=fields.next().unwrap_or("");if !schema.len().is_multiple_of(2){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native odd hex length"))}let limits=super::semantic::subset_limits(limits,schema.len()/2,tag)?;let schema=Owned::new(hex_text(schema,control)?);
- let subset=Owned::new(match tag{
- "brep"=>S::Brep(semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "mesh"=>S::Mesh(semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "model"=>S::Model(semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "value"=>S::Value(semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "document"=>S::Document(semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "cad"=>S::Cad(semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "drawing"=>S::Drawing(semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "image"=>S::Image(semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "video"=>S::Video(semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "audio"=>S::Audio(semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "animation"=>S::Animation(semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "presentation"=>S::Presentation(semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "flow"=>S::Flow(semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "text"=>S::Text(semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "table"=>S::Table(semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "graph"=>S::Graph(semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "object"=>S::Object(semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "kit"=>S::Kit(semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ let mut fields=body.splitn(3,'\n');let tag=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope subset"))?.trim().strip_prefix("subset=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires subset header"))?;let schema=fields.next().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"missing Semio envelope schema"))?.trim().strip_prefix("schema=").ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio envelope requires schema header"))?;let body=fields.next().unwrap_or("");if !schema.len().is_multiple_of(2){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native odd hex length"))}let limits=super::semantic::subset_limits(limits,schema.len()/2,tag)?;hex_text_into(&mut output.schema,schema,control)?;
+ match tag{
+ "brep"=>select!(output,Brep,semio_s_artifact_stdio_semio_brep,document_into,body,control,limits),
+ "mesh"=>select!(output,Mesh,semio_s_artifact_stdio_semio_mesh,document_into,body,control,limits),
+ "model"=>select!(output,Model,semio_s_artifact_stdio_semio_model,document_into,body,control,limits),
+ "value"=>select!(output,Value,semio_s_artifact_stdio_semio_value_model,document_into,body,control,limits),
+ "document"=>select!(output,Document,semio_s_artifact_stdio_semio_document,document_into,body,control,limits),
+ "cad"=>select!(output,Cad,semio_s_artifact_stdio_semio_cad,document_into,body,control,limits),
+ "drawing"=>select!(output,Drawing,semio_s_artifact_stdio_semio_drawing,document_into,body,control,limits),
+ "image"=>select!(output,Image,semio_s_artifact_stdio_semio_image,document_into,body,control,limits),
+ "video"=>select!(output,Video,semio_s_artifact_stdio_semio_video_model,document_into,body,control,limits),
+ "audio"=>select!(output,Audio,semio_s_artifact_stdio_semio_audio_model,document_into,body,control,limits),
+ "animation"=>select!(output,Animation,semio_s_artifact_stdio_semio_animation,document_into,body,control,limits),
+ "presentation"=>select!(output,Presentation,semio_s_artifact_stdio_semio_presentation,document_into,body,control,limits),
+ "flow"=>select!(output,Flow,semio_s_artifact_stdio_semio_flow,document_into,body,control,limits),
+ "text"=>select!(output,Text,semio_s_artifact_stdio_semio_text_model,document_into,body,control,limits),
+ "table"=>select!(output,Table,semio_s_artifact_stdio_semio_table_model,document_into,body,control,limits),
+ "graph"=>select!(output,Graph,semio_s_artifact_stdio_semio_graph,document_into,body,control,limits),
+ "object"=>select!(output,Object,semio_s_artifact_stdio_semio_object,document_into,body,control,limits),
+ "kit"=>select!(output,Kit,semio_s_artifact_stdio_semio_kit,document_into,body,control,limits),
  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio native envelope subset tag"))
- });let value=Owned::new(crate::schema::snapshot::SemioSnapshot{schema:schema.take(),subset:subset.take()});control.checkpoint()?;Ok(value.take())
+ }
+ Ok(())
 }
 }
 

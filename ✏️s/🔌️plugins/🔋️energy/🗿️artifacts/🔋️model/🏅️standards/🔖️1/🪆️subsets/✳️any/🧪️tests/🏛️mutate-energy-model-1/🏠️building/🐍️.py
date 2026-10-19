@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import math
 
-from mutate_energy_model_1_base import applied, head_link, no_op, rejected, unchanged
+from mutate_energy_model_1_mutation_vocabulary import applied, head_link, no_op, rejected, unchanged
 
 
 # region 🔖️Fixtures

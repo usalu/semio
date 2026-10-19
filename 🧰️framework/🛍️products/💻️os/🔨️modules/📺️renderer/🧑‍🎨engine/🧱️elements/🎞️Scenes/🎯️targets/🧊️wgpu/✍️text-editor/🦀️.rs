@@ -64,11 +64,11 @@ struct TextEditorRenameInfo {
     pub(crate) occurrences: Vec<TextEditorSpan>,
 }
 
-fn text_editor_completions(editor: &ui_wgpu::wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
+fn text_editor_completions(editor: &semio_framework_ui_declaration::ui::TextEditorScene) -> Vec<TextEditorCompletionItem> {
     editor.completions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default()
 }
 
-fn text_editor_rename_info(editor: &ui_wgpu::wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
+fn text_editor_rename_info(editor: &semio_framework_ui_declaration::ui::TextEditorScene) -> Option<TextEditorRenameInfo> {
     editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
 }
 
@@ -294,7 +294,7 @@ pub fn text_editor_move_completion(scene: &UiComponentSceneNode, down: bool) -> 
 /** ✅️ Commits the highlighted completion — `applyCompletion`: replace
  * `[identifier_prefix_start(text, caret), caret)` with the item's insert text, publish the buffer as
  * `textEdit`, and close the dropdown. */
-pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<usize>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<usize>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
@@ -317,7 +317,7 @@ pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, index: Option<
 /** ✏️ Arms the multi-span rename — React's `startRename`: the draft carries the scene's own
  * `rename_json` occurrences and current name, and the input takes keyboard focus so the next
  * keystrokes type the new name instead of editing the buffer. */
-pub fn text_editor_start_rename(scene: &UiComponentSceneNode, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn text_editor_start_rename(scene: &UiComponentSceneNode, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     let Some(info) = scene.text_editor.as_ref().and_then(text_editor_rename_info) else {
         return false;
     };
@@ -356,13 +356,13 @@ pub fn text_editor_update_rename(scene: &UiComponentSceneNode, next_text: &str) 
 
 /// ✏️ Commits the rename — `commitRename { occurrences, text }`, React's own payload — and disarms
 /// the draft.
-pub fn text_editor_commit_rename(scene: &UiComponentSceneNode, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_commit_rename(scene: &UiComponentSceneNode, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(draft) = text_editor_ui(&scene.host_id).rename else {
         return Ok(false);
     };
-    let action = ui_wgpu::wgpu::text_editor_actions::COMMIT_RENAME;
+    let action = semio_framework_ui_declaration::ui::text_editor_actions::COMMIT_RENAME;
     let spans = serde_json::to_string(&draft.occurrences.iter().map(|(start, end)| json!({ "start": start, "end": end })).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into());
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "text", &draft.text, "occurrences", &spans])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "text", &draft.text, "occurrences", &spans])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
     {
         let builder = reservation.builder();
@@ -404,7 +404,7 @@ pub fn text_editor_cancel_rename(scene: &UiComponentSceneNode) -> bool {
  * this target has no OS clipboard binding at all (`ui_wgpu::wgpu::events`' `UiCommand::Clipboard*`
  * still says the read/write is an unwired host concern), so pretending to handle them would swallow
  * the row instead of leaving it dispatchable. */
-pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, action: &str, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_local_menu_action(scene: &UiComponentSceneNode, inner: Rect, action: &str, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };
@@ -457,7 +457,7 @@ const TEXT_EDITOR_LOCAL_MENU_ACTIONS: [&str; 6] = ["requestCompletions", "sugges
  * `onKeyDown` prelude (`🧱️elements/✏️TextEditor/🟦️.tsx:556-608`): `Ctrl/Cmd+Space` opens completions,
  * `F2` starts a rename, and while either popup is open its own arrow/commit/dismiss keys win over
  * editing. `false` leaves the key to `semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_apply_key_into`. */
-pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &semio_framework_ui_wgpu_input::PointerModifiers, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let ui = text_editor_ui(&scene.host_id);
     let accelerator = modifiers.ctrl || modifiers.meta;
     if semio_framework_os_renderer_wgpu_engine_text::text_editor::text_editor_explicit_draft_settings(scene).is_some() {
@@ -518,7 +518,7 @@ pub fn text_editor_popup_key(scene: &UiComponentSceneNode, key: &KeyAction, modi
  * (React's `event.altKey && completions.length > 0` branch in `onContextMenu`); a press on an open
  * dropdown row commits that row; a press anywhere else closes it, the way an outside press dismisses
  * any popup. `false` leaves the press to the caret/selection path. */
-pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn text_editor_popup_pointer(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(editor) = scene.text_editor.as_ref() else {
         return Ok(false);
     };

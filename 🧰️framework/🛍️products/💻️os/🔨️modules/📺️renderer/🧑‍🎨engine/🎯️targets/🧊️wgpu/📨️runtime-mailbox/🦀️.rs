@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use ui_wgpu::wgpu::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
 use semio_framework_os_renderer_wgpu_mailbox_core as runtime_mailbox_core;
 use semio_framework_os_renderer_wgpu_program_bridge as program_bridge;
 

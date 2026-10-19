@@ -7,7 +7,7 @@ test("Windows allocation uses one private sequential creator instead of optional
  const file=new URL("../../🟦️.ts",import.meta.url),tree=ts.createSourceFile("fixed.ts",readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true),fn=tree.statements.find(row=>ts.isFunctionDeclaration(row)&&row.name?.text==="fixedCommandSpec");if(!fn)throw Error("Actual fixed command owner required");const bindings={process:{platform:"win32"},Object,join:win32.join,dirname:win32.dirname,nativeImageRootV1:(p:string)=>win32.join(p,"data"),literal:(s:string)=>"'"+s.replaceAll("'","''")+"'",fixedExecutable:()=>"system-powershell",nativeFixedWindowsSystemV1:()=>({powershell:"system-powershell",system:"D:\\Windows\\System32",windows:"D:\\Windows",modulePath:"D:\\Windows\\System32\\Modules"})},code=ts.transpileModule(fn.getText(tree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,run=new Function(...Object.keys(bindings),code+";return fixedCommandSpec;")(...Object.values(bindings)),spec=run({directory:"D:\\owned",filesystemBytes:33554432,maximumPhysicalBytes:34603008},"allocate",false,"FileStream private sequential allocation");expect(spec.args.join(" ")).not.toContain("New-VHD");expect(spec.args.join(" ")).toContain("FileStream");
 });
 
-import{withBuildTestInvocationV1}from"../../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{createHash}from"node:crypto";

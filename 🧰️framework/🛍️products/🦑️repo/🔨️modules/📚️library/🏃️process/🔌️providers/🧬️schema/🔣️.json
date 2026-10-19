@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:repo:library:process:script-provider-designation",
+  "title": "Repository script provider designation",
+  "description": "Closed declaration of the repository modules that implement the framework-owned script ports. Each module path is relative to the declaration file. The wire map handed to script processes and the build graph inputs of every target whose script loads providers both derive from this one declaration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "providers"],
+  "properties": {
+    "version": { "const": 1 },
+    "providers": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$", "maxLength": 64 },
+      "additionalProperties": { "type": "string", "minLength": 3, "maxLength": 512, "pattern": "^\\.\\.?/[^\\u0000\\\\]+$" }
+    }
+  }
+}

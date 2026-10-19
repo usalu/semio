@@ -1,7 +1,7 @@
 /** 📦️ Inline root: module exporting `inlineRootFileModules`. */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { parseRustSourceTree } from "../🌳️module-tree/🟦️.ts";
 import type { TestTransformResult } from "../🧪️test-closure/🟦️.ts";
 

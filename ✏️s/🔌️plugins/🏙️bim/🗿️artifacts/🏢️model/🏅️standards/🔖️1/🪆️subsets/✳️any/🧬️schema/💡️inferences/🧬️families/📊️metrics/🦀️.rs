@@ -2,7 +2,8 @@
 //! visibility, material, volume, area, triangle count and bounds, plus the area and vertex count of the outline of a profile family. The python oracle re-derives the whole table from the same committed snapshot
 //! with its own evaluator and numpy/shapely geometry; the committed expectation is written by that file, never by hand.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, ParameterKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyValue, ParameterValue, ResolvedParameter};
 use semio_framework_geometry::loops;
 use std::collections::BTreeMap;

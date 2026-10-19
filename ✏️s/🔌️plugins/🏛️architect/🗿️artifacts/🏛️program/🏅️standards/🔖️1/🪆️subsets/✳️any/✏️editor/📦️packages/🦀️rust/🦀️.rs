@@ -52,7 +52,7 @@ pub mod editor {
         #[path = "../../🦀️.rs"]
         mod component;
         pub use component::*;
-        pub use semio_s_artifact_architect_program_snapshot::editor::architect::base;
+        pub use semio_s_artifact_architect_program_snapshot::editor::architect::editor_vocabulary;
         pub use semio_s_artifact_architect_program_panels::editor::architect::behavior;
         #[path = "."]
         pub mod config {

@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import * as ownerSqlite0 from "../🟦️.ts";
 import{expect,test}from"bun:test";
 import Ajv from"ajv";
@@ -7,7 +7,6 @@ import laws from"./🧫️fixtures/🔣️.json";
 import snapshot from"../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/👥️stakeholder-creates-a/📸️snapshot/➡️after/🔣️.json";
 import schema from"../../../../🧬️schema/📸️snapshot/🔣️.json";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import * as owner from"../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import * as artifact from"../../../../🧬️schema/🟦️.ts";
 import * as jsonBoundary from"../../../📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts";
@@ -27,7 +26,7 @@ test("Architect independent schema admits the persisted parent fixture",()=>{exp
 test("Architect independent schema admits literal independent child identities",()=>{const input=structuredClone(snapshot);input.knowledge.childId="local 世界\0";input.knowledge.target.artifactId="foreign !@";input.benchmarks.childId="";input.benchmarks.target.artifactId="same";expect(independentSchema(input)).toBe(true);const expected=programArtifactFromJson(input);expect(owner.parseProgramSnapshot(expected) as unknown).toEqual(expected)});
 test("Architect neutral identity corpus is independently parsed without normalizing literal domains",()=>{expect(JSON.parse(JSON.stringify(laws.idTexts))).toEqual(laws.idTexts);expect(laws.control.largeCharacters).toBeGreaterThan(65536)});
 test("Architect public persisted facade exposes both complete semantic directions",()=>{expect(Object.hasOwn(ownerSqlite0,"programSnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(ownerSqlite0,"programSnapshotFromSqliteDatabase")).toBe(true)});
-async function completeFixture(){const input=structuredClone(snapshot) as Record<string,unknown>;for(const[key,folder,caseName]of laws.registerFixtures){const source=await Bun.file(new URL("../../../../🧫️fixtures/🧬️mutations"+folder+"/"+caseName+"/📸️snapshot/➡️after/🔣️.json",import.meta.url)).json();expect(source[key!]).toHaveLength(1);input[key!]=source[key!]}return programArtifactFromJson(input)}
+async function completeFixture(){const input=structuredClone(snapshot) as Record<string,unknown>;for(const[key,folder,caseName]of laws.registerFixtures){const source=await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/"+folder+"/"+caseName+"/📸️snapshot/➡️after/🔣️.json",import.meta.url)).json();expect(source[key!]).toHaveLength(1);input[key!]=source[key!]}return programArtifactFromJson(input)}
 test("Architect complete sixty-five typed bodies round-trip through independently queryable SQLite",async()=>{const expected=await completeFixture();const actual=await ownerSqlite0.programSnapshotToSqliteDatabase(expected);expect(actual.tables).toHaveLength(685);const physical=await exportSqliteDatabase(actual);const db=Database.deserialize(physical);try{expect(db.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);for(const[register,table]of Object.entries(laws.registerTables)){const headers=db.query("SELECT id,ordinal FROM architect_entity_header WHERE register=?").all(register) as{id:number;ordinal:number}[];expect(headers).toHaveLength(1);expect(headers[0]!.ordinal).toBe(0);expect(db.query("SELECT id FROM "+table).all()).toEqual([{id:headers[0]!.id}])}const imported=await importSqliteDatabase(db.serialize());const restored=await ownerSqlite0.programSnapshotFromSqliteDatabase(imported);expect(restored).toEqual(expected)}finally{db.close()}});
 
 test("Architect authored global and shared header entities declare independently queryable columns",async()=>{const file=Bun.file(new URL("../🗄️.sql",import.meta.url));expect(await file.exists()).toBe(true);const db=new Database(":memory:");try{db.run(await file.text());for(const[table,count]of Object.entries(laws.coreColumns))expect(db.query('PRAGMA table_info("'+table+'")').all().length).toBe(count);expect(db.query("SELECT name FROM sqlite_schema WHERE type='index'").all()).toEqual([]);expect(db.query("PRAGMA foreign_key_check").all()).toEqual([])}finally{db.close()}});

@@ -1,7 +1,7 @@
 import ts from"typescript";
 import{captureOwnedCommandResultV1}from"@semio-tech/process/owned-execution/capture";
 import policy from"../🧬️schema/🔣️.json"with{type:"json"};
-import{registerBuildTestLawV1}from"../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";

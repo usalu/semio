@@ -122,7 +122,7 @@ async fn a_streamed_gesture_is_one_transaction_and_one_undo_step() {
     let transaction = rows[0].transaction.as_ref().unwrap();
     assert!(transaction.id.starts_with("tx-") && transaction.tool == "s.note.note@1/*#editor#inkApplyEvents", "{transaction:?}");
     assert_eq!(rows[0].op_count, 1, "one net create-block, not one op per tick");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo erases the whole gesture");
 }
 

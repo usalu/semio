@@ -10,8 +10,8 @@ pub mod paged_list;
 #[path="../🧺️std-collections/🦀️.rs"]
 mod std_collections;
 pub use std_collections::{RetainedCloneEntries,RetainedCloneEntriesCursor};
-#[path="../🔗️shared/🦀️.rs"]
-pub mod shared;
+#[path="../🔗️issuance-clone/🦀️.rs"]
+pub mod issuance_clone;
 #[path="../📋️field/🦀️.rs"]
 mod field;
 pub use field::RetainedFieldCursor;

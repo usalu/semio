@@ -107,7 +107,7 @@ describe("manifestless source closure", () => {
       expect(accepted.stdout).toBe(fixture.descriptorProbe.base64);
       const rejected = run(incomplete);
       expect(rejected.status).not.toBe(0);
-      expect(rejected.stderr).toContain("Missing actor export reactor.poll");
+      expect(rejected.stderr).toContain(`Missing actor export reactor.${(descriptor.ACTOR_COMPONENT_EXPORTS as Record<string, readonly string[]>)["reactor"]![0]}`);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

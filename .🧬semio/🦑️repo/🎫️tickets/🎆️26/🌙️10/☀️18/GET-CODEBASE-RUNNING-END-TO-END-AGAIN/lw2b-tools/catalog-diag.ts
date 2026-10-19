@@ -1,0 +1,11 @@
+import { inventorySchemaScopes } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+const inventory = inventorySchemaScopes(process.cwd(), loadCatalogTaxonomy());
+const byCode = new Map<string, number>();
+for (const d of inventory.diagnostics) byCode.set(d.code, (byCode.get(d.code) ?? 0) + 1);
+console.log(JSON.stringify([...byCode.entries()].sort((a, b) => b[1] - a[1])));
+const mine = inventory.diagnostics.filter((d) => /artifact-reference|artifact-child|artifact-link|blob-ref|os\.store\.(child|link|blob)/u.test(JSON.stringify(d)));
+console.log("mine", mine.length);
+for (const d of mine.slice(0, 12)) console.log(JSON.stringify(d).slice(0, 380));
+const ar = inventory.modules.filter((m) => m.modulePath.includes("🗿️artifact-reference"));
+console.log("modules under artifact-reference", ar.map((m) => `${m.modulePath.split("artifact-reference")[1]} scope=${m.scopeId} level=${m.level}`));

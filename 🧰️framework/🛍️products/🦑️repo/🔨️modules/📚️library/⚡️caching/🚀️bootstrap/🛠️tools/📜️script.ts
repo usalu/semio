@@ -3,7 +3,7 @@ import{isToolingHeadroomRefusalV1,withToolingHeadroomRecoveryV1,type ToolingHead
 import {nxSdkCompilerEnvironmentV1} from "./📦️sdk/📥️source/🔗️derivative/🎛️environment/🟦️.ts";
 import{requireNxSdkDerivativePatchImagesV1,requireNxSdkDerivativeReceiptImagesV1}from"./📦️sdk/📥️source/🔗️derivative/🩹️patch/🟦️.ts";
 import snapshotPolicy from"./🔏️authorizers/📦️snapshot/🔣️policy.json";
-import{withNxSdkDerivativeProjectionV1}from"./📦️sdk/📥️source/🔗️derivative/🟦️.ts";
+import{withNxSdkDerivativeProjectionV1,requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}from"./📦️sdk/📥️source/🔗️derivative/🟦️.ts";
 import{withNxSdkDerivativeReaderV1}from"./📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts";
 import{nxSdkDerivativeHeadroomBytesV1}from"./📦️sdk/🎟️capacity/🧮️formula/🟦️.ts";
 import{captureNxSdkPublicationInputsV1,withNxSdkDerivativePublicationV1,type NxSdkClonePublicationV1}from"./📦️sdk/🎟️capacity/📥️physical/🟦️.ts";
@@ -18,8 +18,8 @@ import retentionSchema from "./🧹️retention/📥️physical/🧬️schema/�
 import {preflightNxAuthorizersV1} from "./🔏️authorizers/📥️loading/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{statfs}from"node:fs/promises";
 import{readNxSdkSourceIndexV1,readNxSdkSourceMetadataV1,nxSdkSourceHashV1,nxSdkSourceIndexPolicyV1}from"./📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts";
 import{nxSdkDerivativeDispositionV1}from"./📦️sdk/📥️source/🔗️derivative/🟦️.ts";
@@ -35,7 +35,7 @@ import {scriptCompilerAdmissionControlV1} from "../../../../../../../🔨️modu
 import { createRequire } from "node:module";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { prepareBun } from "./🟦️bun/📜️script.ts";
 import { withResourceLeases } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
@@ -197,7 +197,7 @@ async function provisionNxToolsOwnedV1(workspace: string, store:RepositoryToolin
   },quote);
   };
 
-  return withNxSdkDerivativePublicationV1(root,store,projection,capturedInputs,control,quote=>publish(quote));
+  return withNxSdkDerivativePublicationV1(root,store,projection,capturedInputs,control,quote=>publish(quote),{requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1});
   });
 }
 
@@ -212,4 +212,4 @@ export async function planNxToolingStorageV1(workspace:string,invocation:import(
 export async function prepareNxToolingStorageV1(workspace:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);const request=await planNxToolingStorageV1(workspace,invocation,phaseControl);checkResourceLeaseControl(phaseControl);if(!request.publicationRequired)return;await prepareManagedToolingStorageV1(workspace,invocation,phaseControl,{version:1,minimumAvailableBytes:request.minimumAvailableBytes});checkResourceLeaseControl(phaseControl);}
 
 /** ♻️ Retries one exact pre-write refusal only after all tooling readers and quote scopes have settled. */
-export function withNxToolingHeadroomRecoveryV1<T>(workspace:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl,attempt:(actualPhase:ResourceLeaseControl)=>Promise<T|ToolingHeadroomRefusalV1>):Promise<T>{return withToolingHeadroomRecoveryV1(repositoryCachePartitionRootV1(workspace,"tools"),invocation,phaseControl,attempt,async(minimumAvailableBytes,actualPhase)=>{checkResourceLeaseControl(actualPhase);const{withRepositoryCacheStoreQueuedMaintenanceV1}=await import("../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts"),{retireQuiescentManagedToolingGenerationsV1}=await import("./🧹️retention/📥️physical/🟦️.ts");checkResourceLeaseControl(actualPhase);await withRepositoryCacheStoreQueuedMaintenanceV1(workspace,"tools",invocation,actualPhase,{version:1,mode:"queued",maximumWaitMilliseconds:0},(store,maintenancePhase)=>retireQuiescentManagedToolingGenerationsV1(workspace,store,maintenancePhase,{version:1,mode:"quiescent-generations",minimumAvailableBytes}));});}
+export function withNxToolingHeadroomRecoveryV1<T>(workspace:string,invocation:import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl,attempt:(actualPhase:ResourceLeaseControl)=>Promise<T|ToolingHeadroomRefusalV1>):Promise<T>{return withToolingHeadroomRecoveryV1(repositoryCachePartitionRootV1(workspace,"tools"),invocation,phaseControl,attempt,async(minimumAvailableBytes,actualPhase)=>{checkResourceLeaseControl(actualPhase);const{withRepositoryCacheStoreQueuedMaintenanceV1}=await import("../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts"),{repositoryCacheOrdinaryMaintenanceV1}=await import("../../💾️storage/🔒️enforcement/📦️budget/🟦️.ts"),{retireQuiescentManagedToolingGenerationsV1}=await import("./🧹️retention/📥️physical/🟦️.ts");checkResourceLeaseControl(actualPhase);await withRepositoryCacheStoreQueuedMaintenanceV1(workspace,"tools",invocation,actualPhase,repositoryCacheOrdinaryMaintenanceV1(),(store,maintenancePhase)=>retireQuiescentManagedToolingGenerationsV1(workspace,store,maintenancePhase,{version:1,mode:"quiescent-generations",minimumAvailableBytes}));});}

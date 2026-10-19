@@ -1,6 +1,9 @@
 //! 📈️ `set-ramp` payload. Sets any of a ramp's authored path, width, landing lengths, slope limit, thickness, material, base offset, top constraint, side railings and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::RampPatch}, snapshot::{ModelSnapshot, TopConstraint, Vertex}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RampPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{TopConstraint, Vertex};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

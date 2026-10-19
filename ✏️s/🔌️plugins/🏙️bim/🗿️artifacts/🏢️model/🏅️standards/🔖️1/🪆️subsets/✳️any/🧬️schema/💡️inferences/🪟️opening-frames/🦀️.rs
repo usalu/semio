@@ -16,13 +16,15 @@
 //! host that has its full thickness (the join-trimmed extent) and strictly below the top, with the one tolerance [`LENGTH_EPS`]; a hole that touches the
 //! border of the face is [`OpeningIssue::OutsideTrimmedExtent`].
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, mark, seg};
-use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::depth_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{mark, segment_of};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{elevation_at, ElevationPoint};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Profile, Swing, Wall, WindowType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, DoorLeaves, OpeningKind, Point2, Profile, Swing};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, DoorType, ModelSnapshot, Opening, Wall, WindowType};
 use semio_framework_geometry::placement::Affine3;
 use semio_framework_geometry::vector::{perp, LENGTH_EPS};
 use semio_framework_geometry::{Point, Vec2};
@@ -366,7 +368,7 @@ pub fn frame_of(snapshot: &ModelSnapshot, id: &str, own: &CutRect, host: Option<
     if !overlaps.is_empty() {
         issues.push(OpeningIssue::OverlapsSibling);
     }
-    let axis = seg(&host.axis);
+    let axis = segment_of(&host.axis);
     let (centre, tangent) = (axis.point_at_length(opening.offset), axis.tangent_at_length(opening.offset));
     let facing = if opening.flip_facing { -1.0 } else { 1.0 };
     let (x, y) = (tangent * facing, perp(tangent) * facing);

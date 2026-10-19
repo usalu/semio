@@ -142,12 +142,12 @@ export abstract class VerifyScript extends VerifyGateLanes {
         if (await result.exited !== 0) throw new Error("Browser actor host context worker test failed");
         return;
       }
-      const { testBrowserActorHostContext } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🟦️.ts");
+      const { testBrowserActorHostContext } = await import("@semio-tech/framework-plugin/browser-bundle/view-context/testing/host-opening-context");
       testBrowserActorHostContext();
       return;
     }
     if (segments[0] === "resolved-host-context") {
-      const { testResolvedHostContext } = await import("../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧪️tests/🪟️resolved-host-context/🟦️.ts");
+      const { testResolvedHostContext } = await import("@semio-tech/framework/manifest/view-context/testing/resolved-host-context");
       testResolvedHostContext();
       return;
     }
@@ -158,12 +158,12 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     
     if (segments[0] === "shared-dynamic-value") {
-      const { testSharedDynamicValueOracle } = await import("../../../../../../🔨️modules/🌱️value/🧪️tests/🔣️json-projection/🟦️.ts");
+      const { testSharedDynamicValueOracle } = await import("@semio-tech/value-ts/testing/json-projection");
       testSharedDynamicValueOracle();
       return;
     }
     if (segments[0] === "shared-artifact-addressing") {
-      const { testContentIdOracle, testSharedArtifactAddressingOracle } = await import("../../../../../💻️os/🔨️modules/🏪️store/🧪️tests/🪪️artifact-addressing/🟦️.ts");
+      const { testContentIdOracle, testSharedArtifactAddressingOracle } = await import("@semio-tech/framework-os/modules/store/testing/artifact-addressing");
       testSharedArtifactAddressingOracle();
       testContentIdOracle();
       if (segments[1] === "oracle") return;
@@ -173,9 +173,9 @@ export abstract class VerifyScript extends VerifyGateLanes {
     }
     
     if (segments[0] === "retained-window-input") {
-      const { testRetainedWindowInputOracle } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts");
+      const { testRetainedWindowInputOracle } = await import("@semio-tech/framework-plugin/window/transient/testing/retained-window-input");
       testRetainedWindowInputOracle();
-      const { testRecursiveOwnedDocumentReplacementOracle } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts");
+      const { testRecursiveOwnedDocumentReplacementOracle } = await import("@semio-tech/framework-plugin/testing/composition");
       testRecursiveOwnedDocumentReplacementOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -183,7 +183,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "publication-retirement-authority") {
-      const { testPublicationRetirementAuthorityOracle } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🟦️.ts");
+      const { testPublicationRetirementAuthorityOracle } = await import("@semio-tech/framework-plugin/testing/publication-retirement-authority");
       testPublicationRetirementAuthorityOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -200,7 +200,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "snapshot-read-retirement") {
-      const { testSnapshotReadRetirement } = await import("../../../../../💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts");
+      const { testSnapshotReadRetirement } = await import("@semio-tech/framework-os/modules/store/testing/snapshot-read-retirement");
       testSnapshotReadRetirement();
       runCmd("bun", [this.root + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", this.root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts"], { cwd: this.root });
       if (segments[1] === "native") {
@@ -247,7 +247,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "shared-map-delta") {
-      const { testSharedMapDeltaOracle } = await import("../../../../../../🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts");
+      const { testSharedMapDeltaOracle } = await import("@semio-tech/framework-replication/mutation/map/testing/shared-map-delta-source");
       testSharedMapDeltaOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -324,7 +324,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "owned-document-closure") {
-      const { testOwnedDocumentClosureOracle } = await import("../../../../../💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️tests/🔬️unit/🟦️.ts");
+      const { testOwnedDocumentClosureOracle } = await import("@semio-tech/framework-os/modules/store/composition/closure/testing/unit");
       testOwnedDocumentClosureOracle();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️closure/🟦️.ts")], { cwd: this.root });
       if (segments[1] === "native") {
@@ -361,7 +361,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       if (segments.length > 3 || (segments[1] !== undefined && segments[1] !== "native") || (nativePhase !== undefined && nativePhase !== "renderer-host" && nativePhase !== "consumers")) {
         throw new Error("node-graph-viewport-ownership accepts native with the optional renderer-host or consumers phase");
       }
-      const flowRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust");
+      const flowRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust");
       const reactRoot = join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript");
       const surfaceRoot = join(this.root, "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust");
       runCmd("bun", [join(flowRoot, "📜️script.ts"), "declarations"], { cwd: flowRoot });
@@ -521,7 +521,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "media-export-encoding") {
-      const { testMediaExportEncodingContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts");
+      const { testMediaExportEncodingContract } = await import("@semio-tech/framework-kernel/testing/media-export-encoding");
       testMediaExportEncodingContract();
       // 🧬️ `tsc --strict` over the codec twin alone: it is self-contained by construction, whereas the
       // law imports `🎠️kernel/🎬️media-export/🟦️.ts` and would drag the whole renderer graph (and its pre-existing,
@@ -535,10 +535,10 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "video-render-export") {
-      const { testVideoRenderProgramContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts");
-      const { testVideoRenderJobContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts");
-      const { testRasterVideoAvcPcmContract } = await import("../../../../../../🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🟦️.ts");
-      const { testVideoRenderHostContract } = await import("../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts");
+      const { testVideoRenderProgramContract } = await import("@semio-tech/framework-kernel/testing/video-render-program");
+      const { testVideoRenderJobContract } = await import("@semio-tech/framework-kernel/testing/video-render-job");
+      const { testRasterVideoAvcPcmContract } = await import("@semio-tech/framework/raster/video/testing/unit");
+      const { testVideoRenderHostContract } = await import("@semio-tech/framework-os/modules/renderer/engine/elements/VideoRenderHost/testing/unit");
       testVideoRenderProgramContract();
       testVideoRenderJobContract();
       testRasterVideoAvcPcmContract();
@@ -554,7 +554,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "file-open-import") {
-      const { testFileOpenImportContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🟦️.ts");
+      const { testFileOpenImportContract } = await import("@semio-tech/framework-kernel/testing/file-open-import");
       testFileOpenImportContract();
       // 🧬️ `tsc --strict` over the PAGE half alone: it imports nothing, which is the whole point — it is
       // the one module allowed to name `document` on this target, and it must type-check against the DOM
@@ -568,7 +568,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "ui-dirty-scope") {
-      const { testUiDirtyScopeContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/🐢️ui-dirty-scope/🟦️.ts");
+      const { testUiDirtyScopeContract } = await import("@semio-tech/framework-kernel/testing/ui-dirty-scope");
       testUiDirtyScopeContract();
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -578,7 +578,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
       return;
     }
     if (segments[0] === "spawned-job-drive") {
-      const { testSpawnedJobDriveContract } = await import("../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts");
+      const { testSpawnedJobDriveContract } = await import("@semio-tech/framework-kernel/testing/spawned-job-drive");
       await testSpawnedJobDriveContract();
       if (segments[1] === "native") {
         const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -594,7 +594,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
     
     
     if (segments[0] === "window-action-context") {
-      const { testWindowActionContextOracle } = await import("../../../../../💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️window-action-context/🟦️.ts");
+      const { testWindowActionContextOracle } = await import("@semio-tech/framework-os/modules/renderer/engine/testing/window-action-context");
       testWindowActionContextOracle();
       if (segments[1] === "oracle") return;
       const { runCargo } = await import("../../🏃️process/🦀️cargo/🏃️run/🟦️.ts");
@@ -621,7 +621,7 @@ export abstract class VerifyScript extends VerifyGateLanes {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_view_context_uses_the_addressed_instance"], join(this.root, "🧰️framework/📦️packages/🦀️rust"));
         return;
       }
-      const { testWindowViewContext } = await import("../../../../../../🔨️modules/🛂️manifest/🧪️tests/🔬️window-view-context/🟦️.ts");
+      const { testWindowViewContext } = await import("@semio-tech/framework/manifest/testing/window-view-context");
       testWindowViewContext();
       return;
     }

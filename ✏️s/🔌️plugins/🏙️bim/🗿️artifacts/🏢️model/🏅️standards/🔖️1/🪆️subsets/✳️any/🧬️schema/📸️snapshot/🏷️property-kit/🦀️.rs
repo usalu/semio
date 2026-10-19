@@ -1,7 +1,7 @@
 //! 🏷️ The vocabulary of property templates and classification systems: what a property value is made of, which violations a definition can find in a value, the checks every authored template and classification table must pass, and the
 //! navigation of an entry table. Pure and base-free: whether the elements a template applies to exist, and which values they carry, is decided by the leaves and by the inference, never here.
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
 use crate::standards::v1::subsets::any::schema::snapshot::entities::ClassificationSystem;
 use std::collections::BTreeSet;
 

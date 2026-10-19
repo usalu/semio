@@ -225,7 +225,7 @@ const wholeLog = (replicas: Record<Name, Replica>) => [...new Map([...replicas.a
 //#endregion 🧮️Twin
 
 //#region 🧪️Corpus
-const corpus = read("../../🧫️fixtures/🧫️viewer-head/🔣️.json");
+const corpus = read("../🧫️fixtures/🧫️viewer-head/🔣️.json");
 const cases = corpus.cases as Case[];
 
 test("🧬️ the viewer-head corpus satisfies its JSON Schema", () => {

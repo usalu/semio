@@ -6,7 +6,7 @@ import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts
 import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences } from "../../🔍️discovery/🧷️rust-path-references/🟦️.ts";
 import { inspectRustCargoManifest, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, type RustModuleGraph } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts";
-import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
 import { basename, dirname, posix } from "node:path";
 import { requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { checkCancellation } from "../🏷️file-kind-matching/🟦️.ts";

@@ -44,7 +44,7 @@ def _load(alias, folder):
     return module
 
 
-base = _load("mutate_energy_model_1_base", "🧱️base")
+mutation_vocabulary = _load("mutate_energy_model_1_mutation_vocabulary", "🧱️mutation-vocabulary")
 building = _load("mutate_energy_model_1_building", "🏠️building")
 openings = _load("mutate_energy_model_1_openings", "🪟️openings")
 fabric = _load("mutate_energy_model_1_fabric", "🪨️fabric-and-gains")
@@ -53,7 +53,7 @@ zone_systems = _load("mutate_energy_model_1_zone_systems", "🔧️zone-systems"
 power = _load("mutate_energy_model_1_power", "🔌️power-and-plant")
 schedules = _load("mutate_energy_model_1_schedules", "📆️schedules-and-layers")
 
-from mutate_energy_model_1_base import unwrap, wire_tag
+from mutate_energy_model_1_mutation_vocabulary import unwrap, wire_tag
 from mutate_energy_model_1_building import FIELD_LEAVES, _zone
 # endregion 🔖️Imports
 

@@ -1,8 +1,9 @@
 //! 🗨️ `set-issue-comment` payload. Sparsely changes a comment: its author, its moment and its text. The issue of a comment never changes.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::diff::patches::IssueCommentPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::IssueCommentPatch;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

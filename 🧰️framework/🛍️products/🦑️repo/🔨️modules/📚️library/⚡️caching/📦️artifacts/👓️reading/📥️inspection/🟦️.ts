@@ -1,10 +1,10 @@
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
 import {createHash} from "node:crypto";
 import {join,relative} from "node:path";
 import {lstat,open,opendir} from "node:fs/promises";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "@semio-tech/process/leases";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import type {RepositoryArtifactReaderOptionsV1} from "../📋️contract/🟦️.ts";
 import type {ArtifactGroupInspectionBudgetV1} from "../📚️group/📏️budget/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

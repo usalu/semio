@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.note.note;
 import "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message NoteDiff {
   optional string schema = 1;
   optional string id = 2;
@@ -21,7 +21,7 @@ message NoteDiff {
 message NoteStringNullable { optional string value = 1; }
 message NoteBoolNullable { optional bool value = 1; }
 message NoteDoubleNullable { optional double value = 1; }
-message NoteLinkNullable { optional semio.os.store.ArtifactLink value = 1; }
+message NoteLinkNullable { optional semio.framework.schema.artifact_link.ArtifactLink value = 1; }
 enum NoteBlockRowKind { NOTE_BLOCK_ROW_KIND_ADD = 0; NOTE_BLOCK_ROW_KIND_REMOVE = 1; NOTE_BLOCK_ROW_KIND_MOVE = 2; NOTE_BLOCK_ROW_KIND_PATCH = 3; }
 message NoteBlockRow { NoteBlockRowKind row = 1; optional string id = 2; optional string parent_id = 3; optional uint64 index = 4; optional NoteBlockNode block = 5; optional NoteBlockPatch patch = 6; optional string from_parent_id = 7; optional uint64 from_index = 8; }
 message NoteBlocksDelta { repeated NoteBlockRow rows = 1; }

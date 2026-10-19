@@ -1,19 +1,21 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
-use crate::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
 #[allow(unused_imports)]
-use crate::editor::bim::panels::properties::input_row;
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::input_row;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::message;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::{parameters, IssueOwner};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::parameters;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ParameterKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
 #[allow(unused_imports)]
 use semio_framework_plugin::tree_item_desc;
 #[allow(unused_imports)]
@@ -24,9 +26,9 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_ui_locale::Label;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::editor::bim::panels::properties::overrides::*;
-use crate::editor::bim::fixture::placed;
-use crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
+use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::overrides::{render_rows, rows};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::placed;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
 use semio_framework_plugin::{ui_node_list, PanelTreeBuilder, ViewModel};
 use semio_framework_ui_locale::{Locale, Terminology};
 
@@ -39,7 +41,7 @@ fn with(overrides: &[(&str, &str)]) -> ModelSnapshot {
 }
 
 fn labels(locale: Locale) -> &'static BimLabels {
-    crate::editor::bim::terminology::bim_labels(&ViewModel::new(locale, Terminology::Native))
+    semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&ViewModel::new(locale, Terminology::Native))
 }
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {

@@ -16,10 +16,15 @@
  * (`🧱️unowned`), and the gate fails on a listed parser that no longer drifts.
  *
  * A leaf split into component files keeps its parsers with the components: a new parser is written to the `🚪️parsers` folder next to the
- * file that declares its type (to the leaf when the leaf declares it), the leaf re-exports every parser its folders hold, and the audit reads
- * every file of the leaf's module tree below its `//#region 🚪️Parsers` marker, so a parser is checked wherever it lives and a second
- * definition of one is a drift (`duplicate`). `--distribute <leaf folder>` moves the fresh parsers of the leaves below a folder into the
- * component folders, verbatim and in leaf order.
+ * file that declares its type (to the leaf when the leaf declares it), and the audit reads every file of the leaf's module tree below its
+ * `//#region 🚪️Parsers` marker, so a parser is checked wherever it lives and a second definition of one is a drift (`duplicate`). The leaf
+ * re-exports nothing: whoever needs a parser, a sibling document or hand-written code, imports it from the file that holds it. The parser
+ * folders import the guard helpers of the leaf, so the leaf must never import a folder: a parser stays in the leaf when its type is declared
+ * there, when the leaf's own code or a parser that stays calls it, when its leaf is named by a package specifier, and when it sits in a cycle
+ * of calls between folders. `--distribute <leaf folder>` moves the fresh parsers of the leaves below a folder into the component folders,
+ * verbatim and in leaf order.
+ *
+ * A property whose schema states no structure while its declared type instantiates a generic of the codebase (`NamedTripleDiff<string, D, T>`) has no projection: the opaque read cannot produce that type, so the parser is refused (the schema must state the structure, or the parser is listed in `🧱️unowned`) rather than emitted with a cast.
  *
  * Documented limits: a schema property named like an array index (`"0"`, `"1"`) cannot keep its document order in a JavaScript object, so
  * its export is refused; integers beyond 2^53 stay exact, other floats print in JavaScript form (`1.0` as `1`); the tracked and untracked
@@ -35,7 +40,7 @@ import { Context, findOwner, parserKey, parserKeyParts, pointed, renderParser, t
 import { renderGraphql, renderProto, renderTsType, type Taken, type TypeScope } from "./📐️type-render/🟦️.ts";
 import { PARSER_REGION } from "./🚪️guard-helpers/🟦️.ts";
 import { LeafWriter } from "./✍️leaf-writer/🟦️.ts";
-import { ownedParserNames } from "./📍️parser-files/🟦️.ts";
+import { ParserFiles, ParserHomes, ownedParserNames, pinnedParsers } from "./📍️parser-files/🟦️.ts";
 import { loadUnowned, unownedKey, type UnownedParser } from "./🧱️unowned/🟦️.ts";
 import { FORMATS, LEAF, SchemaCatalog, SourceStore, buildOwnerIndex, exportsOf, facetOf, helperPrefix, leafPath, portable, readDocument } from "./🗂️documents/🟦️.ts";
 
@@ -256,7 +261,7 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
   if (options.restate.size > 0) {
     const unowned = new Set((options.unowned ?? loadUnowned().parsers).map((row) => unownedKey(row.path, row.name)));
     for (const row of auditParsers({ root, under, catalog, signal: options.signal })) {
-      if (row.reason !== "unrenderable" && options.restate.has(row.reason) && !unowned.has(unownedKey(row.path, row.name))) restated.add(parserKey(join(root, row.leaf), row.name));
+      if (row.reason !== "unrenderable" && row.reason !== "duplicate" && options.restate.has(row.reason) && !unowned.has(unownedKey(row.path, row.name))) restated.add(parserKey(join(root, row.leaf), row.name));
     }
   }
   const replaces = (target: string, name: string): boolean => replace.has(name) || restated.has(parserKey(target, name));
@@ -358,12 +363,28 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
   const spread = options.distribute ?? [];
   const drifted = new Set<ParserKey>();
   if (spread.length > 0) for (const row of auditParsers({ root, under, catalog, signal: options.signal })) drifted.add(parserKey(join(root, row.leaf), row.name));
+  const kept = new Map<string, string[]>();
+  const fresh = new Map<string, string[]>();
   for (const [target, plan] of plans) {
     const keep = [...emit].map(parserKeyParts).filter(([owner]) => owner === target).map(([, name]) => name).sort(codePointOrder);
-    const relativeTarget = portable(root, target);
-    const distributes = spread.some((folder) => relativeTarget.startsWith(`${folder}/`));
+    kept.set(target, keep);
+    const leaf = sources.read(target);
+    const region = leaf.indexOf(PARSER_REGION);
+    const distributes = spread.some((folder) => portable(root, target).startsWith(`${folder}/`));
+    fresh.set(target, !distributes || region < 0 ? [] : ownedParserNames(leaf.slice(region)).filter((name) => plan.exports.has(name) && !keep.includes(name) && !replaces(target, name) && !drifted.has(parserKey(target, name))));
+  }
+  const pins = new Map<string, ReadonlySet<string>>();
+  for (const [target, plan] of plans) {
+    const files = new ParserFiles(sources, target);
+    const names = [...plan.exports].filter((name) => kept.get(target)!.includes(name) || files.definingFile(name) !== undefined).sort(codePointOrder);
+    pins.set(target, pinnedParsers(sources, target, names, new Map(kept.get(target)!.map((name) => [name, plan.entries.get(name)!.local] as const)), new Set(fresh.get(target))));
+  }
+  const homes = new ParserHomes(sources, pins, new Set(specifiers.keys()), new Map([...fresh].map(([target, names]) => [target, new Set(names)] as const)));
+  for (const [target, plan] of plans) {
+    const keep = kept.get(target)!;
+    const distributes = spread.some((folder) => portable(root, target).startsWith(`${folder}/`));
     if (keep.length === 0 && !distributes) continue;
-    const writer = new LeafWriter(sources, root, target, plan.helper, mode === "apply", specifiers);
+    const writer = new LeafWriter(sources, root, target, plan.helper, mode === "apply", specifiers, homes);
     for (const name of keep) {
       const entry = plan.entries.get(name)!;
       if (entry.type !== undefined && !declares(TS, sources.declarations(target), name)) {
@@ -379,12 +400,7 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
         added.add("parser");
       }
     }
-    if (distributes) {
-      const leaf = sources.read(target);
-      const region = leaf.indexOf(PARSER_REGION);
-      const fresh = region < 0 ? [] : ownedParserNames(leaf.slice(region)).filter((name) => plan.exports.has(name) && !keep.includes(name) && !replaces(target, name) && !drifted.has(parserKey(target, name)));
-      writer.distribute(fresh);
-    }
+    if (distributes) writer.distribute(fresh.get(target)!);
     for (const file of writer.finish()) touched.add(file);
   }
   return { mode, under, closing, added: added.entries(), filesTouched: touched.size, refused: [...refused], rustAbsent: [...rustAbsent], touched: [...touched].sort(codePointOrder) };

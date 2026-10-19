@@ -6,7 +6,7 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
  * The repository build tool restores Rust outputs before these process consumers run. An explicit binary override
  * remains a strict prebuilt-artifact seam; both paths require an executable before Vitest starts. */
 import { join } from "node:path";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runVitest } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { requireMcpBinary } from "../../🟦️.ts";

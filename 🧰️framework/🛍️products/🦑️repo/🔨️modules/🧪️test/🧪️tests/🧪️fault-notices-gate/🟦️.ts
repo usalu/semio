@@ -115,8 +115,8 @@ function oracleSites(source: string): Located[] {
 
 describe("📢️ the schema-fault-notice gate", () => {
   test("the fixture satisfies its schema", () => {
-    
-    
+    const admit = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️fault-notices-gate/🔣️.json"), "utf8")));
+    for (const finding of [...fixture.plugin.findings, ...fixture.plugin.scoped.findings]) expect(admit(finding), JSON.stringify(finding)).toBe(true);
   });
 
   test("every snippet's sites are what the token gate and the tree-sitter oracle both read", () => {

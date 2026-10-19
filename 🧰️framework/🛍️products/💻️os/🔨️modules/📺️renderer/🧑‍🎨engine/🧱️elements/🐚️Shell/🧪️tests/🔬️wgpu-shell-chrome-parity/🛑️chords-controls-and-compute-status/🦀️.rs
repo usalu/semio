@@ -2,11 +2,11 @@
 
 //#region ⌨️Chords
 
-fn chord_key_action(key: &str) -> ui_wgpu::wgpu::KeyAction {
+fn chord_key_action(key: &str) -> semio_framework_ui_wgpu_input::KeyAction {
     match key {
-        "ArrowRight" => ui_wgpu::wgpu::KeyAction::ArrowRight,
-        "ArrowLeft" => ui_wgpu::wgpu::KeyAction::ArrowLeft,
-        other => ui_wgpu::wgpu::KeyAction::Char(other.to_string()),
+        "ArrowRight" => semio_framework_ui_wgpu_input::KeyAction::ArrowRight,
+        "ArrowLeft" => semio_framework_ui_wgpu_input::KeyAction::ArrowLeft,
+        other => semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
     }
 }
 
@@ -49,12 +49,12 @@ fn the_alt_axis_never_swallows_a_neighbouring_chord() {
     let accelerator = PointerModifiers { shift: false, ctrl: false, alt: false, meta: true };
     let with_alt = PointerModifiers { alt: true, ..accelerator };
     let bare = PointerModifiers::default();
-    assert!(!matches!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");
-    assert_eq!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
-    assert!(!matches!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::ArrowRight, &accelerator), Some(ShellShortcut::ModeStep(_))), "mod+arrowright is not a mode step — mod+alt+arrowright is");
-    assert!(is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
-    assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
-    assert!(!is_reserved_shell_chord(&ui_wgpu::wgpu::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
+    assert!(!matches!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("e".into()), &accelerator), Some(ShellShortcut::SurfaceRole(_))), "mod+e is not a role chord — mod+alt+e is");
+    assert_eq!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("v".into()), &bare), None, "a bare `v` is ordinary text");
+    assert!(!matches!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::ArrowRight, &accelerator), Some(ShellShortcut::ModeStep(_))), "mod+arrowright is not a mode step — mod+alt+arrowright is");
+    assert!(is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &accelerator), "mod+f stays the find chord");
+    assert!(!is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &with_alt), "mod+alt+f belongs to whoever declares it, not to find");
+    assert!(!is_reserved_shell_chord(&semio_framework_ui_wgpu_input::KeyAction::Char("f".into()), &bare), "a bare `f` is never a reserved shell accelerator — app actions such as zoomToFlow own it");
 }
 
 //#endregion ⌨️Chords

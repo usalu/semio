@@ -296,10 +296,10 @@ struct RecordWitness {
 
 fn witness(record: Option<&OwnedSchemaRecordCursor>) -> Option<RecordWitness> {
     record.map(|record| {
-        let pages = &record.tokens.pages;
+        let pages = record.decode_pages();
         RecordWitness {
-            storage: pages.slots.as_ptr() as usize,
-            capacity: pages.slots.len(),
+            storage: pages.slot_address(),
+            capacity: pages.allocation_byte_demand(),
             pages: pages.page_count(),
             bytes: pages.byte_count(),
             sealed: pages.is_sealed(),
@@ -350,7 +350,7 @@ impl Subject {
             Ok(authority) => authority,
             Err((record, fault, fields)) => {
                 failures.push(format!("fresh registry rejected setup: {fault:?}"));
-                let close_bound = unadmitted_close_bound(record.tokens.pages.page_count());
+                let close_bound = unadmitted_close_bound(record.decode_pages().page_count());
                 let mut rejected = ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields);
                 for _ in 0..close_bound {
                     let result = rejected.close_step(Grant::generous(1).retained());
@@ -371,7 +371,7 @@ impl Subject {
             Ok(rejected) => {drop(cx);caller.retire(grant);Some(Self::Registered { rejected: Box::new(rejected), registry, ticket })},
             Err(mut authority) => {
                 failures.push("unstarted public reject refused setup".into());
-                let close_bound = authority_close_bound(authority.record.as_ref().map_or(0, |record| record.tokens.pages.page_count()));
+                let close_bound = authority_close_bound(authority.record.as_ref().map_or(0, |record| record.decode_pages().page_count()));
                 for _ in 0..close_bound {
                     detach_and_close(&registry, Some(ticket), None, failures);
                     if let Err(error)=cx.with_retained_loan(grant,|cx|authority.close_step(cx)){failures.push(format!("original rejected setup close: {error:?}"));}
@@ -438,7 +438,7 @@ impl Subject {
     }
 
     fn teardown(&mut self, failures: &mut Vec<String>) {
-        let maximum_pages = self.record().map_or(0, |record| record.tokens.pages.page_count());
+        let maximum_pages = self.record().map_or(0, |record| record.decode_pages().page_count());
         let close_bound = match self {
             Self::Registered { .. } => registered_close_bound(maximum_pages),
             Self::Unadmitted(_) => unadmitted_close_bound(maximum_pages),
@@ -472,8 +472,8 @@ fn actual(result: &Result<RetainedCloneStep, semio_framework_value::ValueError>,
         copied_bytes: progress.copied_bytes,
         retained_capacity_bytes: progress.retained_capacity_bytes,
         released_bytes: progress.released_bytes,
-        remaining_pages: record.map_or(0, |record| record.tokens.pages.page_count()),
-        remaining_bytes: record.map_or(0, |record| record.tokens.pages.byte_count()),
+        remaining_pages: record.map_or(0, |record| record.decode_pages().page_count()),
+        remaining_bytes: record.map_or(0, |record| record.decode_pages().byte_count()),
         record_present: record.is_some(),
         terminal,
     }

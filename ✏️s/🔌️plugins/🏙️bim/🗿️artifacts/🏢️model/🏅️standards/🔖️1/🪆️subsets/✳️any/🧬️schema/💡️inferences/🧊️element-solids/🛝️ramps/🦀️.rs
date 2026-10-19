@@ -7,10 +7,11 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Wheelchair_ramp>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
-use crate::standards::v1::subsets::any::schema::snapshot::{standard_post_profile, standard_rail_profile, Ramp};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{standard_post_profile, standard_rail_profile, Ramp};
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::vector::Xyz;
@@ -277,11 +278,11 @@ pub fn ramp_solid(ramp: &Ramp, run: &RampRun) -> ElementSolid {
     let mut builder = SolidBuilder::new(SolidFamily::Ramp);
     let strip = strip_of(ramp);
     let stations = stations_of(&strip, run);
-    builder.add(parts::BODY, &ramp.material, 0, &body_mesh(&stations, ramp.thickness));
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, &ramp.material, 0, &body_mesh(&stations, ramp.thickness));
     let spec = RailSpec::standard();
     let paths: Vec<Vec<RailPoint>> = [(ramp.railing_left, true), (ramp.railing_right, false)].into_iter().filter(|(wanted, _)| *wanted).map(|(_, left)| edge_path(&stations, ramp.width, left, RAMP_RAIL_INSET)).collect();
     let (posts, rails) = railing_meshes(&paths, &spec);
-    builder.add(parts::POST, "", 1, &posts).add(parts::RAIL, "", 1, &rails);
+    builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::POST, "", 1, &posts).add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::RAIL, "", 1, &rails);
     builder.build()
 }
 

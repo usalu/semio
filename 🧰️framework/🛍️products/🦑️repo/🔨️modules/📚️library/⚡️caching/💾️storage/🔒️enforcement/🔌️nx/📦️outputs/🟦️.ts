@@ -1,7 +1,7 @@
 import{requireRecomputableStatePathV1}from"../../../../../../../../../🔨️modules/🏃️process/💾️state/📋️layout/🟦️.ts";
 import {isAbsolute,resolve,relative,sep} from "node:path";
-import {requireMaterializedPathV1} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {requireMaterializedPathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📦️ Resolves an output to one exact physical store and its actual publisher's resource identity. */

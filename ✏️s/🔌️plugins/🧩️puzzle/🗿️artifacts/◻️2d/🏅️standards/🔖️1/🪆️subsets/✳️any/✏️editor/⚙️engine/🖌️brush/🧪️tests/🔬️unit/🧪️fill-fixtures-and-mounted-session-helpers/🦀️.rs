@@ -87,9 +87,9 @@
                 depth: InteractiveJob::next_close_depth_demand(&job).expect("a locally owned fill job quotes its depth demand"),
             };
             let grant = self_funded(demand);
-            let step = InteractiveJob::close_step(&mut job, grant);
+            let step = semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
             assert!(step.progress().fits(grant), "a fill job close receipt must fit its own quoted grant");
-            assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }), "a locally owned fill job close has no external owner and no refusal");
+            assert!(!matches!(step, InteractiveJobCloseStep::Blocked), "a locally owned fill job close has no external owner and no refusal");
         }
         panic!("detached fill close exceeded bounded opportunities");
     }

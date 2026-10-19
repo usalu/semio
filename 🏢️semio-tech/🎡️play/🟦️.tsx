@@ -33,7 +33,7 @@ import { createBrowserStoragePort, resolvePlaygroundBoot, type ShellLocale } fro
 import { composeSpecificOsCatalogV1 } from "../../✏️s/🧑‍💻dev/🧩️catalog/🟦️.ts";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
-import { createFrameworkOsHostPortsV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts";
+import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import { PlayCard } from "./⚛️play-card.tsx";
 import { resolvePlayLocale, PLAY_PANES, playIntroduction, SEMIO_TECH_PLAY_LOGO_SVG, type PlayPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
@@ -109,7 +109,7 @@ const PLAY_INSETS = { top: "calc(var(--size-workbench) * 1.5)" } as const;
 
 /** 🎡️ One app's live shell on its own storage namespace; its own tour only while it is opened. */
 function PlayShell({ pane, opened, locale }: { readonly pane: PlayPaneSpec; readonly opened: boolean; readonly locale: ShellLocale }) {
-  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 128, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
+  const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const boot = useMemo(() => resolvePlaygroundBoot(catalog, pane.variant), [catalog, pane.variant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);

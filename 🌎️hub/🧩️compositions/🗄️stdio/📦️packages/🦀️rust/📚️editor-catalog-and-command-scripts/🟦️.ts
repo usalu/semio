@@ -1,20 +1,16 @@
 /** 📚️ The editor catalog contract, the stdio package manifests and the mutation inventory, composition, test, editor component check and bench scripts of the hub stdio package. */
-import { buildRepositoryCargoArtifacts } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { repositoryCargoNetworkV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import { withCapturedCargoArtifactsTaskV1 } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { completeCargoPreparationObservationV1 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { buildBudgetMs } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildAdmittedCargoArtifactsV1, runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
+import { withCapturedCargoArtifactsTaskV1 } from "@semio-tech/process/native-build";
+import { completeCargoPreparationObservationV1 } from "@semio-tech/process/native-build";
+import { resolveTestLevel } from "@semio-tech/process/test-budget";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import assert from "node:assert/strict";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { devToolingEnv } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { resolveWorkspaceBin, runCmd } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { devToolingEnv, resolveWorkspaceBin, runCmd, cargoTargetDirectory, cargoBuildDirectory } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
 import { prepareStdioComposition } from "../../../🧩️composition/🟦️.ts";
 import { runCompositionContributionChecks } from "../../../🧩️composition/📋️contract/🧪️tests/🟦️.ts";
 import { ARTIFACT_OWNER, CATALOG_DEADLINE_MS, COMPONENT_PROFILE, PACKAGE_NAME } from "../🧮️component-constants/🟦️.ts";
@@ -165,7 +161,7 @@ export class TestScript extends BundleScript {
     if (rest[0] === "editor-catalog-contract") return;
     await runCatalogRootContractTests(this.root,this.repoRoot,{invocation:this.invocation,phase:scriptCompilerAdmissionControlV1(this.invocation,"stdio:catalog-contract",buildBudgetMs()||CATALOG_DEADLINE_MS)});
     if (rest[0] === "catalog-root-contract") return;
-    await runRepositoryCargoTests([PACKAGE_NAME], this.repoRoot, this.invocation, rest);
+    await runAdmittedCargoPackageTestsV1([PACKAGE_NAME], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -190,7 +186,7 @@ export class EditorComponentCheckScript extends BundleScript {
       const env=devToolingEnv({CARGO_TARGET_DIR:join(stage,"target"),CARGO_BUILD_BUILD_DIR:cargoBuildDirectory(this.repoRoot)});
       const args = ["build", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--target", "wasm32-wasip2"];
       try {
-        await buildRepositoryCargoArtifacts(path,args.slice(1).filter((arg,index,array)=>arg!=="--manifest-path"&&array[index-1]!=="--manifest-path"),this.repoRoot,{producer:"artifact",invocation:this.invocation,control:admission,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),deliverables:[".wasm"],consume:token=>withCapturedCargoArtifactsTaskV1(token,async view=>{
+        await buildAdmittedCargoArtifactsV1(path,args.slice(1).filter((arg,index,array)=>arg!=="--manifest-path"&&array[index-1]!=="--manifest-path"),this.repoRoot,{producer:"artifact",invocation:this.invocation,control:admission,deliverables:[".wasm"],consume:token=>withCapturedCargoArtifactsTaskV1(token,async view=>{
           const wasm=view.files.get(`${lib}.wasm`);if(!wasm)throw Error("Actual selected Stdio compiler wasm required");await view.recheck();copyCatalogArtifact(wasm,capture,"original compiler component",catalogControlV1({invocation:this.invocation,phase:view.control}));await view.recheck();
         })});
         const out = join(outputRoot, id);

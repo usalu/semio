@@ -8,10 +8,10 @@ use super::*;
 pub fn empty_dock_notice_lines(atlas: &mut FontAtlas, bounds: Rect, theme: &Theme, german: bool) -> Vec<(std::ops::Range<usize>, Rect)> {
     let text = shell_chrome_string("display.emptyShell", german);
     let lines = atlas.wrap_lines(text, bounds.w, theme.font_size_body);
-    let height = ui_wgpu::wgpu::text::line_height(theme.font_size_body);
+    let height = semio_framework_ui_text::line_height(theme.font_size_body);
     let top = bounds.y + (bounds.h - height * lines.len() as f32) * 0.5;
     lines.into_iter().enumerate().map(|(index, mut range)| {
-        range.end = range.start + text[range.clone()].trim_end_matches(ui_wgpu::wgpu::text::is_wrap_space).len();
+        range.end = range.start + text[range.clone()].trim_end_matches(semio_framework_ui_text::is_wrap_space).len();
         let width = atlas.measure_text(&text[range.clone()], theme.font_size_body).0;
         (range, Rect::new(bounds.x + (bounds.w - width) * 0.5, top + index as f32 * height + (height - theme.font_size_body) * 0.5, width, theme.font_size_body))
     }).collect()

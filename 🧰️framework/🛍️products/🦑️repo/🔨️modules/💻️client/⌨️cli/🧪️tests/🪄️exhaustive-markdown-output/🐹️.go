@@ -25,9 +25,7 @@ func TestExhaustiveMarkdownOutput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow markdown output test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)
@@ -131,7 +129,6 @@ func TestExhaustiveLifecycleCommands(t *testing.T) {
 				t.Fatalf("goal open failed: %v\nOutput: %s", err, goalB.String())
 			}
 			goalID := parseGoalCreateID(t, goalB.String())
-			defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
 			openArgs := []string{"ticket", "open", "🎫️", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-management"}
 			if mode == "json" {
@@ -188,8 +185,6 @@ func TestExhaustiveLifecycleCommands(t *testing.T) {
 			if !found {
 				t.Fatalf("Could not find created ticket with title %q in list output", title)
 			}
-
-			defer os.RemoveAll(GetTicketPath(y, m, d, slug))
 
 			changeArgs := []string{"ticket", "change",
 				fmt.Sprintf("%d/%02d/%02d/%s", y, m, d, slug),
@@ -259,9 +254,7 @@ func TestExhaustiveListCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow list commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)

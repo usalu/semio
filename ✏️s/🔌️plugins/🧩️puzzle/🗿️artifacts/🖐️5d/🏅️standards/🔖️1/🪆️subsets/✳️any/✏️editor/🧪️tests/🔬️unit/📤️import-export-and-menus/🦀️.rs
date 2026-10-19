@@ -269,13 +269,13 @@ async fn add_part_dialog_enumerates_live_part_kinds() {
 
 //#region 🖱️ContextMenuRows
 /// 🖱️ Builds one context-menu request for a surface selection of `(domain, ids)` groups.
-fn context_menu_of(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn context_menu_of(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     context_menu_at(app, groups, None)
 }
 
 /// 🖱️ `context_menu_of` with the world host's pointer hit — `(domain, id)` exactly as `world3dContextMenuSurfaceV1`
 /// sends it (`vortex` for a grip marker, `object` for a part instance).
-fn context_menu_at(app: &mut Puzzle5dApp, groups: Vec<(&str, Vec<String>)>, hit: Option<(&str, &str)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn context_menu_at(app: &mut Puzzle5dTestApp, groups: Vec<(&str, Vec<String>)>, hit: Option<(&str, &str)>) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     let request = ContextMenuRequest {
         menu: UiMenuRef { id: "world3d".into(), args: None },
         surface: Some(ContextMenuSurfaceTarget {

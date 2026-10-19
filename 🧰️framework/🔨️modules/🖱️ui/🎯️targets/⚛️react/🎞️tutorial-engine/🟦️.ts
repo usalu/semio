@@ -1,4 +1,4 @@
-import type { TutorialCameraKeyframe, TutorialCameraState, TutorialDefinition, TutorialUiSnapshot, TutorialUiChange, TutorialEvent, TutorialDocumentEvent } from "@semio-tech/framework";
+import type { TutorialCameraKeyframe, TutorialCameraState, TutorialDefinition, TutorialUiSnapshot, TutorialUiChange, TutorialEvent, TutorialDocumentEvent } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
 
 //#region 🎬️TutorialEngine

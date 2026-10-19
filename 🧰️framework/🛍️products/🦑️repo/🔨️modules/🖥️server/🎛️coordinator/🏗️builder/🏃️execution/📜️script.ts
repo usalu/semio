@@ -12,17 +12,17 @@ import {withCoordinatorNextInputsV1} from "../📥️inputs/🟦️.ts";
 import {withNextStorageV1} from "../💾️storage/🟦️.ts";
 import storageSchema from "../💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import {nextPublicationFiles} from "../📦️publication/🟦️.ts";
-import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import {withRepositoryCacheStoreV1} from "../../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {devToolingEnv} from "../../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
-import {getWorkspaceRoot} from "../../../../📚️library/🗂️workspaces/🟦️.ts";
+import { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "../../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { devToolingEnv } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../📚️library/📦️packages/🟦️typescript/📇️inventory/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import executionSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const PACKAGE_DIR=resolve(import.meta.dir,"../../📦️packages/🟦️typescript");
 /** 🏗️ Compiles the actual coordinator with a dedicated bounded compiler defining Source closure. */
 export async function buildCoordinatorNextV1(workspace:string,invocation:ScriptInvocation,segments:string[]=[]):Promise<void>{
-    if(validateJsonSchemaSubset(executionSchema,{version:1,command:"build",modes:["prototype","release"],maximumDefiningFiles:128}).length)throw Error("Closed Next compiler command required");
+    if(validateJsonSchemaSubset(executionSchema,{version:1,command:"build",modes:["prototype","release"],maximumDefiningFiles:192}).length)throw Error("Closed Next compiler command required");
     if(segments.length)throw Error("Next build configuration belongs to its authored owner");
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), require = createRequire(join(PACKAGE_DIR, "package.json"));
     const control = scriptCompilerAdmissionControlV1(invocation, "compiler:build", 600_000);

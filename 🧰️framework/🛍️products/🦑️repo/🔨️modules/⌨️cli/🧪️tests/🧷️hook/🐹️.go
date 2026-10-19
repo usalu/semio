@@ -18,6 +18,7 @@ import (
 	providers "github.com/usalu/semio/repo/providers"
 	ticketspkg "github.com/usalu/semio/repo/tickets"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
@@ -35,9 +36,7 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	run("git", "config", "user.name", "Test")
 	run("git", "config", "commit.gpgsign", "false")
 	run("git", "commit", "--allow-empty", "-m", "initial")
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
 		t.Fatal(err)
 	}

@@ -1,11 +1,11 @@
-import {withArtifactDescriptorSlotV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts";
+import {withArtifactDescriptorSlotV1} from "@semio-tech/process/artifacts/publication/sources";
 import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {createHash} from "node:crypto";
 import {opendirSync,lstatSync,type Dir} from "node:fs";
 import {lstat,open} from "node:fs/promises";
 import {join,relative,resolve,isAbsolute,sep} from "node:path";
-import publicationSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
-import readerSchema from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🧬️schema/🔣️.json" with {type:"json"};
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
+import { artifactsReadingSchema as readerSchema } from "@semio-tech/repo-lib/artifacts";
 const policy=publicationSchema.definitions.Protocol.const,reading=readerSchema.definitions.Protocol.const;
 /** 📋️ Enumerates a finite regular-file inventory one directory entry at a time. */
 export function artifactFiles(root:string,maximumFiles:number=policy.maximumFiles,maximumBytes:number=policy.maximumOutputBytes):Map<string,string>{

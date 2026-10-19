@@ -1,8 +1,9 @@
 //! ➕️ `insert-row` — places a new row at a FINAL-state index in the row sequence (an intrinsically
 //! ordered, anonymous collection — no stable id on `SemioTableRow`).
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
@@ -14,13 +15,13 @@ pub struct InsertRow {
     pub row: SemioTableRow,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for InsertRow {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for InsertRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "row", kind: "insert-row", record: "InsertedRow" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

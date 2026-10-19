@@ -1,9 +1,9 @@
 syntax = "proto3";
 package semio.s.flow.flow.snapshot;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 📸️ Flow document snapshot: durable schema and composed content identity.
 message FlowSnapshot {
   string schema = 1; // @state artifact
-  semio.os.store.ArtifactChild content = 2; // @state artifact, child s.stdio.semio@v1/flow
+  semio.framework.schema.artifact_child.ArtifactChild content = 2; // @state artifact, child s.stdio.semio@v1/flow
 }

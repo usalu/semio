@@ -1,0 +1,1012 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/framework-os",
+   "newExportEntries": 6,
+   "importerEdges": 6
+  },
+  {
+   "package": "@semio-tech/framework-os-dev",
+   "newExportEntries": 1,
+   "importerEdges": 1
+  },
+  {
+   "package": "@semio-tech/framework-plugin",
+   "newExportEntries": 51,
+   "importerEdges": 152
+  },
+  {
+   "package": "@semio-tech/framework-renderer-react",
+   "newExportEntries": 1,
+   "importerEdges": 1
+  },
+  {
+   "package": "@semio-tech/framework-renderer-wgpu",
+   "newExportEntries": 6,
+   "importerEdges": 6
+  },
+  {
+   "package": "@semio-tech/plugin-extension-store",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/plugin-registry",
+   "newExportEntries": 18,
+   "importerEdges": 81
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/framework-os": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧩️catalog/🟦️.ts",
+    "proposedSubpath": "./modules/renderer/engine/elements/Shell/catalog",
+    "symbols": [
+     "resolveFrameworkOsCatalogConfigurationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📡️channel/🗃️document-archive/🔣️.json",
+    "proposedSubpath": "./testing/fixtures/channel/document-archive",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts",
+    "proposedSubpath": "./modules/renderer/engine/elements/AgentBridge/offer",
+    "symbols": [
+     "AGENT_BRIDGE_OFFER_ENDPOINT",
+     "AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION",
+     "AgentBridgeOfferRecordV2",
+     "AgentBridgeOfferScopeV1",
+     "agentBridgeOfferAnswerV1",
+     "parseAgentBridgeOfferRecordV2",
+     "parseAgentBridgeOfferScopeV1",
+     "selectAgentBridgeOfferV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🟦️.ts",
+    "proposedSubpath": "./config/schema/mutations",
+    "symbols": [
+     "UI_PREFERENCE_MUTATION_KEYS",
+     "uiPreferenceMutationDataClassV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🔣️.json",
+    "proposedSubpath": "./modules/directory/access-policy",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🛡️access-policy/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./modules/directory/access-policy/schema",
+    "symbols": [
+     "directoryAccessPermits",
+     "parseDirectoryAccessPolicyV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-os-dev": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts",
+    "proposedSubpath": "./vite-plugins/stream-mux-server",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-plugin": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🌲️fixture-projection/🟦️.ts",
+    "proposedSubpath": "./testing/fixture-projection",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🎛️commands/👥️member-dialect-checks/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/distribution/inventory",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/♻️close/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/♻️close/🔣️.json",
+    "proposedSubpath": "./reactor/jobs/infer/schema/close",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/⚠️failure/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/⚠️failure/🔣️.json",
+    "proposedSubpath": "./reactor/jobs/infer/schema/failure",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🧬️schema/🔣️.json",
+    "proposedSubpath": "./reactor/jobs/infer/schema",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️schema/🤝️loan/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🧬️schema/🤝️loan/🔣️.json",
+    "proposedSubpath": "./reactor/jobs/schema/loan",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🌐️host/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🌐️host/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/host",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🚪️gateway/🧬️schema/♻️close/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/💡️inference/🚪️gateway/🧬️schema/♻️close/🔣️.json",
+    "proposedSubpath": "./inference/gateway/schema/close",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/child",
+    "symbols": [
+     "BrowserActorChildValue",
+     "browserActorChildCapacity",
+     "reserveBrowserActorChild"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧊️cold-pair/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧩️actor-wire-helpers/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/♻️guest-retirement/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/📤️turn-effects/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/📬️document-backbone/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🖼️surface-rendering/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🧊️cold-pair-transfer/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🩹️ui-patch-reconciliation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🚀️guest-activation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🛤️poll-lanes/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪪️execution-lease/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/describe",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🪪️execution-lease/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🎭️browser-actor-reservation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts",
+    "proposedSubpath": "./companions/test-support/plugin-family",
+    "symbols": [
+     "moduleFamilyText",
+     "pluginFamilyText"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️canonical-error-progress/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./describe/component-receipt/schema",
+    "symbols": [
+     "COMPONENT_RECEIPT_FILE",
+     "COMPONENT_RECEIPT_MAX_BYTES",
+     "SHIPPED_COMPONENT_MAX_BYTES",
+     "componentReceiptBindsV1",
+     "componentReceiptValueV1",
+     "encodeComponentReceiptV1",
+     "parseComponentReceiptV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/component-bridge-source",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/shard-worker-source",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/preview2-shim-patches",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/host-shim-source",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/imports",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+    "proposedSubpath": "./model/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/📋️contract/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+    "proposedSubpath": "./build/driver-stages",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+    "proposedSubpath": "./model/reading",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts",
+    "proposedSubpath": "./describe/component-stage",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+    "proposedSubpath": "./describe/component-receipt",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️convergence/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+    "proposedSubpath": "./build/execution",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+    "proposedSubpath": "./build/plan",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📊️benchmarks/🔌️plugins/🖥️host/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏯️tool-run-matrix/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏱️interaction-latency/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🎬️studio/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/💤️idle-budget/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔀️connection-budget/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔬️catalog-smoke/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🥾️boot-budget/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🎪️run/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🚀️boot/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️time-travel/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧮️program-matrix/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts",
+    "proposedSubpath": "./describe/emitter/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts",
+    "proposedSubpath": "./describe/descriptor-emission",
+    "symbols": [
+     "remainingDescriptorEmissionBudgetMs",
+     "validateDescriptorEmissionInputV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🪶️workspace-lease/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🪶️workspace-lease/🟦️.ts",
+    "proposedSubpath": "./host/testing/workspace-lease",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/jco-module-rewrites",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🔍️freshness/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🔍️freshness/🟦️.ts",
+    "proposedSubpath": "./build/freshness",
+    "symbols": [
+     "COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES",
+     "GENERATED_COMPONENT_OWNER_FILES",
+     "SOURCE_FRESHNESS_COMPONENT_CONCURRENCY",
+     "SOURCE_FRESHNESS_FILE_CONCURRENCY",
+     "UNWATCHED_COMPONENT_SOURCE_DIRECTORIES",
+     "buildComponentSourceStatIndex",
+     "componentSourceContentHash",
+     "mapBoundedV1",
+     "newestComponentSourceMtime",
+     "readStagedSourceContentHash",
+     "readStagedSourceStatIndex",
+     "resolveBootSourceContentHashes",
+     "stagedModuleMtime",
+     "writeStagedSourceContentHash",
+     "writeStagedSourceFreshness"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🔌️staging-root/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🧪️tests/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🧪️tests/🔣️.json",
+    "proposedSubpath": "./browser-bundle/imports/testing",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/📋️contract/🟦️.ts",
+    "proposedSubpath": "./build/driver-stages/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🧪️tests/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🧪️tests/🔣️.json",
+    "proposedSubpath": "./size/testing",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🧬️schema/🔣️.json",
+    "proposedSubpath": "./size/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+    "proposedSubpath": "./size",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+    "proposedSubpath": "./model",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/🧬️schema/🔣️.json",
+    "proposedSubpath": "./describe/emitter/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏃️execution/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏃️execution/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/execution",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts",
+    "proposedSubpath": "./build/watch/testing/source-plan",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+    "proposedSubpath": "./build/watch",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts",
+    "proposedSubpath": "./describe/component-build",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/guestslim-fonts",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/materialization/wasm-opt",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/descriptor",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+    "proposedSubpath": "./build/installation",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+    "proposedSubpath": "./build/materialization",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+    "proposedSubpath": "./build/descriptor",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/distribution/vite",
+    "symbols": [
+     "browserArtifactVitePlugin"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/distribution",
+    "symbols": [
+     "BrowserArtifactSource"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts",
+    "proposedSubpath": "./effect-backbone",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🧪️effectbackbone-capability-gating/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-renderer-react": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+    "proposedSubpath": "./testing/config",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🎚️config/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-renderer-wgpu": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
+    "proposedSubpath": "./publication",
+    "symbols": [
+     "runWgpuPackageGenerator"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts",
+    "proposedSubpath": "./reference-image-decode",
+    "symbols": [
+     "decodeReferenceImage",
+     "referenceImageSourceDimensions",
+     "streamReferenceImageBitmapRows"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️reference-media/🧪️.story.tsx"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️plugin-modules/🟦️.ts",
+    "proposedSubpath": "./plugin-modules",
+    "symbols": [
+     "assertWgpuPluginPlan",
+     "prepareWgpuPluginModules"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧩️composition/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📋️contract/🟦️.ts",
+    "proposedSubpath": "./native-entrypoint/modules/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/🧬️schema/🔣️.json",
+    "proposedSubpath": "./native-entrypoint/modules/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📦️publication/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📦️publication/🟦️.ts",
+    "proposedSubpath": "./compiler/wasm/publication",
+    "symbols": [
+     "rendererWasmPublicationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/plugin-extension-store": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/📋️contract/🟦️.ts",
+    "proposedSubpath": "./packaging/contract",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📦️packaging/🧬️schema/🔣️.json",
+    "proposedSubpath": "./packaging/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/plugin-registry": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+    "proposedSubpath": "./catalog-view",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️convergence/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts",
+    "proposedSubpath": "./runtime",
+    "symbols": [
+     "NativeCatalogV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts",
+    "proposedSubpath": "./catalog-verification",
+    "symbols": [
+     "CATALOG_DESCRIPTOR_MAX_BYTES",
+     "OwnerDescriptorPairV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts",
+    "proposedSubpath": "./deployment",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📊️size/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💓️heartbeat-and-liveness-watchdogs/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🚀️activation-vite-plugin/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️convergence/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts",
+    "proposedSubpath": "./discovery",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/👁️watch/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🔍️freshness/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️convergence/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🏗️profile-and-catalog-build/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧹️capability-policy/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts",
+    "proposedSubpath": "./catalog-verification/descriptor-pair",
+    "symbols": [
+     "verifySemanticDescriptorPairBytesV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/👓️reading/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts",
+    "proposedSubpath": "./playground/session/reading",
+    "symbols": [
+     "withPlaygroundSessionV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🩺️readiness/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts",
+    "proposedSubpath": "./playground/default",
+    "symbols": [
+     "requirePlaygroundVariant"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚖️parity/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📋️plan/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+    "proposedSubpath": "./playground/session",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./discovery/schema",
+    "symbols": [
+     "parseDeployedRegistryEntryV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🎮️playground-session/🏃️execution/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🧬️schema/🔣️.json",
+    "proposedSubpath": "./playground/session/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts",
+    "proposedSubpath": "./playground/discovery",
+    "symbols": [
+     "PlaygroundEntry"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔄️refresh/🟦️.ts",
+    "proposedSubpath": "./refresh",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🧰️test-kit/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/👷️service-worker/🟦️.ts",
+    "proposedSubpath": "./hub-source/service-worker",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts",
+    "proposedSubpath": "./hub-source",
+    "symbols": [
+     "HUB_PLUGIN_MODULE_ROUTE",
+     "HUB_SAME_ORIGIN_MOUNT",
+     "PluginModuleLocksV1",
+     "TrustedPluginModuleTransientError",
+     "createHubPluginSource"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🗄️plugin-module-store/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./deployment/schema",
+    "symbols": [
+     "decodeTrustedPluginModuleBundleV1",
+     "validateTrustedPluginModuleBundleV1",
+     "validateTrustedPluginModuleIndexV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🔍️plugin-module-resolution/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🧩️plugin-module-bundle/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts",
+    "proposedSubpath": "./hub-source/store",
+    "symbols": [
+     "PluginModuleCacheV1",
+     "PluginModuleStoreQuotaError",
+     "collectPluginModuleStoreGarbageV1",
+     "commitPluginModuleBundleV1",
+     "parseStoredPluginModuleUrlV1",
+     "pluginModuleStoreKeysV1",
+     "readPluginModuleStoreRecordsV1",
+     "serveStoredPluginModuleFileV1",
+     "storePluginModuleBlobV1",
+     "storedPluginModuleUrlV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🗄️plugin-module-store/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./hub-source/schema",
+    "symbols": [
+     "PluginModuleStoreRecordV1",
+     "validatePluginModuleStoreRecordV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🧪️tests/🗄️plugin-module-store/🟦️.ts"
+    ]
+   }
+  }
+ }
+}

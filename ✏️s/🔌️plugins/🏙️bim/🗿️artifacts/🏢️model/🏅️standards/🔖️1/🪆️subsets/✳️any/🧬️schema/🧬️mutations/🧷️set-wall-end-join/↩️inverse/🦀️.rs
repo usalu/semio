@@ -1,9 +1,9 @@
 //! ↩️ Inverse of `SetWallEndJoin`: an absolute `SetWallEndJoin` back to the base preference of that end (absent when the end joined
 //! automatically), none when the wall is absent.
 
-use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetWallEndJoin, base: &ModelSnapshot) -> Vec<Op>
 where

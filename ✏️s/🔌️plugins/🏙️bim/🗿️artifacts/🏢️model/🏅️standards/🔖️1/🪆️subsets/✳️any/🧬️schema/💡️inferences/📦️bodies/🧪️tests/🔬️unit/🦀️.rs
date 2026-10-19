@@ -1,40 +1,43 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
 use semio_framework_2d::regions::Region;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of, point, seg};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{point, segment_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, Slab, Stair, Wall};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, Slab, Stair, Wall};
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::Vertex as Corner;
-use crate::standards::v1::subsets::any::schema::inferences::bodies::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Vertex};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::{Body, storey_bodies, profile_outline, BodyKind, slab_span, region, level_storeys};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, Vertex};
 use semio_framework_test_fixtures::fixture_text;
 
 fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, StoreyLevel>) -> Vec<Body> {
     let (layouts, runs) = (compute_wall_layout(snapshot), compute_stair_runs(snapshot));
     storey_bodies(snapshot, storey, levels, &layouts.iter().map(|(id, layout)| (id.as_str(), layout)).collect(), &runs.iter().map(|(id, run)| (id.as_str(), run)).collect())
 }
-use crate::standards::v1::subsets::any::schema::snapshot::{Slope, TopConstraint};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Slope, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json"));
@@ -131,7 +134,7 @@ async fn the_storeys_an_element_set_depends_on_are_its_own_then_the_targeted_one
 
 #[semio_framework_async_macros::async_test]
 async fn the_plan_dependency_of_a_storey_changes_with_its_elements_and_not_with_the_others_or_with_names() {
-    use crate::standards::v1::subsets::any::schema::inferences::plan_linework::dependency;
+    use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::dependency;
     let before = dependency(&house(), "st-ground");
     let mut edited = house();
     edited.columns.get_mut("c-1").expect("column").name = "Renamed".into();

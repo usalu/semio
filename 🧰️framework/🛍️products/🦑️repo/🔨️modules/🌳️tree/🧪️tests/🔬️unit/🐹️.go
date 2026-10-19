@@ -3,43 +3,11 @@
 package tree
 
 import (
-	os "os"
-	filepath "path/filepath"
-	runtime "runtime"
 	strings "strings"
 	testing "testing"
 
 	model "github.com/usalu/semio/repo/model"
 )
-
-func findTestRepoRoot(start string) string {
-	for _, candidate := range []string{start, func() string {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			return ""
-		}
-		return filepath.Dir(file)
-	}()} {
-		dir := candidate
-		if dir == "" {
-			continue
-		}
-		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
-				return dir
-			}
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-				return dir
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return start
-}
 
 func TestBuildTerritoryTree(t *testing.T) {
 	t.Run("single group with kinds", func(t *testing.T) {

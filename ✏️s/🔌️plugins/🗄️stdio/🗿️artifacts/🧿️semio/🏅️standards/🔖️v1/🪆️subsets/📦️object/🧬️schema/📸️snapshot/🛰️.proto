@@ -1,11 +1,11 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.object.snapshot;
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message SemioObjectSnapshot {
   string schema = 1;
   semio.s.stdio.semio.v1.base.geometry.SemioTransform transform = 2;
-  semio.os.store.ArtifactChild brep = 3;
-  semio.os.store.ArtifactChild mesh = 4;
-  semio.os.store.ArtifactChild properties = 5;
+  semio.framework.schema.artifact_child.ArtifactChild brep = 3;
+  semio.framework.schema.artifact_child.ArtifactChild mesh = 4;
+  semio.framework.schema.artifact_child.ArtifactChild properties = 5;
 }

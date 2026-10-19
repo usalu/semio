@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-s-artifact-stdio-semio-table-mut-family = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }

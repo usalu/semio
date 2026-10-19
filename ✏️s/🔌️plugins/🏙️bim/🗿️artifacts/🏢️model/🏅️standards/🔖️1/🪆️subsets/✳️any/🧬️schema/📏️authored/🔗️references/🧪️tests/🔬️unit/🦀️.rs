@@ -1,7 +1,7 @@
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
-use crate::standards::v1::subsets::any::schema::authored::references::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::{top_target, edges, find_cycle};
 
 #[test]
 fn only_an_attached_top_names_a_target() {

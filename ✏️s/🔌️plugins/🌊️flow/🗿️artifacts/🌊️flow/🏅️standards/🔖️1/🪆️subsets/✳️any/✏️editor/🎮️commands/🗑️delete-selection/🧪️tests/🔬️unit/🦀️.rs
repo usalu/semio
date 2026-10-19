@@ -7,7 +7,7 @@ use crate::editor::flow::edit_rules::ContentEdit;
 #[allow(unused_imports)]
 use crate::editor::flow::host::{flow_composed_content, flow_content_leaves_emit};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
+use crate::editor::flow::editor_vocabulary::{flow_graph_selection_domains, FLOW_INTERACTION_GRAPH};
 #[allow(unused_imports)]
 use crate::{FlowMutation, FlowSnapshot};
 #[allow(unused_imports)]

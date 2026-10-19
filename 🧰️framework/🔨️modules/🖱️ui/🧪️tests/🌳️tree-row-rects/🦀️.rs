@@ -14,15 +14,15 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️tree-row-rects/🟦️.ts`, which pins the same rows against the
 //! React `Tree`'s own row metric (`treeRowHeightPx`).
 
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::component::ui::{ActionDescriptor, UiNode, UiPresence, UiState, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-use crate::wgpu::engine::UiSurfaceToken;
-use crate::wgpu::events::hit_test;
-use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
-use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob};
-use crate::wgpu::theme::Theme;
-use crate::wgpu::tree::{NodeKey, UiTree};
-use crate::wgpu::Label;
+use semio_framework_ui_arena::NodeId;
+use semio_framework_ui_declaration::ui::{ActionDescriptor, UiNode, UiPresence, UiState, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_wgpu_engine::UiSurfaceToken;
+use semio_framework_ui_wgpu_events::hit_test;
+use semio_framework_ui_wgpu_layout::flex::{LayoutJobStage, LayoutJobStep};
+use semio_framework_ui_wgpu_mounted_layout::{MountedLayoutIdentity, MountedLayoutJob};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_retained_tree::tree::{NodeKey, UiTree};
+use semio_framework_ui_locale::Label;
 use serde_json::Value;
 
 fn law() -> Value {
@@ -133,8 +133,8 @@ fn the_row_metric_is_the_one_the_fixture_was_pinned_against() {
     assert!(close(theme.tree_row_height, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
     assert!(close(theme.tree_row_height, metrics["uiSpacingCompactPx"].as_f64().expect("uiSpacingCompactPx") * metrics["treeRowUiSpacing"].as_f64().expect("treeRowUiSpacing")));
     // 🌳️ The immediate-mode chrome twin reads the same token, so this target has ONE row pitch.
-    assert!(close(crate::wgpu::widgets::TREE_ROW_HEIGHT, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
-    let row_metrics = crate::wgpu::layout::TreeRowMetrics::from_theme(&theme);
+    assert!(close(semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT, metrics["rowHeightPx"].as_f64().expect("rowHeightPx")));
+    let row_metrics = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::from_theme(&theme);
     assert_eq!(row_metrics.row_height, theme.tree_row_height);
     assert_eq!(row_metrics.header_height, theme.tree_row_height);
 }

@@ -25,8 +25,10 @@ end what already runs (`tasks`, `logs`, `stop`, `kill`, `open`, `daemon stop`, `
 tree must never keep a developer from stopping the daemon. `bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream` republishes on demand and
 prints the executable path for direct native invocation.
 
-The first view immediately shows task controls. English, dark appearance, native terminology,
-React and tabbed output are opinionated defaults; startup asks no questions. Command discovery
+The first view immediately shows task controls. Dark appearance, native terminology,
+React and tabbed output are opinionated defaults; the language is the one the system names (`LC_ALL`,
+`LC_MESSAGES`, `LANG`) or else the first language of the declared chain in `⚙️preferences/🌐️language/🔣️.json`
+(English, then German); startup asks no questions. Command discovery
 and daemon connection run in the background. Choose New Task and type search terms to select a
 dev server, build, test, renderer or example directly. Settings are optional and persistent.
 A selection made while the workspace daemon connects remains pending and can be cancelled with
@@ -220,7 +222,8 @@ launch accepts `--language`, `--appearance`, `--terminology`, `--renderer`, `--l
 
 Environment overrides are `SEMIO_LOCALE`, `SEMIO_APPEARANCE`, `SEMIO_LOCKED_TERMINOLOGY`,
 `SEMIO_DASHBOARD_RENDERER`, `SEMIO_DASHBOARD_LAYOUT` and `SEMIO_DASHBOARD_PREFIX`. `SEMIO_DASHBOARD_CONFIG` selects a local
-journal. Values are validated strictly. Local events live under
+journal. Values are validated strictly. The language resolves from the system and the declared chain at the
+bottom, then shared events, local events, `SEMIO_LOCALE` and `--language` over it; `Locale` has no `Default`. Local events live under
 `.🧬semio/🦑️repo/⚡️cache/🎛️dashboard/preferences.jsonl`; shared events live under
 `.🧬semio/🦑️repo/🎛️dashboard/⚙️preferences.jsonl`. Event revisions are serialized by operating-system
 file locks, and each journal has a 1 MiB admission limit. Task output and view state remain ephemeral.
@@ -282,7 +285,7 @@ The repo command line and the repo MCP server (`⌨️cli`) do not depend on thi
 break in the dashboard or the terminal UI never reaches them.
 
 The crate is a family of producer crates, one per layer, each rooted at the folder that states what it is; every folder keeps its
-own `📦️packages/🦀️rust` package. From the bottom: `🧱️core` (the invocation, the plugin and playground catalog, the dev environment and the
+own `📦️packages/🦀️rust` package. From the bottom: `🧱️invocation-catalog` (the invocation, the plugin and playground catalog, the dev environment and the
 content hash), `🧾️launch` (the launch contract), `🏛️repo-domain` (the repo actions), `🎮️registry` (commands, declarations and resolution),
 `📚️inventory` (reads the sources, keeps the snapshot, runs the background discovery; it also mounts `🌳️command-tree`, the registry
 projected as launcher rows and wizard steps, and runs the laws of the registry through a real discovery), `🌀️daemon/🧵️wire` (the frames,

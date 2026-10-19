@@ -1,0 +1,2893 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/compiler-syntax-ecma-ts",
+   "newExportEntries": 1,
+   "importerEdges": 2,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/compiler-syntax-rust-ts",
+   "newExportEntries": 4,
+   "importerEdges": 13,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework",
+   "newExportEntries": 11,
+   "importerEdges": 36,
+   "closureImporterEdges": 3
+  },
+  {
+   "package": "@semio-tech/framework-canvas-ts",
+   "newExportEntries": 1,
+   "importerEdges": 1,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework-compiler-ts",
+   "newExportEntries": 1,
+   "importerEdges": 1,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework-kernel",
+   "newExportEntries": 6,
+   "importerEdges": 6,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework-os",
+   "newExportEntries": 3,
+   "importerEdges": 3,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework-plugin",
+   "newExportEntries": 13,
+   "importerEdges": 14,
+   "closureImporterEdges": 1
+  },
+  {
+   "package": "@semio-tech/framework-renderer-wgpu",
+   "newExportEntries": 2,
+   "importerEdges": 2,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/framework-replication",
+   "newExportEntries": 1,
+   "importerEdges": 1,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/nx-bootstrap-tools",
+   "newExportEntries": 29,
+   "importerEdges": 48,
+   "closureImporterEdges": 11
+  },
+  {
+   "package": "@semio-tech/plugin-registry",
+   "newExportEntries": 3,
+   "importerEdges": 9,
+   "closureImporterEdges": 3
+  },
+  {
+   "package": "@semio-tech/process",
+   "newExportEntries": 1,
+   "importerEdges": 7,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/quiz-react",
+   "newExportEntries": 2,
+   "importerEdges": 14,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/repo-coordinator",
+   "newExportEntries": 4,
+   "importerEdges": 4,
+   "closureImporterEdges": 1
+  },
+  {
+   "package": "@semio-tech/repo-lib",
+   "newExportEntries": 101,
+   "importerEdges": 422,
+   "closureImporterEdges": 55
+  },
+  {
+   "package": "@semio-tech/repo-test",
+   "newExportEntries": 9,
+   "importerEdges": 11,
+   "closureImporterEdges": 1
+  },
+  {
+   "package": "@semio-tech/ui-react",
+   "newExportEntries": 1,
+   "importerEdges": 1,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/ui-styling",
+   "newExportEntries": 7,
+   "importerEdges": 12,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "repo-vscode",
+   "newExportEntries": 3,
+   "importerEdges": 3,
+   "closureImporterEdges": 0
+  },
+  {
+   "package": "@semio-tech/print",
+   "newExportEntries": 1,
+   "importerEdges": 1,
+   "closureImporterEdges": 1
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/compiler-syntax-ecma-ts": {
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts",
+    "proposedSubpath": "./index",
+    "symbols": [
+     "EcmaExpression",
+     "EcmaPattern",
+     "EcmaStatement",
+     "ecmaProgram",
+     "ecmaStringValue",
+     "ecmaTokens"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🛣️ecma-command-routes/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/compiler-syntax-rust-ts": {
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts",
+    "proposedSubpath": "./index",
+    "symbols": [
+     "RustAttributes",
+     "RustCompileExpansion",
+     "RustCompileReference",
+     "RustGeneratedTokenOutput",
+     "RustMetadataAttributeFact",
+     "RustStructuralVisibility",
+     "RustToken",
+     "RustVisibility",
+     "inspectRustCompileReferences",
+     "rustAttributes",
+     "rustFindTopLevel",
+     "rustIdentifierSymbol",
+     "rustMetadataAttributeHead",
+     "rustMetadataAttributes",
+     "rustMetadataDerives",
+     "rustMetadataPath",
+     "rustPathAttributes",
+     "rustStringValue",
+     "rustTokenPairs",
+     "rustTokenSegments",
+     "rustTokenText",
+     "rustTokens",
+     "rustVisibility"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🌐️rust-module-graph/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏃️rust-runnable-tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏛️rust-structure/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🦀️rust-fact-contracts/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧾️attributes/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts",
+    "proposedSubpath": "./paths",
+    "symbols": [
+     "RustPathLiteral",
+     "inspectRustPathLiterals"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📁️runtime/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📁️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json",
+    "proposedSubpath": "./index",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🧾️attributes/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧪️tests/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧪️tests/🟦️.ts",
+    "proposedSubpath": "./generation/testing",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️rust-source-direction/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework": {
+   "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json",
+    "proposedSubpath": "./modules/filesystem/observation/journal/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs": {
+    "targetFile": "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+    "proposedSubpath": "./modules/identity/installation/.mjs",
+    "symbols": [
+     "parseInstallationDirectoryV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟨️.mjs"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts",
+    "proposedSubpath": "./modules/filesystem/observation/current",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts",
+    "proposedSubpath": "./modules/ui/contract/builder/retirement/testing/built-tree-retirement",
+    "symbols": [
+     "testBuiltTreeRetirementFixture"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚙️native-source-ownership/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts",
+    "proposedSubpath": "./products/repo/modules/server/library/authentication",
+    "symbols": [
+     "hashApiKey",
+     "isAuthError",
+     "requireAdmin",
+     "requireAuth"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🔎️detail/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts",
+    "proposedSubpath": "./products/repo/modules/server/library/persistence",
+    "symbols": [
+     "Scope",
+     "Ticket",
+     "Warning",
+     "createApiKey",
+     "createDeveloper",
+     "getDeveloperByEmail",
+     "getTicket",
+     "insertAuditLog",
+     "insertTicketFiles",
+     "listBreaches",
+     "listClaimsByTicket",
+     "listConflicts",
+     "listEvents",
+     "listScopesByFile",
+     "listTickets",
+     "listWarnings",
+     "newId",
+     "removeContributorWorkForCheckpoint",
+     "replaceScopes",
+     "replaceWarnings",
+     "revokeApiKey",
+     "upsertClaim",
+     "upsertTicket"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚠️warnings/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🔎️detail/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎯️scope/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🔐️authentication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook/🐙️github/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🚨️breaches/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts",
+    "proposedSubpath": "./products/repo/modules/server/library/event",
+    "symbols": [
+     "publishEvent"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🎫️ticket/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📡️event/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🪝️webhook/🐙️github/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts",
+    "proposedSubpath": "./products/repo/modules/server/library/source-index",
+    "symbols": [
+     "buildScopesForFile",
+     "parseUnifiedDiff"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📚️repository/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧾️diff/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+    "proposedSubpath": "./modules/test/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔌️adapter-invocation/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+    "proposedSubpath": "./products/repo/modules/dashboard/installation",
+    "symbols": "*",
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts",
+    "proposedSubpath": "./modules/ui/render/build/browser",
+    "symbols": [
+     "BROWSER_CANVAS_HOT_CRATES"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-canvas-ts": {
+   "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧪️tests/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🧪️tests/🔣️.json",
+    "proposedSubpath": "./runtime-assets/staging/testing",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🧪️tests/🖼️canvas-runtime-assets/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-compiler-ts": {
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts",
+    "proposedSubpath": "./syntax/module-tree",
+    "symbols": [
+     "ModuleTreeOptions",
+     "listModuleTree",
+     "readModuleTreeSource"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-kernel": {
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/⬇️media-export-encoding/🟦️.ts",
+    "proposedSubpath": "./testing/media-export-encoding",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts",
+    "proposedSubpath": "./testing/video-render-program",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🐢️ui-dirty-scope/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🐢️ui-dirty-scope/🟦️.ts",
+    "proposedSubpath": "./testing/ui-dirty-scope",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📤️file-open-import/🟦️.ts",
+    "proposedSubpath": "./testing/file-open-import",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️spawned-job-drive/🟦️.ts",
+    "proposedSubpath": "./testing/spawned-job-drive",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts",
+    "proposedSubpath": "./testing/video-render-job",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-os": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧊️wgpu-browser-boot-cache-inputs/🟦️.ts",
+    "proposedSubpath": "./modules/renderer/engine/testing/wgpu-browser-boot-cache-inputs",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️window-action-context/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️window-action-context/🟦️.ts",
+    "proposedSubpath": "./modules/renderer/engine/testing/window-action-context",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts",
+    "proposedSubpath": "./modules/renderer/engine/elements/VideoRenderHost/testing/unit",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-plugin": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts",
+    "proposedSubpath": "./describe/component-receipt/schema",
+    "symbols": [
+     "COMPONENT_PROFILE_POLICIES",
+     "SHIPPED_COMPONENT_PROFILE"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🕸️native-optimization/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🕸️native-optimization/🟦️.ts",
+    "proposedSubpath": "./testing/native-optimization",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/📋️contract/🟦️.ts",
+    "proposedSubpath": "./model/contract",
+    "symbols": [
+     "componentModelDirectoryKeyV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️preparation/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📍️coordinates/🟨️.mjs"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🪟️view-context/🧪️tests/🪟️host-opening-context/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/view-context/testing/host-opening-context",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/♻️publication-retirement-authority/🟦️.ts",
+    "proposedSubpath": "./testing/publication-retirement-authority",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧩️composition/🟦️.ts",
+    "proposedSubpath": "./testing/composition",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🪟️retained-window-input/🟦️.ts",
+    "proposedSubpath": "./window/transient/testing/retained-window-input",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts",
+    "proposedSubpath": "./describe/component-receipt",
+    "symbols": [
+     "COMPONENT_PROFILE_POLICIES",
+     "SHIPPED_COMPONENT_PROFILE"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧩️os/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
+    "proposedSubpath": "./build/materialization",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+    "proposedSubpath": "./build/driver-stages",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/⚖️comparison/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/⚖️comparison/🟦️.ts",
+    "proposedSubpath": "./model/comparison",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🚀️release/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛠️emitter/📋️contract/🟦️.ts",
+    "proposedSubpath": "./describe/emitter/contract",
+    "symbols": [
+     "descriptorEmitterCargoArgumentsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+    "proposedSubpath": "./browser-bundle/script",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-renderer-wgpu": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+    "proposedSubpath": "./native-entrypoint/script",
+    "symbols": [
+     "nativeRunnerEnvironment"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📦️modules/📋️contract/🟦️.ts",
+    "proposedSubpath": "./native-entrypoint/modules/contract",
+    "symbols": [
+     "readNativeRuntimeManifestV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/framework-replication": {
+   "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts",
+    "proposedSubpath": "./mutation/map/testing/shared-map-delta-source",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/nx-bootstrap-tools": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🟦️.ts",
+    "proposedSubpath": "./retention/headroom",
+    "symbols": [
+     "ToolingHeadroomRefusalV1",
+     "isToolingHeadroomRefusalV1",
+     "requireToolingPublicationValueV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+    "proposedSubpath": "./bun/script",
+    "symbols": [
+     "bunArchiveExecutable",
+     "bunDistribution",
+     "prepareBun"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+    "proposedSubpath": "./bun/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+    "proposedSubpath": "./sdk/source/derivative/reader",
+    "symbols": [
+     "withNxSdkDerivativeReaderReadV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+    "proposedSubpath": "./sdk/source/derivative/index",
+    "symbols": [
+     "readNxSdkSourceMetadataReadV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts",
+    "proposedSubpath": "./sdk/binary/verification",
+    "symbols": [
+     "captureReleasedNxSdkBinaryObjectReadV1",
+     "recheckReleasedNxSdkBinaryObjectReadV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧬️schema/🔣️.json",
+    "proposedSubpath": "./sdk/binary/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧬️schema/🔣️.json",
+    "proposedSubpath": "./retention/physical/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+    "proposedSubpath": "./retention/physical",
+    "symbols": [
+     "captureToolingRetirementBindingReadV1",
+     "captureToolingRetirementGenerationIntegrityReadV1",
+     "captureToolingRetirementWitnessesReadV1",
+     "readSelectedToolingPlanRequestV1",
+     "readSelectedToolingRetirementCommandV1",
+     "recheckToolingRetirementBindingReadV1",
+     "recheckToolingRetirementGenerationIntegrityReadV1",
+     "recheckToolingRetirementWitnessesReadV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🟦️.ts",
+    "proposedSubpath": "./retention/generation",
+    "symbols": [
+     "CopiedToolingRetirementInventoryV1",
+     "captureToolingRetirementInventoryReadV1",
+     "readToolingRetirementInventoryEntriesV1",
+     "recheckCopiedToolingRetirementInventoryReadV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/package.json",
+    "proposedSubpath": "./package",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🩹️patch/🟦️.ts",
+    "proposedSubpath": "./patch",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts",
+    "proposedSubpath": "./sdk/material",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts",
+    "proposedSubpath": "./sdk/binary/testing/runtime",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+    "proposedSubpath": "./wasm/script",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️wasm-outputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts",
+    "proposedSubpath": "./rustup/testing/installation",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/📥️runtime/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/📥️runtime/🟦️.ts",
+    "proposedSubpath": "./rustup/testing/runtime",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+    "proposedSubpath": "./use",
+    "symbols": [
+     "NxToolingUseWitnessV1",
+     "nxToolingUseStorageV1",
+     "withNxToolingUseV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔒️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🧪️tests/📥️purpose/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🧬️schema/📥️witness.json",
+    "proposedSubpath": "./use/schema/witness",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts",
+    "proposedSubpath": "./authorizers/receipt",
+    "symbols": [
+     "nxAuthorizerReceiptHoldsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+    "proposedSubpath": "./authorizers",
+    "symbols": [
+     "NxAuthorizerSourceManifestV1",
+     "captureNxAuthorizerSourcesV1",
+     "nxAuthorizerCapturedBytesV1",
+     "readNxAuthorizerSourceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧪️tests/📖️reader/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/📖️read/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts",
+    "proposedSubpath": "./wasm/testing/tool-fingerprint",
+    "symbols": [
+     "testWasmToolFingerprint"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts",
+    "proposedSubpath": "./wasm/testing/binaryen-toolchain",
+    "symbols": [
+     "testBinaryenToolchain"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+    "proposedSubpath": "./script",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts",
+    "proposedSubpath": "./authorizers/workspace",
+    "symbols": [
+     "nxAuthorizerWorkspaceCandidateV1",
+     "nxAuthorizerWorkspaceIndexV1",
+     "resolveNxAuthorizerWorkspaceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🎟️phase/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/🎟️phase/🟦️.ts",
+    "proposedSubpath": "./sdk/binary/testing/phase",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🎟️phase/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+    "proposedSubpath": "./rustup/installation",
+    "symbols": [
+     "RepositoryRustToolchainV1",
+     "repositoryRustCompilerIdentityV1",
+     "repositoryRustCompilerProgramDigestV1",
+     "repositoryRustToolchainIdentityV1",
+     "withRepositoryRustToolchainV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🦀️rustc/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/📥️descriptor/🎯️selection/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/💾️storage/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts",
+    "proposedSubpath": "./authorizers/snapshot",
+    "symbols": [
+     "compileNxAuthorizerSnapshotV1",
+     "snapshotNxAuthorizerSourcesV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+    "proposedSubpath": "./bazel/script",
+    "symbols": [
+     "BAZEL_VERSION",
+     "prepareBazel"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/📜️script.ts"
+    ]
+   }
+  },
+  "@semio-tech/plugin-registry": {
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
+    "proposedSubpath": "./catalog-view",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+    "proposedSubpath": "./publication/build",
+    "symbols": [
+     "CatalogBuildContributionV1",
+     "catalogBuildContributionForManifestV1",
+     "loadCatalogBuildProvidersV1",
+     "parseCatalogBuildContributionV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️preparation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️preparation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎮️playground-targets/🟨️.mjs",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🔎️owner-discovery/🟨️.mjs",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.d.mts"
+    ]
+   },
+   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌳️surface-scaffold/🟦️.ts",
+    "proposedSubpath": "./surface-scaffold",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️root-clean-scaffold-source/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/process": {
+   "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/🧪️testing/📥️invocation/🟦️.ts",
+    "proposedSubpath": "./testing/invocation",
+    "symbols": [
+     "registerBuildTestLawV1",
+     "withBuildTestInvocationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🌐️http/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🧵️worker/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/📥️pdf/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🎨️paint/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/quiz-react": {
+   "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx": {
+    "targetFile": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx",
+    "proposedSubpath": "./modules/run/.tsx",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🎛️pet-allowances/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/💬️challenge-hint-views/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/💭️crowd-client/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/📢️live-regions/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🖼️task-icons/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🪜️challenge-views/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚏️navigation/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️journey-and-tabs/🟦️.tsx"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx": {
+    "targetFile": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx",
+    "proposedSubpath": "./modules/results/.tsx",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🎛️pet-allowances/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/💭️crowd-client/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🪜️challenge-views/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚏️navigation/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️journey-and-tabs/🟦️.tsx"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/repo-coordinator": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts",
+    "proposedSubpath": "./builder/storage",
+    "symbols": [
+     "withNextStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🌐️next-runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎚️mode/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🎚️mode/🟦️.ts",
+    "proposedSubpath": "./builder/mode",
+    "symbols": [
+     "coordinatorBuildPolicy"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📦️publication/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📦️publication/🟦️.ts",
+    "proposedSubpath": "./builder/publication",
+    "symbols": [
+     "nextPublicationFiles"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts",
+    "proposedSubpath": "./builder/inputs/nx",
+    "symbols": "*",
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
+    ]
+   }
+  },
+  "@semio-tech/repo-lib": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
+    "proposedSubpath": "./process",
+    "symbols": [
+     "orchestratorBudgetOpts",
+     "runCmd",
+     "runCmdStatus"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts",
+    "proposedSubpath": "./build/typescript",
+    "symbols": [
+     "typecheckRepositoryProjectV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts",
+    "proposedSubpath": "./testing/vitest",
+    "symbols": [
+     "runVitest"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/📜️script.ts",
+     "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/native-build",
+    "symbols": [
+     "buildRepositoryCargoArtifacts"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+    "proposedSubpath": "./process/cargo/admission",
+    "symbols": [
+     "runRepositoryCargoCommandV1",
+     "runRepositoryCargoTests"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+    "proposedSubpath": "./process/cargo/dependencies",
+    "symbols": [
+     "repositoryCargoNetworkV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+    "proposedSubpath": "./caching/vite/service",
+    "symbols": [
+     "runViteBunxDev"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏷️package-source-classification/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏷️package-source-classification/🟦️.ts",
+    "proposedSubpath": "./discovery/package-source-classification",
+    "symbols": [
+     "classifyPackageSource"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+    "proposedSubpath": "./discovery/taxonomy-authority",
+    "symbols": [
+     "fileKindIdForSourcePath",
+     "loadCatalogTaxonomy",
+     "loadTaxonomy",
+     "scopedFileKindIdForSourcePath",
+     "semanticDescendantNodeRelativePath",
+     "semanticDirectoryKindId"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧱️command-composition-source/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧮️mutation-catalog/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts",
+    "proposedSubpath": "./discovery/repository-scan",
+    "symbols": [
+     "fixedSourceDispositionDecision"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts",
+    "proposedSubpath": "./discovery/file-kind-resolution",
+    "symbols": [
+     "implementationLeafBasenameFinding",
+     "taxonomyFileKindIsImplementation"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/📄️macro-and-pdf-verification/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts",
+    "symbols": [
+     "stageRepositoryArtifacts",
+     "withRepositoryArtifactDestinationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🖨️pipeline/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/budget/opening/store",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📜️script.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/storage",
+    "symbols": [
+     "ArtifactDestinationContextV1",
+     "ArtifactDestinationV1",
+     "typeScriptArtifactLayoutV1",
+     "withArtifactDestinationTaskV1",
+     "withArtifactScratchV1",
+     "withArtifactStorageOperationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📖️pdf/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🧪️testing/📏️measurement/📥️pdf/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🪟️panels/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/📥️emission/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/native-orchestration/invocation",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/📥️emission/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/👷️worker/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/📜️script.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/📥️acquisition/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+    "proposedSubpath": "./caching/bootstrap/dependencies/storage",
+    "symbols": [
+     "withJavascriptDependencyReadStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/reading",
+    "symbols": [
+     "RepositoryArtifactV1",
+     "withRepositoryArtifactTaskV1",
+     "withRepositoryArtifactV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/📥️material/📤️producer/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+    "proposedSubpath": "./caching/storage/enforcement/budget/policy",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts",
+    "proposedSubpath": "./build/graph/inference/testing/source",
+    "symbols": [
+     "readInferenceSourceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/rust",
+    "symbols": [
+     "runArtifactRustPackageMain",
+     "runArtifactRustTests"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+    "proposedSubpath": "./caching/artifacts/typescript/script",
+    "symbols": [
+     "runArtifactTypeScriptPackageMain"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
+    "proposedSubpath": "./workspaces",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🧪️tests/📚️catalog-coverage/🟦️.ts",
+     "🧰️framework/🛍️products/📓️print/🧪️tests/🧬️native-chart-grammar/🧠️neural-and-domain/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+    "proposedSubpath": "./process/cargo/run",
+    "symbols": [
+     "runCargo"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts",
+    "proposedSubpath": "./policy/linters",
+    "symbols": [
+     "BundleLinter",
+     "FileLinter",
+     "TechnologyLinter",
+     "defineLint"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧭️entrypoints/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧭️entrypoints/🟦️.ts",
+    "proposedSubpath": "./policy/entrypoints",
+    "symbols": [
+     "runPolicyOnlyMain"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+    "proposedSubpath": "./process/routing/entrypoint",
+    "symbols": [
+     "runRepoScriptMain"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts",
+    "proposedSubpath": "./testing/levels",
+    "symbols": [
+     "goLevelTestArgs"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🐹️go-plan/🟦️.ts",
+    "proposedSubpath": "./testing/go-plan",
+    "symbols": [
+     "runCanonicalGoBuild",
+     "runCanonicalGoTests",
+     "writeCanonicalGoWorkspaceOverlay"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔒️oracle-dependencies/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/📊️coverage/🟦️.ts",
+    "proposedSubpath": "./testing/coverage",
+    "symbols": [
+     "goCoverageArgs"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🐹️go/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/native-build/published",
+    "symbols": [
+     "runRepositoryPublishedCargoExecutableV1",
+     "withRepositoryPublishedCargoExecutableV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts",
+    "proposedSubpath": "./build/graph/rust/intent/routing",
+    "symbols": [
+     "runDeclaredRustBuildV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎫️tickets/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎯️goals/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏃️test-runner/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📡️events/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗂️codebase/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🗣️languages/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧑️contributors/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧩️providers/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪝️hooks/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚚️move/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+    "proposedSubpath": "./process/environment/test-output",
+    "symbols": [
+     "repoTestArtifactEnvironment"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts",
+    "proposedSubpath": "./process/environment",
+    "symbols": [
+     "devToolingEnv"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔌️mcp/📦️packages/🦀️rust/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts",
+    "proposedSubpath": "./process/cargo/testing/executable",
+    "symbols": [
+     "runRepositoryCargoTestExecutableV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🚀️launch-catalog/🟦️.ts",
+    "proposedSubpath": "./authoring/launch-catalog",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/📤️child/🟦️.ts",
+    "proposedSubpath": "./build/caller/child",
+    "symbols": [
+     "runOwnedBuildChildInvocationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts",
+    "proposedSubpath": "./build/graph",
+    "symbols": [
+     "BuildGraphV1",
+     "BuildTargetV1",
+     "buildGraphPathV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🎮️registry/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🔮️oracle/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🗺️coverage/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/compiler",
+    "symbols": [
+     "withRepositoryCompilerStoreV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/nx",
+    "symbols": [
+     "boundedNxNamespaceV1",
+     "requireOriginalNxRustCachePromotionV1",
+     "withOriginalNxFixedCacheV1",
+     "withRepositoryNxStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/tools",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/⚠️failure/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/📤️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧪️tests/📥️canonical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/📥️runtime/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📤️copy/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/📥️reader/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/📂️tree/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🧊️pristine/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/📥️publication/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🔎️verification/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️capture/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🔤️toml/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+    "proposedSubpath": "./.mjs",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧪️tests/🧊️execution/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🖥️cli/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🖥️cli/🟦️.ts",
+    "proposedSubpath": "./policy/cli",
+    "symbols": [
+     "resolveCliBin",
+     "resolveMcpBin"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/typescript/binding",
+    "symbols": [
+     "bindTypeScriptPackageArtifactV1",
+     "withTypeScriptPackageArtifactTaskV1",
+     "withTypeScriptPackageArtifactV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🏃️execution/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/budget/paths",
+    "symbols": [
+     "repositoryCachePartitionRootDataV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/👷️worker/📜️script.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/📓️print/📦️artifacts/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts",
+    "proposedSubpath": "./process/bun",
+    "symbols": [
+     "runBunx"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts",
+    "proposedSubpath": "./commands/commit/metrics/uloc",
+    "symbols": [
+     "countUnifiedLocForFile"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📊️metrics/🧪️tests/🧮️loc-aggregation/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📐️phases/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📐️phases/🟦️.ts",
+    "proposedSubpath": "./caching/testing/phases",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️snapshot/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/budget/opening",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🛂️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/🏗️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/🧪️tests/📥️runtime/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🧪️tests/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📦️generation/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🏗️bazel/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📥️use/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/🎟️capacity/📥️physical/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🔏️index/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📦️sdk/📥️source/🔗️derivative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️bootstrap/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️capture/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/📥️inputs/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/nx/graph/inputs",
+    "symbols": [
+     "sourceClosureReceiptHolds",
+     "sourceClosureTaskEnvironments"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/nx/graph",
+    "symbols": [
+     "nxGraphDaemonDisabledMarkerV1",
+     "requireNxGraphDiagnosticDirectoryV1",
+     "requireNxGraphNativeDirectoryV1",
+     "withOriginalNxGraphNativeStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🦀️promotion/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/🦀️promotion/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/nx/outputs/promotion",
+    "symbols": [
+     "readNxRustCacheExpectationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🚦️service/🟦️.ts",
+    "proposedSubpath": "./caching/graph/startup/service",
+    "symbols": [
+     "beginNxDaemonShutdownV1",
+     "completeNxDaemonShutdownV1",
+     "createNxDaemonJournalWorkerV1",
+     "markNxDaemonServerClosedV1",
+     "nxDaemonPinnedEnvironmentV1",
+     "registerNxDaemonServerV1",
+     "requestNxDaemonShutdownV1",
+     "retainNxDaemonWorkerV1",
+     "withNxDaemonRequestV1",
+     "withNxDaemonServiceV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏁️startup/🟦️.ts",
+    "proposedSubpath": "./caching/graph/startup",
+    "symbols": [
+     "withNxDaemonStartupV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️export/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️export/🟨️.mjs",
+    "proposedSubpath": "./caching/graph/export/.mjs",
+    "symbols": [
+     "compactTaskPlans"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🟦️.ts",
+    "proposedSubpath": "./caching/graph/publication",
+    "symbols": [
+     "publishGraphFilesV1",
+     "readGraphPublicationSnapshotV1",
+     "withGraphPublisherControlV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📤️publisher/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📤️publisher/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection/publisher",
+    "symbols": [
+     "captureSelectedGraphReuseReceiptV1",
+     "selectedGraphPublisherReceiptHoldsV1",
+     "selectedGraphReuseReceiptHoldsV1",
+     "writeSelectedGraphPublisherReceiptV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️handoff/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection/handoff",
+    "symbols": [
+     "SELECTED_GRAPH_HANDOFF_ENV",
+     "selectedGraphHandoffHoldsV1",
+     "writeSelectedGraphHandoffV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🔌️sdk/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🔌️sdk/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection/scope/sdk",
+    "symbols": [
+     "nativeSelectedTaskPlannerV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/📥️scope/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection/scope",
+    "symbols": [
+     "selectedTaskScopeV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection/sdk",
+    "symbols": [
+     "originalSelectedGraphHandoffHoldsV1",
+     "selectedGraphSdkPortsV1",
+     "selectedTaskSelectionV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🎯️selection/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/selection",
+    "symbols": [
+     "createSelectedGraphSourceReceiptV1",
+     "isGlobalGraphIdentityPathV1",
+     "selectedGraphSourceReceiptHoldsV1",
+     "validateSelectedGraphValueV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/membership/transport",
+    "symbols": [
+     "readNxGraphSourceProofV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/membership/journal/rpc",
+    "symbols": [
+     "loadedFilesystemJournalToolingIdentityV1",
+     "readFilesystemJournalRpcRequestV1",
+     "readFilesystemJournalRpcResponseV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/👷️worker/📜️script.ts",
+    "proposedSubpath": "./caching/graph/seal/membership/journal/worker/script",
+    "symbols": [
+     "readFilesystemJournalWorkerOptionsV1",
+     "runFilesystemJournalWorkerV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal/membership/journal",
+    "symbols": [
+     "createRepositoryFilesystemJournalV1",
+     "repositoryFilesystemJournalPolicyV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🟦️.ts",
+    "proposedSubpath": "./caching/graph/seal",
+    "symbols": [
+     "nxGraphSealHolds",
+     "nxGraphSourceMembershipV2",
+     "writeNxGraphSeal"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/📦️snapshot/🟦️.ts",
+    "proposedSubpath": "./build/inputs/selected/snapshot",
+    "symbols": [
+     "requireSelectedNativeFileCoverageV1",
+     "selectedNativeWorkspaceInventoryV1",
+     "selectedNativeWorkspaceRootV1",
+     "withOriginalSelectedNativeSnapshotV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️runtime/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧬️schema/📜️receipt.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🧬️schema/📜️receipt.json",
+    "proposedSubpath": "./caching/cargo/units/compiler/code/schema/receipt",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🧪️tests/📥️scope/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+    "proposedSubpath": "./caching/artifacts/native-orchestration/invocation/preparation",
+    "symbols": [
+     "repositoryCargoPreparationStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+    "proposedSubpath": "./caching/bootstrap/dependencies",
+    "symbols": [
+     "runTool"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📋️values/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📋️values/🟦️.ts",
+    "proposedSubpath": "./caching/testing/values",
+    "symbols": [
+     "testMethodV1",
+     "testRecordV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+    "proposedSubpath": "./build/graph/inference/.mjs",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/🏃️execution/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🧪️tests/🦀️inputs/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/📐️test-layout/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.d.mts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/budget",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️negative/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/📥️workspace/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🧬️schema/🔣️.json",
+    "proposedSubpath": "./caching/storage/enforcement/budget/opening/store/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+    "proposedSubpath": "./build/script",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement/budget/graph",
+    "symbols": [
+     "withRepositoryBuildGraphArtifactV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts",
+    "proposedSubpath": "./caching/storage/enforcement",
+    "symbols": [
+     "repositoryStrictStorageV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "proposedSubpath": "./caching/bootstrap/script",
+    "symbols": [
+     "NX_OUTPUT_LOG_ENV",
+     "runOwnedNxInvocationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/💾️storage/🧪️tests/🔌️nx/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+    "proposedSubpath": "./dependencies/typescript/configured",
+    "symbols": [
+     "ConfiguredSourceInputsV1",
+     "configuredSourceInputsV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts",
+    "proposedSubpath": "./policy/dependency-boundary",
+    "symbols": [
+     "dependencyBoundaryBreachesForBundleDir"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔖️breach/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔖️breach/🟦️.ts",
+    "proposedSubpath": "./policy/breach",
+    "symbols": [
+     "BreachRecord"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️policy/🧹️domain/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🌿️mutation-leaves/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏛️repository-contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📃️case-contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗺️test-layout/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️contracts/📋️orchestration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🚧️mutation-gates/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🚨️breaches/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/📇️inventory/🟦️.ts",
+    "proposedSubpath": "./dependencies/inventory",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts",
+    "proposedSubpath": "./workspaces/metadata",
+    "symbols": [
+     "getRepoMetaDir",
+     "getSemioRoot"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏛️repository-contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📊️reporting/📋️orchestration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔒️oracle-dependencies/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗂️taxonomy/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "proposedSubpath": "./workspaces/cargo",
+    "symbols": [
+     "discoverCargoWorkspaces"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪪️mutation-owner-identity/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪪️mutation-owner-identity/🟦️.ts",
+    "proposedSubpath": "./discovery/mutation-owner-identity",
+    "symbols": [
+     "mutationCatalogSourceOwner",
+     "mutationOwnerRelativePath"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📃️case-contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧮️mutation-catalog/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts",
+    "proposedSubpath": "./process/owned-execution",
+    "symbols": [
+     "runRepositoryCommand"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts",
+    "proposedSubpath": "./testing/repository-command",
+    "symbols": [
+     "runRepositoryTestCommand"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📜️script.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts",
+    "proposedSubpath": "./process/probe",
+    "symbols": [
+     "runProbe"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔀️comparison-pipelines/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🔒️oracle-dependencies/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️provenance/📋️orchestration/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🩺️environment/📋️inspection/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs",
+    "proposedSubpath": "./build/observation/.mjs",
+    "symbols": [
+     "observeDependencies",
+     "observeInference",
+     "observedFs"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗂️directories/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+    "proposedSubpath": "./caching/cargo/directories",
+    "symbols": [
+     "cargoTargetDirectory"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📑️taxonomy-document/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📑️taxonomy-document/🟦️.ts",
+    "proposedSubpath": "./discovery/taxonomy-document",
+    "symbols": [
+     "Taxonomy"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗂️taxonomy/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts",
+    "proposedSubpath": "./caching",
+    "symbols": [
+     "repoCacheDirectory"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🗑️retention/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🏃️runner/🟦️.ts",
+    "proposedSubpath": "./policy/runner",
+    "symbols": [
+     "formatBreachReport",
+     "isBlockingBreach"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔍️discovery-contract/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧾️contracts/📋️orchestration/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔍️inventory-planning/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔍️inventory-planning/🟦️.ts",
+    "proposedSubpath": "./normalization/inventory-planning",
+    "symbols": [
+     "inventoryTaxonomy"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧬️mutation-fixtures/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+    "proposedSubpath": "./dependencies/direction/bootstrap/.cjs",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+    "proposedSubpath": "./process/cargo/dependencies/contract",
+    "symbols": [
+     "CargoDependencyNetworkV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts",
+    "proposedSubpath": "./build/selection/closure",
+    "symbols": [
+     "selectedBuildPrerequisitesV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️selection/🟦️.ts",
+    "proposedSubpath": "./build/selection",
+    "symbols": [
+     "selectBuildTasksV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🔌️nx/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🟦️.ts",
+    "proposedSubpath": "./build/inputs/membership",
+    "symbols": [
+     "withBuildFileMembershipV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🏗️builder/📥️inputs/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🟨️.mjs",
+    "proposedSubpath": "./build/mode/.mjs",
+    "symbols": [
+     "targetBuildModes"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+    "proposedSubpath": "./build/inputs/storage/.mjs",
+    "symbols": [
+     "repositoryBuildGraphDataDirectoryV1",
+     "repositoryBuildGraphWriterDirectoryV1",
+     "withRepositoryBuildGraphFactStoreV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs"
+    ]
+   }
+  },
+  "@semio-tech/repo-test": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
+    "proposedSubpath": "./.mjs",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎚️build-mode/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts"
+    ],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts",
+    "proposedSubpath": "./acceptance/orchestration/docstring-and-debug-census",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts",
+    "proposedSubpath": "./acceptance/orchestration/interface-import-census",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts",
+    "proposedSubpath": "./acceptance/orchestration/placeholder-and-job-census",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts",
+    "proposedSubpath": "./acceptance/orchestration/artifact-neutrality",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "proposedSubpath": "./acceptance/orchestration",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts",
+    "proposedSubpath": "./schema/orchestration/mutation-caps",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🚦️gates/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🧬️schema/🔣️.json",
+    "proposedSubpath": "./inventory/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/💾️storage/🟦️.ts",
+    "proposedSubpath": "./storage",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/ui-react": {
+   "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",
+    "proposedSubpath": "./build-tooling",
+    "symbols": [
+     "hostBuildPlugins"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🏗️builder/🌐️vite/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/ui-styling": {
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
+    "proposedSubpath": "./palette/.css",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🌗️contrast-states/🟦️.tsx",
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/💭️crowd-client/🟦️.tsx"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css",
+    "proposedSubpath": "./ui/.css",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/❓️quiz/🧪️tests/🌗️contrast-states/🟦️.tsx"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts",
+    "proposedSubpath": "./verification",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🕸️dependency-lint/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+    "proposedSubpath": "./builder/python/provider",
+    "symbols": [
+     "STYLING_PYTHON_PROVIDER_V1",
+     "StylingPythonProviderV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🔌️provider/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔌️providers/🧪️tests/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📋️contract/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📋️contract/🟦️.ts",
+    "proposedSubpath": "./builder/python/contract",
+    "symbols": [
+     "STYLING_PYTHON_POLICY_V1",
+     "StylingPythonRequestV1",
+     "readStylingPythonRequestV1",
+     "requireStylingPythonWheelNameV1",
+     "stylingPythonEnvironmentV1",
+     "stylingPythonOutputV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📋️inventory/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📋️inventory/🟦️.ts",
+    "proposedSubpath": "./builder/python/inventory",
+    "symbols": [
+     "observeStylingPythonEnvironmentV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/🧬️schema/🔣️.json",
+    "proposedSubpath": "./builder/python/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎨️styling/🏗️builder/🐍️python/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "repo-vscode": {
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/📦️package/🟦️.ts",
+    "proposedSubpath": "./testing/package",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts",
+    "proposedSubpath": "./testing/host-build",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts"
+    ],
+    "closureImporters": []
+   },
+   "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/🏗️builder/🟦️.ts",
+    "proposedSubpath": "./builder",
+    "symbols": [
+     "extensionBuildConfig"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🏗️web-build/🟦️.ts"
+    ],
+    "closureImporters": []
+   }
+  },
+  "@semio-tech/print": {
+   "🧰️framework/🛍️products/📓️print/📦️artifacts/🟦️.ts": {
+    "targetFile": "🧰️framework/🛍️products/📓️print/📦️artifacts/🟦️.ts",
+    "proposedSubpath": "./artifacts",
+    "symbols": [
+     "printArtifactNxOutputV1"
+    ],
+    "importers": [],
+    "closureImporters": [
+     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧩️component-targets/🟨️.mjs"
+    ]
+   }
+  }
+ }
+}

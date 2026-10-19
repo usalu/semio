@@ -7,7 +7,8 @@ use semio_framework_os_renderer_wgpu_shell_state::ShellState;
 use semio_framework_ui_locale::{Locale, Terminology};
 use serde::Deserialize;
 use serde_json::Value;
-use ui_wgpu::wgpu::{InputState, KeyAction, PointerModifiers, Theme};
+use semio_framework_ui_wgpu_input::{InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::Theme;
 
 #[test]
 fn secondary_pointer_button_uses_context_menu_code() {
@@ -50,7 +51,7 @@ fn native_system_theme_change_merges_theme_into_the_pending_redraw_reason() {
 
 #[test]
 fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
-    for (key, expected) in [("Home", ui_wgpu::wgpu::KeyAction::Home), ("End", ui_wgpu::wgpu::KeyAction::End), ("PageUp", ui_wgpu::wgpu::KeyAction::PageUp), ("PageDown", ui_wgpu::wgpu::KeyAction::PageDown)] {
+    for (key, expected) in [("Home", semio_framework_ui_wgpu_input::KeyAction::Home), ("End", semio_framework_ui_wgpu_input::KeyAction::End), ("PageUp", semio_framework_ui_wgpu_input::KeyAction::PageUp), ("PageDown", semio_framework_ui_wgpu_input::KeyAction::PageDown)] {
         assert_eq!(key_action_from_dispatch(key, true), Some(expected));
         assert_eq!(key_action_from_dispatch(key, false), None);
     }
@@ -88,7 +89,7 @@ struct OsShortcutCollision {
 fn keyboard_interaction() -> semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
     semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
         shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
-        input: ui_wgpu::wgpu::InputState::default(),
+        input: semio_framework_ui_wgpu_input::InputState::default(),
         theme: semio_framework_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
@@ -96,7 +97,7 @@ fn keyboard_interaction() -> semio_framework_os_renderer_wgpu_frame_actions::App
         pointer_down: false,
         pointer_button: 0,
         pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
-        modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
+        modifiers: semio_framework_ui_wgpu_input::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         text_streams: std::array::from_fn(|_| None),
@@ -117,8 +118,8 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
 
     let restore = semio_framework_os_renderer_wgpu_host_base::boot_descriptor();
     semio_framework_os_renderer_wgpu_host_base::set_host_platform("MacIntel");
-    let action = ui_wgpu::wgpu::KeyAction::Char("f".into());
-    let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
+    let action = semio_framework_ui_wgpu_input::KeyAction::Char("f".into());
+    let modifiers = semio_framework_ui_wgpu_input::PointerModifiers { ctrl: true, meta: true, shift: false, alt: false };
     assert!(semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.matches));
     assert!(!semio_framework_os_renderer_wgpu_shell_docs::key_event_matches_chord(&action, &modifiers, &fixture.collision.refuses), "control+meta+f must not be reserved by Find's mod+f row");
     let mut interaction = keyboard_interaction();
@@ -140,7 +141,7 @@ fn normalized_host_key_routes_the_platform_os_command_to_the_shell() {
 #[test]
 fn normalized_pointer_and_wheel_snapshots_replace_stale_keyboard_modifiers() {
     let mut interaction = keyboard_interaction();
-    interaction.modifiers = ui_wgpu::wgpu::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
+    interaction.modifiers = semio_framework_ui_wgpu_input::PointerModifiers { shift: true, ctrl: true, alt: true, meta: true };
     interaction.input.modifiers = interaction.modifiers.clone();
     let pointer = PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None };
     let ctrl = EventModifiers { shift: false, ctrl: true, alt: false, meta: false };

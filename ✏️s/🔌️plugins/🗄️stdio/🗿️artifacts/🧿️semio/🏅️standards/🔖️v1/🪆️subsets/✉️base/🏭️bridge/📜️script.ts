@@ -23,7 +23,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import {runRepositoryMutationBridgeScriptV1} from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏭️inventory/🟦️.ts";
+import { runRepositoryMutationBridgeScriptV1 } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🚪️Entry

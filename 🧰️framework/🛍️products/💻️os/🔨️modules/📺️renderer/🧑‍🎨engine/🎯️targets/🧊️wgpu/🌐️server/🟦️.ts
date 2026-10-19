@@ -1,20 +1,20 @@
-import {RUNTIME_ASSET_CHANNELS} from "../../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
-import {frameworkOsViteArtifactPathsV1} from "../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
-import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import {RUNTIME_ASSET_CHANNELS} from "@semio-tech/framework-canvas-ts/runtime-assets";
+import {frameworkOsViteArtifactPathsV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts";
+import { repositoryCachePartitionRootDataV1 } from "@semio-tech/repo-lib/storage";
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
-import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
-import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
-import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "@semio-tech/assets/resolver/dispatch";
+import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "@semio-tech/plugin-registry/playground/assets/composition";
+import { MODULE_ROUTES, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
 import { packageAssetMounts } from "../../../../../../../../🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
-import { FONT_ASSET } from "../../../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { semioEmojiIndexHtmlVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
-import { staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin } from "@semio-tech/ui-styling/builder/vite/site-html";
+import { staticDirVitePlugin } from "@semio-tech/ui-styling/builder/vite";
+import type { OwnedBuildConfig, OwnedBuildPlugin } from "@semio-tech/ui-react/build-tooling";
+import { semioAgentBridgeRendezvousVitePlugin } from "@semio-tech/framework-os-dev/vite-plugins/agent-bridge-rendezvous";
 
 export type WgpuBrowserConfiguration = {
   readonly catalog: PluginCatalogRowsV1;

@@ -4,15 +4,17 @@
 //!
 //! The same options can be typed as a line: `z <length>` (the elevation), `rot <degrees>`, `mirror`, `sys <system|none>` and `fam <id or name>`; a length is in metres, or in millimetres, centimetres or metres with its unit.
 
-use crate::editor::bim::gestures::session::{Modifiers, Surface};
-use crate::editor::bim::gestures::plane::{axis_tangent_at, point2, project, P};
-use crate::editor::bim::gestures::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::gestures::snap::SnapHit;
-use crate::editor::bim::gestures::typed::INVALID;
-use crate::editor::bim::entities::components::{placeable, system_of, wall_mounted, SYSTEMS};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Component, MepSystem, ModelSnapshot}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Surface};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_tangent_at, point2, project, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit;
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{placeable, system_of, wall_mounted, SYSTEMS};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, MepSystem};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::f64::consts::TAU;
 
 /// 🚫️ The model holds no family the tool could place.
@@ -176,7 +178,7 @@ impl Place {
         let count = ctx.snapshot.components.values().filter(|component| component.family == family).count();
         let name = format!("{} {}", ctx.snapshot.families.get(&family).map_or("", |row| row.name.as_str()), count + 1);
         let component = Component { storey, family, position: point2(at), elevation: self.elevation, rotation: self.rotation, mirrored: self.mirrored, host: mounted.map(|mount| mount.wall), system: self.system, name };
-        let probe = ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id: "probe".into(), component: component.clone() });
+        let probe = ModelMutation::CreateComponent(semio_s_artifact_bim_model_mut_any_154::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id: "probe".into(), component: component.clone() });
         Some(Candidate { valid: ctx.accepts(&probe), component, frame, hit })
     }
 
@@ -191,14 +193,14 @@ impl Place {
             Some(candidate) => {
                 let component = candidate.component.clone();
                 let id = ctx.mint("component");
-                Step::write(ctx, ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id, component }))
+                Step::write(ctx, ModelMutation::CreateComponent(semio_s_artifact_bim_model_mut_any_154::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id, component }))
             }
         }
     }
 
     fn options(&self, ctx: &ToolContext<'_>) -> String {
         let family = self.family.as_ref().and_then(|id| ctx.snapshot.families.get(id)).map_or("", |row| row.name.as_str());
-        let system = self.system.map(|system| format!(" · {}", ctx.labels.map_or_else(|| format!("{system:?}"), |labels| crate::editor::bim::entities::components::system_label(labels, system)))).unwrap_or_default();
+        let system = self.system.map(|system| format!(" · {}", ctx.labels.map_or_else(|| format!("{system:?}"), |labels| semio_s_artifact_bim_model_entities::editor::bim::entities::components::system_label(labels, system)))).unwrap_or_default();
         format!("{family} · {}°{} · z {:.2} m{system}", clean(self.rotation.to_degrees().round()), if self.mirrored { " ⇋" } else { "" }, self.elevation)
     }
 
@@ -249,7 +251,7 @@ impl Tool for Place {
             }
             ToolEvent::Escape => {
                 self.hover = None;
-                Step { arm: Some(crate::editor::bim::utilities::DEFAULT_UTILITY.to_string()), ..Step::default() }
+                Step { arm: Some(semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY.to_string()), ..Step::default() }
             }
             ToolEvent::Lost => {
                 self.hover = None;

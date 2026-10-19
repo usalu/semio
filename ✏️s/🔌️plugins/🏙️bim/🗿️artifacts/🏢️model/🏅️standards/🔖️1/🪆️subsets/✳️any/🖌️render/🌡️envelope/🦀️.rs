@@ -6,10 +6,11 @@
 //!
 //! Related: Okabe and Ito <https://jfly.uni-koeln.de/color/>, gbXML surface types <https://gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{placement_of, SolidPlacement};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{placement_of, SolidPlacement};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::Point;
 use semio_framework_plugin::{MeshData, World3dColorRamp};

@@ -6,6 +6,8 @@
     "test": "bun --cwd \"../../../../..\" repo run @semio-tech/framework-mesh-attributes-ownership:test"
   },
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "ajv": "8.20.0",
+    "json5": "2.2.3"
   }
 }

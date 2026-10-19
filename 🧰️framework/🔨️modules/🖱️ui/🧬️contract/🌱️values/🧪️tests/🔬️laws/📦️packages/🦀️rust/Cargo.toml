@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-ui-contract-values-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion white-box laws of semio-framework-ui-contract-values"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-contract-values-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-ui-contract-values = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-ui-contract-budget = { path = "../../../../../📏️budget/📦️packages/🦀️rust" }
+semio-framework-ui-contract-text = { path = "../../../../../🔤️text/📦️packages/🦀️rust" }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true

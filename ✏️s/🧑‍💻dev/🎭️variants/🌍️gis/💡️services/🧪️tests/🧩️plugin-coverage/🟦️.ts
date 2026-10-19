@@ -1,5 +1,5 @@
 import{mcpJsonPathV1,mcpJsonArrayV1}from"@semio-tech/framework-os-mcp/stdio/session/data";
-import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{receiveScriptProcessInvocation,createIssuedResourceControlV1,withRequestedIssuedResourceControlV1}from"@semio-tech/process/routing";
 import{withDelegatedMcpClientSessionV1,withMcpDelegationCleanupV1}from"@semio-tech/framework-os-mcp/stdio/session/published";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "@semio-tech/framework/directory/io/text";
 import { serviceMcpTestArtifactRoot } from "../📁️artifact-root/🟦️.ts";

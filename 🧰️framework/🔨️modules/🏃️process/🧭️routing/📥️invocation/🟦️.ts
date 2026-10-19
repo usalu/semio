@@ -4,6 +4,7 @@ import {types} from "node:util";
 
 const scriptPolicyContract = compileJsonSchemaSubset(schema);
 const immutablePolicies = new WeakSet<object>();
+const admittedInvocations = new WeakSet<object>();
 const invocationKeys=compileExactKeysV1(schema.definitions.ExpectedKeys.const.invocation),controlKeys=compileExactKeysV1(schema.definitions.ExpectedKeys.const.control);
 
 /** 🧬️ Names the original caller's finite or ordinary no-deadline command authority. */
@@ -35,11 +36,15 @@ export function readScriptPolicy(value: unknown): ScriptPolicy {
 /** ⏳️ Checks original incoming authority before acquiring or executing an owner. */
 export function checkScriptInvocation<Capabilities extends object>(invocation: ScriptInvocation<Capabilities>): void {
   const row = requireRecord(invocation, "Script invocation");
-  invocationKeys(row, "Script invocation");
-  const policy = readScriptPolicy(row.policy), control = requireRecord(row.control, "Script control");
-  controlKeys(control, "Script control");
-  requireRecord(row.capabilities, "Script capabilities");
-  if (!(control.signal instanceof AbortSignal) || typeof control.remainingMilliseconds !== "function" || typeof control.publish !== "function" || typeof control.yieldContinuation !== "function") throw Error("Original Script control ports required");
+  if (!admittedInvocations.has(row)) {
+    invocationKeys(row, "Script invocation");
+    const admitted = requireRecord(row.control, "Script control");
+    controlKeys(admitted, "Script control");
+    requireRecord(row.capabilities, "Script capabilities");
+    if (!(admitted.signal instanceof AbortSignal) || typeof admitted.remainingMilliseconds !== "function" || typeof admitted.publish !== "function" || typeof admitted.yieldContinuation !== "function") throw Error("Original Script control ports required");
+    if (!types.isProxy(row) && Object.isFrozen(row) && !types.isProxy(admitted) && Object.isFrozen(admitted)) admittedInvocations.add(row);
+  }
+  const policy = readScriptPolicy(row.policy);
   invocation.control.signal.throwIfAborted();
   const remaining = invocation.control.remainingMilliseconds();
   if (policy.maximumElapsedMilliseconds === 0 ? remaining !== null : remaining === null || !Number.isFinite(remaining) || remaining <= 0 || remaining > policy.maximumElapsedMilliseconds) throw Error("Original Script deadline refused");

@@ -255,7 +255,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     1 => overlay.set_screen_height(h),
                     2 => {
                         draw.push_solid([0.0, 0.0, w, h], theme.background);
-                        self.chrome.chrome_floor_scope = Some(ui_wgpu::wgpu::SurfaceScope { level: ui_wgpu::wgpu::Level::Base, fill: ui_wgpu::wgpu::SurfaceFill::Surface });
+                        self.chrome.chrome_floor_scope = Some(semio_framework_ui_theme::SurfaceScope { level: semio_framework_ui_theme::Level::Base, fill: semio_framework_ui_theme::SurfaceFill::Surface });
                     }
                     3 => {
                         if self.chrome.chrome_build.find_items.pop_front().is_some() {
@@ -548,7 +548,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
         let sign_in_item = ChromeGroupItem { control_id: "framework.hub.signIn", icon_id: Some("user"), label: Some(sign_in_label), active: false, disabled: false, kind: HitKind::Button };
         let sign_in_width = (hub == HubConnectionState::SignedOut).then(|| retained_chrome_group_item_width(atlas, theme, &sign_in_item).unwrap_or(theme.control_height));
         let presence_rows = self.footer_presence_rows();
-        let presence_label = ui_wgpu::wgpu::presence_bar_chip_text(&presence_rows, None, self.prefs.active_locale());
+        let presence_label = semio_framework_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence_rows, None, self.prefs.active_locale());
         let presence_item = ChromeGroupItem { control_id: "s-presence-peers", icon_id: None, label: Some(presence_label.as_str()), active: false, disabled: false, kind: HitKind::Button };
         let presence_width = (!mobile).then(|| retained_chrome_group_item_width(atlas, theme, &presence_item).unwrap_or(0.0));
         let bottom_right_left = width - theme.padding_standard - bottom_right;
@@ -638,7 +638,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
     ) -> bool {
         match cursor.phase {
             0 => {
-                if ui_wgpu::wgpu::shell_floor_paints(self.chrome.chrome_floor_scope) {
+                if semio_framework_ui_theme::shell_floor_paints(self.chrome.chrome_floor_scope) {
                     draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
                 }
                 cursor.rect = Some(bounds.inset(theme.panel_inset));

@@ -4,7 +4,7 @@ import {join,resolve,relative} from "node:path";
 import {mkdirSync,writeFileSync,rmSync} from "node:fs";
 import {createHash,randomUUID} from "node:crypto";
 import {withRepositoryCompilerStoreV1} from "../../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readCargoExecutableTestRequestV1,selectCargoTestExecutableV1,runRepositoryCargoTestExecutableV1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

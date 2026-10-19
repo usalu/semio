@@ -4,14 +4,10 @@
 //! element) used by both. The viewer must not import the editor,
 //! so this module is the single place both surfaces import.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub use semio_s_artifact_bim_model_tests::render::window_config;
 #[path = "🧊️world/🦀️.rs"]
 pub mod world;
-pub use semio_s_artifact_bim_model_plan_linework::render::plan;
-pub use semio_s_artifact_bim_model_modify::render::envelope;
-pub use semio_s_artifact_bim_model_modify::render::structure;
 
 //#region 🔖️Storeys
 /// 🏢️ One storey in stacking order for pickers, plan selection and visibility toggles.

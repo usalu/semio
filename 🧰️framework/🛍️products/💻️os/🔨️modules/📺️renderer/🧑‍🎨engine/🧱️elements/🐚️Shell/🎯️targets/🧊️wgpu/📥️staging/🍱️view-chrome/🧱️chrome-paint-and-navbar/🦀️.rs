@@ -64,7 +64,7 @@ fn render_retained_chrome_group_item_step_with_trailing(
         }
         2 => {
             if let Some(label) = item.label {
-                if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+                if label.len() > semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
                     *group_phase = 0;
                     glyph.reset();
                     return RetainedChromeGroupStep::Fault;

@@ -1,5 +1,5 @@
 # 🪪️ FormsSnapshot imports the canonical OS Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import FormsDefinition from "../📝️definition/🔗️.graphql"
 # import FormsResponse from "../📨️response/🔗️.graphql"
 type FormsSnapshot {

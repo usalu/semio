@@ -60,7 +60,13 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::HashMap;
 use ui_contract::SurfaceId;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Rect, Theme, UiControlNode, UiNode, WindowMeasure};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowMeasure};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiControlNode, UiNode};
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🗄️browser-prefs-persistence/🦀️.rs"]

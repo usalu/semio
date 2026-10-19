@@ -3,8 +3,9 @@ import { cleanup, fireEvent, render, waitFor } from "@semio-tech/framework/ui/ta
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { boardTestSession } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
-import * as flowSessionLoader from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import { Board2dHost, beginBoardPeerGesture, endBoardPeerGesture, unregisterBoard2dPeer, boardPeerOwnsGesture } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { createWasmModuleLoader, type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
+import * as flowSessionLoader from "@semio-tech/framework-os/modules/renderer/engine/elements/WasmSessionLoader";
+import { Board2dHost, beginBoardPeerGesture, endBoardPeerGesture, unregisterBoard2dPeer, boardPeerOwnsGesture } from "@semio-tech/framework-renderer-react";
 import boardSessionFixture from "../🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../🧬️schema/🔣️.json";
 
@@ -49,7 +50,7 @@ describe("app-owned surface session factories", () => {
     const first = Promise.withResolvers<object>();
     const second = Promise.withResolvers<object>();
     const load = vi.fn().mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise);
-    const cached = flowSessionLoader.createWasmModuleLoader<object>(load);
+    const cached = createWasmModuleLoader<object>(load);
     const a = cached();
     const b = cached();
     expect(a).toBe(b);
@@ -73,7 +74,7 @@ describe("app-owned surface session factories", () => {
     const createA = vi.fn().mockResolvedValueOnce(sessions[0]).mockResolvedValueOnce(sessions[1]);
     const createB = vi.fn().mockResolvedValueOnce(sessions[2]).mockResolvedValueOnce(sessions[3]);
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
-    const content = (scope: flowSessionLoader.BoardPeerScope, create: () => Promise<flowSessionLoader.Board2dWasmSession>, id: string) => boardTestHost({ pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create }, id);
+    const content = (scope: flowSessionLoader.BoardPeerScope, create: () => Promise<Board2dWasmSession>, id: string) => boardTestHost({ pluginId: "puzzle", appId: "s.puzzle2d@1/*#editor", instanceId: 1, scope, create }, id);
     const views = [render(content(a, createA, "pane.a")), render(content(a, createA, "pane.b")), render(content(b, createB, "pane.a")), render(content(b, createB, "pane.b"))];
     try {
       await waitFor(() => sessions.forEach((session) => expect(session.attach_canvas).toHaveBeenCalledOnce()));
@@ -135,9 +136,9 @@ describe("app-owned surface session factories", () => {
   });
 
   it.each(boardSessionFixture.cancellation)("retires the exact mounted Board session once after $phase cancellation", async (vector) => {
-    const constructed = Promise.withResolvers<flowSessionLoader.Board2dWasmSession>();
+    const constructed = Promise.withResolvers<Board2dWasmSession>();
     const attached = Promise.withResolvers<void>();
-    const session: flowSessionLoader.Board2dWasmSession = {
+    const session: Board2dWasmSession = {
       attach_canvas: vi.fn(() => attached.promise),
       setSize: vi.fn(),
       renderFrame: vi.fn(),
@@ -227,7 +228,7 @@ describe("app-owned surface session factories", () => {
       .compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
     expect(validate(boardSessionFixture)).toBe(true);
     expect(validate({ ...boardSessionFixture, globalFactory: true })).toBe(false);
-    const create = vi.fn(async (): Promise<flowSessionLoader.Board2dWasmSession> => {
+    const create = vi.fn(async (): Promise<Board2dWasmSession> => {
       throw new Error("A lookup must not construct a session");
     });
     const registrations = boardSessionFixture.appIds.map((appId) => ({ kind: "board-2d" as const, pluginId: boardSessionFixture.pluginId, appId, create }));

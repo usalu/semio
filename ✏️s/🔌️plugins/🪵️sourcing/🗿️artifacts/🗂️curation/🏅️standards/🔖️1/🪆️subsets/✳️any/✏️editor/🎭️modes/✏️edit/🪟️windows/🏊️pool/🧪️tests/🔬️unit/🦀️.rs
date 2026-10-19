@@ -123,7 +123,7 @@ async fn pool_scene_names_columns_by_id_and_drops_onto_the_pool() {
     assert_eq!(columns[0]["sortable"], true, "the name header is clickable to sort");
     assert_eq!(columns[4]["id"], "curated");
     assert_eq!(columns.as_array().expect("column records").len(), 5, "pool columns end at curated — no duplicate actions column");
-    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::base::SOURCING_DRAG_MIME));
+    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::editor_vocabulary::SOURCING_DRAG_MIME));
     assert!(scene.drop_action_json.expect("drop action").contains("dropOnPool"));
 }
 
@@ -149,8 +149,8 @@ async fn definition_declares_the_table_surface_and_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_pool_table_scene() {
     let mut app = new_app().await;
-    let rendered = semio_framework_plugin::PluginApp::render(&mut *app, SOURCING_CURATION_BODY_POOL, None, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    assert!(rendered.root.children.iter().any(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_))));
+    let has_surface = semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, SOURCING_CURATION_BODY_POOL, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| root.children.iter().any(|child| matches!(child.component, semio_framework_plugin::Component::Surface(_)))).await.expect("render");
+    assert!(has_surface);
 }
 
 /// ⚖️ LAW: dispatching the search box's own command through the live app narrows the rendered pool.
@@ -233,8 +233,8 @@ async fn a_contributed_module_reaches_the_filter_bar_and_then_the_pool_rows() {
 #[semio_framework_async_macros::async_test]
 async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_lane() {
     let json = demonstrator_contributions();
-    assert!(json.len() > crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_TEXT_BYTES);
-    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&json, crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    assert!(json.len() > crate::editor::sourcing::editor_vocabulary::SOURCING_CURATION_CONFIG_TEXT_BYTES, "the real pack is {} bytes — past the {}-byte filter-text envelope", json.len(), crate::editor::sourcing::editor_vocabulary::SOURCING_CURATION_CONFIG_TEXT_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&json, crate::editor::sourcing::editor_vocabulary::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert_eq!(installable, "[]", "the shipped extensions re-contribute authored modules, so nothing new is installable");
     let installed: Vec<String> = crate::schema::available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&json)).into_iter().map(|module| module.module_id).collect();
     assert_eq!(installed, vec!["beams".to_string(), "windows".to_string(), "slabs".to_string(), "reuse".to_string()], "a re-contributed module never duplicates the authored one");
@@ -255,14 +255,14 @@ async fn the_real_sourcing_module_pack_installs_through_the_live_contributions_l
 /// store really kept the pushed roster — the whole path the demonstrator depends on.
 #[semio_framework_async_macros::async_test]
 async fn dispatching_set_contributions_installs_the_module_into_the_live_catalogue() {
-    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&fake_contribution(), crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
+    let installable = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&fake_contribution(), crate::editor::sourcing::editor_vocabulary::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(installable.contains("\"salvage\""), "a module id no authored module serves is installable: {installable}");
-    assert!(installable.len() <= crate::editor::sourcing::base::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
+    assert!(installable.len() <= crate::editor::sourcing::editor_vocabulary::SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "the installable roster fits its retained lane");
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
     assert!(!before.iter().any(|id| id == CONTRIBUTED_KIND_ID), "the contributed kind is absent before the push");
     dispatch(&mut app, SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: fake_contribution() })).await;
-    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("restock dispatch");
+    app.0.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()
@@ -283,7 +283,7 @@ async fn dispatching_set_contributions_installs_the_module_into_the_live_catalog
 async fn the_restock_button_publishes_a_merged_catalogue_document() {
     let mut app = new_app().await;
     let before = row_ids(&mut app, SOURCING_CURATION_BODY_POOL).await;
-    app.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("restock dispatch");
+    app.0.dispatch_typed(SourcingCurationCommand::StockFromCatalogue(stock_from_catalogue::StockFromCatalogue {}), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("restock dispatch");
     let restocked = settle(&mut app)
         .await
         .into_iter()

@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/Interpreter/surface-menu` entry: explicit re-exports of the source module that owns each member. */
+export { ShellContextMenuFallbackContext, mapContextMenuSpecs, openSurfaceContextMenu, surfaceContextMenuTitleKey, useAppKeybindingsByActionId, useMapContextMenuSpecs, useShellContextMenuFallback } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";
+export type { SurfaceContextMenuResult } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🖱️surface-menu/🟦️.ts";

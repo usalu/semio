@@ -1,7 +1,6 @@
 //! ✏️ BIM model editor: the `edit` mode and its default window layout: the plan beside the 3D world, the section and the schedule alongside.
 
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -23,7 +22,7 @@ pub fn definition() -> ModeDefinition {
 
 /// 🪟️ The app's default window layout: this mode is the app's `default_mode_id`, so its layout is the app-level `default_layout`. The windows carry their own localized labels.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[plan::WINDOW_KIND_ID.into(), world::WINDOW_KIND_ID.into(), section::WINDOW_KIND_ID.into(), schedule::WINDOW_KIND_ID.into()], "row", Some(&[28.0, 38.0, 18.0, 16.0]), None)
+    create_default_layout(&[semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID.into(), semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID.into(), semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID.into(), semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::WINDOW_KIND_ID.into()], "row", Some(&[28.0, 38.0, 18.0, 16.0]), None)
 }
 //#endregion 🔖️Definition
 

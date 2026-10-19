@@ -1,27 +1,29 @@
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::standards::v1::subsets::any::io::export::svg::codec::{element, text, CommonAttrs, SvgElement, TransformOp};
-use crate::standards::v1::subsets::any::io::export::svg::sheet::Slot;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::{element, text};
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, SvgElement, TransformOp};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::Slot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::codec::attr;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::attr;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::sheet::TITLE_BAND;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::TITLE_BAND;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanText};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanText};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::io::export::svg::drawing::*;
-use crate::standards::v1::subsets::any::io::export::svg::codec::{document_text, PathCommand, ViewBox};
-use crate::standards::v1::subsets::any::io::export::svg::sheet::layout;
-use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, tags};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::{view_group, xml_id};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::document_text;
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::{PathCommand, ViewBox};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::layout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{house, tags};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 
 fn view(id: &str) -> (SvgElement, PlanLinework, Slot) {
     let model = house();

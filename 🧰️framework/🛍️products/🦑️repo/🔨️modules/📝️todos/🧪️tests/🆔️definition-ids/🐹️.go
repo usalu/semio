@@ -8,16 +8,14 @@ import (
 
 	codebase "github.com/usalu/semio/repo/codebase"
 	model "github.com/usalu/semio/repo/model"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 🆔️Definition Id Tests
 
 func TestResolveAllTestDefinitionIDs(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	t.Run("go_test_file", func(t *testing.T) {
 		goDir := filepath.Join(tmpDir, "pkg")
@@ -118,7 +116,7 @@ func TestEventIDsUseComposeRepoFormat(t *testing.T) {
 		t.Skip("skipping slow real-git-subprocess event id test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 
 	os.MkdirAll(filepath.Join(tmpDir, "src"), 0755)
 	os.WriteFile(filepath.Join(tmpDir, "src", "main.go"), []byte("package main"), 0644)

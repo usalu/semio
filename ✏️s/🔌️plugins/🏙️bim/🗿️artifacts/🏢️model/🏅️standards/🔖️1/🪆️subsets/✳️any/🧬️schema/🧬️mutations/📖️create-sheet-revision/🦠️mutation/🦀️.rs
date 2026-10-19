@@ -1,6 +1,7 @@
 //! 📖️ `create-sheet-revision` payload. Adds a row to the revision table of a sheet: the mark, its date, what changed and who changed it. The table is printed in the corner of the sheet by the inferred sheet layout.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, SheetRevision}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SheetRevision};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateSheetRevision {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateSheetRevision
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSheetRevision> + From<crate::standards::v1::subsets::any::schema::mutations::delete_sheet_revision::DeleteSheetRevision>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSheetRevision> + From<semio_s_artifact_bim_model_mut_any_106::standards::v1::subsets::any::schema::mutations::delete_sheet_revision::DeleteSheetRevision>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "sheet-revision", kind: "create-sheet-revision", record: "CreateSheetRevision" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

@@ -2,9 +2,9 @@
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{fileURLToPath}from"node:url";
-import{registerBuildTestLawV1}from"../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 test("neutral Rust artifact receipt schema limits remain explicit",()=>{expect(new Ajv({strict:true}).validate({type:"array",items:schema.definitions.Case},corpus.cases)).toBe(true);});

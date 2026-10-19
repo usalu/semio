@@ -1,0 +1,17 @@
+import { readFileSync, writeFileSync } from "node:fs";
+type Cycle = { name: string }[];
+type V = { from: string; to: string; rule: { name: string }; cycle?: Cycle };
+const [, , reportPath, outPath] = process.argv;
+const report = JSON.parse(readFileSync(reportPath!, "utf8"));
+const vs: V[] = report.summary.violations;
+const strip = (p: string) => p.replace(/[^\x00-\x7f]/gu, "");
+const fam = (n: string) => n.replace(/^(no-cross-package-relative|no-cross-technology|no-cross-plugin|plugin-no-extension-or-artifact)-.+$/u, "$1");
+const FW = "🧰️framework/";
+const isProd = (p: string) => p.startsWith(FW + "🛍️products/");
+const srcOk = (p: string) => p.startsWith(FW + "🔨️modules/") || p.startsWith(FW + "📦️packages/");
+const wp = vs.filter((v) => srcOk(v.from) && !isProd(v.to) && (v.rule.name !== "no-circular" || !(v.cycle ?? []).some((c) => isProd(c.name))));
+const count = (rows: V[], k: (v: V) => string) => { const o: Record<string, number> = {}; for (const r of rows) o[k(r)] = (o[k(r)] ?? 0) + 1; return Object.fromEntries(Object.entries(o).sort((a, b) => b[1] - a[1])); };
+const modOf = (p: string) => { const s = p.split("/"); return strip(s.slice(0, 3).join("/")); };
+const out = { total: wp.length, byFamily: count(wp, (v) => fam(v.rule.name)), byFromArea: count(wp, (v) => modOf(v.from)), cyclesByArea: count(wp.filter((v) => v.rule.name === "no-circular"), (v) => modOf(v.from)), uiNoFw: count(wp.filter((v) => v.rule.name === "ui-no-framework-packages"), (v) => modOf(v.to)), rows: wp.map((v) => ({ rule: fam(v.rule.name), full: v.rule.name, from: v.from, to: v.to, cycle: v.cycle?.map((c) => c.name) })) };
+writeFileSync(outPath!, JSON.stringify(out, null, 1));
+console.log(JSON.stringify({ total: out.total, byFamily: out.byFamily, byFromArea: out.byFromArea, cyclesByArea: out.cyclesByArea, uiNoFw: out.uiNoFw }, null, 1));

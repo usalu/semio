@@ -2,38 +2,70 @@
   "requests": [
     {
       "value": {
-        "minimumAvailableBytes": 0
+        "minimumAvailableBytes": 0,
+        "wait": false
       },
       "accepted": true
     },
     {
       "value": {
-        "minimumAvailableBytes": 2684354560
+        "minimumAvailableBytes": 0,
+        "wait": true
       },
       "accepted": true
     },
     {
       "value": {
-        "minimumAvailableBytes": 2684354561
+        "minimumAvailableBytes": 2684354560,
+        "wait": true
+      },
+      "accepted": true
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 2684354561,
+        "wait": false
       },
       "accepted": false
     },
     {
       "value": {
-        "minimumAvailableBytes": -1
+        "minimumAvailableBytes": -1,
+        "wait": false
       },
       "accepted": false
     },
     {
       "value": {
-        "minimumAvailableBytes": 1.5
+        "minimumAvailableBytes": 1.5,
+        "wait": true
       },
       "accepted": false
     },
     {
       "value": {
         "minimumAvailableBytes": 1,
+        "wait": false,
         "unknown": true
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "minimumAvailableBytes": 1,
+        "wait": "yes"
+      },
+      "accepted": false
+    },
+    {
+      "value": {
+        "wait": true
       },
       "accepted": false
     }

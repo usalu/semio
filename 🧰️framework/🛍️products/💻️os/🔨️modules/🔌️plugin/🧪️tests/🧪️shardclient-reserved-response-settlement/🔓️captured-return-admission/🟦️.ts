@@ -1,6 +1,6 @@
 /** 🔓️ The captured return admission, response admission and construction tests. */
-import { loadInstanceOutputAdmissionFixture, loadActivationReturnRetirementFixture, loadActivationReturnAdmissionFixture, loadActivationReturnAdmissionContract, loadInstanceOutputAdmissionContract, loadInstanceOutputFaultFixture, loadActorActivationReturnFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { loadInstanceOutputAdmissionFixture, loadActivationReturnRetirementFixture, loadActivationReturnAdmissionFixture, loadActivationReturnAdmissionContract, loadInstanceOutputAdmissionContract, loadInstanceOutputFaultFixture, loadActorActivationReturnFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { shardClientInternals } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { OwnedResidentLedger, OwnedResidentRecord, OwnedShardReturn, ShardClientSettlementTestKit, ShardInstanceOwner, ShardReturnAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
@@ -17,7 +17,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
     
     for (const prefix of fixture.prefixes) {
       const { client, residentLedger, worker, instance } = await captured();
-      const owner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence);
+      const owner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence)!;
       const before = residentLedger.usage.data, posts = worker.sent.length;
       for (const row of admission.phases.slice(0, prefix)) instance.reserveReturn(admission.capacity, { maxItems: 1, maxBytes: row.grant });
       const source = instance.pendingReturn;
@@ -61,7 +61,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
     const admission = await loadActivationReturnAdmissionFixture();
     for (const phase of ["in-flight", "content-owned", "faulted"]) {
       const { client, residentLedger, worker, instance, row } = await captured();
-      const owner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence);
+      const owner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence)!;
       if (phase === "faulted") {
         const fault = { payload: new Uint8Array(8192) };
         const freeze = Object.freeze;
@@ -73,7 +73,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
       }
       const source = await fixtureCapturedReturn(instance, admission.capacity);
       if (phase === "content-owned") {
-        const content = new OwnedKernelReturnContent(source, owner.host, instance.activation, instance.lifetime!);
+        const content = new OwnedKernelReturnContent(source, owner.host!, instance.activation, instance.lifetime!);
         const before = residentLedger.usage;
         expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(source.content).toBe(content);
         expect(instance.pendingReturn).toBe(source); expect(residentLedger.usage).toEqual(before); client.disposeAll(); continue;
@@ -83,7 +83,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
       const before = residentLedger.usage;
       expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(instance.pendingReturn).toBe(source);
       expect(residentLedger.usage).toEqual(before);
-      const { encodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+      const { encodeActorReturnResult } = await import("@semio-tech/framework-actor/return");
       worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: encodeActorReturnResult({ kind: "pending", identity: { origin: source.origin!, returnSequence: BigInt(row.returnSequence) }, reason: "working" }) });
       await pending;
       expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(instance.pendingReturn).toBe(source); client.disposeAll();
@@ -124,7 +124,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
   });
   it("CapturedReturnAdmission installs the actual parent before all twelve granted construction phases", async () => {
     const fixture = await loadActivationReturnAdmissionFixture(); const { produce } = await import("immer");
-    const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence); const initial = residentLedger.usage.data; const posts = worker.sent.length;
+    const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence)!; const initial = residentLedger.usage.data; const posts = worker.sent.length;
     for (const capacity of fixture.invalidCapacities) expect(instance.reserveReturn(capacity, { maxItems: 1, maxBytes: 4096 })).toMatchObject({ step: { kind: "rejected", bytes: 0 }, source: null });
     expect(owner.returnCell).toBeNull(); expect(owner.returnCapacity).toBe(0); let source: OwnedShardReturn | null = null;
     for (const [index, phase] of fixture.phases.entries()) {
@@ -146,7 +146,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
   it("CapturedReturnAdmission recovers genuine lost returns and finalizer faults under the original charged owner", async () => {
     const fixture = await loadActivationReturnAdmissionFixture(); const { OwnedResidentRecord } = await import("@semio-tech/value-ts/resident");
     for (const boundary of fixture.faultBoundaries) for (const kind of fixture.faultValues) {
-      const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence); const posts = worker.sent.length; let reads = 0;
+      const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence)!; const posts = worker.sent.length; let reads = 0;
       const fault = kind === "null" ? null : kind === "undefined" ? undefined : kind === "false" ? false : kind === "zero" ? 0 : { payload: new Uint8Array(8193), get message() { reads++; throw new Error("Foreign fault getter"); } };
       const restorations: Array<() => void> = []; let observed = false;
       if (boundary === "prepare-after-return") { const original = OwnedResidentLedger.prototype.prepareAdmission; const spy = vi.spyOn(OwnedResidentLedger.prototype, "prepareAdmission").mockImplementation(function (this: OwnedResidentLedger, consumer, partition, grant) { const result = original.call(this, consumer, partition, grant); if (this === residentLedger && consumer === owner) { observed = true; throw fault; } return result; }); restorations.push(() => spy.mockRestore()); }
@@ -168,7 +168,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
   it("CapturedReturnAdmission stops forward child construction at every closing ledger prefix", async () => {
     const fixture = await loadActivationReturnAdmissionFixture();
     for (const prefix of fixture.closing.prefixes) {
-      const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence);
+      const { client, residentLedger, worker, instance } = await captured(); const owner: ShardInstanceOwner = shardClientInternals(client).state.instanceLifecycles.get(instance.openRequest.requestSequence)!;
       for (const phase of fixture.phases.slice(0, prefix)) expect(instance.reserveReturn(fixture.capacity, { maxItems: 1, maxBytes: phase.grant }).step.kind).toBe(phase.kind);
       const state = owner.activation.returned; const outputs = state?.outputs; const source = state?.facade; const before = residentLedger.usage; const posts = worker.sent.length; residentLedger.beginClose();
       for (const phase of fixture.phases.slice(prefix)) {
@@ -232,7 +232,7 @@ export function registerCapturedReturnAdmissionTests(kit: ShardClientSettlementT
     }
   });
   it("CapturedReturnConstruction fences the original parent after a retained child finalizer fault", async () => {
-    const { OwnedActorTurnOutput } = await import("../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts");
+    const { OwnedActorTurnOutput } = await import("@semio-tech/framework-actor/activation/instance/output");
     const fixture = await loadInstanceOutputFaultFixture();  const { default: Ajv } = await import("ajv"); 
     for (const boundary of fixture.boundaries) for (const kind of fixture.values) {
       const { client, worker, instance } = await captured(); const source = await fixtureCapturedReturn(instance, 2); const state = capturedReturnState(source); const posts = worker.sent.length; let reads = 0;

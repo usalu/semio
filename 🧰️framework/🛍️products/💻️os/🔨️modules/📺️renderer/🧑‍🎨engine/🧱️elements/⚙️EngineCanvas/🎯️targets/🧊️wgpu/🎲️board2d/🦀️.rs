@@ -11,7 +11,9 @@ use super::paint2d::write_interaction_hover;
 use super::tiled_map::board_local_pointer;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, KeyAction, PointerModifiers, Rect};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{KeyAction, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
 
 //#region Board2d
 /// 📬️ One coalesced board batch: the board rows for `applyBoardEvents`, the latest camera for the view lane (`setCamera`)
@@ -70,9 +72,9 @@ pub fn board2d_set_camera_silent(surface_id: &str, camera: [f64; 3]) -> bool {
 }
 
 /// 🏁️ Publishes the settled board camera once when the last pinch contact lifts.
-pub fn board2d_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_publish_camera_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(camera) = board2d_camera(surface_id) else { return Ok(false) };
-    let mut reservation = input.reserve_actions(1, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(1, semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     write_board_camera_flat(&mut reservation, controller_id, camera)?;
     reservation.publish()?;
     Ok(true)
@@ -80,7 +82,7 @@ pub fn board2d_publish_camera_into(surface_id: &str, controller_id: &str, input:
 
 /// 🔀️ Ends the board's single-pointer lane exactly once when a second touch acquires the surface — after the lane's
 /// pending commit reached its terminal ([`settle_board_pointer_authority_into`]).
-pub fn board2d_yield_to_pinch_into(surface_id: &str, sx: f64, sy: f64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_yield_to_pinch_into(surface_id: &str, sx: f64, sy: f64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     settle_board_pointer_authority_into(surface_id, input)?;
     Ok(with_board_host_mut(surface_id, |host| {
         host.cancel_area_select();
@@ -156,14 +158,14 @@ pub fn board2d_granularity_by_id(snapshot_json: &str) -> HashMap<String, String>
     by_id
 }
 
-fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infinite_canvas::BoardOwnedEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infinite_canvas::BoardOwnedEvent) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     if !*first {
         output.push(',');
     }
     *first = false;
     event.write_json(output);
-    if output.len() > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    if output.len() > semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY {
+        return Err(semio_framework_ui_action::BoundedActionFault::ByteCredits);
     }
     Ok(())
 }
@@ -173,7 +175,7 @@ fn append_board_owned_event(output: &mut String, first: &mut bool, event: &infin
 /// latest `camera` out for the view lane, keeps every other row in order, and flushes now for a terminal row —
 /// except a `select` tagged with a `gestureId` whose record the batch does not yet carry: an open gesture's
 /// selection leaves together with its record, never mid-gesture.
-pub fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> Result<CoalescedBoardEvents, semio_framework_ui_action::BoundedActionFault> {
     use infinite_canvas::BoardEventKind;
     let recorded: Vec<String> = queue.iter().filter(|event| event.kind() == BoardEventKind::Gesture).filter_map(board_event_gesture_id).collect();
     let mut output = String::from("[");
@@ -204,12 +206,12 @@ pub fn coalesce_owned_board_events(queue: &infinite_canvas::BoardEventQueue) -> 
 /// preview and the link rings went the same way (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F24).
 /// React's host never dispatches those rows (`coalesceBoard2dEvents`); the shared corpus
 /// `🖥️Board2dHost/🧪️tests/🧫️fixtures/🧫️board-event-coalescing/🔣️.json` names what each batch leaves.
-pub fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, semio_framework_ui_action::BoundedActionFault> {
     let page = events_json.trim();
     if page.is_empty() {
         return Ok(None);
     }
-    let body = page.strip_prefix('[').and_then(|rest| rest.strip_suffix(']')).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let body = page.strip_prefix('[').and_then(|rest| rest.strip_suffix(']')).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
     let mut output = String::from("[");
     let (mut depth, mut in_string, mut escaped, mut start) = (0usize, false, false, 0usize);
     for (index, byte) in body.bytes().enumerate() {
@@ -232,11 +234,11 @@ pub fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, ui_
                 depth += 1;
             }
             b'}' | b']' => {
-                depth = depth.checked_sub(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                depth = depth.checked_sub(1).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
                 if depth == 0 {
                     let row = &body[start..=index];
-                    let name = row.strip_prefix("{\"name\":\"").and_then(|rest| rest.split('"').next()).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-                    let kind = infinite_canvas::BoardEventKind::parse(name).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                    let name = row.strip_prefix("{\"name\":\"").and_then(|rest| rest.split('"').next()).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+                    let kind = infinite_canvas::BoardEventKind::parse(name).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
                     if kind != infinite_canvas::BoardEventKind::Camera && !board_event_transient(kind) {
                         if output.len() > 1 {
                             output.push(',');
@@ -249,7 +251,7 @@ pub fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, ui_
         }
     }
     if depth != 0 || in_string {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        return Err(semio_framework_ui_action::BoundedActionFault::Structure);
     }
     output.push(']');
     Ok((output.len() > 2).then_some(output))
@@ -257,14 +259,14 @@ pub fn board_page_dispatch_rows(events_json: &str) -> Result<Option<String>, ui_
 
 /// 🧮️ Reserves exactly the actions one coalesced board batch publishes: `setCamera` for its camera, `applyBoardEvents`
 /// for its rows.
-fn reserve_board_coalesced<'input>(input: &'input mut ui_wgpu::wgpu::InputState<ActionDescriptor>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<ui_wgpu::wgpu::BoundedActionBatchReservation<'input>, ui_wgpu::wgpu::BoundedActionFault> {
-    let camera_bytes = if coalesced.camera.is_some() { ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])? } else { 0 };
-    let rows_bytes = if coalesced.has_rows() { ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &coalesced.events_json])? } else { 0 };
+fn reserve_board_coalesced<'input>(input: &'input mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<semio_framework_ui_action::BoundedActionBatchReservation<'input>, semio_framework_ui_action::BoundedActionFault> {
+    let camera_bytes = if coalesced.camera.is_some() { semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])? } else { 0 };
+    let rows_bytes = if coalesced.has_rows() { semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &coalesced.events_json])? } else { 0 };
     input.reserve_actions(usize::from(coalesced.camera.is_some()) + usize::from(coalesced.has_rows()), camera_bytes + rows_bytes)
 }
 
 /// 📤️ Writes one coalesced board batch: its camera on the view lane first, then its board rows.
-fn write_board_coalesced_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_board_coalesced_flat(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, coalesced: &CoalescedBoardEvents) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     if let Some(camera) = coalesced.camera {
         write_board_camera_flat(batch, controller_id, camera)?;
     }
@@ -328,9 +330,9 @@ fn board_peek_buffer_coalesced(surface_id: &str) -> Option<CoalescedBoardEvents>
 
 /// 📤️ Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
 
-fn write_board_events_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, events_json: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_board_events_flat(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, events_json: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let action = "applyBoardEvents";
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "eventsJson", events_json])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, action, "eventsJson", events_json])?;
     batch.action(controller_id, action, bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("eventsJson"), events_json)?;
@@ -338,9 +340,9 @@ fn write_board_events_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservat
     })
 }
 
-fn write_board_camera_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, camera: [f64; 3]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_board_camera_flat(batch: &mut semio_framework_ui_action::BoundedActionBatchReservation<'_>, controller_id: &str, camera: [f64; 3]) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let action = "setCamera";
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "camera", "x", "y", "zoom"])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, action, "camera", "x", "y", "zoom"])?;
     batch.action(controller_id, action, bytes, |builder| {
         builder.begin_object(None)?;
         builder.begin_object(Some("camera"))?;
@@ -360,15 +362,15 @@ pub fn board_set_pointer_inside(surface_id: &str, inside: bool) {
     });
 }
 
-fn board_pointer_plan_fault(fault: infinite_canvas::BoardPointerPlanFault) -> ui_wgpu::wgpu::BoundedActionFault {
+fn board_pointer_plan_fault(fault: infinite_canvas::BoardPointerPlanFault) -> semio_framework_ui_action::BoundedActionFault {
     match fault {
-        infinite_canvas::BoardPointerPlanFault::ItemCredits => ui_wgpu::wgpu::BoundedActionFault::ItemCredits,
-        infinite_canvas::BoardPointerPlanFault::ByteCredits => ui_wgpu::wgpu::BoundedActionFault::ByteCredits,
-        infinite_canvas::BoardPointerPlanFault::Unsupported => ui_wgpu::wgpu::BoundedActionFault::Structure,
+        infinite_canvas::BoardPointerPlanFault::ItemCredits => semio_framework_ui_action::BoundedActionFault::ItemCredits,
+        infinite_canvas::BoardPointerPlanFault::ByteCredits => semio_framework_ui_action::BoundedActionFault::ByteCredits,
+        infinite_canvas::BoardPointerPlanFault::Unsupported => semio_framework_ui_action::BoundedActionFault::Structure,
     }
 }
 
-fn plan_board_pointer(surface_id: &str, intent: infinite_canvas::BoardPointerIntent) -> Result<Option<infinite_canvas::BoardPointerPlan>, ui_wgpu::wgpu::BoundedActionFault> {
+fn plan_board_pointer(surface_id: &str, intent: infinite_canvas::BoardPointerIntent) -> Result<Option<infinite_canvas::BoardPointerPlan>, semio_framework_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let Some(host) = map.get(surface_id).and_then(|entry| entry.board_host.as_ref()) else {
@@ -400,9 +402,9 @@ fn commit_board_pointer(surface_id: &str, plan: &infinite_canvas::BoardPointerPl
 /// 🚦️ Begins one retained pointer commit and answers whether it dispatches anything: a view camera (`setCamera`, at once)
 /// or the board rows its page leaves after the delivery table ([`board_page_dispatch_rows`]) — claimed here, published
 /// when the commit reached its terminal ([`publish_board_pointer_step`]).
-fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     if let Some(camera) = plan.view_camera() {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])?;
+        let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "setCamera", "camera", "x", "y", "zoom"])?;
         let mut reservation = input.reserve_actions(1, bytes)?;
         write_board_camera_flat(&mut reservation, controller_id, camera)?;
         let mut admitted = None;
@@ -410,15 +412,15 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
             let result = ENGINE_SURFACES.with(|cell| {
                 let mut map = cell.borrow_mut();
                 let Some(entry) = map.get_mut(surface_id) else {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                    return Err(semio_framework_ui_action::BoundedActionFault::Structure);
                 };
                 if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
                 let Some(host) = entry.board_host.as_mut() else {
-                    return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                    return Err(semio_framework_ui_action::BoundedActionFault::Structure);
                 };
-                begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+                begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)?;
                 if let Some(pointer_inside) = pointer_inside {
                     entry.board_pointer_inside = pointer_inside;
                 }
@@ -433,21 +435,21 @@ fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infin
     let dispatch = board_page_dispatch_rows(plan.events_json())?;
     let emits = dispatch.is_some();
     let claim = match dispatch.as_deref() {
-        Some(rows) => Some(input.claim_action(ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", rows])?)?),
+        Some(rows) => Some(input.claim_action(semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", rows])?)?),
         None => None,
     };
     let admitted = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
         };
         if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+            return Err(semio_framework_ui_action::BoundedActionFault::ItemCredits);
         }
         let Some(host) = entry.board_host.as_mut() else {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+            return Err(semio_framework_ui_action::BoundedActionFault::Structure);
         };
-        begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+        begin_pointer_commit(&mut host.scene, &mut host.commit, plan).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)?;
         entry.board_pointer_claim = claim;
         entry.board_pointer_controller_id = emits.then(|| controller_id.to_owned());
         if let Some(pointer_inside) = pointer_inside {
@@ -486,7 +488,7 @@ const BOARD_POINTER_SETTLE_GRANT: semio_framework_job::RetainedCloneGrant = semi
 /// This is the frame phase's own ladder, stepped in place: the commit runs to `Complete` and its events are published
 /// through the claim it reserved when it began — so they leave BEFORE the new input's — and a cancelled commit returns
 /// its claim. Nothing is dropped and nothing overtakes; an idle authority costs one borrow.
-pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     if with_board_host(surface_id, |__h| __h.commit.pointer_authority_terminal_is_empty()).unwrap_or(true) {
         return Ok(());
     }
@@ -507,7 +509,7 @@ pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut ui_wgpu
             infinite_canvas::BoardAuthorityStep::Cancelled => release_board_pointer_claim(surface_id, input)?,
             infinite_canvas::BoardAuthorityStep::Fault => {
                 release_board_pointer_claim(surface_id, input)?;
-                return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                return Err(semio_framework_ui_action::BoundedActionFault::Structure);
             }
             infinite_canvas::BoardAuthorityStep::Complete => {
                 publish_board_pointer_step(surface_id, input)?;
@@ -517,7 +519,7 @@ pub fn settle_board_pointer_authority_into(surface_id: &str, input: &mut ui_wgpu
             return Ok(());
         }
     }
-    Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
+    Err(semio_framework_ui_action::BoundedActionFault::Structure)
 }
 
 pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framework_job::StepContext<'_>) -> infinite_canvas::BoardAuthorityStep {
@@ -536,7 +538,7 @@ pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framewor
     })
 }
 
-pub fn board2d_pointer_cancel_into(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+pub fn board2d_pointer_cancel_into(surface_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> bool {
     let (cancelled, claim) = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else { return (false, None) };
@@ -554,7 +556,7 @@ pub fn board2d_pointer_cancel_into(surface_id: &str, input: &mut ui_wgpu::wgpu::
     cancelled
 }
 
-pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn publish_board_pointer_step(surface_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let Some(entry) = map.get_mut(surface_id) else {
@@ -566,10 +568,10 @@ pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::I
         };
         let Some(events_json) = board_page_dispatch_rows(publication.events_json())? else {
             let retired = host.commit.take_pointer_publication().is_some_and(|mut publication| publication.close_step() && publication.terminal_is_empty());
-            return if retired { Ok(false) } else { Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
+            return if retired { Ok(false) } else { Err(semio_framework_ui_action::BoundedActionFault::Structure) };
         };
-        let claim = entry.board_pointer_claim.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
-        let controller_id = entry.board_pointer_controller_id.as_deref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let claim = entry.board_pointer_claim.ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
+        let controller_id = entry.board_pointer_controller_id.as_deref().ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
         let mut reservation = input.reserve_claimed_action(claim, controller_id, "applyBoardEvents")?;
         reservation.builder().begin_object(None)?;
         reservation.builder().string(Some("eventsJson"), &events_json)?;
@@ -586,7 +588,7 @@ pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::I
     })
 }
 
-pub fn release_board_pointer_claim(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn release_board_pointer_claim(surface_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let claim = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(surface_id)?;
@@ -607,7 +609,7 @@ pub fn release_board_pointer_claim(surface_id: &str, input: &mut ui_wgpu::wgpu::
 /// ⚖️ The frame phase used to publish each queued event by itself and as it stood — one raw `applyBoardEvents` per step, a
 /// `hover` the press queued included (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, live fault F24). One flush, one
 /// table, for every lane.
-pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     for _ in 0..2 * infinite_canvas::BOARD_EVENT_ITEM_CAPACITY + 2 {
         if !board_drain_into_buffer(surface_id) {
             break;
@@ -626,7 +628,7 @@ pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &m
 /// 📤️ Unconditional drain + coalesce + dispatch of the board's own event buffer — the wgpu twin of
 /// React's `flushBoardEvents`. `board2d_wheel_into` inlines the same three steps because it
 /// must ride the camera action's reservation; this is the standalone form the keyboard chords use.
-fn board2d_flush_events_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+fn board2d_flush_events_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     board_drain_into_buffer(surface_id);
     let Some(coalesced) = board_peek_buffer_coalesced(surface_id) else {
         return Ok(false);
@@ -648,8 +650,8 @@ fn board2d_flush_events_into(surface_id: &str, controller_id: &str, input: &mut 
 /// 🎛️ Drives one move or release of a lane the retained plan does not model (`BoardHost::pointer_lane_is_direct`: the rotate
 /// ring, a target-region drag, the area brush) the way React's Board2dHost drives every pointer: the engine's direct handler,
 /// then the one coalesced flush ([`publish_board_event_step`]).
-fn board2d_direct_pointer_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, drive: impl FnOnce(&mut infinite_canvas::BoardHost)) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    with_board_host_mut(surface_id, drive).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+fn board2d_direct_pointer_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, drive: impl FnOnce(&mut infinite_canvas::BoardHost)) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    with_board_host_mut(surface_id, drive).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
     publish_board_event_step(surface_id, controller_id, input)
 }
 
@@ -676,7 +678,7 @@ pub fn board_retire_pending_events(surface_id: &str) -> bool {
 ///
 /// 🎯️ `domain_id` used to be carried on `Board2dScene` and read NOWHERE in this target, so every
 /// board hover was invisible to the framework's interaction domain (outliner rows, sibling panes).
-pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let planned = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -695,7 +697,7 @@ pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut ui_
         Some(id) => json!([{ "granularity": granularity, "id": id }]).to_string(),
         None => "[]".to_string(),
     };
-    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", &domain_id, "channel", "pointer", "targets", &targets])?;
+    let bytes = semio_framework_ui_action::checked_action_string_bytes(&[controller_id, "interactionHover", "domainId", &domain_id, "channel", "pointer", "targets", &targets])?;
     let mut reservation = input.reserve_actions(1, bytes)?;
     write_interaction_hover(&mut reservation, controller_id, &domain_id, &targets)?;
     reservation.publish_with_checked(|| {
@@ -721,7 +723,7 @@ pub fn board2d_hover_into(surface_id: &str, controller_id: &str, input: &mut ui_
 ///
 /// 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
 /// on `scene.interactive`; the pointer-inside witness is this target's equivalent.
-pub fn board2d_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let armed = ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -754,7 +756,7 @@ pub fn board2d_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, 
 
 /// 🖱️ Presses the board — the engine's direct handler, so the authority is settled first
 /// ([`settle_board_pointer_authority_into`]): a press never lands under the pending commit of the move before it.
-pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
@@ -771,8 +773,8 @@ pub fn board2d_pointer_move_into(
     shift: bool,
     ctrl_or_meta: bool,
     alt: bool,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     if with_board_host(surface_id, |__h| pointer_lane_is_direct(&__h.focus, &__h.gestures)).unwrap_or(false) {
@@ -787,7 +789,7 @@ pub fn board2d_pointer_move_into(
         return begin_board_pointer_commit(surface_id, controller_id, plan, Some(true), input);
     }
     if !commit_board_pointer(surface_id, &plan, Some(true)) {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        return Err(semio_framework_ui_action::BoundedActionFault::Structure);
     }
     Ok(false)
 }
@@ -801,8 +803,8 @@ pub fn board2d_pointer_up_into(
     shift: bool,
     ctrl_or_meta: bool,
     alt: bool,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     settle_board_pointer_authority_into(surface_id, input)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
     if with_board_host(surface_id, |__h| pointer_lane_is_direct(&__h.focus, &__h.gestures)).unwrap_or(false) {
@@ -816,7 +818,7 @@ pub fn board2d_pointer_up_into(
         return begin_board_pointer_commit(surface_id, controller_id, plan, None, input);
     }
     if !commit_board_pointer(surface_id, &plan, None) {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        return Err(semio_framework_ui_action::BoundedActionFault::Structure);
     }
     Ok(false)
 }
@@ -824,7 +826,7 @@ pub fn board2d_pointer_up_into(
 /// 🐁️ The leave clears the domain's hover before the board events go out — React's
 /// `dispatchBoardHover(null)` on the same transition. The engine's own `hovered_id` is already
 /// `None` by the time a leave is planned, so the witness comparison publishes exactly one clear.
-pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let was_inside = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).is_some_and(|entry| entry.board_pointer_inside));
     if !was_inside {
         return Ok(false);
@@ -840,7 +842,7 @@ pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bo
         return begin_board_pointer_commit(surface_id, controller_id, plan, Some(false), input);
     }
     if !commit_board_pointer(surface_id, &plan, Some(false)) {
-        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        return Err(semio_framework_ui_action::BoundedActionFault::Structure);
     }
     Ok(false)
 }
@@ -851,11 +853,11 @@ pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |__h| pointer_lane_in_flight(&__h.focus, &__h.gestures)).unwrap_or(false)
 }
 
-pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     settle_board_pointer_authority_into(surface_id, input)?;
-    let mut reservation = input.reserve_actions(2, 2 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let mut reservation = input.reserve_actions(2, 2 * semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     let (sx, sy) = board_local_pointer(inner, x, y);
-    let plan = with_board_host(surface_id, |host| host.scene.plan_wheel(sx, sy, delta as f64)).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let plan = with_board_host(surface_id, |host| host.scene.plan_wheel(sx, sy, delta as f64)).ok_or(semio_framework_ui_action::BoundedActionFault::Structure)?;
     let camera = plan.camera();
     board_drain_into_buffer(surface_id);
     let buffered = board_peek_buffer_coalesced(surface_id);

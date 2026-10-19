@@ -1,0 +1,12 @@
+{
+ "name": "wfcjc",
+ "crates": [
+  "semio-s-plugin-wfc-engine",
+  "semio-framework-job",
+  "semio-framework-job-worker",
+  "semio-framework-job-worker-authority",
+  "semio-framework-value",
+  "semio-framework-async"
+ ],
+ "note": "every crate owning a file this port rewrote"
+}

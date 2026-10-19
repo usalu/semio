@@ -10,18 +10,18 @@ import (
 	os "os"
 	strings "strings"
 	testing "testing"
+	unicode "unicode"
 
 	model "github.com/usalu/semio/repo/model"
 	providers "github.com/usalu/semio/repo/providers"
 	ticketspkg "github.com/usalu/semio/repo/tickets"
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 func TestExhaustiveMcpTicketCloseAutoResolve(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mcp ticket close auto-resolve test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	result := ToolTicketOpen("🎫️", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", providers.McpClientGeneric, "", "")
 	if result.Error != "" {
@@ -53,7 +53,7 @@ func TestExhaustiveMcpTicketCloseWithFullYearPath(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mcp ticket close full-year-path test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	result := ToolTicketOpen("🎫️", "Test Full Year Path", "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", providers.McpClientGeneric, "", "")
 	if result.Error != "" {
@@ -84,7 +84,7 @@ func TestExhaustiveParityGoalList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity goal list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("list", "--only-goal")
@@ -129,7 +129,7 @@ func TestExhaustiveParityContributorList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity contributor list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("list", "--only-contributor")
@@ -161,7 +161,7 @@ func TestExhaustiveParityTicketList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity ticket list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("list", "--only-ticket")
@@ -193,7 +193,7 @@ func TestExhaustiveParityTechnologyList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity technology list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("list", "--only-technology")
@@ -226,7 +226,7 @@ func TestExhaustiveParityTechnologyTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity technology tree test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("search", "--only-technology")
@@ -251,10 +251,9 @@ func TestExhaustiveParityTechnologyTree(t *testing.T) {
 			trimmed := strings.TrimSpace(line)
 			if idx := strings.Index(trimmed, "repo://technology/"); idx >= 0 {
 				rest := trimmed[idx+len("repo://technology/"):]
-				// Extract inline name from parenthesized link
 				endParen := strings.Index(rest, ")")
 				if endParen >= 0 {
-					technologyNames = append(technologyNames, rest[:endParen])
+					technologyNames = append(technologyNames, strings.TrimLeftFunc(rest[:endParen], func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) }))
 				}
 			}
 		}
@@ -270,7 +269,7 @@ func TestExhaustiveParityPolicyList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity policy list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("output matches CLI markdown", func(t *testing.T) {
 		cliOut, _, err := executeCommandMd("list", "--only-policy")
@@ -302,8 +301,7 @@ func TestExhaustiveMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc command test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	workspace.SetRootDir(root)
+	withExhaustiveRepo(t)
 	cmd := NewRoot(testEngineFactory)
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
@@ -321,8 +319,7 @@ func TestExhaustiveMermaidCommandLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language command test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	workspace.SetRootDir(root)
+	withExhaustiveRepo(t)
 	cmd := NewRoot(testEngineFactory)
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)

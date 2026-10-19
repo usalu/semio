@@ -1,5 +1,5 @@
 //#region 🧬️ReadLeaseContract
-import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
 import type { OwnedUiNode, RetainedUiNodeRecord, UiNodeRetirement } from "../📦️wire/🧾️typed/🟦️.ts";
 import { OwnedUiSceneBinding, type OwnedUiSceneBindingRetirement, type OwnedUiSceneDiagnostic } from "../🎬️scene/🔗️binding/🟦️.ts";
 import type { OwnedUiPreparedSceneReader, OwnedUiPreparedSceneReadStep } from "../🎬️scene/🧾️typed/🟦️.ts";
@@ -8,7 +8,7 @@ import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
 type ReadOwner = OwnedUiNode | OwnedUiSceneBinding;
 type ReadRetirement = UiNodeRetirement | OwnedUiSceneBindingRetirement;
 type IssuedRoot = { readonly lease: object; node: ReadOwner | null; active: boolean; readers: number };
-type SceneRetirement = { advance(grant: NumericIndexGrant): RetainedUiWireStep; terminalIsEmpty(): boolean };
+type SceneRetirement = { advance(grant: UiIndexGrant): RetainedUiWireStep; terminalIsEmpty(): boolean };
 const ISSUED_MINT = Object.freeze({});
 export interface OwnedUiReadSubscription { readonly snapshot: OwnedUiNodeReadSnapshot | null }
 export interface OwnedUiReadSource {
@@ -17,15 +17,15 @@ export interface OwnedUiReadSource {
   unsubscribeNode(subscription: OwnedUiReadSubscription): void;
 }
 export type OwnedUiIssuedSceneReader = OwnedUiIssuedSceneRecord | OwnedUiIssuedSceneText;
-export interface OwnedUiSceneRecordView { advance(grant: NumericIndexGrant): OwnedUiPreparedSceneReadStep; close(): boolean }
-export interface OwnedUiSceneTextView { advance(grant: NumericIndexGrant): OwnedUiSceneReadStep; close(): boolean }
+export interface OwnedUiSceneRecordView { advance(grant: UiIndexGrant): OwnedUiPreparedSceneReadStep; close(): boolean }
+export interface OwnedUiSceneTextView { advance(grant: UiIndexGrant): OwnedUiSceneReadStep; close(): boolean }
 export interface OwnedUiSceneReadSource extends OwnedUiReadSource {
   retireSceneRead(subscription: OwnedUiReadSubscription, reader: OwnedUiIssuedSceneReader): boolean;
   openSceneRecord(subscription: OwnedUiReadSubscription, snapshot: OwnedUiNodeReadSnapshot, source?: number): OwnedUiSceneRecordView | null;
   openSceneText(subscription: OwnedUiReadSubscription, snapshot: OwnedUiNodeReadSnapshot, source: number): OwnedUiSceneTextView | null;
 }
 
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const state = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function natural(value: number): number { if (!Number.isSafeInteger(value) || value < 0) throw new RangeError("Invalid owned UI read identity"); return value === 0 ? 0 : value; }
 let issue: (lease: object, version: number, node: ReadOwner | null) => OwnedUiNodeReadSnapshot;
@@ -104,7 +104,7 @@ export class OwnedUiIssuedSceneRecord {
   #reader: OwnedUiPreparedSceneReader | null;
   private constructor(mint: object, root: IssuedRoot, reader: OwnedUiPreparedSceneReader) { if (mint !== ISSUED_MINT) throw new Error("Issued scene reader requires exact mint authority"); this.#root = root; this.#reader = reader; Object.freeze(this); }
   static { ownSceneRecord = (root, reader) => new OwnedUiIssuedSceneRecord(ISSUED_MINT, root, reader); recordLease = reader => reader.#root?.lease ?? null; }
-  advance(grant: NumericIndexGrant): OwnedUiPreparedSceneReadStep { if (!this.#reader) throw new Error("Issued scene reader is closed"); return this.#reader.advance(grant); }
+  advance(grant: UiIndexGrant): OwnedUiPreparedSceneReadStep { if (!this.#reader) throw new Error("Issued scene reader is closed"); return this.#reader.advance(grant); }
   beginClose(): OwnedUiIssuedSceneRetirement { if (!this.#reader || !this.#root) throw new Error("Issued scene reader is closed"); const result = retireScene(this.#root, this.#reader.beginClose()); this.#reader = null; this.#root = null; return result; }
   terminalIsEmpty(): boolean { return this.#root === null && this.#reader === null; }
 }
@@ -114,7 +114,7 @@ export class OwnedUiIssuedSceneText {
   #reader: OwnedUiSceneReader | null;
   private constructor(mint: object, root: IssuedRoot, reader: OwnedUiSceneReader) { if (mint !== ISSUED_MINT) throw new Error("Issued scene text requires exact mint authority"); this.#root = root; this.#reader = reader; Object.freeze(this); }
   static { ownSceneText = (root, reader) => new OwnedUiIssuedSceneText(ISSUED_MINT, root, reader); textLease = reader => reader.#root?.lease ?? null; }
-  advance(grant: NumericIndexGrant): OwnedUiSceneReadStep { if (!this.#reader) throw new Error("Issued scene text is closed"); return this.#reader.advance(grant); }
+  advance(grant: UiIndexGrant): OwnedUiSceneReadStep { if (!this.#reader) throw new Error("Issued scene text is closed"); return this.#reader.advance(grant); }
   beginClose(): OwnedUiIssuedSceneRetirement { if (!this.#reader || !this.#root) throw new Error("Issued scene text is closed"); const result = retireScene(this.#root, this.#reader.beginClose()); this.#reader = null; this.#root = null; return result; }
   terminalIsEmpty(): boolean { return this.#root === null && this.#reader === null; }
 }
@@ -124,7 +124,7 @@ export class OwnedUiIssuedSceneRetirement {
   #reader: SceneRetirement | null;
   private constructor(mint: object, root: IssuedRoot, reader: SceneRetirement) { if (mint !== ISSUED_MINT) throw new Error("Issued scene retirement requires exact mint authority"); this.#root = root; this.#reader = reader; Object.freeze(this); }
   static { retireScene = (root, reader) => new OwnedUiIssuedSceneRetirement(ISSUED_MINT, root, reader); }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return state("blocked", "issued-scene-close");
     if (this.#reader) { const current = this.#reader.advance(grant); if (current.kind === "complete") this.#reader = null; return { ...current, kind: "pending" }; }
     if (this.#root) { this.#root.readers--; this.#root = null; return state("pending", "issued-scene-slot-release", 32); }
@@ -138,7 +138,7 @@ class OwnedUiIssuedRetirement {
   #node: ReadRetirement | null = null;
   private constructor(mint: object, root: IssuedRoot) { if (mint !== ISSUED_MINT) throw new Error("Issued retirement requires exact mint authority"); this.#root = root; Object.freeze(this); }
   static { retireIssued = root => new OwnedUiIssuedRetirement(ISSUED_MINT, root); }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return state("blocked", "issued-read-close");
     if (this.#root?.readers) return state("blocked", "issued-scene-readers");
     if (this.#node) { const current = this.#node.advance(grant); if (current.kind === "complete") this.#node = null; return { ...current, kind: "pending" }; }
@@ -212,7 +212,7 @@ export class OwnedUiNodeReadLease {
     return this.#first !== null && snapshot === this.#first && !this.#releaseFirst;
   }
 
-  #advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  #advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!this.#closing && (this.#cancelled() || this.#discard)) {
       if (!this.#discard) { this.#retirement = release(this.#second!); this.#discard = true; return state("pending", "read-staging-release", 64); }
       if (this.#retirement) { const result = this.#retirement.advance(grant); if (result.kind === "complete") this.#retirement = null; return { ...result, kind: "pending" }; }
@@ -225,13 +225,13 @@ export class OwnedUiNodeReadLease {
     return state("pending", "read-capacity-release", 64);
   }
 
-  advanceRetirement(grant: NumericIndexGrant): RetainedUiWireStep {
+  advanceRetirement(grant: UiIndexGrant): RetainedUiWireStep {
     if (this.#closing || this.#closed) throw new Error("Use closeStep after closing an owned UI read lease");
     if (!admitted(grant)) return state("blocked", "read-retirement");
     return this.#advance(grant);
   }
   beginClose(): void { if (this.#closed || this.#closing) return; this.#closing = true; if (this.#first) this.#releaseFirst = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (this.#closed) return state("complete", "read-lease-close");
     if (!this.#closing) throw new Error("Owned UI read close has not begun");
     if (!admitted(grant)) return state("blocked", "read-lease-close");

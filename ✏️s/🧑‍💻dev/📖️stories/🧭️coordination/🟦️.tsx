@@ -1,5 +1,5 @@
 import { generatedCatalogSchema as nativeCatalog } from "@semio-tech/s-dev-catalog-ts/generated";
-import {readNativeCatalogV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import {readNativeCatalogV1} from "@semio-tech/plugin-registry/runtime";
 import {useMemo} from "react";
 import {OsBootHost as GeneralOsBootHost,WgpuBootHost as GeneralWgpuBootHost,type OsBootHostProps as GeneralOsBootHostProps,type WgpuBootHostProps as GeneralWgpuBootHostProps} from "@semio-tech/framework-os/stories/coordination";
 import {composeSpecificOsCatalogV1} from "@semio-tech/s-dev-catalog-ts";

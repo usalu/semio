@@ -13,7 +13,10 @@
     "workUnits",
     "denied",
     "protocol",
-    "receipt"
+    "receipt",
+    "granted",
+    "nested",
+    "selfFunded"
   ],
   "properties": {
     "schema": {
@@ -61,6 +64,30 @@
     },
     "receipt": {
       "const": "consume-original-effects-once-preserve-both-causes"
+    },
+    "granted": {
+      "const": {
+        "fuelPerBody": 1,
+        "bodyGrant": "caller-remaining-retained-grant",
+        "progress": "debited-once-after-body",
+        "refusal": "whole-value-error-debited-then-original-failure",
+        "exhaustedFuel": "pending-without-running-body"
+      }
+    },
+    "nested": {
+      "const": {
+        "bodyContext": "same-borrowed-caller-cx",
+        "debit": "reported-minus-posted-by-nested-callers",
+        "underReport": "invariant-violated"
+      }
+    },
+    "selfFunded": {
+      "const": {
+        "lentGrant": "exactly-the-supplied-grant",
+        "fuel": "unbounded",
+        "deadline": "unbounded",
+        "failure": "returned-whole"
+      }
     }
   }
 }

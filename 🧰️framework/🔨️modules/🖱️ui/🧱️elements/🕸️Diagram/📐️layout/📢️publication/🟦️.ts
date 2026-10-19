@@ -1,6 +1,7 @@
 import type { Node, Edge } from "@xyflow/react";
 import { DiagramPagedStore, finiteLayoutValue, pagedLayoutArray, projectLayoutEdge, projectLayoutNode } from "../🗃️paged-store/🟦️.ts";
-import { type DiagramLayoutPosition, diagramLayoutLimits } from "../📊️job-types/🟦️.ts";
+import { diagramLayoutLimits } from "../📊️job-types/🟦️.ts";
+import type { DiagramLayoutPosition } from "../📜️wire/🟦️.ts";
 import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_OUTPUT_ITEMS, type DiagramLayoutDescriptor, type DiagramLayoutEdgeWire, type DiagramLayoutHostPage, type DiagramLayoutIngressPage, type DiagramLayoutNodeWire, type DiagramLayoutOptions, type DiagramLayoutPositionPage, type DiagramLayoutPublicationResult, type DiagramLayoutTerminal, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes } from "../📜️wire/🟦️.ts";
 
 export class DiagramLayoutPublication {

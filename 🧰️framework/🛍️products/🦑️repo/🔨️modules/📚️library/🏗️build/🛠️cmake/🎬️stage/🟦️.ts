@@ -1,10 +1,10 @@
 /** 🎬️ Stage: module exporting `CmakeOwnedStageV1`, `runCmakeOwnedStageV1`. */
-import{withCompilerCapacityConsumptionV1}from"../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts";
-import{withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,readIssuedResourceControlCapabilitiesV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{captureOwnedCommandResultV1,type OwnedCommandCaptureV1}from"../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{withCompilerCapacityConsumptionV1}from"@semio-tech/process/build/capacity/scope/consumption";
+import{withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,readIssuedResourceControlCapabilitiesV1,scriptResourceProcessEnvironmentV1}from"@semio-tech/process/routing";
+import{captureOwnedCommandResultV1,type OwnedCommandCaptureV1}from"@semio-tech/process/execution";
 import{readNativeCallerAuthorityV1}from"../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 import{requireCmakeInputsControlV1,recheckCmakeInputsV1,type CmakeInputsV1}from"../📥️inputs/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 export type CmakeOwnedStageV1=Readonly<{kind:"probe"|"configure"|"build"|"test";directory:string;commands:readonly Readonly<{program:string;arguments:readonly string[];cwd:string}>[]}>;

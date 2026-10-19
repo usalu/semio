@@ -139,8 +139,9 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_json_editor());
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<JsonAnyEditor>>::with_registry(EditorApp::<JsonAnyEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -171,23 +172,24 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<JsonAnyEdi
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &JsonSnapshot) -> KitFixtureApp {
+async fn kit_fixture_holding(document: &JsonSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
     use semio_framework_plugin::PluginApp;
     register_document_schema();
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonAnyEditor>, _>(async { semio_framework_plugin::App { definition: create_json_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
-    app
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+    (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(action, Some(&args), &meta, &mut identity).await)?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).map(|_| ())
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// ⚖️ LAW: `set-node` — the verb the `TreeWindowKit` mints for `🪟️main` — reaches the document through this
@@ -195,27 +197,27 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
-    let mut app = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
+    let (mut app, mut scope) = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
     let snapshot = app.snapshot().expect("json snapshot");
     let JsonValue::Object { members } = &snapshot.value else { panic!("demo object") };
     let name_index = members.iter().position(|member| member.key == "name").expect("name member");
     let node_id = main::encode_path_id(&[main::member_segment(name_index)]);
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
-    dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio-edited\"")]).await.expect("set-node settles");
+    dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio-edited\"")], scope.cx()).await.expect("set-node settles");
     let printed = <JsonSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
     let restored=<JsonSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[name_index].value,JsonValue::String{value:"semio-edited".into()});
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn source_edit_reaches_the_document_through_the_retained_event_route() {
-    let mut app = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
+    let (mut app, mut scope) = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
     let source = "{\"kind\":\"typed\",\"count\":3,\"enabled\":true}";
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
-    dispatch_settled(&mut app, "set-node", &[("nodeId", main::JSON_ROOT_NODE_ID), ("revision", &revision), ("value", source)]).await.expect("source edit settles");
+    dispatch_settled(&mut app, "set-node", &[("nodeId", main::JSON_ROOT_NODE_ID), ("revision", &revision), ("value", source)], scope.cx()).await.expect("source edit settles");
     let after = app.snapshot().expect("json snapshot");
     assert_eq!(after, JsonSnapshot { schema:crate::STDIO_JSON_DOCUMENT_SCHEMA.into(), value:crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("expected source") });
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🪟️KitVerbLaws
 

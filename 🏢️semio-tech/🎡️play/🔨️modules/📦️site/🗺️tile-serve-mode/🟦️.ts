@@ -1,4 +1,4 @@
-import type { AssetDeliveryModeV1 } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
+import type { AssetDeliveryModeV1 } from "@semio-tech/assets/resolver/dispatch";
 
 /** 🎚️ The static site ships the map's default viewport through z10 (~400 tiles) instead of the full offline z13/z14 set. */
 export const PLAY_STATIC_MAP_TILE_Z_MAX = 10;

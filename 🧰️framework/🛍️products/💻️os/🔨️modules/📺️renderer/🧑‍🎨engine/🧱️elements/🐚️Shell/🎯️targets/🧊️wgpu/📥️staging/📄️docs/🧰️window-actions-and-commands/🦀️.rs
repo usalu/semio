@@ -53,7 +53,7 @@ pub fn reserved_shell_chords_v1(shell_table: &[(String, String)], overrides: &[(
 /// ⌨️ Whether a key event matches a keybinding chord such as `"mod+shift+z"`, `"ctrl+k"`, or `"escape"`.
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
-pub fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
+pub fn key_event_matches_chord(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chord: &str) -> bool {
     let mut want_mod = false;
     let mut want_shift = false;
     let mut want_alt = false;
@@ -85,22 +85,22 @@ pub fn key_event_matches_chord(action: &ui_wgpu::wgpu::KeyAction, modifiers: &Po
         return false;
     }
     match action {
-        ui_wgpu::wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
-        ui_wgpu::wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
-        ui_wgpu::wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
-        ui_wgpu::wgpu::KeyAction::Backspace => key_token == "backspace",
-        ui_wgpu::wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
-        ui_wgpu::wgpu::KeyAction::Tab => key_token == "tab",
-        ui_wgpu::wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
-        ui_wgpu::wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
-        ui_wgpu::wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
-        ui_wgpu::wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
-        ui_wgpu::wgpu::KeyAction::Home => key_token == "home",
-        ui_wgpu::wgpu::KeyAction::End => key_token == "end",
-        ui_wgpu::wgpu::KeyAction::PageUp => key_token == "pageup",
-        ui_wgpu::wgpu::KeyAction::PageDown => key_token == "pagedown",
-        ui_wgpu::wgpu::KeyAction::Function(number) => key_token == format!("f{number}"),
-        ui_wgpu::wgpu::KeyAction::Space(_) => key_token == "space",
+        semio_framework_ui_wgpu_input::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
+        semio_framework_ui_wgpu_input::KeyAction::Enter => key_token == "enter" || key_token == "return",
+        semio_framework_ui_wgpu_input::KeyAction::Escape => key_token == "escape" || key_token == "esc",
+        semio_framework_ui_wgpu_input::KeyAction::Backspace => key_token == "backspace",
+        semio_framework_ui_wgpu_input::KeyAction::Delete => key_token == "delete" || key_token == "del",
+        semio_framework_ui_wgpu_input::KeyAction::Tab => key_token == "tab",
+        semio_framework_ui_wgpu_input::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
+        semio_framework_ui_wgpu_input::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
+        semio_framework_ui_wgpu_input::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
+        semio_framework_ui_wgpu_input::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        semio_framework_ui_wgpu_input::KeyAction::Home => key_token == "home",
+        semio_framework_ui_wgpu_input::KeyAction::End => key_token == "end",
+        semio_framework_ui_wgpu_input::KeyAction::PageUp => key_token == "pageup",
+        semio_framework_ui_wgpu_input::KeyAction::PageDown => key_token == "pagedown",
+        semio_framework_ui_wgpu_input::KeyAction::Function(number) => key_token == format!("f{number}"),
+        semio_framework_ui_wgpu_input::KeyAction::Space(_) => key_token == "space",
     }
 }
 

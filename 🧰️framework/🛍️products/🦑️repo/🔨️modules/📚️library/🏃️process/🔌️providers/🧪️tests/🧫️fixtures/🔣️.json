@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "declarations": [
+    { "id": "one-provider", "value": { "version": 1, "providers": { "cargo-admission": "../a/🟦️.ts" } }, "valid": true },
+    { "id": "sibling-provider", "value": { "version": 1, "providers": { "wasm-build": "./b.ts" } }, "valid": true },
+    { "id": "no-providers", "value": { "version": 1, "providers": {} }, "valid": false },
+    { "id": "wrong-version", "value": { "version": 2, "providers": { "wasm-build": "./b.ts" } }, "valid": false },
+    { "id": "upper-case-name", "value": { "version": 1, "providers": { "Wasm": "./b.ts" } }, "valid": false },
+    { "id": "absolute-path", "value": { "version": 1, "providers": { "wasm-build": "/abs/b.ts" } }, "valid": false },
+    { "id": "bare-specifier", "value": { "version": 1, "providers": { "wasm-build": "pkg/b.ts" } }, "valid": false },
+    { "id": "backslash-path", "value": { "version": 1, "providers": { "wasm-build": "..\\b.ts" } }, "valid": false },
+    { "id": "extra-key", "value": { "version": 1, "providers": { "wasm-build": "./b.ts" }, "loader": "./l.ts" }, "valid": false },
+    { "id": "non-string-path", "value": { "version": 1, "providers": { "wasm-build": 3 } }, "valid": false }
+  ]
+}

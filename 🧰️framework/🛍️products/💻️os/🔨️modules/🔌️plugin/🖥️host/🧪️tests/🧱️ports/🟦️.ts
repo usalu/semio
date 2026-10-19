@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
 import Parser from "web-tree-sitter";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const owner = resolve(import.meta.dir, "../..");
 

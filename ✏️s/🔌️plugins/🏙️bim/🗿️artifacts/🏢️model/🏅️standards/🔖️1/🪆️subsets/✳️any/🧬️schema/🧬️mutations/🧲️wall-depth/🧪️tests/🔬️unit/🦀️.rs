@@ -1,14 +1,14 @@
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallSweep};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallSweep};
 use protocol::OutcomeCode;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{material_flaw, profile_flaw, EPS};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{material_flaw, profile_flaw, EPS};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{Profile, TopConstraint};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::{sweep_flaw, attach_flaw, reveal_flaw};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use serde_json::json;
 
@@ -76,7 +76,7 @@ fn an_attach_names_a_target_of_the_same_building_with_a_finite_offset() {
 #[test]
 fn only_a_wall_attaches_the_top_of_an_element_to_a_surface() {
     let base = house();
-    let flaw = crate::standards::v1::subsets::any::schema::mutations::wall_geometry::top_flaw(&base, "st", &TopConstraint::Roof { roof: "r".into(), offset: 0.0 }).expect("a refusal");
+    let flaw = semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::top_flaw(&base, "st", &TopConstraint::Roof { roof: "r".into(), offset: 0.0 }).expect("a refusal");
     assert_eq!((flaw.code, flaw.path), (OutcomeCode::Invariant, vec!["top".to_string()]));
 }
 

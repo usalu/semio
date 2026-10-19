@@ -3,9 +3,9 @@ import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️proce
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
 import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { runProbe } from "../../../📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { writeCanonicalGoWorkspaceOverlay } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
-import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { runProbe } from "@semio-tech/repo-lib/process";
+import { writeCanonicalGoWorkspaceOverlay } from "@semio-tech/repo-lib/testing";
+import { cargoTargetDirectory } from "@semio-tech/repo-lib/cargo";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { delimiter, join, relative, sep } from "node:path";

@@ -1,7 +1,7 @@
 /** 📌️ PDF 1.7 snapshot types of annotations and appearances. */
 import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import type { PdfAnnotationKind } from "./🏷️kind/🟦️.ts";
-import type { PdfDate } from "../📇️metadata/🟦️.ts";
+import type { PdfDate } from "../📆️date/🟦️.ts";
 import type { PdfDictEntry } from "../🧩️cos/🟦️.ts";
 
 export interface PdfAnnotation {

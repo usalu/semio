@@ -62,7 +62,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     return false;
                 };
                 let presence = self.footer_presence_rows();
-                let label = ui_wgpu::wgpu::presence_bar_chip_text(&presence, None, self.prefs.active_locale());
+                let label = semio_framework_ui_wgpu_light::presence_bar::presence_bar_chip_text(&presence, None, self.prefs.active_locale());
                 match render_footer_status_step(cursor, draw, atlas, icons, input, theme, rect, "s-presence-peers", None, &label, false) {
                     Ok(false) => return false,
                     Ok(true) => cursor.phase = 4,

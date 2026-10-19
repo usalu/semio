@@ -1,7 +1,11 @@
 use semio_framework_os_renderer_wgpu_contracts::framework_widget_context;
 use std::collections::HashMap;
 use super::{DIFF_GUTTER_COLUMN_W, DiffLineOperation, diff_lines, diff_view_metrics, render_diff_view};
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, SurfaceKind, TextFace, Theme, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_text::TextFace;
 
 #[test]
 fn neutral_diff_fixture_matches_the_native_operation_sequence() {
@@ -133,7 +137,7 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (semio_framewor
     };
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();

@@ -1,21 +1,21 @@
 //#region 🔖️CatalogSmokeVerify
 import { LocalHubHostLedgerV1 } from "../../🚀️local-bootstrap/🎛️host/🟦️.ts";
-import type { CompilerAdmissionControl } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { requireIssuedResourceControlInvocationV1, withRequestedIssuedResourceControlV1, type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import type { CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
+import { requireIssuedResourceControlInvocationV1, withRequestedIssuedResourceControlV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
 import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
 import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";
 import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 /** 🧩️ Semantic collaboration verification owner. */
 
-import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 
 import { mkdirSync } from "node:fs";
 
 import { join } from "node:path";
 
-import { generatePluginRegistry } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+import { generatePluginRegistry } from "@semio-tech/plugin-registry/discovery";
 import { COLLAB_E2E_LOCALES, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER1_PASSWORD, COLLAB_E2E_USER2_EMAIL, COLLAB_E2E_USER2_PASSWORD, type CollabLinkRelay, type CollabLocale, collabRecorder, collabStartLinkRelay, type CollabStepOutcome, collabVerdict, repoRoot } from "./⚙️constants-relay-and-recorder/🟦️.ts";
 import { collabActivateShellRuntime, type CollabDevServerV1, collabExternalAdminCapability, collabExternalHub, collabOutDir, collabScopesV1, collabScopeV1, type CollabScopeV1, collabStartUserDevServer, finishCollabDevServerV1 } from "./🧭️scope-and-dev-servers/🟦️.ts";
 import { collabHubDataDir, type CollabHubHandle, collabProvisionCredentials, collabScanPort, collabSignIn, collabStartHub } from "./🏠️hub-start-and-credentials/🟦️.ts";
@@ -25,9 +25,9 @@ import { collabRunScenario } from "./🎬️scenario-run/🟦️.ts";
 import { collabRunRestartStep } from "./🔁️restart-and-convergence/🟦️.ts";
 import { collabRunCollaborationBehaviours } from "./🧪️collaboration-behaviours/🟦️.ts";
 
-import {buildComponentClosureV1} from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
+import {buildComponentClosureV1} from "@semio-tech/framework-plugin/build/driver-stages";
 
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 
 import { withBuiltLocalHubHostV1, withLocalHubHostTaskV1, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 

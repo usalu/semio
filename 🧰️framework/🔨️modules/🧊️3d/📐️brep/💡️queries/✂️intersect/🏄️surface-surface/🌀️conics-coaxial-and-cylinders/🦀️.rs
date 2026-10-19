@@ -95,8 +95,8 @@ fn solve_conic_pair(ca: Conic, cb: Conic, tol: f64) -> Vec<(f64, f64)> {
 /// its own axis. `None` when the surfaces aren't actually coaxial (caller falls back).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(super) fn coaxial_case(a: &Surface, b: &Surface, tol: f64) -> Option<Result<Vec<IntCurve>, IntersectError>> {
-    let (pa, da) = super::super::shared::axis_of(a)?;
-    let (pb, db) = super::super::shared::axis_of(b)?;
+    let (pa, da) = super::super::intersection_numerics::axis_of(a)?;
+    let (pb, db) = super::super::intersection_numerics::axis_of(b)?;
     if da.cross(db).norm() > tol {
         return None;
     }

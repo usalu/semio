@@ -4,7 +4,7 @@ name = "semio-framework-ui"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Handcrafted semio UI: declarative components plus the terminal (feature \"tui\") and wgpu (feature \"wgpu\") retained-mode targets"
+description = "Target-neutral semio UI facts: whether a session may offer its authored introduction"
 build = false
 
 [package.metadata.semio]
@@ -12,9 +12,9 @@ role = "framework"
 id = "ui"
 
 [package.metadata.semio.rust-source-boundary]
-maxSourceBytes = 1048576
-maxSourceFiles = 128
-maxActiveLines = 12000
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
 
 [lints]
 workspace = true
@@ -22,172 +22,5 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
-[features]
-default = []
-testkit = ["wgpu-engine", "semio-framework-ui-retained-tree/testkit"]
-# 🧊️ wgpu target: declarative component types only, so wasm32-wasip2 program components stay light.
-# Names the target, not the `wgpu` crate — that one only arrives with `wgpu-engine` below. `bytemuck`
-# backs `draw_types::{UiInstance, VectorVertex}` (GPU vertex layout structs with zero `wgpu`-crate
-# reference — pure `#[repr(C)]` value types); its own dependency is `bytemuck_derive`, a proc-macro
-# that runs on the host at build time and links nothing into the target binary. `semio-framework-job`
-# backs `prepared.rs`'s job-driven CPU staging/admission state machine (first-party, itself already
-# wasip2-safe). Neither reintroduces the `wasm-bindgen` leak this ticket closes. Ticket
-# 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-wgpu = ["dep:semio-framework-ui-draw-contract", "dep:semio-framework-ui-prepared", "dep:semio-framework-ui-raster-owner", "dep:semio-framework-ui-action", "dep:semio-framework-ui-theme", "dep:semio-framework-ui-declaration", "dep:serde", "dep:serde_json", "dep:semio-framework-ui-locale", "dep:semio-framework-value-derive", "dep:bytemuck", "dep:semio-framework-job"]
-# 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
-wgpu-engine = [
-    "dep:semio-framework-ui-wgpu-render",
-    "semio-framework-ui-prepared/browser-presenter",
-    "dep:semio-framework-ui-surface-identity",
-    "dep:semio-framework-ui-retained-tree",
-    "dep:semio-framework-ui-select-behavior",
-    "dep:semio-framework-ui-arena",
-    "wgpu",
-    "dep:semio-framework-ui-text",
-    "dep:bytemuck",
-    "dep:winit",
-    "dep:wgpu",
-    "dep:taffy",
-    "dep:js-sys",
-    "dep:wasm-bindgen",
-    "dep:web-sys",
-    "dep:arboard",
-    "dep:semio-framework-geometry",
-    "dep:semio-framework-2d",
-    "dep:semio-framework-job",
-    "dep:semio-framework-async",
-    "dep:semio-framework-pixels",
-  "dep:semio-framework-job-worker", "dep:semio-framework-job-worker-authority",
-]
-# 🧬️ Enables the owned TypeScript schema projection for the `wgpu` boundary types.
-typegen = ["wgpu"]
-
-[dependencies]
-semio-framework-ui-wgpu-render = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", optional = true }
-semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", optional = true }
-semio-framework-job-worker-authority = { path = "../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", optional = true }
-
-semio-framework-ui-surface-identity = { path = "../../🪟️surface/🪪️identity/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-raster-owner = { path = "../../🖼️raster/🧵️ownership/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-retained-tree = { path = "../../🌳️retained/🌳️tree/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-select-behavior = { path = "../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-arena = { path = "../../🌳️retained/🏟️arena/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-action = { path = "../../🎬️action/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-theme = { path = "../../🎨️styling/🎭️theme/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-text = { path = "../../🔤️typography/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-declaration = { path = "../../📜️declaration/📦️packages/🦀️rust", optional = true }
-semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-# 🎬️ The 15 product scene structs (`World3dScene`/`TableScene`/...) and the generic 3D scene math
-# both relocated out of this crate into `semio-framework-ui-scene` — ticket
-# 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`. `component::ui` re-exports
-# the former; `kernel_3d_scene` is now a re-export of the latter's `math` module. Non-optional: both
-# are re-exported unconditionally from `component::ui`, which itself has no feature gate.
-ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
-# ⛓️ Consumed directly for the `wgpu-engine` widgets that still take `Camera3d` by value (see
-# `widgets.rs`); `semio-framework-ui-scene`'s `math` module re-exports `Mat4`/`Vec3` from here too.
-semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
-semio-framework-2d = { path = "../../../◻️2d/📦️packages/🦀️rust", optional = true }
-semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
-# 🖼️ Owned PNG codec (first-party, its only dependency is the owned DEFLATE module) backing
-# `🎯️targets/🧊️wgpu/🖌️paint`'s `🖼️UiImageSources` region: a `Component::Image` whose `src` is a
-# `data:image/png` URL decodes in-process instead of showing the placeholder box. No third-party
-# image crate enters the graph — see that region's own docstring for the JPEG carve-out.
-semio-framework-pixels = { path = "../../../🔲️pixels/📦️packages/🦀️rust", optional = true }
-semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", optional = true }
-semio-framework-ui-locale = { path = "../../🌐️locale/📦️packages/🦀️rust", optional = true }
-semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive", optional = true }
-ui_contract = { path = "../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-serde = { version = "1.0.219", features = ["derive"], optional = true }
-serde_json = { version = "1.0.140", optional = true }
-# 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
-# atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
-# pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
-# `no_std` + `libm` like `ui-render`: embedded font bytes only, no fontique path/mmap sources.
-# 🧷️ `extern_crate_alloc` (requested by `image`) and `min_const_generics` (requested by `font-types`) are pinned here, in
-# every hub component's closure, so all components compile one `bytemuck` unit.
-bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"], optional = true }
-# ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): restored after an
-# attempt to move this behind a `not(target_env = "p2")` target table — reverted because
-# `♾️infinite`'s `🌍️world/🦀️.rs` unconditionally names wgpu-engine symbols that need this
-# tier to exist even for `wasm32-wasip2`. See `🎯️targets/🧊️wgpu/🦀️.rs`'s top docstring.
-wgpu = { version = "29.0.4", default-features = false, features = ["std", "wgsl"], optional = true }
-# 📐️ The retained target's production layout solver (`🎯️targets/🧊️wgpu/📐️flex`). `grid` joins
-# `flexbox` because `LayoutSpec::Grid` is a first-class contract variant React renders as real CSS
-# grid — same feature set `semio-framework-ui-render` already resolves for the same reason.
-taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "grid", "taffy_tree"], optional = true }
-semio-framework-ui-layout = { path = "../../📜️declaration/📐️layout/📦️packages/🦀️rust" }
-
-[target.'cfg(not(target_os = "wasi"))'.dependencies]
-winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
-
-# 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
-[target.'cfg(target_os = "linux")'.dependencies]
-winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"], optional = true }
-
-# 🌉️ Browser-only device/session bindings (`🎯️targets/🧊️wgpu`'s canvas/clipboard/fetch/cursor
-# bridges — cursor.rs, prepared.rs, host.rs, text.rs, gpu.rs — plus `tui-bindgen`'s xterm.js
-# export). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI
-# component target too. wasip2 plugin components have no direct DOM/canvas/clipboard access from
-# the guest (that is host-mediated through the UI contract), so these become undefined for that
-# target rather than getting a wasip2 arm — nothing in the shipped plugin path calls them.
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-wgpu = { version = "29.0.4", default-features = false, features = ["std", "webgpu", "wgsl"], optional = true }
-js-sys = { version = "0.3.83", optional = true }
-wasm-bindgen = { version = "0.2.106", optional = true }
-web-sys = { version = "0.3.98", optional = true, features = [
-    "Window",
-    "Navigator",
-    "Clipboard",
-    "HtmlCanvasElement",
-    "OffscreenCanvas",
-    "HtmlElement",
-    "CssStyleDeclaration",
-    "MouseEvent",
-    "WheelEvent",
-    "KeyboardEvent",
-    "Request",
-    "RequestInit",
-    "RequestMode",
-    "Response",
-] }
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal", "vulkan", "dx12", "wgsl"], optional = true }
-# 📋️ OS clipboard read/write for `host::clipboard_write_text`/`clipboard_read_text` — pure-Rust X11/
-# Wayland (Linux), NSPasteboard (macOS), Win32 (Windows) backends, no system dev headers required.
-arboard = { version = "3", optional = true }
-
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-ui-wgpu-render = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-job-worker = { path = "../../../🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
-
-semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-raster-owner = { path = "../../🖼️raster/🧵️ownership/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-ui-retained-tree = { path = "../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-trace = { workspace = true }
-taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"] }
-semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
-semio-framework-ui-viewport = { path = "../../🪟️viewport/📦️packages/🦀️rust" }
-tiny-skia = "0.11.4"
-# 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
-# crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
-semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-ui-testing-paint-policy = { path = "../../🧪️testing/🎨️paint-policy/📦️packages/🦀️rust" }
-semio-framework-ui-text = { path = "../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }
-
-[[test]]
-name = "original_prepared_raster_refusal"
-path = "../../🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs"
-required-features = ["wgpu-engine"]
-
-[[test]]
-name = "original_clipboard_ingress"
-path = "../../🧪️tests/📋️clipboard-ingress/🦀️.rs"
-required-features = ["wgpu-engine"]

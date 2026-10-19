@@ -1,0 +1,14 @@
+{
+ "name": "c7w-ui2",
+ "crates": [
+  "semio-framework-ui-wgpu-layout"
+ ],
+ "features": {},
+ "base": {
+  "rev": "overlay",
+  "crates": [
+   "semio-framework-ui-wgpu-layout"
+  ]
+ },
+ "note": "flex layout crate"
+}

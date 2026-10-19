@@ -28,7 +28,7 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::WindowOptions;
-use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";

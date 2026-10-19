@@ -1,20 +1,27 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate, PropertyValue, TemplateTarget};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyValue, TemplateTarget};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{OpeningKind, Violation};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values::Violation;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::{finding};
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::*;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ClassificationSystem, PropertyDef, PropertyKind, PropertySet}, diff::{Entry, ModelDiff, patches::PropertyTemplatePatch}};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::finding;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::{EffectiveValue, Source, Issue, holders, target_of, type_of};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind, PropertySet};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::PropertyTemplatePatch;
 use protocol::Inference;
 
 fn text(value: &str) -> PropertyValue {
@@ -34,7 +41,7 @@ fn set(pairs: &[(&str, PropertyValue)]) -> PropertySet {
 }
 
 fn model() -> ModelSnapshot {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let fire = PropertyDef { allowed: vec![text("EI30"), text("EI60")], ..definition("FireRating", PropertyKind::Text) };
     let thermal = PropertyDef { minimum: Some(0.0), maximum: Some(5.0), default_value: Some(real(0.35)), ..definition("ThermalTransmittance", PropertyKind::Real) };
     let external = PropertyDef { default_value: Some(PropertyValue::Boolean { value: false }), ..definition("IsExternal", PropertyKind::Boolean) };
@@ -90,13 +97,13 @@ fn the_findings_become_diagnostics_in_both_languages_and_a_clean_model_has_none(
     let missing = inference.diagnostics.iter().find(|finding| finding.code == DiagnosticCode::PropertyRequiredMissing).expect("a finding");
     assert_eq!(missing.text("en").as_deref(), Some("w-east lacks the required property Pset_Strict.Mass."));
     assert!(missing.text("de").is_some_and(|text| text.contains("Pset_Strict.Mass")));
-    let clean = infer(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot());
+    let clean = infer(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot());
     assert!(clean.effective_properties.is_empty() && clean.diagnostics.iter().all(|finding| finding.code.category() != "property"));
 }
 
 #[test]
 fn classifications_are_checked_against_the_table_of_their_system() {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     snapshot.classification_systems.insert("cs-uni".into(), ClassificationSystem { name: "Uniclass".into(), edition: String::new(), source: None, entries: vec![ClassificationItem { code: "EF_25_10".into(), title: "Walls".into(), parent: None }] });
     snapshot.classifications.insert("w-south".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "EF_25_10".to_string())]));
     snapshot.classifications.insert("w-east".into(), std::collections::BTreeMap::from([("cs-uni".to_string(), "Zz_99".to_string())]));
@@ -138,7 +145,7 @@ fn a_template_edit_reaches_every_holder_it_applies_to_and_a_type_edit_its_instan
     let incremental = session.update(&after, &edit).clone();
     assert_eq!(incremental, infer(&after));
     assert!(incremental.effective_properties["wt-300"].get("Pset_WallCommon", "ThermalTransmittance").is_none(), "the type fell out of the template");
-    let retype = ModelDiff::properties("wt-300", Entry::Patched(crate::standards::v1::subsets::any::schema::diff::PropertySetPatch { assigned: std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), Some(text("EI30")))]))]) }));
+    let retype = ModelDiff::properties("wt-300", Entry::Patched(semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::PropertySetPatch { assigned: std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), Some(text("EI30")))]))]) }));
     let next = protocol::apply_diff(&retype, &after).expect("applies");
     let served = session.update(&next, &retype).clone();
     assert_eq!(served, infer(&next));
@@ -152,7 +159,7 @@ fn the_holders_are_the_records_with_data_or_under_a_template_types_first() {
     assert_eq!(rows[0], ("wt-300".to_string(), None));
     assert!(rows.iter().any(|(id, parent)| id == "w-north" && parent.as_deref() == Some("wt-300")));
     assert_eq!(rows.len(), 5);
-    assert!(holders(&crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()).is_empty());
+    assert!(holders(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()).is_empty());
     assert_eq!((target_of(&snapshot, "w-south"), target_of(&snapshot, "wt-300"), target_of(&snapshot, "nobody")), (Some(TemplateTarget::Wall), Some(TemplateTarget::WallType), None));
     assert_eq!(type_of(&snapshot, "w-south").as_deref(), Some("wt-300"));
 }

@@ -76,7 +76,8 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         semio_s_plugin_puzzle_retained::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, Fault> {
+    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command: _command, snapshot, config: _config, interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_ref());
         let window_config_snapshot = context.and_then(|context| context.window_config.as_ref());
@@ -139,6 +140,9 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
             Puzzle3dFocusSelectionStage::Complete => Err(Fault::from("puzzle3d-focus-selection-complete-repolled")),
             Puzzle3dFocusSelectionStage::Closing => Err(Fault::from("puzzle3d-focus-selection-closing")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn begin_close(&mut self) {
@@ -146,8 +150,10 @@ impl<A: Puzzle3dEditor> semio_framework_plugin::retained_command::ArtifactComman
         self.close_owners.stage(Puzzle3dFocusSelectionWorkOwners { selected: std::mem::take(&mut self.selected) });
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.close_owners.close_step(grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.close_owners.close_step(grant)
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

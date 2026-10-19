@@ -7,7 +7,7 @@ import contributionVectors from "./🧫️fixtures/🔣️contribution.json";
 import contributionSchema from "../🧬️schema/🔣️contribution.json";
 import { questionKindLabel } from "../🟦️.ts";
 import { extensionRenderPayload } from "../🟦️.ts";
-import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { FormQuestion, DslValue } from "../../../../🧬️schema/🧱️form-model/🟦️.ts";
 
 /** 🧩️ Extension inputs preserve authored routing and exact answers across render surfaces. */
 export function testFormsExtensionInputs(): void {

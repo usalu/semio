@@ -5,13 +5,15 @@ import { encodeDocumentArchiveBytes } from "../../../../🟦️";
 import { CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1, CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES, decodeCanonicalCheckpointPairV1 } from "../../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
 import { admitCanonicalCheckpointPairV1 } from "@semio-tech/framework/directory/schema";
 import { admitCheckpointSelectionV1 } from "../../../📇️directory/🚪️io/🧱️binary/🪢️checkpoint-pair/🟦️.ts";
-import { type ArtifactState, artifactScope, artifacts, documentServices, emitEvent, post } from "../🧾️document-state/🟦️.ts";
-import { type FolderCanonicalBootstrapMirrorOwner, publishFolderCanonicalBootstrapMirror, reserveFolderCanonicalBootstrapMirror, retireCurrentFolderCanonicalBootstrapMirror, stageFolderCanonicalBootstrapMirror } from "../📁️folder/🟦️.ts";
+import { type ArtifactState, artifactScope, artifacts, documentServices, dropVerifiedColdDocumentPair, emitEvent, post } from "../🧾️document-state/🟦️.ts";
+import type { FolderCanonicalBootstrapMirrorOwner } from "../📁️folder/🏷️mirror-owner/🟦️.ts";
+import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "./🏷️owners/🟦️.ts";
+import { publishFolderCanonicalBootstrapMirror, reserveFolderCanonicalBootstrapMirror, retireCurrentFolderCanonicalBootstrapMirror, stageFolderCanonicalBootstrapMirror } from "../📁️folder/🟦️.ts";
 import { hubBinding } from "../🧩️actor-wire-helpers/🟦️.ts";
 import { folderBinding, setRemote } from "../🎭️actor-lifecycle/🟦️.ts";
 import { equalByteArrays, equalFrontiers, flushMutationsToHubIfReady, requeuePendingBatches } from "../📮️hub-outbox/🟦️.ts";
 import { abortArtifactBootstrap, artifactBootstrapFailure, clearArtifactBootstrapDeadline, clearArtifactRebootstrapDeadline } from "../🛑️session-teardown/🟦️.ts";
-import { ARTIFACT_BOOTSTRAP_DEADLINE_MS, dropVerifiedColdDocumentPair } from "../⚙️constants/🟦️.ts";
+import { ARTIFACT_BOOTSTRAP_DEADLINE_MS } from "../⚙️constants/🟦️.ts";
 import { type ExecutionTargetReadControl, emitExecutionTargetStatus, executionTargetHex, forgetMountedDocument, readBoundedExecutionTargetBody } from "../📥️execution-target-read/🟦️.ts";
 import { VerifiedColdDocumentPair, verifiedColdDocumentPairMintToken } from "../🧊️cold-pair/🟦️.ts";
 import { documentBackboneMessageFromDomain, emitMutationEvent, retireFolderCanonicalBootstrapMirror } from "../🌉️wire-bridge/🟦️.ts";
@@ -33,16 +35,6 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
     totalChunks: progress.totalChunks,
   });
 }
-
-export type DocumentArtifactBootstrapOwner = {
-  assembler: ArtifactBootstrapAssembler | null;
-  folderMirror: FolderCanonicalBootstrapMirrorOwner | null;
-  deadlineMs: number | null;
-  deadlineTimer: ReturnType<typeof setTimeout> | null;
-  readonly rebootstrapOwner: DocumentArtifactRebootstrapOwner | null;
-  readonly socket: WebSocket | null;
-  assertCurrent(): void;
-};
 
 /** 🧷️ Retains the document and transport selection that admitted one canonical pair transfer. */
 function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBootstrapOwner {
@@ -101,12 +93,6 @@ function captureArtifactBootstrapOwner(state: ArtifactState): DocumentArtifactBo
   owner.assertCurrent();
   return owner;
 }
-
-export type DocumentArtifactRebootstrapOwner = {
-  readonly deadlineMs: number;
-  readonly timer: ReturnType<typeof setTimeout>;
-  assertCurrent(): void;
-};
 
 function captureArtifactRebootstrapOwner(state: ArtifactState): DocumentArtifactRebootstrapOwner {
   clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);

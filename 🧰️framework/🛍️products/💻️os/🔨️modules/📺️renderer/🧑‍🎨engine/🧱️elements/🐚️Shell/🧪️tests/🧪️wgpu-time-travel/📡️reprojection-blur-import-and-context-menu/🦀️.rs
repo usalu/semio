@@ -198,7 +198,7 @@ fn a_disabled_context_menu_row_is_reachable_and_tells_its_reason() {
 
     let mut shell = session_shell();
     shell.input.context_menu = Some(ContextMenuState { items: items.clone(), active: vec![2], ..Default::default() });
-    assert!(matches!(shell.input.context_menu_handle_key(ui_wgpu::wgpu::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
+    assert!(matches!(shell.input.context_menu_handle_key(semio_framework_ui_wgpu_input::KeyAction::Enter), ContextMenuKeyOutcome::Ignored), "Enter on a disabled row fires nothing");
     assert!(shell.input.context_menu.is_some(), "and keeps the menu open");
 
     let menu = shell.input.context_menu.clone().expect("open");

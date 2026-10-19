@@ -1,11 +1,11 @@
 //! 🧰️ The fixtures every tool test shares: the demo model without its walls, extended by one type of each family, and a rig that drives a tool session pointer event by pointer event and
 //! applies every emitted mutation through the central applier, so a test reads the model the gesture left behind.
 
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::editor::bim::modes::edit;
-use crate::editor::bim::modes::edit::windows::family;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::EditorApp;
@@ -14,14 +14,15 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::ViewModel;
 use crate::editor::bim::BimModelApp;
-use crate::editor::bim::gestures::ToolSession;
-use crate::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, ToolContext, ToolEvent};
-use crate::editor::bim::marks::{Preview, Shape};
-use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
-use crate::standards::v1::subsets::any::schema::snapshot::{Beam, ColumnType, Component, DoorLeaves, DoorType, ExprPoint3, Family, FamilyCategory, FamilyParameter, FamilySolid, Layer, LayerFunction, Material, MaterialCategory, ModelSnapshot, ParameterKind, Point2, Profile, Rgb, RoofType, Slab, SlabType, SolidShape, Swing, WindowType};
+use semio_s_artifact_bim_model_gestures::editor::bim::gestures::ToolSession;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, ToolContext, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shape};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, ColumnType, Component, DoorType, Family, FamilyParameter, FamilySolid, Material, ModelSnapshot, RoofType, Slab, SlabType, WindowType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, ExprPoint3, FamilyCategory, Layer, LayerFunction, MaterialCategory, ParameterKind, Point2, Profile, Rgb, SolidShape, Swing};
 use semio_framework_pack_json::{JsonMemberPolicy, from_json_str};
 
-pub const PLAN: &str = crate::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID;
+pub const PLAN: &str = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID;
 
 fn layer(material: &str, thickness: f64) -> Layer {
     Layer { material: material.into(), thickness, function: LayerFunction::Structure }
@@ -38,10 +39,10 @@ pub fn model() -> ModelSnapshot {
     snapshot.slab_types.insert("sl-200".into(), SlabType { name: "Slab".into(), layers: vec![layer("m-concrete", 0.2)] });
     snapshot.roof_types.insert("rf-200".into(), RoofType { name: "Roof".into(), layers: vec![layer("m-concrete", 0.2)] });
     snapshot.column_types.insert("col-30".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
-    snapshot.beam_types.insert("bm-20".into(), crate::standards::v1::subsets::any::schema::snapshot::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
+    snapshot.beam_types.insert("bm-20".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
     snapshot.window_types.insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
     snapshot.curtain_wall_types.clear();
-    snapshot.curtain_wall_types.insert("cw-fa".into(), crate::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: crate::standards::v1::subsets::any::schema::snapshot::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: crate::standards::v1::subsets::any::schema::snapshot::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+    snapshot.curtain_wall_types.insert("cw-fa".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
     snapshot.door_types.insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into(), u_value: None });
     snapshot
 }
@@ -111,9 +112,9 @@ impl Rig {
     pub fn on(utility: &str, snapshot: ModelSnapshot, surface: Surface) -> Self {
         let kind = match surface {
             Surface::Plan { .. } => PLAN,
-            Surface::World { .. } => crate::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID,
-            Surface::Section { .. } => crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID,
-            Surface::Sheet { .. } => crate::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID,
+            Surface::World { .. } => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID,
+            Surface::Section { .. } => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID,
+            Surface::Sheet { .. } => semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID,
         };
         Self { snapshot, session: ToolSession::new(utility, kind), surface, selected: Vec::new(), library: Vec::new(), preview: Preview::default(), operations: 0 }
     }
@@ -143,7 +144,7 @@ impl Rig {
     }
 
     /// 🔑️ Offers a gesture key to the tool; every mutation of the answer is applied to the rig's model. The flag says whether the tool took the key.
-    pub fn key(&mut self, key: crate::editor::bim::gestures::session::GestureKey) -> (bool, Step) {
+    pub fn key(&mut self, key: semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::GestureKey) -> (bool, Step) {
         let mut taken = false;
         let step = self.drive(|session, context| {
             let (took, step, preview) = session.key(context, key);
@@ -155,16 +156,16 @@ impl Rig {
 
     fn drive(&mut self, feed: impl FnOnce(&mut ToolSession, &mut ToolContext<'_>) -> (Step, Preview)) -> Step {
         self.operations += 1;
-        let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &self.snapshot, |inference| inference.clone());
+        let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &self.snapshot, |inference| inference.clone());
         let snapshot = self.snapshot.clone();
         let mut context = ToolContext::new(&snapshot, &inference, self.surface.clone(), &format!("op{}", self.operations));
         context.selected = &self.selected;
         context.library = &self.library;
-        context.labels = Some(&crate::editor::bim::terminology::BimLabels::NATIVE_EN);
+        context.labels = Some(&semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels::NATIVE_EN);
         let (step, preview) = feed(&mut self.session, &mut context);
         self.preview = preview;
         for mutation in &step.mutations {
-            self.snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&self.snapshot, mutation).expect("an emitted mutation applies");
+            self.snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&self.snapshot, mutation).expect("an emitted mutation applies");
         }
         step
     }
@@ -204,7 +205,7 @@ impl Rig {
     }
 
     /// 🫧️ Whether the preview holds a mark of the shape.
-    pub fn shows(&self, shape: crate::editor::bim::marks::Shape) -> bool {
+    pub fn shows(&self, shape: semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape) -> bool {
         self.preview.marks.iter().any(|mark| mark.shape == shape)
     }
 }
@@ -212,7 +213,6 @@ impl Rig {
 pub mod context {
     use crate::editor::bim::*;
     use crate::editor::bim::{BimCommand, BimModelApp};
-    use crate::editor::bim::modes::edit::windows::world;
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
@@ -220,7 +220,9 @@ pub mod context {
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives, bound to [`BIM_TEST_INSTANCE`] so typed commands reach their retained routes and retired through the framework's
     /// exact close loop when it goes out of scope.
-    pub struct BimApp(VcsArtifactApp<EditorApp<BimModelApp>>);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+    /// scope pays the caller's terminal retirement after the paid app close.
+    pub struct BimApp(pub VcsArtifactApp<EditorApp<BimModelApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for BimApp {
         type Target = VcsArtifactApp<EditorApp<BimModelApp>>;
@@ -238,7 +240,7 @@ pub mod context {
     impl Drop for BimApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -250,20 +252,21 @@ pub mod context {
     }
 
     pub async fn bim_app() -> BimApp {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<BimModelApp>>(bim_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(BIM_TEST_INSTANCE).await;
-        BimApp(app)
+        BimApp(app, scope)
     }
 
     /// 🔁️ Dispatches `command` as the host does (no window addressed), drives its retained publication home and applies any `LoadDocument` effect.
     pub async fn dispatch(app: &mut BimApp, command: BimCommand) -> Dispatched {
-        let mut result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        let mut result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -272,8 +275,8 @@ pub mod context {
     /// 🪟️ Dispatches `command` addressed at the window instance `view` names, as the shell does for a window-scoped action.
     pub async fn dispatch_in(app: &mut BimApp, command: BimCommand, view: &ViewModel) -> Dispatched {
         let action_meta = semio_framework_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone()), ..meta("local") };
-        let mut result = app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        let mut result = app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         Dispatched { result, lanes: settled.lanes }
     }
@@ -300,7 +303,7 @@ pub mod context {
     }
 
     pub async fn history_verb(app: &mut BimApp, verb: &str) {
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, verb, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 
     pub fn view(locale: semio_framework_ui_locale::Locale, windows: &[(&str, &str)], addressed: Option<&str>) -> ViewModel {
@@ -312,7 +315,7 @@ pub mod context {
     }
 
     pub async fn render_text(app: &mut BimApp, body_key: &str, view: &ViewModel) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, view).await.expect("render")).expect("project and retire semantic tree")
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("project and retire semantic tree")
     }
 
     pub async fn canvas_scene(app: &mut BimApp, body_key: &str, view: &ViewModel) -> semio_framework_plugin::Canvas2dScene {
@@ -321,10 +324,7 @@ pub mod context {
     }
 
     pub async fn world_scene(app: &mut BimApp, view: &ViewModel) -> semio_framework_plugin::World3dScene {
-        let tree = app.render(world::BODY_KEY, None, view).await.expect("render world");
-        let decoded = semio_framework_plugin::artifact_app_laws::built_surface_scene(&tree.root);
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("retire world tree");
-        decoded.expect("assembled 3D scene")
+        semio_framework_plugin::artifact_app_laws::observe_registered_fixture_app(&mut app.0, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::BODY_KEY, view, app.1.cx(), |root| semio_framework_plugin::artifact_app_laws::built_surface_scene(root)).await.expect("render world").expect("assembled 3D scene")
     }
 }
 
@@ -333,11 +333,11 @@ pub mod support {
     use crate::editor::bim::*;
     use crate::editor::bim::BimModelApp;
     use semio_framework_plugin::ArtifactView;
-    use crate::editor::bim::dispatch_context::BimDispatchCtx;
+    use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
     use semio_framework_plugin::ConfigView;
     use semio_framework_plugin::Emit;
-    use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_plugin::NoConfig;
     use semio_framework_plugin::NoConfigMutation;
     use semio_framework_plugin::ViewModel;
@@ -356,7 +356,7 @@ pub mod support {
     }
 
     pub fn ctx(selected: &[&str]) -> BimDispatchCtx {
-        BimDispatchCtx { selected: selected.iter().map(|id| id.to_string()).collect(), utility: crate::editor::bim::utilities::DEFAULT_UTILITY.into(), ..BimDispatchCtx::default() }
+        BimDispatchCtx { selected: selected.iter().map(|id| id.to_string()).collect(), utility: semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY.into(), ..BimDispatchCtx::default() }
     }
 
     /// 🧪️ Runs `body` against `snapshot` the way a handler sees it.
@@ -368,6 +368,6 @@ pub mod support {
 
     /// 🔁️ The snapshot after the emitted mutations are applied one after the other through the central applier.
     pub fn applied(snapshot: &ModelSnapshot, emit: &Emit<ModelMutation, NoConfigMutation>) -> ModelSnapshot {
-        emit.artifact_mutations.iter().fold(snapshot.clone(), |state, mutation| crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&state, mutation).expect("the emitted mutation applies"))
+        emit.artifact_mutations.iter().fold(snapshot.clone(), |state, mutation| semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&state, mutation).expect("the emitted mutation applies"))
     }
 }

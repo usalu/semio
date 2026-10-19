@@ -5,7 +5,7 @@ import { buildFrameworkSyncUtilities } from "@semio-tech/framework-os";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import Ajv from "ajv";
 import { afterEach, describe, expect, test } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { TaskManagerWindow, type TaskManagerTaskV1 } from "../../🧱️elements/🧵️TaskManager/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");

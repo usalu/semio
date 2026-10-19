@@ -54,7 +54,7 @@
   ],
   "x-semio-admission": {
     "maxBytes": 2097152,
-    "maxRows": 128,
+    "maxRows": 512,
     "maxDurationMs": 30000
   },
   "x-semio-preview-progress": {

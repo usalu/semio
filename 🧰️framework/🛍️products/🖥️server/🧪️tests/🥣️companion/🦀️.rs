@@ -3,7 +3,6 @@
 //! 🧭️ The tests reach the product through its public modules, the `conformance` feature and the `testkit` hooks of the gateway; the reference instance they run against lives in the product's `🧩️instance` test file.
 #![cfg(test)]
 #![allow(async_fn_in_trait)]
-extern crate semio_framework_replication as protocol;
 
 pub use server::{__semio_dispatch_AuthorityStore, __semio_dispatch_BlobStore, __semio_dispatch_Decider, __semio_dispatch_PrincipalResolver, __semio_dispatch_ProjectionStore, __semio_dispatch_Saga, __semio_dispatch_SessionStore};
 pub use server::{authority, conformance, contract, gateway, policy, storage, throttle};

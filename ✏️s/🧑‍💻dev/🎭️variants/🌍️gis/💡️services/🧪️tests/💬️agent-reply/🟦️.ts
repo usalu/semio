@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { findWorkspaceRoot } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 /** 💬️ The agent's own voice, end to end, with nothing mocked on either side — ticket
  * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AC1, audit `📓️g19-ai-user-experience-audit.md`
  * gap 1. A real `semio-os-mcp` stdio gateway launched exactly as `.mcp.json` launches it, a real
@@ -31,7 +31,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Page } from "playwright";
-import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
+import { parseAgentBridgeOffer, sameAgentBridgeOffer, type AgentBridgeConfig } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 
 const REPO_ROOT = findWorkspaceRoot(import.meta.dir);
 const PROTOCOL_VERSION = "2025-06-18";

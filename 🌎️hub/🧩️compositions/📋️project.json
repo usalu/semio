@@ -18,6 +18,14 @@
         "forwardAllArgs": true
       },
       "cache": false
+    },
+    "typescript": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions",
+        "command": "bun ./📜️script.ts typescript"
+      },
+      "cache": false
     }
   }
 }

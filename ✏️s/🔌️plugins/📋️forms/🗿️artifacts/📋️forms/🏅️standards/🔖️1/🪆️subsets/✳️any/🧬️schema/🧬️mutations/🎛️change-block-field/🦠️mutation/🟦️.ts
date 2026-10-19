@@ -3,7 +3,7 @@
  * optional field). Schema: `../🧬️schema/🔣️.json`; design §17.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING. */
 import{parseCondition}from"../../../📝️definition/🟦️.ts";
 import{parseFormsValue,formsValueEqual,formsValueNumber}from"../../../🌱️value/🟦️.ts";
-import type { DslValue, FormExpr, FormQuestion, FormQuestionOption, FormVectorField } from "../../🟦️.ts";
+import type { DslValue, FormExpr, FormQuestion, FormQuestionOption, FormVectorField } from "../../../🧱️form-model/🟦️.ts";
 
 export const BLOCK_TEXT_FIELDS = ["description", "placeholder", "text", "unit", "schema", "src", "accept", "exampleId"] as const;
 export const BLOCK_NUMBER_FIELDS = ["min", "max", "step"] as const;

@@ -20,7 +20,7 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
     let kind = semio_framework_os_spr::ConflictKind::Degraded { edit_ids: vec![edit_id.clone()] };
     let conflict_id = semio_framework_os_spr::ConflictId::new(&kind, &ArtifactId(store.envelope().id.clone()), &mutation_ids, &timestamp).await;
     let messages: Vec<semio_framework_os_spr::MutationMessage> = ["mutation.target-referenced", "mutation.target-mismatch"].into_iter().map(|code| semio_framework_os_spr::MutationMessage::error(code, format!("{code} persisted")).at(["node-1"]).at_op(0)).collect();
-    store.0.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: conflict_id, kind, status: semio_framework_os_spr::ConflictStatus::Open, messages, actors, timestamp });
+    store.0.log.envelope.conflicts.push(semio_framework_os_spr::Conflict { id: conflict_id, kind, status: semio_framework_os_spr::ConflictStatus::Open, messages, actors, timestamp });
 
     let pack = initial.encode_pack();
     let spr = print_document_spr(store.envelope()).await.expect("state-dependent codes encode");
@@ -31,7 +31,7 @@ async fn spr_round_trip_preserves_state_dependent_error_codes() {
     let codes: Vec<&str> = restored.conflicts().last().expect("the conflict survives").messages.iter().map(|message| message.code.0.as_str()).collect();
     assert_eq!(codes, ["mutation.target-referenced", "mutation.target-mismatch"]);
 
-    for message in &mut store.0.envelope.conflicts.last_mut().expect("the conflict").messages {
+    for message in &mut store.0.log.envelope.conflicts.last_mut().expect("the conflict").messages {
         message.level = semio_framework_diagnostic::Severity::Fatal;
     }
     let error = print_document_spr(store.envelope()).await.expect_err("a state-dependent code is an Error, never Fatal");

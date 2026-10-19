@@ -3,9 +3,9 @@ import{open,lstat,writeFile}from"node:fs/promises";
 import{join,resolve,dirname,relative,isAbsolute,sep}from"node:path";
 import{createHash}from"node:crypto";
 import{checkScriptInvocation,requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,readIssuedScriptProcessEnvelopeV1,type ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json";
 
 /** 📥️ Reads only the exact newly owned finite purpose request through a stable nofollow descriptor. */

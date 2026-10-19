@@ -36,6 +36,22 @@ impl OriginalFixtureCaller{
 }
 impl Drop for OriginalFixtureCaller{fn drop(&mut self){assert!(std::thread::panicking()||self.source.is_none(),"original fixture caller requires paid terminal retirement")}}
 
+/// 🪙️ One fixture-lifetime original caller: owns the caller and its single lent context so a fixture app threads the same `cx` through every call and pays the caller's terminal retirement once, at an explicit [`OriginalFixtureScope::retire`] or else when the scope drops (a scope dropped while panicking pays nothing).
+pub struct OriginalFixtureScope{context:Option<StepContext<'static>>,caller:*mut OriginalFixtureCaller}
+impl OriginalFixtureScope{
+ /// 🚪️ Admits one original caller and lends its sole context for the whole life of the scope.
+ pub fn admit()->Self{let caller=Box::into_raw(Box::new(OriginalFixtureCaller::admit().expect("closed original fixture scope caller")));let context=unsafe{(*caller).context()};Self{context:Some(context),caller}}
+ /// 🪢️ The one original context every call of the fixture's financed body shares.
+ pub fn cx(&mut self)->&mut StepContext<'static>{self.context.as_mut().expect("original fixture scope context is lent until its retirement")}
+ /// 🧹️ Returns the context, then pays the caller's terminal retirement from the fuel the body left.
+ pub fn retire(&mut self)->RetainedCloneProgress{
+  let context=self.context.take().expect("original fixture scope retires once");let fuel=context.fuel_remaining();drop(context);
+  let mut caller=unsafe{Box::from_raw(self.caller)};self.caller=std::ptr::null_mut();
+  caller.retire(fuel).expect("paid original fixture scope retirement")
+ }
+}
+impl Drop for OriginalFixtureScope{fn drop(&mut self){if self.caller.is_null(){return}if std::thread::panicking(){drop(self.context.take());drop(unsafe{Box::from_raw(self.caller)})}else{self.retire();}}}
+
 #[cfg(test)]
 mod original_physical_laws{
  use super::*;

@@ -51,38 +51,38 @@
   "registerFixtures": [
     [
       "stakeholders",
-      "👥️stakeholder",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "👥️stakeholder-creates-a"
     ],
     [
       "users",
-      "🧑️user",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🧑️user-creates-a"
     ],
     [
       "activities",
-      "🏃️activity",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🏃️activity-creates-a"
     ],
     [
       "functions",
-      "⚙️function",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "⚙️function-creates"
     ],
     [
       "elements",
-      "🧱️program-element",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🧱️program-element-creates-a"
     ],
     [
       "quantities",
-      "🔢️quantity",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🔢️quantity-creates-a"
     ],
     [
       "relationships",
-      "🕸️relationship",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🕸️relationship-creates-a"
     ],
     [
       "adjacencies",
@@ -91,288 +91,288 @@
     ],
     [
       "processes",
-      "🔄️process",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🔄️process-creates"
     ],
     [
       "flows",
-      "🌊️flow",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🌊️flow-creates-a"
     ],
     [
       "accessRules",
-      "🔑️access-rule",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🔑️access-rule-creates-a"
     ],
     [
       "operations",
-      "📋️operational",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📋️operational-creates-a"
     ],
     [
       "equipment",
-      "🛠️equipment",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🛠️equipment-creates-a"
     ],
     [
       "resources",
-      "📦️resource",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📦️resource-creates-a"
     ],
     [
       "storage",
-      "🗄️storage",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🗄️storage-creates"
     ],
     [
       "environmental",
-      "🌿️environmental",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🌿️environmental-creates-a"
     ],
     [
       "humanFactors",
-      "🧠️human",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🧠️human-creates"
     ],
     [
       "accessibility",
-      "♿️accessibility",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "♿️accessibility-creates-a"
     ],
     [
       "privacy",
-      "🔒️privacy",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🔒️privacy-creates"
     ],
     [
       "safety",
-      "🦺️safety",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🦺️safety-creates"
     ],
     [
       "security",
-      "🛡️security",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🛡️security-creates-a"
     ],
     [
       "regulatory",
-      "📜️regulatory",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📜️regulatory-creates-a"
     ],
     [
       "siteContext",
-      "📍️site",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📍️site-creates-a"
     ],
     [
       "organizational",
-      "🏢️organizational",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🏢️organizational-creates-a"
     ],
     [
       "services",
-      "🛎️service",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🛎️service-creates"
     ],
     [
       "infrastructure",
-      "🏗️infrastructure",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🏗️infrastructure-creates-a"
     ],
     [
       "information",
-      "ℹ️information",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "ℹ️information-creates-a"
     ],
     [
       "communication",
-      "📡️communication",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📡️communication-creates-a"
     ],
     [
       "wayfinding",
-      "🧭️wayfinding",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🧭️wayfinding-creates-a"
     ],
     [
       "schedules",
-      "📅️schedule",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📅️schedule-creates-a"
     ],
     [
       "flexibility",
-      "🧩️flexibility",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🧩️flexibility-creates-a"
     ],
     [
       "growth",
-      "📈️growth-plan",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📈️growth-plan-creates-a"
     ],
     [
       "sustainability",
-      "♻️sustainability",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "♻️sustainability-creates-a"
     ],
     [
       "resilience",
-      "💪️resilience",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "💪️resilience-creates-a"
     ],
     [
       "costs",
-      "💰️cost",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "💰️cost-creates-a"
     ],
     [
       "delivery",
-      "🚚️delivery-constraint",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🚚️delivery-constraint-creates"
     ],
     [
       "risks",
-      "⚠️risk",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "⚠️risk-creates-a"
     ],
     [
       "conflicts",
-      "⚔️conflict",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "⚔️conflict-creates"
     ],
     [
       "requirements",
-      "📌️requirement",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📌️requirement-creates-a"
     ],
     [
       "priorities",
-      "⭐️priority-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "⭐️priority-record-creates-a"
     ],
     [
       "scenarios",
-      "🎬️scenario",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🎬️scenario-creates-a"
     ],
     [
       "options",
-      "⚖️option",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "⚖️option-creates"
     ],
     [
       "decisions",
-      "✅️decision",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "✅️decision-creates"
     ],
     [
       "validations",
-      "✔️validation-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "✔️validation-record-creates-a"
     ],
     [
       "performance",
-      "📊️performance",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📊️performance-creates-a"
     ],
     [
       "quality",
-      "💎️quality-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "💎️quality-record-creates-a"
     ],
     [
       "artifacts",
-      "📃️document",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📃️document-creates-a"
     ],
     [
       "assumptions",
-      "💭️assumption",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "💭️assumption-creates-a"
     ],
     [
       "constraints",
-      "🚧️constraint-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🚧️constraint-record-creates-a"
     ],
     [
       "complianceRecords",
-      "🛂️compliance-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🛂️compliance-record-creates-a"
     ],
     [
       "approvals",
-      "👍️approval-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "👍️approval-record-creates-a"
     ],
     [
       "meetings",
-      "🗓️meeting-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🗓️meeting-record-creates-a"
     ],
     [
       "changes",
-      "🔀️change-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🔀️change-record-creates-a"
     ],
     [
       "collaboration",
-      "🤝️collaboration",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🤝️collaboration-creates-a"
     ],
     [
       "analyses",
-      "🔬️analysis-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🔬️analysis-record-creates-a"
     ],
     [
       "reports",
-      "📑️report-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📑️report-record-creates-a"
     ],
     [
       "searchFilters",
-      "🔍️search-filter",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🔍️search-filter-creates-a"
     ],
     [
       "statusRecords",
-      "📶️status-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📶️status-record-creates-a"
     ],
     [
       "workshops",
-      "🎓️workshop",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🎓️workshop-creates-a"
     ],
     [
       "surveys",
-      "🗳️survey",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🗳️survey-creates"
     ],
     [
       "issues",
-      "🐛️issue",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "🐛️issue-creates"
     ],
     [
       "auditEvents",
-      "📒️audit",
-      "🌱️create/🌱️creates"
+      "📋️register-row/🌱️create",
+      "📒️audit-creates"
     ],
     [
       "templates",
-      "📐️template-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📐️template-record-creates-a"
     ],
     [
       "knowledgePayload",
-      "📚️knowledge-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "📚️knowledge-record-creates-a"
     ],
     [
       "benchmarksPayload",
-      "🏁️benchmark-record",
-      "🌱️create/🌱️creates-a"
+      "📋️register-row/🌱️create",
+      "🏁️benchmark-record-creates-a"
     ]
   ],
   "binary64Words": [
@@ -422,19 +422,19 @@
   ],
   "unsigned64Fixtures": {
     "AnalysisRecord": [
-      "🧫️fixtures/🧬️mutations/🔬️analysis-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/🔬️analysis-record-creates-a/📸️snapshot/➡️after/🔣️.json",
       "analyses"
     ],
     "SearchFilter": [
-      "🧫️fixtures/🧬️mutations/🔍️search-filter/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/🔍️search-filter-creates-a/📸️snapshot/➡️after/🔣️.json",
       "searchFilters"
     ],
     "TemplateRecord": [
-      "🧫️fixtures/🧬️mutations/📐️template-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/📐️template-record-creates-a/📸️snapshot/➡️after/🔣️.json",
       "templates"
     ],
     "KnowledgeRecord": [
-      "🧫️fixtures/🧬️mutations/📚️knowledge-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/📚️knowledge-record-creates-a/📸️snapshot/➡️after/🔣️.json",
       "knowledgePayload"
     ]
   },
@@ -676,27 +676,27 @@
   },
   "unsigned32Fixtures": {
     "BenchmarkRecord": [
-      "🧫️fixtures/🧬️mutations/🏁️benchmark-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/🏁️benchmark-record-creates-a/📸️snapshot/➡️after/🔣️.json",
       "benchmarksPayload"
     ],
     "Equipment": [
-      "🧫️fixtures/🧬️mutations/🛠️equipment/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/🛠️equipment-creates-a/📸️snapshot/➡️after/🔣️.json",
       "equipment"
     ],
     "GrowthPlan": [
-      "🧫️fixtures/🧬️mutations/📈️growth-plan/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/📈️growth-plan-creates-a/📸️snapshot/➡️after/🔣️.json",
       "growth"
     ],
     "PriorityRecord": [
-      "🧫️fixtures/🧬️mutations/⭐️priority-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/⭐️priority-record-creates-a/📸️snapshot/➡️after/🔣️.json",
       "priorities"
     ],
     "ScheduleRequirement": [
-      "🧫️fixtures/🧬️mutations/📅️schedule/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/📅️schedule-creates-a/📸️snapshot/➡️after/🔣️.json",
       "schedules"
     ],
     "Survey": [
-      "🧫️fixtures/🧬️mutations/🗳️survey/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json",
+      "/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/🗳️survey-creates/📸️snapshot/➡️after/🔣️.json",
       "surveys"
     ]
   },

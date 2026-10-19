@@ -27,7 +27,7 @@ testkit = ["semio-framework-os-kernel-db-engine-base/testkit", "semio-framework-
 
 [dependencies]
 semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust" }
-semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-ids = { path = "../../../../🆔️ids/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
@@ -36,7 +36,7 @@ semio-framework-async = { workspace = true }
 semio-framework-replication = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️base/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-engine-base = { path = "../../../🧱️catalog-codec/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-core = { path = "../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-io-driver = { path = "../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel-db-storage = { path = "../../../../🗄️storage/📦️packages/🦀️rust", features = ["testkit"] }

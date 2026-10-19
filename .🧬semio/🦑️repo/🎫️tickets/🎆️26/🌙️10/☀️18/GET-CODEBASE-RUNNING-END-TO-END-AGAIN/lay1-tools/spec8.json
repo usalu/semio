@@ -1,0 +1,4 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts","leaf":"🖼️display-model","names":["DisplayItem","DisplayModel"],"doc":"🖼️ The display model an interaction state resolves to: display items and the model that carries them."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts","leaf":"🎛️machine-views","names":["StatelyAdvanceEvent","StatelyMachineSpec","SpatialStatelyMachineTransitionView","SpatialStatelyMachineStateView","SpatialStatelyMachineView","SpatialStatelyMachineCatalogView"],"doc":"🎛️ The stately machine spec and the transition, state, machine and catalog views the stately engine publishes."}
+]

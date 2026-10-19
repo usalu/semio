@@ -3,9 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-search-go` router: `bun ./📜️script.ts test`. */
 import { dirname, join } from "node:path";
-import { goLevelTestArgs } from "../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
-import { goCoverageArgs } from "../../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
-import { runCanonicalGoTests } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
+import { goLevelTestArgs, goCoverageArgs, runCanonicalGoTests } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

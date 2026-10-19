@@ -1,67 +1,73 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::sync::Arc;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, Wall}, diff::{Entry, patches::{MaterialPatch, StoreyPatch, WallPatch}, ModelDiff}};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode, NodeKind, ModelInferenceSession, ModelValue, ModelGraph};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{Inference, InferredField};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -118,8 +124,8 @@ fn rooms_grid(rows: usize, columns: usize) -> ModelSnapshot {
 #[test]
 fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() {
     for snapshot in [full(), decode((*JOINS))] {
-        for wanted in [kinds::ALL, kinds::LEVELS, kinds::LAYOUTS, kinds::FRAMES, kinds::SOLIDS, kinds::ROOMS, kinds::PLANS, kinds::QUANTITIES, kinds::DIAGNOSTICS, kinds::RUNS, kinds::CURTAINS] {
-            let steps = plan::build(&snapshot, kinds::closure(wanted));
+        for wanted in [semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LEVELS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LAYOUTS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::FRAMES, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::SOLIDS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ROOMS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::PLANS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::QUANTITIES, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::DIAGNOSTICS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::RUNS, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::CURTAINS] {
+            let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(wanted));
             let position: BTreeMap<&ModelNode, usize> = steps.iter().enumerate().map(|(index, step)| (&step.key, index)).collect();
             assert_eq!(position.len(), steps.len(), "keys are unique");
             for step in &steps {
@@ -134,7 +140,7 @@ fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() 
 #[test]
 fn a_selection_plans_only_its_kinds_and_their_ancestors() {
     let snapshot = full();
-    let kinds_of = |wanted: u64| plan::build(&snapshot, kinds::closure(wanted)).iter().map(|step| step.key.kind()).collect::<std::collections::BTreeSet<_>>();
+    let kinds_of = |wanted: u64| semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(wanted)).iter().map(|step| step.key.kind()).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(kinds_of(kinds::LEVELS), [NodeKind::Storey].into());
     assert_eq!(kinds_of(kinds::LAYOUTS), [NodeKind::Storey, NodeKind::Band, NodeKind::WallLayout].into());
     assert!(!kinds_of(kinds::SOLIDS).contains(&NodeKind::Plan) && kinds_of(kinds::SOLIDS).contains(&NodeKind::OpeningFrame));
@@ -178,19 +184,24 @@ fn every_projection_is_cache_transparent_warm_equals_cold_equals_uncached() {
 
 #[test]
 fn the_thin_projections_equal_the_whole_inference() {
-    use crate::standards::v1::subsets::any::schema::inferences::{curtain_layout, diagnostics, element_solids, opening_frames, plan_linework, quantities, spaces, stair_runs, storey_levels, wall_layout};
+    use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::{curtain_layout, stair_runs, storey_levels};
+    use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics;
+    use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::{opening_frames, wall_layout};
+    use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework;
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities;
+    use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces;
     for snapshot in [full(), decode((*JOINS))] {
         let whole = ModelInference::infer(&snapshot).expect("infers");
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot), whole.storey_levels);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot), whole.wall_layout);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout(&snapshot), whole.curtain_layout);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs(&snapshot), whole.stair_runs);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_spaces(&snapshot), whole.spaces);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames(&snapshot), whole.opening_frames);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids(&snapshot), whole.element_solids);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework(&snapshot), whole.plan_linework);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics(&snapshot), whole.diagnostics);
-        assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities(&snapshot, &whole), whole.quantities);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot), whole.storey_levels);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot), whole.wall_layout);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout(&snapshot), whole.curtain_layout);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs(&snapshot), whole.stair_runs);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_spaces(&snapshot), whole.spaces);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames(&snapshot), whole.opening_frames);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids(&snapshot), whole.element_solids);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework(&snapshot), whole.plan_linework);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics(&snapshot), whole.diagnostics);
+        assert_eq!(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities(&snapshot, &whole), whole.quantities);
     }
 }
 
@@ -272,7 +283,7 @@ fn moving_one_wall_recomputes_only_its_neighbourhood() {
 
 #[test]
 fn moving_a_window_recomputes_its_frame_its_host_wall_and_filler_only() {
-    use crate::standards::v1::subsets::any::schema::diff::patches::OpeningPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
     let snapshot = full();
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
@@ -289,11 +300,11 @@ fn moving_a_window_recomputes_its_frame_its_host_wall_and_filler_only() {
 #[test]
 fn a_node_keeps_the_key_it_was_computed_for() {
     let snapshot = house();
-    let steps = plan::build(&snapshot, kinds::closure(kinds::ALL));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL));
     let mut values: BTreeMap<ModelNode, ModelValue> = BTreeMap::new();
     for step in &steps {
         let parents: Vec<ModelValue> = step.parents.iter().map(|parent| values[parent].clone()).collect();
-        let value = <ModelGraph<{ kinds::ALL }> as InferredField<ModelSnapshot>>::compute(&snapshot, &step.key, &parents);
+        let value = <ModelGraph<{ semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::ALL }> as InferredField<ModelSnapshot>>::compute(&snapshot, &step.key, &parents);
         assert_eq!(value.node, step.key);
         values.insert(step.key.clone(), value);
     }

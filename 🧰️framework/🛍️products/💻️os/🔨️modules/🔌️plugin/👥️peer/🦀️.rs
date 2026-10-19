@@ -30,7 +30,7 @@ use semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
 pub struct PeerPresenceRootRetirement {
     pub root: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
     pub owned: ManuallyDrop<Option<PeerPresenceRoot>>,
-    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<PeerPresenceEntry>>>,
+    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>,
     pub cursor: usize,
 }
 
@@ -48,7 +48,7 @@ impl PeerPresenceRootRetirement {
             return Ok(RetirementDemand { copy_bytes: entry.next_copy_byte_demand()?, capacity_bytes: entry.next_capacity_byte_demand(body)?, release_bytes: entry.next_release_byte_demand()?, depth: entry.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))? });
         }
         if self.root.is_some() {
-            return Ok(RetirementDemand { copy_bytes: size_of::<PeerPresenceRoot>(), release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<PeerPresenceRoot>(), depth: 1, ..Default::default() });
+            return Ok(RetirementDemand { copy_bytes: size_of::<PeerPresenceRoot>(), release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>(), depth: 1, ..Default::default() });
         }
         if let Some(root) = self.owned.as_ref() {
             return Ok(RetirementDemand { copy_bytes: if self.cursor < root.len { size_of::<std::sync::Arc<PeerPresenceEntry>>() } else { 0 }, depth: 1, ..Default::default() });
@@ -72,7 +72,7 @@ impl PeerPresenceRootRetirement {
         if self.owned.is_none() {
             let root = self.root.as_mut().expect("peer root retains its original backing");
             if std::sync::Arc::get_mut(root).is_none() { return Ok(PluginLifecycleStep::Blocked { reason: "peer-presence root remains captured by a live operation" }); }
-            let release = semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<PeerPresenceRoot>();
+            let release = semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<PeerPresenceRoot>();
             if grant.maximum_release_bytes < release { return Ok(PluginLifecycleStep::Progress(empty)); }
             let root = self.root.take().expect("peer root original ownership");
             match std::sync::Arc::try_unwrap(root) {
@@ -88,7 +88,7 @@ impl PeerPresenceRootRetirement {
             let index = self.cursor;
             self.cursor += 1;
             if let Some(entry) = root.entries[index].take() {
-                *self.entry = Some(semio_framework_value::retirement::shared::SharedControlledRetirement::new(entry));
+                *self.entry = Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(entry));
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, ..empty }));
             }
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));

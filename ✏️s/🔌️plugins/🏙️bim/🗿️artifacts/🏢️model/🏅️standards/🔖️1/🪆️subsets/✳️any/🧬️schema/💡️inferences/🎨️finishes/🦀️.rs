@@ -13,11 +13,12 @@
 //!
 //! Related: shapely `Polygon.boundary.distance` and `buffer` reproduce the face test, <https://shapely.readthedocs.io/en/stable/manual.html#object.distance>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, ModelQuantities, QuantityKind};
-use crate::standards::v1::subsets::any::schema::inferences::spaces::{self, SpaceRoom, SpaceStatus};
-use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, ModelSnapshot, Slope, Space, Vertex};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Ceiling, ModelSnapshot, Space};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Slope, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_2d::Vec2;
@@ -124,7 +125,7 @@ pub fn covered_area(snapshot: &ModelSnapshot, space: &Space, room: &SpaceRoom, c
     let control = &mut |_: &BooleanProgress| true;
     let (floor, hung) = (Region::new(outer, islands), Region::new(&flat_ring(&ceiling.boundary), &ceiling.holes.iter().map(|hole| flat_ring(hole)).collect::<Vec<_>>()));
     let covered = region_boolean(BooleanOperation::Intersection, &[floor], &[hung], control).unwrap_or_default();
-    let columns = spaces::column_regions(snapshot, &space.storey);
+    let columns = semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::column_regions(snapshot, &space.storey);
     let net = if columns.is_empty() { covered } else { region_boolean(BooleanOperation::Difference, &covered, &columns, control).unwrap_or_default() };
     net.iter().map(Region::area).sum()
 }
@@ -164,7 +165,7 @@ pub fn finish_rows(snapshot: &ModelSnapshot, space: &Space, room: &SpaceRoom, fr
 pub fn dependency(snapshot: &ModelSnapshot, space: &Space) -> DslValue {
     let slopes = DslValue::object(snapshot.slabs.iter().filter(|(_, slab)| slab.slope.is_some()).map(|(id, slab)| (id.clone(), dep_value(&slab.slope))));
     let hung = DslValue::object(snapshot.ceilings.iter().filter(|(_, ceiling)| ceiling.storey == space.storey).map(|(id, ceiling)| (id.clone(), dep_object([("boundary", dep_value(&ceiling.boundary)), ("holes", dep_value(&ceiling.holes)), ("slope", dep_value(&ceiling.slope))]))));
-    dep_object([("floor", dep_value(&space.floor_finish)), ("wall", dep_value(&space.wall_finish)), ("ceiling", dep_value(&space.ceiling_finish)), ("slopes", slopes), ("ceilings", hung), ("columns", spaces::column_dependency(snapshot, &space.storey))])
+    dep_object([("floor", dep_value(&space.floor_finish)), ("wall", dep_value(&space.wall_finish)), ("ceiling", dep_value(&space.ceiling_finish)), ("slopes", slopes), ("ceilings", hung), ("columns", semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::column_dependency(snapshot, &space.storey))])
 }
 //#endregion 🔖️Dependency
 

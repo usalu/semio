@@ -266,8 +266,9 @@ impl ToolRunRetargetableJob<Puzzle3dConfig> for Puzzle3dFillToolRunJob {
     }
 }
 
-impl InteractiveJob for Puzzle3dFillToolRunJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl Puzzle3dFillToolRunJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         while let FillToolRunPhase::Preparing(preparation) = &mut self.phase {
             if context.is_cancelled() {
                 return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
@@ -287,6 +288,10 @@ impl InteractiveJob for Puzzle3dFillToolRunJob {
             FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => semio_framework_job::JobOutcomeBorrow::admit_cancelled(context),
         }
     }
+}
+
+impl InteractiveJob for Puzzle3dFillToolRunJob {
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match &self.phase {
@@ -309,15 +314,15 @@ impl InteractiveJob for Puzzle3dFillToolRunJob {
         }
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         match &mut self.phase {
-            FillToolRunPhase::Run(job) => job.close_step(grant),
-            FillToolRunPhase::Revalidate(job) => job.close_step(grant),
+            FillToolRunPhase::Run(job) => job.close_step(cx),
+            FillToolRunPhase::Revalidate(job) => job.close_step(cx),
             FillToolRunPhase::Preparing(_) => {
                 self.phase = FillToolRunPhase::Closed;
-                InteractiveJobCloseStep::Complete { progress: Default::default() }
+                Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })
             }
-            FillToolRunPhase::Closed => InteractiveJobCloseStep::Complete { progress: Default::default() },
+            FillToolRunPhase::Closed => Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }),
         }
     }
 

@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 bindgen = ["dep:wasm-bindgen"]
 
 [dependencies]
-semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
 semio-framework-ui-tui-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-ui-tui-terminal = { path = "../../../📺️terminal/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

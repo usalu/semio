@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallBaseOffset`: an absolute `SetWallBaseOffset` back to the base offset, none when the wall is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetWallBaseOffset, base: &ModelSnapshot) -> Vec<Op>
 where

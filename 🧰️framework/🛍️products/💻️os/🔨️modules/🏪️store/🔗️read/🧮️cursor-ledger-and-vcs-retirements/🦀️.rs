@@ -126,7 +126,7 @@ pub struct ArtifactStoreHistoryLedgerRetirement<T> {
     pub ledger: std::mem::ManuallyDrop<Option<ArtifactHistoryLedger<T>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     pub pending: std::mem::ManuallyDrop<Option<T>>,
-    pub visibility: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::shared::SharedControlledRetirement<semio_framework_os_vcs::ArtifactGroupVisibility>>>,
+    pub visibility: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<semio_framework_os_vcs::ArtifactGroupVisibility>>>,
     pub factory: std::mem::ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,
     pub closing_factory: std::mem::ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
 }
@@ -176,7 +176,7 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
             }
             if ledger.retained_terminal_slot_count() != 0 {
                 let (visibility, progress) = ledger.retire_terminal_slot(grant)?;
-                *self.visibility = visibility.map(semio_framework_value::retirement::shared::SharedControlledRetirement::lease);
+                *self.visibility = visibility.map(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease);
                 return Ok(RetainedCloneStep::Progress(progress));
             }
             if !ledger.backing_is_empty() { return ledger.release_empty_page(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }

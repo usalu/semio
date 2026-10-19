@@ -25,7 +25,7 @@ func applySystemAutofixes(breachs []model.Breach) (int, error) {
 	for _, v := range breachs {
 		switch v.Kind {
 		case model.BreachFolderIllegalEmpty:
-			folderPath := filepath.Join(workspace.RootDir, v.Excerpt)
+			folderPath := filepath.Join(workspace.GetRootDir(), v.Excerpt)
 			entries, readErr := os.ReadDir(folderPath)
 			if readErr == nil && len(entries) == 0 {
 				if err := os.Remove(folderPath); err == nil {

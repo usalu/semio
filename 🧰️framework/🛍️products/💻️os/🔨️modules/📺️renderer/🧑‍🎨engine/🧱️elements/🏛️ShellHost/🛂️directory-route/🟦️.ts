@@ -48,7 +48,7 @@ import { type SpaceAdministrationIntentV1 } from "../../🛂️SpaceAdministrati
 import { parseShellRoute } from "../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { useUIHistory } from "../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import { isPluginInstanceRetiredV1, setPluginRuntimeActor } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { type InferencePortUiAction } from "../🪪️host-bootstrap/🟦️.tsx";
+import type { InferencePortUiAction } from "@semio-tech/framework/inference/service";
 import { applyDirectoryEventPageBootstrapV1, openDirectoryHomeOwnerV1, directoryHomeOwnerAppV1 } from "../📇️directory-bootstrap/🟦️.tsx";
 import { identityMutationEnvelope, shellActorId } from "../🔐️identity-binding/🟦️.ts";
 import { mintDirectoryCommandRequestId } from "../🧾️space-artifact-creation/🟦️.ts";

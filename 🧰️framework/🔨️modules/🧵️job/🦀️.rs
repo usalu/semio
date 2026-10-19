@@ -22,7 +22,7 @@ mod original_turn_failure;
 pub use original_turn_failure::{OriginalTurnFailure,OriginalTurnPrimary,OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand,project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault};
 #[path="♻️retirement/🎟️context/🦀️.rs"]
 mod original_close_context;
-pub use original_close_context::close_original_retained_step;
+pub use original_close_context::{close_original_granted_step,close_original_nested_step,close_original_retained_step,close_with_self_funded_context,SelfFundedCloseCaller};
 
 #[cfg(test)]
 use std::time::Instant;
@@ -140,7 +140,6 @@ pub struct StepContext<'a> {
     original_physical_recipient:Option<(&'a mut RetainedCloneProgress,RetainedCloneProgress)>,
     original_work_recipient:Option<&'a mut u128>,
     payload_page_granted: bool,
-    retained_work: retained_work::RetainedWorkBudget,
 }
 
 fn retained_delta(after:RetainedCloneProgress,before:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items.saturating_sub(before.copied_items),copied_bytes:after.copied_bytes.saturating_sub(before.copied_bytes),retained_capacity_bytes:after.retained_capacity_bytes.saturating_sub(before.retained_capacity_bytes),released_bytes:after.released_bytes.saturating_sub(before.released_bytes)}}
@@ -166,7 +165,7 @@ impl OriginalWorkLoan<'_>{fn matches_original(&self)->bool{let cx=unsafe{&*self.
 impl Drop for OriginalWorkLoan<'_>{fn drop(&mut self){if self.matches_original(){let cx=unsafe{&mut*self.target};let spent=cx.work_units_spent-self.spent;cx.fuel_remaining=self.fuel.saturating_sub(u64::try_from(spent).unwrap_or(u64::MAX));cx.deadline_us=self.deadline;}}}
 
 impl<'a> StepContext<'a> {
-    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None,payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})}
+    fn with_original_worker_authority(operation:OperationId,generation:Generation,budget:StepBudget,cancel:&'a CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,retained_progress:&'a mut RetainedCloneProgress,payload_ledger:&'a Arc<JobPayloadOperationLedger>)->Result<Self,ValueError>{if payload_ledger.operation!=operation||payload_ledger.generation!=generation||!retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"worker context requires its original admitted identity ledger and recipient"))}Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(clock),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::OriginalWorker(payload_ledger),source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None,payload_page_granted:false})}
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
         StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)),retained_progress)
     }
@@ -177,7 +176,7 @@ impl<'a> StepContext<'a> {
         assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
         StepContext { retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
-            work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None, payload_page_granted: false, retained_work: retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK) }
+            work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None, payload_page_granted: false }
     }
 
     /// 🤝️ Borrows the original paid ledger and cancellation while preserving the caller's exact recipient.
@@ -185,7 +184,7 @@ impl<'a> StepContext<'a> {
         let Some(original)=authority.original()else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority has already closed"))};
         if original.operation!=operation||original.generation!=generation{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload authority identity does not match caller turn"))}
         if !retained_progress.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original job recipient exceeds incoming retained grant"))}
-        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None,payload_page_granted:false,retained_work:retained_work::RetainedWorkBudget::new(retained_work::NO_RETAINED_WORK)})
+        Ok(Self{retained:budget.retained,retained_progress,operation,generation,fuel_remaining:budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,work_units_spent:0,deadline_us:budget.deadline_us,now_us,clock:std::cell::Cell::new(ClockStride::new()),cancel:StepCancelReference::Borrowed(cancel),stage:"initial",preview_sequence,payload_ledger:JobPayloadLedgerReference::Borrowed(authority),source_parent:None,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None,payload_page_granted:false})
     }
 
     /// 🎟️ Preserves the original caller depth and independently unspent physical credits.
@@ -219,6 +218,8 @@ impl<'a> StepContext<'a> {
     }
     /// 📊️ Exposes actual effects recorded by this same original step context, including failed turns.
     pub fn retained_progress(&self)->RetainedCloneProgress{*self.retained_progress}
+    /// 🚪️ Quotes one normal-work demand against the caller's remaining retained grant on every axis, independent of CPU fuel; a denied quote allocates and posts nothing.
+    pub fn retained_work_can_enter(&self,demand:RetirementDemand)->bool{retained_work::RetainedWorkBudget::new(self.retained_grant()).can_enter(demand)}
     /// 🎟️ Checks the original cumulative recipient against the issued turn grant.
     pub fn retained_recipient_is_admitted(&self)->bool{self.retained_progress().fits(self.retained)}
 

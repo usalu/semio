@@ -52,7 +52,7 @@ fn gauss_newton_seed(a: &Surface, mut ua: f64, mut va: f64, b: &Surface, mut ub:
             rows[i][i] += 1e-6;
             rhs[i] = -cols[i].dot(r);
         }
-        let delta = super::super::shared::gauss_elim(&rows, &rhs);
+        let delta = super::super::intersection_numerics::gauss_elim(&rows, &rhs);
         ua += delta[0];
         va += delta[1];
         ub += delta[2];
@@ -179,7 +179,7 @@ fn march_direction(a: &Surface, dom_a: ((f64, f64), (f64, f64)), b: &Surface, do
                 rows[i][i] += 1e-8;
                 rhs[i] = -cols[i].dot(r);
             }
-            let delta = super::super::shared::gauss_elim(&rows, &rhs);
+            let delta = super::super::intersection_numerics::gauss_elim(&rows, &rhs);
             nua += delta[0];
             nva += delta[1];
             nub += delta[2];
@@ -254,15 +254,15 @@ pub(super) fn general_marching(a: &Surface, b: &Surface, tol: f64) -> Vec<IntCur
             continue;
         }
         let pts3: Vec<Pnt3> = trace.iter().map(|s| s.0).collect();
-        let params = super::super::shared::centripetal_params(&pts3);
-        let Some(nurbs) = super::super::shared::interpolate_params_3d(&pts3, &params) else { continue };
+        let params = super::super::intersection_numerics::centripetal_params(&pts3);
+        let Some(nurbs) = super::super::intersection_numerics::interpolate_params_3d(&pts3, &params) else { continue };
         let curve3 = Curve3::Nurbs { knots: nurbs.knots, controls: nurbs.controls, weights: nurbs.weights };
         let mut pts2a: Vec<Pnt2> = trace.iter().map(|s| Pnt2::new(s.1, s.2)).collect();
         let mut pts2b: Vec<Pnt2> = trace.iter().map(|s| Pnt2::new(s.3, s.4)).collect();
         unwrap_pts2(&mut pts2a, a);
         unwrap_pts2(&mut pts2b, b);
-        let Some(pcurve_a) = super::super::shared::interpolate_params_2d(&pts2a, &params) else { continue };
-        let Some(pcurve_b) = super::super::shared::interpolate_params_2d(&pts2b, &params) else { continue };
+        let Some(pcurve_a) = super::super::intersection_numerics::interpolate_params_2d(&pts2a, &params) else { continue };
+        let Some(pcurve_b) = super::super::intersection_numerics::interpolate_params_2d(&pts2b, &params) else { continue };
         let mut max_err = 0.0f64;
         for (i, &t) in params.iter().enumerate() {
             max_err = max_err.max(curve3.eval(t).distance(pts3[i]));
@@ -281,14 +281,14 @@ pub(super) fn general_marching(a: &Surface, b: &Surface, tol: f64) -> Vec<IntCur
 fn unwrap_pts2(pts: &mut [Pnt2], surface: &Surface) {
     if surface.is_u_periodic() {
         let mut us: Vec<f64> = pts.iter().map(|p| p.x).collect();
-        super::super::shared::unwrap_periodic(&mut us, std::f64::consts::TAU);
+        super::super::intersection_numerics::unwrap_periodic(&mut us, std::f64::consts::TAU);
         for (p, u) in pts.iter_mut().zip(us) {
             p.x = u;
         }
     }
     if surface.is_v_periodic() {
         let mut vs: Vec<f64> = pts.iter().map(|p| p.y).collect();
-        super::super::shared::unwrap_periodic(&mut vs, std::f64::consts::TAU);
+        super::super::intersection_numerics::unwrap_periodic(&mut vs, std::f64::consts::TAU);
         for (p, v) in pts.iter_mut().zip(vs) {
             p.y = v;
         }

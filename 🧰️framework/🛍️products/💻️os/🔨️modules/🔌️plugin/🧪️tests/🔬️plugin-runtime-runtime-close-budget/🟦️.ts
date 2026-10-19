@@ -5,7 +5,7 @@ import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { pluginFamilyText } from "../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
-import { jobRetirementPayloadFixtureUrl } from "../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/🟦️.ts";
+import { jobRetirementPayloadFixtureUrl } from "@semio-tech/framework/job/testing/fixtures";
 test("mounted worker forwards its original paid turn before a separate borrowed semantic turn",async()=>{
  const fixture=await Bun.file(new URL("🧫️fixtures/🪟️outcome-borrow/🔣️.json",import.meta.url)).json(),law=fixture.workerReceipt;
  expect(new Ajv({strict:true}).compile({type:"object",additionalProperties:false,required:["originalGrant","receipt","consumptionCount","semanticOnReceiptTurn","poolWrapperBirth","metadataCopyCurrency","originalOutcomeUntilAcknowledgement"],properties:{originalGrant:{const:[1,17,8192,65536,9]},receipt:{const:[1,17,0,0]},consumptionCount:{const:1},semanticOnReceiptTurn:{const:false},poolWrapperBirth:{const:false},metadataCopyCurrency:{const:0},originalOutcomeUntilAcknowledgement:{const:true}}})(law)).toBe(true);

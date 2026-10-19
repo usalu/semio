@@ -15,7 +15,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import laws from "../🧫️fixtures/🖼️wgpu-raster-witness/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const engineRoot = resolve(suiteRoot, "../..");

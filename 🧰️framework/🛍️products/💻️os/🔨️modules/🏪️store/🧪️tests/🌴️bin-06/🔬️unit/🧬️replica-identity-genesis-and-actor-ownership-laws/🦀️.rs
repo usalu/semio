@@ -172,6 +172,7 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
             let mut original_retained_progress_9=semio_framework_value::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX, schema_test_close_grant()), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut original_retained_progress_9);
             let mut capture = ArtifactGenesisPackCapture::new(token, &cx).unwrap();
+            drop(cx);
             for _ in 0..hex.len()+2 {
                 let before = capture.relative;
                 let mut original_retained_progress_10=semio_framework_value::RetainedCloneProgress::default();
@@ -187,6 +188,7 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
         let mut stale = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(2), semio_framework_job::StepBudget::new(fuel, u64::MAX, schema_test_close_grant()), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut original_retained_progress_11);
             let before = capture.bytes.len();
             assert!(capture.step(&cursor, &mut stale).is_err());
+            drop(stale);
             assert_eq!(capture.bytes.len(), before);
             cancel.cancel_now();
             let mut original_retained_progress_12=semio_framework_value::RetainedCloneProgress::default();

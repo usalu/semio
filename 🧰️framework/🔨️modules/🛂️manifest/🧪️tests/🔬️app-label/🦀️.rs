@@ -498,12 +498,12 @@ async fn resolve_mode_tools_skips_unresolvable_refs() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
-    async fn stack_layout(active: &str) -> ui_wgpu::wgpu::WindowLayout {
-        ui_wgpu::wgpu::WindowLayout { root: ui_wgpu::wgpu::WindowLayoutRoot::Stack(ui_wgpu::wgpu::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
+    async fn stack_layout(active: &str) -> semio_framework_ui_declaration::layout::WindowLayout {
+        semio_framework_ui_declaration::layout::WindowLayout { root: semio_framework_ui_declaration::layout::WindowLayoutRoot::Stack(semio_framework_ui_declaration::layout::WindowLayoutStackNode { kind: "stack".into(), size: None, active_window_kind_id: Some(active.into()), children: vec![] }) }
     }
     let mut app = app_with(vec![], vec![]).await;
     app.modes.first_mut().layout_id = Some("named".into());
-    app.named_layouts.push(ui_wgpu::wgpu::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
+    app.named_layouts.push(semio_framework_ui_declaration::layout::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
     app.default_layout = Some(stack_layout("fallback").await);
 
     assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main").await), "named layout referenced by the mode wins");

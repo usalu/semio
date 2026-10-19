@@ -1,5 +1,5 @@
 import {fileURLToPath} from "node:url";
-import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
+import { observeCargoPreparationSourceV1, observeCargoPreparationInputV1, observeCargoPreparationOutputV1 } from "@semio-tech/framework/process/native-build";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 

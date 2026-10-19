@@ -1,10 +1,12 @@
 //! 🩹 `setField`: sets one authored parameter of one or more entities of one kind. The field row of the entity table turns the edited text into the `set-*` mutation that owns the
 //! parameter; a parameter without a mutation yet is refused, never half-applied. The project record answers to the id `project` and has its own rows.
 
-use crate::editor::bim::entities::{fields_of, kind_holding, FieldRow, PROJECT_FIELDS, PROJECT_ID};
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding, PROJECT_FIELDS, PROJECT_ID};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

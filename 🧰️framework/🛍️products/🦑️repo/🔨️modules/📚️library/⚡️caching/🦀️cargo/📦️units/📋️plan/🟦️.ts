@@ -1,13 +1,14 @@
 /** 📋️ Plan: module exporting `rustUnitPlanLimitsV1`, `captureRustUnitInputsV1`, `captureRustUnitPlanV1`, `requireRustUnitPlanV1` and more. */
 import{types}from"node:util";
-import{compileJsonSchemaSubset,jsonSchemaSubsetValueEquals}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset,jsonSchemaSubsetValueEquals}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{readRustUnitV1,isRustUnitPathV1,type RustUnitV1}from"../🧬️definition/🟦️.ts";
-import type{RustUnitPlanV1}from"../🟦️.ts";
-import{rustUnitCompilerContextV1}from"../🧭️context/🟦️.ts";
+import{rustUnitCompilerContextV1,type RustUnitCompilerContextV1}from"../🧭️context/🟦️.ts";
 import unitSchema from"../🧬️schema/🔣️.json";
 import contextSchema from"../🧭️context/🧬️schema/🔣️.json";
 import schema from"./🧬️schema/🔣️.json";
 import{normalizeRustUnitV1,rustUnitPlanDigestV1,rustUnitPlanSlotV1}from"./🔏️identity/🟦️.ts";
+/** 📋️ One immutable compiler plan: the unit, its compiler context, its identity digest, its output directory and the digests of the plans it depends on. */
+export interface RustUnitPlanV1 {unit:RustUnitV1;context:RustUnitCompilerContextV1;digest:string;outputDirectory:string;dependencyDigests:{unit:string;semanticDigest:string;artifactDigest:string|null}[]}
 export const rustUnitPlanLimitsV1=Object.freeze({...schema.definitions.Policy.const});
 const policy=rustUnitPlanLimitsV1,documents=[unitSchema,contextSchema],planContract=compileJsonSchemaSubset(schema,schema,documents),inputContract=compileJsonSchemaSubset(schema.definitions.Inputs,schema,documents),unitContract=compileJsonSchemaSubset(unitSchema,unitSchema),owned=new WeakMap<object,number>(),ownedInputs=new WeakMap<object,number>();
 const artifactBindingsContract=compileJsonSchemaSubset(schema.definitions.ArtifactBindings,schema);

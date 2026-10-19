@@ -2,9 +2,8 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { findNodeAtLocation, parseTree } from "jsonc-parser";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
 //#endregion Imports
@@ -13,10 +12,18 @@ import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const contractId = "remaining-package-purity-history-v1";
-const registered = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts[contractId]!;
-const goldenPath = join(repoRoot, registered.path);
+const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🏺️historical-package-owner-identity/🔣️.json"), "utf8")).historicalDocument as { libraryRelativePath: string; sha256: string };
+const goldenPath = join(libraryRoot, historical.libraryRelativePath);
 const goldenBytes = readFileSync(goldenPath);
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+const registered = { path: relative(repoRoot, goldenPath).replaceAll("\\", "/"), sha256: sha(goldenBytes), schemaVersion: 1, coordinates: [
+  { pointer: "/mappings/*/0", kind: "source" as const },
+  { pointer: "/mappings/29/3", kind: "source" as const, representation: "recorded-package-owner-identity" as const, identityPrefix: "unmarked:" },
+  { pointer: "/mappings/29/4", kind: "source" as const },
+  { pointer: "/mappings/29/5", kind: "source" as const },
+  { pointer: "/mappings/29/6", kind: "destination" as const },
+  { pointer: "/mappings/69/10", kind: "destination" as const },
+] };
 const golden = JSON.parse(goldenBytes.toString("utf8"));
 
 /** 🧭️ The token start (inside the opening quote) of every row's column-0 sourcePath, read from the live sealed bytes by
@@ -29,8 +36,8 @@ const columnZeroOffsets = mappingsNode.children!.map((row) => row.children![0]!.
 //#endregion Authority
 
 //#region Tests
-test("the fixture on disk still matches the registered whole-document digest", () => {
-  expect(sha(goldenBytes)).toBe(registered.sha256);
+test("the fixture on disk still matches the frozen whole-document digest", () => {
+  expect(sha(goldenBytes)).toBe(historical.sha256);
   expect(registered.coordinates).toHaveLength(6);
 });
 
@@ -42,7 +49,7 @@ test("every column-0 token sits inside the mappings array, and column 0 is a saf
   expect(mappings.filter((row) => row[10] === null || row[10] === "")).toHaveLength(1);
 });
 
-test("the live registration is exactly the wildcard-plus-one-explicit-row shape, not a hand-enumerated list", () => {
+test("the registration shape is exactly the wildcard-plus-one-explicit-row shape, not a hand-enumerated list", () => {
   expect(registered.coordinates).toEqual([
     { pointer: "/mappings/*/0", kind: "source" },
     { pointer: "/mappings/29/3", kind: "source", representation: "recorded-package-owner-identity", identityPrefix: "unmarked:" },

@@ -1,4 +1,4 @@
-import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
 /** 🧮️ Hashes one current bounded exact Source inventory and absence under actual carried control. */
 export function sourceClosureDigest(workspaceRoot:string,value:unknown,control:ResourceLeaseControl):Promise<string>;
 /** 🏗️ Captures bounded task Source inputs; the adapter validates returned environment DATA. */

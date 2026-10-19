@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "@semio-tech/repo-lib/inventory";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const domainRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test");

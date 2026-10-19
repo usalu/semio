@@ -10,9 +10,9 @@ pub enum UiArenaHandback {
 
 //#region 📫️FixedObligations
 pub struct UiArenaHandbacks<const SLOTS: usize, const WORDS: usize> {
-    releases: [AtomicU64; SLOTS],
+    pub releases: [AtomicU64; SLOTS],
     claims: [AtomicBool; SLOTS],
-    ready: [AtomicU64; WORDS],
+    pub ready: [AtomicU64; WORDS],
 }
 
 impl<const SLOTS: usize, const WORDS: usize> UiArenaHandbacks<SLOTS, WORDS> {
@@ -83,6 +83,3 @@ impl<const SLOTS: usize, const WORDS: usize> UiArenaHandbacks<SLOTS, WORDS> {
 }
 //#endregion 📫️FixedObligations
 
-#[cfg(test)]
-#[path = "🧪️tests/📮️handback/🦀️.rs"]
-mod tests;

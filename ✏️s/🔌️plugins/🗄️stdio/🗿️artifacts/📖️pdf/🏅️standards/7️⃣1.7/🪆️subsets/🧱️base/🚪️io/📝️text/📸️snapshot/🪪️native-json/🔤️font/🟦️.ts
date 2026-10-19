@@ -1,7 +1,8 @@
 import {parseArtifactRef} from "@semio-tech/framework/schema/artifact-reference";
 /** 🔤️ Explicit native font JSON admission into the same owned PDF relational domain. */
 import type { PdfFont, PdfFontKind, PdfFontProgram, PdfFontDescriptor, PdfCidFont, PdfCidWidthRun, PdfCidVerticalRun, PdfSimpleEncoding, PdfBaseEncoding, PdfCMap, PdfToUnicode, PdfToUnicodeMapping, PdfCidMapping, PdfCidToGid, PdfCharProc } from "../../../../../🧬️schema/📸️snapshot/🔤️font/🟦️.ts";
-import { record, array, text, boolean, integer, integers, real, reals, three, four, pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { record, array, text, boolean, integer, integers, real, reals, three, four } from "../🧰️scalars/🟦️.ts";
 import { pdfMatrixFromNativeJson, pdfOperationFromNativeJson } from "../🖋️content/🟦️.ts";
 
 /** 📏️ Admit every descriptor field and default as an owned binary64 scalar. */

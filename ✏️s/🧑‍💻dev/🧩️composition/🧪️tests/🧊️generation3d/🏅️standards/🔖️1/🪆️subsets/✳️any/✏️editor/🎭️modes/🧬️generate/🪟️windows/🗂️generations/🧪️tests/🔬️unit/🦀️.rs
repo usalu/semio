@@ -3,14 +3,14 @@ use semio_s_artifact_procedural_3d_editor_commands::add_generation;
 use semio_s_artifact_procedural_3d_editor_commands::remove_generation;
 use semio_s_artifact_procedural_3d_editor_commands::rename_generation;
 use semio_s_artifact_procedural_3d_editor_commands::select_generation;
-use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dApp};
+use crate::editor_domain::editor_laws::context::{app, dispatch, render as render_body, snapshot, Generation3dAppFixture};
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
 /// 🎯️ Reads the selection back the way a USER sees it — off the rendered tree, through the one
 /// affordance only the selected row carries (the inline rename editor). Deliberately NOT off the
 /// artifact snapshot: the generate-mode bodies render against the CONFIG's selection, and the whole
 /// point of `schema::generation_by_id` is that those two used to disagree.
-async fn rendered_selected_id(app: &mut Generation3dApp, roster: &[String]) -> Option<String> {
+async fn rendered_selected_id(app: &mut Generation3dAppFixture, roster: &[String]) -> Option<String> {
     let body = render_body(app, GENERATION_3D_PLAY_BODY_GENERATIONS).await;
     roster.iter().find(|id| body.contains(&format!("procedural3d-play-generate.generation.{id}.rename"))).cloned()
 }
@@ -18,7 +18,7 @@ async fn rendered_selected_id(app: &mut Generation3dApp, roster: &[String]) -> O
 /// 🗂️ Seeds `count` generations through the SAME `addGeneration` the tree row dispatches, and returns
 /// their ids in roster order — never a hand-built `GenerationPlayState`, because the roster a user
 /// sees is the one the retained command actually published.
-async fn seed_generations(app: &mut Generation3dApp, count: usize) -> Vec<String> {
+async fn seed_generations(app: &mut Generation3dAppFixture, count: usize) -> Vec<String> {
     for _ in 0..count {
         dispatch(app, Generation3dCommand::AddGeneration(add_generation::AddGeneration {})).await;
     }
@@ -133,7 +133,7 @@ async fn add_generation_lands_a_row_under_every_renderer_argument_shape() {
     let mut expected = 0usize;
     for (label, args) in shapes {
         let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-        semio_framework_plugin::PluginApp::handle_action(&mut *app, "addGeneration", args.as_ref(), &meta).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
+        semio_framework_plugin::semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", args.clone(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{label}: addGeneration must be admitted: {error:?}"));
         crate::editor_domain::editor_laws::context::settle(&mut app).await;
         expected += 1;
         let landed = snapshot(&app).generation.generations.len();

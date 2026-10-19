@@ -53,7 +53,7 @@ type testScope struct {
 func detectBundleLanguage(bundleRoot string) string {
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
-		absRoot = filepath.Join(workspace.RootDir, absRoot)
+		absRoot = filepath.Join(workspace.GetRootDir(), absRoot)
 	}
 	if workspace.FileExists(filepath.Join(absRoot, "go.mod")) {
 		return "go"
@@ -287,7 +287,7 @@ func runTechnologyTests(technologyName string, cmd workspace.CommandStreams) err
 func runBundleTests(bundleRoot string, lang string, fileFilter string, testFilter string, cmd workspace.CommandStreams) error {
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
-		absRoot = filepath.Join(workspace.RootDir, absRoot)
+		absRoot = filepath.Join(workspace.GetRootDir(), absRoot)
 	}
 	if lang == "" {
 		lang = detectBundleLanguage(bundleRoot)
@@ -385,13 +385,13 @@ func runFileTests(filePath string, lang string, testFilter string, cmd workspace
 	}
 	absFilePath := filePath
 	if !filepath.IsAbs(absFilePath) {
-		absFilePath = filepath.Join(workspace.RootDir, filePath)
+		absFilePath = filepath.Join(workspace.GetRootDir(), filePath)
 	}
 	bundle := model.GetBundleByPath(filePath)
 	if bundle == nil {
 		return fmt.Errorf("no bundle found for file %s", filePath)
 	}
-	absRoot := filepath.Join(workspace.RootDir, bundle.Root)
+	absRoot := filepath.Join(workspace.GetRootDir(), bundle.Root)
 	relFile, _ := filepath.Rel(absRoot, absFilePath)
 	switch lang {
 	case "go":
@@ -449,13 +449,13 @@ func runSectionTests(filePath string, lang string, section string, cmd workspace
 	}
 	absFilePath := filePath
 	if !filepath.IsAbs(absFilePath) {
-		absFilePath = filepath.Join(workspace.RootDir, filePath)
+		absFilePath = filepath.Join(workspace.GetRootDir(), filePath)
 	}
 	bundle := model.GetBundleByPath(filePath)
 	if bundle == nil {
 		return fmt.Errorf("no bundle found for file %s", filePath)
 	}
-	absRoot := filepath.Join(workspace.RootDir, bundle.Root)
+	absRoot := filepath.Join(workspace.GetRootDir(), bundle.Root)
 	switch lang {
 	case "go":
 
@@ -496,10 +496,10 @@ func runDefinitionTest(filePath string, lang string, bundleRoot string, testName
 	}
 	absRoot := bundleRoot
 	if !filepath.IsAbs(absRoot) {
-		absRoot = filepath.Join(workspace.RootDir, bundleRoot)
+		absRoot = filepath.Join(workspace.GetRootDir(), bundleRoot)
 	}
 
-	originalName := resolveTestFunctionName(filepath.Join(workspace.RootDir, filePath), testName)
+	originalName := resolveTestFunctionName(filepath.Join(workspace.GetRootDir(), filePath), testName)
 	if originalName == "" {
 
 		originalName = unflattenTestName(testName)

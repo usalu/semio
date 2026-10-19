@@ -92,8 +92,7 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
   mkdirSync(captureRoot, { recursive: true });
   const cargoOutput = mkdtempSync(join(captureRoot, "wasm-cargo-"));
   const packageOutput = mkdtempSync(join(captureRoot, "wasm-package-"));
-  let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined;
-  let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined,primaryFailed=false;
+  let primaryFailed=false;
   try {
     const pkgDir=packageOutput;
     const profile = buildModePolicy(policy.mode).cargoProfile;
@@ -106,6 +105,8 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${pkgDir} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
     await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
+    let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined,lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined,bodyFailed=false;
+    try{
     const signal=actual.control.signal;capacity=await acquireCompilerCapacityLeaseV1({request:{kind:"whole-host"},directory:policy.leaseDirectory,control:actual.control});lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:actual.arguments,signal:actual.control.signal,control:actual.control});checkResourceLeaseControl(actual.control);
     const environment:Record<string,string|undefined>={...actual.environment,SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism)};if(!environment.MAKEFLAGS&&!environment.CARGO_MAKEFLAGS)environment.CARGO_BUILD_JOBS=String(capacity.parallelism);
     const invoke=async(command:string,args:readonly string[])=>{checkResourceLeaseControl(actual.control);await port.run(command,args,{cwd:componentDir,environment,budgetMs:compilerAdmissionBudgetV1(actual.control),label:logPrefix,signal:actual.control.signal,control:actual.control});checkResourceLeaseControl(actual.control);};
@@ -147,9 +148,12 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
     } else {
       throw new Error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
     }
+    }catch(error){bodyFailed=true;throw error;}finally{
+      let failed=false,failure:unknown;for(const cleanup of[()=>{const held=lease;lease=undefined;held?.release();},()=>{const held=capacity;capacity=undefined;held?.release();}])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!bodyFailed&&failed)throw failure;
+    }
     });
   }catch(error){primaryFailed=true;throw error;}finally{
-    let failed=false,failure:unknown;for(const cleanup of[()=>rmSync(cargoOutput,{recursive:true,force:true}),()=>rmSync(packageOutput,{recursive:true,force:true}),()=>lease?.release(),()=>capacity?.release()])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;
+    let failed=false,failure:unknown;for(const cleanup of[()=>rmSync(cargoOutput,{recursive:true,force:true}),()=>rmSync(packageOutput,{recursive:true,force:true})])try{cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;
   }
 }
 

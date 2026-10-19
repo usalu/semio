@@ -4,13 +4,14 @@
 //! flight swaps and a door keeps its swing. Points and directions are snapped to a picometre so that quarter turns and reflections about an
 //! axis-parallel line stay exact.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Refusal};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Refusal;
 use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge};
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::{Point, Rect};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Ceiling, Column, Component, CurtainWall, EndJoin, GridLine, MepElement, ModelSnapshot, Opening, Point2, Point3, Railing, Ramp, Roof, RoofShape, Slab, Slope, Space, SpaceBoundary, Stair, StairFlight, Turn, Vertex, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, EndJoin, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Turn, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, GridLine, MepElement, ModelSnapshot, Opening, Railing, Ramp, Roof, Slab, Space, Stair, Wall};
 use protocol::OutcomeCode;
 
 fn snap(value: f64) -> f64 {
@@ -278,7 +279,7 @@ pub fn image(base: &ModelSnapshot, id: &str, map: &Map) -> Result<Image, Refusal
     if let Some(row) = base.grids.get(id) {
         return Ok(Image::Grid(GridLine { start: map.point(row.start), end: map.point(row.end), ..row.clone() }));
     }
-    if elements::exists(base, id) {
+    if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::exists(base, id) {
         return Err(refused(id, "The element has no placement of its own."));
     }
     Err(Refusal::new(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.to_string()]))
@@ -286,8 +287,8 @@ pub fn image(base: &ModelSnapshot, id: &str, map: &Map) -> Result<Image, Refusal
 
 impl Image {
     /// 📍️ The placement fields of the image, the record a move, a rotation and their exact inverse speak.
-    pub fn placement(&self) -> elements::Placement {
-        use elements::Placement;
+    pub fn placement(&self) -> semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement {
+        use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement;
         match self {
             Image::Wall(row) => Placement::Wall { axis: row.axis.clone() },
             Image::CurtainWall(row) => Placement::CurtainWall { axis: row.axis.clone() },
@@ -331,8 +332,8 @@ fn loop_bounds(vertices: &[Vertex]) -> Option<[f64; 4]> {
 
 /// 📏️ The extent `[x0, y0, x1, y1]` of the authored plan geometry of a placement, arcs included: the axis of a wall, a beam, the points of a grid line, a railing or a stair start, the position of a column, the outline of a slab, ceiling, roof or space, the path of a
 /// ramp. None for an opening, which has no place of its own.
-pub fn bounds(placement: &elements::Placement) -> Option<[f64; 4]> {
-    use elements::Placement as P;
+pub fn bounds(placement: &semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement) -> Option<[f64; 4]> {
+    use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement as P;
     match placement {
         P::Wall { axis } | P::CurtainWall { axis } | P::Beam { axis } => rectangle(segment_of(axis).bounds()),
         P::Column { position, .. } => spanned([*position]),

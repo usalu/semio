@@ -1,6 +1,6 @@
 import{createHash}from"node:crypto";
 import{posix,win32}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 🌐️ Describes child environment data without granting any cache, control or compiler authority. */
 export interface ViteCommandEnvironmentV1{readonly mode:"prototype"|"release";readonly platform:"darwin"|"linux"|"win32";readonly environment:Readonly<Record<string,string>>;readonly digest:string}

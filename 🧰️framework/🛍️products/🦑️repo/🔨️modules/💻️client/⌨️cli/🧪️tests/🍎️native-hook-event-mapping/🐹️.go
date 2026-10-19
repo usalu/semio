@@ -2,7 +2,7 @@
 
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Native hook event mapping from real data and logs.
+// Native hook event mapping from recorded native payloads.
 
 // #endregion 🧲️Header
 
@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
@@ -221,104 +220,6 @@ func TestNativeHookEventMappingWithRealData(t *testing.T) {
 			}
 			if entry.Response.Blocked != nil {
 				t.Error("log response.blocked: want nil for non-blocked event")
-			}
-		})
-	}
-}
-
-func TestNativeHookEventMappingFromRealLogFiles(t *testing.T) {
-	repoRoot := findRepoRoot(".")
-	logDir := filepath.Join(repoRoot, ".🧬semio", "🦑️repo", "📜️")
-	dirEntries, err := os.ReadDir(logDir)
-	if err != nil {
-		t.Skipf("no log directory: %v", err)
-	}
-	type oldLogEntry struct {
-		Context struct {
-			Event    string          `json:"event"`
-			Client   string          `json:"client"`
-			ToolName string          `json:"toolName"`
-			Input    json.RawMessage `json:"input"`
-		} `json:"context"`
-	}
-	seen := map[string]bool{}
-	for _, de := range dirEntries {
-		if de.IsDir() || !strings.HasSuffix(de.Name(), ".json") {
-			continue
-		}
-		data, err := os.ReadFile(filepath.Join(logDir, de.Name()))
-		if err != nil {
-			continue
-		}
-		var old oldLogEntry
-		if err := json.Unmarshal(data, &old); err != nil {
-			continue
-		}
-		if old.Context.Event == "" || old.Context.Client == "" {
-			continue
-		}
-		key := old.Context.Client + "|" + old.Context.Event + "|" + old.Context.ToolName
-		if seen[key] {
-			continue
-		}
-		seen[key] = true
-		t.Run(fmt.Sprintf("%s/%s/%s", old.Context.Client, strings.ReplaceAll(old.Context.Event, ".", "-"), old.Context.ToolName), func(t *testing.T) {
-			tmpDir := t.TempDir()
-			writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-			hctx := HookContext{
-				Event:    HookEvent(old.Context.Event),
-				Client:   old.Context.Client,
-				Second:   time.Now().UTC().Format(time.RFC3339),
-				RepoRoot: tmpDir,
-				ToolName: old.Context.ToolName,
-				Input:    old.Context.Input,
-			}
-			result := RunHook(hctx)
-			outBase := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "⚡️cache")
-			var logFiles []string
-			filepath.WalkDir(outBase, func(path string, d os.DirEntry, walkErr error) error {
-				if walkErr != nil {
-					return nil
-				}
-				if !d.IsDir() && strings.HasSuffix(d.Name(), ".json") {
-					logFiles = append(logFiles, path)
-				}
-				return nil
-			})
-			if len(logFiles) != 1 {
-				t.Fatalf("want 1 log file under ⚡️, got %d", len(logFiles))
-			}
-			outData, err := os.ReadFile(logFiles[0])
-			if err != nil {
-				t.Fatalf("read log: %v", err)
-			}
-			var entry HookLogEntry
-			if err := json.Unmarshal(outData, &entry); err != nil {
-				t.Fatalf("invalid log JSON: %v", err)
-			}
-			var evt map[string]interface{}
-			if err := json.Unmarshal(entry.Event, &evt); err != nil {
-				t.Fatalf("cannot unmarshal event: %v", err)
-			}
-			if evt["kind"] != string(old.Context.Event) {
-				t.Errorf("kind: want %s, got %v", old.Context.Event, evt["kind"])
-			}
-			if evt["client"] != old.Context.Client {
-				t.Errorf("client: want %s, got %v", old.Context.Client, evt["client"])
-			}
-			if old.Context.Input != nil && entry.Native.Event == nil {
-				t.Error("native.event not preserved")
-			}
-			wantSession := resolveEventSessionID(extractSessionIDFromInput(old.Context.Input))
-			if wantSession != "" && evt["session"] != wantSession {
-				t.Errorf("session: want %s, got %v", wantSession, evt["session"])
-			}
-			wantTranscript := extractTranscriptFromInput(old.Context.Input)
-			if wantTranscript != "" && evt["transcript"] != wantTranscript {
-				t.Errorf("transcript: want %s, got %v", wantTranscript, evt["transcript"])
-			}
-			if result.IsAllowed() && entry.Response.Blocked != nil {
-				t.Error("response.blocked should be nil for allowed event")
 			}
 		})
 	}

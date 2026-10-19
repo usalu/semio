@@ -446,4 +446,13 @@ pub(crate) fn analyze_result_source(result: &AnalyzeResult, statutes: &[StatuteM
     tagged(fields, "AnalyzeResult")
 }
 
+/// 🩹️ The fix-result source object.
+pub(crate) fn fix_result_source(result: &FixResult, statutes: &[StatuteMeta]) -> Json {
+    let mut fields = Map::new();
+    fields.insert("fixed".to_string(), Json::from(result.fixed));
+    fields.insert("remaining".to_string(), Json::from(result.remaining));
+    fields.insert("breachs".to_string(), Json::Array(result.breachs.clone().unwrap_or_default().iter().map(|breach| breach_source(breach, statutes)).collect()));
+    tagged(fields, "FixResult")
+}
+
 //#endregion 🖼️Sources

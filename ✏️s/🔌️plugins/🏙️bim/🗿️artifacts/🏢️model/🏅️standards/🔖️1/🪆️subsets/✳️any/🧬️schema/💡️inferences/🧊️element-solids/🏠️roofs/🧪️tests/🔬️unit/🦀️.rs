@@ -1,13 +1,16 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, RoofShape};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RoofShape;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, stack};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, stack};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, SolidEntry, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, SolidEntry};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Roof;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Roof;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::{self, Vertex};
 #[allow(unused_imports)]
@@ -26,14 +29,16 @@ use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::f64::consts::FRAC_PI_2;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{layer_thicknesses, testing::{assert_matches_oracle, case, close, group_extent, raised}};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs::{RoofGeometry, roof_geometry, RoofLineKind, RoofFallback, roof_geometry_controlled};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::layer_thicknesses;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 

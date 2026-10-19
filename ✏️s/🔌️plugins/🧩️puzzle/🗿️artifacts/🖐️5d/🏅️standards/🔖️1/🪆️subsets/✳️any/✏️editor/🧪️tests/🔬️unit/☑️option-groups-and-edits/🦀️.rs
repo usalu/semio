@@ -268,7 +268,7 @@ fn duplicate_verb_ids_are_removed_rather_than_aliased() {
 /// `empty_document()` for a fixture it cannot deserialize, which is exactly how `🌙️capsule-dream` and
 /// `🏗️nakagin-capsule-tower` currently load (see `clipboard_verbs_cover_every_part_of_the_largest_example`,
 /// red before this slice) — so a law that read those files would assert `0 == 0` and prove nothing.
-pub(super) fn seeded_parts(app: &mut Puzzle5dApp, count: usize) -> Vec<String> {
+pub(super) fn seeded_parts(app: &mut Puzzle5dTestApp, count: usize) -> Vec<String> {
     dispatch(app, "setActiveExample", Some(&semio_framework_pack_json::json!({ "exampleId": "" })), None).expect("empty document");
     assert_eq!(part_count(app), 0, "the empty example really empties the document");
     for index in 0..count {
@@ -366,7 +366,7 @@ async fn translate_selection_moves_both_poses_and_refuses_a_locked_part() {
     let parts = seeded_parts(&mut app, 1);
     let part_id = parts[0].clone();
     select_id(&mut app, PUZZLE5D_GRANULARITY_PART, &part_id).expect("select the part");
-    let read = |app: &Puzzle5dApp, id: &str| -> (f64, f64, [f64; 3]) {
+    let read = |app: &Puzzle5dTestApp, id: &str| -> (f64, f64, [f64; 3]) {
         let projection = projection_of(app);
         let row = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id))).expect("part row").clone();
         let flat = row.get("2d").expect("flat pose").clone();
@@ -419,7 +419,7 @@ async fn board_node_delete_removes_the_part_and_its_fasteners() {
 async fn a_board_gesture_drag_moves_each_target_once() {
     let mut app = Box::new(app_with_registry());
     let parts = seeded_parts(&mut app, 2);
-    let pose = |app: &Puzzle5dApp, id: &str| {
+    let pose = |app: &Puzzle5dTestApp, id: &str| {
         let parts = projection_of(app).get("parts").and_then(Value::as_array).cloned().unwrap_or_default();
         let flat = parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(id)).and_then(|part| part.get("2d")).cloned().unwrap_or(Value::Null);
         (flat.get("x").and_then(Value::as_f64).unwrap_or(0.0), flat.get("y").and_then(Value::as_f64).unwrap_or(0.0))

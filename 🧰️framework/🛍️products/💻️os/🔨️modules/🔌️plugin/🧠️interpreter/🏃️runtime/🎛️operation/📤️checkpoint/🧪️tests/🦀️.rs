@@ -57,8 +57,8 @@ fn borrowed_host_checkpoint_frame_preserves_exact_bytes_and_original_failure_own
 #[test]
 fn borrowed_actual_vm_checkpoint_visit_allocates_nothing(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let module=std::sync::Arc::new(crate::interpreter::CoreModule::parse(&fixture["coreModule"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>()).unwrap());
-    let instance=crate::interpreter::CoreInstance::instantiate(module).unwrap();let expected=instance.checkpoint();let mut count=0;
+    let module=std::sync::Arc::new(semio_framework_plugin_interpreter::CoreModule::parse(&fixture["coreModule"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>()).unwrap());
+    let instance=semio_framework_plugin_interpreter::CoreInstance::instantiate(module).unwrap();let expected=instance.checkpoint();let mut count=0;
     let (result,allocated,released)=backing(||instance.visit_checkpoint(&mut |bytes|{assert_eq!(&expected[count..count+bytes.len()],bytes);count+=bytes.len();Ok(())}));
     result.unwrap();assert_eq!(count,expected.len());assert_eq!((allocated,released),(0,0));
 }

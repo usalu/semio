@@ -209,7 +209,11 @@ export function ecmaIdentifierValue(token: EcmaToken | undefined, checkCancellat
 /** 🌳️ Parses closed source syntax into first-party nodes with original UTF16 ranges. */
 class EcmaParser {
   private index = 0;
-  constructor(private readonly tokens: readonly EcmaToken[], private readonly checkCancellation?: () => void, private readonly source = "", private readonly sourceOffset = 0) {}
+  private readonly tokens: readonly EcmaToken[];
+  private readonly checkCancellation?: () => void;
+  private readonly source: string;
+  private readonly sourceOffset: number;
+  constructor(tokens: readonly EcmaToken[], checkCancellation?: () => void, source = "", sourceOffset = 0) { this.tokens = tokens; this.checkCancellation = checkCancellation; this.source = source; this.sourceOffset = sourceOffset; }
   private lineBreak(start: number, end: number): boolean { return /[\n\r\u2028\u2029]/u.test(this.source.slice(start - this.sourceOffset, end - this.sourceOffset)); }
   private node(row: Omit<EcmaExpression, "start" | "end">, start: number, end = this.tokens[Math.max(0, this.index - 1)]?.end ?? start): EcmaExpression { return { ...row, start, end }; }
   private statementNode(row: Omit<EcmaStatement, "start" | "end">, start: number): EcmaStatement { return { ...row, start, end: this.tokens[Math.max(0, this.index - 1)]?.end ?? start }; }

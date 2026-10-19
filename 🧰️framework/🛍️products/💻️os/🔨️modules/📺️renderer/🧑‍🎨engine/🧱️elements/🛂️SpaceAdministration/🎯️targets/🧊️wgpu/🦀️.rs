@@ -16,9 +16,9 @@
 //! below is that class list, resolved.
 
 use semio_framework_ui_locale::Locale;
-use ui_wgpu::wgpu::Rect;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::Theme;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_theme::Theme;
 
 //#region 🔖️Geometry
 /// 📏️ `w-[36rem]` — 36 × the 16 px root font, in logical pixels.

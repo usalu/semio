@@ -19,7 +19,7 @@ use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "flow-view-main";

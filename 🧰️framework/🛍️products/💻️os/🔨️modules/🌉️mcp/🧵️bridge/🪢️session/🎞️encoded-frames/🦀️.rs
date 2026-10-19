@@ -146,7 +146,7 @@ impl BridgeEncodedFrame {
     }
 
     #[cfg(test)]
-    pub(super) fn decode(&self) -> GatewayToShell {
+    pub(crate) fn decode(&self) -> GatewayToShell {
         let mut bytes = Vec::new();
         bytes.try_reserve_exact(self.len).expect("bridge test decode reservation failed");
         for offset in (0..self.len).step_by(BRIDGE_OUTBOX_PAGE_BYTES) {

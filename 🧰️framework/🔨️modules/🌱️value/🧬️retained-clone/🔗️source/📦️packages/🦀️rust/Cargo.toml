@@ -23,7 +23,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../../♻️retirement/📦️packages/🦀️rust" }
-semio-framework-value-shared-issuance = { path="../../../../♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path="../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/🦀️rust" }

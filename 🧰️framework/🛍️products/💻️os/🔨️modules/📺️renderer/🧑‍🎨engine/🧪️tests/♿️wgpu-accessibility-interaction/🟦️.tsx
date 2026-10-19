@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 // @vitest-environment jsdom
 
 import { readFileSync } from "node:fs";
@@ -10,11 +10,12 @@ import { createRoot, type Root } from "react-dom/client";
 import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
-import { createAccessibilityMirror, type AccessibilityProjectionWindow } from "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
-import { PanelTabBar, type PanelTabNode } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx";
-import { Toggle } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx";
+import { createAccessibilityMirror, type AccessibilityProjectionWindow } from "@semio-tech/framework-renderer-wgpu/accessibility-mirror";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
+import { PanelTabBar, type PanelTabNode } from "@semio-tech/ui-react";
+import { Toggle } from "@semio-tech/ui-react";
 import { Mode, uiDataLabel, type WindowLayoutNode } from "@semio-tech/ui-react";
 import accessibilityVisibilityFixture from "../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json";
 

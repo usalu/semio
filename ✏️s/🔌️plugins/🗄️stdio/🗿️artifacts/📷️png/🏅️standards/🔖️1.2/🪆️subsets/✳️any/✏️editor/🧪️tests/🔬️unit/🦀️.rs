@@ -171,11 +171,11 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     let edited = protocol::apply_diff(mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
     assert_eq!(crate::standards::v1_2::subsets::any::schema::operations::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     work.begin_close();
-    let probe = work.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 });
+    let probe = semio_framework_job::close_with_self_funded_context(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 }, |cx| work.close_step(cx)).expect("original fixture close turn");
     assert!(matches!(probe, semio_framework_job::InteractiveJobCloseStep::Pending { .. } | semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
     for _ in 0..100_000 {
         if work.terminal_is_empty() { break; }
-        work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant());
+        semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn");
     }
     assert!(work.terminal_is_empty());
 }
@@ -241,7 +241,7 @@ fn pixel_region_rejects_invalid_bounds_and_cancellation_publishes_nothing() {
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { .. }));
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { .. }));
     work.begin_close();
-    assert!(matches!(work.close_step(semio_s_artifact_stdio_contract::editing::ample_close_grant()), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
+    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete{..}));
     assert!(work.terminal_is_empty());
     assert!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&snapshot).unwrap()).unwrap().pixels.iter().all(|value| *value == 7));
 }
@@ -306,18 +306,19 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     use protocol::OpText;
     use semio_framework_plugin::{artifact_app_laws, PluginApp};
     let mut expected = rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]);
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_framework_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&expected, STDIO_PNG_DOCUMENT_SCHEMA) else { panic!("PNG fixture load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).unwrap();
     let revision = app.test_document_revision(); let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
-    let meta = artifact_app_laws::meta("local"); semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta, &mut identity).await).unwrap(); assert_eq!(app.test_document_revision(), revision);
+    let meta = artifact_app_laws::meta("local"); semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, patch_pixel_region::ACTION_ID, Some(arguments.clone()), &meta, &mut identity, scope.cx(), semio_s_artifact_stdio_contract::testing::mounted_policy().close).await).unwrap(); assert_eq!(app.test_document_revision(), revision);
     let concurrent = crate::standards::v1_2::subsets::any::schema::operations::paint_rgba8_region_controlled(&expected, &crate::standards::v1_2::subsets::any::schema::operations::png_revision(&expected), crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
     let mutation = PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image: concurrent.image.clone() });
     semio_framework_plugin::with_authoring_identity!(|identity| app.ingest_operations_text(&mutation.print_op(), &mut identity).await).unwrap(); expected = concurrent;
-    let fault = match semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await) { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
+    let fault = match semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await) { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
     assert!(fault.message.contains("stale immutable document root")); assert_eq!(app.snapshot().unwrap(), expected);
-    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 #[test]

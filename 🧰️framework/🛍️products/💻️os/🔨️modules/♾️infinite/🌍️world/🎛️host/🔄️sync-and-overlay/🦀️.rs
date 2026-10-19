@@ -331,7 +331,7 @@ fn world3d_presentation(json: Option<&str>) -> World3dPresentation {
 
 /// ⏯️ Feeds `World3dScene.tool_run_trace` into the resident trace layer and re-derives the mesh index →
 /// mesh key table the trace subjects address (`meshes_json` order) only when that lane changed.
-fn sync_world3d_tool_run_trace(trace_state: &mut WorldTraceState, world: &ui_wgpu::wgpu::World3dScene) {
+fn sync_world3d_tool_run_trace(trace_state: &mut WorldTraceState, world: &semio_framework_ui_declaration::ui::World3dScene) {
     let _ = trace_state.tool_run_trace.apply_lane(world.tool_run_trace.as_deref());
     if trace_state.tool_run_trace.is_empty() {
         return;
@@ -362,7 +362,7 @@ pub fn world3d_tool_run_trace_cursors<'a>(states: impl IntoIterator<Item = &'a W
 /// 🎨️ Appends the trace layer's instanced `(mesh, verdict)` draws; a mesh index with no published mesh
 /// falls back to the placeholder box, exactly like the brush ghost.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(super) fn append_tool_run_trace_draws(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, retirement_state: &mut WorldRetirementState, scene_state: &mut WorldSceneState, trace_state: &mut WorldTraceState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, translucent_draws: &mut Vec<SceneDraw3d>) {
+pub(super) fn append_tool_run_trace_draws(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, retirement_state: &mut WorldRetirementState, scene_state: &mut WorldSceneState, trace_state: &mut WorldTraceState, gpu: &mut World3dBuildContext, theme: &semio_framework_ui_theme::Theme, translucent_draws: &mut Vec<SceneDraw3d>) {
     if trace_state.tool_run_trace.is_empty() {
         return;
     }
@@ -423,7 +423,7 @@ pub fn apply_runtime_draw_flags(selection_state: &mut WorldSelectionState, inter
 /// is drawn only where the bit is set, then the solids are drawn a second time to invert the bit back to zero. The three passes ride the translucent draw list in that order,
 /// after the opaque solids, so the cap is depth-tested against the retained surface.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(super) fn append_world3d_section_cap(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, retirement_state: &mut WorldRetirementState, scene_state: &mut WorldSceneState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, section: &ui_wgpu::wgpu::World3dSection, solids: &[SceneDraw3d], translucent: &mut Vec<SceneDraw3d>) {
+pub(super) fn append_world3d_section_cap(session_state: &mut WorldSessionState, authority_state: &mut WorldAuthorityState, retirement_state: &mut WorldRetirementState, scene_state: &mut WorldSceneState, gpu: &mut World3dBuildContext, theme: &semio_framework_ui_theme::Theme, section: &semio_framework_ui_declaration::ui::World3dSection, solids: &[SceneDraw3d], translucent: &mut Vec<SceneDraw3d>) {
     let Some(cap) = section.cap else { return };
     if solids.iter().all(|draw| draw.instances.is_empty()) {
         return;
@@ -507,7 +507,7 @@ const WORLD_OVERLAY_LABEL_PADDING_Y_PX: f32 = 1.0;
 
 /// 📐️ The three corners of a dimension arrowhead whose tip sits at `(x, y)` and points along `angle` — React's `arrowPoints`.
 fn world3d_arrow_points(x: f64, y: f64, angle: f64) -> [[f32; 2]; 3] {
-    let length = ui_wgpu::wgpu::WORLD3D_ANNOTATION_ARROW_PX;
+    let length = semio_framework_ui_declaration::ui::WORLD3D_ANNOTATION_ARROW_PX;
     let (cos, sin) = (angle.cos(), angle.sin());
     let (base_x, base_y) = (x - cos * length, y - sin * length);
     let half = length * 0.35;
@@ -515,7 +515,7 @@ fn world3d_arrow_points(x: f64, y: f64, angle: f64) -> [[f32; 2]; 3] {
 }
 
 /// 🌙️ The polyline of an angle arc, one vertex per `WORLD_OVERLAY_ARC_SEGMENT_PX` of arc length (at least four, at most thirty-two segments).
-fn world3d_arc_points(arc: &ui_wgpu::wgpu::World3dProjectedArc) -> Vec<[f32; 2]> {
+fn world3d_arc_points(arc: &semio_framework_ui_declaration::ui::World3dProjectedArc) -> Vec<[f32; 2]> {
     let segments = ((arc.sweep.abs() * arc.radius / WORLD_OVERLAY_ARC_SEGMENT_PX).ceil() as usize).clamp(4, 32);
     (0..=segments)
         .map(|index| {
@@ -529,7 +529,7 @@ fn world3d_circle_points(x: f64, y: f64, radius: f64) -> Vec<[f32; 2]> {
     (0..=16).map(|index| index as f64 / 16.0 * std::f64::consts::TAU).map(|angle| [(x + angle.cos() * radius) as f32, (y + angle.sin() * radius) as f32]).collect()
 }
 
-fn world3d_overlay_color(theme: &ui_wgpu::wgpu::Theme, tone: ui_wgpu::wgpu::World3dTone) -> Rgba {
+fn world3d_overlay_color(theme: &semio_framework_ui_theme::Theme, tone: semio_framework_ui_declaration::ui::World3dTone) -> Rgba {
     let color = world3d_tone_rgba(theme, tone);
     Rgba::new(color[0], color[1], color[2], color[3])
 }
@@ -537,15 +537,15 @@ fn world3d_overlay_color(theme: &ui_wgpu::wgpu::Theme, tone: ui_wgpu::wgpu::Worl
 /// 📏️ Paints the projected annotation layer on top of the world pass: lines, arrowheads, arcs and marks at screen-constant size in the tone colours of the live theme,
 /// and the caller's text in the active language on a translucent plate. Clipped to the viewport by the caller's scissor.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(super) fn paint_world3d_annotations(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, layer: &ui_wgpu::wgpu::World3dAnnotationLayer, view_proj: &[f32; 16], inner: Rect, locale: &str) {
-    use ui_wgpu::wgpu::{World3dLabelAlign, World3dMarkerShape};
+pub(super) fn paint_world3d_annotations(ctx: &mut semio_framework_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>, layer: &semio_framework_ui_declaration::ui::World3dAnnotationLayer, view_proj: &[f32; 16], inner: Rect, locale: &str) {
+    use semio_framework_ui_declaration::ui::{World3dLabelAlign, World3dMarkerShape};
     let theme = ctx.theme;
-    let stroke = ui_wgpu::wgpu::WORLD3D_ANNOTATION_STROKE_PX as f32;
-    let marker_radius = ui_wgpu::wgpu::WORLD3D_ANNOTATION_MARKER_PX / 2.0;
+    let stroke = semio_framework_ui_declaration::ui::WORLD3D_ANNOTATION_STROKE_PX as f32;
+    let marker_radius = semio_framework_ui_declaration::ui::WORLD3D_ANNOTATION_MARKER_PX / 2.0;
     let size = theme.font_size_small;
     let (origin_x, origin_y) = (f64::from(inner.x), f64::from(inner.y));
     let at = |points: Vec<[f32; 2]>| -> Vec<[f32; 2]> { points.into_iter().map(|point| [point[0] + inner.x, point[1] + inner.y]).collect() };
-    let projected = ui_wgpu::wgpu::project_world3d_annotations(layer, view_proj, inner.w, inner.h);
+    let projected = semio_framework_ui_declaration::ui::project_world3d_annotations(layer, view_proj, inner.w, inner.h);
     for (item, entry) in layer.items.iter().zip(&projected).filter(|(_, entry)| entry.visible) {
         let color = world3d_overlay_color(theme, entry.tone);
         for line in &entry.lines {
@@ -587,7 +587,7 @@ pub(super) fn paint_world3d_annotations(ctx: &mut ui_wgpu::wgpu::widgets::Widget
             let top = label.y as f32 + inner.y - height / 2.0;
             let plate = Rgba::new(theme.background.r, theme.background.g, theme.background.b, 0.8);
             ctx.draw.push_rounded_overlay([left - WORLD_OVERLAY_LABEL_PADDING_X_PX, top - WORLD_OVERLAY_LABEL_PADDING_Y_PX, width + 2.0 * WORLD_OVERLAY_LABEL_PADDING_X_PX, height + 2.0 * WORLD_OVERLAY_LABEL_PADDING_Y_PX], plate, theme.border_radius.min(4.0));
-            ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, left, label.y as f32 + inner.y + size * 0.35, size, color);
+            semio_framework_ui_wgpu_widget_kit::draw_text_overlay(ctx, text, left, label.y as f32 + inner.y + size * 0.35, size, color);
         }
     }
 }
@@ -600,7 +600,7 @@ fn world3d_legend_rect(inner: Rect, content: (f32, f32)) -> [f32; 4] {
 
 /// 🌡️ Paints the scalar-field legend: the title with its unit, the ramp as a vertical gradient (range minimum at the bottom), the evenly spaced tick values beside it and the no-data caption.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(super) fn paint_world3d_legend(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, field: &ui_wgpu::wgpu::World3dScalarField, inner: Rect, locale: &str) {
+pub(super) fn paint_world3d_legend(ctx: &mut semio_framework_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>, field: &semio_framework_ui_declaration::ui::World3dScalarField, inner: Rect, locale: &str) {
     let theme = ctx.theme;
     let size = theme.font_size_small;
     let lines = field.legend_lines(locale);
@@ -614,7 +614,7 @@ pub(super) fn paint_world3d_legend(ctx: &mut ui_wgpu::wgpu::widgets::WidgetConte
     let rect = world3d_legend_rect(inner, content);
     ctx.draw.push_rounded_overlay(rect, Rgba::new(theme.panel.r, theme.panel.g, theme.panel.b, 0.9), theme.border_radius.min(4.0));
     let (left, top) = (rect[0] + WORLD_OVERLAY_LEGEND_PADDING_PX, rect[1] + WORLD_OVERLAY_LEGEND_PADDING_PX);
-    ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, &lines.title, left, top + size, size, theme.text);
+    semio_framework_ui_wgpu_widget_kit::draw_text_overlay(ctx, &lines.title, left, top + size, size, theme.text);
     let bar_top = top + title_height + WORLD_OVERLAY_LEGEND_GAP_PX;
     let slice = WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX / WORLD_OVERLAY_LEGEND_BAR_SLICES as f32;
     for index in 0..WORLD_OVERLAY_LEGEND_BAR_SLICES {
@@ -624,26 +624,26 @@ pub(super) fn paint_world3d_legend(ctx: &mut ui_wgpu::wgpu::widgets::WidgetConte
     let steps = lines.ticks.len().saturating_sub(1).max(1) as f32;
     for (index, tick) in lines.ticks.iter().enumerate() {
         let y = bar_top + WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX - index as f32 / steps * WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX;
-        ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, &tick.text, left + WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX + WORLD_OVERLAY_LEGEND_GAP_PX, y + size * 0.35, size, theme.text);
+        semio_framework_ui_wgpu_widget_kit::draw_text_overlay(ctx, &tick.text, left + WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX + WORLD_OVERLAY_LEGEND_GAP_PX, y + size * 0.35, size, theme.text);
     }
     if let Some((text, (_, height))) = no_data {
         let y = bar_top + WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX + WORLD_OVERLAY_LEGEND_GAP_PX;
-        let [r, g, b] = ui_wgpu::wgpu::WORLD3D_SCALAR_NO_DATA_RGB;
+        let [r, g, b] = semio_framework_ui_declaration::ui::WORLD3D_SCALAR_NO_DATA_RGB;
         ctx.draw.push_solid_overlay([left, y, 10.0, 10.0], Rgba::from_srgb8(r, g, b, 255));
-        ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, left + 10.0 + WORLD_OVERLAY_LEGEND_GAP_PX, y + height.max(10.0) * 0.5 + size * 0.35, size, theme.text);
+        semio_framework_ui_wgpu_widget_kit::draw_text_overlay(ctx, text, left + 10.0 + WORLD_OVERLAY_LEGEND_GAP_PX, y + height.max(10.0) * 0.5 + size * 0.35, size, theme.text);
     }
 }
 
 /// 🌡️ Announces on the viewport that the scalar field does not fit the mesh it names, in place of a wrong heatmap.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub(super) fn paint_world3d_scalar_mismatch(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, inner: Rect, locale: &str) {
+pub(super) fn paint_world3d_scalar_mismatch(ctx: &mut semio_framework_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>, inner: Rect, locale: &str) {
     let theme = ctx.theme;
     let size = theme.font_size_small;
-    let text = ui_wgpu::wgpu::world3d_modelling_strings(locale).mismatch;
+    let text = semio_framework_ui_declaration::ui::world3d_modelling_strings(locale).mismatch;
     let (width, height) = ctx.atlas.measure_text(text, size);
     let rect = world3d_legend_rect(inner, (width, height));
     ctx.draw.push_rounded_overlay(rect, Rgba::new(theme.panel.r, theme.panel.g, theme.panel.b, 0.9), theme.border_radius.min(4.0));
-    ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, rect[0] + WORLD_OVERLAY_LEGEND_PADDING_PX, rect[1] + WORLD_OVERLAY_LEGEND_PADDING_PX + size, size, theme.error);
+    semio_framework_ui_wgpu_widget_kit::draw_text_overlay(ctx, text, rect[0] + WORLD_OVERLAY_LEGEND_PADDING_PX, rect[1] + WORLD_OVERLAY_LEGEND_PADDING_PX + size, size, theme.error);
 }
 
 /// ♿️ One node of the accessibility tree a world surface publishes for its modelling overlays: a stable key, an ARIA role, the text a screen reader speaks and its nesting below the surface.
@@ -662,7 +662,7 @@ pub struct World3dAccessibilityEntry {
 pub fn world3d_modelling_accessibility(session_state: &WorldSessionState, overlay_state: &WorldOverlayState, scene: &UiComponentSceneNode) -> Vec<World3dAccessibilityEntry> {
     let Some(world) = scene.world_3d.as_ref() else { return Vec::new() };
     let locale = session_state.modelling_locale;
-    let strings = ui_wgpu::wgpu::world3d_modelling_strings(locale);
+    let strings = semio_framework_ui_declaration::ui::world3d_modelling_strings(locale);
     let host = scene.host_id.as_str();
     let entry = |key: String, role: &'static str, label: String, depth: u8, polite: bool| World3dAccessibilityEntry { key, role, label, depth, polite };
     let mut entries = Vec::new();

@@ -1,5 +1,5 @@
 syntax = "proto3";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 package semio.s.sourcing.curation.artifact;
 
 // 🧬️ Curation artifact schema — every field with its state class.
@@ -74,7 +74,7 @@ message CuratedItem {
 
 message CurationArtifact {
   // @state artifact @child kind=s.stdio.semio
-  semio.os.store.ArtifactChild catalog = 1;
+  semio.framework.schema.artifact_child.ArtifactChild catalog = 1;
   // @state artifact
   repeated ObjectKindExtra stock_extra = 2;
   // @state artifact

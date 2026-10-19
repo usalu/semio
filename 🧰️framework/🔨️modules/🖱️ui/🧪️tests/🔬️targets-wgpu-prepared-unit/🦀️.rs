@@ -765,9 +765,9 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         let mut job = PreparedRenderJob::new(retained_input, 1);
         let input = job.input.as_ref().unwrap() as *const PreparedRenderInput;
         assert!(job.commands.take().unwrap().terminal_is_empty());
-        assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Blocked);
+        assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Blocked);
         InteractiveJob::begin_close(&mut job);
-        let outcome = InteractiveJob::close_step(&mut job, grant);
+        let outcome = semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         let expected = semio_framework_job::RetainedCloneProgress { copied_items: row["expectedItems"].as_u64().unwrap() as usize, ..Default::default() };
         assert_eq!(outcome, semio_framework_job::InteractiveJobCloseStep::Pending { progress: expected });
         assert!(outcome.progress().fits(grant));
@@ -779,7 +779,7 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         for _ in 0..10_000 { if close_job_step(&mut job) { complete = true; break; } }
         assert!(complete);
         assert!(PreparedRenderJob::terminal_is_empty(&job));
-        assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
+        assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
     }
 }
 

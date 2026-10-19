@@ -30,9 +30,9 @@ fn tab_walks_the_chrome_ring_and_enter_presses_the_focused_control() {
     assert_eq!(ring, published, "the ring is the chrome's focusable controls in publication order");
     for step in fixture["steps"].as_array().unwrap() {
         let (action, shift) = match step["key"].as_str().unwrap() {
-            "tab" => (ui_wgpu::wgpu::KeyAction::Tab, false),
-            "shift+tab" => (ui_wgpu::wgpu::KeyAction::Tab, true),
-            _ => (ui_wgpu::wgpu::KeyAction::Enter, false),
+            "tab" => (semio_framework_ui_wgpu_input::KeyAction::Tab, false),
+            "shift+tab" => (semio_framework_ui_wgpu_input::KeyAction::Tab, true),
+            _ => (semio_framework_ui_wgpu_input::KeyAction::Enter, false),
         };
         let modifiers = PointerModifiers { shift, ..PointerModifiers::default() };
         semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(action, &modifiers, &mut input)).expect("keyboard step");

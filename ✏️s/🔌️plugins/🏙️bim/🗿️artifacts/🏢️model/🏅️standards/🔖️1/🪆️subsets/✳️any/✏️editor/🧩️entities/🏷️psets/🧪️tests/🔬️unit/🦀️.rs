@@ -1,9 +1,11 @@
-use crate::editor::bim::entities::{kind_holding, kind_of, EntityKind, ENTITIES};
-use crate::editor::bim::entities::psets::{create_classification_system, create_property_template, parse_targets, targets_text};
-use crate::editor::bim::entities::FieldRow;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate, TemplateTarget};
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, PropertyDef, PropertyKind};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of, ENTITIES};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::psets::{create_classification_system, create_property_template, parse_targets, targets_text};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TemplateTarget;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind};
 
 fn model() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
@@ -20,7 +22,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +68,7 @@ async fn a_classification_system_is_edited_by_name_edition_and_source_and_a_blan
 #[semio_framework_async_macros::async_test]
 async fn the_inferred_rows_count_the_definitions_the_entries_and_the_holders_that_use_them() {
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     let template = kind_of("property-template").expect("the kind");
     let system = kind_of("classification-system").expect("the kind");
     let read = |row: &'static EntityKind, key: &str, id: &str| row.inferred.iter().find(|inferred| inferred.key == key).and_then(|inferred| (inferred.read)(&snapshot, &inference, id));
@@ -83,5 +85,5 @@ async fn a_new_template_and_a_new_system_are_empty_and_named() {
     assert!(matches!(&template, ModelMutation::CreatePropertyTemplate(row) if row.template.name == "Pset_New" && row.template.applies_to.is_empty() && row.template.properties.is_empty()));
     let system = create_classification_system(&snapshot, "cs-new", "", "DIN 276").expect("creates");
     assert!(matches!(&system, ModelMutation::CreateClassificationSystem(row) if row.system.name == "DIN 276" && row.system.entries.is_empty() && row.system.source.is_none()));
-    assert!(crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &template).is_ok() && crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &system).is_ok());
+    assert!(semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &template).is_ok() && semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &system).is_ok());
 }

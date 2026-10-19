@@ -226,7 +226,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/🟨️.mjs",
       "owners": [
         "🔁️verification/📋️orchestration/🟦️.ts"
       ]

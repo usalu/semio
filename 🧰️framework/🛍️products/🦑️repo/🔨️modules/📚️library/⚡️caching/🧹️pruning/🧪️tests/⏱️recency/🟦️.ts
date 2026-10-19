@@ -5,10 +5,10 @@ import fixture from"./🔣️.json"with{type:"json"};
 import{summarizeRecencyFilesV1,fitsRecencySourceBytesV1,describeCacheRecencyChangeV1}from"../../⏱️recency/🟦️.ts";
 import summaryFixture from"../../⏱️recency/🧪️tests/🔣️.json"with{type:"json"};
 import summarySchema from"../../⏱️recency/🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{scanCargoBuildUnits,scanCargoIncrementalUnits}from"../../🟦️.ts";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 test("mixed timestamp maxima and backwards recency match independent physical SQLite oracle",async()=>{
  await receiveScriptProcessInvocation(process.env,async original=>{

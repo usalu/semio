@@ -92,22 +92,24 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
     fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.depth)}
 
-    fn close_step(&mut self, grant:semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep as Step;
-        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueRefusalKind};
-        if !self.closing||grant.maximum_items==0{return Step::Blocked}
-        let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Step::Refused{kind:error.kind,progress:error.retained_progress()}};
-        if grant.maximum_depth<demand.depth{return Step::Refused{kind:ValueRefusalKind::DepthLimit,progress:Default::default()}}
-        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Step::Pending{progress:Default::default()}}
-        if let Some(original)=self.instance_owner.take(){self.instance_retirement=Some(semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original));return Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}}}
-        if let Some(owner)=self.instance_retirement.as_mut(){
-            let grant=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let result=owner.step(grant);
-            let terminal=owner.terminal_is_empty();
-            if terminal{self.instance_retirement=None;}
-            return match result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(fault)=>Step::Refused{kind:fault.value_refusal_kind().unwrap_or(ValueRefusalKind::InvariantViolated),progress:fault.retained_progress}};
-        }
-        Step::Complete{progress:Default::default()}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            use semio_framework_job::InteractiveJobCloseStep as Step;
+            use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep};
+            if !self.closing||grant.maximum_items==0{return Ok(Step::Blocked)}
+            let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))};
+            if grant.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "interactive job close exceeds its admitted depth"),cx))}
+            if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:Default::default()})}
+            if let Some(original)=self.instance_owner.take(){self.instance_retirement=Some(semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+            if let Some(owner)=self.instance_retirement.as_mut(){
+                let grant=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
+                let result=owner.step(grant);
+                let terminal=owner.terminal_is_empty();
+                if terminal{self.instance_retirement=None;}
+                return Ok(match result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(fault)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))});
+            }
+            Ok(Step::Complete{progress:Default::default()})
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {

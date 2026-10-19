@@ -1,11 +1,13 @@
 /** 🦀️ Rust source evidence readers: production/test source pairs, store roots and comment stripping.
  * @see 📜️script.ts
  */
-import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "../../../../../../💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
+import { memberStoreProducerSourceDeclarationV1, type ToolJobMemberStoreProducerSources, type MemberProducerSourceExtension } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
 import { inspectRustModuleGraphFacts } from "../../🌐️rust-module-graph/🟦️.ts";
 import { inspectRustStructure } from "../../🏛️rust-structure/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyModuleTreeFiles, policyReadFileSafe, policyReadModuleTreeSource } from "../🟦️.ts";
 import { isAbsolute, posix, sep } from "node:path";
+import { listSourceFamily } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { WORKSPACE_ROOT } from "../../../🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { INTERACTIVITY_AUDIT_UI_RECONCILE_CURSOR_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_PRIMITIVES_FILE } from "../../../⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts";
 
 type PolicyRustSourceEntry = Readonly<{ path: string; source: string }>;
@@ -19,84 +21,17 @@ export function policyRustTestSource(evidence: string | PolicyRustSourceEvidence
   return typeof evidence === "string" ? evidence : evidence.tests.map((entry) => entry.source).join("\n");
 }
 
+const OS_STORE_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
+
 /**
- * 🏪️ The os Store's production source: its root plus the vocabulary, ledger, codec and composition modules wave E1 decomposed
- * that root into (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/📓️2026-10-13-wave-e1-os-kernel.md`).
- * Store-wide policies read them as one text, so they scan exactly the production source the single root file held. The composer crate `os-store-engine`, its component crates `os-store-engine-core` and `os-store-engine-live`, the use-case crate `os-store-engine-bundle` (spill valve D3) and the batch publication owners are part of that text.
+ * 🏪️ The os Store's production source: its root file first, then every authored file of the crates carved below it in path order (`🧪️tests` and `🧪️testing` stay out), read from the folder so a carve needs no registry edit. Store-wide policies read them as one text, so they scan exactly the production source the single root file once held. The composer crate `os-store-engine`, its component crates `os-store-engine-core` and `os-store-engine-live`, the use-case crate `os-store-engine-bundle` (spill valve D3) and the batch publication owners are part of that text.
  */
-export const OS_STORE_ROOT_SOURCES = [
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧶️config-record-macros/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📜️ops-header-lines/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🏷️command-header-supersede-inputs-and-policy-tokens/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📝️command-print-parse-and-codec/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🧯️command-decode-error-and-retirement/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧮️effective-operations-and-folds/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🔢️prefix-digests-replay-progress-and-edit-replay/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧱️replay-owned-state-and-result-types/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📜️space-history/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧮️decode-owner-bundle-and-bounded-array-authority/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📄️decode-page-state-and-authority/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🚫️decode-rejections-and-erased-retirement/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🎫️completed-record-registry-and-completion/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🌱️fresh-snapshot-target-and-vcs-authority/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🔬️fresh-vcs-active-and-verifier/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧷️fresh-record-target-and-field-decoder/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🛑️whole-buffer-ingress-refusal/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🗒️text-files-parsed-document-and-ops-log/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🛂️history-messages-and-persisted-validation/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/📦️document-spr-pack-and-history-composition/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🔁️replay-ops-and-document-parsing/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🗒️draft-config-store-and-checkpoint-identity/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🌱️runtime-seed-construction-and-owned-close/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/↩️supersede-undo-redo-and-backbone-pump/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/📑️delegating-operations-and-publication/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🧯️close-host-drop-and-pair-merge/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/📇️receipts-envelope-view-and-history-columns/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🧩️store-component-structs/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/📒️store-log-operations/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🗑️store-wire-scratch-owner-and-fold-history/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧱️live-fold-and-parts-types/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📸️snapshot-reads-and-retained-replacements/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧮️time-travel-reads-publication-and-supersede-inputs/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🎞️event-sourced-history-reprojection/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/📣️replay-invalidation-announcements-and-transactions/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/⏳️deferred-reprojection-and-supersede-reports/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🛰️history-lane-commands-and-outbound/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🟰️convergence-early-exit-and-applied-mutation/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧳️bundle/🦀️.rs",
-  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
-] as const;
+export const OS_STORE_ROOT_SOURCES: readonly string[] = [
+  `${OS_STORE_ROOT}/🦀️.rs`,
+  ...listSourceFamily(posix.join(WORKSPACE_ROOT.split(sep).join("/"), OS_STORE_ROOT))
+    .map((absolute) => posix.relative(WORKSPACE_ROOT.split(sep).join("/"), absolute.split(sep).join("/")))
+    .filter((file) => file !== `${OS_STORE_ROOT}/🦀️.rs`),
+];
 
 /** 🏭️ Binds exact domain-owned member producer bodies and this workspace’s explicit semio extension. */
 export function policyReadMemberStoreProducerSources(repoRoot:string):ToolJobMemberStoreProducerSources{
@@ -105,10 +40,15 @@ export function policyReadMemberStoreProducerSources(repoRoot:string):ToolJobMem
   const extension=JSON.parse(policyReadFileSafe(repoRoot,extensionPath)) as MemberProducerSourceExtension["declaration"];
   const roles=Object.fromEntries(Object.entries(memberStoreProducerSourceDeclarationV1.roles).map(([role,reference])=>[role,read(reference)])) as Omit<ToolJobMemberStoreProducerSources,"extensions">;
   const store=policyReadRustSourceEvidence(repoRoot,memberStoreProducerSourceDeclarationV1.roles.store.path);
-  if(!store.tests.some(test=>test.path===memberStoreProducerSourceDeclarationV1.roles.storeLaws.path))throw new Error("[member producer evidence] missing declared canonical store laws");
-  const lawSource=roles.storeLaws as {path:string;source:string};
+  const storeLawsPath=memberStoreProducerSourceDeclarationV1.roles.storeLaws.path;
+  const companionRoot=posix.join(posix.dirname(posix.dirname(storeLawsPath)),"🦀️.rs");
+  const companionMounts=inspectRustModuleGraphFacts(policyReadFileSafe(repoRoot,companionRoot)).modules.some(module=>!module.inline&&module.pathTarget!==null&&posix.normalize(posix.join(posix.dirname(companionRoot),module.pathTarget))===storeLawsPath);
+  if(!store.tests.some(test=>test.path===storeLawsPath)&&!companionMounts)throw new Error("[member producer evidence] missing declared canonical store laws");
   const catalogPath=memberStoreProducerSourceDeclarationV1.roles.catalogLaws.path;
-  if(!inspectRustStructure(lawSource.source).includes.some(item=>item.macro==="include"&&!item.usesOutDir&&(()=>{try{return posix.normalize(posix.join(posix.dirname(lawSource.path),JSON.parse(item.expression)))===catalogPath;}catch{return false;}})()))throw new Error("[member producer evidence] missing declared canonical catalog laws");
+  const storeRoot=posix.dirname(memberStoreProducerSourceDeclarationV1.roles.store.path);
+  const includes=(file:string):boolean=>{const text=policyReadFileSafe(repoRoot,file);return text.includes("include!")&&inspectRustStructure(text).includes.some(item=>item.macro==="include"&&!item.usesOutDir&&(()=>{try{return posix.normalize(posix.join(posix.dirname(file),JSON.parse(item.expression)))===catalogPath;}catch{return false;}})());};
+  const repoRootPosix=repoRoot.split(sep).join("/");
+  if(!listSourceFamily(posix.join(repoRootPosix,storeRoot),{tests:true}).some(absolute=>includes(posix.relative(repoRootPosix,absolute))))throw new Error("[member producer evidence] missing declared canonical catalog laws");
   return {...roles,extensions:[{declaration:extension,producer:read(extension.roles.producer),members:read(extension.roles.members)}]};
 }
 
@@ -137,7 +77,7 @@ export function policyReadRustSourceEvidence(repoRoot: string, sourcePath: strin
       const segments = target.split("/");
       const testsAt = segments.lastIndexOf("🧪️tests");
       if (testsAt < 0) continue;
-      if (testsAt !== segments.length - 3 || segments.at(-1) !== "🦀️.rs" || !segments.at(-2)) {
+      if (segments.at(-1) !== "🦀️.rs") {
         throw new Error(`[policy rust evidence] conditional external module ${module.modulePath.join("::")} is not canonical: ${target}`);
       }
       if (tests.some((entry) => entry.path === target)) continue;

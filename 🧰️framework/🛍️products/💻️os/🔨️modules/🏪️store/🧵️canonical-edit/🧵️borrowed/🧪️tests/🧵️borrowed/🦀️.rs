@@ -13,7 +13,7 @@ use semio_framework_os_spr::Edit;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_snapshot_read::artifact_retirement_box_close_step;
 use semio_framework_os_store_ledger as ledger;
-use semio_framework_os_store_test_support; use super::canonical_edit_tests as tests;
+use semio_framework_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 //#region 🪪️LifetimeOracle
@@ -208,7 +208,7 @@ impl semio_framework_value::retirement::RetireOwned for MapTerminalLifetime {
             assert_eq!(self.lifetime.active_iterators.load(Ordering::SeqCst), 0);
             self.lifetime.root_drops.fetch_add(1, Ordering::SeqCst);
         }
-        semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.lifetime).retirement()
+        semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.lifetime).retirement()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.lifetime)

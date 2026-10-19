@@ -1,7 +1,7 @@
-import{readNativeStorageReservationPolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {serveStorybookArtifactInStorageV1} from "../../🏃️execution/🟦️.ts";
-import {acquireResourceLease} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease} from "@semio-tech/process/leases";
 import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {writeFileSync,readFileSync,existsSync,mkdirSync,rmSync} from "node:fs";
 import {join} from "node:path";

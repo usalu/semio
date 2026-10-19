@@ -1,21 +1,19 @@
 //#region 🧬️InstanceContract
-import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
-import { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
-import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import { uiPatchAuthority, type UiActivationLease, type UiInstanceLifetime, type UiPatchReceipt, type UiPatchSource } from "../🔌️host/🟦️.ts";
+import type { UiIndexGrant } from "../🔌️host/🟦️.ts";
 import type { UiDocumentLimits } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { OwnedUiSurface, type OwnedUiSurfaceAcknowledgement, type OwnedUiSurfaceView } from "../🖼️surface/🟦️.ts";
 import { OwnedUiWirePatchCursor } from "../🩹️operations/📥️wire/🟦️.ts";
 import type { OwnedUiSceneHostProfile } from "../🎬️scene/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../📦️wire/🟦️.ts";
-import { OwnedUiResidentInstance } from "../💾️resident/🟦️.ts";
+import { residentScopeMatches, type OwnedUiResidentScope } from "./🪪️resident-scope/🟦️.ts";
 import type { OwnedUiSceneReadSource, OwnedUiReadSubscription, OwnedUiNodeReadSnapshot, OwnedUiIssuedSceneReader, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "../📖️read-lease/🟦️.ts";
 
-type Cell = { owner: OwnedUiInstance | null; name: string; surface: OwnedUiSurface | null; facade: OwnedUiInstanceSurface | null; wire: OwnedUiWirePatchCursor | null; patch: OwnedUiInstancePatch | null; source: OwnedNativeUiPatchAuthority | null; ordinal: number; inputActive: boolean; original: unknown; page: OwnedUiPatchInputRetirement | null; ack: OwnedUiPatchAcknowledgement | null; next: Cell | null; workNext: Cell | null; queued: boolean };
+type Cell = { owner: OwnedUiInstance | null; name: string; surface: OwnedUiSurface | null; facade: OwnedUiInstanceSurface | null; wire: OwnedUiWirePatchCursor | null; patch: OwnedUiInstancePatch | null; source: UiPatchSource | null; ordinal: number; inputActive: boolean; original: unknown; page: OwnedUiPatchInputRetirement | null; ack: OwnedUiPatchAcknowledgement | null; next: Cell | null; workNext: Cell | null; queued: boolean };
 const MINT = Object.freeze({});
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
-function closeChild(current: RetainedUiWireStep, grant: NumericIndexGrant): RetainedUiWireStep {
+function closeChild(current: RetainedUiWireStep, grant: UiIndexGrant): RetainedUiWireStep {
   if (!Number.isSafeInteger(current.items) || current.items < 0 || current.items > 1 || !Number.isSafeInteger(current.bytes) || current.bytes < 0 || current.bytes > grant.maxBytes) return { ...current, kind: "rejected" };
   return current.kind === "complete" ? { ...current, kind: "pending" } : current;
 }
@@ -29,10 +27,10 @@ let closeLookup: (owner: OwnedUiInstance, lookup: OwnedUiSurfaceLookup) => void;
 let appendSurface: (owner: OwnedUiInstance, name: string) => Cell;
 let operationAuthority: (owner: OwnedUiInstance) => void;
 let enqueue: (owner: OwnedUiInstance, cell: Cell) => void;
-let createAcknowledgement: (owner: OwnedUiInstance, source: OwnedNativeUiPatchAuthority, lifetime: ActorInstanceLifetime, value: OwnedUiSurfaceAcknowledgement) => OwnedUiPatchAcknowledgement;
-let createRetirement: (owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime) => OwnedUiInstanceRetirement;
-let createInputRetirement: (source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) => OwnedUiPatchInputRetirement;
-let createInputAcceptance: (source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) => OwnedUiPatchInputAcceptance;
+let createAcknowledgement: (owner: OwnedUiInstance, source: UiPatchSource, lifetime: UiInstanceLifetime, value: OwnedUiSurfaceAcknowledgement) => OwnedUiPatchAcknowledgement;
+let createRetirement: (owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime) => OwnedUiInstanceRetirement;
+let createInputRetirement: (source: UiPatchSource, ordinal: number, original: unknown) => OwnedUiPatchInputRetirement;
+let createInputAcceptance: (source: UiPatchSource, ordinal: number, original: unknown) => OwnedUiPatchInputAcceptance;
 function live(cell: Cell, operation = false): OwnedUiSurface { if (!cell.owner || !cell.surface) throw new Error("Owned UI instance surface is retired"); if (operation) operationAuthority(cell.owner); return cell.surface; }
 /** 🔒️ Whether this surface's previous patch still holds its wire cursor, input page or receipt outbox. */
 function patchIsOpen(cell: Cell): boolean { return Boolean((cell.wire && !cell.wire.terminalIsEmpty()) || cell.page || cell.ack); }
@@ -45,10 +43,10 @@ function prepareInputRetirement(cell: Cell, wire: OwnedUiWirePatchCursor): Owned
 //#region 📥️InputRetirementAuthority
 /** 📥️ A private accepted claim is issued only after the exact wire input has acquired its payload. */
 export class OwnedUiPatchInputAcceptance {
-  readonly #source: OwnedNativeUiPatchAuthority;
+  readonly #source: UiPatchSource;
   readonly #ordinal: number;
   readonly #original: unknown;
-  private constructor(mint: object, source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) {
+  private constructor(mint: object, source: UiPatchSource, ordinal: number, original: unknown) {
     if (mint !== MINT) throw new Error("Invalid UI patch input acceptance authority"); this.#source = source; this.#ordinal = ordinal; this.#original = original; Object.freeze(this);
   }
   static { createInputAcceptance = (source, ordinal, original) => new OwnedUiPatchInputAcceptance(MINT, source, ordinal, original); }
@@ -57,10 +55,10 @@ export class OwnedUiPatchInputAcceptance {
 
 /** 📥️ Exact native source, ordinal and original operation bind the completed input-retirement obligation. */
 export class OwnedUiPatchInputRetirement {
-  readonly #source: OwnedNativeUiPatchAuthority;
+  readonly #source: UiPatchSource;
   readonly #ordinal: number;
   readonly #original: unknown;
-  private constructor(mint: object, source: OwnedNativeUiPatchAuthority, ordinal: number, original: unknown) {
+  private constructor(mint: object, source: UiPatchSource, ordinal: number, original: unknown) {
     if (mint !== MINT) throw new Error("Invalid UI patch input retirement authority"); this.#source = source; this.#ordinal = ordinal; this.#original = original; Object.freeze(this);
   }
   static { createInputRetirement = (source, ordinal, original) => new OwnedUiPatchInputRetirement(MINT, source, ordinal, original); }
@@ -70,13 +68,13 @@ export class OwnedUiPatchInputRetirement {
 //#endregion 📥️InputRetirementAuthority
 
 //#region 📨️PublicationAcknowledgementAuthority
-export type OwnedUiPatchAcknowledgementValue = OwnedUiSurfaceAcknowledgement & { readonly lifetime: ActorInstanceLifetime; readonly receipt: ActorUiPatchReceipt };
+export type OwnedUiPatchAcknowledgementValue = OwnedUiSurfaceAcknowledgement & { readonly lifetime: UiInstanceLifetime; readonly receipt: UiPatchReceipt };
 /** 📨️ Private publication evidence remains bound to its original aggregate and exact native source authority. */
 export class OwnedUiPatchAcknowledgement {
   readonly #owner: OwnedUiInstance;
   readonly #source: object;
   readonly #value: OwnedUiPatchAcknowledgementValue;
-  private constructor(mint: object, owner: OwnedUiInstance, source: OwnedNativeUiPatchAuthority, lifetime: ActorInstanceLifetime, value: OwnedUiSurfaceAcknowledgement) {
+  private constructor(mint: object, owner: OwnedUiInstance, source: UiPatchSource, lifetime: UiInstanceLifetime, value: OwnedUiSurfaceAcknowledgement) {
     if (mint !== MINT) throw new Error("Invalid UI patch acknowledgement authority");
     const producer = source.value.receipt;
     if (producer.lifetime.activationGeneration !== lifetime.activationGeneration || producer.lifetime.instanceId !== lifetime.instanceId || producer.lifetime.guestLifetime !== lifetime.guestLifetime) throw new Error("Native UI receipt lifetime mismatch");
@@ -94,14 +92,14 @@ export class OwnedUiPatchAcknowledgement {
 /** 🏁️ Transfers the exact activation alias only after every UI descendant and receipt obligation has closed. */
 export class OwnedUiInstanceRetirement {
   readonly #owner: OwnedUiInstance;
-  readonly #activation: ShardActorActivationLease;
-  readonly #lifetime: ActorInstanceLifetime;
-  private constructor(mint: object, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime) {
+  readonly #activation: UiActivationLease;
+  readonly #lifetime: UiInstanceLifetime;
+  private constructor(mint: object, owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime) {
     if (mint !== MINT) throw new Error("Invalid UI instance retirement authority");
     this.#owner = owner; this.#activation = activation; this.#lifetime = lifetime; Object.freeze(this);
   }
   static { createRetirement = (owner, activation, lifetime) => new OwnedUiInstanceRetirement(MINT, owner, activation, lifetime); }
-  static matches(witness: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): witness is OwnedUiInstanceRetirement {
+  static matches(witness: unknown, owner: OwnedUiInstance, activation: UiActivationLease, lifetime: UiInstanceLifetime): witness is OwnedUiInstanceRetirement {
     return witness !== null && typeof witness === "object" && #owner in witness && witness.#owner === owner && witness.#activation === activation && witness.#lifetime.activationGeneration === lifetime.activationGeneration && witness.#lifetime.instanceId === lifetime.instanceId && witness.#lifetime.guestLifetime === lifetime.guestLifetime;
   }
 }
@@ -122,11 +120,11 @@ export class OwnedUiInstanceSurface implements OwnedUiSceneReadSource {
   retireSceneRead(subscription: OwnedUiReadSubscription, reader: OwnedUiIssuedSceneReader): boolean { if (!this.#cell.owner) return false; const result = live(this.#cell).retireSceneRead(subscription, reader); enqueue(this.#cell.owner, this.#cell); return result; }
   openSceneRecord(subscription: OwnedUiReadSubscription, snapshot: OwnedUiNodeReadSnapshot, source?: number): OwnedUiSceneRecordView | null {
     const result = live(this.#cell, true).openSceneRecord(subscription, snapshot, source); if (!result) return null;
-    return Object.freeze({ advance: (grant: NumericIndexGrant) => result.advance(grant), close: () => { const closed = result.close(); if (this.#cell.owner) enqueue(this.#cell.owner, this.#cell); return closed; } });
+    return Object.freeze({ advance: (grant: UiIndexGrant) => result.advance(grant), close: () => { const closed = result.close(); if (this.#cell.owner) enqueue(this.#cell.owner, this.#cell); return closed; } });
   }
   openSceneText(subscription: OwnedUiReadSubscription, snapshot: OwnedUiNodeReadSnapshot, source: number): OwnedUiSceneTextView | null {
     const result = live(this.#cell, true).openSceneText(subscription, snapshot, source); if (!result) return null;
-    return Object.freeze({ advance: (grant: NumericIndexGrant) => result.advance(grant), close: () => { const closed = result.close(); if (this.#cell.owner) enqueue(this.#cell.owner, this.#cell); return closed; } });
+    return Object.freeze({ advance: (grant: UiIndexGrant) => result.advance(grant), close: () => { const closed = result.close(); if (this.#cell.owner) enqueue(this.#cell.owner, this.#cell); return closed; } });
   }
 }
 //#endregion 📖️FrozenSurfaceFacade
@@ -143,7 +141,7 @@ export class OwnedUiSurfaceLookup {
   private constructor(mint: object, owner: OwnedUiInstance, name: string, first: Cell | null) { if (mint !== MINT) throw new Error("Invalid instance lookup authority"); this.#owner = owner; this.#name = name; this.#cell = first; Object.freeze(this); }
   static { createLookup = (owner, name, first) => new OwnedUiSurfaceLookup(MINT, owner, name, first); }
   get failure(): string | null { return this.#failure; }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-surface-lookup"); if (this.#closing || this.#failure) return step("rejected", "instance-surface-lookup"); if (this.#ready) return step("ready", "instance-surface-lookup");
     try {
       operationAuthority(this.#owner!);
@@ -153,7 +151,7 @@ export class OwnedUiSurfaceLookup {
   }
   takeResult(): OwnedUiInstanceSurface | null { if (!this.#ready || this.#closing || this.#failure) return null; const result = this.#result; this.#result = null; return result; }
   beginClose(): void { this.#closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-lookup-close"); if (!this.#closing) throw new Error("Instance lookup close has not begun");
     if (this.#owner) { closeLookup(this.#owner, this); this.#owner = null; this.#cell = null; this.#result = null; this.#name = ""; return step("pending", "instance-lookup-close", 1152); }
     return step("complete", "instance-lookup-close");
@@ -178,7 +176,7 @@ export class OwnedUiInstancePatch {
     this.#cell.inputActive = true; this.#cell.original = original;
     if (!source.acceptInput(createInputAcceptance(source, ordinal, original))) throw new Error("Native UI input acceptance claim was refused"); return true;
   }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-patch"); operationAuthority(this.#cell.owner!); const wire = this.#wire();
     if (this.#cell.page) return step("ready", "instance-input-retirement"); if (prepareInputRetirement(this.#cell, wire)) return step("ready", "instance-input-retirement", 128);
     const current = wire.advance(grant); enqueue(this.#cell.owner!, this.#cell); return this.#cell.inputActive && current.kind === "ready" ? { ...current, kind: "pending" } : current;
@@ -191,9 +189,9 @@ export class OwnedUiInstancePatch {
     if (!source || value.actor !== source.value.activation.actorId || value.instance !== source.value.lifetime.instanceId || value.surface !== source.value.surface || value.revision !== source.value.revision) throw new Error("Native UI publication acknowledgement mismatch");
     this.#cell.ack = createAcknowledgement(this.#cell.owner!, source, source.value.lifetime, value); return this.#cell.ack;
   }
-  acceptAcknowledgement(receipt: unknown): boolean { this.#wire(); if (!this.#cell.source || !this.#cell.ack || !OwnedNativeUiPatchSubmissionReceipt.matches(receipt, this.#cell.source, this.#cell.ack)) return false; this.#cell.ack = null; return true; }
+  acceptAcknowledgement(receipt: unknown): boolean { this.#wire(); if (!this.#cell.source || !this.#cell.ack || !uiPatchAuthority().matchesReceipt(receipt, this.#cell.source, this.#cell.ack)) return false; this.#cell.ack = null; return true; }
   beginClose(): void { this.#wire().beginClose(); this.#closing = true; }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-patch-close"); const wire = this.#wire(); if (this.#cell.page) return step("blocked", "instance-input-retirement"); if (this.#cell.ack) return step("blocked", "instance-receipt-outbox");
     if (wire.terminalIsEmpty()) return prepareInputRetirement(this.#cell, wire) ? step("pending", "instance-input-retirement", 128) : step("complete", "instance-patch-close");
     return closeChild(wire.closeStep(grant), grant);
@@ -205,8 +203,8 @@ export class OwnedUiInstancePatch {
 //#region 🏘️ActivationOwnedInstance
 /** 🏘️ Holds one exact guest lifetime and its UI descendants; retirement never requires a live activation. */
 export class OwnedUiInstance {
-  #activation: ShardActorActivationLease | null;
-  readonly #lifetime: ActorInstanceLifetime;
+  #activation: UiActivationLease | null;
+  readonly #lifetime: UiInstanceLifetime;
   readonly #limits: UiDocumentLimits;
   readonly #profile: OwnedUiSceneHostProfile;
   #head: Cell | null = null;
@@ -219,8 +217,8 @@ export class OwnedUiInstance {
   #closing = false;
   #closed = false;
   #retirement: OwnedUiInstanceRetirement | null = null;
-  #resident: OwnedUiResidentInstance | null = null;
-  constructor(activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime, limits: UiDocumentLimits, profile: OwnedUiSceneHostProfile) {
+  #resident: OwnedUiResidentScope | null = null;
+  constructor(activation: UiActivationLease, lifetime: UiInstanceLifetime, limits: UiDocumentLimits, profile: OwnedUiSceneHostProfile) {
     activation.assertActive();
     const activationGeneration = generation(lifetime.activationGeneration); const guestLifetime = generation(lifetime.guestLifetime); const instanceId = lifetime.instanceId;
     if (activation.activationGeneration !== activationGeneration || !Number.isInteger(instanceId) || instanceId < 0 || instanceId > 0xffffffff) throw new Error("Instance capture does not match native lifetime");
@@ -238,13 +236,13 @@ export class OwnedUiInstance {
     };
     enqueue = (owner, cell) => { if (owner.#closing || cell.queued || !cell.surface?.maintenancePending) return; cell.queued = true; if (owner.#workTail) owner.#workTail.workNext = cell; else owner.#work = cell; owner.#workTail = cell; };
   }
-  #matches(activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): boolean { return activation === this.#activation && lifetime.activationGeneration === this.#lifetime.activationGeneration && lifetime.instanceId === this.#lifetime.instanceId && lifetime.guestLifetime === this.#lifetime.guestLifetime; }
-  static matches(owner: unknown, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): owner is OwnedUiInstance { return owner !== null && typeof owner === "object" && #activation in owner && owner.#matches(activation, lifetime); }
-  attachResidentScope(scope: OwnedUiResidentInstance): boolean {
-    if (this.#closing || this.#closed || !this.#activation || (this.#resident !== null && this.#resident !== scope) || !OwnedUiResidentInstance.matches(scope, this, this.#activation, this.#lifetime)) return false;
+  #matches(activation: UiActivationLease, lifetime: UiInstanceLifetime): boolean { return activation === this.#activation && lifetime.activationGeneration === this.#lifetime.activationGeneration && lifetime.instanceId === this.#lifetime.instanceId && lifetime.guestLifetime === this.#lifetime.guestLifetime; }
+  static matches(owner: unknown, activation: UiActivationLease, lifetime: UiInstanceLifetime): owner is OwnedUiInstance { return owner !== null && typeof owner === "object" && #activation in owner && owner.#matches(activation, lifetime); }
+  attachResidentScope(scope: OwnedUiResidentScope): boolean {
+    if (this.#closing || this.#closed || !this.#activation || (this.#resident !== null && this.#resident !== scope) || !residentScopeMatches(scope, this, this.#activation, this.#lifetime)) return false;
     this.#resident = scope; return true;
   }
-  beginSurfaceLookup(activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime, name: string): OwnedUiSurfaceLookup | null {
+  beginSurfaceLookup(activation: UiActivationLease, lifetime: UiInstanceLifetime, name: string): OwnedUiSurfaceLookup | null {
     if (!this.#matches(activation, lifetime)) return null; operationAuthority(this); if (this.#lookup) return null;
     const lookup = createLookup(this, surfaceName(name), this.#head); this.#lookup = lookup; return lookup;
   }
@@ -257,15 +255,15 @@ export class OwnedUiInstance {
    * name, a retired cell) and stays a fault forever; `Busy instance surface owner` means this surface's
    * previous patch has not closed, which is unreachable from a host whose intake is serialized per
    * instance — see {@link surfacePatchIsOpen}. */
-  beginPatch(source: OwnedNativeUiPatchAuthority, facade: OwnedUiInstanceSurface): OwnedUiInstancePatch {
-    operationAuthority(this); if (!OwnedNativeUiPatchAuthority.matches(source, this.#activation!, this.#lifetime) || !OwnedNativeUiPatchAuthority.matchesOwner(source, this)) throw new Error("Foreign native instance patch owner"); const cell = cellOf(facade); const value = source.value;
+  beginPatch(source: UiPatchSource, facade: OwnedUiInstanceSurface): OwnedUiInstancePatch {
+    operationAuthority(this); if (!uiPatchAuthority().matches(source, this.#activation!, this.#lifetime) || !uiPatchAuthority().matchesOwner(source, this)) throw new Error("Foreign native instance patch owner"); const cell = cellOf(facade); const value = source.value;
     if (cell.owner !== this || cell.name !== value.surface || !cell.surface) throw new Error("Foreign instance surface owner");
     if (patchIsOpen(cell)) throw new Error("Busy instance surface owner");
     const wire = new OwnedUiWirePatchCursor(cell.surface, value.baseRevision, value.revision, value.operationCount); cell.wire = wire; cell.source = source; cell.ordinal = 0; cell.inputActive = false; cell.patch = createPatch(cell); return cell.patch;
   }
   get maintenancePending(): boolean { return this.#work !== null; }
   get maintenanceFailure(): string | null { return this.#maintenanceFailure; }
-  advanceMaintenance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advanceMaintenance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-maintenance"); if (!this.#work) return step("complete", "instance-maintenance");
     const cell = this.#work;
     if (this.#maintenanceWorked) { this.#work = cell.workNext; if (!this.#work) this.#workTail = null; cell.workNext = null; cell.queued = false; this.#maintenanceWorked = false; enqueue(this, cell); return step("pending", "instance-maintenance-queue", 64); }
@@ -277,7 +275,7 @@ export class OwnedUiInstance {
     } catch (error) { this.#maintenanceFailure = error instanceof Error ? error.message : "Instance maintenance failed"; return step("rejected", "instance-maintenance-failed"); }
   }
   beginClose(): void { if (this.#closing) return; this.#closing = true; this.#maintenanceWorked = false; this.#resident?.beginClose(); this.#lookup?.beginClose(); }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "instance-close"); if (!this.#closing) throw new Error("Instance close has not begun"); if (this.#closed) return step("complete", "instance-close");
     if (this.#lookup) return closeChild(this.#lookup.closeStep(grant), grant);
     if (this.#work) { const cell = this.#work; this.#work = cell.workNext; if (!this.#work) this.#workTail = null; cell.workNext = null; cell.queued = false; return step("pending", "instance-work-release", 64); }

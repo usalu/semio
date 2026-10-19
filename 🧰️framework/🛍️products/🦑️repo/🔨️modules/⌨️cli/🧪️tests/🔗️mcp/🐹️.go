@@ -10,7 +10,7 @@ import (
 	testing "testing"
 
 	providers "github.com/usalu/semio/repo/providers"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // 🧪️#endregion 🧬️Consolidated
@@ -93,17 +93,8 @@ func TestRenderPromptTemplateUsesRepoMetaRoot(t *testing.T) {
 	if err := os.MkdirAll(otherDir, 0755); err != nil {
 		t.Fatalf("mkdir other dir: %v", err)
 	}
-	oldRoot := workspace.RootDir
-	defer func() { workspace.SetRootDir(oldRoot) }()
-	workspace.SetRootDir(repoRoot)
-	oldWD, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("getwd: %v", err)
-	}
-	defer func() { _ = os.Chdir(oldWD) }()
-	if err := os.Chdir(otherDir); err != nil {
-		t.Fatalf("chdir: %v", err)
-	}
+	sandbox.BindRoot(t, repoRoot)
+	t.Chdir(otherDir)
 	out, err := renderPromptTemplate("enhance", map[string]string{"prompt": "hello"})
 	if err != nil {
 		t.Fatalf("renderPromptTemplate failed: %v", err)

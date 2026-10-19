@@ -89,21 +89,9 @@ test("genuine census retains exact bytes and five typed historical coordinates",
   expect(() => frozenCoordinateEvidenceCoordinates(contract.path, Buffer.concat([goldenBytes, Buffer.from("\n")]), { purity: contract })).toThrow(/frozen-coordinate-evidence-invalid/u);
 });
 
-test("genuine historical purity authority is registered with no broader span ownership than the deliberately widened set", () => {
-  const live = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"];
-  expect(live).toMatchObject({ path: relative(repoRoot, goldenPath).replaceAll("\\", "/"), sha256: vector.historicalDocument.sha256, schemaVersion: 1 });
-  // The four non-sourcePath fields this identity test itself depends on (row 29's owner-identity,
-  // ownerRoot, packageRoot, canonicalPackageRoot) are still exactly, individually, what they always
-  // were — only the sourcePath declaration changed shape (see below), never these four.
-  expect(live!.coordinates.filter((row) => row.pointer !== "/mappings/*/0" && row.pointer !== "/mappings/69/10")).toEqual(vector.historicalCoordinates.filter((row: { pointer: string }) => row.pointer !== "/mappings/29/0"));
-  // The only widening beyond that: a row-index wildcard over the sourcePath column (covering row
-  // 29's own sourcePath along with every other row's), plus one explicit destinationPath addition
-  // for a row a later, wider rename scope touched. `☂️frozen-coordinate-wildcard-coverage` proves
-  // that widening is sound (safe to wildcard column 0, unsafe to wildcard column 10) and exactly
-  // bounded (does not touch row 29's other four fields).
-  expect(live!.coordinates.some((row) => row.pointer === "/mappings/*/0" && row.kind === "source")).toBe(true);
-  expect(live!.coordinates.some((row) => row.pointer === "/mappings/69/10" && row.kind === "destination")).toBe(true);
-  expect(live!.coordinates).toHaveLength(vector.historicalCoordinates.length + 1);
+test("genuine historical purity authority stays a testing example outside production coordinate metadata and keeps its typed coordinates", () => {
+  expect(Object.values(loadCatalogTaxonomy().frozenCoordinateEvidenceContracts).some((row) => row.path === relative(repoRoot, goldenPath).replaceAll("\\", "/"))).toBe(false);
+  expect(vector.historicalCoordinates).toHaveLength(5);
 });
 
 test("historical owner identity gate is registered in Nx", () => {
@@ -157,7 +145,7 @@ test("a frozen package-owner census naming moved Draw files stays byte-identical
   const { commandBundle, members } = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8")) as { commandBundle: { directoryKinds: Taxonomy["semanticDirectoryKinds"]; descendantContract: Taxonomy["semanticDescendantContracts"][string] }; members: readonly { path: string; content: string }[] };
   const taxonomy: ProbeTaxonomy = { ...base, semanticDirectoryKinds: { ...base.semanticDirectoryKinds, ...commandBundle.directoryKinds }, semanticDescendantContracts: { ...base.semanticDescendantContracts, "draw-editor-command-bundle-v1": commandBundle.descendantContract } };
   const schemaPath = golden.taxonomy.path;
-  const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
+  const historyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕰️history/🧼️remaining-package-purity-authority/🔣️.json";
   const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
   const projection = catalog.projections[1];
   const owner = `${projection.sourceRoot}/🔄️fsm/✨️macros`, moved = projection.mappings.find(({ sourcePath }: { sourcePath: string }) => sourcePath === `${owner}/🦀️.rs`)!;

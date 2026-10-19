@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType;
 use crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateCeilingType, base: &ModelSnapshot) -> Vec<Op>
 where

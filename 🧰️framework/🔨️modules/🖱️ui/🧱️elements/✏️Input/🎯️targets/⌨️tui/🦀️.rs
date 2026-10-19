@@ -76,7 +76,7 @@ fn word_end(value: &str, from: usize) -> usize {
     at
 }
 
-pub(crate) fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn input_on_key(i: &mut InputState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let caret = i.caret();
     i.cursor = caret;
     let ctrl = ev.mods & mods::CTRL != 0;
@@ -150,7 +150,7 @@ fn delete_forward(i: &mut InputState, to: usize) -> Option<WidgetSignal> {
     Some(i.changed())
 }
 
-pub(crate) fn input_on_paste(i: &mut InputState, text: &str) -> Option<WidgetSignal> {
+pub fn input_on_paste(i: &mut InputState, text: &str) -> Option<WidgetSignal> {
     let clean: String = text.chars().map(|c| if c.is_whitespace() { ' ' } else { c }).filter(|c| !c.is_control()).collect();
     if clean.is_empty() {
         return None;
@@ -166,7 +166,7 @@ fn view_start(i: &InputState, width: u16) -> u16 {
     (column + 1).saturating_sub(width)
 }
 
-pub(crate) fn input_on_mouse(i: &mut InputState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn input_on_mouse(i: &mut InputState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     if !matches!(event.kind, MouseKind::Down(MouseButton::Left) | MouseKind::Drag(MouseButton::Left)) || !rect.contains(event.pos) {
         return None;
     }
@@ -175,7 +175,7 @@ pub(crate) fn input_on_mouse(i: &mut InputState, rect: Rect, event: &MouseEvent)
     None
 }
 
-pub(crate) fn input_cursor(i: &InputState, rect: Rect) -> Option<CursorSpec> {
+pub fn input_cursor(i: &InputState, rect: Rect) -> Option<CursorSpec> {
     if rect.width == 0 || rect.height == 0 {
         return None;
     }
@@ -183,7 +183,7 @@ pub(crate) fn input_cursor(i: &InputState, rect: Rect) -> Option<CursorSpec> {
     Some(CursorSpec { pos: Pos { x: (rect.x + column).min(rect.x + rect.width - 1), y: rect.y }, shape: CursorShape::Bar, blink: true })
 }
 
-pub(crate) fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, _focused: bool) {
+pub fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, _focused: bool) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

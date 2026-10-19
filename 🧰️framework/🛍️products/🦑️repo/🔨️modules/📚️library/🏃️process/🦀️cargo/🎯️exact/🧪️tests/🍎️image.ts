@@ -8,7 +8,7 @@ import {runOwnedCommand,captureOwnedProcess} from "../../../../../../../../🔨�
 import {exactExecutableFingerprint,originalNativeLibraryDirectory,configuredExactCargoLawPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {runRepositoryExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../🟦️.ts";
-import fixture from "../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🧫️fixtures/🔣️.json";
+import fixture from "@semio-tech/process/testing/cargo/exact/testing/fixtures.json";
 
 test("actual repository exact Cargo prepares and acquires every selected bounded workspace",async()=>{
  const mode=process.env.SEMIO_BUILD_MODE;if(mode!=="prototype"&&mode!=="release")throw Error("Original build mode required");

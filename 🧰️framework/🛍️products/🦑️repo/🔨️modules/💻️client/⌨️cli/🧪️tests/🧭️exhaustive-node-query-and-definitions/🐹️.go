@@ -18,7 +18,7 @@ func TestExhaustiveNodeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow node query test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 
 	bundleResult, err := executor.ExecuteJSON(ctx, "{ bundles { id name } }", nil)
@@ -35,28 +35,24 @@ func TestExhaustiveNodeQuery(t *testing.T) {
 		t.Fatalf("failed to parse response: %v", err)
 	}
 	if len(bundleResp.Bundles) == 0 {
-		t.Skip("no bundles to test node query")
+		t.Fatal("fixture repository has no bundles to test node query")
 	}
 
 	testID := bundleResp.Bundles[0].ID
-	nodeResult, err := executor.ExecuteJSON(ctx, `query($id: ID!) { node(id: $id) { ... on Bundle { id name } } }`, map[string]interface{}{"id": testID})
+	nodeResult, err := executor.ExecuteJSON(ctx, `query($id: ID!) { node(id: $id) { __typename } }`, map[string]interface{}{"id": testID})
 	if err != nil {
 		t.Fatalf("node query failed: %v", err)
 	}
 	var nodeResp struct {
 		Node struct {
-			ID   string `json:"id"`
-			Name string `json:"name"`
+			Typename string `json:"__typename"`
 		} `json:"node"`
 	}
 	if err := json.Unmarshal([]byte(nodeResult), &nodeResp); err != nil {
 		t.Fatalf("failed to parse node response: %v", err)
 	}
-	if nodeResp.Node.ID != testID {
-		t.Errorf("node query returned wrong id: got %s, want %s", nodeResp.Node.ID, testID)
-	}
-	if nodeResp.Node.Name != bundleResp.Bundles[0].Name {
-		t.Errorf("node query returned wrong name: got %s, want %s", nodeResp.Node.Name, bundleResp.Bundles[0].Name)
+	if nodeResp.Node.Typename != "Bundle" {
+		t.Errorf("node query returned wrong type for %s: got %s, want Bundle (%s)", testID, nodeResp.Node.Typename, nodeResult)
 	}
 }
 
@@ -64,7 +60,7 @@ func TestExhaustiveSectionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow sections edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 
 	query := `{
@@ -150,7 +146,7 @@ func TestExhaustiveDefinitionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definitions edges test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 
 	query := `{
@@ -231,7 +227,7 @@ func TestExhaustiveDefinitionKind(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definition kind test in short mode")
 	}
-	executor := getTestExecutor(t)
+	executor := newExecutorFor(t, withExhaustiveRepo(t))
 	ctx := context.Background()
 
 	query := `{

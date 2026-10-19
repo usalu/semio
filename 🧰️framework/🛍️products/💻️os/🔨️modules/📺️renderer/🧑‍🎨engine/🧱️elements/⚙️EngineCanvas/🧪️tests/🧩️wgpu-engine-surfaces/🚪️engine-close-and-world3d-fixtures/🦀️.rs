@@ -55,12 +55,12 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: semio_framewo
     {
         let mut ctx = semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let mut hosts = semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts { chrome_labels: semio_framework_os_renderer_wgpu_scene_state::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
-        let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
+        let mut cursor = semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
         for _ in 0..4096 {
-            match semio_framework_os_renderer_wgpu_scene_render::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, ui_wgpu::wgpu::UiDriverDrag::Handle, 1) {
-                ui_wgpu::wgpu::ScenePaintStep::Pending => continue,
-                ui_wgpu::wgpu::ScenePaintStep::Complete => break,
-                ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("engine surface scene paint faulted"),
+            match semio_framework_os_renderer_wgpu_scene_render::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, 1) {
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => continue,
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("engine surface scene paint faulted"),
             }
         }
     }

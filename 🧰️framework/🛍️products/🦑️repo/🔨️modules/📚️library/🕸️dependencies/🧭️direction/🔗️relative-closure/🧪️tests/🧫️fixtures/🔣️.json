@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {"id":"static-and-reexport","entry":"a.ts","files":{"a.ts":"import {b} from \"./b.ts\";\nexport * from \"./c.ts\";","b.ts":"export const b=1;","c.ts":"export const c=2;"},"closure":["a.ts","b.ts","c.ts"],"workspace":[]},
+    {"id":"dynamic-and-require","entry":"a.ts","files":{"a.ts":"export const load=()=>import(\"./b.ts\");const c=require(\"./c.cjs\");","b.ts":"export const b=1;","c.cjs":"module.exports=2;"},"closure":["a.ts","b.ts","c.cjs"],"workspace":[]},
+    {"id":"bare-workspace-specifier","entry":"a.ts","files":{"a.ts":"import {x} from \"@semio-tech/framework/schema\";\nimport {y} from \"./b.ts\";","b.ts":"import {z} from \"@semio-tech/process/leases\";"},"closure":["a.ts","b.ts"],"workspace":["a.ts -> @semio-tech/framework/schema","b.ts -> @semio-tech/process/leases"]},
+    {"id":"external-and-builtin-are-not-workspace","entry":"a.ts","files":{"a.ts":"import {join} from \"node:path\";\nimport Ajv from \"ajv\";\nimport {b} from \"./b.ts\";","b.ts":"export const b=1;"},"closure":["a.ts","b.ts"],"workspace":[]},
+    {"id":"cycle-and-diamond","entry":"a.ts","files":{"a.ts":"import \"./b.ts\";import \"./c.ts\";","b.ts":"import \"./d.ts\";","c.ts":"import \"./d.ts\";","d.ts":"import \"./a.ts\";"},"closure":["a.ts","b.ts","c.ts","d.ts"],"workspace":[]},
+    {"id":"json-and-type-only","entry":"a.ts","files":{"a.ts":"import data from \"./data.json\";\nimport type {T} from \"./t.ts\";","data.json":"{}","t.ts":"export type T=1;"},"closure":["a.ts","t.ts"],"workspace":[]}
+  ],
+  "bootstrapEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"
+}

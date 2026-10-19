@@ -1,10 +1,10 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Profile};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, Profile};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops;
-use crate::standards::v1::subsets::any::io::export::ifc::frames::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Vertex;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::{ccw, cw, area, perimeter, frame_at, point, profile_top};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
 
 fn corner(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }

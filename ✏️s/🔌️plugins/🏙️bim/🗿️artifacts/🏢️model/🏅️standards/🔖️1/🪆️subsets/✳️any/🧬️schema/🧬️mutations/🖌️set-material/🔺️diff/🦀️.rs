@@ -2,7 +2,11 @@
 //! non-negative, colour channels in 0..1; a patch that changes nothing is a no-op. Everything derived from the material follows by inference.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_material::SetMaterial;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::MaterialPatch, ModelDiff, Patch}, snapshot::{ModelSnapshot, Rgb}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn unit(color: &Rgb) -> bool {

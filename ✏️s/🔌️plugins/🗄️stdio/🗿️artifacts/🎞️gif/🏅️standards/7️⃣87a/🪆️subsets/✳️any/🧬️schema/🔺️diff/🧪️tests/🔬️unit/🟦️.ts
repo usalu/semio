@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../../🔣️.json";
 import snapshot from "../../../📸️snapshot/🔣️.json";
-import vectors from "../🧫️fixtures/🔣️.json";
+import vectors from "../../../../🧪️tests/🧫️fixtures/🔺️diff/🔣️.json";
 import { parseGifDiff } from "../../🟦️.ts";
 
 test("GIF 87a diff parser agrees with the independent JSON Schema oracle on every vector", () => {

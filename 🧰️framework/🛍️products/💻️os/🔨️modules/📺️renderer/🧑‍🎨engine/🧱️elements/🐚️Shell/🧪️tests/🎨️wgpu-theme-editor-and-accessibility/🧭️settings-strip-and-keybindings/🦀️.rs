@@ -108,7 +108,7 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
                 other => key = other,
             }
         }
-        let action = ui_wgpu::wgpu::KeyAction::Char(key.to_string());
+        let action = semio_framework_ui_wgpu_input::KeyAction::Char(key.to_string());
         assert_eq!(shell_edit_verb_for(&action, &modifiers), Some(expected), "⌨️ {chord} is React's framework-universal history tail");
     }
 }

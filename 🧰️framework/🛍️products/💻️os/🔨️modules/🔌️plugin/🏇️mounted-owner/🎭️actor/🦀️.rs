@@ -1,5 +1,5 @@
 //! 🎭️ Captures bounded original actor text only after its full publication grant admits real custody.
-use semio_framework_value::{SharedUtf8,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{controlled::ControlledRetirement,shared::shared_retirement_allocation_bytes}};
+use semio_framework_value::{SharedUtf8,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{controlled::ControlledRetirement,arc_custody::shared_retirement_allocation_bytes}};
 use std::mem::size_of;
 /// 📏️ The shared Store protocol admits at most this original identity extent.
 pub const MOUNTED_ACTOR_TEXT_BYTES:usize=256;

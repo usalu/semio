@@ -41,7 +41,7 @@ pub mod standards {
                             pub use component::*;
                         }
                     }
-                    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff;
+                    pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::schema::diff;
                 }
             }
         }

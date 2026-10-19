@@ -57,9 +57,9 @@ export function testSemioKitDocumentContract(): void {
   const ajv = semioSchemaAjvV1({ allErrors: true }).addSchema(artifactReferenceSchema);
   for (const path of [
     frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"),
-    frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json"),
-    frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"),
-    frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔣️.json"),
+    frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/🔣️.json"),
+    frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"),
+    frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔣️.json"),
     "../../../../✉️base/🧬️schema/🪆️child/🔣️.json",
     "../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json",
   ]) ajv.addSchema(read(path));

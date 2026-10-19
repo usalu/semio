@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import type { PixelOracleFixture } from "../🧾️pixel-oracle-fixture/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -362,7 +363,7 @@ export async function runReferenceVisualOracle(repoRoot: string, outputDirectory
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const shaderSource = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
+      const shaderSource = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"));
       const shader = (name: string) => shaderSource.match(new RegExp(`pub const ${name}: &str = r#"([\\s\\S]*?)"#;`))?.[1];
       const texturedShader = shader("WORLD3D_TEXTURED_SHADER");
       const lineShader = shader("WORLD3D_LINES_SHADER");

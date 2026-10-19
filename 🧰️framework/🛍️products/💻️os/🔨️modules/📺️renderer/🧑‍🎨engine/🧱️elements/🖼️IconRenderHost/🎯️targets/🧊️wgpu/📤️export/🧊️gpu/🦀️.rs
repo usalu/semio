@@ -1,6 +1,6 @@
 //! 🧊️ Accepted-packet PNG export with bounded presentation, readback and retirement.
 use super::png::IconPngExport;
-use ui_wgpu::wgpu::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderPacket};
+use semio_framework_ui_prepared::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderPacket};
 use ui_gpu::{GpuContext, PreparedGpuPresentCursor, PreparedGpuReadback};
 use ui_gpu::{RasterTextureCleanupStep, RasterTextureWitness};
 
@@ -57,9 +57,9 @@ impl IconGpuPngExport {
         };
         let gate = PreparedRenderGate::default();
         #[cfg(not(target_arch = "wasm32"))]
-        let admitted = gpu.begin_prepared(&ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread(), &gate, &packet, packet.scene_revision(), packet.preview_generation());
+        let admitted = gpu.begin_prepared(&semio_framework_ui_prepared::UiPresentToken::mint_for_current_thread(), &gate, &packet, packet.scene_revision(), packet.preview_generation());
         #[cfg(target_arch = "wasm32")]
-        let admitted = ui_wgpu::wgpu::OffscreenPresentToken::mint_for_dedicated_worker().map_err(str::to_owned).and_then(|token| gpu.begin_prepared_offscreen(&token, &gate, &packet, packet.scene_revision(), packet.preview_generation()));
+        let admitted = semio_framework_ui_prepared::OffscreenPresentToken::mint_for_dedicated_worker().map_err(str::to_owned).and_then(|token| gpu.begin_prepared_offscreen(&token, &gate, &packet, packet.scene_revision(), packet.preview_generation()));
         if let Err(fault) = admitted {
             return Err(IconGpuPngRejected { fault, packet });
         }

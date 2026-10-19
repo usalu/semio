@@ -4,12 +4,12 @@
 //! `CeilingCovering` name the materials) plus the ids in `Semio_Authoring`, so the importer finds the material again.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifczone.htm
 
-use crate::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, refs, rf, text, typed, unset, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, refs, rf, text, typed, unset, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🎨️ The finish rows of one space: the material ids in its authoring data and the covering property set that names the materials.
@@ -90,7 +90,7 @@ fn totals_of(totals: &ZoneTotals) -> BTreeMap<String, f64> {
 
 /// 🧾️ The table the third-party IfcOpenShell oracle reads back from the exported file: every zone with its members and totals, every area scheme with its rule and the covering names of every finished space.
 pub fn report_json(model: &ModelSnapshot) -> Result<String, String> {
-    let zone_totals = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
+    let zone_totals = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred.zone_totals.clone()).map_err(|error| error.to_string())?;
     let zones = model
         .zones
         .iter()

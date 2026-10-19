@@ -9,9 +9,9 @@ import{readDefaultBuildCliPolicyV1}from"../../../📜️script.ts";
 import ts from"typescript";
 import {createBuildBootstrapCapabilitiesV1} from "../../📤️child/🟦️.ts";
 import type {NativeBuildCallerCapabilitiesV1} from "../../🟦️.ts";
-import {registerBuildTestLawV1} from "../../../\ud83e\uddea\ufe0ftests/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts";
+import {registerBuildTestLawV1} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83d\udce5\ufe0finvocation/\ud83d\udfe6\ufe0f.ts";
 import {readIssuedScriptProcessEnvelopeV1,scriptProcessEnvironment,scriptInvocationBudget,advanceScriptInvocation} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83e\udded\ufe0frouting/\ud83d\udfe6\ufe0f.ts";
-import {runOwnedCommand} from "../../../../../../../../\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83c\udf9b\ufe0fowned-execution/\ud83d\udfe6\ufe0f.ts";
+import {runOwnedCommand} from "@semio-tech/process/execution";
 
 test("prebirth build grants bind every finite literal Nx launch and preserve opaque tails",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(':memory:');try{

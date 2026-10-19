@@ -120,8 +120,6 @@ pub mod editor {
             pub mod move_question;
             #[path = "../../../../↔️move-step/🦀️.rs"]
             pub mod move_step;
-            #[path = "../../../../▶️next-step/🦀️.rs"]
-            pub mod next_step;
             #[path = "../../../../🎛️patch-question-options/🦀️.rs"]
             pub mod patch_question_options;
             #[path = "../../../../🩹️patch-questions/🦀️.rs"]
@@ -130,8 +128,6 @@ pub mod editor {
             pub mod patch_step;
             #[path = "../../../../🩺️patch-vector-field/🦀️.rs"]
             pub mod patch_vector_field;
-            #[path = "../../../../◀️previous-step/🦀️.rs"]
-            pub mod previous_step;
             #[path = "../../../../🗑️remove-question/🦀️.rs"]
             pub mod remove_question;
             #[path = "../../../../⭕️remove-question-option/🦀️.rs"]
@@ -140,22 +136,12 @@ pub mod editor {
             pub mod remove_step;
             #[path = "../../../../🚫️remove-vector-field/🦀️.rs"]
             pub mod remove_vector_field;
-            #[path = "../../../../↩️reset-try/🦀️.rs"]
-            pub mod reset_try;
             #[path = "../../../../📥️set-active-example/🦀️.rs"]
             pub mod set_active_example;
             #[path = "../../../../🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "../../../../🔣️set-spec-json/🦀️.rs"]
             pub mod set_spec_json;
-            #[path = "../../../../🎯️set-try-value/🦀️.rs"]
-            pub mod set_try_value;
-            #[path = "../../../../📍️set-try-value-step/🦀️.rs"]
-            pub mod set_try_value_step;
-            #[path = "../../../../🗃️set-try-values/🦀️.rs"]
-            pub mod set_try_values;
-            #[path = "../../../../✅️submit/🦀️.rs"]
-            pub mod submit;
             #[path = "../../../../♻️update-form/🦀️.rs"]
             pub mod update_form;
         }

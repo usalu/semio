@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type ArtifactAdmissionFixtureV1 = Readonly<{
   schema: string;

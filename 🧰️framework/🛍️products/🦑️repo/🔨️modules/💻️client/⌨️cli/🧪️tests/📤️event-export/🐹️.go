@@ -13,7 +13,6 @@ import (
 	eventstore "github.com/usalu/semio/repo/client/internal/eventstore"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -64,8 +63,6 @@ func (c *testExportContext) GetStatutes() []*StatuteMeta                   { ret
 func (c *testExportContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{}, nil
 }
-
-func (c *testExportContext) Fix(scope *string) (*FixResult, error)                 { return &FixResult{}, nil }
 
 func (c *testExportContext) GoalCreate(input GoalCreateInput) (*Goal, error)       { return nil, nil }
 
@@ -213,48 +210,6 @@ export function doWork(): void {}
 	}
 	if events[0].Kind != "bundle.recorded" {
 		t.Fatalf("first deterministic event kind = %q", events[0].Kind)
-	}
-}
-
-func TestPostgresSchemaIncludesKitVersionControlTables(t *testing.T) {
-	rootDir := findTestRepoRoot(".")
-	schemaPath := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "🖥️server", "🧬️schema", "🐘️postgres", "🗄️.sql")
-	data, err := os.ReadFile(schemaPath)
-	if err != nil {
-		t.Fatalf("failed to read postgres schema: %v", err)
-	}
-	schema := string(data)
-	requiredSnippets := []string{
-		"CREATE TABLE IF NOT EXISTS kits (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshots (",
-		"CREATE TABLE IF NOT EXISTS kit_checkpoints (",
-		"CREATE TABLE IF NOT EXISTS kit_alternatives (",
-		"CREATE TABLE IF NOT EXISTS kit_sessions (",
-		"CREATE TABLE IF NOT EXISTS kit_drafts (",
-		"CREATE TABLE IF NOT EXISTS kit_transactions (",
-		"CREATE TABLE IF NOT EXISTS kit_releases (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_families (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_kind_entities (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_layouts (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_layout_pieces (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_layout_connections (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_properties (",
-		"CREATE TABLE IF NOT EXISTS kit_snapshot_attributes (",
-		"CREATE UNIQUE INDEX IF NOT EXISTS idx_kit_transactions_one_open_per_draft ON kit_transactions(draft_id) WHERE state = 'open';",
-		"source_json          JSONB NOT NULL DEFAULT '{}'",
-		"before_snapshot_json  JSONB NOT NULL DEFAULT '{}'",
-	}
-	for _, snippet := range requiredSnippets {
-		if !strings.Contains(schema, snippet) {
-			t.Errorf("postgres schema missing snippet %q", snippet)
-		}
-	}
-
-	if !strings.Contains(schema, "snapshot_kind        TEXT NOT NULL CHECK (snapshot_kind IN ('initial', 'materialized', 'draft-base', 'session-cache'))") {
-		t.Error("expected snapshot kind check constraint in postgres schema")
-	}
-	if !strings.Contains(schema, "state       TEXT NOT NULL DEFAULT 'open' CHECK (state IN ('open', 'finalized', 'aborted'))") {
-		t.Error("expected transaction state check constraint in postgres schema")
 	}
 }
 

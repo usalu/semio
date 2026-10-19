@@ -1,17 +1,17 @@
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::{plan, section, world};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, world};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::set_camera::*;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::{demo, run};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_camera::{SetCamera, handle};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
 use semio_framework_ui_locale::Locale;
 
 fn window(kind: &str) -> BimDispatchCtx {
@@ -40,7 +40,7 @@ fn code(result: Result<Emit<ModelMutation, NoConfigMutation>, Fault>) -> Option<
 
 #[semio_framework_async_macros::async_test]
 async fn each_window_kind_takes_its_own_pose_and_writes_only_its_config() {
-    for (kind, payload) in [(plan::WINDOW_KIND_ID, pose2d(2.0)), (section::WINDOW_KIND_ID, pose2d(3.0)), (world::WINDOW_KIND_ID, pose3d())] {
+    for (kind, payload) in [(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, pose2d(2.0)), (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID, pose2d(3.0)), (semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, pose3d())] {
         let (result, _) = set(kind, &payload);
         let emit = result.unwrap_or_else(|fault| panic!("{kind}: {}", fault.message));
         assert_eq!(emit.window_config_mutations.len(), 1);
@@ -50,9 +50,9 @@ async fn each_window_kind_takes_its_own_pose_and_writes_only_its_config() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_plan_camera_is_shared_as_presence_and_a_world_camera_is_not() {
-    let (_, plan_ctx) = set(plan::WINDOW_KIND_ID, &pose2d(2.0));
+    let (_, plan_ctx) = set(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, &pose2d(2.0));
     assert_eq!(plan_ctx.presence_out.len(), 1);
-    let (_, world_ctx) = set(world::WINDOW_KIND_ID, &pose3d());
+    let (_, world_ctx) = set(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, &pose3d());
     assert!(world_ctx.presence_out.is_empty());
 }
 

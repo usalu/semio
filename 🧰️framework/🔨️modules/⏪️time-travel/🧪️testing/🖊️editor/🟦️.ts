@@ -1,10 +1,10 @@
 /** 🖊️ The draft editor of a history session: its number controls, text inputs and focus. */
 import { scenario, renderer, page } from "../🧠️state/🟦️.ts";
 import { mirror, mirrorFind, mirrorFocus, mirrorLocator, mirrorAwait } from "../🧊️wgpu-mirror/🟦️.ts";
-import { evalSafe, sleep, shot } from "../📄️page/🟦️.ts";
-import { scrollHistory, openHistory, pressAuthored } from "../📜️history/🟦️.ts";
+import { evalSafe, markToken, sleep, shot } from "../🔬️probe/🟦️.ts";
+import { scrollHistory, openHistory, pressAuthored, revealHistory } from "../📜️history/🟦️.ts";
 import { band, prepareChord } from "../🎗️band/🟦️.ts";
-import { resolveDomId, markToken, inside } from "../🧱️chrome/🟦️.ts";
+import { resolveDomId, inside } from "../🧱️chrome/🟦️.ts";
 import { log } from "../🧾️report/🟦️.ts";
 
 //#region 🔖️Band
@@ -76,32 +76,6 @@ const reactEditor = (pointers: readonly string[]) =>
     null as Editor | null,
     pointers,
   );
-
-/** 🪜️ Scrolls the history body so the section (or row) `authored` names sits at the top of the panel — what a user does to
- * reach it; the body is windowed, so rows below the viewport are not in the document until they scroll in. */
-export const revealHistory = async (authored: string) => {
-  if (renderer === "wgpu") {
-    let node = mirrorFind(await mirror(), authored);
-    if (!node && (await scrollHistory("end"))) {
-      await sleep(700);
-      node = mirrorFind(await mirror(), authored);
-    }
-    if (node) await mirrorFocus(node.key);
-    await sleep(node ? 500 : 0);
-    return Boolean(node);
-  }
-  const found = await evalSafe(
-    (target) => {
-      const el = Array.from(document.querySelectorAll("[id]")).find((node) => node.id === target || node.id.endsWith(`/${target}`) || node.id.endsWith(`␟${target}`)) as HTMLElement | undefined;
-      el?.scrollIntoView({ block: "start" });
-      return Boolean(el);
-    },
-    false,
-    authored,
-  );
-  await sleep(found ? 500 : 0);
-  return found;
-};
 
 /** 📗️ {@link editor} after revealing the editor's inputs section (`framework.history.editor.inputs`). */
 export const readEditor = async () => {

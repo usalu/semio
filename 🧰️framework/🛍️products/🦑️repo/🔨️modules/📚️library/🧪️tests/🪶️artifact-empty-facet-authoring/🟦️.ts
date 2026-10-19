@@ -408,7 +408,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   expect(join(repoRoot, registration.source)).toBe(import.meta.filename);
   const project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[registration.target]).toBeDefined();
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
+  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
   expect(manifest.scripts[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"),

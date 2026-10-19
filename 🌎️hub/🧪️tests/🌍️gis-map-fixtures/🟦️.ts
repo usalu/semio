@@ -2,18 +2,18 @@
  * @see ../../📦️packages/🦀️rust/📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
-import { type ScriptInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { captureOwnedProcess } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { buildBudgetMs } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { captureOwnedProcess } from "@semio-tech/process/execution";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { assertObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
@@ -777,7 +777,7 @@ export class GisMapFrozenBindingCheckScript extends BundleScript {
     if (segments.length > 1 || (segments.length === 1 && segments[0] !== "--native")) throw new Error("gis-map-frozen-binding-check accepts only --native");
     await proveGisMapFrozenBindingFixture(this.repoRoot);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub-inference-catalog", target: { kind: "lib" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable"] }, { package: "semio-hub-trusted-catalog-laws", target: { kind: "lib" }, laws: ["gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],progress(event) {
+      const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-hub-inference-catalog", target: { kind: "lib" }, laws: ["gis_map_verified_binding_freezes_catalog_selection_and_native_executable"] }, { package: "semio-hub-trusted-catalog-laws", target: { kind: "lib" }, laws: ["gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes"] }],progress(event) {
           console.log(`gis-map-frozen-binding ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
         }});
       for (const receipt of receipts) console.log(`gis-map-frozen-binding-receipt: ${JSON.stringify(receipt)}`);

@@ -5,6 +5,8 @@ import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packag
 import type { OwnedUiInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { OwnedUiOperationPayloadBuilder, OwnedUiOperationInputCopied, OwnedUiOperationInputCancelled } from "../../../../🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts";
 import { OwnedUiResidentPayload, OwnedUiResidentPayloadSourceRelease, OwnedUiResidentBuilderRetirement, type OwnedUiResidentInstance } from "../../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts";
+import { bindReturnContentMatcher } from "../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
+import { bindUiInputHost } from "../../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts";
 import { KernelReturnContentFraming, KernelReturnUiOperationHeader, type KernelReturnUiFieldName } from "../🟦️.ts";
 
 export type KernelReturnInputGrant = { readonly maxItems: number; readonly maxBytes: number };
@@ -332,3 +334,6 @@ export class OwnedKernelReturnInputRelease {
   get kind(): "copied" | "cancelled" { return this.#kind; }
 }
 //#endregion 🧾️PrivateRelease
+
+bindUiInputHost({ field: OwnedKernelReturnInputField, fragment: OwnedKernelReturnInputFragment, release: OwnedKernelReturnInputRelease, detachment: OwnedKernelReturnPayloadDetachment });
+bindReturnContentMatcher(OwnedKernelReturnContent);

@@ -1,7 +1,8 @@
 //! 🗑️ `delete-column` — removes a named column and its aligned cell from every row (captures the
 //! full cascade for its inverse, per `📓️taxonomy.md`'s `delete` row).
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
@@ -12,13 +13,13 @@ pub struct DeleteColumn {
     pub name: String,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for DeleteColumn {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for DeleteColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "column", kind: "delete-column", record: "DeletedColumn" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

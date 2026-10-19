@@ -1,10 +1,10 @@
-use crate::standards::v1::subsets::any::io::export::ifc::writer::V;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::V;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, list, opt_text, refs, rf, typed, unset};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, int, list, opt_text, refs, rf, typed, unset};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Quantity, StoreyRef};
-use crate::standards::v1::subsets::any::io::export::ifc::spatial::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, target};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Quantity, StoreyRef};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial::compound_angle;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, target};
 
 #[test]
 fn the_compound_angle_splits_degrees_minutes_seconds_and_millionths_with_the_sign_on_every_part() {

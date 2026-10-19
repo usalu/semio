@@ -1,6 +1,6 @@
 //! 🔍️ Architect inspection panel — the document-wide register summary.
 
-use crate::editor::architect::base::ui_label;
+use crate::editor::architect::editor_vocabulary::ui_label;
 use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;

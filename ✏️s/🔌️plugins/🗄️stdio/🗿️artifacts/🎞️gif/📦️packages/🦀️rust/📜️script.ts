@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ gif Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-gif", { packages: ["semio-s-artifact-stdio-gif", "semio-s-artifact-stdio-gif-editor", "semio-s-artifact-stdio-gif-fixture-tests", "semio-s-artifact-stdio-gif-inferences", "semio-s-artifact-stdio-gif-mutations", "semio-s-artifact-stdio-gif-mutations-2", "semio-s-artifact-stdio-gif-schema", "semio-s-artifact-stdio-gif-schema-2", "semio-s-artifact-stdio-gif-snapshot"], snapshotSqliteTests: ["../../🏅️standards/7️⃣87a/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts", "../../🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

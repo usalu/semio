@@ -10,7 +10,7 @@
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
 #[test]
 fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
     let declared: Vec<semio_framework_async::FixedSlotTableBudget> = fixture["tables"]
         .as_array()
         .expect("🧱️ the budget lists its tables")
@@ -66,7 +66,7 @@ fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() 
 /// 🌲️ Compact content keeps its intrinsic extent when presentation swaps its accepted tree.
 #[test]
 fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).expect("compact tree height fixture");
     let surface = law["surface"].as_str().unwrap();
     let nodes = law["nodes"].as_array().unwrap();
     let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation: 1, surface: SurfaceId::try_from(surface).unwrap(), revision: UiRevision(1), root: UiNodeId(1), layout_epoch: 0, node_count: nodes.len() }).unwrap();
@@ -105,7 +105,7 @@ fn compact_tree_content_height_survives_presentation_and_viewport_changes() {
 /// 🧾️ A discarded layout cannot lend its height witness to the still-presented document.
 #[test]
 fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🌳️compact-tree-intrinsic/🔣️.json")).unwrap();
     let surface = law["surface"].as_str().unwrap();
     let sequence = law["publicationSequence"].as_array().unwrap();
     let document = |generation: u64, presentation: &str| {
@@ -144,7 +144,7 @@ fn intrinsic_content_height_cannot_leak_from_a_discarded_candidate() {
 
 #[test]
 fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧫️fixtures/🚦️input-draft-disposition/🔣️.json")).unwrap();
     for (index, law) in corpus["cases"].as_array().unwrap().iter().enumerate() {
         let window = format!("retained-draft-{index}");
         let records = serde_json::json!([
@@ -153,11 +153,11 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
         ]);
         let mut document = UiDocumentTree::new(UiDocumentLeaseHeader { generation:1, surface:SurfaceId::try_from(window.as_str()).unwrap(), revision:UiRevision(1), root:UiNodeId(0), layout_epoch:1, node_count:2 }).unwrap();
         for record in records.as_array().unwrap() { document.try_upsert_record(serde_json::from_value(record.clone()).unwrap()).unwrap(); }
-        let mut ui = Ui::new(crate::wgpu::Locale::En);
+        let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
         assert!(ui.publish_document(&window, document));
         drive_scene_lifetime_reconcile(&mut ui, &window, 1);
         acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 1);
-        let key = |name:&str, ctrl:bool| UiEvent::KeyDown { key:name.into(), modifiers:crate::wgpu::events::EventModifiers { ctrl, ..Default::default() } };
+        let key = |name:&str, ctrl:bool| UiEvent::KeyDown { key:name.into(), modifiers:semio_framework_ui_wgpu_events::EventModifiers { ctrl, ..Default::default() } };
         ui.dispatch_event(&window, key("Tab",false));
         ui.dispatch_event(&window, key("a",true));
         ui.dispatch_event(&window, UiEvent::TextInput { text:law["submitted"].as_str().unwrap().into() });
@@ -182,7 +182,7 @@ fn retained_input_discard_projects_the_shared_draft_law_and_schedules_paint() {
                 acknowledge_scene_lifetime_candidate(&mut ui, &window, index as u64 + 101);
             }
         }
-        let visible = crate::wgpu::accessibility::accessibility_projection(ui.tree(&window).unwrap()).into_iter().find(|node|node.key == "draft/input").unwrap().value_text.unwrap();
+        let visible = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(&window).unwrap()).into_iter().find(|node|node.key == "draft/input").unwrap().value_text.unwrap();
         assert_eq!(visible,law["expected"].as_str().unwrap(),"{}",law["name"]);
     }
 }
@@ -192,8 +192,8 @@ fn original_layout_admission_params_cancel_and_full_error_close_with_system_rece
  use semio_framework_job::{OperationId,Generation,InteractiveStage,RetainedCloneGrant};
 use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
  use semio_framework_value::{ValueError,ValueRefusalKind};
- use crate::wgpu::host::physical_job_close_tests::measured;
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json")).unwrap();
+ use crate::physical_allocator::measured;
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🫴️receiving.json")).unwrap();
  for copy in law["admission"]["copies"].as_array().unwrap().iter().map(|row|row.as_u64().unwrap()as usize){
   let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:law["grant"]["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:law["grant"]["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:law["grant"]["maximumDepth"].as_u64().unwrap()as usize};
   let((root,receipt),root_born,root_free)=measured(||semio_framework_job::CancelToken::admit_root(grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((root_born,root_free),(receipt.retained_capacity_bytes,receipt.released_bytes));
@@ -215,7 +215,7 @@ use semio_framework_job_worker_authority::{BatchJobParams,BatchDriveConfig};
 /// 🧳️ The real window keeps both failed worker sources through denied and fully funded original close.
 #[test]
 fn original_ui_worker_close_retains_whole_failure_and_original_cx(){
- let law:serde_json::Value=serde_json::from_str(include_str!("../../🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🧵️original-close.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🧫️fixtures/🧵️original-close.json")).unwrap();
  for copy in law["copyGrants"].as_array().unwrap(){let mut ui=Ui::new(semio_framework_ui_locale::Locale::En);let id="original-worker-failure";let token=ui.try_admit_surface(id).unwrap();assert!(ui.begin_surface_close(token));let((failure,pointers),birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let primary=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original UI worker cause 源");let receipt=semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"original separate UI receipt 源");let pointers=(primary.message.as_ptr(),receipt.message.as_ptr());(semio_framework_job::OriginalTurnFailure{primary:primary.into(),receipt_refusal:Some(receipt),context_refusal:None},pointers)});
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.windows.get_token_mut(token).unwrap().retain_layout_close_failure("Layout.CloseSession",failure));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap()as usize,maximum_capacity_bytes:262144,maximum_release_bytes:262144,maximum_depth:128};let mut sequence=0;let cancel=semio_framework_job::root_cancel_token();
   for denial in law["denials"].as_array().unwrap(){let denial=denial.as_str().unwrap();let mut receipt=Default::default();let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),semio_framework_job::StepBudget::new(if denial=="work"{0}else{1},if denial=="deadline"{0}else{12345},semio_framework_job::RetainedCloneGrant{maximum_items:usize::from(denial!="items"),..grant}),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ui.close_surface_one(token,&mut cx));assert!(matches!(result.unwrap(),UiSurfaceCloseStep::Pending));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),Default::default());let original=ui.layout_retirement_failure(id).unwrap();assert_eq!((original.primary_value().unwrap().message.as_ptr(),original.receipt_refusal.as_ref().unwrap().message.as_ptr()),pointers);}

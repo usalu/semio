@@ -1,0 +1,13 @@
+import { readSourceFamilySource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { toolJobRustBlock } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+const E = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session";
+const session = readSourceFamilySource(E);
+const sig = "pub(super) fn step(&mut self, budget: JobBudget, cx: &mut StepContext<'_>) -> JobStep";
+const at = session.indexOf(sig);
+const body = toolJobRustBlock(session, session.indexOf("{", at))!.body;
+console.log("step body bytes", body.length);
+for (const n of [".step(cx)", ".step(&mut cx)", "while ", "current_identity(self.identity.app_instance_id)", "commit_authority_matches(", "self.cancel.is_cancelled_now()", "JobStep::Done(output)", "AssemblyJob::new_owned(", "into_full_matrix(", "PcgJob::new(", "AssemblyJobConstruction::new_owned", "AssemblyCsrBuild::new", "PcgJobConstruction::new", "loop {", "for "]) console.log(JSON.stringify(n), body.split(n).length - 1);
+console.log("indexOf commit", body.indexOf("commit_authority_matches("), "Done", body.indexOf("JobStep::Done(output)"));
+const m = [...body.matchAll(/\.step\(cx\)/g)].map((x) => body.slice(Math.max(0, x.index! - 70), x.index! + 12).replace(/\n/g, " "));
+console.log(m.join("\n"));
+for (const n of ["AssemblyJobConstruction::new_owned", "AssemblyCsrBuild::new", "PcgJobConstruction::new", "assembly_build.close_step(maximum_bytes)", "close_step(maximum_bytes)"]) console.log(JSON.stringify(n), session.split(n).length - 1);

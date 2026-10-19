@@ -45,7 +45,7 @@ use semio_framework::*;
 use semio_framework_tool_machine::{GesturePhase, GestureState, GestureTool, ToolAbortReason, ToolRefusal, ToolStep};
 
 fn gesture_grants()->(semio_framework_value::retained_clone::RetainedCloneGrant,semio_framework_value::retained_clone::RetainedCloneGrant){
- use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::shared::sealed::SealedShared};
+ use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::arc_custody::sealed::SealedShared};
  (RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<GestureSlot<TestMutation>>::birth_bytes(),maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<SealedShared<GestureSlot<TestMutation>>>(),maximum_depth:1,..Default::default()})
 }
 fn retire_gesture_capture<T:semio_framework_value::retirement::RetireOwned>(original:T){

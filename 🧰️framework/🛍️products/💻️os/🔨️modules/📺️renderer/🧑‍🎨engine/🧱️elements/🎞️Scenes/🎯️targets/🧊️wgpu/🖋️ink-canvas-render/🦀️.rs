@@ -237,7 +237,7 @@ fn positive_mod_f32(v: f32, m: f32) -> f32 {
     }
 }
 
-fn draw_ink_grid(draw: &mut ui_wgpu::wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
+fn draw_ink_grid(draw: &mut semio_framework_ui_draw_contract::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
     let major_px = (spacing * camera.zoom) as f32;
     if major_px < 2.0 {
         return;
@@ -280,7 +280,7 @@ fn draw_ink_grid(draw: &mut ui_wgpu::wgpu::DrawList, camera: InkCameraF, inner: 
     }
 }
 
-fn draw_ink_selection_chrome(draw: &mut ui_wgpu::wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
+fn draw_ink_selection_chrome(draw: &mut semio_framework_ui_draw_contract::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
     let (sx, sy) = ink_world_to_screen(camera, inner, bounds.x, bounds.y);
     let w = (bounds.w * camera.zoom) as f32;
     let h = (bounds.h * camera.zoom) as f32;
@@ -341,7 +341,7 @@ pub fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
 
     if state.ink_marquee_points.len() >= 2 {
         let points: Vec<[f32; 2]> = state.ink_marquee_points.iter().map(|p| [p.0, p.1]).collect();
-        ui_wgpu::wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
+        semio_framework_ui_draw_contract::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
     }
 
     ctx.draw.pop_scissor();

@@ -1,7 +1,7 @@
 import {readViteRuntimeChannelsV1,type ViteRuntimeChannelV1} from "../📥️environment/🏃️runtime/🟦️.ts";
-import type {CompilerAdmissionControl} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import type {CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
 import {checkScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readBuildMode} from "@semio-tech/process/build-mode";
 import type {RepositoryArtifactRequestV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import {playPollingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
 import {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort} from "../../../🌐️network/🔌️ports/🟦️.ts";

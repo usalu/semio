@@ -1,9 +1,8 @@
 /** 🦀️ Recipe: module exporting `RustRlibRecipeArgumentV1`, `RustRlibCommandRecipeV1`, `rustRlibCommandRecipeV1`. */
-import{compileJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{compileJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{RUST_COMPILER_CONSUMED_BYTES_PROTOCOL_V1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🔏️consumption/🟦️.ts";
-import{requireRustUnitPlanV1}from"../../../../📋️plan/🟦️.ts";
+import{ requireRustUnitPlanV1, type RustUnitPlanV1 }from"../../../../📋️plan/🟦️.ts";
 import{canonicalRustUnitJsonV1}from"../../../../📋️plan/🔏️identity/🟦️.ts";
-import type{RustUnitPlanV1}from"../../../../🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const policy=Object.freeze({...schema.definitions.Policy.const}),contract=compileJsonSchemaSubset(schema);
 /** 🧩️ Marks compiler locations structurally while retaining literal argument text verbatim. */

@@ -1,0 +1,306 @@
+{
+  "schema": "semio.stdio.semio-frames/v1",
+  "subsetsRoot": "🏅️standards/🔖️v1/🪆️subsets",
+  "frames": [
+    {
+      "id": "kit-snapshot-binary",
+      "folder": "🧰️kit/🚪️io/💾️binary/📸️snapshot",
+      "title": "SemioKitSnapshotPackHeader",
+      "parser": "parseSemioKitSnapshotPackHeader",
+      "facet": "binary",
+      "cases": [
+        {
+          "name": "a complete pack header",
+          "instance": {
+            "format": 1,
+            "schemaLen": 3,
+            "schemaBytes": "abc",
+            "payload": "00ff"
+          },
+          "valid": true
+        },
+        {
+          "name": "an empty payload is present",
+          "instance": {
+            "format": 1,
+            "schemaLen": 3,
+            "schemaBytes": "abc",
+            "payload": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "format is mandatory",
+          "instance": {
+            "schemaLen": 3,
+            "schemaBytes": "abc",
+            "payload": "00ff"
+          },
+          "valid": false
+        },
+        {
+          "name": "schemaLen is mandatory",
+          "instance": {
+            "format": 1,
+            "schemaBytes": "abc",
+            "payload": "00ff"
+          },
+          "valid": false
+        },
+        {
+          "name": "schemaBytes is mandatory",
+          "instance": {
+            "format": 1,
+            "schemaLen": 3,
+            "payload": "00ff"
+          },
+          "valid": false
+        },
+        {
+          "name": "payload is mandatory",
+          "instance": {
+            "format": 1,
+            "schemaLen": 3,
+            "schemaBytes": "abc"
+          },
+          "valid": false
+        },
+        {
+          "name": "format is an integer",
+          "instance": {
+            "format": "1",
+            "schemaLen": 3,
+            "schemaBytes": "abc",
+            "payload": "00ff"
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "kit-diff-binary",
+      "folder": "🧰️kit/🚪️io/💾️binary/🔺️diff",
+      "title": "SemioKitDiffFrame",
+      "parser": "parseSemioKitDiffFrame",
+      "facet": "binary",
+      "cases": [
+        {
+          "name": "a frame of two present sections",
+          "instance": {
+            "format": 1,
+            "presence": 3,
+            "payload": "0161"
+          },
+          "valid": true
+        },
+        {
+          "name": "an empty diff frame: format and presence only, empty payload",
+          "instance": {
+            "format": 1,
+            "presence": 0,
+            "payload": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "format is mandatory",
+          "instance": {
+            "presence": 3,
+            "payload": "0161"
+          },
+          "valid": false
+        },
+        {
+          "name": "presence is mandatory",
+          "instance": {
+            "format": 1,
+            "payload": "0161"
+          },
+          "valid": false
+        },
+        {
+          "name": "payload is mandatory",
+          "instance": {
+            "format": 1,
+            "presence": 3
+          },
+          "valid": false
+        },
+        {
+          "name": "presence is an integer",
+          "instance": {
+            "format": 1,
+            "presence": "3",
+            "payload": "0161"
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "kit-snapshot-text",
+      "folder": "🧰️kit/🚪️io/📝️text/📸️snapshot",
+      "title": "SemioKitSnapshotDsl",
+      "parser": "parseSemioKitSnapshotDsl",
+      "facet": "text",
+      "cases": [
+        {
+          "name": "an empty line is a present line (an empty diff)",
+          "instance": {
+            "line": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "a diff line",
+          "instance": {
+            "line": "t=[];o=[]"
+          },
+          "valid": true
+        },
+        {
+          "name": "the line is mandatory",
+          "instance": {},
+          "valid": false
+        },
+        {
+          "name": "the line is text",
+          "instance": {
+            "line": 1
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "kit-diff-text",
+      "folder": "🧰️kit/🚪️io/📝️text/🔺️diff",
+      "title": "SemioKitDiffDsl",
+      "parser": "parseSemioKitDiffDsl",
+      "facet": "text",
+      "cases": [
+        {
+          "name": "an empty line is a present line (an empty diff)",
+          "instance": {
+            "line": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "a diff line",
+          "instance": {
+            "line": "t=[];o=[]"
+          },
+          "valid": true
+        },
+        {
+          "name": "the line is mandatory",
+          "instance": {},
+          "valid": false
+        },
+        {
+          "name": "the line is text",
+          "instance": {
+            "line": 1
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "object-diff-binary",
+      "folder": "📦️object/🚪️io/💾️binary/🔺️diff",
+      "title": "SemioObjectDiffFrame",
+      "parser": "parseSemioObjectDiffFrame",
+      "facet": "binary",
+      "cases": [
+        {
+          "name": "a frame of two present sections",
+          "instance": {
+            "format": 1,
+            "presence": 3,
+            "payload": "0161"
+          },
+          "valid": true
+        },
+        {
+          "name": "an empty diff frame: format and presence only, empty payload",
+          "instance": {
+            "format": 1,
+            "presence": 0,
+            "payload": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "format is mandatory",
+          "instance": {
+            "presence": 3,
+            "payload": "0161"
+          },
+          "valid": false
+        },
+        {
+          "name": "presence is mandatory",
+          "instance": {
+            "format": 1,
+            "payload": "0161"
+          },
+          "valid": false
+        },
+        {
+          "name": "payload is mandatory",
+          "instance": {
+            "format": 1,
+            "presence": 3
+          },
+          "valid": false
+        },
+        {
+          "name": "presence is an integer",
+          "instance": {
+            "format": 1,
+            "presence": "3",
+            "payload": "0161"
+          },
+          "valid": false
+        }
+      ]
+    },
+    {
+      "id": "object-diff-text",
+      "folder": "📦️object/🚪️io/📝️text/🔺️diff",
+      "title": "SemioObjectDiffDsl",
+      "parser": "parseSemioObjectDiffDsl",
+      "facet": "text",
+      "cases": [
+        {
+          "name": "an empty line is a present line (an empty diff)",
+          "instance": {
+            "line": ""
+          },
+          "valid": true
+        },
+        {
+          "name": "a diff line",
+          "instance": {
+            "line": "t=[];o=[]"
+          },
+          "valid": true
+        },
+        {
+          "name": "the line is mandatory",
+          "instance": {},
+          "valid": false
+        },
+        {
+          "name": "the line is text",
+          "instance": {
+            "line": 1
+          },
+          "valid": false
+        }
+      ]
+    }
+  ]
+}

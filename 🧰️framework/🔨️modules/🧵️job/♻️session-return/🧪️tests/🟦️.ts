@@ -16,15 +16,15 @@ test("original session frame neutral custody agrees with independent owner remov
  }
 });
 test("original session native authority preserves its pre-admitted frame and seals weak capability",()=>{
- const source=readFileSync(join(import.meta.dir,"../../🦀️.rs"),"utf8"),owner=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),handle=readFileSync(join(import.meta.dir,"../🔐️handle/🦀️.rs"),"utf8");
+ const source=readFileSync(join(import.meta.dir,"../../👷️worker/🧵️worker-job-session/🦀️.rs"),"utf8"),owner=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),handle=readFileSync(join(import.meta.dir,"../🔐️handle/🦀️.rs"),"utf8");
  expect(handle).toContain("inner:Arc<WorkerJobSessionInner<J>>");
  expect(handle).not.toContain("Weak");
  expect(owner).toContain("original worker session retains a registered wake owner");
- expect(owner).toContain("self.inner_returned=true");
+ expect(owner).toContain("let inner=self.inner.0.take().expect(\"terminal session retains its original handle\");");
  expect(owner).toContain("drop(retirement)");
- const slot=source.slice(source.indexOf("fn release_retirement_slot"),source.indexOf("impl<J:InteractiveJob+'static> Drop for WorkerJobSession"));
- expect(slot).not.toContain("drop(retirement)");
- const fallback=source.slice(source.indexOf("impl<J:InteractiveJob+'static> Drop for WorkerJobSession"),source.indexOf("pub struct WorkerJobOutcome"));
+ const slot=source.slice(source.indexOf("fn release_retirement_slot"),source.indexOf("impl<J: InteractiveJob + 'static> Drop for WorkerJobSession"));
+ expect(slot.indexOf("grant.maximum_release_bytes<released_bytes")).toBeGreaterThanOrEqual(0);expect(slot.indexOf("grant.maximum_release_bytes<released_bytes")).toBeLessThan(slot.indexOf("drop(retirement)"));
+ const fallback=source.slice(source.indexOf("impl<J: InteractiveJob + 'static> Drop for WorkerJobSession"),source.indexOf("//#endregion 🏭️RetainedSessions"));
  expect(fallback).toContain("Box::into_raw(retirement)");
- expect(fallback).toContain("ManuallyDrop::drop(&mut self.inner)");
+ expect(fallback).toContain("retirement.inner=self.inner.0.take();");
 });

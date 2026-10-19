@@ -1,4 +1,4 @@
-import { requireRecord, requireStringArray, requireString } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord, requireStringArray, requireString } from "@semio-tech/schema-validator-ts";
 import { type SemanticDescendantKindNode } from "../🔣️taxonomy/🌳️descendants/🟦️.ts";
 import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type SemanticProjectionCaptureField } from "../🔣️taxonomy/🧭️path-projection/🟦️.ts";
@@ -9,7 +9,7 @@ import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts
 import { subsetIdForDirectoryName } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
 import { mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/👥️mutation-owner-rules/🟦️.ts";
-import { pathEmojiStatuteFindings } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
+import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { basename, dirname } from "node:path";
 import { type SemanticKindDescendantContract, type TaxonomyCapturedSourceRead, type TaxonomyInventoryEntry, type TaxonomyViolation, WINDOWS_RESERVED, requireTaxonomyValue } from "../📜️plan-contracts/🟦️.ts";
 import { absolutePath, isExcluded, violation } from "../🏷️file-kind-matching/🟦️.ts";

@@ -5,6 +5,8 @@
   "exports": {
     ".": "./🟦️.ts",
     "./actions": "./🕹️actions/🟦️.ts",
-    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./actions-labels": "./🏷️actions-labels/🟦️.ts",
+    "./lifecycle": "./🚦️lifecycle/🟦️.ts"
   }
 }

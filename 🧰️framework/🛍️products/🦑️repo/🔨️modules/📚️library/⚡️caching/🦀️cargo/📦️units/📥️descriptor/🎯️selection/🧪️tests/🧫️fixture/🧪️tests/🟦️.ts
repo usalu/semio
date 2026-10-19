@@ -7,10 +7,10 @@ import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 const path=(name:string)=>fileURLToPath(new URL(name,import.meta.url)),owner=path("../🟦️.ts"),routing=path("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"),selection=path("../../../🟦️.ts");
 async function child(program:string,original:ScriptInvocation,control:ResourceLeaseControl){const result=await captureOwnedCommandResultV1(process.execPath,["-e",program],process.cwd(),{control,env:{...scriptInvocationEnvironment(original,process.env),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},output:{maximumBytes:65536,maximumLines:256}});expect(result.signal).toBeNull();if(!result.stdout.trim())throw Error("Actual fixture consumer child omitted terminal DATA: "+result.stderr);return{status:result.status,stderr:result.stderr,data:JSON.parse(result.stdout.trim().split("\n").at(-1)??"")};}
 test("neutral Rust fixture consumer corpus requires actual retained callbacks",async()=>{expect(new Ajv({strict:true}).validate(corpusSchema,corpus)).toBe(true);const fixture=await import(owner);expect(typeof fixture.withFixtureRustProjectsV1).toBe("function");});

@@ -179,7 +179,7 @@ pub mod editor {
         pub use semio_s_artifact_writer_writer_tests_2::editor::writer::*;
 pub use semio_s_artifact_writer_writer_tests::editor::writer::demo_session;
 
-        pub use semio_s_artifact_writer_writer_inferences::editor::writer::base;
+        pub use semio_s_artifact_writer_writer_inferences::editor::writer::editor_vocabulary;
         pub use semio_s_artifact_writer_writer_tests::editor::writer::terminology;
         pub use semio_s_artifact_writer_writer_tests::editor::writer::wasm;
 

@@ -1,4 +1,4 @@
-import {runRepositoryCargoTestsV1 as runCargoTestsV1,runRepositoryCargoLintV1 as runCargoLintV1} from "./../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {runAdmittedCargoTestsV1 as runCargoTestsV1,runAdmittedCargoLintV1 as runCargoLintV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";

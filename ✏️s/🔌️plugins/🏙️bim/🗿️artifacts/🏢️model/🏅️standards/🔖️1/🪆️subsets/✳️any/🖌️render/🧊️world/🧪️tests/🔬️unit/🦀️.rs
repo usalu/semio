@@ -1,17 +1,17 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidGroup};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{World3dScene, WorldProjectionConfig};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
 use semio_framework_plugin::{world3d_camera_projection_json, world3d_scene, world3d_selection_json_with_granularity, MeshData, WorldSunConfig};
 #[allow(unused_imports)]
 use semio_framework_value::{DslValue, ToValue};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::render::world::{instance};
-use crate::render::world::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_tests_5::render::world::instance;
+use semio_s_artifact_bim_model_tests_5::render::world::{scene, WorldView, ELEMENT_GRANULARITY, ELEMENT_DOMAIN, group_color, family_color, world_bounds, overview_orbit};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use semio_framework_test_fixtures::fixture_text;
 
 fn demo() -> ModelSnapshot {
@@ -23,7 +23,7 @@ fn json(text: &str) -> serde_json::Value {
 }
 
 fn scene_of(snapshot: &ModelSnapshot, orbit: Option<&store::Viewport3dOrbit>, hidden: &[String], selected: &[String]) -> World3dScene {
-    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inference| inference.element_solids.clone());
+    let solids = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inference| inference.element_solids.clone());
     scene(snapshot, &solids, &WorldView { orbit, projection: &WorldProjectionConfig::default(), hidden_storeys: hidden, selected, hovered: &[] })
 }
 
@@ -69,11 +69,11 @@ fn mesh_arrays_are_consistent_and_coloured_per_vertex() {
 fn a_solid_group_takes_the_colour_of_its_material() {
     let model = demo();
     let (id, material) = model.materials.iter().next().expect("a demo material");
-    let group = SolidGroup { part: parts::LAYER.into(), material: id.clone(), layer: 0 };
+    let group = SolidGroup { part: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LAYER.into(), material: id.clone(), layer: 0 };
     assert_eq!(group_color(&model, SolidFamily::Wall, &group), [material.color.r as f32, material.color.g as f32, material.color.b as f32, 1.0]);
-    let unknown = SolidGroup { part: parts::BODY.into(), material: "none".into(), layer: 0 };
+    let unknown = SolidGroup { part: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY.into(), material: "none".into(), layer: 0 };
     assert_eq!(group_color(&model, SolidFamily::Roof, &unknown), family_color(SolidFamily::Roof));
-    let glass = SolidGroup { part: parts::GLASS.into(), material: String::new(), layer: 0 };
+    let glass = SolidGroup { part: semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS.into(), material: String::new(), layer: 0 };
     assert_eq!(group_color(&model, SolidFamily::Window, &glass)[3], 0.35);
 }
 
@@ -108,7 +108,7 @@ fn the_fit_is_requested_only_while_no_orbit_is_stored() {
 #[test]
 fn the_overview_camera_looks_at_the_centre_of_the_drawn_solids() {
     let model = demo();
-    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone());
+    let solids = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone());
     let (lo, hi) = world_bounds(solids.values()).expect("drawn solids have bounds");
     let orbit = overview_orbit(Some((lo, hi)));
     assert_eq!(orbit.target, [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0, (lo[2] + hi[2]) / 2.0]);
@@ -120,9 +120,9 @@ fn the_overview_camera_looks_at_the_centre_of_the_drawn_solids() {
 #[test]
 fn world_bounds_follow_the_building_placement() {
     let mut model = demo();
-    let plain = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
-    model.buildings.get_mut("bldg-1").expect("the building").origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 100.0, y: -50.0 };
-    let moved = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
+    let plain = world_bounds(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
+    model.buildings.get_mut("bldg-1").expect("the building").origin = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 100.0, y: -50.0 };
+    let moved = world_bounds(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
     assert!((moved.0[0] - plain.0[0] - 100.0).abs() < 1e-9 && (moved.0[1] - plain.0[1] + 50.0).abs() < 1e-9);
 }
 
@@ -139,7 +139,7 @@ fn case_model(name: &str) -> ModelSnapshot {
     let mut model = demo();
     if name == "placed-demo" {
         let building = model.buildings.get_mut("bldg-1").expect("the building");
-        building.origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 100.0, y: -50.0 };
+        building.origin = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 100.0, y: -50.0 };
         building.rotation = 0.5;
     }
     model
@@ -151,7 +151,7 @@ fn rounded(value: f64) -> f64 {
 
 fn case_projection(name: &str) -> serde_json::Value {
     let model = case_model(name);
-    let solids = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone());
+    let solids = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone());
     let scene = scene_of(&model, None, &[], &[]);
     let meshes: Vec<serde_json::Value> = json(&scene.meshes_json)
         .as_array()

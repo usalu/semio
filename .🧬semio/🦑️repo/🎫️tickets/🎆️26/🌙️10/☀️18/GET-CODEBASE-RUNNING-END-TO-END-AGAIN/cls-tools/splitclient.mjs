@@ -105,29 +105,32 @@ for (const statement of sf.statements) {
 }
 const depth = relative => relative.startsWith("./") ? "../" + relative.slice(2) : relative.startsWith("../") ? "../" + relative : relative;
 
-const identifiersIn = code => {
-  const used = new Set();
+const usageIn = code => {
+  const used = new Map();
   const file = ts.createSourceFile("x.ts", code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const inTypePosition = n => { for (let p = n.parent; p; p = p.parent) { if (ts.isTypeNode(p) && !ts.isExpressionWithTypeArguments(p)) return true; if (ts.isStatement(p) || ts.isClassElement(p) || ts.isExpression(p) && !ts.isTypeNode(p) && false) return false; } return false; };
   const visit = n => {
     if (ts.isIdentifier(n)) {
       const p = n.parent;
-      const isPropertyName = (ts.isPropertyAccessExpression(p) && p.name === n) || (ts.isPropertyAssignment(p) && p.name === n) || (ts.isMethodDeclaration(p) && p.name === n) || (ts.isPropertyDeclaration(p) && p.name === n) || (ts.isPropertySignature(p) && p.name === n) || (ts.isQualifiedName(p) && p.right === n);
-      if (!isPropertyName) used.add(n.text);
+      const isPropertyName = (ts.isPropertyAccessExpression(p) && p.name === n) || (ts.isPropertyAssignment(p) && p.name === n) || (ts.isMethodDeclaration(p) && p.name === n) || (ts.isPropertyDeclaration(p) && p.name === n) || (ts.isPropertySignature(p) && p.name === n) || (ts.isQualifiedName(p) && p.right === n) || ts.isExportSpecifier(p);
+      if (!isPropertyName) { const entry = used.get(n.text) ?? { value: false }; if (!inTypePosition(n)) entry.value = true; used.set(n.text, entry); }
     }
     ts.forEachChild(n, visit);
   };
   visit(file);
   return used;
 };
+const identifiersIn = code => new Set(usageIn(code).keys());
 
 function importsFor(code, fromLeaf, extra = []) {
-  const used = identifiersIn(code);
+  const usage = usageIn(code);
   const lines = [];
   for (const decl of importDecls) {
-    const hit = decl.names.filter(n => used.has(n.name));
+    const hit = decl.names.filter(n => usage.has(n.name)).map(n => ({ ...n, type: n.type || !usage.get(n.name).value }));
     if (hit.length === 0) continue;
     const specifier = fromLeaf ? decl.specifier : depth(decl.specifier);
-    lines.push(`import { ${hit.map(n => (n.type && !hit.every(h => h.type) ? "type " : "") + n.name).join(", ")} } from "${specifier}";`.replace(/^import \{/u, hit.every(n => n.type) ? "import type {" : "import {"));
+    const allType = hit.every(n => n.type);
+    lines.push(`import ${allType ? "type " : ""}{ ${hit.map(n => (n.type && !allType ? "type " : "") + n.name).join(", ")} } from "${specifier}";`);
   }
   return [...extra, ...lines].join("\n");
 }
@@ -147,7 +150,7 @@ for (const [key, spec] of Object.entries(COLLABORATORS)) {
   const body = spec.methods.map(m => indent(transformMember(members.get(m), key, "collab"))).join("\n\n");
   const stateExtra = key === "residents";
   const residentState = stateExtra ? `
-/** 💾️ The phase fields of the UI resident pool admission and of the worker bootstrap admission; field names and order are the census the admission accounting prices. */
+/** 📋️ The phase fields of the UI resident pool admission and of the worker bootstrap admission; field names and order are the census the admission accounting prices. */
 export class ResidentAdmissionState {
   uiResidentControllerCell: OwnedResidentAdmission | null = null;
   uiResidentControllerRecord: OwnedResidentRecord | null = null;
@@ -178,17 +181,13 @@ ${stateExtra ? "  private readonly resident = new ResidentAdmissionState();\n" :
 ${body}
 }
 `;
-  const extra = [`import type { ShardClientState } from "../🗃️state/🟦️.ts";`, `import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";`];
+  const extra = [`import type { ShardClientState } from "../🗃️state/🟦️.ts";`, `import type { ShardClientHub } from "../🟦️.ts";`];
   const code = importsFor(classCode, false, extra) + "\n" + classCode;
   sizes[spec.dir] = write(spec.dir, code);
 }
 
 const hubClasses = Object.entries(COLLABORATORS);
-const hubCode = `${hubClasses.map(([, s]) => `import { ${s.cls} } from "../${s.dir}/🟦️.ts";`).join("\n")}
-import type { ShardClient } from "../🟦️.ts";
-import type { ShardClientState } from "../🗃️state/🟦️.ts";
-
-/** 🧩️ Wires the collaborators of one {@link ShardClient} around its shell and its single private state; collaborators reach each other only through this hub, and only at call time, never while they are constructed. */
+const hubCode = `/** 🧩️ Wires the collaborators of one {@link ShardClient} around its shell and its single private state; collaborators reach each other only through this hub, and only at call time, never while they are constructed. */
 export class ShardClientHub {
 ${hubClasses.map(([k, s]) => `  readonly ${k}: ${s.cls};`).join("\n")}
   constructor(readonly shell: ShardClient, readonly state: ShardClientState) {
@@ -196,7 +195,7 @@ ${hubClasses.map(([k, s]) => `    this.${k} = new ${s.cls}(this);`).join("\n")}
   }
 }
 `;
-sizes["🧩️wiring"] = write("🧩️wiring", hubCode);
+const hubImports = hubClasses.map(([, s]) => `import { ${s.cls} } from "./${s.dir}/🟦️.ts";`);
 
 
 const field = name => classNode.members.find(m => m.name?.getText(sf) === name);
@@ -269,6 +268,7 @@ ${reexports}
 
 ${headerDoc}
 
+${hubCode}
 //#region 🧵️ShardClient
 ${classDoc}
 export class ShardClient {
@@ -295,7 +295,7 @@ ${parts.kept.map(k => k.code).join("\n\n")}
 
 ${testDeps}
 `;
-const facadeImports = importsFor(facadeBody.replace(reexports, ""), true, [`import { ShardClientHub } from "./🧩️wiring/🟦️.ts";`, `import { ShardClientState } from "./🗃️state/🟦️.ts";`]);
+const facadeImports = importsFor(facadeBody.replace(reexports, ""), true, [...hubImports, `import { ShardClientState } from "./🗃️state/🟦️.ts";`]);
 fs.writeFileSync(path.join(outDir, "..", "ShardClient.generated.ts"), facadeImports + "\n" + facadeBody);
 sizes["facade"] = (facadeImports + "\n" + facadeBody).split("\n").length;
 console.log(JSON.stringify(sizes, null, 2));

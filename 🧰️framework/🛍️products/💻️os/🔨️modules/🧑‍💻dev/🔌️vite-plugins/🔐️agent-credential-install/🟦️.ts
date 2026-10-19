@@ -1,8 +1,8 @@
 /** 🔐️ The agent credential install endpoint of the dev server: the credentials directory, the well-formedness check and the Vite plugin that installs a credential. */
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { protectOwnerOnly } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
-import { agentClientLauncher, readDeclaredTools } from "../../../../../🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🟦️.ts";
+import { protectOwnerOnly } from "@semio-tech/repo-lib/process";
+import { agentClientLauncher, readDeclaredTools } from "@semio-tech/repo-lib/inventory";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "@semio-tech/framework/directory/delegations";
 import type { RendezvousServerResponse } from "../🛰️agent-bridge-rendezvous/🟦️.ts";
 

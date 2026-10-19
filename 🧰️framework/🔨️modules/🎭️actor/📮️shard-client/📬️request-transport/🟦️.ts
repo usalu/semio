@@ -1,7 +1,7 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import { hopTraceEpochNowMs } from "@semio-tech/framework/trace";
-import { OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
+import type { OwnedActorTurnOutput } from "../../🪪️activation/🚪️instance/📥️output/🟦️.ts";
 import { type ShardSlot, graftWorkerStack } from "../🔐️activation/🟦️.ts";
 import { describeShardMessageError, describeShardWorkerError, formatShardWorkerFault, freshHeartbeatState } from "../💓️heartbeat/🟦️.ts";
 import { type InboundMessage, type OutboundMessage, publishShardWorkerTurnSpans } from "../📨️messages/🟦️.ts";
@@ -9,7 +9,8 @@ import { type InboundMessage, type OutboundMessage, publishShardWorkerTurnSpans 
 /** 📬️ Spawns shard workers, posts correlated requests and settles them from the per-worker inbound messages. */
 export class ShardRequestTransport {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   spawnShard(index: number): ShardSlot {
     const worker = this.state.createWorker(index);

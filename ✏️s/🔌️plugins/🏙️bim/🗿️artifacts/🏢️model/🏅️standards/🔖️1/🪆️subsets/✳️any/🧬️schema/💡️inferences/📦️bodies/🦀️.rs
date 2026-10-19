@@ -4,14 +4,16 @@
 //! the plan cut and of the clash tests. Walls, curtain walls, columns, beams, slabs and stairs have one; they are derived from authored
 //! parameters and the already inferred storey levels, wall layouts and stair runs (the nodes the callers are children of). Sloped or curved parts are bounded by their extent.
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of, extents_of, placed, point, seg};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of, extents_of, placed};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{point, segment_of};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Slab, Stair, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, TopConstraint};
 use semio_framework_2d::regions::Region;
 use semio_framework_geometry::loops::{self, Vertex as Corner};
 use semio_framework_geometry::Point;
@@ -19,7 +21,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Vocabulary
 /// 📏️ Sagitta (metres) allowed when an arc becomes a polygon ring for booleans and overlap tests.
-pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 
 
 /// 🧱️ What a body is.
@@ -191,7 +193,7 @@ pub fn column_section(snapshot: &ModelSnapshot, column: &Column, base: f64, top:
 pub fn beam_outline(snapshot: &ModelSnapshot, beam: &Beam) -> Option<Vec<Corner>> {
     let kind = snapshot.beam_types.get(&beam.beam_type)?;
     let width = extents_of(&kind.profile).0;
-    let axis = seg(&beam.axis);
+    let axis = segment_of(&beam.axis);
     if axis.length() <= 1e-9 || width <= 1e-9 {
         return None;
     }
@@ -219,7 +221,7 @@ pub fn wall_body(id: &str, wall: &Wall, layout: &WallLayout) -> Option<Body> {
 pub fn curtain_body(snapshot: &ModelSnapshot, id: &str, curtain: &CurtainWall, own: &StoreyLevel, target: Option<&StoreyLevel>) -> Option<Body> {
     let depth = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map_or(DEFAULT_MULLION_DEPTH, |kind| depth_of(&kind.interior_mullion));
     let (base, top) = vertical_of(curtain.base_offset, &curtain.top, own, target);
-    let rows = semio_framework_geometry::bulge::band_loop(&seg(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
+    let rows = semio_framework_geometry::bulge::band_loop(&segment_of(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
     let outline: Vec<Corner> = rows.iter().map(|(p, b)| Corner::new(*p, *b)).collect();
     Body::new(id, BodyKind::CurtainWall, &curtain.storey, base, top, vec![region(&outline, &[])])
 }
@@ -248,9 +250,9 @@ pub fn slab_body(snapshot: &ModelSnapshot, id: &str, slab: &Slab, own: &StoreyLe
 
 /// 🔲️ The body of a ceiling: its boundary with the holes between the underside of its layers and the top of its plane. Ceilings are not in [`storey_bodies`] (the plan cuts walls, not hung ceilings); the clashes add [`ceiling_bodies`].
 pub fn ceiling_body(snapshot: &ModelSnapshot, id: &str, ceiling: &Ceiling, own: &StoreyLevel) -> Option<Body> {
-    let (low, high) = ceilings::span(snapshot, ceiling, own);
+    let (low, high) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::span(snapshot, ceiling, own);
     let holes: Vec<Vec<Corner>> = ceiling.holes.iter().map(|hole| bulged(hole)).collect();
-    if ceiling.boundary.len() < 3 || ceilings::thickness(snapshot, ceiling) <= 1e-12 {
+    if ceiling.boundary.len() < 3 || semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::thickness(snapshot, ceiling) <= 1e-12 {
         return None;
     }
     Body::new(id, BodyKind::Ceiling, &ceiling.storey, low, high, vec![region(&bulged(&ceiling.boundary), &holes)])

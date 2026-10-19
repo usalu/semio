@@ -1,9 +1,9 @@
-import{withRepositoryDevelopmentStateV1,withRepositoryDevelopmentStateTaskV1}from"../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
+import { withRepositoryDevelopmentStateV1, withRepositoryDevelopmentStateTaskV1 } from "@semio-tech/repo-lib/storage";
 import {withTrustedCargoCompilationPacketsV1,type TrustedCargoCompilationViewV1} from "../🧾️provenance/📦️cargo/📥️reading/🟦️.ts";
 import {trustedCargoActorUnitV1} from "../🧾️provenance/📦️cargo/🎯️selection/🟦️.ts";
-import{withCargoWorkspaceSelectionV1}from"../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
-import{runtimeActorCargoArgumentsV1,type RuntimeActorCargoArgumentsRequestV1}from"../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts";
-import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withCargoWorkspaceSelectionV1, selectedCargoArguments, CargoCliOperationOwner, parseCargoCliPolicy, runCargoCliCommand } from "@semio-tech/repo-lib/cargo";
+import { runtimeActorCargoArgumentsV1, type RuntimeActorCargoArgumentsRequestV1, inspectRuntimeGraphV1, runtimeFixturePathV1, runtimeActorChildImportV1, runtimeCargoObservationCurrentV1, parseSelectedRuntimeActorEvidenceV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, type SelectedRuntimeActorWitnessV1, type SelectedRuntimeActorProducerV1, type SelectedRuntimeClosedActorV1 } from "@semio-tech/repo-lib/inventory";
+import {requireIssuedResourceControlInvocationV1,scriptInvocationEnvironment,withRequestedIssuedResourceControlV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
 import {captureOwnedCommandV1} from "@semio-tech/process/owned-execution";
 import { createHash } from "node:crypto";
@@ -12,22 +12,17 @@ import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import {CurrentPhysicalOwnerV1} from "@semio-tech/framework/filesystem/observation/current";
 import { readPhysicalFileV1, type FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
-import { inspectRuntimeGraphV1, runtimeFixturePathV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
-import { runtimeActorChildImportV1, runtimeCargoProvenanceV1, runtimeCargoObservationCurrentV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts";
-import type { RuntimeCargoObservationV1, RuntimeCompilerResourceEntryV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts";
-import { parseSelectedRuntimeActorEvidenceV1, type SelectedRuntimeActorPublicationPortV1, type SelectedRuntimeActorsV1, type SelectedRuntimeActorWitnessV1, type SelectedRuntimeActorProducerV1, type SelectedRuntimeClosedActorV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts";
+import type { RuntimeCargoObservationV1 } from "@semio-tech/repo-lib/inventory";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import selectionSchema from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🔣️.json";
-import runtimeConfig from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json";
-import { selectedCargoArguments } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts";
-import {CargoCliOperationOwner,parseCargoCliPolicy,runCargoCliCommand} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts";
-import cargoSelectionPolicy from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json";
+import { runtimeSelectionSchema as selectionSchema } from "@semio-tech/repo-lib/inventory";
+import { discoveryRuntimeDocument as runtimeConfig } from "@semio-tech/repo-lib/inventory";
+import { entrypointPolicyDocument as cargoSelectionPolicy } from "@semio-tech/repo-lib/cargo";
 import * as publicationOwner from "../🧾️provenance/🟦️.ts";
 import {trustedBootstrapProfileIdV1,trustedBootstrapSelectPackages} from "../🧾️provenance/🧭️bootstrap-selection/🟦️.ts";
 import { LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
-import * as factory from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
-import * as descriptorOwner from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
-import { SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, componentReceiptValueV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import * as factory from "@semio-tech/framework-plugin/browser-bundle/script";
+import * as descriptorOwner from "@semio-tech/framework-plugin/describe/component-build";
+import { SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, componentReceiptValueV1 } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
 interface SelectedHubBundleV1 {readonly schemaVersion:4;readonly profiles:readonly {readonly id:string;readonly generationId:string}[];readonly packages:readonly {readonly pluginId:string;readonly packageId:string;readonly component:{readonly path:string;readonly sha256:string;readonly byteLength:number};readonly descriptor:{readonly path:string;readonly sha256:string;readonly byteLength:number};readonly receipt:unknown;readonly browserActor:SelectedRuntimeClosedActorV1|{readonly kind:"none"}}[]}
 
 /** 🎭️ Verifies the real selected Hub actor publication and original production compiler custody. */

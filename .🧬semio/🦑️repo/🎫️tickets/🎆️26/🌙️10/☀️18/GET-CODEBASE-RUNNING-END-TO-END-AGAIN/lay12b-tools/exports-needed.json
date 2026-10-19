@@ -1,0 +1,3134 @@
+{
+ "summary": {
+  "package": "@semio-tech/framework",
+  "note": "Each row is one cross-package relative target the importing nested package (ui-react, ui-styling, ui locale, tests) reaches through a path. The rule fires once for the framework package and once for its -rs twin per edge. Alternatives per row: export the target from @semio-tech/framework (proposedSubpath), or relocate the importer's dependency into the importing package.",
+  "newExportEntries": 155,
+  "importerEdges": 308,
+  "uiInternal": {
+   "newExportEntries": 143,
+   "importerEdges": 278,
+   "violationsCountedByCruiser": 556
+  },
+  "subpathsAlreadyExported": 6,
+  "uiSeamOrOther": {
+   "newExportEntries": 12,
+   "importerEdges": 30
+  }
+ },
+ "removeExports": [
+  {
+   "package": "@semio-tech/ui-styling",
+   "subpath": "./builder/python/inventory",
+   "reason": "the Python environment inventory moved to the repository library product (its only consumer); the stub 🏗️builder/🐍️python/📋️inventory was deleted"
+  }
+ ],
+ "entries": [
+  {
+   "targetFile": "🧰️framework/🔨️modules/🏷️component-receipt/🟦️.ts",
+   "proposedSubpath": "./component-receipt",
+   "subpathAlreadyExported": true,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "ComponentProfileV1",
+    "ComponentReceiptV1"
+   ],
+   "importers": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🔏️hash/🟦️.ts",
+   "proposedSubpath": "./hash",
+   "subpathAlreadyExported": true,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "hexLower",
+    "sha256"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts",
+   "proposedSubpath": "./manifest/ui-contract-and-canvas-types",
+   "subpathAlreadyExported": true,
+   "scope": "ui-internal",
+   "symbols": [
+    "CANVAS_HOVER_SOURCE_CANVAS",
+    "CANVAS_HOVER_SOURCE_PICK_MENU",
+    "CanvasHoverFocus",
+    "CanvasPickRequest",
+    "CanvasPickTarget"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🎓️onboarding/🏷️declaration/🟦️.ts",
+   "proposedSubpath": "./onboarding/declaration",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "IntroductionCursor",
+    "IntroductionDefinition",
+    "IntroductionDemonstration",
+    "IntroductionGesture",
+    "IntroductionKeyModifier",
+    "IntroductionLogo",
+    "IntroductionPlacement",
+    "IntroductionPoint",
+    "IntroductionStepDefinition",
+    "TutorialCameraKeyframe",
+    "TutorialCameraState",
+    "TutorialDefinition",
+    "TutorialDocumentEvent",
+    "TutorialEvent",
+    "TutorialGestureCue",
+    "TutorialOverlayRect",
+    "TutorialUiChange",
+    "TutorialUiSnapshot"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎞️tutorial-engine/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧭️introduction-resolve/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🎚️axes/🔣️.json",
+   "proposedSubpath": "./ui/axes",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "default"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/host",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "UiActivationLease",
+    "UiPatchSource",
+    "bindUiPatchAuthority",
+    "uiPatchAuthority"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/host/composition",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "UiResidentComposition",
+    "bindUiResidentComposition",
+    "uiResidentComposition"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/💾️resident-bootstrap/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🔌️ui-composition/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📥️input/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/host/input",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "bindUiInputHost",
+    "uiInputHost"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧪️tests/🔌️ui-input-host/🟦️.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/host/return-content",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "bindReturnContentMatcher",
+    "returnContentMatches"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🧪️tests/🔌️ui-input-host/🟦️.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/instance",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "OwnedUiInstance",
+    "OwnedUiInstanceRetirement",
+    "OwnedUiPatchAcknowledgement",
+    "OwnedUiPatchInputAcceptance",
+    "OwnedUiPatchInputRetirement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/📥️ui-acknowledgement/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧩️hub/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🚪️instance-lifecycle/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/operations/wire/pages",
+   "subpathAlreadyExported": true,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "OwnedUiOperationInputCancelled",
+    "OwnedUiOperationInputCopied",
+    "OwnedUiOperationPayloadBuilder"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/resident",
+   "subpathAlreadyExported": true,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "OwnedUiResidentBuilderRetirement",
+    "OwnedUiResidentInstance",
+    "OwnedUiResidentPayload",
+    "OwnedUiResidentPayloadSourceRelease",
+    "OwnedUiResidentPool",
+    "OwnedUiResidentPoolRetirement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/💾️resident-bootstrap/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️.ts",
+   "proposedSubpath": "./ui/contract/retained/resident/metadata",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "uiResidentMetadataEnvelope"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts",
+   "proposedSubpath": "./ui/device",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ElementsSurfaceDevice",
+    "UI_AVAILABLE_HEIGHT",
+    "UI_MOBILE_MAX_WIDTH_PX",
+    "UI_MOBILE_MEDIA_QUERY",
+    "UI_TABLET_MAX_WIDTH_PX",
+    "UI_TABLET_MEDIA_QUERY",
+    "availableViewportHeightPx",
+    "elementsSurfaceDeviceForMatches",
+    "elementsSurfaceDeviceForWidth",
+    "elementsSurfaceDeviceIsMobile",
+    "elementsSurfaceDeviceSupportsTabDrag"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️device-context/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ActionGroup",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Action",
+    "ActionDropdown",
+    "ActionDropdownOption",
+    "ActionDropdownProps",
+    "ActionGroup",
+    "ActionGroupItem",
+    "ActionProps",
+    "actionGroupItemVariants"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Button",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Button",
+    "ButtonProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔳️ButtonGroup/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ButtonGroup",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ButtonGroup",
+    "ButtonGroupItem",
+    "buttonGroupItemVariants"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Canvas",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "App",
+    "AppModeDescriptor",
+    "AppProps",
+    "Canvas",
+    "HorizontalWindows",
+    "MODE_CANVAS_INSET_CLASS",
+    "Mode",
+    "ModeProps",
+    "Ui",
+    "UiAppDescriptor",
+    "UiProps",
+    "VerticalWindows"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/📐️corners/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Canvas/corners",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WINDOW_STACK_CORNERS",
+    "extractStackFromLayout",
+    "insertWindowAsTabAtCorner",
+    "mergeStackTabsIntoStack",
+    "modeStackTabsByCorner",
+    "resolveWindowCorner",
+    "setWindowCornerInLayout",
+    "splitWithStack",
+    "splitWithWindow"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🎯️drop/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Canvas/drop",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "applyModeDrop",
+    "computeModeDropZone",
+    "computeModeSplitPreviewInBody",
+    "computeTabInsertPreview",
+    "insertWindowAtDropZone",
+    "modeDockDragInsertTabs",
+    "modeDockOutLayout",
+    "modeDockTabsWithInsertPreview",
+    "resolveModeSplitSideInBody",
+    "resolveModeTabInsertPreview"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🔗️join-corners/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Canvas/join-corners",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "MODE_JOIN_CORNER_TOUCH_EPS",
+    "ModeJoinCornerCrossAxis",
+    "applyAxisGroupLayoutDelta",
+    "applyAxisResizeDelta",
+    "applyModeJoinCornerResize",
+    "modeAxisGroupLayout",
+    "modeAxisIsPerpendicularChild",
+    "modeJoinCornerSpecsForCrossSeparator",
+    "modeJoinCornerSpecsForSeparator",
+    "modePerpendicularJoinSeparators",
+    "resolveJoinCornerPeerCrossAxes",
+    "resolveJoinCornerResizeDeltas"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🗺️layout/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Canvas/layout",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "collapseLayout",
+    "modeCollectWindowIds",
+    "normalizeLayoutToStacks",
+    "reconcileWindows",
+    "removeWindowFromLayout",
+    "resolveStackPathForWindowId"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🪟️template-drag/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Canvas/template-drag",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "COMPOSE_WINDOW_TEMPLATE_MIME",
+    "MODE_TEMPLATE_PREVIEW_WINDOW_ID",
+    "ModeCanvasDropTarget",
+    "ModeWindowDescriptor",
+    "WindowTemplateDragSession",
+    "WindowTemplateDropPayload",
+    "beginWindowTemplateDrag",
+    "beginWindowTemplatePointerDrag",
+    "cancelWindowTemplatePointerDrag",
+    "endWindowTemplateDrag",
+    "readActiveWindowTemplateDragSession",
+    "windowTemplatePaletteTreeDragController",
+    "windowTemplatePointerDragRef"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Checkbox/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Checkbox",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Checkbox",
+    "CheckboxProps",
+    "CheckboxState"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ChromeControlHint",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "CHROME_CONTROL_TOOLTIP_DELAY_MS",
+    "ChromeControlHint",
+    "DisabledReasonHint"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Collapsible/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Collapsible",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Collapsible",
+    "CollapsibleContent",
+    "CollapsibleContentProps",
+    "CollapsibleProps",
+    "CollapsibleTrigger",
+    "CollapsibleTriggerProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Command",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Command",
+    "CommandDialog",
+    "CommandEmpty",
+    "CommandGroup",
+    "CommandInput",
+    "CommandItem",
+    "CommandList",
+    "CommandShortcut"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ContextMenu",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ContextMenu",
+    "ContextMenuController",
+    "ContextMenuControllerProps",
+    "ContextMenuProps",
+    "TextSelectionContextMenuHost",
+    "contextMenuDigitFromKey",
+    "createDOMEventBinding",
+    "findCheckedContextMenuItem",
+    "isContextMenuPointerTarget"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🥣️chrome/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ContextMenu/chrome",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ContextMenuChrome"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎨️item-render/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ContextMenu/item-render",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ContextMenuItem",
+    "getElementById",
+    "queryElement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🧭️navigation/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ContextMenu/navigation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ContextMenuNavDirection",
+    "contextMenuItemAtPath",
+    "contextMenuItemsAtLevel",
+    "contextMenuNavigationFromKey",
+    "contextMenuOpenSubmenuPath",
+    "contextMenuOrdinals",
+    "contextMenuPathForOrdinal",
+    "findContextMenuCheckedPath",
+    "moveContextMenuActivePath"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/📝️text-selection/🟦️.ts",
+   "proposedSubpath": "./ui/elements/ContextMenu/text-selection",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TextSelectionContextMenuActions",
+    "TextSelectionContextMenuLabels",
+    "buildTextSelectionContextMenuItems",
+    "copyDomTextSelection",
+    "cutDomTextSelection",
+    "isDomTextEditableTarget",
+    "isPointerEventOnDomTextSelection",
+    "pasteDomTextSelection",
+    "readDomTextSelection",
+    "selectAllDomText"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Diagram",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DIAGRAM_UNIT",
+    "Diagram",
+    "DiagramLayoutDirection",
+    "DiagramLayoutOptions",
+    "DiagramSkeleton"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📋️force-model/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Diagram/force-model",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DiagramForceConfig",
+    "defaultDiagramForceConfig"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧩️inner/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Diagram/inner",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DiagramProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/⌨️keyboard/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Diagram/keyboard",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DIAGRAM_KEYBOARD_FOCUS_CLASS",
+    "DiagramKeyboardStep",
+    "DiagramLiveRegion",
+    "DiagramNavigableNode",
+    "DiagramTranslate",
+    "diagramKeyboardAnnouncement",
+    "diagramKeyboardStep",
+    "diagramReadingOrderPosition",
+    "useDiagramTranslate"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🪢️layout-hook/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Diagram/layout-hook",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "useDiagramLayout"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Dialog",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Dialog",
+    "DialogClose",
+    "DialogCloseProps",
+    "DialogContent",
+    "DialogContentProps",
+    "DialogDescription",
+    "DialogDescriptionProps",
+    "DialogFooter",
+    "DialogHeader",
+    "DialogOverlay",
+    "DialogOverlayProps",
+    "DialogPortal",
+    "DialogPortalProps",
+    "DialogPreventableEvent",
+    "DialogProps",
+    "DialogTitle",
+    "DialogTitleProps",
+    "DialogTrigger",
+    "DialogTriggerProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/DragHandle",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DragHandle",
+    "HANDLE_HOVER_SCOPE_ATTR"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🆔️ElementId/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ElementId",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ELEMENT_ID_PATTERN",
+    "assertElementId",
+    "childElementId",
+    "elementIdSegment",
+    "elementIdSelector",
+    "isElementId",
+    "useFirstDraggableElementAlias"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧬️element-state/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧭️introduction-resolve/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎮️Engagement/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Engagement",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ENGAGEMENT_USER",
+    "Engagement",
+    "EngagementControl",
+    "EngagementOption",
+    "EngagementProps",
+    "EngagementRingControl",
+    "EngagementRingOption",
+    "EngagementSelectControl",
+    "EngagementSelectItem",
+    "EngagementSliderControl",
+    "EngagementSpec",
+    "EngagementStatus",
+    "EngagementStepperControl",
+    "EngagementToggleGroupControl",
+    "EngagementToggleGroupOption",
+    "UI_ENGAGEMENT"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📝️Field/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Field",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Field",
+    "FieldProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Footer",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Footer",
+    "FooterProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧾️Form/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Form",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Form",
+    "FormProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/HistoryTable",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "HistoryColumn",
+    "HistoryColumnAuthor",
+    "HistoryTable",
+    "HistoryTableProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/I18n",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "AssertUiRibbonParentKeysCovered",
+    "AssertUiSettingsLanguageKeysCovered",
+    "AssertUiSettingsTerminologyKeysCovered",
+    "DeepUiTranslationKeys",
+    "UI_RIBBON_PARENT_CATEGORIES",
+    "UiChromeTerminologyId",
+    "UiI18nPort",
+    "UiLabelPair",
+    "UiLabelValue",
+    "UiLocale",
+    "UiRegisteredTranslationKey",
+    "UiRibbonParentCategory",
+    "UiRibbonParentEntries",
+    "UiTranslateFn",
+    "UiTranslationKey",
+    "UiTranslationSchema",
+    "resolveUiLabel"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/⚙️configuration/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🎓️guidance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🤝️collaboration/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧩️content-hosts/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🧭️shell-chrome/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗣️i18n-terminology/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Icons",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "AddIcon",
+    "AlertCircleIcon",
+    "ArrowLeftIcon",
+    "AwardIcon",
+    "BookIcon",
+    "BoxIcon",
+    "CameraIcon",
+    "ChatIcon",
+    "CheckIcon",
+    "CheckIconAlt",
+    "ChevronDownIcon",
+    "ChevronDownIconAlt",
+    "ChevronLeftIcon",
+    "ChevronRightIcon",
+    "ChevronUpIcon",
+    "ChevronsUpDownIcon",
+    "CircleDotIcon",
+    "CloseIcon",
+    "CloseIconAlt",
+    "CodeIcon",
+    "ComponentIcon",
+    "ConnectionIcon",
+    "ConnectorIcon",
+    "ControlIcon",
+    "CopyIcon",
+    "Cursor",
+    "DetailsIcon",
+    "DiagramIcon",
+    "DisconnectIcon",
+    "DocumentIcon",
+    "ExternalLinkIcon",
+    "FileArchiveIcon",
+    "FileCodeIcon",
+    "FileImageIcon",
+    "FileJsonIcon",
+    "FileSpreadsheetIcon",
+    "FileTypeIcon",
+    "FileVideoIcon",
+    "FilterIcon",
+    "FindInViewIcon",
+    "FocusIcon",
+    "FolderIcon",
+    "FolderOpenIcon",
+    "GlobeIcon",
+    "GripVerticalIcon",
+    "HandIcon",
+    "HashIcon",
+    "HomeIcon",
+    "HudIcon",
+    "HudPanelIcon",
+    "Icon",
+    "IconName",
+    "IconProps",
+    "IconSelectorMode",
+    "IconSizeToken",
+    "IconSource",
+    "InfoIcon",
+    "IntersectIcon",
+    "LandmarkIcon",
+    "LassoIcon",
+    "LayoutGridIcon",
+    "LayoutIcon",
+    "LeftSidePanelIcon",
+    "LightbulbIcon",
+    "LinkIcon",
+    "LoaderIcon",
+    "LocalKitIcon",
+    "Maximize2Icon",
+    "MessageCircle",
+    "MessageSquareIcon",
+    "Minimize2Icon",
+    "MonitorIcon",
+    "MoonIcon",
+    "MoreHorizontalIcon",
+    "MousePointerIcon",
+    "MoveIcon",
+    "NavigateBackIcon",
+    "NavigateForwardIcon",
+    "NavigateUpIcon",
+    "PanelRightIcon",
+    "PauseIcon",
+    "PieceIcon",
+    "PlayIcon",
+    "PlugIcon",
+    "PlusIcon",
+    "PortIcon",
+    "Puzzle2dIconFileImportIcon",
+    "Puzzle2dIconMathGlyphIcon",
+    "Puzzle2dIconRasterGlyphIcon",
+    "RecordIcon",
+    "RemoteKitIcon",
+    "RemoveIcon",
+    "ResetIcon",
+    "RightSidePanelIcon",
+    "SceneIcon",
+    "SearchIcon",
+    "SelectUtilityIcon",
+    "Settings2Icon",
+    "SettingsIcon",
+    "SkipBackIcon",
+    "SkipForwardIcon",
+    "SmartphoneIcon",
+    "SortAscendingIcon",
+    "SortDescendingIcon",
+    "StatsIcon",
+    "StopIcon",
+    "SunIcon",
+    "TableViewIcon",
+    "TabletIcon",
+    "TemporaryKitIcon",
+    "ThemedIconCatalog",
+    "TriangleAlertIcon",
+    "TutorialIcon",
+    "TypeIcon",
+    "UserIcon",
+    "UsersIcon",
+    "UtilitiesIcon",
+    "UtilityBarIcon",
+    "WorkbenchIcon",
+    "classifyIconSelectorMode",
+    "createIconComponent",
+    "decodeIcon",
+    "encodeIcon",
+    "iconMaskImage",
+    "iconSvgMarkup",
+    "renderControlIcon",
+    "resolveCatalogIconSvg",
+    "resolveIconSizePx",
+    "resolveMetabolismIconSvg",
+    "setThemedIconCatalog"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📣️display-components/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎴️IconSelector/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/IconSelector",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "IconSelector",
+    "IconSelectorProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Input",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "COLLAPSED_FIELD_ELLIPSIS",
+    "CollapsedFieldDisplay",
+    "Input",
+    "fitCollapsedFieldText",
+    "formatNumber",
+    "resolveCollapsedFieldDisplayState"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Label",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ControlTooltipTextOptions",
+    "Label",
+    "resolveTranslationLabel",
+    "useControlAccessibleLabel",
+    "useControlInlineText",
+    "useControlTooltipText",
+    "useIdLabel",
+    "useLabel",
+    "useLabelFormatter",
+    "useUiTranslation"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📣️display-components/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/LayeredOverview",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "LayeredDirection",
+    "LayeredOverview"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts",
+   "proposedSubpath": "./ui/elements/LayeredOverview/pane-helpers",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "capturePosterFromCanvases"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts",
+   "proposedSubpath": "./ui/elements/LayeredOverview/types",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "LayeredCardState",
+    "LayeredChromeState",
+    "LayeredInsets",
+    "LayeredLabels",
+    "LayeredMode",
+    "LayeredOverviewProps",
+    "LayeredPane",
+    "LayeredPaneState"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Layout",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Layout",
+    "LayoutMobilePanelProps",
+    "LayoutProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/MenuItem",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "MenuItem",
+    "MenuItemProps",
+    "menuItemClassName"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Navbar",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Navbar",
+    "NavbarItem",
+    "NavbarProps",
+    "NavbarSpanV1",
+    "NavbarTrailingChrome",
+    "SemioLogo",
+    "ShellBrandLogo",
+    "navbarCenteredLeftV1",
+    "navbarFillItem",
+    "navbarFlowChildOccupiesV1",
+    "navbarFreeBandV1",
+    "setNavbarTrailingChrome"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧪️NavbarExampleSelect/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/NavbarExampleSelect",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "NavbarExampleOption",
+    "NavbarExampleSelect",
+    "NavbarExampleSelectProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🃏️OverviewCard/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/OverviewCard",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "OverviewCard",
+    "OverviewCardAction",
+    "OverviewCardActionProps",
+    "OverviewCardBaseProps",
+    "OverviewCardButtonProps",
+    "OverviewCardOpenChip",
+    "OverviewCardProps",
+    "OverviewCardSectionProps",
+    "overviewCardChipClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Panel",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Panel",
+    "PanelEmptyDockZone",
+    "PanelProps",
+    "PanelTreeUnitsPane",
+    "liveTreePanelDefinition",
+    "staticTreePanelDefinition",
+    "useNativeDragAndDrop",
+    "usePointerDrag"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🌲️tree-source/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Panel/tree-source",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreePanelConfig",
+    "TreePanelDefinition",
+    "TreePanelSource"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👻️PanelGhost/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/PanelGhost",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ActiveInteractionContext",
+    "GhostProvider",
+    "GhostRegionShell",
+    "InteractionCommands",
+    "InteractionContext",
+    "PanelGhostRoot",
+    "PanelGhostValue",
+    "interactionMergeFromModifiers",
+    "panelGhostSessionBridge",
+    "setPanelGhostSessionBridge",
+    "shouldBeginAutomaticGhostInteraction",
+    "useInteractionCommands",
+    "usePanelGhost"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️device-context/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧭️PanelTabBar/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/PanelTabBar",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PanelDock",
+    "PanelTabBar",
+    "PanelTabBarProps",
+    "PanelTabBarVariant",
+    "PanelTabBranch",
+    "PanelTabLeaf",
+    "PanelTabNode",
+    "PanelTabSelectionOptions",
+    "PanelTabSelectionResult",
+    "PanelTreeUnit",
+    "applyDockSkeleton",
+    "dockSkeletonOf",
+    "dockSkeletonsEqual",
+    "findPanelTabNode",
+    "findPanelTabPath",
+    "panelTabChildren",
+    "progressPanelTabSelection",
+    "reconcileActivePath",
+    "resolvePanelBranchBodyLeaf",
+    "singleTreeLeaf",
+    "usePanelTabSelection"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗨️Popover/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Popover",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Popover",
+    "PopoverAlign",
+    "PopoverAnchor",
+    "PopoverAnchorProps",
+    "PopoverContent",
+    "PopoverContentProps",
+    "PopoverPreventableEvent",
+    "PopoverProps",
+    "PopoverSide",
+    "PopoverTrigger",
+    "PopoverTriggerProps",
+    "resolvePopoverPlacement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Ports",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "FlowHostPort",
+    "HostReactFlow",
+    "HostReactFlowProvider",
+    "HostThreeCanvas",
+    "ReactHostPort",
+    "SceneHostPort",
+    "flowHostPort",
+    "reactHostPort",
+    "sceneHostPort",
+    "setFlowHostPort",
+    "setReactHostPort",
+    "setSceneHostPort"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎞️tutorial-engine/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️device-context/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧭️introduction-resolve/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/👥️PresenceBar/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/PresenceBar",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PRESENCE_BAR_DEFAULT_MAX",
+    "PresenceAppearance",
+    "PresenceBar",
+    "PresenceBarProps",
+    "PresenceHsl",
+    "PresencePeer",
+    "PresenceRole",
+    "presenceColor",
+    "presenceCssVar"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/↔️Resizable/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Resizable",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "RESIZABLE_CORNER_GRAB_PX",
+    "RESIZABLE_HIT_TARGET_MIN_COARSE_PX",
+    "RESIZABLE_HIT_TARGET_MIN_FINE_PX",
+    "ResizableHandle",
+    "ResizableJoinCornerResizeHandler",
+    "ResizableJoinCornerSpec",
+    "ResizableJoinEdgeSide",
+    "ResizablePanel",
+    "ResizablePanelGroup",
+    "readResizableJoinCornerSpec",
+    "resizableJoinCornerPlacementStyle"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎀️Ribbon/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Ribbon",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Ribbon",
+    "RibbonDirection",
+    "RibbonDivider",
+    "RibbonGroup",
+    "RibbonItem",
+    "RibbonProps",
+    "RibbonRow",
+    "RibbonZone"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⭕️Ring/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Ring",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Ring",
+    "RingOrbData",
+    "RingProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scene",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Scene",
+    "SceneSkeleton"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/📐️geometry/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Scene/geometry",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Camera",
+    "Plane",
+    "Point",
+    "Vector"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧭️gizmo-snap/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Scene/gizmo-snap",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "SCENE_GIZMO_LABELS",
+    "resolveSceneGizmoSnapTarget",
+    "resolveSceneGizmoViewportPlacement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🕹️gumball/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scene/gumball",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "UnifiedGumball",
+    "UnifiedGumballProps",
+    "gumballApplyHandleVisualMaterial"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🔩️gumball-handles/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scene/gumball-handles",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "GUMBALL_PLANE_OFFSET",
+    "GUMBALL_PLANE_SIZE",
+    "GUMBALL_PREVIEW_MIN_EXTENT",
+    "GUMBALL_RING_RADIUS",
+    "gumballPlaneScaleCorner",
+    "gumballPlaneScaleFactors",
+    "gumballScaleAxisOffset",
+    "gumballScalePlaneAxisIndices"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🧿️gumball-model/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Scene/gumball-model",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DEFAULT_GUMBALL_CONFIG",
+    "GUMBALL_DEFAULT_SHIFT_ROTATION_SNAP",
+    "GUMBALL_DEFAULT_SHIFT_SCALE_SNAP",
+    "GUMBALL_PLANE_HANDLES",
+    "GumballConfig",
+    "GumballHandleKind",
+    "GumballPlaneId",
+    "GumballPose",
+    "GumballVec3",
+    "applyGumballPose",
+    "gumballAxisDragPlaneNormal",
+    "gumballAxisRotateAngle",
+    "gumballAxisScaleFactor",
+    "gumballConfigVisible",
+    "gumballEffectiveSnapValue",
+    "gumballEyeFromPivot",
+    "gumballHandleAllowedByPlane",
+    "gumballHandleEnabled",
+    "gumballHandleGroupEnabled",
+    "gumballHandleKindToTransformMode",
+    "gumballPoseFromObject3D",
+    "gumballProjectRayOntoAxis",
+    "gumballRayAxisParameter",
+    "gumballRayPlanePoint",
+    "gumballResolveDragSnaps",
+    "gumballSnapScalar",
+    "resolveGumballConfig"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎯️gumball-pick/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Scene/gumball-pick",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "gumballHandleRaycast",
+    "gumballKindFromRaycastObject",
+    "gumballPointerConsumesCanvasEventRef",
+    "gumballRayFromNdc",
+    "gumballRaycastAtClientPoint",
+    "gumballRaycastKindAtClientPoint",
+    "gumballRaycastOwnedAtClientPoint"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🎨️gumball-visual/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scene/gumball-visual",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "GUMBALL_PREVIEW_DISK_RADIUS",
+    "GUMBALL_PREVIEW_RING_RADIUS",
+    "GumballHandleVisualState",
+    "GumballVisualPalette",
+    "gumballHandleVisualState",
+    "gumballPreviewWorldExtent",
+    "gumballResolveHandleVisual",
+    "resolveGumballVisualPalette"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🗿️objects/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scene/objects",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Geometry",
+    "OnMultiPlaneUpdate",
+    "OnPlaneUpdate",
+    "PlaneTransformDelta",
+    "SceneGeometry",
+    "TransformableGeometry",
+    "getPlanePosition",
+    "hasValidPlane",
+    "isGeometryFocusable",
+    "planeFromPointAndDirection",
+    "sceneFrameControlRef"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Scrollable",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Scrollable"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Select",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Select",
+    "SelectAlign",
+    "SelectContent",
+    "SelectContentProps",
+    "SelectGroup",
+    "SelectGroupProps",
+    "SelectItem",
+    "SelectItemProps",
+    "SelectLabel",
+    "SelectLabelProps",
+    "SelectPosition",
+    "SelectPreventableEvent",
+    "SelectProps",
+    "SelectScrollButtonProps",
+    "SelectScrollDownButton",
+    "SelectScrollUpButton",
+    "SelectSeparator",
+    "SelectSeparatorProps",
+    "SelectSide",
+    "SelectTrigger",
+    "SelectTriggerProps",
+    "SelectValue",
+    "SelectValueProps",
+    "resolveSelectPlacement"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ShellScope",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "NULL_SHELL_ROOT_REF",
+    "SelectionModeStore",
+    "ShellScope",
+    "ShellScopeContext",
+    "ShellScopeProvider",
+    "activeShellRoot",
+    "createShellScope",
+    "registerShellActivityRoot",
+    "shellScopeStorageOrBrowserFallback",
+    "useIsActiveShellRoot",
+    "useShellFloatingSurfaceHost",
+    "useShellKeydown",
+    "useShellScope",
+    "useShellScopeOptional"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📐️introduction-geometry/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🦴️Skeletons/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Skeletons",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "CanvasSkeleton",
+    "ElementSkeletonKind",
+    "PanelTreeSkeleton",
+    "SkeletonBlock",
+    "WindowBodySkeleton",
+    "elementSkeleton",
+    "skeletonPulseClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Slider",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Slider",
+    "SliderDirection",
+    "SliderOrientation",
+    "SliderProps",
+    "SliderRange",
+    "SliderValue",
+    "clampSliderValuesToReady",
+    "normalizeSliderRange",
+    "normalizeSliderValues",
+    "resolveSliderDraftClear",
+    "sliderValuesMatch"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Stepper",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Stepper"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Surface",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "LEVELS",
+    "Level",
+    "LevelProvider",
+    "Surface",
+    "SurfaceActiveBindProps",
+    "SurfaceFill",
+    "SurfaceProps",
+    "SurfaceScope",
+    "SurfaceScopeValue",
+    "getLevelZClass",
+    "isSurfaceActiveBackgroundPointer",
+    "setSurfaceActiveRoot",
+    "surfaceFillClass",
+    "useLevel",
+    "useSurface",
+    "useSurfaceActive"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Table",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DragDropConfig",
+    "HierarchicalRowData",
+    "SortDirection",
+    "Table",
+    "TableColumn",
+    "TableProps",
+    "TableSkeleton",
+    "TableSkeletonProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📻️TableAvatar/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/TableAvatar",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TableAvatar",
+    "TableAvatarProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tabs",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Tabs",
+    "TabsActivationMode",
+    "TabsContent",
+    "TabsContentProps",
+    "TabsDirection",
+    "TabsList",
+    "TabsListProps",
+    "TabsOrientation",
+    "TabsProps",
+    "TabsTrigger",
+    "TabsTriggerProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔤️Textarea/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Textarea",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Textarea"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Toggle",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Toggle",
+    "ToggleItem",
+    "ToggleProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/ToggleGroup",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ToggleGroup",
+    "ToggleGroupDirection",
+    "ToggleGroupItem",
+    "ToggleGroupItemProps",
+    "ToggleGroupMultipleProps",
+    "ToggleGroupOrientation",
+    "ToggleGroupProps",
+    "ToggleGroupSingleProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "FileTree",
+    "FileTreeNode",
+    "Tree",
+    "TreeWindowRowExtent",
+    "uiSpacingLen"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/⚡️actions/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/actions",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeActionPlacement",
+    "TreeCheckbox",
+    "TreeCheckboxAction",
+    "TreeCheckboxProps",
+    "TreeDragRole",
+    "TreeHeaderAction",
+    "TreeSectionAction",
+    "deriveTreeDragRoles",
+    "mergeTreeRowContextMenu",
+    "treeRowDragPayloadAttributes"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌲️branch/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/branch",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeContent"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📚️catalogue/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/catalogue",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Catalogue",
+    "CatalogueItem",
+    "CatalogueProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/chrome",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "getTreeItemOrderedIds",
+    "getTreeSiblingGapPx",
+    "treeCompactSiblingGapPx",
+    "treeFoldChevronIcon",
+    "treeItemSecondaryTextClassName",
+    "treeRowChromeClasses",
+    "treeRowChromeContentFillClasses",
+    "treeRowChromeShellClasses"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🕹️control-tree/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/control-tree",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ControlDef",
+    "ControlTree",
+    "ControlTreeClassNames",
+    "ControlTreeFolderSettings",
+    "ControlTreeProps",
+    "buildControlTree",
+    "defaultControlRenderer"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📋️data/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Tree/data",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeDataActivationContext",
+    "TreeDataItem",
+    "TreeDataSection",
+    "TreeItemCollapsibleState",
+    "TreeSelectionMode",
+    "treeDataActivation"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧲️drag-drop/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/drag-drop",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "CATALOGUE_DRAG_MIME",
+    "TreeDragAndDropController",
+    "TreeDropPosition",
+    "TreePointerPaletteDragController",
+    "TreeReorderControllerOptions",
+    "TreeReorderMove",
+    "UseTreeReorderResult",
+    "catalogueTreeDragController",
+    "getActiveCatalogueDragPayload",
+    "getActiveCataloguePointerDragData",
+    "isTreeReorderDragEvent",
+    "resolveTreeDropPosition",
+    "treeReorderDragController",
+    "useTreeReorder"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧭️hover-path/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Tree/hover-path",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "markGhostTreeInteraction",
+    "resolveHoverRow"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🍃️item/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/item",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeItem",
+    "TreeItems"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔀️pane-chrome-toggle/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/pane-chrome-toggle",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WindowPaneChromeToggle",
+    "WindowPaneChromeToggleProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧷️path-marking/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Tree/path-marking",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "syncTreeSelectionPath"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🧩️props/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Tree/props",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "mergeTreeSectionOrder"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📄️row/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/row",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "HelperRow",
+    "TreeRow"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/row-alignment",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PropertyValueColumnContext",
+    "TreeAlignedRow",
+    "TreeContext",
+    "TreeDirection",
+    "TreeRowAlignmentContext",
+    "detailPanelHeaderLineCenterPx",
+    "detailPanelIndentLen",
+    "detailPanelIndentPx",
+    "detailPanelPropertyControlClassName",
+    "detailPanelPropertyInlineGapPx",
+    "detailPanelPropertyRowClassName",
+    "detailPanelPropertyStackedToInlineHysteresisPx",
+    "treeHeaderMainClassName",
+    "treeHeaderRowClassName",
+    "treeInspectorInnerRowClassName",
+    "treeItemLabelStyle",
+    "treeRowHeightPx"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌱️section/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/section",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeSection",
+    "shouldDispatchTreeRowPointerLeave"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎚️selection/🟦️.ts",
+   "proposedSubpath": "./ui/elements/Tree/selection",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "createTreeHighlightStore",
+    "createTreeSelectionStore",
+    "getTreeNextSelectionState",
+    "normalizeTreeSelectedIds"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/↕️sortable-item/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/sortable-item",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "SortableTreeItems"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🌿️state/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/state",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TreeStateProvider",
+    "useTreeState"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔭️virtual-window/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/virtual-window",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "TREE_WINDOW_BODY_NODE_BUDGET",
+    "TREE_WINDOW_OVERSCAN_ROWS",
+    "TREE_WINDOW_PATH_SEPARATOR",
+    "TREE_WINDOW_ROWS_MAX",
+    "TREE_WINDOW_ROW_EXTENTS",
+    "TreeDataWindow",
+    "TreeWindowContainerMeasure",
+    "TreeWindowDomAttributes",
+    "TreeWindowRequest",
+    "TreeWindowRowMeasure",
+    "TreeWindowVisibleRows",
+    "capTreeWindowRequests",
+    "treeWindowDomAttributes",
+    "treeWindowPathOf",
+    "treeWindowRequestsForViewport",
+    "treeWindowRowIndexOf",
+    "treeWindowSpacerRows",
+    "treeWindowVisibleRowsForViewport"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🔢️window-measures/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Tree/window-measures",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WindowMeasureTreeGroup",
+    "WindowMeasureTreeGroupProps",
+    "WindowMeasureTreeLeaf",
+    "WindowMeasureTreeLeafProps",
+    "WindowMeasuresTree"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📚️component-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📨️UIDialog/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/UIDialog",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "UIDialog",
+    "UIDialogFieldBinding",
+    "UIDialogProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/UiDriver",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "COMPACT_UI_DRIVER",
+    "DEFAULT_UI_DRIVER",
+    "UI_CHROME_DRIVER_STORAGE_KEY",
+    "UI_CUSTOM_DRIVERS_STORAGE_KEY",
+    "UiDriver",
+    "UiDriverDrag",
+    "UiDriverHotkeys",
+    "UiDriverLabelTier",
+    "UiDriverLabels",
+    "UiDriverProvider",
+    "UiDriverReveal",
+    "UiDriverTooltips",
+    "activeUiDriver",
+    "builtinUiDrivers",
+    "humanizeControlId",
+    "humanizeControlSegment",
+    "humanizeEngagementStepId",
+    "isInternalChromeControlId",
+    "panelKindFromPanelToggleControlId",
+    "parseUiDriver",
+    "readStoredUiCustomDrivers",
+    "readStoredUiDriver",
+    "readStoredUiDriverId",
+    "resolveControlLabelId",
+    "resolveUiDriver",
+    "serializeUiDriver",
+    "setControlLabelIdResolver",
+    "setUiDriverProvider",
+    "useNativeDragArm",
+    "useUiDriver",
+    "useUiDriverDragSurface",
+    "useUiDriverTooltips",
+    "writeStoredUiCustomDrivers",
+    "writeStoredUiDriverId"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎗️UiLabel/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/UiLabel",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "UiLabel",
+    "uiDataLabel"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📣️display-components/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖲️section/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/VirtualFileSystem",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DescriptorKind",
+    "FileNode",
+    "FileNodeDescriptor",
+    "FileNodeDescriptorValue",
+    "FileNodeKind",
+    "VIRTUAL_FILE_SYSTEM_DEMO_DESCRIPTOR_KINDS",
+    "VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS",
+    "VIRTUAL_FILE_SYSTEM_DEMO_SCHEMA",
+    "VirtualFileSystem",
+    "VirtualFileSystemNode",
+    "VirtualFileSystemProps",
+    "VirtualFileSystemRow",
+    "VirtualFileSystemSchema",
+    "buildVirtualFileSystemDescriptorColumns",
+    "buildVirtualFileSystemDescriptorValues",
+    "buildVirtualFileSystemSceneRows",
+    "buildVirtualFileSystemVisibleRows",
+    "formatVirtualFileSystemTime",
+    "getVirtualFileSystemNextSelectionState",
+    "getVirtualFileSystemOrderedRowIds",
+    "isVirtualFileSystemRemoteIcon",
+    "normalizeVirtualFileSystemSelectedRowIds",
+    "renderVirtualFileSystemDescriptorCell",
+    "resolveVirtualFileSystemDescriptorBinding",
+    "resolveVirtualFileSystemDescriptorKind",
+    "resolveVirtualFileSystemFileNodeKind",
+    "resolveVirtualFileSystemSchemaIcon",
+    "virtualFileSystemKindIcon"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/Window",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Window",
+    "WindowConfig"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/WindowChrome",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WINDOW_CHROME_BODY_PLANE_STYLE",
+    "WINDOW_CHROME_CHIP_ROW_STYLE",
+    "WINDOW_SILHOUETTE_BORDER_KINDS",
+    "WindowChrome",
+    "WindowChromeControlAction",
+    "WindowChromeProps",
+    "WindowChromeSilhouetteBorder",
+    "WindowSilhouetteBorderKind",
+    "isWindowChromeIntroducedTarget",
+    "measureWindowSilhouetteMetrics",
+    "resolveWindowSilhouetteBorderKind",
+    "useWindowSilhouetteGeometry",
+    "windowCapFrameClass",
+    "windowChromeTitleChipClass",
+    "windowControlsCapClass",
+    "windowGapFrameClass",
+    "windowSilhouetteBorderPaint"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚧️WindowContentDeadLine/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/WindowContentDeadLine",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "isWindowContentDeadLineHost",
+    "measureWindowChromeScrollClearancePx",
+    "readScrollerContentOverflows",
+    "readWindowChromeScrollClearancePx",
+    "readWindowContentDeadLinePx",
+    "useWindowContentDeadLineInset",
+    "windowChromeScrollClearanceVar",
+    "windowContentDeadLineScrollClass",
+    "windowContentDeadLineVar"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📌️WindowPane/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/WindowPane",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Pane",
+    "PaneHost",
+    "PaneHostProps",
+    "PaneProps",
+    "usePaneHostContext"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔍️WindowSearch/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/WindowSearch",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "SEARCH_LINE_EDIT_SENT_LIMIT",
+    "Search",
+    "SearchInlineCompletion",
+    "SearchInput",
+    "SearchLineEdit",
+    "SearchPossible",
+    "SearchProps",
+    "SearchSpec",
+    "UI_WINDOW_SEARCH",
+    "applySearchSpaceAction",
+    "filterSearchPossibles",
+    "focusActiveSearchInput",
+    "isUiTypingTarget",
+    "isWindowSearchTypingTarget",
+    "normalizeEngagementActionText",
+    "queryWindowSearchInput",
+    "routeWindowSearchEscape",
+    "routeWindowSearchKeydown",
+    "routeWindowSearchSpace",
+    "searchActiveInlineCompletion",
+    "searchControlledLineV1",
+    "searchHighlightedLabel",
+    "searchInlineCompletion",
+    "searchSpaceConfirmsLine",
+    "shouldActivateSearchPossibleOnConfirm",
+    "shouldRouteKeysToWindowSearch"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔎️window-search/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔲️WindowSilhouette/🟦️.tsx",
+   "proposedSubpath": "./ui/elements/WindowSilhouette",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PendingWindowSilhouetteMetrics",
+    "WINDOW_SILHOUETTE_CHIP_EPSILON",
+    "WINDOW_SILHOUETTE_GEOMETRY_SCHEMA",
+    "WINDOW_SILHOUETTE_PATH_INSET",
+    "WindowSilhouetteChip",
+    "WindowSilhouetteDock",
+    "WindowSilhouetteEdge",
+    "WindowSilhouetteGeometry",
+    "WindowSilhouetteMetrics",
+    "WindowSilhouettePoint",
+    "WindowSilhouetteRegion",
+    "WindowSilhouetteSafeClearances",
+    "createWindowSilhouetteGeometry",
+    "normalizeWindowSilhouetteChips",
+    "normalizeWindowSilhouetteMetrics",
+    "pendingWindowSilhouetteMetrics",
+    "simplifyWindowSilhouetteOutline",
+    "windowSilhouetteBodyRegion",
+    "windowSilhouetteContains",
+    "windowSilhouetteContentClipPath",
+    "windowSilhouetteContentRegions",
+    "windowSilhouetteEdgePoints",
+    "windowSilhouetteEdgePointsRtl",
+    "windowSilhouetteGlassRegions",
+    "windowSilhouetteOutline",
+    "windowSilhouetteOutlineViolations",
+    "windowSilhouettePath",
+    "windowSilhouettePathFromOutline",
+    "windowSilhouetteRegionContains",
+    "windowSilhouetteSafeClearances"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪞️chrome-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📏️border-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/border-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "borderElementClass",
+    "borderNormalBottomClass",
+    "borderNormalClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎨️chrome-classes/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎯️canvas-pick-targets/🟦️.ts",
+   "proposedSubpath": "./ui/modules/canvas-pick-targets",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "canvasHoverFocusFromTarget",
+    "canvasPickTargetKey",
+    "pickMostSpecificCanvasTarget",
+    "sortCanvasPickTargetsGeneralFirst"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎨️chrome-class-names/🟦️.ts",
+   "proposedSubpath": "./ui/modules/chrome-class-names",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "GLASS_OVERLAY_BOX_CLASS",
+    "borderNormalTopClass",
+    "dropZoneReadyClass",
+    "dropZoneReadyFillClass",
+    "dropZoneReadyTextClass",
+    "floatingMenuItemClass",
+    "mobilePanelTabBarClass",
+    "mobilePanelTabButtonClass",
+    "modeDockActiveTabClass",
+    "modeDockActiveTabFillClass",
+    "modeDockInactiveTabBeforeGapClass",
+    "modeDockInactiveTabClass",
+    "modeDockTabLabelClassName",
+    "panelAnchorTabBarClass",
+    "panelAnchorTabButtonClass",
+    "panelResizeEdgeAccentClass",
+    "panelTabBarClass",
+    "panelTabButtonClass",
+    "panelTabButtonDividerClass",
+    "panelTabIconSlotClass",
+    "panelTabLabelClass",
+    "panelWindowInactiveTabClass",
+    "shellChromeFrameLayerClass",
+    "utilityBarBodyClass",
+    "windowBodyFrameClass",
+    "windowEngagementBodyClass",
+    "windowMeasureTreeGroupLabelClass",
+    "windowMeasureTreeLeafLabelClass",
+    "windowMeasuresBodyClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🎛️chrome-control-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/chrome-control-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "chromeControlGroupClass",
+    "chromeControlGroupShellClass",
+    "chromeControlItemBaseClass",
+    "chromeControlItemClass",
+    "chromeControlItemOnClass",
+    "chromeControlTabActiveClass",
+    "chromeControlTabItemClass",
+    "modeDockTabClassName",
+    "windowPaneChromeToggleClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🛟️chrome-safe-area/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/chrome-safe-area",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ChromePanelOccupancy",
+    "ChromePanelSafeArea",
+    "SafeAreaBox",
+    "SafeAreaYield",
+    "chromeHostedPanelCapRowStyle",
+    "chromePanelSafeArea",
+    "chromePanelSafeAreaStyle",
+    "publishShellChromePanelBox",
+    "safeAreaBoxFromRect",
+    "shellNavbarTrailingEndReserveStyle",
+    "shellNavbarTrailingEndWidthByRoot",
+    "shellNavbarTrailingEndWidthListenersByRoot",
+    "useChromePanelSafeArea",
+    "useShellChromePanelBoxes",
+    "useShellNavbarTrailingEndWidthPx"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🟦️.ts",
+   "proposedSubpath": "./ui/modules/class-name-composition",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "cn"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎨️chrome-classes/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎬️introduction-demo/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📋️canvas-pick/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔌️host-ports/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔲️selection-marquee/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🖥️fullscreen/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🚦️status-surface/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/control-hotkey-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ControlHotkeyBadge",
+    "ControlHotkeyBadgeProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/control-keybinding-context",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ControlKeybindingAction",
+    "ControlKeybindingCallback",
+    "ControlKeybindingDefinition",
+    "ControlKeybindingDependencies",
+    "ControlKeybindingOptions",
+    "SHELL_KEYBINDINGS",
+    "UiKeybindingsProvider",
+    "buildKeysByActionId",
+    "composeControlKeybindings",
+    "resolveControlKeybindingRaw",
+    "useControlHotkey",
+    "useControlKeybinding",
+    "useHotkeys",
+    "useUiKeybindingsByControlId"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💡️control-tooltip-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/control-tooltip-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "formatControlTooltipText"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts",
+   "proposedSubpath": "./ui/modules/dock-skeleton",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "DockSkeleton",
+    "DockTabSkeleton"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/👂️dom-event-binding/🟦️.ts",
+   "proposedSubpath": "./ui/modules/dom-event-binding",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "createDOMEventBinding"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🆔️element-identity/🟦️.ts",
+   "proposedSubpath": "./ui/modules/element-identity",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ElementProps",
+    "panelTabElementId",
+    "panelTabFirstDraggableElementId",
+    "windowElementId"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧭️flow-direction-context/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/flow-direction-context",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "Flow",
+    "FlowBlock",
+    "FlowInline",
+    "FlowProvider",
+    "useFlow"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎨️chrome-classes/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📝️form-control-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/form-control-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "applyUiFormControlBrowserDefaults",
+    "formControlFocusBorderClass",
+    "uiFormControlBrowserDefaultProps"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🔎️fuzzy-ranking/🟦️.ts",
+   "proposedSubpath": "./ui/modules/fuzzy-ranking",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "FuzzySearchField",
+    "FuzzySearchOptions",
+    "FuzzySearchResult",
+    "rankFuzzyItems"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/interaction-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "groupHoverExcludingHandleBgFillClass",
+    "hoverExcludingHandleBgFillClass",
+    "hoverExcludingHandleTextEmphasizedClass",
+    "interactiveActiveBorderClass",
+    "interactiveActiveFillClass",
+    "interactiveControlTransitionClass",
+    "interactiveHoverClass",
+    "interactiveHoverFillClass",
+    "interactiveOnClass",
+    "interactiveTabActiveClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧱️window-chrome/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",
+   "proposedSubpath": "./ui/modules/keybinding-persistence",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "readStoredUiKeybindingOverrides",
+    "writeStoredUiKeybindingOverrides"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/keybinding-text-interpretation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ariaKeyshortcutsText",
+    "formatKeybindingShortcut",
+    "parseKeybindingChords"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🥞️layered-overview-geometry/🟦️.ts",
+   "proposedSubpath": "./ui/modules/layered-overview-geometry",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "LAYERED_DEFAULT_LIFECYCLE",
+    "LAYERED_FOLLOW_EPSILON",
+    "LAYERED_FOLLOW_FRAME_MS",
+    "LAYERED_FOLLOW_LERP",
+    "LAYERED_GLIDE_MS",
+    "LayeredCell",
+    "LayeredGrid",
+    "LayeredIdleScheduler",
+    "LayeredLifecycle",
+    "LayeredLivePane",
+    "LayeredOffset",
+    "LayeredSpan",
+    "LayeredVeil",
+    "LayeredWarmStep",
+    "LayeredWindow",
+    "PaneAxisBounds",
+    "cellOffset",
+    "centeredLastRowCells",
+    "centeredRowSpan",
+    "clampOffset",
+    "easeInOutCubic",
+    "followFactor",
+    "followStep",
+    "glideOffset",
+    "inWindow",
+    "lerpOffset",
+    "nearSquareGrid",
+    "nextWarmBoot",
+    "occupiedColumns",
+    "paneAxisBounds",
+    "panesOverBudget",
+    "panesToRelease",
+    "pointerOffset",
+    "resolveLifecycle",
+    "scheduleIdle",
+    "stripGrid",
+    "stripTransform",
+    "veilClip",
+    "veilClipPath",
+    "veilPolygon",
+    "warmDelay",
+    "windowAround"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📋️menu-item-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/menu-item-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "menuListItemClassName"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/⚓️panel-anchor/🟦️.ts",
+   "proposedSubpath": "./ui/modules/panel-anchor",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "ANCHORS",
+    "Anchor",
+    "anchorHorizontal",
+    "anchorPositionStyle",
+    "anchorVertical",
+    "chromeHostedOpenPanelPositionStyle",
+    "flowFromAnchor",
+    "nearestAnchor"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/⌨️keybindings/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔥️hotkeys/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧲️panel-dock/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/panel-dock",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PANEL_TREE_UNIT_MIME",
+    "PanelDockContext",
+    "PanelDockContextValue",
+    "PanelTabDockTarget",
+    "PanelTreeUnitDockMove",
+    "PanelTreeUnitDockTarget",
+    "PanelTreeUnitDragSession",
+    "TREE_SECTION_REORDER_MIME",
+    "beginPanelTreeUnitDrag",
+    "endPanelTreeUnitDrag",
+    "readActivePanelTreeUnitDrag",
+    "usePanelDockContext",
+    "usePanelTreeUnitDragActive"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📑️panel-chrome-tab-bar/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/👥️presence-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/presence-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "PresenceAppearance",
+    "PresenceHsl",
+    "presenceColor",
+    "presenceCssVar",
+    "presencePaint"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧷️panel-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏠️shell-floor-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/shell-floor-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "shellFloorFillClass",
+    "shellFloorPaints"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎥️tutorial-ui/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌀️status-border-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/status-border-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "chromeStatusBorderClass",
+    "loadingBorderActiveClass",
+    "loadingBorderClass",
+    "loadingBorderElementClass",
+    "loadingBorderStateClass",
+    "waitingBorderActiveClass",
+    "waitingBorderClass",
+    "waitingBorderElementClass",
+    "waitingBorderStateClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts",
+   "proposedSubpath": "./ui/modules/storage-port",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "StoragePort",
+    "createBrowserStoragePort"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔑️chrome-prefs/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🧬️style-variants/🟦️.ts",
+   "proposedSubpath": "./ui/modules/style-variants",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "StyleCompoundVariant",
+    "StyleVariantCompiler",
+    "StyleVariantConfiguration",
+    "StyleVariantProps",
+    "StyleVariantSchema",
+    "StyleVariantSelection",
+    "styleVariants"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🌈️surface-presentation/🟦️.ts",
+   "proposedSubpath": "./ui/modules/surface-presentation",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "glassClass",
+    "surfaceClass",
+    "veilClass"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎨️chrome-classes/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📤️adapter-exports/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🧲️panel-dock/🟦️.tsx"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📱️ui-mobile-context/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/ui-mobile-context",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "UiMobileContext",
+    "UiMobileProvider",
+    "useUiMobile"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📱️device-context/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗣️ui-terminology/🟦️.tsx",
+   "proposedSubpath": "./ui/modules/ui-terminology",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "UI_CHROME_TERMINOLOGY_STORAGE_KEY",
+    "UI_TERMINOLOGY_NATIVE",
+    "readStoredUiChromeTerminology",
+    "resolveUiLocalizedText",
+    "useUiTerminology",
+    "writeStoredUiChromeTerminology"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🎓️introduction/🟦️.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗣️i18n-terminology/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🗺️window-layout/🟦️.ts",
+   "proposedSubpath": "./ui/modules/window-layout",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WindowLayoutAxisNode",
+    "WindowLayoutNode",
+    "WindowLayoutStackNode",
+    "WindowLayoutWindowNode",
+    "WindowStackCorner",
+    "createEvenWindowLayout"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🔨️modules/📐️window-measures/🟦️.ts",
+   "proposedSubpath": "./ui/modules/window-measures",
+   "subpathAlreadyExported": false,
+   "scope": "ui-internal",
+   "symbols": [
+    "WINDOW_PANE_ACTIONS_ICON",
+    "WINDOW_PANE_MEASURES_ICON",
+    "WINDOW_PANE_SEARCH_ICON",
+    "WINDOW_PANE_UTILITIES_ICON",
+    "windowChromeClearedTopOffset",
+    "windowMeasuresDefaultWidthPx",
+    "windowMeasuresMaxWidthPx",
+    "windowMeasuresMinWidthPx"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🗿️framework-exports/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🖌️render/🏗️build/🕸️browser/🟦️.ts",
+   "proposedSubpath": "./ui/render/build/browser",
+   "subpathAlreadyExported": false,
+   "scope": "ui-seam-or-other",
+   "symbols": [],
+   "importers": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🟦️.ts"
+   ]
+  },
+  {
+   "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts",
+   "proposedSubpath": "./ui/testing/fixtures",
+   "subpathAlreadyExported": true,
+   "scope": "ui-seam-or-other",
+   "symbols": [
+    "localeLocalizedLabelFixtureUrl",
+    "localeLocalizedLabelSchemaUrl",
+    "renderTextFontsFixtureUrl",
+    "uiViewport2dSchema"
+   ],
+   "importers": [
+    "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🏷️localized-label-fixture/🟦️.ts",
+    "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/📦️package-assets/🟦️.ts",
+    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/📡️scene/🧪️tests/🟦️.ts"
+   ]
+  }
+ ]
+}

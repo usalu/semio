@@ -60,18 +60,20 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
-        if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        let released_items = usize::from(self.session.take().is_some());
-        let released_bytes = self.unreleased_bytes.min(maximum_bytes);
-        self.unreleased_bytes -= released_bytes;
-        if released_items == 0 && released_bytes == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()};
-        }
-        semio_framework_job::InteractiveJobCloseStep::Pending { progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..Default::default()} }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            let maximum_items=grant.maximum_items;let maximum_bytes=grant.maximum_release_bytes;
+            if !self.closing || maximum_items == 0 || maximum_bytes == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            let released_items = usize::from(self.session.take().is_some());
+            let released_bytes = self.unreleased_bytes.min(maximum_bytes);
+            self.unreleased_bytes -= released_bytes;
+            if released_items == 0 && released_bytes == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Complete {progress:Default::default()});
+            }
+            Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress:semio_framework_value::retained_clone::RetainedCloneProgress {copied_items:released_items,released_bytes,..Default::default()} })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -130,13 +132,13 @@ impl DrawingInstanceOperationOwner {
                     if self.operations.can_admit(live_key, DRAWING_GESTURE_RETAINED_BYTES) {
                         break;
                     }
-                    let _ = self.operations.close_step(drawing_gesture_release_grant());
+                    let _ = context.with_retained_loan(drawing_gesture_release_grant(), |same| self.operations.close_step(same));
                 }
             }
             self.operations.admit(live_key, DrawingGestureOperationOwner::new(active_utility_id, &operation.authoring_seed)).map_err(|mut rejected| {
                 rejected.owner.cancel();
                 rejected.owner.begin_close();
-                let _ = rejected.owner.close_step(drawing_gesture_release_grant());
+                let _ = context.with_retained_loan(drawing_gesture_release_grant(), |same| rejected.owner.close_step(same));
                 Fault::new(FaultOrigin::App, FaultCode::new("drawing.gesture.saturated"), "the fixed Drawing gesture operation authority is saturated")
             })?;
             self.active = Some((live_key, source_identity));
@@ -334,14 +336,13 @@ impl semio_framework_plugin::ArtifactInstanceOperationOwner for DrawingInstanceO
         Ok(if self.operations.is_empty() { Default::default() } else { semio_framework_value::RetirementDemand { release_bytes: DRAWING_GESTURE_RAW_BYTES, depth: 4, ..Default::default() } })
     }
 
-    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,_grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
         for _ in 0..DRAWING_GESTURE_OPERATION_SLOTS {
-            match self.operations.close_step(grant) {
+            match self.operations.close_step(cx)? {
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } if progress == Default::default() && !self.operations.is_empty() => continue,
                 semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(semio_framework_plugin::PluginLifecycleStep::Blocked { reason: "Drawing gesture close owner awaits a non-empty grant" }),
                 semio_framework_job::InteractiveJobCloseStep::Pending { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Progress(progress)),
                 semio_framework_job::InteractiveJobCloseStep::Complete { progress } => return Ok(semio_framework_plugin::PluginLifecycleStep::Complete(progress)),
-                semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } => return Err(Fault::from(format!("Drawing gesture retirement refused: {kind:?}"))),
             }
         }
         Ok(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default()))

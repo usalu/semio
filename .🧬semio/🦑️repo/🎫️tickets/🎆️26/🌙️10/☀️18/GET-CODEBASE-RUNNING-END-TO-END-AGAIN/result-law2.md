@@ -1,0 +1,127 @@
+# Result law2: source-text law drift outside `🔨️modules/**` (plugins, os products, hub, framework leftovers)
+
+Executor Sonnet 5.5, foreground, no sub-agents, no cargo, no modifying git command, no `package.json`/`bun.lock` edit.
+
+## Outcome
+
+- Scope: the 63 red bun law suites of `result-tst2-suites.md` that live outside `🧰️framework/🔨️modules/**` (`PL/` plugins, `OS/` os products, `🌎️hub`, `✏️s` leftovers, `🧰️framework/📏️script-boundary`, `🧰️framework/🧪️tests`).
+- Baseline reproduced with the tst2 runner (emulated hoist, runner envelope): **0 / 63 green suites** (576 pass / 232 fail tests).
+- Final: **40 / 63 green suites** (767 pass / 65 fail tests). 38 suites turned green by my edits, 2 turned green by concurrent peers (`📏️script-boundary`, `🧪️tests/🧱️ownership`).
+- 23 suites stay red, all with evidence below: unfinished migrations / TDD-red laws (production code is not there yet), fixtures that only a cargo run can generate, native/launcher-gated laws, one dependency mismatch.
+- Extra scope found: `🦑️repo` was not part of tst2. Baseline 408 / 664 suites green; 256 red, of which ~110 are launcher-gated (`Original ... required`), the rest deep build-system AST laws. I fixed the fixture-placement/path drift of 5 repo suites (table below), the rest is recorded as open.
+
+## Decision classes
+
+(a) moved/split -> re-pointed to the carved owner (module tree or `readSourceFamilySource`); (b) renamed/relocated (fixture trees, paths, identifiers); (c) design change with evidence in git -> law rewritten to the new invariant; (d) accidentally lost -> production restored; open = needs production work (often cargo).
+
+Evidence rule used throughout: `git log -S/-G` (read-only) to date the change, the new owner text must exist at HEAD, and the asserted invariant must hold there (checked with `law2-tools/chk.ts`, `classify.py`, `cover.py`). No needle was deleted without a replacement assertion of the same invariant.
+
+## Production / shared edits (everything else is test or fixture)
+
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml`: restored the missing `[workspace.dependencies.semio-s-artifact-raster-raster]` provider (decision d; the companion test crate of 7880cc36 inherits it, the package exists).
+- `🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/📖️syntax/🌳️module-tree/🟦️.ts`: the public entry now also exports `listSourceFamily` and `readSourceFamilySource` (added by tst2 to the implementation module) so laws outside the module can use them.
+- Fixture data: architect sqlite fixture (`unsigned32/64Fixtures`, `registerFixtures`), cad sqlite fixture (`mutationFields`), flow refusal fixture (`naturalFileFields`).
+
+## Per-law decision table
+
+| suite | tests before -> after | class | decision / evidence |
+|---|---|---|---|
+| `PL/🏛️architect/…/🪶️sqlite/📸️snapshot` | 10/48 -> 58/0 | b | fixture JSON paths pointed at the pre-0c3e789 mutation fixture tree and had lost their leading slash; re-pointed unsigned32/64Fixtures + registerFixtures to tests/🧫️fixtures/🧬️mutations/📋️register-row/<mode>/<entity>-<variant>; test URL gets the slash |
+| `PL/🏭️process3d/…/🪶️sqlite/📸️snapshot` | 19/1 -> 20/0 | b | capability law asserted sqlite exports on the schema snapshot module; they live (since creation) in the sqlite owner -> asserts snapshotSqlite0 |
+| `PL/🕸️dag/…/🪶️sqlite/📸️snapshot/📋️contract` | 15/1 -> 16/0 | b | same: asserts sqlite owner exports (new import ../../🟦️.ts) |
+| `PL/📐️cad/…/🪶️sqlite/📸️snapshot` | 65/2 -> 67/0 | c | 251fa724 intentionally dropped CadDiff.artifact and added optional index to CreateDrawing/CreateNode (graphql, proto, json, ts, rs all agree); law+fixture rewritten to the new design |
+| `PL/🗄️stdio/📇️registry/🧬️contract/✏️editing` | 53/2 -> 55/0 | a | fem2d editor rs was split into #[path] children; producer reads now use readModuleTreeSource |
+| `PL/🗄️stdio/🗿️artifacts/🌦️epw/…/🫴️receiving` | 3/3 -> 6/0 | a+c | settlement body moved from io/⏱️control to io/🪶️sqlite-snapshot/🫴️receiving (793f6353); `mod tests;` hoisted out of the owner into the epw package crate (1bae6115) -> law asserts the package-crate #[path] mount instead |
+| `PL/🗄️stdio/🗿️artifacts/📑️tsv/…/🪶️sqlite/📸️snapshot` | 18/1 (unchanged) | blocked | tree-sitter-wasms@0.1.13 grammar predates async closures; tests/🦀️.rs line 139 uses `async/a,b/` (0c3e789, valid on the pinned nightly-2026-07-20). Needs a newer tree-sitter-rust (freeze), Rust code is valid |
+| `PL/🗄️stdio/🗿️artifacts/📖️pdf/…/🪪️stream-roles` | 5/1 (unchanged) | open | TS law (da607013) demands Rust fn `pdf_stream_roles_multi_object_reorder_delete_and_path_refusal` (special_edit, PdfDiff::between); no such fn ever existed (git -S under the pdf tree), the commit's own log says "native execution pending": TDD-red feature, needs a cargo-verified Rust test |
+| `PL/🗄️stdio/🧿️semio/…/🫙️prefix` | 25/22 (unchanged) | open | acceptance laws of an unfinished "original prefix" migration: c44e9645 converted flow (projection::project) and all 18 💰️reconstruction modules (struct Prefix), but graph/table/value 🦀️.rs never mount 🫙️projection (orphan file), the 18 🛬️native/🦀️.rs lack fn binary_into/document_into/workspace::decode and still use Owned::new, base 🛫️native encoder lacks EncodingPrefix. Production wiring pending (needs cargo), not drift |
+| `PL/🧩️puzzle/…/◻️2d/…/🪶️sqlite/📸️snapshot` | 48/15 -> 63/0 | a+b | 7880cc36 thinned the crate root (records -> 🧬️schema/🧱️records, declaration -> 🏅️standards/🔖️1/🦀️.rs, mutation dirs gained category folders); 0c3e7894 fixture-placement codemod pointed every prepare/inverse/candidate fixture read at connect-handles/🎮️prepare. Re-pointed: root reads -> new owners, per-test fixtures -> own mutation fixture, 🏷️literal-id-inverse +1 level, mutation glob depth 2/3, needle pub fn restore_edge |
+| `PL/🧪️tests/📁fixture-placement` | 35/4 (unchanged) | open | partial fixture-placement migration (0c3e7894): 13 fixtures outside tests/, 3 rs include_str/moved targets, 10 ts imports from non-tests, 30+ Cargo-manifest readers pointing at missing targets; full offender list in law2-tools/placement-offenders.txt (needs fixture moves + Rust edits, no cargo) |
+| `✏️s/🔨️modules/🏗️fem/…/🕸️mesh/📐️surface (2 suites)` | 1/1 + 4/1 (unchanged) | native-gated | need SEMIO_FEM_NEUTRAL_RESULTS (a native cargo result artifact); not drift |
+| `✏️s/🧪️tests/🗂️native-ownership` | 3/1 -> 3/1 (3 issues -> 2) | d (1 of 3) + open (2) | RESTORED the missing workspace provider semio-s-artifact-raster-raster in 🖨️raster/🗿️artifacts/🖨️raster/Cargo.toml (companion test crate 7880cc36 inherits it; package exists). OPEN: 🔋️energy workspace lists the 🧩️extensions/🌦️epw crate as member and a provider path into it (7c8af563 violated the standing 251fa724 law: extensions are removable child workspaces); fix = give 🌦️epw its own Cargo.toml workspace + Cargo.lock (needs cargo to regenerate the lock) |
+| `✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership` | 0/3 (unchanged) | native-gated | every test runs `cargo metadata` through the original process control (stdio:cargo-metadata, phase.leaseControl, native child deadline); cargo/harness issuance, not source drift |
+| `🌎️hub/🧩️compositions/🗄️stdio/📥️execution` | 0/1 -> 1/0 | a | 4dab415e split hub stdio 📜️script.ts into subfolders (runStdioOwnedCommandV1 call now in 🧾️catalog-artifact-io/🟦️.ts); law scans the whole script family instead of the thin root file |
+| `🌎️hub/🧪️tests/🧱️foundation-source` | 15/1 (unchanged) | harness | readTrustedCatalogPublicationProvenanceV1 needs original native caller capabilities (launcher issuance); needs bun repo run, not drift |
+| `🧰️framework/📏️script-boundary` | 1/2 -> 3/0 | concurrent | green on re-run without an edit by law2 (a concurrent peer changed the router/owners meanwhile) |
+| `OS/🌊️flow/🧩️extensions/🕸️wasm/🧪️tests/🔬️unit` | 22/12 -> 34/0 | a+b+c | plugin crate is a carved family (readSourceFamilySource, now also exported from the compiler-ts module-tree entry); 0c3e7894/7af1259d: wallet comes from cx.retained_grant() (request/wire no longer carry `retained`), inference job rewritten (close_sources/debit_original replaces record_retirement/OutcomeClose), envelope uses OriginalDomainProjection+OwnedProjectedPackWireCursor, jobs bind (cx.operation(),cx.generation()), cause Inference(ArtifactInferenceGatewayRefusal), gateway debits original_lifecycle_unposted, mcp InferCommand/inference_original_turn moved to channel-port/run-handler, InferenceRunInput requires turn.work + retainedPolicy; each law rewritten to the new owner text/schema |
+| `OS/🏪️store/📜️space-history/…/🪶️sqlite/📸️snapshot` | 15/11->17/9 (tst2) -> 20/3 (law2) | a+b | store crate carve: schema root mounts space-history, snapshot tests mounted from 🧪️tests/🌲️bin-07, pack helpers in 🧰️test-support, OwnedSchemaDecodeDiagnostic in pack json retained schema, child-currencies fixture path, encode-owner fixture; remaining 3 tests blocked by tree-sitter-wasms@0.1.13 async-closure grammar |
+| `OS/🏪️store/📬️outcome` | 0/1 -> 1/0 | a | ArtifactEnvelopeDecodeAuthority moved to 📦️codec/🧬️owned-schema/📄️decode-page-state-and-authority; slice start only |
+| `OS/🏪️store/🚪️io/🚫️refusal/📬️outcome` | 0/1 -> 1/0 | c | fault close logic moved into close_granted (child grant depth-1) -> law asserts the fault branch of close_granted |
+| `OS/🏪️store/…/🏭️operation/📦️catalog` | 0/1 -> 1/0 | b | member fixture lives at 🏭️member/🧪️tests/🧫️fixtures (not under 🧬️schema/🧪️tests) |
+| `OS/🏪️store/…/📜️history/🏭️factory/🧪️tests/🛬️receiving` | 4/2 -> 6/0 | a+b | MemberFactory trait moved to 👥️space-member/📥️lifted/🏪️store/🏭️member-factory-visitors-and-no-members; original_history_source is pub fn (crate carve) |
+| `OS/🏪️store/🧩️composition/🚪️open/…/📏️retirement/🌊️hydration-and-source-birth` | 9/12 -> 21/0 | a+b+c | store carve + hydration rewrite (7af1259d/0c3e7894/4dab415e): readers re-pointed to the lifted/🏭️operation/📦️codec/♻️lifecycle owners; member-open close uses artifact_retirement_box_close_step; actor owner is has_owner()/remaining_owner(); fold branch quotes next_step_grant capped by the supplied grant (required_copy.min(grant.maximum_copy_bytes)); progress_fuel -> record_member_step(cx,progress); replication ProtocolError/close helpers live in semio_framework_replication_error; Phase::CopyHistory removed (history source decode) so only CaptureGenesis keeps the buffer birth law; replication 🧾️wire/♻️retirement deleted (f856dff0) -> dropped from the rustfmt list; plugin tests 🧩️composition root -> 📨️emission |
+| `OS/🏪️store/…/📏️retirement/📄️catalog-retirement` | 6/8 -> 14/0 | a+c | artifact_retirement_box_* / admit_owned moved to 🌱️value/📸️snapshot/👁️read (next_demand struct replaces per-axis next_*_demand); catalog constructor admission is one-factory-per-call (checks precede slot.prepare_step, child grant ..grant); preborn factory retirement and Phase::CopyHistory retired; step_store reformatted; macro in 🎲️space-members-macro; envelope retirement in 🔗️read/🗑️envelope-genesis…; ledger message retirement in 📒️ledger/📨️messages; hot retirement closes only the active hydration box |
+| `OS/🏪️store/…/📏️retirement/📸️snapshot-custody` | 14/14 -> 28/0 | a+b+c | 28 laws re-pointed after the store carve and the 7af1259d/0c3e7894 redesign: trailing-slash loss in the retained-clone wire root URL (fixtures/schema/impl lookups), readers moved to 🧾️document/✉️envelope/📒️ledger/📨️messages/🔗️read/🌱️value read owners, one-factory-per-call constructor admission, cancel_job only flags+pays, inference close via close_field/consume_retained, saturating_sub in remaining_grant, member_step_grant/record_member_step are pub fns in the open crate, physical_test_close_grant lives in semio_framework_value::testing, NativeSnapshotDecodeOwner in semio_framework_os_io::control, native-decoding fixtures under 🧪️tests/ |
+| `OS/🏪️store/🧪️tests/{deferred-reprojection,supersede-law,tool-transaction,viewer-head}` | 0/1 each -> green | b | fixtures moved to store/🧪️tests/🧫️fixtures (0c3e7894 placement contract): "../../🧫️fixtures/" -> "../🧫️fixtures/" |
+| `OS/🏪️store/🧪️tests/🧪️supersede-replay (OS/…/🧪️supersede-replay)` | 5/6 -> 11/0 | b | same move plus owner-relative fixtures: 📋️copy and 🔁️fold fixtures under 🧪️tests/🧫️fixtures, genesis schema fixture under 🌱️genesis/🧪️tests/🧫️fixtures/🧬️schema, init descriptors at <owner>/🧪️tests/🧫️fixtures, EntityIdentityAuthority::<..>::new turbofish |
+| `OS/🏪️store/🧬️snapshot-clone/🧪️tests/📦️assembly` | 0/1 -> 1/0 | c | 03c902fa dropped the Arc::try_unwrap forward-owner handoff for a detach from self.mutation; law asserts the detach message + publication_post Arc::new(copied.take()) |
+| `OS/💡️inference/🧪️tests/🔬️unit` | 5/2 -> 7/0 | b | dsl/encode identity fixture moved to dsl/🧪️tests/🧫️fixtures/🛫️encode and schema to 🛫️encode/🧬️schema/🪪️identity; inference-admission fixture under 🧪️tests/ |
+| `OS/📡️spr/📜️history/🛬️decode/🧪️tests` | 0/1 (unchanged) | open | decoder law demands RetainedHistoryDecode without self.decode_frame(frame) and without step(maximum_records: usize); production still decodes whole frames (decode_frame since 8add1df1, take_ready_into since 48e47561): refactor pending, not drift |
+| `OS/📺️renderer/…/🧊️wgpu/⌨️native-entrypoint/🧪️tests/📇️catalog` | 0/1 -> 1/0 | c | native-entrypoint scripts now run through withPlaygroundSessionV1/withNativeRuntimeV1/readNativeCallerAuthorityV1/createRequestedIssuedResourceControlV1 and publish {pluginId,cratePath} modules; law stubs those boundaries over the variant-scoped session files it already wrote, expectation on published modules updated |
+| `OS/📺️renderer/…/🧊️wgpu/🎬️media-slots/🎟️collect` | 3/3 -> 6/0 | a | ui runtime cursor/present, plugin reactor patches/turn/instance/app/runtime and ui contract text were carved into child crates; laws read the directory family (readSourceFamilySource), UiTextOriginalCopy now in 🧬️contract/🔤️text |
+| `OS/📺️renderer/…/🔮️oracles/🎨️world3d-scene-shading/📋️data` | 2/1 -> 3/0 | a | script.ts split into four oracle modules (each calls oraclePixelDeltaV1 once); law aggregates script + four oracle entry modules |
+| `OS/📺️renderer/…/🧪️tests/♻️frame-close` | 9/5 -> 14/0 | a+b | StoreSync receive/caller tests (semio_framework_os_vcs paths, pause assert), renderer family (readSourceFamilySource), OsHost::new with frame_job::frame_authority path, atlas in 🎟️prepared/📤️staging, ViewModel in 🛂️manifest/🖼️view-model and ToolRunTraceCursor in ⏯️tool-run/🗄️trace-store, node-key/reconcile in ui 🌳️retained, scene camera dispatch child |
+| `OS/📺️renderer/…/🧪️tests/♻️hot-swap-session-handover` | 7/1 -> 8/0 | a | the debug [TRACE] unmount anchor was cleaned (2c9a3b12) and the surface effect moved into 🔌️flow-session-attach; law anchors on the retained-host unmount comment inside the effect keyed [surfaceId] |
+| `OS/📺️renderer/…/🎞️Scenes/…/🔬️wgpu-admitted-surface-map` | 0/1 -> 1/0 | a | get_mut_at moved to engine 🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🗃️scene-state |
+| `OS/📺️renderer/…/🖌️Paint2dHost/✍️editing/🧪️tests/🧭️ownership` | 3/1 (unchanged) | harness | spawns the real 📜️script.ts with runScriptMain mocked to router.run([test]); the router now requires an Original script invocation object ("Script invocation must be an object"), needs the launcher/envelope, not drift |
+| `OS/📺️renderer/…/🗣️Interpreter/🧵️worker-cell/🧪️tests` | 3/2 -> 5/0 | a+b | Ui engine type is semio_framework_ui_wgpu_engine::Ui, cfg(any(test,feature=testkit)), pub install_ui_engine_locale, Shell staging calls semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::install_ui_engine_locale (4 sites incl. new), worker-cell tests mounted from 🧿️ui-engine-tests |
+| `OS/🔁️workflow/…/{🏃️run,🔁️workflow}/…/🪶️sqlite/📸️snapshot` | 55/1 + 41/1 (unchanged) | open | semantic-cells fixture (unchanged since d4597d04) counts each embedded NUL as 0 bytes (run_document 44, run_output_artifact 42) while the TS law counts Buffer.byteLength incl. NUL (45/43); the Rust law (547 total as max_value_bytes boundary) is the arbiter and needs a cargo run to say which side is right |
+| `OS/🔌️plugin/🧵️retained-command/🧬️context/🧪️tests + ♻️lifecycle/🏪️stores/🧪️tests (imports it)` | 0/1 + 7/1 -> 1/0 + 8/0 | a | retained-command host is a carved module tree; law reads readModuleTreeSource of 🧵️retained-command/🦀️.rs |
+| `OS/🔌️plugin/🌐️browser-bundle/🛂️descriptor/🧪️tests` | 0/1 (unchanged) | dep | @bytecodealliance package in the store lacks the export 'types' the descriptor test imports (dependency mismatch, freeze) |
+| `OS/🔌️plugin/📇️registry/📥️runtime/🧪️tests` | 2/1 (unchanged) | native | test runs cargo test of the original Rust ownership source (native parser executes Rust); cargo-gated |
+| `OS/🔌️plugin/📇️registry/🧪️tests/🧬️semantic-source-pairs` | 0/1 (unchanged) | open | committed plugin descriptor JSON/.descriptor.semio pairs disagree with the current writer (generated artifacts stale after the schema changes); regeneration needs the component build (cargo) |
+| `OS/🔌️plugin/🖥️host/🧬️component-codec/🎟️retained-turn/💼️jobs/🧪️tests` | 9/2 -> 11/0 | a+b | portable WIT split into 📜️jobs/types/... files (law reads the schema dir's .wit family); pump_close moved to ⚙️mounted-registry-pump-and-reaper and is pub(super) (markers adapted) |
+| `OS/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests` | 3/1 -> 4/0 | a | actor module carved: TurnGrant::original_input lives in 🎭️actor/⏱️scheduler-and-scene |
+| `OS/🔌️plugin/🧪️tests/📦️units` | 5/8 (unchanged) | open | Cargo workspace restructure (root Cargo.toml now owns the 🧰️framework members, package.workspace points at the root, 🧰️framework/Cargo.toml members lists changed); fixture lock/workspace expectations and consumer locks need regeneration by a cargo-capable owner (as tst2 recorded) |
+| `OS/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📋️inventory` | 0/1 -> 1/0 | b | bim registration now names the candidate by crate path (semio_s_artifact_bim_model_bim::editor::bim::BimModelApp) instead of super::; regex accepts a path-qualified candidate |
+| `OS/🔌️plugin/🧵️retained-command/📸️checkpoint/👣️cursor/🧪️tests` | 1/2 -> 3/0 | a | retained-command host is a carved module tree; reads via readModuleTreeSource |
+| `🧰️framework/🧪️tests/🧱️ownership` | 0/3 -> 3/0 | concurrent | green on re-run without a law2 edit |
+| `OS/🛎️services/🧪️tests/🧮️compute-retained` | 11/1 -> 12/0 | a | job worker module carved; law reads the 👷️worker directory family |
+| `PL/🌀️procedural/…/🧊️generation3d/…/{✂️brep-intersect,🐚️brep-topology,🛠️brep-feature}/🧪️tests/🔬️unit (3 suites)` | 4/1, 4/1, 3/2 (unchanged) | open | the committed fixtures of these categories carry no pinned `mesh` (brep-boolean etc. do not need it, these laws do); the pins are written by the Rust support::refresh under GEN3D_WRITE_FIXTURES=1 (cargo), never committed since 251fa724/0c3e7894 |
+| `PL/🌀️procedural/…/🧊️generation3d/🔨️modules/🏠️host/📐️geometry-service/🧪️tests/🔬️unit` | 0/7 (unchanged) | open | fixture 🧫️fixtures/🔣️.json is the 3-byte placeholder `[]` since its creation (251fa724); it is written by the Rust test under GEN3D_WRITE_FIXTURES=1 (cargo) |
+| `PL/🌊️flow/…/✏️editor/🎮️commands/♻️retirement/🧪️tests` | 0/1 -> 1/0 | c+a | NaturalFileImportJob gained the reserved-outcome fields in b4bf1a54 (pending_bytes, pending_media_*, pending_port, state, fault, pending, outcomes): fixture naturalFileFields updated in order; the close slice ends at the impl block (EditorApp moved to another crate file) |
+| `REPO/🎛️dashboard/🧪️tests/🧭️journeys (+🏋️load)` | 0/... -> advances to env gate | b | journeys workspace fixture moved to dashboard/🧪️tests/🧫️fixtures; support path re-pointed; remaining failures are 'Dashboard is not installed' (bun run dashboard:install) |
+| `REPO/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests` | 24/18+... -> 14/0 (subset 19) | b+c | bun tool manifest is now schema const (🧬️schema definitions.Release.const) and its env fixture is under 🧪️tests/🧫️fixtures |
+| `REPO/🧪️tests/🧱️cargo-dependency-direction` | -> 7/0 | b | fixture moved to library/🧪️tests/🧫️fixtures |
+| `REPO/🖥️server/🎛️coordinator/🧪️tests/🔬️schema` | -> 52/0 | b | rest-cases/g3-event-log fixtures moved under 🧪️tests/🧫️fixtures |
+| `REPO/⚡️caching/🧪️tests/🛑️coordinator (support read)` | -> advances | b | cancellation fixture moved under 🧪️tests/🧫️fixtures |
+| `REPO/🧪️tests/🧱️rust-source-direction/🧾️attributes` | -> 15/1 | b | fixture moved; remaining failure needs a nightly rustc for #![feature] (harness) |
+| `REPO/⚖️laws/📇️indexed-generated-output` | 0/1 (unchanged) | open | real repo-state violation: git tracks 37 generated files (💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/⚡️out-jspi-explicit/** and 🌊️flow/🫀️core/🕸️bindings/package.json); needs git untrack + ignore by the owner (no git-modifying command allowed here) |
+
+## Still red (23 suites) by cause
+
+1. Production wiring pending or fixtures never generated (needs a cargo-capable owner):
+   - `PL/🗄️stdio/🧿️semio/…/🫙️prefix` (22 tests): graph/table/value never mount `🫙️projection`, the 18 `🛬️native/🦀️.rs` lack `workspace::decode`/`binary_into`/`document_into`, base encoder lacks `EncodingPrefix`. c44e9645 finished flow and all `💰️reconstruction` modules only.
+   - `OS/📡️spr/…/🛬️decode/🧪️tests`: decoder still whole-frame (`decode_frame`, `maximum_records`), law demands the granted shape.
+   - `PL/🗄️stdio/🗿️artifacts/📖️pdf/…/🪪️stream-roles`: the TS law demands Rust fn `pdf_stream_roles_multi_object_reorder_delete_and_path_refusal`, which never existed (`native execution pending` in da607013).
+   - generation3d: 3 brep suites need `mesh` pins and the geometry-service suite needs its `🧫️fixtures/🔣️.json` (a 3-byte `[]` placeholder since 251fa724): both are written by the Rust refresh under `GEN3D_WRITE_FIXTURES=1`.
+   - `✏️s/🧪️tests/🗂️native-ownership`: `🔋️energy` workspace lists the removable-child crate `🧩️extensions/🌦️epw` as member and as provider path; fix = its own workspace + `Cargo.lock` (cargo).
+   - `OS/🔌️plugin/🧪️tests/📦️units`: Cargo workspace restructure (root `Cargo.toml` owns the framework members); lock expectations need regeneration.
+   - `OS/🔌️plugin/📇️registry/🧪️tests/🧬️semantic-source-pairs`: committed descriptor JSON/pack pairs are stale against the writer.
+   - `PL/🧪️tests/📁fixture-placement`: partial fixture-placement migration; exact offender list in `law2-tools/placement-offenders.txt` (13 fixtures outside `🧪️tests`, 3 Rust includes, 10 TS imports, 26 manifest readers).
+   - workflow `🏃️run` and `🔁️workflow` sqlite snapshots: the unchanged `semantic-cells` fixture counts an embedded NUL as 0 bytes (44/42), the law counts it (45/43); the Rust `max_value_bytes` law is the arbiter.
+2. Tree-sitter grammar blocker (dependency freeze): `tree-sitter-wasms@0.1.13` cannot parse async closures (`async|a,b|`) that 0c3e7894 introduced in valid Rust (nightly-2026-07-20). Affects `PL/…/📑️tsv/…/📸️snapshot` and 3 tests of `OS/🏪️store/📜️space-history/…/📸️snapshot`. Fix = newer `tree-sitter-rust` wasm.
+3. Native/launcher gated: fem surface (needs `SEMIO_FEM_NEUTRAL_RESULTS`), `✏️s/🧑‍💻dev/🗄️stdio/…/🏃️command-ownership` (cargo metadata through original control), `🌎️hub/🧪️tests/🧱️foundation-source` and `OS/…/🖌️Paint2dHost/…/🧭️ownership` (original invocation), `OS/🔌️plugin/📇️registry/📥️runtime` (cargo test), wfc bitmap (package `dist/` not built).
+4. Dependency: `OS/🔌️plugin/🌐️browser-bundle/🛂️descriptor` (store package lacks the export `types`).
+
+## Repo (`🦑️repo`) baseline and the 5 suites fixed
+
+Run: `TST2_HOIST=1 python3 law2-tools/runbun.py law2-tools/list-repo.txt …` -> 408 / 664 green. Red classes: 106 suites fail on launcher/issuance/dependency gates (19 `Original native caller capabilities required`, 9 `Original process birth already received`, 7 `Nested persistent image requires actual parent scope`, 6 `Live Original resource control issuance required`, 5+5+4+3+... other original-control gates, 7 `vscode`, 16 missing packages, 4 dashboard not installed, 1 timeout); 150 suites fail on `expect(...)`/ENOENT/AST laws (`law2-tools/repo-candidates.txt`, first error per suite). Fixed (path/fixture relocation, class b): dashboard journeys support (+ load), bootstrap dependencies (bun manifest is now the schema const), cargo-dependency-direction, coordinator schema, coordinator oracle support, rust-source-direction attributes fixture. Open examples: indexed-generated-output (37 generated files are tracked by git; needs untracking by the owner).
+
+## How verified
+
+- Runner: `law2-tools/runbun.py` (copy of tst2's, output `🗑️generated/law2-out`), `TST2_HOIST=1` emulated hoist, `SEMIO_SCRIPT_PROCESS_INVOCATION` minted by `tst2-tools/envwire.ts`, `--timeout 120000`.
+- Single suite: `python3 law2-tools/one.py <suite>`; failing expression: `python3 law2-tools/loc.py`; needle audit: `law2-tools/classify.py`, `cover.py`; slice check: `chk.ts`.
+- Before/after of all 63 suites: `before.jsonl` / `after.jsonl` (deleted with the generated folder; numbers in the table above).
+- No cargo, no rustc beyond `rustfmt --emit stdout` inside existing laws; no git write command.
+
+## Open for others
+
+- cargo owner: generation3d fixture refresh, energy epw workspace, `📦️units` locks, descriptor pairs, prefix migration (Rust), spr decoder, pdf replay law.
+- deps owner: newer tree-sitter-rust wasm, `@bytecodealliance/*` export mismatch.
+- coordinator: `bun repo run` for the launcher-gated laws; untrack the 37 generated jcoprobe files.
+
+## Files
+
+Edited files are listed in `law2-tools/changed-files.txt` (suite sources, fixtures, the raster manifest, the module-tree entry). Tools: `law2-tools/`.
+

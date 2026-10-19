@@ -42,7 +42,7 @@ fn clock(app: &mut Fem2dApp) -> Option<FemPlaybackClock> {
 /// 🔁️ Drives the publication the dispatch opened all the way into the stores, the way the plugin
 /// host's own continuation does — a read before the settle would see the PREVIOUS frame.
 async fn settle(app: &mut Fem2dApp) -> Vec<Effect> {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut **app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation").effects
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation").effects
 }
 
 /// 🔁️ How many playback re-arms one gesture asked the host for. Counted off BOTH the dispatch's own
@@ -163,7 +163,7 @@ async fn transport_wire(app: &mut Fem2dApp, args: serde_json::Value) {
     let mut meta = semio_framework_plugin::artifact_app_laws::meta("local");
     meta.view_state = Some(results_view());
     let args = semio_framework_plugin::DslValue::from(&args);
-    app.handle_action("setResultAnimation", Some(&args), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setResultAnimation", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("setResultAnimation: {fault:?}"));
     if !aborting {
         settle(app).await;
     }
@@ -259,7 +259,7 @@ mod long {
             } else if frame >= frames - fifth {
                 last += elapsed;
             }
-            semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one fair maintenance step per frame");
+            semio_framework_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one fair maintenance step per frame");
             assert!(!semio_framework_plugin::PluginApp::maintenance_under_pressure(&*app), "frame {frame}: a frame never displaces a store owner");
         }
         assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), config_generation, "no frame amended the window config");

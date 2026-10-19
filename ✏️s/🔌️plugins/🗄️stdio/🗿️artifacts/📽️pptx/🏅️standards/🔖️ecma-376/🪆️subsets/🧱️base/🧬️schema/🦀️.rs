@@ -125,7 +125,3 @@ pub async fn demo_pptx_snapshot() -> PptxSnapshot {
 //#region 🧪️Tests
 //#endregion 🧪️Tests
 
-#[path="🏷️vocabulary/🦀️.rs"]
-pub mod vocabulary;
-#[path="⚠️refusal/🦀️.rs"]
-pub mod refusal;

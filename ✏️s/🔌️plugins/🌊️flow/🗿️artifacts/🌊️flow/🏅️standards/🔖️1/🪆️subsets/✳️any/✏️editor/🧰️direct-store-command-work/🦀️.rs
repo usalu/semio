@@ -388,21 +388,23 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if !self.retirement.is_empty() {
-            return self.retirement.step(grant);
-        }
-        if grant.maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()).or_else(|| self.edge_ids.take()).or_else(|| self.node_ids.take()) {
-            self.retirement.push(values);
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            if !self.retirement.is_empty() {
+                return self.retirement.step(grant);
+            }
+            if grant.maximum_items == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            if let Some(values) = self.preview_off.take().or_else(|| self.preview_next.take()).or_else(|| self.edge_ids.take()).or_else(|| self.node_ids.take()) {
+                self.retirement.push(values);
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

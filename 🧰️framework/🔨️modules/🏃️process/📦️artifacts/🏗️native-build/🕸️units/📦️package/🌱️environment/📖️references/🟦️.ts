@@ -1,7 +1,7 @@
 import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "../../../../../../../📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import {selectRustSourceV1} from "../../../../📥️source/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 const policy=schema.definitions.Policy.const;
 /** 🌱️ Admits only literal compiler environment observations whose presence and value are represented before artifact hashing. */
 export function rustCompileEnvironmentReferencesV1(value:unknown):Readonly<Record<string,string|null>>{

@@ -9,7 +9,7 @@ use crate::editor_domain::editor_laws::context;
 async fn add_generation_records_an_undoable_generation_operation() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    assert_undo_redo_round_trip(&mut app, Generation3dCommand::AddGeneration(AddGeneration {}), |app| context::snapshot(&app).generation.generations.len(), 0, 1).await;
+    assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::AddGeneration(AddGeneration {}), |app| context::snapshot(&app).generation.generations.len(), 0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]

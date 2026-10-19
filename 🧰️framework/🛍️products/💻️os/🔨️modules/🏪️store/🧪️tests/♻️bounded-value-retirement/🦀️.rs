@@ -1,6 +1,5 @@
 //! ♻️ Original typed catalog owners conserve actual independent constructor and physical release receipts.
 use super::*;
-use semio_framework_os_store_testing_fixtures::physical_test_close_grant;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 
 #[test]

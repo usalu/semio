@@ -1,5 +1,5 @@
 import type { ShardClientState } from "../🗃️state/🟦️.ts";
-import type { ShardClientHub } from "../🧩️wiring/🟦️.ts";
+import type { ShardClientHubPort } from "../🧩️hub/🟦️.ts";
 import { type ShardActivation, type ShardActorActivationLease, type ShardSlot, mintCapturedActivation } from "../🔐️activation/🟦️.ts";
 import type { OutboundMessage } from "../📨️messages/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
@@ -7,7 +7,8 @@ import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngress
 /** 🪪️ Owns the exact activation of every actor: activation, revocable operation leases and teardown. */
 export class ShardExactActivations {
   private readonly state: ShardClientState;
-  constructor(private readonly hub: ShardClientHub) { this.state = hub.state; }
+  private readonly hub: ShardClientHubPort;
+  constructor(hub: ShardClientHubPort) { this.hub = hub; this.state = hub.state; }
 
   async activate(actorId: string, moduleUrl: string, caps: readonly ShardCapabilityGrant[], budget: ShardBudget, assets: readonly ShardAsset[] = []): Promise<void> {
     if (this.state.actorActivations.get(actorId)?.available) throw new Error("actor-close.activation-already-owned");

@@ -1,5 +1,5 @@
 /** 🧪️ Map document facets preserve every durable handle and dynamic feature value. */
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {test} from "bun:test";
 import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import {applyGisMapFeaturePatch,parseGisMapFeature,parseGisMapFeaturePatch,type GisMapValue} from "../../📍️feature/🟦️.ts";
@@ -10,7 +10,6 @@ import { testSchemaRecordOracle } from "@semio-tech/framework/schema/record/test
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import featureSchema from "../../📍️feature/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };

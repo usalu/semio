@@ -7,7 +7,7 @@ Feature: Apply registered typed glTF 2.0 mutations to a real-world document
   per-family subset cases against one synthetic three-exported base; this artifact-root case is the one that
   measures seven of those kinds against a REAL document instead — honestly a sample, chosen to cover the node
   hierarchy, the scene root list, the default-scene pointer and material flags. The input is the real 284 KB,
-  271-node, 2-material `base.glb` export (asset://🌱️metabolism/🏙️base/🧊️.glb) with one minimal,
+  271-node, 2-material `base.glb` export (asset://🌱️metabolism/🏙️metabolism-model/🧊️.glb) with one minimal,
   real-data-preserving derivation applied once: node 1 was moved out of the scene's 271-entry root-node list and
   into node 0's own `children`, since the real export's whole node graph is otherwise flat (every node a direct
   scene root, none nested) and two of the seven kinds (`bind-node-child`/`unbind-node-child`) need an existing or

@@ -1,14 +1,14 @@
 /** 🧾️ The catalog artifact io of the hub stdio package: the scope export compiler, the controlled and bounded readers, the release component preparation, the synced writes, the commit marker, the descriptor pair and the wasm core inspection with its independent oracles. */
 import { runStdioOwnedCommandV1 } from "../../../📥️execution/🟦️.ts";
-import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type { ResourceLeaseControl } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import { requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "@semio-tech/process/routing";
+import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { createHash } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, renameSync, rmSync, statSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { decodePackValue, encodePackValue } from "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts";
-import { resolveWorkspaceBin } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { checkResourceLeaseControl } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { resolveWorkspaceBin } from "@semio-tech/process/execution";
+import { checkResourceLeaseControl } from "@semio-tech/process/leases";
+import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { ARTIFACT_MAX_BYTES, COMPONENT_FUNCTION_MAX, DESCRIPTOR_JSON, DESCRIPTOR_PACK, IO_CHUNK_BYTES, PLUGIN_ID } from "../🧮️component-constants/🟦️.ts";
 
 /** 🧬️ Compiles one PascalCase `$defs` export of the Stdio plugin-root draft-07 schema module.

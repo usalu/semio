@@ -94,7 +94,7 @@ impl DirectoryState {
             on_submit: Some(ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None }),
             on_abort: None,
             on_repeat_last: None,
-            presence: UiPresence { state: if connected { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
+            presence: UiPresence { state: if connected { semio_framework_ui_declaration::ui::UiState::Normal } else { semio_framework_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
             ..Default::default()
         }));
@@ -104,7 +104,7 @@ impl DirectoryState {
             label: Label::data(shell_chrome_string("chat.send", is_de)),
             action: ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None },
             style: None,
-            presence: UiPresence { state: if connected && !self.agent_chat_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
+            presence: UiPresence { state: if connected && !self.agent_chat_draft.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Normal } else { semio_framework_ui_declaration::ui::UiState::Disabled }, ..UiPresence::default() },
             menu: None,
         }));
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("framework.chat.panel".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })

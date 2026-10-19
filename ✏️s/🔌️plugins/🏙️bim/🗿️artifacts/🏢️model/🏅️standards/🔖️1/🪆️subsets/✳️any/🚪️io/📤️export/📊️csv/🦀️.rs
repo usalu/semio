@@ -5,15 +5,14 @@
 //! [`schedule_csv`] and [`diagnostics_csv`] write one table each.
 //! 📎 https://www.rfc-editor.org/rfc/rfc4180
 
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
-use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleTable};
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleTable};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec;
 
 /// 🪪️ The RFC 4180 dialect this leaf writes.
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
@@ -71,7 +70,7 @@ pub fn diagnostics_records(found: &[Diagnostic]) -> Vec<Vec<String>> {
 }
 
 fn document(records: Vec<Vec<String>>) -> String {
-    codec::document_text(records.into_iter().map(codec::record).collect())
+    semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::document_text(records.into_iter().map(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::record).collect())
 }
 
 /// 📊️ The CSV table of schedule `id` from an inference of `model`; `None` when the model has no such schedule.
@@ -94,7 +93,7 @@ pub fn export_diagnostics(model: &ModelSnapshot) -> Result<String, semio_framewo
 /// ⚖️ The canonical JSON table `"<position>|<slug>|<elements>" → { severity, storey, missing, message_en, message_de }` of a diagnostics table read back with the decoder: the table the third-party oracle reads from the same file.
 pub fn findings_json(text: &str) -> String {
     use std::collections::BTreeMap;
-    let records = codec::read_records(text);
+    let records = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::read_records(text);
     let table: BTreeMap<String, BTreeMap<String, String>> = records
         .iter()
         .skip(1)

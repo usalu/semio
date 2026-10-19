@@ -1,7 +1,7 @@
 import * as ModuleUnderTest from "../../🟦️.ts";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { loadActorReturnFixture, loadActorReturnSchema } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadActorReturnFixture, loadActorReturnSchema } from "@semio-tech/framework-actor/testing/fixtures";
 
 type TestSource = { readonly url: string };
 
@@ -30,7 +30,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   it("PluginReturnWit maps every canonical drive to the exact WIT nesting and u64 request", async () => {
     const api = await import("../../🟦️.ts");
     const fixture = await loadActorReturnFixture();
-    const { decodeActorReturnDrive } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { decodeActorReturnDrive } = await import("@semio-tech/framework-actor/return");
     const name = "@webassemblyjs/leb128/lib/leb.js";
     const module = await import(name);
     const encode = (module.default ?? module).encodeUIntBuffer;
@@ -60,7 +60,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { valueSchema } = await import("@semio-tech/value-ts/schema");
     const { default: Ajv } = await import("ajv");
     const validate = new Ajv({ strict: true }).addSchema(valueSchema).addSchema(lifetimeSchema).addSchema(pageSchema).addSchema(schema).getSchema("https://json.schemas.assets.semio-tech.com/framework/actor/return/schema.json#/$defs/Return")!;
-    const { decodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { decodeActorReturnResult } = await import("@semio-tech/framework-actor/return");
     for (const row of fixture.resultVectors) {
       expect(validate(row.value)).toBe(true);
       const value = hydrate(row.value);

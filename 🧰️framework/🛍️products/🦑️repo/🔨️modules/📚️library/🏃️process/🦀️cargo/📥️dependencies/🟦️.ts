@@ -1,33 +1,30 @@
 import continuationSchema from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🤲️continuations/🧬️schema/🔣️.json";
 import type {CargoCompilerInputsRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
-import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{cargoConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import{requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{cargoConfigurationArgumentsV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import type{CargoCompilerInputsPortV1}from"../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import{repositoryCargoCommandV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/📤️forwarding/🟦️.ts";
 import cargoLaunchSchema from"../🚪️launcher/🧬️schema/🔣️.json";
 const cargoLaunchPolicy=cargoLaunchSchema.definitions.Configuration.const;
 import{readCargoProfileConsumptionV1,type CargoProfileConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{withCompilerWorkspaceWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withRepositoryCargoConfigurationV1,repositoryCargoConfigurationArgumentsV1,type RepositoryCargoConfigurationViewV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🟦️.ts";
 import {withRepositoryCargoRegistryReadyV1} from "./🟢️ready/💾️storage/🟦️.ts";
+import type {CargoDependencyNetworkV1,RepositoryCargoInputsV1} from "./📋️contract/🟦️.ts";
 import {admitRepositoryCompilerEnvironmentV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/🌍️environment/🟦️.ts";
 import {admitRepositoryCargoStorageArgumentsV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {resolve,join} from "node:path";
-import {acquireQueuedResourceLease,checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "./../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "./../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {captureOwnedCommandV1} from "./../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {acquireQueuedResourceLease,checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {validateJsonSchemaSubset} from "./../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import type {ScriptInvocation} from "./../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "./../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";
 
-/** 🌐️ Retains the original caller's explicit offline grant without ambient network inference. */
-export interface CargoDependencyNetworkV1 {readonly offline:boolean}
-/** 📥️ Names one bounded registry owner and the exact original manifest selection. */
-export interface RepositoryCargoInputsV1 {readonly invocation:ScriptInvocation;readonly consumption:CargoProfileConsumptionV1;readonly workspace:string;readonly cwd:string;readonly manifest:string;readonly args:readonly string[];readonly additionalManifests?:readonly Readonly<{manifest:string;cwd:string;args:readonly string[]}>[];readonly network:CargoDependencyNetworkV1;readonly control:ResourceLeaseControl;readonly storage:NativeStorageReservationV1;readonly environment:Readonly<Record<string,string|undefined>>}
 
 /** 🧊️ Retains exact per-selection issued arguments and actual phase across Cargo planning and execution. */
 export interface RepositoryCargoInputSelectionV1{readonly manifest:string;readonly cwd:string;readonly arguments:readonly string[];readonly configuration:RepositoryCargoConfigurationViewV1}

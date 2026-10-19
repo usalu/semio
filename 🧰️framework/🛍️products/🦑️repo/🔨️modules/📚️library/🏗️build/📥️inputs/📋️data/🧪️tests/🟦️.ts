@@ -1,7 +1,7 @@
 /** 🧪️ Data: 10 tests covering neutral actual graph inventory producers admit closed DATA before writer effects; neutral shared Source and lock inventory capture agrees with Ajv and SQLite; neutral shared inventory capture refuses hos… */
-import{withBuildTestInvocationV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{readInferenceGraphSourceV1,readInferenceSourceV1}from"../../../🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
-import{buildModesV1}from"../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import{buildModesV1}from"@semio-tech/process/build-mode";
 import{test,expect}from"bun:test";
 import{readFileSync}from"node:fs";
 import ts from"typescript";
@@ -17,8 +17,8 @@ import{resolve,parse,relative,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{runInNewContext}from"node:vm";
 import{createSourceInventoryDataV1}from"../🟨️.mjs";
-import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{createIssuedResourceControlV1}from"@semio-tech/process/routing";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import schema from"../🧬️schema/🔣️.json";
 import policySchema from"../../🧮️digest/📥️read/🧬️schema/🔣️.json";
 import sourceSchema from"../../🧮️digest/🔣️schema.json";

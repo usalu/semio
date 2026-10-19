@@ -2,7 +2,7 @@
 //! written. Pure, total and read-only: a refusal names the field below the record and carries the message.
 //! 📎 https://en.wikipedia.org/wiki/ISO_216
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2, ViewCrop, ViewKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2, ViewCrop, ViewKind};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::snapshot::entities::{Sheet, SheetRevision, Viewport};
 

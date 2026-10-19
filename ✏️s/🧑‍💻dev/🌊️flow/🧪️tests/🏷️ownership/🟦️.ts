@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { findWorkspaceRoot } from "@semio-tech/process/routing";
-import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const owner = fileURLToPath(new URL("../..", import.meta.url));
 export function flowCompositionLaws() {
   const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));

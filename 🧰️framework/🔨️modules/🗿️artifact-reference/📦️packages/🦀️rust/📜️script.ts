@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {resolveTestLevel,testLevelBudgetMs} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -8,7 +7,7 @@ import {cmdBudgetMs} from "../../../🏃️process/📦️packages/🟦️typesc
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 
 /** 🧪️ Checks owned identities and their physical text extensions. */
 class NativeScript extends BundleScript {

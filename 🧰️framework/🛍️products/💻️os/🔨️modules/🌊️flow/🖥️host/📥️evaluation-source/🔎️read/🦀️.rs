@@ -10,7 +10,7 @@ use semio_framework_os_flow_operators::registry::flow_extension_registry_generat
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
 use std::sync::Arc;
 use semio_framework_job::StepContext;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::{SharedControlledRetirement,shared_retirement_birth_bytes}};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{SharedControlledRetirement,shared_retirement_birth_bytes}};
 use std::mem::{ManuallyDrop,size_of};
 /// 🧭️ The session baseline custody a funded current-source read inspects; the evaluation session is its one implementor.
 pub trait FlowSourceBaseline {

@@ -1,6 +1,6 @@
 //! 🧭️ `plan`: the conversions from authored plan values to the geometry crate and the length of an authored axis, the one definition mutations, inferences, the editor and the exports share.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 

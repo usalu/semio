@@ -78,7 +78,7 @@ impl BridgeBroadcastCursor {
         BridgeBroadcastStep::Complete(completion)
     }
 
-    pub(super) fn close_one_claim(mut self) -> BridgeBroadcastStep {
+    pub(crate) fn close_one_claim(mut self) -> BridgeBroadcastStep {
         while self.recipient_cursor < self.recipients {
             let index = self.recipient_cursor;
             self.recipient_cursor += 1;

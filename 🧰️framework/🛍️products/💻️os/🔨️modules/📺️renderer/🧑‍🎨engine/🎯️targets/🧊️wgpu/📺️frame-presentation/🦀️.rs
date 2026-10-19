@@ -16,7 +16,7 @@ use semio_framework_os_renderer_wgpu_host_plumbing::surface_lane;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use ui_gpu::GpuContext;
-use ui_wgpu::wgpu::{SemioCursor, apply_window_cursor};
+use semio_framework_ui_wgpu_hosting::cursor::{SemioCursor, apply_window_cursor};
 use winit::window::Window;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;

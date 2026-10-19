@@ -187,7 +187,7 @@ impl Drop for IconPaintCache {
 struct IconOwnedRetirement {
     pub source:ManuallyDrop<Option<IconPaintCache>>,
     pub key:Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
-    image:Option<semio_framework_value::retirement::shared::SharedControlledRetirement<RasterImage>>,
+    image:Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<RasterImage>>,
     metadata:Option<semio_framework_value::retirement::controlled::ControlledRetirement<(f64,f64,f64,f64)>>,
     pub cursor:usize,
 }
@@ -207,7 +207,7 @@ impl IconOwnedRetirement {
         Ok(RetirementDemand{depth:1,..Default::default()})
     }
     pub fn step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
-        use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,shared::SharedControlledRetirement}};
+        use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{controlled::ControlledRetirement,arc_custody::SharedControlledRetirement}};
         let empty=RetainedCloneProgress::default();if self.terminal(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
         let demand=self.demand(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original icon retirement exceeds admitted depth"))}if grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         macro_rules! child{($field:ident,$method:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.$method(child)?;return Ok(RetainedCloneStep::Progress(semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original icon child")?.progress()))}}}

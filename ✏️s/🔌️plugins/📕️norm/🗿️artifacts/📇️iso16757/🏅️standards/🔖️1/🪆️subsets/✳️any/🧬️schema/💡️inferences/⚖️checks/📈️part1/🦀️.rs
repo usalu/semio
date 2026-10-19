@@ -12,7 +12,7 @@ use semio_s_artifact_norm_iso16757_checks_common::{assess, catalogue_subject, co
 use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, Quantity, QuantityKind, Remedy, RemedyBound};
 use semio_s_artifact_norm_iso16757_model::part_1::{Catalogue, Product, PropertyDefinition, SelectionRequest};
 use semio_s_artifact_norm_iso16757_model::CatalogueValue;
-use semio_s_artifact_norm_iso16757_checks_common::helpers::part_1 as helpers;
+use semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_1 as helpers;
 use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 use std::collections::{HashMap, HashSet};
 

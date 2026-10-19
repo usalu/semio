@@ -43,11 +43,29 @@ semio-framework-os-infinite-world-interaction = { path = "../../../🧵️intera
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_gpu = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render" }
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["browser-presenter"] }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-prepared = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../../../../🔨️modules/🖱️ui/🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

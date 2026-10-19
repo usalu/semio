@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 /** 🗂️ One id-keyed collection of an artifact snapshot, as the `x-semio-collection-catalog` extension of its JSON schema declares it. */
 export interface CollectionCatalogEntryV1 {
@@ -14,7 +14,7 @@ export interface CollectionCatalogEntryV1 {
   readonly label: { readonly article: "a" | "an"; readonly en: string; readonly de: string };
 }
 
-/** 🗂️ The `x-semio-collection-catalog` extension: names, type paths and the collections the generic collection mutations range over. */
+/** 🗂️ The `x-semio-collection-catalog` extension: names, type paths and the collections the generic collection mutations range over. `typescript.rows` is the entry of the TypeScript module tree (relative to the generated catalog) in which the row types are declared; the generated catalog imports each row type from the module of that tree that declares it, never from the entry. */
 export interface CollectionCatalogV1 {
   readonly keyType: string;
   readonly rowType: string;
@@ -254,11 +254,53 @@ impl From<${entry.row}> for ${R} {
   return [{ folder: null, text: root }, ...RUST_CHILDREN.map((entry, index) => ({ folder: entry.folder, text: child(index, bodies[index]!) }))];
 }
 
-/** 🟦️ Renders the TypeScript catalog: the key and row unions and the collection table, over the TypeScript row types the schema already publishes. */
-export function renderCollectionCatalogTypeScriptV1(catalog: CollectionCatalogV1): string {
+/** 🔗️ Reads a TypeScript source, or undefined when the file does not exist. */
+export type CollectionCatalogReaderV1 = (path: string) => string | undefined;
+
+const RELATIVE_MODULE = /^[ \t]*(?:import|export)\s+(?:type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s*from\s*"(\.{1,2}\/[^"\n]+\.ts)"/gmu;
+
+const declares = (source: string, name: string): boolean => new RegExp(`^[ \\t]*(?:export\\s+)?(?:declare\\s+)?(?:interface|type|class|enum)\\s+${name}\\b`, "mu").test(source);
+
+function reachable(entry: string, stop: string, read: CollectionCatalogReaderV1): ReadonlySet<string> {
+  const seen = new Set<string>();
+  const queue = [entry];
+  for (let path = queue.pop(); path !== undefined; path = queue.pop()) {
+    if (seen.has(path)) continue;
+    const source = path === stop ? undefined : read(path);
+    if (source === undefined && path !== stop) continue;
+    seen.add(path);
+    if (source !== undefined) for (const match of source.matchAll(RELATIVE_MODULE)) queue.push(resolve(dirname(path), match[1]!));
+  }
+  return seen;
+}
+
+/** 🧭️ The module that declares each row type, as the import specifier the generated catalog at `outputPath` uses for it. The modules are found by following the relative imports and re-exports of the `typescript.rows` entry (the catalog itself left out); a row type must be declared by exactly one of them, and that module must not reach the catalog again, so the generated import can never close a cycle. */
+export function resolveCollectionRowOwnersV1(catalog: CollectionCatalogV1, outputPath: string, read: CollectionCatalogReaderV1): ReadonlyMap<string, string> {
+  const tree = [...reachable(resolve(dirname(outputPath), catalog.typescript.rows), outputPath, read)].filter((path) => path !== outputPath);
+  if (tree.length === 0) throw Error(`collection catalog typescript.rows ${catalog.typescript.rows} does not name a TypeScript module`);
+  const owners = new Map<string, string>();
+  for (const row of new Set(catalog.collections.map((collection) => collection.row))) {
+    const declaring = tree.filter((path) => declares(read(path)!, row));
+    if (declaring.length !== 1) throw Error(`collection catalog row type ${row} must be declared by exactly one module below ${catalog.typescript.rows}, found ${declaring.length}`);
+    if (reachable(declaring[0]!, outputPath, read).has(outputPath)) throw Error(`collection catalog row type ${row} is declared in ${declaring[0]}, which imports the catalog: the generated import would close a cycle`);
+    const specifier = relative(dirname(outputPath), declaring[0]!).split("\\").join("/");
+    owners.set(row, specifier.startsWith(".") ? specifier : `./${specifier}`);
+  }
+  return owners;
+}
+
+/** 🟦️ Renders the TypeScript catalog: the key and row unions and the collection table, over the TypeScript row types imported from the modules that declare them (`owners`, see `resolveCollectionRowOwnersV1`). */
+export function renderCollectionCatalogTypeScriptV1(catalog: CollectionCatalogV1, owners: ReadonlyMap<string, string>): string {
   const c = catalog.collections;
+  const bySpecifier = new Map<string, Set<string>>();
+  for (const entry of c) {
+    const specifier = owners.get(entry.row);
+    if (specifier === undefined) throw Error(`collection catalog row type ${entry.row} has no owning module`);
+    bySpecifier.set(specifier, (bySpecifier.get(specifier) ?? new Set()).add(entry.row));
+  }
+  const imports = [...bySpecifier.keys()].sort().map((specifier) => `import type { ${[...bySpecifier.get(specifier)!].sort().join(", ")} } from "${specifier}";`).join("\n");
   return `/** 🤖️ Generated by the collection-catalog generator (\`📚️library/🏗️authoring/🗂️collection-catalog\`) from the \`x-semio-collection-catalog\` extension of its snapshot schema. Edit the schema and regenerate. */
-import type { ${[...new Set(c.map((entry) => entry.row))].sort().join(", ")} } from "${catalog.typescript.rows}";
+${imports}
 
 /** 🗂️ Key of one id-keyed collection. */
 export type ${catalog.keyType} = ${c.map((entry) => JSON.stringify(entry.key)).join(" | ")};
@@ -277,11 +319,13 @@ ${c.map((entry) => `  { key: ${JSON.stringify(entry.key)}, entity: ${JSON.string
 `;
 }
 
-/** 🏭️ Writes (or, in check mode, compares) the generated Rust and TypeScript at the catalog's declared \`output\` paths, relative to its schema, and returns the paths that differ. */
+/** 🏭️ Writes (or, in check mode, compares) the generated Rust and TypeScript at the catalog's declared `output` paths, relative to its schema, and returns the paths that differ. */
 export function generateCollectionCatalogV1(schemaPath: string, mode: "write" | "check"): readonly string[] {
   const catalog = parseCollectionCatalogV1(JSON.parse(readFileSync(schemaPath, "utf8")));
   const rust = join(dirname(schemaPath), catalog.output.rust);
-  const outputs: [string, string][] = [...renderCollectionCatalogRustV1(catalog).map((file): [string, string] => [file.folder === null ? rust : join(dirname(rust), file.folder, basename(rust)), file.text]), [join(dirname(schemaPath), catalog.output.typescript), renderCollectionCatalogTypeScriptV1(catalog)]];
+  const typescript = join(dirname(schemaPath), catalog.output.typescript);
+  const owners = resolveCollectionRowOwnersV1(catalog, typescript, (path) => (existsSync(path) ? readFileSync(path, "utf8") : undefined));
+  const outputs: [string, string][] = [...renderCollectionCatalogRustV1(catalog).map((file): [string, string] => [file.folder === null ? rust : join(dirname(rust), file.folder, basename(rust)), file.text]), [typescript, renderCollectionCatalogTypeScriptV1(catalog, owners)]];
   const stale = outputs.filter(([path, text]) => !existsSync(path) || readFileSync(path, "utf8") !== text).map(([path]) => path);
   if (mode === "write") for (const [path, text] of outputs) if (stale.includes(path)) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); }
   return stale;

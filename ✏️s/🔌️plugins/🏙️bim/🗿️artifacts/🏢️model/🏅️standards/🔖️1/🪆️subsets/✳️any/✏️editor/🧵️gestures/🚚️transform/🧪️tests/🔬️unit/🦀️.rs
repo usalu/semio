@@ -1,7 +1,7 @@
-use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 fn only(mutations: &[ModelMutation]) -> &ModelMutation {
     match mutations {
@@ -20,7 +20,7 @@ async fn dragging_the_selection_writes_one_move_with_the_vector() {
     let step = rig.up(3.0, 1.0);
     let ModelMutation::MoveElements(moved) = only(&step.mutations) else { panic!("a move-elements") };
     assert_eq!((moved.ids.clone(), moved.vector.x, moved.vector.y), (vec!["w-south".to_string(), "w-north".to_string()], 2.0, 0.0));
-    assert_eq!(rig.snapshot.walls["w-south"].axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 2.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 10.0, y: 0.0 } });
+    assert_eq!(rig.snapshot.walls["w-south"].axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 2.0, y: 0.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 10.0, y: 0.0 } });
 }
 
 #[semio_framework_async_macros::async_test]

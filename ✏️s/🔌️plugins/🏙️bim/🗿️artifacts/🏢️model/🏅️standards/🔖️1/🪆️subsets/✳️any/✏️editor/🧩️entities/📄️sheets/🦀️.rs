@@ -2,12 +2,23 @@
 //! properties panel offers. The size of the paper, the scales and the window of a viewport are inferred rows of the `sheet-layout` inference.
 
 use crate::editor::bim::entities::views::{pair_text, parse_crop};
-use crate::editor::bim::entities::{number, parse_count, parse_point, parse_text, partial, point, Created, EntityKind, FieldRow, InferredRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::io::export::sheets;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::scale_text;
-use crate::standards::v1::subsets::any::schema::{snapshot::{view_is_drawn, IsoSize, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport, DEFAULT_VIEWPORT_SCALE, MAX_VIEWPORT_SCALE}, diff::Assigned, mutations::ModelMutation};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{number, parse_count, parse_point, parse_text, partial, point};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow, InferredRow};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::scale_text;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{view_is_drawn, ModelSnapshot, Sheet, SheetRevision, Viewport, DEFAULT_VIEWPORT_SCALE, MAX_VIEWPORT_SCALE};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_104::standards::v1::subsets::any::schema::mutations::delete_sheet;
+use semio_s_artifact_bim_model_mut_any_106::standards::v1::subsets::any::schema::mutations::delete_sheet_revision;
+use semio_s_artifact_bim_model_mut_any_105::standards::v1::subsets::any::schema::mutations::delete_viewport;
+use semio_s_artifact_bim_model_mut_any_36::standards::v1::subsets::any::schema::mutations::set_sheet;
+use semio_s_artifact_bim_model_mut_any_38::standards::v1::subsets::any::schema::mutations::set_sheet_revision;
+use semio_s_artifact_bim_model_mut_any_37::standards::v1::subsets::any::schema::mutations::set_viewport;
 
 //#region 🔖️Text
 /// 📄️ The paper a text names: an ISO size (`A3`) or two sides in millimetres (`600 × 400`, `600 x 400`).
@@ -46,7 +57,7 @@ pub fn orientation_choices(_: &ModelSnapshot, labels: &BimLabels) -> Vec<(String
 
 /// 📄️ The sheets of the model by id and number and name, in print order.
 pub fn sheet_choices(snapshot: &ModelSnapshot, _: &BimLabels) -> Vec<(String, String)> {
-    sheets::ordered(snapshot).into_iter().filter_map(|id| snapshot.sheets.get(&id).map(|row| (id.clone(), format!("{} {}", row.number, row.name)))).collect()
+    semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::ordered(snapshot).into_iter().filter_map(|id| snapshot.sheets.get(&id).map(|row| (id.clone(), format!("{} {}", row.number, row.name)))).collect()
 }
 
 /// 🖼️ The views that draw on paper by id and name.
@@ -112,7 +123,7 @@ pub fn next_number(snapshot: &ModelSnapshot) -> String {
 /// 📄️ A new sheet: A3 landscape, the next free number, named by the caller, with the project line and the author of the project in its title block.
 pub fn create_sheet(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let sheet = Sheet { project: snapshot.project.name.clone(), drawn_by: snapshot.project.author.clone(), ..Sheet::standard(&next_number(snapshot), name) };
-    Ok(ModelMutation::CreateSheet(crate::standards::v1::subsets::any::schema::mutations::create_sheet::CreateSheet { id: id.into(), sheet }))
+    Ok(ModelMutation::CreateSheet(semio_s_artifact_bim_model_mut_any_145::standards::v1::subsets::any::schema::mutations::create_sheet::CreateSheet { id: id.into(), sheet }))
 }
 
 fn container(snapshot: &ModelSnapshot, parent: &str) -> Result<String, &'static str> {
@@ -138,7 +149,7 @@ pub fn create_viewport(snapshot: &ModelSnapshot, id: &str, parent: &str, _name: 
     let view = next_view(snapshot, &sheet).ok_or("bim.create.view-missing")?;
     let count = snapshot.viewports.values().filter(|row| row.sheet == sheet).count() as f64;
     let viewport = Viewport { scale: scale_of(snapshot, &view), ..Viewport::standard(&sheet, &view, Point2 { x: 30.0 + 10.0 * count, y: 30.0 + 10.0 * count }) };
-    Ok(ModelMutation::CreateViewport(crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport { id: id.into(), viewport }))
+    Ok(ModelMutation::CreateViewport(semio_s_artifact_bim_model_mut_any_146::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport { id: id.into(), viewport }))
 }
 
 /// 🧾️ The next revision mark of a sheet: the letter after the highest letter mark, `A` for the first.
@@ -151,7 +162,7 @@ pub fn next_mark(snapshot: &ModelSnapshot, sheet: &str) -> String {
 pub fn create_revision(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let sheet = container(snapshot, parent)?;
     let revision = SheetRevision { number: next_mark(snapshot, &sheet), date: String::new(), description: name.into(), author: snapshot.project.author.clone(), sheet };
-    Ok(ModelMutation::CreateSheetRevision(crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::CreateSheetRevision { id: id.into(), sheet_revision: revision }))
+    Ok(ModelMutation::CreateSheetRevision(semio_s_artifact_bim_model_mut_any_147::standards::v1::subsets::any::schema::mutations::create_sheet_revision::CreateSheetRevision { id: id.into(), sheet_revision: revision }))
 }
 //#endregion 🔖️Create
 
@@ -163,7 +174,7 @@ pub const SHEET: EntityKind = EntityKind {
     library: false,
     label: |labels| labels.kind_sheet,
     group: |labels| labels.group_sheets,
-    ids: |snapshot| sheets::ordered(snapshot),
+    ids: |snapshot| semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::ordered(snapshot),
     name: |snapshot, id| snapshot.sheets.get(id).map(|row| row.name.clone()),
     parent: |_, _| None,
     delete: delete!(delete_sheet::DeleteSheet),

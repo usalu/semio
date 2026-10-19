@@ -1,7 +1,7 @@
 use super::*;
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
-use crate::wgpu::Label;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
+use semio_framework_ui_locale::Label;
 
 fn observe_layout_step(job: &mut MountedLayoutJob, cx: &mut semio_framework_job::StepContext<'_>) -> Option<semio_framework_job::JobOutcomeKind> {
     let outcome = semio_framework_job::InteractiveJob::step(job, cx).expect("original layout step").map(semio_framework_job::JobOutcomeBorrow::into_descriptor);
@@ -322,7 +322,7 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
 }
 
 //#region 📐️AuthoredLayoutRects
-use crate::wgpu::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
+use semio_framework_ui_retained_tree::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
 use ui_contract::{Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, Sizing, SpaceToken, StackLayout};
 
 /// 🧪️ The arena is what layout reads, so a fixture mounts nodes straight into it with the AUTHORED
@@ -335,7 +335,7 @@ fn mount(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, 
 }
 
 fn leaf() -> UiNode {
-    UiNode::Separator(crate::wgpu::component::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None })
+    UiNode::Separator(semio_framework_ui_declaration::ui::UiSeparatorNode { presence: UiPresence::default(), menu: None })
 }
 
 fn fixed_leaf_spec() -> LayoutSpec {
@@ -366,7 +366,7 @@ fn mounted_layout_publishes_space_between_rects_without_growing_children() {
     let children: Vec<NodeId> = (0..3).map(|ordinal| mount(&mut tree, Some(root), ordinal + 1, leaf(), fixed_leaf_spec())).collect();
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 300.0, 100.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 300.0, 100.0));
 
     assert_eq!(solved(&tree, root), (0.0, 0.0, 300.0, 100.0));
     assert!(close(solved(&tree, children[0]).0, 0.0));
@@ -388,7 +388,7 @@ fn mounted_layout_publishes_a_two_column_grid_as_two_columns() {
     let second = mount(&mut tree, Some(root), 2, leaf(), fixed_leaf_spec());
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
 
     assert!(close(solved(&tree, first).0, 0.0));
     assert!(close(solved(&tree, second).0, 100.0), "the second cell sits in the second COLUMN, never on a second row");
@@ -412,7 +412,7 @@ fn mounted_layout_publishes_the_shared_overlay_flow_fixture() {
     let following = mount(&mut tree, Some(root), 4, leaf(), layout("following"));
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), fixture["viewport"]["width"].as_f64().expect("viewport width") as f32, fixture["viewport"]["height"].as_f64().expect("viewport height") as f32));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), fixture["viewport"]["width"].as_f64().expect("viewport width") as f32, fixture["viewport"]["height"].as_f64().expect("viewport height") as f32));
 
     for (node, id) in [("root", root), ("overlay", overlay), ("content", content), ("absolute", absolute), ("following", following)] {
         let actual = solved(&tree, id);
@@ -428,7 +428,7 @@ fn mounted_layout_wraps_an_overflowing_row_onto_a_second_line() {
     let children: Vec<NodeId> = (0..4).map(|ordinal| mount(&mut tree, Some(root), ordinal + 1, leaf(), fixed_leaf_spec())).collect();
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 100.0, 100.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 100.0, 100.0));
 
     assert!(close(solved(&tree, children[0]).1, 0.0));
     assert!(close(solved(&tree, children[1]).1, 0.0));
@@ -442,7 +442,7 @@ fn mounted_layout_aligns_the_cross_axis_instead_of_always_stretching() {
     let child = mount(&mut tree, Some(root), 1, leaf(), fixed_leaf_spec());
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
 
     let (_, y, _, height) = solved(&tree, child);
     assert!(close(height, 19.2), "align:center keeps the child's own height, never stretches it, got {height}");
@@ -458,7 +458,7 @@ fn mounted_layout_wraps_text_inside_a_narrow_flex_item() {
         let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
         let text = mount(&mut tree, Some(root), 1, UiNode::Text(UiTextNode { value: Label::data("alpha beta gamma delta"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), LayoutSpec::default());
         tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
-        assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), width, 400.0));
+        assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), width, 400.0));
         solved(&tree, text)
     };
     let (_, _, wide_width, wide_height) = build(600.0);
@@ -477,9 +477,9 @@ fn mounted_layout_prices_a_text_run_with_the_atlas_pair_kerning() {
     let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Horizontal, Align::Start, Justify::Start, false));
     let text = mount(&mut tree, Some(root), 1, UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None }), LayoutSpec::default());
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 1_000.0, 400.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 1_000.0, 400.0));
     let (_, _, width, _) = solved(&tree, text);
-    let mut atlas = crate::wgpu::text::FontAtlas::shaped_default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::shaped_default();
     let kerned = atlas.measure_text(value, DEFAULT_TEXT_SIZE_PX).0;
     let unkerned: f32 = value.chars().map(|ch| atlas.ensure_glyph(ch, DEFAULT_TEXT_SIZE_PX).advance).sum();
     assert!(unkerned - kerned > 0.5, "the pangram kerns: {unkerned} vs {kerned}");
@@ -512,7 +512,7 @@ fn composite_intrinsic_and_layout(tree: &mut UiTree, root: NodeId, width: f32) -
 fn geometry_button() -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some("geometry.control".into()),
-        icon_id: crate::wgpu::IconName::CircleDot,
+        icon_id: semio_framework_ui_declaration::IconName::CircleDot,
         label: Label::data("Control"),
         action: ActionDescriptor { controller_id: "geometry".into(), action: "change".into(), args: None },
         style: None,
@@ -587,7 +587,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
         &mut tree,
         Some(root),
         1,
-        UiNode::ExternalSlot(crate::wgpu::component::ui::UiExternalSlotNode {
+        UiNode::ExternalSlot(semio_framework_ui_declaration::ui::UiExternalSlotNode {
             plugin_id: "framework".into(),
             app_id: "shell".into(),
             body_key: "framework.chat.transcript".into(),
@@ -599,7 +599,7 @@ fn a_host_content_slot_reserves_the_band_its_host_declared() {
         LayoutSpec::default(),
     );
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 320.0, 800.0));
+    assert!(crate::layout_tree_now(&mut tree, root, Theme::default(), 320.0, 800.0));
     let (_, _, width, height) = solved(&tree, slot);
     assert!(close(height, declared), "🧩️ the host's band is honoured exactly, got {height}");
     assert!(width > 0.0, "🧩️ and the slot fills its parent's width rather than measuring nothing");

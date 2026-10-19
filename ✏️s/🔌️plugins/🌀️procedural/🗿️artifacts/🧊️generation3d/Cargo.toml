@@ -221,9 +221,6 @@ path = "../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️pac
 [workspace.dependencies.semio-framework-trace]
 path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-framework-ui]
-path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 

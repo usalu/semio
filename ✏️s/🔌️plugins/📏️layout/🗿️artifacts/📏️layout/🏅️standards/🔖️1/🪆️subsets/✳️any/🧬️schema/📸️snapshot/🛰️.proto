@@ -2,7 +2,7 @@ syntax = "proto3";
 package semio.s.layout.layout.snapshot;
 import "🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🛰️.proto";
 import "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🛰️.proto";
 message LayoutSnapshot {
   string schema = 1;
   string name = 2;
@@ -17,5 +17,5 @@ message LayoutSnapshot {
   optional string print_target = 11;
   optional semio.framework.value.dictionary.QuestionDictionary data_fields = 12;
   semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 13;
-  semio.os.store.ArtifactLink referenced_model = 14;
+  semio.framework.schema.artifact_link.ArtifactLink referenced_model = 14;
 }

@@ -285,7 +285,7 @@ func DefinitionHeaderUri(filePath string, sectionPath string, name string) strin
 // 🔖️RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
 // 🧪️RemoveAgentsDocsEntry removes the specified agents docs entry.
 func RemoveAgentsDocsEntry(filePath string) {
-	agentsPath := filepath.Join(workspace.RootDir, "AGENTS.md")
+	agentsPath := filepath.Join(workspace.GetRootDir(), "AGENTS.md")
 	if !workspace.FileExists(agentsPath) {
 		return
 	}

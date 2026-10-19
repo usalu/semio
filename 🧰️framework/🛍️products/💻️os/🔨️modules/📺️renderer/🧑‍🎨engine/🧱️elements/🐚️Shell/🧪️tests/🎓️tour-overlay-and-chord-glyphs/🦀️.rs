@@ -9,7 +9,7 @@
 
 use semio_framework_os_renderer_wgpu_fixtures::shell::{tour_introduction, tour_shell};
 use super::*;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation the two sibling law files use.
 fn engine_root() -> std::path::PathBuf {

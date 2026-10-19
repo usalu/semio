@@ -16,7 +16,7 @@ describe("host variant Nx fan-out", () => {
       const put = (path: string, text: string): void => { mkdirSync(dirname(join(fixture, path)), { recursive: true }); writeFileSync(join(fixture, path), text); };
       const project = (path: string, name: string): void => put(join(path, "📋️project.json"), JSON.stringify({ name, targets: { wasm: { configurations: { prototype: { env: { SEMIO_BUILD_MODE: "prototype" } }, release: { env: { SEMIO_BUILD_MODE: "release" } } } }, "wasm-release": {} } }));
       project("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer");
-      project("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow");
+      project("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust", "flow");
       const { frameworkOsEngineSourceOwnersV1, frameworkOsEnginePackageNameV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts")).href);
       for (const owner of frameworkOsEngineSourceOwnersV1("distribution")) project(owner, frameworkOsEnginePackageNameV1(owner));
       const crate = (directory: string, id: string, extra: string): void => {

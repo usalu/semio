@@ -1,4 +1,4 @@
-import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, IntroductionDemonstration, IntroductionPoint } from "@semio-tech/framework";
+import type { IntroductionGesture, IntroductionCursor, IntroductionKeyModifier, IntroductionDemonstration, IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import * as React from "react";
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";

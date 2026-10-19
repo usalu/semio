@@ -1,12 +1,13 @@
 //! 🏛️ Columns, beams, slabs, roofs and railings in the plan: poché where the plane cuts, projection below it, dashed hidden above it.
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::bodies::{beam_outline, beam_span, column_outline, column_section, slab_span};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::{host_paths, Host};
-use crate::standards::v1::subsets::any::schema::snapshot::RailingHost;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, point};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::{beam_outline, beam_span, column_outline, column_section, slab_span};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::{host_paths, Host};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RailingHost;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::bulged as corners;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
 use semio_framework_geometry::loops::{self, Vertex as Corner};
 use semio_framework_geometry::Point;
 
@@ -62,7 +63,7 @@ fn ceilings(sheet: &mut Sheet, cx: &Context<'_>) {
         if ceiling.boundary.len() < 3 {
             continue;
         }
-        let (low, high) = ceilings::span(cx.snapshot, ceiling, &cx.own);
+        let (low, high) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::span(cx.snapshot, ceiling, &cx.own);
         let (edge, holes): (Vec<Corner>, Vec<Vec<Corner>>) = (corners(&ceiling.boundary), ceiling.holes.iter().map(|hole| corners(hole)).collect());
         match classify(low, high, cx.cut) {
             Cutting::Cut => sheet.loop_region(id, PlanKind::CeilingEdge, PlanStyle::Cut, &edge, &holes),

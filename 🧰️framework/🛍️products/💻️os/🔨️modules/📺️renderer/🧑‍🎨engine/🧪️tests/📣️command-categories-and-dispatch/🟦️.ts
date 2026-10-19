@@ -1,7 +1,7 @@
 /** 📣 Command category trees and host effect dispatch. */
 import { treeDataActivation } from "@semio-tech/ui-react";
-import { createContinuationScheduler } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
-import { createVirtualContinuationHost } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🧪️tests/⚖️oracle/🟦️.ts";
+import { createContinuationScheduler } from "@semio-tech/framework-async";
+import { createVirtualContinuationHost } from "@semio-tech/framework-async/continuation/testing/oracle";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { actionSemanticsForKind } from "@semio-tech/framework";
 import { buildCommandCategoryTree, buildCommandCategoryTabs, encodeEffectActionInvocation, encodeEffectCommandInvocation, type ResolvedCommand, type ResolvedActionArgDef, dispatchOpenedFiles, IMPORT_CHUNK_BYTES, importPayloadChunks, scheduleDispatchAction, sampleMediaFrameTimestampsMs, runTier2VideoFrames, requestMediaFramesSourceV1, runMediaFramesV1 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";

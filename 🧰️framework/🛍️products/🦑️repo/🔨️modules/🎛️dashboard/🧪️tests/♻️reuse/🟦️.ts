@@ -7,8 +7,8 @@ import Ajv from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import * as ts from "typescript";
 import {Database} from "bun:sqlite";
-import {rustTokens,rustTokenPairs} from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import {readModuleTreeSource} from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import {rustTokens,rustTokenPairs} from "@semio-tech/compiler-syntax-rust-ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import corpus from "../🧫️fixtures/♻️reuse/🔣️.json";
 import schema from "../🧫️fixtures/♻️reuse/📋️schema.json";
 

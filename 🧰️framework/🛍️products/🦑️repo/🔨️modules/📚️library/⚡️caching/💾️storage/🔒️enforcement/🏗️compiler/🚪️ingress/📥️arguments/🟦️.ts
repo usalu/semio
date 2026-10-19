@@ -1,8 +1,8 @@
 import{admitRepositoryCargoConfigurationArgumentsV1,type RepositoryCargoConfigurationViewV1}from"../⚙️configuration/🟦️.ts";
 import{repositoryCargoStorageArgumentsV1,type RepositoryCargoStorageArgumentsV1}from"./📋️policy/🟦️.ts";
 export{repositoryCargoStorageArgumentsV1,type RepositoryCargoStorageArgumentsV1}from"./📋️policy/🟦️.ts";
-import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 /** 🎟️ Admits declared Cargo writers only after authentic enforcing compiler custody is rechecked. */
 export async function admitRepositoryCargoStorageArgumentsV1(args:readonly string[],context:RepositoryCargoStorageArgumentsV1,storage:NativeStorageReservationV1,control:ResourceLeaseControl,configuration:RepositoryCargoConfigurationViewV1|null):Promise<readonly string[]>{requireNativeStorageReservationV1(storage,control);if(storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler argument storage required");await storage.recheck();requireNativeStoragePathV1(storage.backing.root,context.buildDirectory);requireNativeStoragePathV1(storage.backing.root,context.targetDirectory);const declared=configuration===null?args:await admitRepositoryCargoConfigurationArgumentsV1(configuration,args,storage,control);repositoryCargoStorageArgumentsV1(declared,context);return Object.freeze([...args]);}

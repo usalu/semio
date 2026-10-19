@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Version 2 immutable Bun installation material uses canonical JSON manifests with only top-level semio omitted. Native fields, nested semio, array ordering, lock/config/patch bytes and exact canonical physical membership remain install inputs. Every operation captures and revalidates full original Source bytes and physical path/mode facts, including omitted metadata; an active publisher witness fences complete current membership before reuse and publication. No earlier generation protocol is admitted.",
+  "description": "Version 2 immutable Bun installation material uses canonical JSON manifests with only top-level scripts and semio omitted. Native fields other than scripts, nested semio, array ordering, lock/config/patch bytes and exact canonical physical membership remain install inputs. Every operation captures and revalidates full original Source bytes and physical path/mode facts, including omitted metadata; an active publisher witness fences complete current membership before reuse and publication. No earlier generation protocol is admitted.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,6 +16,7 @@
     },
     "excludedTopLevelFields": {
       "const": [
+        "scripts",
         "semio"
       ]
     },
@@ -4768,7 +4769,7 @@
       "SourceOwnerLockOutputProtocol":{"const":{"version":1,"purpose":"current-produced-source-lock-output","maximumBytes":8388608,"chunkBytes":65536,"maximumRootFields":9,"allowedRootFields":["lockfileVersion","configVersion","workspaces","packages","patchedDependencies","overrides","catalog","catalogs","trustedDependencies"],"mutableStageOutput":true,"readyIssued":false,"scopeMembership":"complete-current-installed-members","sourcePublication":"all-qualified-before-first"}},"SourceOwnerLockOutputCase":{"type":"object","additionalProperties":false,"required":["mode","accepted"],"properties":{"mode":{"enum":["valid","workspace-alias","foreign-workspace","foreign-name","unknown-field","invalid-utf8","symbolic-lock","oversize","undefined","frozen","drift-after-read"]},"accepted":{"type":"boolean"}}},
       "SourceOwnerStoreLifetimeReceipt":{"type":"object","additionalProperties":false,"required":["mode","failed","aborted","originalWireSha256"],"properties":{"mode":{"type":"string"},"failed":{"type":"boolean"},"aborted":{"type":"boolean"},"originalWireSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}},
       "SourceOwnerStoreLifetimeCase":{"type": "object", "additionalProperties": false, "required": ["mode", "failed", "aborted"], "properties": {"mode": {"enum": ["success", "undefined", "frozen", "accepted-drain", "accepted-failure", "release-failure", "reader-frozen"]}, "failed": {"type": "boolean"}, "aborted": {"type": "boolean"}}},
-    "SourceOwnerStoreSyncProtocol":{"const": {"version": 2, "purpose": "sync-current-store-source-owners", "selection": "complete-all-model-requested-owned-bindings", "externalOwners": "current-ready-no-implicit-install", "existingRoots": "exact-v2-ready-or-refuse", "sourceTransition": "preserve-exact-current-endpoint", "readyVersion": 2, "legacy": false, "platforms": ["darwin", "linux"], "lock": "requires-conditional-file-publication",
+    "SourceOwnerStoreSyncProtocol":{"const": {"version": 2, "maximumQueueWaitMilliseconds": 21600000, "purpose": "sync-current-store-source-owners", "selection": "complete-all-model-requested-owned-bindings", "externalOwners": "current-ready-no-implicit-install", "existingRoots": "exact-v2-ready-or-refuse", "sourceTransition": "preserve-exact-current-endpoint", "readyVersion": 2, "legacy": false, "platforms": ["darwin", "linux"], "lock": "requires-conditional-file-publication",
         "unsupportedPlatform": "pre-store-open-refusal"}},
     "SourceOwnerStoreSelection":{"oneOf": [{"type": "object", "additionalProperties": false, "required": ["kind"], "properties": {"kind": {"const": "all"}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "owner"], "properties": {"kind": {"const": "scope"}, "owner": {"type": "string", "minLength": 1, "maxLength": 256}}}]},
     "SourceOwnerStoreProducerCase":{"type": "object", "additionalProperties": false, "required": ["mode", "accepted", "changed"], "properties": {"mode": {"enum": ["complete", "subset-missing-owner", "installer-second", "ready-second", "publish-after-effect", "root-collision", "offline", "reuse", "subset-ready", "ordinary-after-one",

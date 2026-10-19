@@ -28,7 +28,7 @@ function repoRoot(): string {
   return findWorkspaceRoot(process.cwd());
 }
 
-const DOCK_WGPU_SOURCE = resolve(repoRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs");
+const DOCK_WGPU_SOURCE = resolve(repoRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🏷️tab-chrome-and-layout-edits/🦀️.rs");
 const CSS_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css';
 const HOST_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚀️boot-html/🟦️.ts';
 

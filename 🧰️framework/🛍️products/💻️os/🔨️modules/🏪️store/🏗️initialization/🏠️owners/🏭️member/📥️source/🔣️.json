@@ -31,11 +31,65 @@
       "language": "rust",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
       "symbols": [
-        "ArtifactStore",
         "ArtifactStoreOwnedDisposer",
         "ArtifactStoreCursorDisposer",
         "create_member_store",
         "open_member_store"
+      ]
+    },
+    "memberStore": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🏠️space/📥️lifted/🏪️store/🦀️.rs",
+      "symbols": [
+        "create_member_store",
+        "open_member_store",
+        "install_funded_member_store_owners",
+        "install_unscheduled_catalog"
+      ]
+    },
+    "storeOwnerInstall": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🏗️store-owners-retained-reads-and-retirements/🦀️.rs",
+      "symbols": [
+        "install_document_store_owners_exact"
+      ]
+    },
+    "storeComponents": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🧩️store-component-structs/🦀️.rs",
+      "symbols": [
+        "StoreLog",
+        "StoreOwners"
+      ]
+    },
+    "storeLive": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🧱️live-fold-and-parts-types/🦀️.rs",
+      "symbols": [
+        "StoreLive"
+      ]
+    },
+    "storeDisposer": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs",
+      "symbols": [
+        "ArtifactStoreOwnedDisposer",
+        "ArtifactStoreCursorDisposer"
+      ]
+    },
+    "storeCloseCursor": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📥️lifted/🏪️store/🚦️cursor-admission-dispatch-and-apply-batch/🦀️.rs",
+      "symbols": [
+        "close_cursor_admit",
+        "owned_roots_terminal_is_empty"
+      ]
+    },
+    "storeBackbone": {
+      "language": "rust",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️store-components/📥️lifted/🏪️store/🗑️store-wire-scratch-owner-and-fold-history/🦀️.rs",
+      "symbols": [
+        "close_take_backbone_retirement"
       ]
     },
     "valueFactory": {

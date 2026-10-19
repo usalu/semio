@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::DeleteAnnotationStyle;
 use crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateAnnotationStyle, base: &ModelSnapshot) -> Vec<Op>
 where

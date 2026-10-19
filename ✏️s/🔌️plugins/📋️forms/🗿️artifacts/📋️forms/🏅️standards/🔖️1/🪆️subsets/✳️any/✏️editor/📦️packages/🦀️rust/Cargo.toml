@@ -43,6 +43,7 @@ semio-framework-value = { path = "../../../../../../../../../../../../🧰️fra
 semio-framework-value-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-value-dictionary = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-commands = { path = "../../🎮️commands/❓️add-question/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms-commands-try = { path = "../../🎮️commands/↩️reset-try/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-config = { path = "../../🎚️config/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-definition = { path = "../../../🧬️schema/📝️definition/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms-diff = { path = "../../../🧬️schema/🔺️diff/📦️packages/🦀️rust" }

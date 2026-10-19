@@ -83,7 +83,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const forward=(stream:NodeJS.ReadableStream,destination:NodeJS.WritableStream|undefined,observed:boolean,source:OwnedCommandStreamV1):void=>{
     const limits=options.output;
     let tail=false;
-    const admitted=limits?new Transform({transform(bytes:Buffer,_encoding,done){
+    const admitted:NodeJS.ReadableStream=limits?new Transform({transform(bytes:Buffer,_encoding,done){
       if(outputRefused||consumerRefused){done();return;}
       if(bytes.length>limits.maximumBytes-outputBytes){outputRefused=true;terminate("output byte limit");done();return;}
       let lines=outputLines,open=tail;

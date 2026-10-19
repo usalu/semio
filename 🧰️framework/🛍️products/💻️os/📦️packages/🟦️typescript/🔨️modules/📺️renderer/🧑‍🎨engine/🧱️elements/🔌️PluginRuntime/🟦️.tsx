@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/PluginRuntime` entry: explicit re-exports of the source module that owns each member. */
+export { adaptPluginHandle, applyUiPatchToRetained, decodeWirePatchOps, fetchDescriptorManifest, loadPluginModule, resolveDescriptorBeforeRuntime, serializeCommandIngressForActor, serializePerActor } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+export type { PluginDispatchHintV1, PluginOperationCompletion, PluginWasmHandle } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx";

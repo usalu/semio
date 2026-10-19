@@ -1,4 +1,4 @@
-export {createLiveFilesystemJournalV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+export {createLiveFilesystemJournalV1} from "@semio-tech/framework/filesystem/observation/journal";
 export {writeNxGraphSeal,nxGraphSealHolds,nxGraphSourceMembershipV2} from "../../../../🕸️graph/🔏️seal/🟦️.ts";
 export {createRepositoryFilesystemJournalV1,repositoryFilesystemJournalPolicyV1} from "../../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🟦️.ts";
 export {readFilesystemJournalRpcRequestV1,readFilesystemJournalRpcResponseV1,loadedFilesystemJournalToolingIdentityV1} from "../../../../🕸️graph/🔏️seal/📥️membership/📥️journal/🌐️rpc/🟦️.ts";

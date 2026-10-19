@@ -10,12 +10,12 @@
 //! layers (else the `Structure` layers, else the mid plane). Faces are offset curves of the axis (parallel lines, or concentric arcs with
 //! the same bulge); joins trim them as described in [`joins`]. Z values: see `storey-levels`.
 
-pub use crate::standards::v1::subsets::any::schema::inferences::storey_levels::top_of;
 
-use crate::standards::v1::subsets::any::schema::authored::plan::{axis_length, segment_of as seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::mark;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, LocationLine, ModelSnapshot, Point2, Vertex, Wall};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{axis_length, segment_of as seg};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::mark;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, LocationLine, Point2, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::vector::angle_between;
@@ -159,18 +159,18 @@ pub fn thickness_of(snapshot: &ModelSnapshot, wall: &Wall) -> f64 {
     snapshot.wall_types.get(&wall.wall_type).map_or(0.0, |kind| kind.layers.iter().map(|layer| layer.thickness).sum())
 }
 
-fn core_centre(layers: &[crate::standards::v1::subsets::any::schema::snapshot::Layer], thickness: f64) -> f64 {
-    let span = |function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction| {
+fn core_centre(layers: &[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer], thickness: f64) -> f64 {
+    let span = |function: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction| {
         let first = layers.iter().position(|layer| layer.function == function)?;
         let last = layers.iter().rposition(|layer| layer.function == function)?;
         Some((layers[..first].iter().map(|layer| layer.thickness).sum::<f64>(), layers[..=last].iter().map(|layer| layer.thickness).sum::<f64>()))
     };
-    span(crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Core).or_else(|| span(crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure)).map_or(thickness / 2.0, |(start, end)| (start + end) / 2.0)
+    span(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Core).or_else(|| span(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LayerFunction::Structure)).map_or(thickness / 2.0, |(start, end)| (start + end) / 2.0)
 }
 
 /// ↔️ The face distances of a wall from its location line and the layers of its type.
 pub fn offsets_of(snapshot: &ModelSnapshot, wall: &Wall) -> Offsets {
-    let layers: &[crate::standards::v1::subsets::any::schema::snapshot::Layer] = snapshot.wall_types.get(&wall.wall_type).map_or(&[][..], |kind| &kind.layers[..]);
+    let layers: &[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer] = snapshot.wall_types.get(&wall.wall_type).map_or(&[][..], |kind| &kind.layers[..]);
     let thickness: f64 = layers.iter().map(|layer| layer.thickness).sum();
     let left = match wall.location {
         LocationLine::Center => thickness / 2.0,

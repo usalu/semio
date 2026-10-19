@@ -2,10 +2,10 @@
 //! together with the map from view metres to paper millimetres. All in millimetres from the top left corner of the sheet, x to the right and y downward.
 //! 📎 https://en.wikipedia.org/wiki/Technical_drawing#Sheet_sizes_and_frame
 
-use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, ViewMap};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
 
 /// 📏️ The margin of the frame at the binding edge (the left side), as ISO 5457 asks for.
 pub const BINDING_MARGIN: f64 = 20.0;

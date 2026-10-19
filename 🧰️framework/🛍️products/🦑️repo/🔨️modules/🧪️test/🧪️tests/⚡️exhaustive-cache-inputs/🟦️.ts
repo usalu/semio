@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { repoRootFromHere, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 
 /** 🦀️ Independent oracle for `rustSutCratePath`: the same walk-up, written from scratch against raw
  * `fs` calls instead of importing the plugin's own helper, so the two can disagree if either is wrong. */
@@ -34,15 +36,18 @@ function oracleContributionPaths(workspaceRoot: string, ownerRel: string): strin
 
 describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency closure", () => {
   const workspaceRoot = repoRootFromHere();
+  const createNodes = async (paths: readonly string[]) => {
+    const { default: plugin } = await import("../../🟨️.mjs");
+    return withBuildTestInvocationV1((invocation) => plugin.createNodesV2[1](paths, {}, { workspaceRoot, invocation, phaseControl: createIssuedResourceControlV1(invocation, "graph:test-inference-entry", 0) }));
+  };
 
   beforeAll(async () => {
-    const { default: plugin } = await import("../../🟨️.mjs");
-    await plugin.createNodesV2[1](["🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🥒️.feature"], {}, { workspaceRoot });
+    await createNodes(["🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🥒️.feature"]);
   });
 
   test("rustSutCratePath finds a crate rooted well above a deeply nested owner, agreeing with an independent walk", async () => {
     const { internals } = await import("../../🟨️.mjs");
-    const owner = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit";
+    const owner = "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles";
     const observed = internals.rustSutCratePath(workspaceRoot, owner);
     expect(observed).toBe("✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust");
     expect(observed).toBe(oracleRustSutCratePath(workspaceRoot, owner));
@@ -106,9 +111,8 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
   });
 
   test("one owner project carries a cached lint and a level-forwarding test target", async () => {
-    const { default: plugin } = await import("../../🟨️.mjs");
     const featurePath = "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🥒️.feature";
-    const [, graph] = (await plugin.createNodesV2[1]([featurePath], {}, { workspaceRoot }))[0];
+    const [, graph] = (await createNodes([featurePath]))[0];
     const project = Object.values(graph.projects)[0] as { targets: Record<string, { cache?: boolean; outputs?: readonly string[]; options: { command: string; forwardAllArgs: boolean } }> };
     expect(Object.keys(project.targets).sort()).toEqual(["lint", "test"]);
     expect(project.targets.test.options.forwardAllArgs).toBe(true);

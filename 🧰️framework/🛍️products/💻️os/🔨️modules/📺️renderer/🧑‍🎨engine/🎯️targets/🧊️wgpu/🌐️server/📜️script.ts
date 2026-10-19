@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {frameworkOsViteArtifactInputsV1} from "../../../../../🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
-import {repositoryCachePartitionRootV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {frameworkOsViteArtifactInputsV1} from "../../../../../🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🟦️.ts";
+import { repositoryCachePartitionRootV1 } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { serveVite } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { serveVite } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟦️.ts";
 
 /** 🌐️ Owns one browser listener consuming build-completed WGPU artifacts. */

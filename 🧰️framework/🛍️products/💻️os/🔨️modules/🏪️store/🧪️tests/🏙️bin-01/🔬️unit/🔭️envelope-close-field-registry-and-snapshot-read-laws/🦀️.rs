@@ -120,7 +120,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     let mut aliased = registry.try_issue(aliased_root.clone()).expect("exact aliased lease");
     assert!(aliased.return_now());
     assert!(!aliased.return_now(), "the same generation cannot be returned twice on the aliased path");
-    assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 0, "an aliased root is reclaimed on the returning thread, not charged to the pump");
+    assert_eq!(registry.returned_count(), 0, "an aliased root is reclaimed on the returning thread, not charged to the pump");
     assert_eq!(Arc::strong_count(&aliased_root), 1, "the aliased slot released its own owner alias in the same call");
     assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
     drop(aliased);
@@ -130,7 +130,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     let mut lease = registry.try_issue(Arc::new(11u32)).expect("exact sole-owner lease");
     assert!(lease.return_now());
     assert!(!lease.return_now(), "the same generation cannot be returned twice on the pump path");
-    assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 1);
+    assert_eq!(registry.returned_count(), 1);
     let mut reclaimed = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
         if let Some(owner) = registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe") {
@@ -139,7 +139,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
         }
     }
     assert_eq!(reclaimed.as_deref(), Some(&11));
-    assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 0);
+    assert_eq!(registry.returned_count(), 0);
     assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
     drop(reclaimed);
     drop(lease);
@@ -151,8 +151,8 @@ fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(1u16);
     let first = registry.try_issue(owner.clone()).expect("first exact lease");
-    let stale_index = first.index;
-    let stale_generation = first.generation;
+    let stale_index = first.slot_index();
+    let stale_generation = first.slot_generation();
     let first_read = ErasedSnapshotRead::new(owner, first);
     drop(match first_read.into_typed::<u16>(&registry) {
         Ok(owner) => owner,
@@ -164,8 +164,8 @@ fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
     for value in 0..SNAPSHOT_READ_LEASE_CAPACITY {
         let owner = Arc::new(value as u16);
         let lease = registry.try_issue(owner.clone()).expect("fixed ring re-admits every slot");
-        if lease.index == stale_index {
-            reused_generation = Some(lease.generation);
+        if lease.slot_index() == stale_index {
+            reused_generation = Some(lease.slot_generation());
         }
         reads.push(ErasedSnapshotRead::new(owner, lease));
     }

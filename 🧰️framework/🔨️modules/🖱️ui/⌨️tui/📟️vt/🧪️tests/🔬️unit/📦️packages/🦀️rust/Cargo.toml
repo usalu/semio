@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-ui-tui-vt-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui virtual terminal laws: screen sequences, history reflow, pane input and pointer, encoders and the shared corpus"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-vt-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../../../🧱️cell-model/📦️packages/🦀️rust" }
+semio-framework-ui-tui-vt = { path = "../../../../📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

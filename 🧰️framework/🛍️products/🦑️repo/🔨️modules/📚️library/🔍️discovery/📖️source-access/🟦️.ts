@@ -14,7 +14,7 @@ export type PolicySourceDirectoryResult = Readonly<{ state: "directory"; entries
 
 export type PolicySourceTextResult = Readonly<{ state: "file"; text: string }> | Readonly<{ state: "missing" | "unreadable" | "symlink" | "not-file"; text: "" }>;
 
-export const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
+export const POLICY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".cache", ".storybook", "storybook-static"]);
 
 export const POLICY_SOURCE_OPERATIONS: PolicySourceOperations = {
   lstat: (path) => {
@@ -138,6 +138,7 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs",
@@ -175,6 +176,9 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   `${OS_ENGINE}/🧱️elements/🏛️ShellHost/🟦️.tsx`,
   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -241,6 +245,43 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🧊️renderer/🦴️glb-decode/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/✒️ink-canvas-model-state/🦀️.rs`,
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🧊️renderer/📦️kernel-runtime/🏊️kernel-pool/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🎬️execution/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs",
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🧊️renderer/📮️mailbox-impl/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🗃️scene-state/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🗂️engine-surface-registry/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🔬️introspection/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🏭️factory/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🎬️shell-actions/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🕸️node-graph/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🪟️surfaces/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/🔗️AgentBridge/🎯️targets/🧊️wgpu/🦀️.rs`,
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🧊️renderer/🖥️frame-presentation/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🧩️retained-ui-engine/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/⌨️keyboard-and-palette/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🦀️.rs",
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/📡️kernel-protocol/📥️lifted/📬️kernel-replay-client/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/📨️command-dispatch/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/✍️text-editor/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/🖱️pointer-input/🦀️.rs`,
+  `${OS_ENGINE}/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🧩️engine-surface-attach/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs",
+  "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🩹️patches/📚️library/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📐️flex/🦀️.rs",
+  `${OS_ENGINE}/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🖌️canvas2d/🦀️.rs`,
+  `${OS_ENGINE}/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs`,
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
 ];
 
 /** 🌳️ Lists the repo-relative files of a split source's module tree (the root first, then its mounted children) through the symlink-refusing policy read; the crates of the renderer partition are not followed unless `crates: true` is passed, because the canonical test-mount rule of the evidence reader does not know the crate roots' `🧪️tests/🦀️.rs` stubs. */

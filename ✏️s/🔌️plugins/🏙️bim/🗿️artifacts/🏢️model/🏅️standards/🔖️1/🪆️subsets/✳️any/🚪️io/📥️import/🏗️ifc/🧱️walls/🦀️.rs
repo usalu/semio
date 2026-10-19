@@ -1,15 +1,16 @@
 //! 🧱️ Walls and their openings. A wall is read from its `Axis` representation, its swept `Body` (height and base level), and its layer set (type and location line); an opening from its void,
 //! its filling window or door, and the position of its placement projected onto the host axis.
 
-use crate::standards::v1::subsets::any::io::import::ifc::reader::Doc;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc;
 use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
-use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{real, text, Section};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{real, text, Section};
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of, set_of};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::offsets_of;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::offsets_of;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, DoorLeaves, Layer, LayerFunction, LocationLine, OpeningKind, Point2, Swing, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{DoorType, Opening, Wall, WallType, WindowType};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 
@@ -56,11 +57,11 @@ fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_con
         i.skip(entity, &label_text, "it is not contained in a storey");
         return;
     };
-    let id = crate::standards::v1::subsets::any::io::import::ifc::reader::Doc::identity(args, entity).unwrap_or_else(|| format!("w-{instance_id}"));
+    let id = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc::identity(args, entity).unwrap_or_else(|| format!("w-{instance_id}"));
     let to_building = i.in_building(&args[5], &storey);
     let body = i.doc.body(args);
     let edge = i.doc.axis_edge(args).or_else(|| match body.as_ref().map(|body| &body.section) {
-        Some(Section::Rectangle { width, .. }) => Some(crate::standards::v1::subsets::any::io::import::ifc::reader::Edge { start: [0.0, 0.0], end: [*width, 0.0], bulge: 0.0 }),
+        Some(Section::Rectangle { width, .. }) => Some(semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Edge { start: [0.0, 0.0], end: [*width, 0.0], bulge: 0.0 }),
         _ => None,
     });
     let attach = set_of(&i.doc, instance_id, ATTACH_SET);
@@ -129,7 +130,7 @@ fn door_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_c
 fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
     let (Some(host), Some(args)) = (i.ids.get(&host_ifc).cloned(), i.doc.args(opening_ifc, "IFCOPENINGELEMENT")) else { return };
     let Some(wall_row) = i.model.walls.get(&host).cloned() else { return };
-    let id = crate::standards::v1::subsets::any::io::import::ifc::reader::Doc::identity(args, "IFCOPENINGELEMENT").unwrap_or_else(|| format!("o-{opening_ifc}"));
+    let id = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::Doc::identity(args, "IFCOPENINGELEMENT").unwrap_or_else(|| format!("o-{opening_ifc}"));
     let Some(body) = i.doc.body(args) else {
         i.skip("IFCOPENINGELEMENT", &id, "it has no swept body");
         return;
@@ -148,7 +149,7 @@ fn opening(i: &mut Import<'_>, host_ifc: u64, opening_ifc: u64) {
         Axis::Line { start, end } => BulgeSeg::line(Point::new(start.x, start.y), Point::new(end.x, end.y)),
         Axis::Arc { start, end, bulge } => BulgeSeg::new(Point::new(start.x, start.y), Point::new(end.x, end.y), *bulge),
     };
-    let offset = crate::standards::v1::subsets::any::io::import::ifc::frames::snap(segment.closest(Point::new(origin[0], origin[1])).t * segment.length());
+    let offset = semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::snap(segment.closest(Point::new(origin[0], origin[1])).t * segment.length());
     let base_z = i.levels.get(&wall_row.storey).map_or(0.0, |level| level.elevation) + wall_row.base_offset;
     let filler = i.doc.index.filling.get(&opening_ifc).copied();
     let sill = number(&authoring_of(&i.doc, filler.unwrap_or(opening_ifc)), "Sill").unwrap_or(origin[2] - base_z);

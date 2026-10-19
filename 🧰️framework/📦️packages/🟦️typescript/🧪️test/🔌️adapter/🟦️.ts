@@ -1,3 +1,3 @@
 /** 🔌️ SDK entry `@semio-tech/framework/test/adapter`: explicit public surface of the framework module that plugins build on. */
-export { EVIDENCE_CLASSES, IMPLEMENTATIONS, MUTATION_OUTCOME_CLASSES, TEST_ROLES, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
+export { EVIDENCE_CLASSES, IMPLEMENTATIONS, MUTATION_OUTCOME_CLASSES, TEST_ROLES, TEST_INPUT_URI_RE, committedArtifact, currentPlatform, defineTestAdapter } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 export type { AdapterContext, AdapterOutcome, ComparisonProfile, EngineFamily, EvidenceClass, EvidenceInvariants, FeatureScenario, FeatureStep, Implementation, MutationOutcomeClass, PlatformId, ResolvedTestInput, SubjectRawInputs, SubsetTarget, TestAdapter, TestCasePlan, TestEvidence, TestRole, ToleranceOverride } from "../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";

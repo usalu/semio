@@ -66,7 +66,7 @@ semio-framework-ui-theme = { path = "../../../../../../../../../../🔨️module
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_styling = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-renderer-wgpu-engine-attach = { path = "../../../🔗️engine-attach/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,6 +1,7 @@
 //! 🛏️ `create-component` payload. Places an instance of a family: a storey, a family, a plan position with an elevation above the storey, a rotation, a mirror flag, an optional host wall and an optional system for a terminal.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Component, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateComponent {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateComponent
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateComponent> + From<crate::standards::v1::subsets::any::schema::mutations::delete_component::DeleteComponent>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateComponent> + From<semio_s_artifact_bim_model_mut_any_122::standards::v1::subsets::any::schema::mutations::delete_component::DeleteComponent>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "component", kind: "create-component", record: "CreateComponent" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

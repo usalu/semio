@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-document-ops` entry: explicit re-exports of the source module that owns each member. */
+export { applyInkCanvasEventLocal, cloneInkItemsWithOffset, createInkItemByKind, inkClipboardPayload, inkHtmlToParagraphs, inkImageAssetDataUrl, inkItemsFromClipboardPayload, inkParagraphsToHtml, inkTextParagraphsFromPlainText, inkTextPlainText } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🌳️ink-document-ops/🟦️.ts";
+export type { InkClipboardPayload } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🌳️ink-document-ops/🟦️.ts";

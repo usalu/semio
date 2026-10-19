@@ -1,6 +1,10 @@
 //! 🔧️ `set-railing` payload. Sets any of a railing's authored path, height, post spacing, rail and post sections, baluster row (an assigned null removes it), infill, host (an assigned null releases it), material, base offset and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::RailingPatch}, snapshot::{Baluster, Infill, ModelSnapshot, Point2, Profile, RailingHost}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RailingPatch;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Baluster, Infill, Point2, Profile, RailingHost};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

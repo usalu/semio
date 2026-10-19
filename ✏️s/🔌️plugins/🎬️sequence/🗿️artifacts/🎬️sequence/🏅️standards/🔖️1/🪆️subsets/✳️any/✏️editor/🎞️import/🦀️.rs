@@ -8,7 +8,7 @@ use crate::editor::sequence::edit_rules;
 use crate::editor::sequence::retained::SEQUENCE_STORE_MAXIMUM_BYTES;
 use crate::editor::sequence::app::SequencePlayApp;
 use crate::editor::sequence::host::max_serial_in_snapshot;
-use crate::editor::sequence::base::{sequence_child_leaves_emit, sequence_host_snapshot_from_children};
+use crate::editor::sequence::editor_vocabulary::{sequence_child_leaves_emit, sequence_host_snapshot_from_children};
 use crate::editor::sequence::persistent::sequence_close_step;
 
 //#region 🎞️ReservedImport
@@ -345,8 +345,9 @@ impl SequenceImportJob {
     }
 }
 
-impl semio_framework_job::InteractiveJob for SequenceImportJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SequenceJobTurn<'a> {
+impl SequenceImportJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SequenceJobTurn<'a> {
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         }
@@ -407,6 +408,10 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
         }
         semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
     }
+}
+
+impl semio_framework_job::InteractiveJob for SequenceImportJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -423,9 +428,11 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        self.closing = true;
-        sequence_close_step(self.close_original(grant))
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.closing = true;
+            sequence_close_step(self.close_original(grant))
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }

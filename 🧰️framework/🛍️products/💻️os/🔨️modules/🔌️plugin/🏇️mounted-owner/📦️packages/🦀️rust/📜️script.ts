@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modu
 import { resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 🧪️ Executes original scheduling authority and all portable native receipts before the independent oracle. */
 class TestScript extends BundleScript {

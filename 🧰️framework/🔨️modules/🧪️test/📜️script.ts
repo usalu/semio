@@ -9,7 +9,7 @@ import { runOwnedCommand } from "../🏃️process/📦️packages/🟦️typesc
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length !== 1 || segments[0] !== "adapter-ownership") throw new Error("Expected test adapter-ownership");
-    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "🔌️adapter/🧪️tests/🟦️.ts")], this.repoRoot, "adapter-ownership", TEST_LEVEL_BUDGET_MS.fundamental, { env: process.env });
+    await runOwnedCommand(process.execPath, ["test", resolve(this.root, "🔌️adapter/🧪️tests/🟦️.ts"), resolve(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🔌️adapter-invocation/🟦️.ts")], this.repoRoot, "adapter-ownership", TEST_LEVEL_BUDGET_MS.fundamental, { env: process.env });
   }
 }
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { invocation: original }));

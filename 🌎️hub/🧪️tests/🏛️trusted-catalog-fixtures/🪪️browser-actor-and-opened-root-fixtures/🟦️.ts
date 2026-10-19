@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { canonicalJson } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { hubSchemaExport } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { assertObservationExpectation, type ObservationExpectation } from "../../../🧪️testing/🛂️expectation/🟦️.ts";
 import { trustedBootstrapBrowserActorEncoding, trustedBootstrapBrowserActorV1 } from "../../../🏗️bootstrap/🧾️provenance/🧮️bootstrap-claims/🟦️.ts";

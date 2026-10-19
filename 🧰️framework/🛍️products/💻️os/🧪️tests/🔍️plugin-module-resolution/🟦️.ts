@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PLUGIN_MODULE_SOURCES_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
-import { decodeTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { decodeTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1 } from "@semio-tech/plugin-registry/deployment/schema";
 import { trustedPluginModuleSourceOfEntryV1, type TrustedPluginModuleFileV1 } from "@semio-tech/framework/plugin-module";
 import {
   hubCatalogClosureV1,

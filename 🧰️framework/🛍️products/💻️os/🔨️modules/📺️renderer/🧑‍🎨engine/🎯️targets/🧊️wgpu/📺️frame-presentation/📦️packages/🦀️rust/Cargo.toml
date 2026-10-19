@@ -39,7 +39,8 @@ semio-framework-job = { workspace = true }
 semio-framework-job-worker = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-prepared = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["browser-presenter"] }
+semio-framework-ui-wgpu-hosting = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧭️hosting/📦️packages/🦀️rust" }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]

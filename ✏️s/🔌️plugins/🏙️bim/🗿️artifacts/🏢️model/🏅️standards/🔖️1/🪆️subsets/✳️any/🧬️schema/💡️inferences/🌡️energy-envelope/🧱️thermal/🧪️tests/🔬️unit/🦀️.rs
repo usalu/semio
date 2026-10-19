@@ -1,6 +1,6 @@
 //! 🧪️ ISO 6946: the surface resistances of the three flow directions, the resistance of a homogeneous layer stack and the transmittance against hand-computed values.
 
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{HeatFlow, FarSide, transmittance};
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() < 1e-12

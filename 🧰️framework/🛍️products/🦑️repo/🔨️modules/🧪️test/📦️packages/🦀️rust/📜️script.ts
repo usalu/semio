@@ -2,10 +2,10 @@
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runRepositoryCargoTests } from "../../../📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 /** 🧪️ Checks the neutral host without compiling any contributed adapter. */
 class CheckScript extends BundleScript {

@@ -1,5 +1,5 @@
 /** 🌱️ Forms consumes the complete canonical intrinsic value domain. */
-import type{DslValue}from"../🧬️mutations/🟦️.ts";
+import type { DslValue } from "../🧱️form-model/🟦️.ts";
 import {binary64Value} from "@semio-tech/framework/value/ieee754";
 export{parseIntrinsicValue as parseFormsValue}from"@semio-tech/framework/value/schema";
 /** 🔢️ Match the native intrinsic numeric projection without changing its stored identity. */

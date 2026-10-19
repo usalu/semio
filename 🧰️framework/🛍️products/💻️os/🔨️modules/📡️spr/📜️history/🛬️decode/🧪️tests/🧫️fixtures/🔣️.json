@@ -25,5 +25,21 @@
     "capacity": 1048576,
     "release": 1048576,
     "depth": 64
+  },
+  "receiving": {
+    "owner": "RetainedHistoryDecode",
+    "engine": "RetainedHistorySourceDecode",
+    "steps": [
+      "Blocked",
+      "Progress",
+      "Ready",
+      "Fault",
+      "Closed"
+    ],
+    "turn": [
+      "should_yield",
+      "is_cancelled"
+    ],
+    "corpus": "🗂️file/🧪️tests/🧫️fixtures/🔣️.json"
   }
 }

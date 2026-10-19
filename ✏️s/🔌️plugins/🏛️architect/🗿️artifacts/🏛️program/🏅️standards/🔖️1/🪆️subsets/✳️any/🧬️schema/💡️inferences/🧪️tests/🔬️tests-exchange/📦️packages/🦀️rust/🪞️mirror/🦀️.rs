@@ -110,7 +110,7 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod architect {
-        pub use semio_s_artifact_architect_program_snapshot::editor::architect::base;
+        pub use semio_s_artifact_architect_program_snapshot::editor::architect::editor_vocabulary;
         #[path = "."]
         pub mod config {
             pub use semio_s_artifact_architect_program_config::editor::architect::config::*;

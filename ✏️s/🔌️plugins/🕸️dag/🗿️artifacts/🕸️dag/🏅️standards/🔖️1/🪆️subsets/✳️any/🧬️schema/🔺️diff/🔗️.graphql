@@ -1,5 +1,5 @@
 # 🔺️ DAG sparse durable delta with whole child-handle replacement.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 type DagDiff {
   schema: String @state(class: ARTIFACT)
   content: ArtifactChild @state(class: ARTIFACT)

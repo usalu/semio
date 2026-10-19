@@ -16,12 +16,12 @@
  * @see https://rollupjs.org/configuration-options/#treeshake-modulesideeffects — why evaluating it must do nothing
  */
 
-import { Component, useId, type ReactElement, type ReactNode } from "react";
-import type { Deed, Menagerie, Point, Slug } from "@semio-tech/pets";
+import { Component, useId, type ComponentType, type ReactElement, type ReactNode, type RefObject } from "react";
+import type { PetLayerHandle, PetLayerProps } from "@semio-tech/pets-react";
+import type { Deed, Menagerie, PetMode, Point, Slug } from "@semio-tech/pets";
 import { localized, type QuizLabelKey, type QuizLocale, type QuizText } from "../../🌐️i18n/🟦️.ts";
 import type { QuizState, QuizStep } from "../../🧭️session/🧮️state/🟦️.ts";
 import { BodyButton, useAnnouncement } from "../../🪟️chrome/🟦️.tsx";
-import type { PetPlay, PetPlayer, ShownPets } from "../🟦️.tsx";
 
 //#region 🎬️Scene
 /** 🏡️ The scene of every screen that belongs to no quiz: the render target's own name for it. */
@@ -64,6 +64,37 @@ export const PET_DEED_LABELS: { readonly [D in PetDeed]: QuizLabelKey } = { hell
 /** 📣️ What the status line of "Play with the pets" says once the learner asked a pet for a {@link PetDeed} — what was
  * asked, never what the pet then does or what the pets do by themselves (`{{name}}` is the pet). */
 export const PET_DEED_SAID: { readonly [D in PetDeed]: QuizLabelKey } = { hello: "quiz.preferences.petsHelloSaid", trick: "quiz.preferences.petsTrickSaid", pet: "quiz.preferences.petsPetSaid", toss: "quiz.preferences.petsTossSaid" };
+
+/** 🐕️ A pet on stage: its species and its display name in the learner's language. */
+export interface PetPlayer {
+  readonly species: Slug;
+  readonly name: string;
+}
+
+/** 🤹️ What the settings need to play with the pets without a pointer: who is on stage, in the order the layer names
+ * them, and how to ask one of them for a deed (whether and how it answers is its stage's to decide). */
+export interface PetPlay {
+  readonly players: readonly PetPlayer[];
+  readonly play: (species: Slug, deed: PetDeed) => void;
+}
+
+/** 🎭️ Where the render target comes from: its pet layer and what that layer keeps clear of by itself. */
+export type QuizPetsStage = () => Promise<{ readonly PetLayer: ComponentType<PetLayerProps>; readonly PET_KEEPOUTS: string }>;
+
+/** 🎟️ What the layer of the quiz draws once the pets came: the species, the render target, the scene of the step on screen,
+ * how lively the pets are, whether a run asks for quiet, what the learner allows (`play`, `mischief`), the handle the
+ * settings ask for deeds by, and where the layer says who is on stage. */
+export interface StagedPets {
+  readonly menagerie: Menagerie;
+  readonly target: Awaited<ReturnType<QuizPetsStage>>;
+  readonly scene: string;
+  readonly mode: PetMode;
+  readonly quiet: boolean;
+  readonly play: boolean;
+  readonly mischief: boolean;
+  readonly handle: RefObject<PetLayerHandle | null>;
+  readonly onCast: (species: readonly Slug[]) => void;
+}
 //#endregion 🎾️Play
 
 //#region 🗺️Stage
@@ -132,7 +163,7 @@ class PetBoundary extends Component<{ readonly children: ReactNode }, { readonly
  * ({@link QUIZ_PET_CONTROLS}), plays with copies of the marked topics ({@link QUIZ_PET_PROPS}), glances at the other
  * learners' cursors, says who is on stage and takes the deeds of the settings by its handle — as far as the learner
  * allows play and mischief. A layer that throws is taken away and the quiz stays. */
-export function QuizPetLayer(props: { readonly pets: ShownPets }): ReactElement {
+export function QuizPetLayer(props: { readonly pets: StagedPets }): ReactElement {
   const { pets } = props;
   const { PetLayer: Layer, PET_KEEPOUTS } = pets.target;
   return (

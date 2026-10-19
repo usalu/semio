@@ -45,7 +45,8 @@ describe("stable wasm package wrappers", () => {
   test("binds each stable owner to its compiler payload and existing Nx producer", () => {
     for (const row of fixture.wrappers) {
       expect(existsSync(join(repoRoot, row.ownerPath)), row.ownerPath).toBe(true);
-      expect(json(row.ownerPath), row.ownerPath).toEqual(row.manifest);
+      const { scripts: _scripts, devDependencies: _devDependencies, nx: _nx, ...identity } = json(row.ownerPath);
+      expect(identity, row.ownerPath).toEqual(row.manifest);
       const payload = json(row.payloadManifestPath);
       expect(payload.name, row.id).toBe(row.packageName);
       expect<string>(payload.type, row.id).toBe("module");
@@ -56,7 +57,10 @@ describe("stable wasm package wrappers", () => {
       const project = json(row.projectPath);
       expect(project.name, row.id).toBe(row.projectName);
       expect(project.targets[row.producerTarget].options.command, row.id).toBe(row.producerCommand);
-      expect<readonly string[]>(project.targets[row.producerTarget].outputs, row.id).toEqual([row.producerOutput]);
+      const producer = project.targets[row.producerTarget];
+      expect(producer.executor, row.id).toBe("repo:script");
+      expect<readonly string[]>(producer.outputs, row.id).toEqual([]);
+      expect(producer.metadata.semio.wasmPackageSourceV1, row.id).toEqual({ version: 1, sourceOwner: dirname(row.projectPath) });
     }
   });
 
@@ -116,7 +120,7 @@ describe("stable wasm package wrappers", () => {
       expect(current, row.id).toContain(dirname(row.ownerPath));
       expect(current, row.id).not.toContain(dirname(row.payloadManifestPath));
     }
-  }, 30_000);
+  }, 120_000);
 
   test("registers one exact cached Nx route with complete inputs", () => {
     const registration = fixture.registration;

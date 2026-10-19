@@ -10,7 +10,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/🪟️mounted-window-fetch.json" with { type: "json" };
-import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "../../../../../../../🔨️modules/🎠️kernel/🎯️ui-dirty-scope/🟦️.ts";
+import { partitionRefreshWindowInstancesV1, windowLayoutWindowIdsV1 } from "@semio-tech/framework-kernel";
 
 
 import React, { act, useEffect } from "react";

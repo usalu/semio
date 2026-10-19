@@ -25,14 +25,14 @@ impl TooltipState {
 }
 
 /// 📐️ The overlay's size for `viewport`: padded by one cell on each side.
-pub(crate) fn tooltip_size(t: &TooltipState, viewport: Size) -> Size {
+pub fn tooltip_size(t: &TooltipState, viewport: Size) -> Size {
     let widest = t.text.split('\n').map(display_width).max().unwrap_or(0);
     let width = (widest + 2).min(TOOLTIP_MAX_WIDTH).min(viewport.width.max(1));
     let height = (t.text.split('\n').count() as u16).min(viewport.height.max(1));
     Size { width, height }
 }
 
-pub(crate) fn paint_tooltip(t: &TooltipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_tooltip(t: &TooltipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Menu);
     let fg = theme.role(Role::Foreground);
     buf.fill_rect(rect, Cell::blank(fg, bg));

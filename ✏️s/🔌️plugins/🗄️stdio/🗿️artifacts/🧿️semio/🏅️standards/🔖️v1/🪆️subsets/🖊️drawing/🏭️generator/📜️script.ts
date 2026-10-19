@@ -30,8 +30,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧭️Paths
@@ -68,7 +68,7 @@ const CARRIERS = [
 const generate = (): void => {
   const built = spawnSync("cargo", ["build", "--release", "--offline"], { cwd: engine, stdio: "inherit" });
   if (built.status !== 0) throw new Error("engine build failed");
-  const run = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [fixtures], { stdio: "inherit" });
+  const run = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [fixtures], { stdio: "inherit" });
   if (run.status !== 0) throw new Error("fixture generation failed");
 };
 //#endregion 🏭️Generate
@@ -135,7 +135,7 @@ const manifests = (): void => {
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

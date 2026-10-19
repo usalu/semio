@@ -1,6 +1,6 @@
 /** 🚀️ The shard worker bootstrap registration tests. */
-import { loadActorCompositionBootstrapFixture, loadActorCompositionFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { loadActorCompositionBootstrapFixture, loadActorCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import type { OwnedResidentAdmission, OwnedResidentLedger, OwnedResidentRecord, ShardClient, ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 
 /** 🥾 Registers the original metadata preparation, prefix cancellation, gate ending and first value retention tests of the shard worker bootstrap. */

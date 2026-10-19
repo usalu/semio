@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-audio",
+ "crates": ["semio-s-artifact-stdio-semio-audio-model", "semio-s-artifact-stdio-semio-base", "semio-s-artifact-stdio-semio-audio-mutations", "semio-s-artifact-stdio-semio-audio-mut-family"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-s-artifact-stdio-semio-audio-model", "semio-s-artifact-stdio-semio-base", "semio-s-artifact-stdio-semio-audio-mutations"]},
+ "note": "HDR-4: audio mutation leaves to a generic leaf crate"
+}

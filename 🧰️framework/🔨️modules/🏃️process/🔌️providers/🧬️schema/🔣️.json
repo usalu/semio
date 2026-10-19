@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:framework:process:script-providers",
+  "title": "Script provider designation",
+  "description": "Closed wire map in which the issuing parent designates, by provider name, the absolute module that implements a framework-owned port inside the script process.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "providers"],
+  "properties": {
+    "version": { "const": 1 },
+    "providers": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$", "maxLength": 64 },
+      "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[^\\u0000]+$" }
+    }
+  },
+  "definitions": {
+    "Environment": { "const": "SEMIO_SCRIPT_PROVIDERS" },
+    "Export": { "const": "provider" }
+  }
+}

@@ -38,16 +38,16 @@ pub fn apply_world3d_projection_spec(session_state: &mut WorldSessionState, came
         return false;
     }
     let orientation_changed = camera_state.projection_spec.orientation != spec.orientation;
-    let projection = ui_wgpu::wgpu::projection_spec_family(spec);
+    let projection = ui_scene::math::projection_spec_family(spec);
     if camera_state.orbit.projection != projection {
         if projection.is_parallel() {
-            camera_state.orbit.zoom = ui_wgpu::wgpu::world_projection_matched_ortho_zoom(camera_state.orbit.fov_y.to_degrees(), camera_state.orbit.distance, session_state.bounds.h);
+            camera_state.orbit.zoom = ui_scene::math::world_projection_matched_ortho_zoom(camera_state.orbit.fov_y.to_degrees(), camera_state.orbit.distance, session_state.bounds.h);
         }
     }
     camera_state.orbit.projection = projection;
-    camera_state.orbit.fov_y = ui_wgpu::wgpu::projection_spec_fov_degrees(spec).to_radians();
+    camera_state.orbit.fov_y = ui_scene::math::projection_spec_fov_degrees(spec).to_radians();
     if orientation_changed {
-        let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(spec);
+        let (direction, up) = ui_scene::math::projection_spec_orientation_look(spec);
         let direction = direction.normalize();
         camera_state.orbit.yaw = direction.y.atan2(direction.x);
         camera_state.orbit.pitch = direction.z.clamp(-1.0, 1.0).asin();
@@ -67,17 +67,17 @@ pub fn apply_world3d_projection_mode(session_state: &mut WorldSessionState, came
 }
 
 /// 🧭️ The live orientation retained across projection-mode changes.
-pub fn world3d_projection_orientation(camera_state: &WorldCameraState) -> ui_wgpu::wgpu::WorldProjectionOrientation {
+pub fn world3d_projection_orientation(camera_state: &WorldCameraState) -> ui_scene::math::WorldProjectionOrientation {
     match camera_state.projection_spec.orientation {
-        Viewport3dProjectionOrientation::Cardinal { view } => ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(match view {
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Plan | semio_framework_ui_viewport::Viewport3dOrthographicView::Top => ui_wgpu::wgpu::WorldCardinalView::Top,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Bottom => ui_wgpu::wgpu::WorldCardinalView::Bottom,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Front => ui_wgpu::wgpu::WorldCardinalView::Front,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Back => ui_wgpu::wgpu::WorldCardinalView::Back,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Left => ui_wgpu::wgpu::WorldCardinalView::Left,
-            semio_framework_ui_viewport::Viewport3dOrthographicView::Right => ui_wgpu::wgpu::WorldCardinalView::Right,
+        Viewport3dProjectionOrientation::Cardinal { view } => ui_scene::math::WorldProjectionOrientation::Cardinal(match view {
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Plan | semio_framework_ui_viewport::Viewport3dOrthographicView::Top => ui_scene::math::WorldCardinalView::Top,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Bottom => ui_scene::math::WorldCardinalView::Bottom,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Front => ui_scene::math::WorldCardinalView::Front,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Back => ui_scene::math::WorldCardinalView::Back,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Left => ui_scene::math::WorldCardinalView::Left,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Right => ui_scene::math::WorldCardinalView::Right,
         }),
-        _ => ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+        _ => ui_scene::math::WorldProjectionOrientation::Free,
     }
 }
 
@@ -99,7 +99,7 @@ pub fn apply_world3d_initial_projection_seed(
     if camera_state.projection_selected || bridge_state.snapshot_lease.is_none() {
         return false;
     }
-    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(spec);
+    let (direction, up) = ui_scene::math::projection_spec_orientation_look(spec);
     let length = direction.length();
     if !length.is_finite() || length <= 1e-6 || up.to_array().into_iter().any(|value| !value.is_finite()) {
         return false;
@@ -108,9 +108,9 @@ pub fn apply_world3d_initial_projection_seed(
     camera_state.orbit.yaw = direction.y.atan2(direction.x);
     camera_state.orbit.pitch = direction.z.clamp(-1.0, 1.0).asin();
     camera_state.orbit.up = up;
-    let projection = ui_wgpu::wgpu::projection_spec_family(spec);
+    let projection = ui_scene::math::projection_spec_family(spec);
     camera_state.orbit.projection = projection;
-    camera_state.orbit.fov_y = ui_wgpu::wgpu::projection_spec_fov_degrees(spec).to_radians();
+    camera_state.orbit.fov_y = ui_scene::math::projection_spec_fov_degrees(spec).to_radians();
     camera_state.projection_spec = spec;
     camera_state.projection_selected = true;
     camera_state.projection_frame_policy = Viewport3dProjectionFramePolicy::Content;
@@ -123,7 +123,7 @@ pub fn apply_world3d_initial_projection_seed(
 
 /// 🔎️ This surface's live camera family, for the pane chip that reports it.
 pub fn world3d_camera_projection(camera_state: &WorldCameraState) -> CameraProjection3d {
-    ui_wgpu::wgpu::projection_spec_family(camera_state.projection_spec)
+    ui_scene::math::projection_spec_family(camera_state.projection_spec)
 }
 
 /// 🎥️ This surface's LIVE orbit in the very shape `setCamera` carries — the row `dumpMeshStats`

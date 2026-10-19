@@ -197,13 +197,35 @@ where
 #[doc(hidden)]
 pub async fn render_registered_fixture_app<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
 where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
+    render_registered_fixture_app_over(app,body_key,None,view,cx).await
+}
+
+/// 🎬️ [`render_registered_fixture_app`] over an explicit snapshot override document, the way the host renders an embedded payload.
+#[doc(hidden)]
+pub async fn render_registered_fixture_app_over<A,M>(app:&mut VcsArtifactApp<A,M>,body_key:&str,snapshot_override_json:Option<&str>,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<String,semio_framework_job::OriginalTurnFailure>
+where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if cx.should_yield(){break}
+        if app.render(body_key,snapshot_override_json,view,cx).await?.is_some(){
+            let source=app.original_render_tree_source(cx)?;
+            let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
+            let mut remaining=FIXTURE_TREE_MAX_NODES;
+            return project_fixture_node(&tree.root,&mut remaining,0).and_then(|value|serde_json::to_string(&value).map_err(|_|"projection-json")).map_err(|source|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,source).into())
+        }
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original registered fixture render remained pending under its authored caller").into())
+}
+
+/// 🔭️ Observes the stationary rendered tree of `body_key` in place: the same bounded render loop as [`render_registered_fixture_app`], handing the built root to `observe` while the app keeps owning the tree.
+#[doc(hidden)]
+pub async fn observe_registered_fixture_app<A,M,R>(app:&mut VcsArtifactApp<A,M>,body_key:&str,view:&semio_framework::ViewModel,cx:&mut semio_framework_job::StepContext<'_>,observe:impl FnOnce(&semio_framework_ui_contract::BuiltNode)->R)->Result<R,semio_framework_job::OriginalTurnFailure>
+where A:ArtifactApp+Default,M:store::SpaceMember+store::MemberFactory+Send+'static{
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){break}
         if app.render(body_key,None,view,cx).await?.is_some(){
             let source=app.original_render_tree_source(cx)?;
             let tree=source.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture render readiness lost its stationary tree"))?;
-            let mut remaining=FIXTURE_TREE_MAX_NODES;
-            return project_fixture_node(&tree.root,&mut remaining,0).and_then(|value|serde_json::to_string(&value).map_err(|_|"projection-json")).map_err(|source|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,source).into())
+            return Ok(observe(&tree.root))
         }
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original registered fixture render remained pending under its authored caller").into())

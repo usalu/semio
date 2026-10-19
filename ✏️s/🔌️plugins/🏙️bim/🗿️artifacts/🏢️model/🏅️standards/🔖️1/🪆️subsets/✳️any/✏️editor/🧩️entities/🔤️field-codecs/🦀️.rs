@@ -1,6 +1,7 @@
 //! 🔤️ Field codecs of the BIM entity table: the text and parse helpers of every field row kind. See [`super`].
 
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Baluster, DoorLeaves, EndJoin, Infill, LocationLine, MaterialCategory, ModelSnapshot, OpeningKind, Point2, Profile, RiserKind, RoofShape, Slope, StairFlight, StairStringer, StringerKind, Swing, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Baluster, DoorLeaves, EndJoin, Infill, LocationLine, MaterialCategory, OpeningKind, Point2, Profile, RiserKind, RoofShape, Slope, StairFlight, StairStringer, StringerKind, Swing, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -241,7 +242,7 @@ pub fn parse_location(text: &str) -> Option<LocationLine> {
 }
 
 pub fn parse_category(text: &str) -> Option<MaterialCategory> {
-    use MaterialCategory::*;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::*;
     variant(text, &[Concrete, Masonry, Wood, Metal, Glass, Insulation, Finish, Membrane, Other])
 }
 
@@ -322,7 +323,7 @@ pub fn parse_roof_shape(text: &str) -> Option<RoofShape> {
 pub fn flight_text(flight: &StairFlight) -> String {
     match flight {
         StairFlight::Straight => "straight".to_string(),
-        StairFlight::LTurn { split, turn } => format!("l-turn {} {}", number(*split), if matches!(turn, crate::standards::v1::subsets::any::schema::snapshot::Turn::Left) { "left" } else { "right" }),
+        StairFlight::LTurn { split, turn } => format!("l-turn {} {}", number(*split), if matches!(turn, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Turn::Left) { "left" } else { "right" }),
         StairFlight::UTurn { gap } => format!("u-turn {}", number(*gap)),
         StairFlight::Spiral { radius, sweep } => format!("spiral {} {}", number(*radius), number(*sweep)),
     }
@@ -333,7 +334,7 @@ pub fn parse_flight(text: &str) -> Option<StairFlight> {
     let (name, words) = words_of(text)?;
     match (name.as_str(), words.as_slice()) {
         ("straight", []) => Some(StairFlight::Straight),
-        ("l-turn", [split, turn]) => Some(StairFlight::LTurn { split: split.parse().ok().filter(|value: &f64| value.is_finite())?, turn: match turn.as_str() { "left" => crate::standards::v1::subsets::any::schema::snapshot::Turn::Left, "right" => crate::standards::v1::subsets::any::schema::snapshot::Turn::Right, _ => return None } }),
+        ("l-turn", [split, turn]) => Some(StairFlight::LTurn { split: split.parse().ok().filter(|value: &f64| value.is_finite())?, turn: match turn.as_str() { "left" => semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Turn::Left, "right" => semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Turn::Right, _ => return None } }),
         ("u-turn", [gap]) => Some(StairFlight::UTurn { gap: gap.parse().ok().filter(|value: &f64| value.is_finite())? }),
         ("spiral", [radius, sweep]) => Some(StairFlight::Spiral { radius: radius.parse().ok().filter(|value: &f64| value.is_finite())?, sweep: sweep.parse().ok().filter(|value: &f64| value.is_finite())? }),
         _ => None,

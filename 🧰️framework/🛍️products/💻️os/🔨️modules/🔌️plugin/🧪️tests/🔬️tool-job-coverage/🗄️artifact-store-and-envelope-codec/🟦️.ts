@@ -1,7 +1,5 @@
 /** 🗄️ The artifact store structural owner, history ledger, edit message ledger and owned envelope codec checks. */
-import { toolJobArtifactEventSourcedMergeExact, toolJobArtifactEditMessageLedgerExact, toolJobArtifactEnvelopeOwnedCodecExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
-import { toolJobArtifactStoreStructuralOwnersExact, toolJobHistoryLedgerAdmissionExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts";
-import { toolJobPresentationEnvelopeCallerRetainedExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts";
+import { toolJobArtifactEventSourcedMergeExact, toolJobArtifactEditMessageLedgerExact, toolJobArtifactEnvelopeOwnedCodecExact, toolJobArtifactStoreStructuralOwnersExact, toolJobHistoryLedgerAdmissionExact, toolJobPresentationEnvelopeCallerRetainedExact } from "@semio-tech/repo-lib/laws";
 
 /** 🏛 Checks the structural store owners, the VCS history reservation, the edit message ledger and the owned envelope codec callers. */
 export function artifactStoreStructuralAndEnvelopeCodecChecks() {

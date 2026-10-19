@@ -5,13 +5,17 @@ import { type ActorInstanceOpenRequest, type ActorInstanceLifetime, type ActorIn
 import { OwnedUiInstanceRetirement, OwnedUiInstance, OwnedUiPatchAcknowledgement } from "../../../🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { OriginalOperationAdmission } from "../../🎟️retained-turn/🟦️.ts";
 import type { ActorReturnResult, ActorReturnPageReceipt, ActorReturnOrigin, ActorReturnIdentity } from "../../📤️return/🟦️.ts";
-import { OwnedKernelReturnContent } from "@semio-tech/framework-kernel/return/content/input";
 import type { ActorBytePage } from "../../📃️page/🟦️.ts";
 import type { ShardWorkerLike } from "../🚨️quota/🟦️.ts";
 import type { ShardHeartbeatState } from "../💓️heartbeat/🟦️.ts";
 import type { ShardAsset, ShardBudget, ShardCapabilityGrant, ShardCommandIngressPage, ShardEventEnvelope } from "../📜️wire/🟦️.ts";
 import type { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedUiPatchAcknowledgementEntry } from "../🩹️ui-patch/🟦️.ts";
-import type { ShardClient } from "../🟦️.ts";
+import { returnContentMatches } from "../../../🖱️ui/🧬️contract/🧵️retained/🔌️host/📦️return-content/🟦️.ts";
+/** 📦️ The decoded content a consumer binds to a published return; the actor holds it opaquely and never calls into it. */
+export type ShardReturnContent = object;
+
+/** 🧵️ The opaque identity of the owning `ShardClient` shell: activations and captured returns compare it by reference and never call into it. */
+export type ShardClientIdentity = object;
 
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
  * `OwnedResidentLedger` arrives over an import cycle (`📮️shard-client` → `🎠️kernel/📥️input` →
@@ -48,7 +52,7 @@ export function graftWorkerStack(actorId: string, reason: string, stack: string 
 
 /** ⏱️ Marks a rejection the worker classified as a RETRYABLE guest lifecycle-turn deadline — the
  * browser twin of the host's `retryable_lifecycle_turn` verdict (`🔌plugin/🖥host/🦀.rs`). The guest
- * retained its receipt, so {@link ShardClient.sendInstanceLifecycle} replays the same events instead
+ * retained its receipt, so `ShardClient.sendInstanceLifecycle` replays the same events instead
  * of failing the open; a symbol keeps the marker off every structured-clone and JSON path. */
 export const RETRYABLE_LIFECYCLE_TURN = Symbol("semio.actor.retryable-lifecycle-turn");
 
@@ -115,16 +119,16 @@ export interface ShardActorActivationLease {
 }
 
 const ACTIVATION_MINT = Symbol("actor-activation.private-lease");
-export let mintCapturedActivation: (client: ShardClient, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) => ShardActorActivationLease;
-export let capturedActivationMatches: (activation: unknown, client: ShardClient) => boolean;
+export let mintCapturedActivation: (client: ShardClientIdentity, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) => ShardActorActivationLease;
+export let capturedActivationMatches: (activation: unknown, client: ShardClientIdentity) => boolean;
 /** 🧷️ Original composition identity survives revocation without granting new operation authority. */
 class CapturedShardActivation implements ShardActorActivationLease {
-  readonly #client: ShardClient;
+  readonly #client: ShardClientIdentity;
   readonly actorId: string;
   readonly activationGeneration: bigint;
   readonly assertActive: ShardActorActivationLease["assertActive"];
   readonly turn: ShardActorActivationLease["turn"];
-  private constructor(mint: symbol, client: ShardClient, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) {
+  private constructor(mint: symbol, client: ShardClientIdentity, actorId: string, generation: bigint, assertActive: ShardActorActivationLease["assertActive"], turn: ShardActorActivationLease["turn"]) {
     if (mint !== ACTIVATION_MINT) throw new Error("actor-activation.private-lease");
     this.#client = client; this.actorId = actorId; this.activationGeneration = generation; this.assertActive = assertActive; this.turn = turn; Object.freeze(this);
   }
@@ -166,17 +170,17 @@ export type ShardReturnReport = Exclude<ActorReturnResult, { kind: "page" }> | {
 export type ShardReturnAdmission = { readonly step: ResidentStep; readonly source: OwnedShardReturn | null };
 type ReturnAdmissionPhase = "empty" | "preparing" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "installing" | "installed" | "state-held" | "roster-held" | "facade-held" | "published" | "closing" | "rejected";
 export type CapturedReturnWork = { readonly kind: "execute"; readonly events: readonly ShardEventEnvelope[] } | { readonly kind: "retry" | "poll" | "cancel" };
-export type CapturedReturn = { instance: ShardInstanceOwner | null; outputs: OwnedActorTurnOutputs | null; client: ShardClient | null; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: OwnedKernelReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; fault: unknown; cancelled: boolean; retired: boolean };
+export type CapturedReturn = { instance: ShardInstanceOwner | null; outputs: OwnedActorTurnOutputs | null; client: ShardClientIdentity | null; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: ShardReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; fault: unknown; cancelled: boolean; retired: boolean };
 const RETURN_MINT = Object.freeze({});
 export const NO_RETURN_FAULT = Object.freeze({});
 export const returnDomainEnvelope = Object.freeze({ bytes: 800, slots: 4, owners: 4 });
 export function returnAdmission(kind: ResidentStep["kind"], phase: string, bytes = 0): ShardReturnAdmission { return { step: residentStep(kind, phase, bytes), source: null }; }
 export let mintCapturedReturn: (state: CapturedReturn) => OwnedShardReturn;
 export let capturedReturnState: (owner: OwnedShardReturn) => CapturedReturn;
-export let submitCapturedReturn: (client: ShardClient, state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget) => Promise<ShardReturnReport>;
-export let reserveCapturedResponse: (client: ShardClient, state: CapturedReturn, grant: ResidentGrant) => ResidentStep;
+export let submitCapturedReturn: (client: ShardClientIdentity, state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget) => Promise<ShardReturnReport>;
+export let reserveCapturedResponse: (client: ShardClientIdentity, state: CapturedReturn, grant: ResidentGrant) => ResidentStep;
 /** 🔗️ Binds the owning client's dispatch for captured-return submission and response reservation; ES imports are read-only, so the client binds through the declaring module. */
-export function bindCapturedReturnDispatch(submit: typeof submitCapturedReturn, reserve: typeof reserveCapturedResponse): void { submitCapturedReturn = submit; reserveCapturedResponse = reserve; }
+export function bindCapturedReturnDispatch<Client extends ShardClientIdentity>(submit: (client: Client, state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget) => Promise<ShardReturnReport>, reserve: (client: Client, state: CapturedReturn, grant: ResidentGrant) => ResidentStep): void { submitCapturedReturn = submit as typeof submitCapturedReturn; reserveCapturedResponse = reserve as typeof reserveCapturedResponse; }
 export let mintCapturedReturnPage: (state: CapturedReturn, output: OwnedActorTurnOutput, receipt: ActorReturnPageReceipt, page: ActorBytePage) => OwnedShardReturnPage;
 export function sameReturnOrigin(left: ActorReturnOrigin, right: ActorReturnOrigin): boolean { return left.activationGeneration === right.activationGeneration && left.requestSequence === right.requestSequence; }
 export function sameReturnIdentity(left: ActorReturnIdentity, right: ActorReturnIdentity): boolean { return sameReturnOrigin(left.origin, right.origin) && left.returnSequence === right.returnSequence; }
@@ -193,10 +197,10 @@ export class OwnedShardReturn {
   }
   get origin(): ActorReturnOrigin | null { return this.#state.origin; }
   get page(): OwnedShardReturnPage | null { return this.#state.page; }
-  get content(): OwnedKernelReturnContent | null { return this.#state.content; }
-  bindContent(content: OwnedKernelReturnContent): boolean {
+  get content(): ShardReturnContent | null { return this.#state.content; }
+  bindContent(content: ShardReturnContent): boolean {
     const state = this.#state; const instance = state.instance;
-    if (!instance || instance.returnPhase !== "published" || state.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime)) return false;
+    if (!instance || instance.returnPhase !== "published" || state.content !== null || !instance.host || !instance.lifetime || !returnContentMatches(content, this, instance.host, instance.operation, instance.lifetime)) return false;
     state.content = content; return true;
   }
   get retainedResponses(): number { return this.#state.outputs?.pending ?? 0; }

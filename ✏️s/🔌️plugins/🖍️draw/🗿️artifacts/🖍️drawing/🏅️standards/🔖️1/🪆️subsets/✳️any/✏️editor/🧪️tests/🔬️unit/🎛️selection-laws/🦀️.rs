@@ -23,8 +23,8 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera { camera:store::Viewport2d { x:0.0,y:0.0,zoom:1.0 } }),&meta).await;
         let ids=vec!["group".to_string(),"child".to_string(),"other".to_string()];
         let targets=serde_json::to_string(&ids.iter().map(|id|serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":id})).collect::<Vec<_>>()).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+        let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
         let selected=selected_strokes(&app).await;
         assert_eq!(selected.len(),3);
         settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x:420.0,y:320.0,width:800.0,height:600.0,..Default::default() }),&meta).await;
@@ -56,9 +56,9 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
             assert!((semio_s_artifact_draw_drawing_model::layer_base(&after.layers[0]).transform.x-30.0).abs()<1e-10);
             assert!((semio_s_artifact_draw_drawing_model::layer_base(&after.layers[1]).transform.x-430.0).abs()<1e-10);
             assert_eq!(semio_s_artifact_draw_drawing_model::layer_base(semio_s_artifact_draw_drawing_model::find_drawing_layer(&after,"child").unwrap()).transform.x,0.0);
-            artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+            artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
             assert_eq!(app.snapshot().unwrap(),before);
-            artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+            artifact_laws::settle_history_verb(&mut app.0, "redo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
             assert_eq!(app.snapshot().unwrap(),after);
         }
         assert_eq!(selected_strokes(&app).await,selected);
@@ -95,14 +95,14 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let(mut close,prepared)=paint.into_retirement();
     while !close.advance(4096).unwrap().done{}
     let plan=prepared.unwrap();
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(semio_s_artifact_draw_drawing_model::DrawingArtboard { width: 1024.0,height: 1024.0 });
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,1024.0,1024.0]);
     config.framed = true;
     config.viewport = store::Viewport2d { x: 777.0,y: -333.0,zoom: 2.0 };
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
+    let scene = canvas_scene_of_tree(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
     let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(plan);
@@ -127,7 +127,7 @@ async fn text_content_and_size_each_undo_as_one_selection_edit() {
             if field == "textContent" { text.content = value.into(); } else { text.size = 36.0; }
         }
         load_drawing_fixture(&mut app, &before);
-        artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        artifact_laws::assert_undo_redo_round_trip(&mut app.0, DrawingCommand::PatchLayers(patch_layers::PatchLayers { index:None, layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     }
 }
 
@@ -139,16 +139,16 @@ async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
     let ids = vec![layer_id(&first).to_string(), layer_id(&second).to_string()];
     let snapshot = DrawingSnapshot { id: "select-all-topology".into(), layers: vec![first, second].into(), ..Default::default() };
     load_drawing_fixture(&mut app, &snapshot);
-    let admission=app.handle_action("selectAll", None, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("Select All admission");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.expect("Select All publication");
+    let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "selectAll", None, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("Select All admission");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.expect("Select All publication");
     assert_eq!(selected_strokes(&app).await, ids);
     assert_eq!(app.snapshot().unwrap(), snapshot, "selection must not edit the drawing");
     settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[0].clone() }), &meta).await;
     assert_eq!(selected_strokes(&app).await, vec![ids[1].clone()]);
     settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[1].clone() }), &meta).await;
     assert!(selected_strokes(&app).await.is_empty());
-    let admission=app.handle_action("selectAll", None, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("empty Select All admission");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.expect("empty Select All publication");
+    let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "selectAll", None, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("empty Select All admission");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.expect("empty Select All publication");
     assert!(selected_strokes(&app).await.is_empty());
 }
 
@@ -168,8 +168,8 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             load_drawing_fixture(&mut app,&before);
             settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
             let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"child"})]).unwrap();
-            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
-            semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+            let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+            semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
             let scene=canvas_scene(rendered_drawing_canvas(&mut app,None,meta.view_state.as_ref().unwrap()).await.unwrap());
             let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
@@ -196,9 +196,9 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
                 let actual=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
                 let wanted=semio_s_artifact_draw_drawing_geometry::multiply(expected,original);
                 for index in 0..6 {assert!((actual[index]-wanted[index]).abs()<1e-9);}
-                artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+                artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
                 assert_eq!(app.snapshot().unwrap(),before);
-                artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+                artifact_laws::settle_history_verb(&mut app.0, "redo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
                 assert_eq!(app.snapshot().unwrap(),after);
             }
         }
@@ -218,9 +218,9 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
         load_drawing_fixture(&mut app,&before);
         settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
         let targets=serde_json::to_string(&vec![serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"curve"})]).unwrap();
-        let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
-        semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
-        artifact_laws::settle_registered_typed_operation(&mut *app,meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
+        let admission=semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, semio_framework::INTERACTION_SELECT_ACTION_ID, Some(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap();
+        semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admission).await.unwrap();
+        artifact_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:421.0,y:321.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
         let selected=app.interaction_state().await.selection[DRAWING_POINT_DOMAIN].ids.clone();
         assert_eq!(selected.len(),1);
@@ -245,8 +245,8 @@ async fn node_drag_previews_without_mutation_and_commits_one_undoable_edit() {
             assert_ne!(rebound,selected);
             assert_eq!(interaction::points::parse_point_id(&rebound[0]).unwrap().geometry,interaction::points::geometry_id(&path.segments).unwrap());
             assert_eq!(path.segments[1],semio_s_artifact_draw_drawing_model::PathSegment::Cubic {ctrl1:[20.0,30.0],ctrl2:[30.0,20.0],to:[40.0,0.0]});
-            artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;assert_eq!(app.snapshot().unwrap(),before);
-            artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;assert_eq!(app.snapshot().unwrap(),after);
+            artifact_laws::settle_history_verb(&mut app.0, "undo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;assert_eq!(app.snapshot().unwrap(),before);
+            artifact_laws::settle_history_verb(&mut app.0, "redo", meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;assert_eq!(app.snapshot().unwrap(),after);
         }
         assert_eq!(selected_strokes(&app).await,vec!["curve".to_string()]);
     }

@@ -2,10 +2,9 @@
 import{createIssuedResourceControlV1}from"../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {readHubDrillRequestV1} from "../../🧪️testing/💾️backup-restore/🎛️request/🟦️.ts";
 import {createRequestedIssuedResourceControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {repositoryLeaseDirectoryV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import {runHubVitestV1} from "../../🧪️testing/🎛️run/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckRepositoryProjectV1 } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
@@ -17,10 +16,9 @@ import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃�
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { TEST_LEVEL_BUDGET_MS,type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runBunxStatus } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { runBunxStatus } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runVitest } from "../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withBuiltLocalHubHostV1,HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";

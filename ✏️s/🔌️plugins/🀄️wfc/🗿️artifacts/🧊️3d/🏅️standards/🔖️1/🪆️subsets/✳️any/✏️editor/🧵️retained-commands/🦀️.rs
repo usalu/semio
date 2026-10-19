@@ -133,7 +133,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Wfc
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Wfc3dEditor>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Wfc3dEditor>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Wfc3dEditor>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || wfc3d_command_id(input.command) != self.tool_id {
             return Err(Fault::new(
                 semio_framework_plugin::FaultOrigin::App,
@@ -154,6 +155,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Wfc
             emit,
             ephemeral: EphemeralEmit { presence: Vec::new(), transient, window_transient: Vec::new() },
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

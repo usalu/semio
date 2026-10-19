@@ -1,11 +1,13 @@
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::ToolEvent;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolEvent;
 #[allow(unused_imports)]
 use crate::editor::bim::commands::canvas_pointer_down::canvas_pointer;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use crate::editor::bim::commands::canvas_pointer_move::*;
@@ -17,5 +19,5 @@ async fn a_move_outside_a_retained_route_is_refused_and_the_payload_reads_pixels
     let raw = payload.raw();
     assert_eq!((raw.x, raw.y, raw.width, raw.height, raw.modifiers.shift, raw.modifiers.ctrl, raw.ground), (440.0, 260.0, 800.0, 600.0, true, false, None));
     let fault = run(&demo(), |doc, cfg| handle(&payload, doc, cfg, &mut ctx(&[]))).err().expect("no session owner");
-    assert!(format!("{:?}", fault.code).contains(crate::editor::bim::gestures::RETAINED_ROUTE));
+    assert!(format!("{:?}", fault.code).contains(semio_s_artifact_bim_model_gestures::editor::bim::gestures::RETAINED_ROUTE));
 }

@@ -9,7 +9,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use semio_framework_tool_run::{ToolRunCodecError, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTracePage, ToolRunTraceSubject, ToolRunVerdict, TOOL_RUN_TRACE_PAGE_BYTES_MAX};
 use ui_styling::metrics::tool_run;
-use ui_wgpu::wgpu::{Instance3d, Rgba, Theme};
+use ui_scene::math::Instance3d;
+use semio_framework_ui_theme::{Rgba, Theme};
 
 //#region 🔖️Limits
 /// 📏️ Longest `World3dScene.tool_run_trace` text the render-plan validator admits: a delta of

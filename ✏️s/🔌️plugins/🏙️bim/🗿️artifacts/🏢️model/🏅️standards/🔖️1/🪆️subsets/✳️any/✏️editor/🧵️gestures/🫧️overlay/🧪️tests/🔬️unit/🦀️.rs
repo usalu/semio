@@ -1,21 +1,23 @@
-use crate::editor::bim::marks::Style;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Style;
 use semio_framework_plugin::DslValue;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::select;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::select;
 #[allow(unused_imports)]
-use crate::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
 #[allow(unused_imports)]
 use std::f64::consts::TAU;
-use crate::editor::bim::gestures::overlay::{marker};
-use crate::editor::bim::gestures::overlay::*;
-use crate::editor::bim::marks::{Mark, Preview};
-use crate::editor::bim::gestures::snap::{SnapHit, SnapKind};
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay::marker;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay::records;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::{SnapHit, SnapKind};
 
 fn role_of(record: &DslValue) -> String {
     semio_framework_pack_json::to_json_string(record)
@@ -34,7 +36,7 @@ async fn marks_become_overlay_records_mirrored_into_the_windows_space() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_snap_kind_has_its_own_marker_and_free_has_none() {
-    let marker = |kind: SnapKind| records(&Preview::of(vec![crate::editor::bim::gestures::session::snap_mark(&SnapHit { point: [1.0, 1.0], kind, source: String::new() })]), 0.01).len();
+    let marker = |kind: SnapKind| records(&Preview::of(vec![semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::snap_mark(&SnapHit { point: [1.0, 1.0], kind, source: String::new() })]), 0.01).len();
     for kind in [SnapKind::Endpoint, SnapKind::Midpoint, SnapKind::Intersection, SnapKind::Grid, SnapKind::Edge, SnapKind::Orthogonal] {
         assert_eq!(marker(kind), 1, "{kind:?}");
     }

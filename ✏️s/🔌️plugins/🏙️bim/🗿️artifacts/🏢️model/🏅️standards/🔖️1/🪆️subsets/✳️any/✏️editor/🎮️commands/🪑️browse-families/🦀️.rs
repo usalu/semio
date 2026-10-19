@@ -2,12 +2,13 @@
 //! selection alone tells the tool which family to place), `openFamily` selects the family and opens the family editor, `searchFamilies` selects the placeable families a text matches. Selection and windows are framework
 //! state, so none of them writes a mutation.
 
-use crate::editor::bim::entities::components::{matching, placeable};
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
-use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::modes::edit::windows::family;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{matching, placeable};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -67,7 +68,7 @@ impl Browse for OpenFamily {
         }
         let mut emit = Emit::default();
         emit.effects.push(select_family(&self.family));
-        emit.effects.push(Effect::OpenWindow { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), kind: semio_framework::kernel::WindowKindId(family::WINDOW_KIND_ID.to_string()), params: semio_framework_plugin::DslValue::Null });
+        emit.effects.push(Effect::OpenWindow { req: semio_framework_plugin::RequestId(semio_framework_job::allocate_operation_id().0), kind: semio_framework::kernel::WindowKindId(semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID.to_string()), params: semio_framework_plugin::DslValue::Null });
         Ok(emit)
     }
 }

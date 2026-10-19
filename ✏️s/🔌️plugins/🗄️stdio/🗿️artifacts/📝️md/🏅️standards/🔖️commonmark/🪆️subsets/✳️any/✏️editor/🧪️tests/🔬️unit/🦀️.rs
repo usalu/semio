@@ -64,8 +64,9 @@ async fn the_editor_declares_the_example_pickers_verb() {
 async fn the_example_switch_joins_its_exact_retained_factory() {
     use semio_framework_plugin::PluginApp;
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_md_editor());
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<MdEditor>>::with_registry(EditorApp::<MdEditor>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -96,22 +97,23 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<MdEditor>>
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &MdSnapshot) -> KitFixtureApp {
+async fn kit_fixture_holding(document: &MdSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
     use semio_framework_plugin::PluginApp;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<MdEditor>, _>(async { semio_framework_plugin::App { definition: create_md_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_MD_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
-    app
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+    (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)], cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
     let args = semio_framework_value::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), semio_framework_value::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
-    semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(action, Some(&args), &meta, &mut identity).await)?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await).map(|_| ())
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// 🧾️ The change set JSON the editor sends: `(offset, delete, insert)` ranges of Unicode scalars of the source it started from.
@@ -126,12 +128,12 @@ fn splices_json(ranges: &[(usize, usize, &str)]) -> String {
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let base = MdSnapshot::default();
     let target = MdSnapshot::from_text(&md_example_snapshot(crate::examples::demo::ID).to_text());
-    let mut app = kit_fixture_holding(&base).await;
+    let (mut app, mut scope) = kit_fixture_holding(&base).await;
     let (revision, base_text) = (semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base), base.to_text());
     let changes = splices_json(&[(0, base_text.chars().count(), &target.to_text())]);
-    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("splices", &changes)]).await.expect("textEdit settles");
+    dispatch_settled(&mut app, "textEdit", &[("revision", &revision), ("splices", &changes)], scope.cx()).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("md snapshot"), target);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🪟️KitVerbLaws
 
@@ -144,11 +146,11 @@ async fn one_applied_change_set_is_one_splice_source_edit() {
     use semio_framework_plugin::PluginApp;
     let (before, after) = ("# Title\n\nFirst.\n\nSecond.\n", "# Title\n\nFirst, edited.\n\nSecond.\n");
     let base = MdSnapshot::from_text(before);
-    let mut app = kit_fixture_holding(&base).await;
+    let (mut app, mut scope) = kit_fixture_holding(&base).await;
     let edits = app.edit_transactions().len();
     let offset = base.to_text().find("First.").expect("the paragraph") + "First".len();
     let changes = splices_json(&[(base.to_text()[..offset].chars().count(), 0, ", edited")]);
-    dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)]).await.expect("the applied change set settles");
+    dispatch_settled(&mut app, "textEdit", &[("revision", &semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&base)), ("splices", &changes)], scope.cx()).await.expect("the applied change set settles");
     assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(after));
     assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
     let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
@@ -156,9 +158,9 @@ async fn one_applied_change_set_is_one_splice_source_edit() {
     assert_eq!(row.mutations.len(), 1, "one change set is one leaf: {:?}", row.mutations);
     assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En), "Edit source");
     assert_eq!(row.mutations[0].label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De), "Quelltext bearbeiten");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await);
     assert_eq!(app.snapshot().expect("md snapshot"), base, "one undo restores the committed document");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 static SPLICE_SOURCE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/✂️splice-source/🔣️.json"));

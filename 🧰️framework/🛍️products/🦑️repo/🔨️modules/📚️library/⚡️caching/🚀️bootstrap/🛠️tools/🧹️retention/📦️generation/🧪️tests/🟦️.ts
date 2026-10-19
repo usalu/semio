@@ -5,13 +5,13 @@ import schema from"../🧬️schema/🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 test("copied generation retirement classifies only authored closed material",async()=>{const api=await import("../🟦️.ts"),db=new Database(":memory:");try{for(const row of corpus.cases){const valid=new Ajv({strict:true}).validate(schema.definitions.CopiedMaterial,row.material);expect(Boolean(valid)).toBe(row.copied);const oracle=db.query<{allowed:number},[string]>("select json_valid(?1) and json_extract(?1,'$.version')=1 and json_extract(?1,'$.kind')='immutable-binary-objects' and length(json_extract(?1,'$.snapshot'))=64 and json_extract(?1,'$.snapshot') not glob '*[^0-9a-f]*' and not exists(select 1 from json_each(?1) where key not in ('version','kind','snapshot')) allowed").get(JSON.stringify(row.material))!;expect(Boolean(oracle.allowed)).toBe(row.copied);expect(api.copiedToolingRetirementMaterialV1(row.material)).toBe(row.copied);}}finally{db.close();}});
 
-import{withBuildTestInvocationV1}from"../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
-import{scriptCompilerAdmissionControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import{scriptCompilerAdmissionControlV1}from"@semio-tech/process/compiler-capacity";
 import{openNativeImageStorageV1,retireNativeImageStorageV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{openRepositoryCachePartitionV1,repositoryLeaseDirectoryV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import{resourceLeasePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{resourceLeasePathV1}from"@semio-tech/process/leases";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 import{bindNxSdkSnapshotBinariesV1,retireReleasedNxSdkBinaryObjectsV1}from"../../../📦️sdk/🧊️binary/📥️publication/🟦️.ts";
 import{mkdir,mkdtemp,writeFile,rm,rename,link,symlink,access}from"node:fs/promises";
 import{join}from"node:path";

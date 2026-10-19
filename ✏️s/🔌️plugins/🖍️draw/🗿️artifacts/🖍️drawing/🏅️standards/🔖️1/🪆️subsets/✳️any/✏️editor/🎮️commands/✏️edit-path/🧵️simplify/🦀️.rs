@@ -75,11 +75,13 @@ impl ArtifactCommandWork<App> for Work {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self) {self.closing=true;}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep {
-        use semio_framework_job::InteractiveJobCloseStep;
-        if !self.closing {return InteractiveJobCloseStep::Blocked;}
-        let Some(owner)=self.workspace.as_mut() else {return InteractiveJobCloseStep::Complete {progress:Default::default()};};
-        match owner.step(grant) {Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:error.retained_progress()}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            use semio_framework_job::InteractiveJobCloseStep;
+            if !self.closing {return Ok(InteractiveJobCloseStep::Blocked);}
+            let Some(owner)=self.workspace.as_mut() else {return Ok(InteractiveJobCloseStep::Complete {progress:Default::default()});};
+            Ok(match owner.step(grant) {Ok(RetainedCloneStep::Complete(progress))=>InteractiveJobCloseStep::Complete {progress},Ok(RetainedCloneStep::Progress(progress))=>InteractiveJobCloseStep::Pending {progress},Err(error)=>return Err(error)})
+        })
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_copy_byte_demand()).unwrap_or(Ok(0))}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_capacity_byte_demand(copy)).unwrap_or(Ok(0))}

@@ -54,7 +54,12 @@ use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::{ArtifactActorMsg, ArtifactHost, ArtifactMailboxSender, DocumentLinkStatus, PersistenceBinding, RemoteState};
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, HitKind, Rect, Theme, UiButtonNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID};
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_wgpu_input::HitKind;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🪝️window-actions/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_window_actions__dock_model_and_measures;

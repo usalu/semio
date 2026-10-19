@@ -1,6 +1,9 @@
 //! 🖌️ `set-material` payload. Patches exactly the provided fields of a material; layouts, solids and quantities that use it follow by inference.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{MaterialCategory, ModelSnapshot, Rgb}, diff::{patches::MaterialPatch, ModelDiff}};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MaterialCategory, Rgb};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

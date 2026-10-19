@@ -2,15 +2,15 @@
 //! `SetSlabBoundary` of the exact base loops, then the created slab, which holds no data of its own by then, is deleted. Empty when the
 //! split is refused.
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab;
-use crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary;
+use semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab;
+use semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary;
 use crate::standards::v1::subsets::any::schema::mutations::split_slab::diff::pieces;
 use crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SplitSlab, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab> + From<crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary>,
+    Op: From<semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab> + From<semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary>,
 {
     if pieces(payload, base).is_err() {
         return Vec::new();

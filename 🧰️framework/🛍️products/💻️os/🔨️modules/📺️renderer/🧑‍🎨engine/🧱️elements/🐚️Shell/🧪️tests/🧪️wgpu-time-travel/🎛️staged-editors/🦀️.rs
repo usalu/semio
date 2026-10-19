@@ -189,7 +189,7 @@ fn kinds_dialog() -> DialogDefinition {
     DialogDefinition { args: editor_defs(), ..DialogDefinition::new("editors", LocalizedLabel::native("Edit", "Bearbeiten"), semio_framework::ActionRef::new("apply")) }
 }
 
-fn press(shell: &mut ShellState, action: ui_wgpu::wgpu::KeyAction) {
+fn press(shell: &mut ShellState, action: semio_framework_ui_wgpu_input::KeyAction) {
     let mut input = InputState::<ActionDescriptor>::default();
     PointerCtx::of(&mut shell).handle_keyboard(action, &PointerModifiers::default(), &mut input);
 }
@@ -215,41 +215,41 @@ fn a_chrome_dialog_stages_every_editor_kind_by_keyboard() {
     shell.chrome.chrome_build.open_dialog(request);
 
     focus(&mut shell, ChromeDialogStop::Field(0));
-    for action in [ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowUp, ui_wgpu::wgpu::KeyAction::ArrowDown] {
+    for action in [semio_framework_ui_wgpu_input::KeyAction::ArrowUp, semio_framework_ui_wgpu_input::KeyAction::ArrowUp, semio_framework_ui_wgpu_input::KeyAction::ArrowUp, semio_framework_ui_wgpu_input::KeyAction::ArrowDown] {
         press(&mut shell, action);
     }
     assert_eq!(staged(&shell, "count"), Some(serde_json::json!(2.0)));
 
     focus(&mut shell, ChromeDialogStop::Field(1));
     let mut walk = Vec::new();
-    for action in [ui_wgpu::wgpu::KeyAction::ArrowRight, ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::Home, ui_wgpu::wgpu::KeyAction::End, ui_wgpu::wgpu::KeyAction::PageDown] {
+    for action in [semio_framework_ui_wgpu_input::KeyAction::ArrowRight, semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::Home, semio_framework_ui_wgpu_input::KeyAction::End, semio_framework_ui_wgpu_input::KeyAction::PageDown] {
         press(&mut shell, action);
         walk.push(staged(&shell, "angle").and_then(|value| value.as_f64()).unwrap_or(f64::NAN));
     }
     assert_eq!(walk, [5.0, 45.0, 90.0, 0.0, 90.0, 45.0], "step, detent, detent, start, end, detent");
 
     focus(&mut shell, ChromeDialogStop::Field(2));
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::ArrowRight);
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::ArrowRight);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::ArrowRight);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::ArrowRight);
     assert_eq!(staged(&shell, "mode"), Some(serde_json::json!("cut")));
 
     focus(&mut shell, ChromeDialogStop::Field(4));
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::Char("7".into()));
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::Char("7".into()));
     assert_eq!(staged(&shell, "offset"), Some(serde_json::json!([0.0, 7.0, 0.0])));
 
     focus(&mut shell, ChromeDialogStop::Field(6));
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::Enter);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::Enter);
     assert_eq!(staged(&shell, "targets"), Some(serde_json::json!(["n1", "n2"])), "Enter on a reference field uses the current selection");
     let stops = shell.chrome.chrome_build.dialog_stack.last().expect("dialog").stops();
     assert!(stops.contains(&ChromeDialogStop::Chip(6, 0)) && stops.contains(&ChromeDialogStop::Chip(6, 1)), "each chip is a focus stop");
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::Tab);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::Tab);
     assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)));
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::Backspace);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::Backspace);
     assert_eq!(staged(&shell, "targets"), Some(serde_json::json!(["n2"])));
     assert_eq!(shell.chrome.chrome_build.dialog_stack.last().map(ChromeDialogRequest::focused), Some(ChromeDialogStop::Chip(6, 0)), "focus stays on the chip that took its place");
 
     focus(&mut shell, ChromeDialogStop::Confirm);
-    press(&mut shell, ui_wgpu::wgpu::KeyAction::Enter);
+    press(&mut shell, semio_framework_ui_wgpu_input::KeyAction::Enter);
     let submit = shell.settle.deferred_actions.pop().expect("the submit dispatched");
     assert_eq!(submit.action, "apply");
     assert_eq!(args_of(&submit), serde_json::json!({ "count": 2.0, "angle": 45.0, "mode": "cut", "offset": [0.0, 7.0, 0.0], "targets": ["n2"] }));

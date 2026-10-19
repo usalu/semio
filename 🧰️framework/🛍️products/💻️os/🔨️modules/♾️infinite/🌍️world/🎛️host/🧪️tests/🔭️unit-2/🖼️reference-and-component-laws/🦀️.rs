@@ -115,7 +115,7 @@ fn reference_visual_identity_geometry_and_interaction_match_three() {
         }
     }
     let mut plan = select.finish_plan(&state.session, &state.selection, &state.interaction, 12).expect("reference select plan").expect("reference hit");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 12, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     let actions = take_actions(&mut input);
     assert_eq!(actions.len(), 1);
@@ -140,14 +140,14 @@ fn reference_visual_geometry_reaches_the_actual_textured_scene_pass() {
     let size = &geometry["sourceNaturalSize"];
     let _ = state.scene.reference_pixels.insert(url.into(), test_world_scene_raster(size[0].as_u64().unwrap() as u32, size[1].as_u64().unwrap() as u32, 0));
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
         scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
         interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
@@ -183,14 +183,14 @@ fn an_actual_world_grid_is_one_camera_projected_procedural_scalar_without_grid_l
     state.scene.lod.grid_datum = Some([3.0, 5.0, 2.0]);
     drive_scene_bridge(&mut state, &scene, bounds);
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
         scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
         interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
@@ -231,14 +231,14 @@ fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_wor
     drive_scene_bridge(&mut state, &scene, bounds);
     state.scene.retired_draws = Some(WorldDrawRegistry::default());
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = HashMap::new();
     let mut collapsed = HashMap::new();
     let mut selects = HashMap::new();
-    let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+    let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
         draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme,
         scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects,
         interaction_maps: None, pick_clip: None, viewport_height: bounds.h,
@@ -249,7 +249,7 @@ fn isolated_world_presentation_suppresses_chrome_and_input_but_retains_frame_wor
     assert_eq!(pass.clear_color, None, "transparent presentation leaves the accepted card in place");
     assert!(pass.procedural_grid.is_none());
     let camera = state.camera.orbit.to_camera();
-    let expected = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.w / 2.0).to_cols_array();
+    let expected = ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.w / 2.0).to_cols_array();
     assert_eq!(pass.view_proj, expected, "authored 2:1 source aspect survives the 396×196 physical stretch");
     assert!(input.staged_hits().is_empty(), "noninteractive worlds publish no pointer owner");
     assert_eq!(draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.overlay_ui_instances.len()).sum::<usize>(), 0, "noninteractive isolated worlds paint no gizmo or fallback clear quad");
@@ -266,7 +266,7 @@ fn reference_visual_state_uses_authored_opacity_and_live_theme() {
         if row["sourceProfileId"] != "world-image" || row["hidden"].as_bool().unwrap() {
             continue;
         }
-        let theme = if row["themeId"] == "semio-dark" { ui_wgpu::wgpu::Theme::dark() } else { ui_wgpu::wgpu::Theme::light() };
+        let theme = if row["themeId"] == "semio-dark" { semio_framework_ui_theme::Theme::dark() } else { semio_framework_ui_theme::Theme::light() };
         let id = "reference-authored-a";
         let reference = WorldReferenceRecord {
             id: Some(id.into()),
@@ -339,7 +339,7 @@ fn world_native_analytic_component_picks_and_marquee_preserve_original_source() 
         }
         assert_eq!(cursor.best.map(|hit| hit.id), Some(0));
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..128 {
             if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; }
             assert!(turn < 127);
@@ -441,7 +441,7 @@ fn assert_native_original_vertex_selection(expanded: bool) {
     }
     assert_eq!(cursor.best.map(|hit| hit.id), Some(0), "surface sample at the pointer is not an original vertex");
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 10).unwrap().unwrap();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for turn in 0..128 {
         if with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 10, &mut input, context)).unwrap() == WorldInteractionStep::Complete { break; }
         assert!(turn < 127);
@@ -551,7 +551,7 @@ fn assert_native_original_wire(edge_only: bool) {
         }
         assert_eq!(cursor.best.map(|hit|hit.id),Some(row["group"].as_u64().unwrap() as u32));
         let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene,10).unwrap().unwrap();
-        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
         for turn in 0..128 {
             if with_world_step_context(1,|context|publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene,&mut plan,10,&mut input,context)).unwrap()==WorldInteractionStep::Complete {break;}
             assert!(turn<127);
@@ -587,7 +587,7 @@ fn assert_native_original_wire(edge_only: bool) {
             state.selection.selection_method = method.into();
             assert!(world_component_marquee_cursor_ids(&state,&points).is_empty(),"{method}: packed endpoints have no topology selection");
         }
-        let mut lines = Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&ui_wgpu::wgpu::Theme::default(),&state.camera.orbit.to_camera(),state.session.bounds,&mut lines);
+        let mut lines = Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&semio_framework_ui_theme::Theme::default(),&state.camera.orbit.to_camera(),state.session.bounds,&mut lines);
         assert_eq!(lines.len(),fixture["edgeOnly"]["expected"]["renderVertices"].as_u64().unwrap() as usize,"no vertex glyph is synthesized for an edge endpoint");
     }
     retire_bridged_surface(&mut state);
@@ -606,7 +606,7 @@ fn world_native_analytic_point_paints_without_component_targeting() {
     world.selection_json=serde_json::json!({"granularity":"object","ids":[],"showEdges":false,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
     let mut state=World3dState::new("surface-point".into(),"controller".into());let bounds=Rect::new(0.0,0.0,400.0,400.0);drive_scene_bridge(&mut state,&scene,bounds);
     let schema=state.scene.meshes.get("point").unwrap().schema().unwrap();assert_eq!((schema.vertices,schema.vertex_ids,schema.indices,schema.edges),(1,1,0,0));
-    let mut lines=Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&ui_wgpu::wgpu::Theme::default(),&state.camera.orbit.to_camera(),bounds,&mut lines);
+    let mut lines=Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&semio_framework_ui_theme::Theme::default(),&state.camera.orbit.to_camera(),bounds,&mut lines);
     assert!(!lines.is_empty(),"an unselected pure point has a primary native visual");
     for pair in lines.chunks_exact(2) {for axis in 0..3 {assert!(((pair[0].position[axis]+pair[1].position[axis])*0.5-point[axis]).abs()<1e-5);}}
     assert!(state.selection.selected_ids.is_empty());assert_eq!(state.selection.granularity,"object");retire_bridged_surface(&mut state);
@@ -621,7 +621,7 @@ fn world_native_analytic_wire_paints_without_surface_outlines() {
         world.meshes_json=serde_json::json!([{"id":"wire","data":fixture["mesh"]}]).to_string();world.instances_json=serde_json::json!([{"id":fixture["instance"],"meshId":"wire"}]).to_string();world.camera_json=fixture["camera"].to_string();
         world.selection_json=serde_json::json!({"granularity":"object","ids":[],"showEdges":show_edges,"targets":{"mesh":true,"vertex":false,"edge":false,"face":false}}).to_string();
         let mut state=World3dState::new("surface-wire".into(),"controller".into());let bounds=Rect::new(0.0,0.0,400.0,400.0);drive_scene_bridge(&mut state,&scene,bounds);
-        let mut lines=Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&ui_wgpu::wgpu::Theme::default(),&state.camera.orbit.to_camera(),bounds,&mut lines);
+        let mut lines=Vec::new();append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay,&semio_framework_ui_theme::Theme::default(),&state.camera.orbit.to_camera(),bounds,&mut lines);
         assert_eq!(lines.iter().flat_map(|line|line.position).collect::<Vec<_>>(),serde_json::from_value::<Vec<f32>>(fixture["mesh"]["edgePositions"].clone()).unwrap(),"primary original wire showEdges={show_edges}");
         retire_bridged_surface(&mut state);
     }

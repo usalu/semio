@@ -8,10 +8,10 @@
 //!
 //! [`faces`] merges the coplanar front-facing triangles of an element into its planar faces and unites them: the silhouette of the element, exact to the corner.
 
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::{clip_triangle, slab};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::cut::{group, Cut};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::{Drawn, Frame, World};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip::{clip_triangle, slab};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::cut::{group, Cut};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame::{Drawn, Frame, World};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_geometry::section::chain;

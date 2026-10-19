@@ -29,14 +29,14 @@ fn ink_pointer_cancel_retires_only_the_exact_in_progress_owner_without_publishin
         semio_framework_os_renderer_wgpu_scene_ink::InkInteractionJob::new(1, 0, Some(pointer), &zero_generation_scene, semio_framework_os_renderer_wgpu_scene_ink::InkInteractionEvent::PointerDown { x: 64.0, y: 64.0, button: 0, shift: false }),
         Err(semio_framework_ui_action::BoundedActionFault::Structure)
     ));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let down = ui_wgpu::wgpu::UiCommand::Scene {
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let down = semio_framework_ui_wgpu_events::UiCommand::Scene {
         window_id: window_id.into(),
         node,
         surface_id: surface_id.clone(),
         kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas,
         rect,
-        event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 64.0, y: 64.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        event: semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 64.0, y: 64.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
     };
     apply_ui_commands(&mut vec![down.clone()], Some(pointer), &mut input);
     let installed = (0..4096).any(|_| {
@@ -82,17 +82,17 @@ fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuatio
     let point = |name: &str| (behavior["points"][name]["x"].as_f64().unwrap() as f32, behavior["points"][name]["y"].as_f64().unwrap() as f32);
     let down_point = point("down");
     let move_point = point("move");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let command = |event| ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event };
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let command = |event| semio_framework_ui_wgpu_events::UiCommand::Scene { window_id: window_id.into(), node, surface_id: surface_id.clone(), kind: semio_framework_ui_declaration::ui::SurfaceKind::InkCanvas, rect, event };
 
-    apply_ui_commands(&mut vec![command(ui_wgpu::wgpu::UiEvent::PointerDown { x: down_point.0, y: down_point.1, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() })], Some(pointer), &mut input);
+    apply_ui_commands(&mut vec![command(semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: down_point.0, y: down_point.1, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() })], Some(pointer), &mut input);
     drive_ink_scene_terminal(&mut input);
     let begin = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(begin.len(), 1);
     assert_eq!(begin[0].action, "inkApplyEvents");
     assert_eq!(begin[0].args.as_ref().and_then(|args| args.get("phase")).and_then(semio_framework::DslValue::as_str), behavior["acceptedBeforeCancel"][0]["phase"].as_str());
 
-    apply_ui_commands(&mut vec![command(ui_wgpu::wgpu::UiEvent::PointerMove { x: move_point.0, y: move_point.1, modifiers: Default::default() })], Some(pointer), &mut input);
+    apply_ui_commands(&mut vec![command(semio_framework_ui_wgpu_events::UiEvent::PointerMove { x: move_point.0, y: move_point.1, modifiers: Default::default() })], Some(pointer), &mut input);
     drive_ink_scene_terminal(&mut input);
     let live = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(live.len(), 1);
@@ -111,7 +111,7 @@ fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuatio
     assert_eq!(behavior["blockedAfterCancel"], serde_json::json!(["inkApplyEvents:stream", "inkApplyEvents:commit"]));
 
     let successor = ui_render::PointerId(72);
-    apply_ui_commands(&mut vec![command(ui_wgpu::wgpu::UiEvent::PointerDown { x: down_point.0 + 24.0, y: down_point.1 + 24.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() })], Some(successor), &mut input);
+    apply_ui_commands(&mut vec![command(semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: down_point.0 + 24.0, y: down_point.1 + 24.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() })], Some(successor), &mut input);
     drive_ink_scene_terminal(&mut input);
     let fresh = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(fresh.len(), 1);
@@ -120,7 +120,7 @@ fn a_streamed_note_ink_gesture_aborts_on_physical_cancel_while_stale_continuatio
     retire_presented_document(window_id);
 }
 
-fn open_ink_editor(window_id: &str, node: NodeId, surface_id: &str, rect: Rect, point: &Value, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn open_ink_editor(window_id: &str, node: NodeId, surface_id: &str, rect: Rect, point: &Value, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) {
     let x = point["x"].as_f64().expect("gesture x") as f32;
     let y = point["y"].as_f64().expect("gesture y") as f32;
     for _ in 0..2 {
@@ -129,7 +129,7 @@ fn open_ink_editor(window_id: &str, node: NodeId, surface_id: &str, rect: Rect, 
     }
 }
 
-fn assert_atomic_ink_update(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, expected: &Value) {
+fn assert_atomic_ink_update(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, expected: &Value) {
     let queued = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(input);
     let updates: Vec<&ActionDescriptor> = queued.iter().filter(|action| action.action == "inkApplyEvents").collect();
     assert_eq!(updates.len(), 1, "one commit publishes exactly one inkApplyEvents action, got {queued:?}");
@@ -155,44 +155,44 @@ fn ink_canvas_text_and_table_editing_matches_the_react_host_lifecycle() {
     assert_ne!(host_id, authored_surface_id);
     let viewport = &law["viewport"];
     let rect = Rect::new(viewport["x"].as_f64().unwrap() as f32, viewport["y"].as_f64().unwrap() as f32, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
 
     open_ink_editor(window_id, node, &surface_id, rect, &law["gestures"]["text"], &mut input);
     assert_eq!(input.focused_id.as_deref(), Some(format!("{host_id}.ink.text.text-a.input").as_str()));
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char(law["gestures"]["text"]["replacement"].as_str().unwrap().into()), &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char(law["gestures"]["text"]["replacement"].as_str().unwrap().into()), &Default::default(), &mut input));
     assert!(blur_focused_ink_editor_at(law["gestures"]["blur"]["x"].as_f64().unwrap() as f32, law["gestures"]["blur"]["y"].as_f64().unwrap() as f32, &mut input));
     assert_atomic_ink_update(&mut input, &law["expected"]["textEvent"]);
 
     open_ink_editor(window_id, node, &surface_id, rect, &law["gestures"]["table"], &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char(law["gestures"]["table"]["replacement"].as_str().unwrap().into()), &Default::default(), &mut input));
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Enter, &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char(law["gestures"]["table"]["replacement"].as_str().unwrap().into()), &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &Default::default(), &mut input));
     assert_atomic_ink_update(&mut input, &law["expected"]["tableEvent"]);
     let advanced_suffix = law["expected"]["advancedControlId"].as_str().unwrap().strip_prefix(authored_surface_id).expect("neutral control id begins with the authored surface");
     assert_eq!(input.focused_id.as_deref(), Some(format!("{host_id}{advanced_suffix}").as_str()));
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("z".into()), &Default::default(), &mut input));
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Tab, &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("z".into()), &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Tab, &Default::default(), &mut input));
     assert_atomic_ink_update(&mut input, &law["expected"]["tableTabEvent"]);
     assert!(input.focused_id.is_none(), "Tab from the final table cell commits and retires the editor");
 
     open_ink_editor(window_id, node, &surface_id, rect, &law["gestures"]["text"], &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("cancelled".into()), &Default::default(), &mut input));
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Escape, &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("cancelled".into()), &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Escape, &Default::default(), &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().all(|action| action.action != "inkApplyEvents"), "Escape cancels without publishing an update");
 
     open_ink_editor(window_id, node, &surface_id, rect, &law["gestures"]["text"], &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).expect("window generation");
     assert!(request_ui_document_close(window_id));
-    assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("closing".into()), &Default::default(), &mut input), "a closing document immediately fences and clears its focused editor");
+    assert!(!apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("closing".into()), &Default::default(), &mut input), "a closing document immediately fences and clears its focused editor");
     assert!(input.focused_id.is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     drain_presented_document_close(window_id);
     assert!(publish_new_focus_rebase_document(window_id, 2, 453, semio_framework_ui_declaration::ui::SurfaceKind::TextEditor, &[4]).is_some());
     assert!(UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).is_some_and(|next| next > generation));
-    assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("stale".into()), &Default::default(), &mut input), "a prior window generation cannot mutate the reopened document");
+    assert!(!apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("stale".into()), &Default::default(), &mut input), "a prior window generation cannot mutate the reopened document");
     assert!(input.focused_id.is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     retire_presented_document(window_id);
@@ -204,13 +204,13 @@ fn stale_scene_revision_retires_without_mutation_or_action_publication() {
     let window_id = "apply-ui-commands-stale-scene-revision";
     let node = seed_scene_window(window_id, "original", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -226,13 +226,13 @@ fn closing_window_fences_queued_scene_intent_before_tree_retirement() {
     let window_id = "closing-window-queued-canvas";
     let node = seed_scene_window(window_id, "closing-canvas", semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     apply_scene_ui_command(
         window_id,
         node,
         semio_framework_ui_declaration::ui::SurfaceKind::Canvas2d,
         rect,
-        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        &semio_framework_ui_wgpu_events::UiEvent::PointerDown { x: 10.0, y: 10.0, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() },
         Some(ui_render::PointerId(1)),
         &mut input,
     );
@@ -252,12 +252,12 @@ fn closing_ink_editor_rejects_a_commit_before_its_scene_retires() {
     let node = seed_scene_window_with(window_id, ink_editing_scene(&law));
     let viewport = &law["viewport"];
     let rect = Rect::new(viewport["x"].as_f64().unwrap() as f32, viewport["y"].as_f64().unwrap() as f32, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     open_ink_editor(window_id, node, surface_id, rect, &law["gestures"]["text"], &mut input);
     semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
-    assert!(apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Char("uncommitted".into()), &Default::default(), &mut input));
+    assert!(apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Char("uncommitted".into()), &Default::default(), &mut input));
     assert!(request_ui_document_close(window_id));
-    assert!(!apply_focused_ink_editor_key(&ui_wgpu::wgpu::KeyAction::Enter, &Default::default(), &mut input));
+    assert!(!apply_focused_ink_editor_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &Default::default(), &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 
@@ -286,7 +286,7 @@ fn closing_window_retires_an_unfinished_ink_clipboard_stream_before_reopening() 
     assert!(INK_CLIPBOARD_STREAMS.with(|cell| cell.borrow().iter().flatten().all(|stream| stream.address.window_id != window_id)));
     assert!(focused_ink_surface().is_none());
     seed_scene_window_with(window_id, ink_editing_scene(&law));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(!commit_focused_ink_clipboard_stream(41, &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
     caller.finish();
@@ -327,7 +327,7 @@ fn closing_one_window_retires_only_its_ink_clipboard_owner() {
 #[test]
 fn a_late_native_clipboard_callback_cannot_complete_a_reused_slot() {
     let mut caller=semio_framework_os_renderer_wgpu_ui_engine_tests::fixture_original_turn::FixtureTurnV1::new(ui_contract::UI_WORKER_RETIREMENT_POLICY);
-    let source=caller.turn(|cx|ui_wgpu::wgpu::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
+    let source=caller.turn(|cx|semio_framework_ui_wgpu_input::ClipboardIntentSource{operation:cx.operation(),generation:cx.generation(),epoch:cx.original_source_epoch().expect("fixture issued input epoch")});
     let mut arena = semio_framework_ui_arena::Arena::<()>::new();
     let node = arena.insert(());
     let address = |host_id: &str| InkClipboardAddress { window_id: "native-ink-clipboard-aba".into(), window_generation: 1, node, host_id: host_id.into(), rect: Rect::new(0.0, 0.0, 100.0, 100.0) };
@@ -336,7 +336,7 @@ fn a_late_native_clipboard_callback_cannot_complete_a_reused_slot() {
     let successor_token = reserve_pending_native_ink_clipboard(address("successor"),source).expect("successor reuses the free slot");
     assert_eq!(stale.slot, successor_token.slot);
     assert_ne!(stale.generation, successor_token.generation);
-    complete_pending_native_ink_clipboard(stale, Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text("stale".into()))));
+    complete_pending_native_ink_clipboard(stale, Ok(Some(semio_framework_ui_wgpu_hosting::host::ClipboardContent::Text("stale".into()))));
     PENDING_NATIVE_INK_CLIPBOARD.with(|cell| {
         let mut slots = cell.borrow_mut();
         let successor = slots[usize::from(successor_token.slot)].mounted.take().expect("successor slot remains mounted");

@@ -96,13 +96,18 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         let media = Media { media_type: media_type.clone(), payload };
         assert!(<CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &ArtifactView::new(&scene, &history)).is_err(), "an uncomposed view cannot publish a geometry child");
         let mut cancelled = <CadPlayApp as ArtifactEditor>::import_media("geometry:in", &media, &view).expect("cancellable owned geometry import");
-        assert!(matches!(cancelled.prepare_child_one(0, 65_536).unwrap(), semio_framework_plugin::app::ChildEmitPreparationStep::Pending));
-        assert_eq!(cancelled.close_child_one(0, 65_536), Some(semio_framework_plugin::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }));
+        let quoted = |demand: semio_framework_value::RetirementDemand, items: usize| semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: demand.copy_bytes.max(65_536), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let preparing = quoted(cancelled.child_preparation_demands(65_536).expect("child preparation quote"), 0);
+        assert!(matches!(cancelled.prepare_child_one(preparing).unwrap(), semio_framework_plugin::app::ChildEmitPreparationStep::Pending(progress) if progress == Default::default()));
+        let closing = quoted(cancelled.child_close_demands(65_536).expect("child close quote").expect("a cancelled import still owns its geometry child"), 0);
+        assert_eq!(cancelled.close_child_one(closing).unwrap(), Some(semio_framework_plugin::PluginLifecycleStep::Progress(Default::default())));
         let mut retired = false;
         for _ in 0..4096 {
-            match cancelled.close_child_one(1, 65_536) {
+            let Some(demand) = cancelled.child_close_demands(65_536).expect("child close quote") else { retired = true; break; };
+            let grant = quoted(demand, 1);
+            match cancelled.close_child_one(grant).unwrap() {
                 None => { retired = true; break; },
-                Some(semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes }) => { assert!(released_items <= 1 && released_bytes <= 65_536); },
+                Some(semio_framework_plugin::PluginLifecycleStep::Progress(progress)) => { assert!(progress.copied_items <= 1 && progress.released_bytes <= grant.maximum_release_bytes); },
                 Some(step) => panic!("cancelled geometry child must reach its exact empty witness: {step:?}"),
             }
         }
@@ -118,10 +123,12 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         assert!(emit.effects.is_empty());
         let mut ready = false;
         for _ in 0..4096 {
-            match emit.prepare_child_one(1, 65_536).expect("bounded media child preparation") {
-                semio_framework_plugin::app::ChildEmitPreparationStep::Ready => { ready = true; break; },
-                semio_framework_plugin::app::ChildEmitPreparationStep::Pending => {},
-                semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault) => panic!("media child preparation: {}", fault.message),
+            let demand = emit.child_preparation_demands(65_536).expect("child preparation quote");
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(65_536), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            match emit.prepare_child_one(grant).expect("bounded media child preparation") {
+                semio_framework_plugin::app::ChildEmitPreparationStep::Ready(_) => { ready = true; break; },
+                semio_framework_plugin::app::ChildEmitPreparationStep::Pending(progress) => { assert!(progress.fits(grant)); },
+                semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault, _) => panic!("media child preparation: {}", fault.message),
             }
         }
         assert!(ready);
@@ -210,24 +217,24 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
         drop(children);
         let rows = member_rows(&mut app).await;
         if rows.len() != 1 || rows[0].mutations.len() != 3 { return Err(format!("import does not publish exactly one atomic three-lane history row: {rows:?}")); }
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         if app.snapshot().unwrap() != before || pane_model(&app, CadPaneId::Shape).await != before_model { return Err("undo did not restore the exact parent and model before geometry creation".into()); }
-        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         if app.snapshot().unwrap() != after || pane_model(&app, CadPaneId::Shape).await != after_model { return Err("redo did not restore the exact parent and model geometry ownership".into()); }
         let heads = PluginApp::child_head_packs(&app).await.map_err(|fault| format!("{fault:?}"))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect::<Vec<_>>();
-        let archive = PluginApp::document_archive(&app).await.map_err(|fault| format!("{fault:?}"))?;
+        let archive = PluginApp::document_archive(&mut app.0).await.map_err(|fault| format!("{fault:?}"))?;
         if !archive.members.iter().any(|member| member.owner.slot == "breps" && member.owner.child_id == geometry_id) { return Err("recursive archive omitted the exact geometry owner".into()); }
-        PluginApp::begin_document_archive_load(&mut app, 94, archive).map_err(|fault| format!("{fault:?}"))?;
+        PluginApp::begin_document_archive_load(&mut app.0, 94, archive).map_err(|fault| format!("{fault:?}"))?;
         let mut terminal = None;
         for _ in 0..1_000_000 {
-            let status = PluginApp::poll_document_archive_load(&mut app, 94, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|fault| format!("{fault:?}"))?;
+            let status = PluginApp::poll_document_archive_load(&mut app.0, 94, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|fault| format!("{fault:?}"))?;
             if matches!(status.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) { terminal = Some(status); break; }
-            PluginApp::maintenance_step(&mut app, 1, 4_096).map_err(|fault| format!("{fault:?}"))?;
+            PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).map_err(|fault| format!("{fault:?}"))?;
             std::thread::yield_now();
         }
         let terminal = terminal.ok_or("geometry archive did not reach its bounded terminal witness")?;
         if terminal.state != protocol::DocumentArchiveLoadState::Ready { return Err(format!("geometry archive failed: {}", String::from_utf8_lossy(&terminal.fault))); }
-        PluginApp::acknowledge_document_archive_load(&mut app, 94).map_err(|fault| format!("{fault:?}"))?;
+        PluginApp::acknowledge_document_archive_load(&mut app.0, 94).map_err(|fault| format!("{fault:?}"))?;
         let reloaded_heads = PluginApp::child_head_packs(&app).await.map_err(|fault| format!("{fault:?}"))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect::<Vec<_>>();
         if app.snapshot().unwrap() != after || pane_model(&app, CadPaneId::Shape).await != after_model || reloaded_heads != heads { return Err("archive reload did not preserve exact parent, model, and topology child heads".into()); }
         let children = app.test_child_content_view();
@@ -249,6 +256,11 @@ fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() 
     let source = format!("{}{}", fixture["prefix"].as_str().unwrap().repeat(fixture["repeat"].as_u64().unwrap() as usize), fixture["suffix"].as_str().unwrap());
     let unit = fixture["maximumUnitBytes"].as_u64().unwrap() as usize;
     let maximum = fixture["closeMaximumBytes"].as_u64().unwrap() as usize;
+    let close_grant = |work: &CadMediaWork, items: usize| {
+        use semio_framework_job::InteractiveJob as _;
+        let copy = work.next_close_copy_byte_demand().unwrap().max(maximum);
+        semio_framework_value::RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: work.next_close_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: work.next_close_release_byte_demand().unwrap(), maximum_depth: work.next_close_depth_demand().unwrap().max(1) }
+    };
     let expected_bytes = fixture["sourceBytes"].as_u64().unwrap() as usize;
     let expected_checksum = fixture["sourceChecksum"].as_str().unwrap().parse::<u64>().unwrap();
     assert_eq!(source.as_bytes().len(), expected_bytes);
@@ -309,11 +321,12 @@ fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() 
             assert_eq!(work.borrowed_source().unwrap().as_ptr(), pointer);
             assert!(!work.consumed);
             work.begin_close();
-            assert_eq!(work.close_step(0, maximum), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(semio_framework_job::close_with_self_funded_context(close_grant(&work, 0), |cx| work.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
             for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-                match work.close_step(1, maximum) {
-                    semio_framework_job::InteractiveJobCloseStep::Complete => break,
-                    semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= maximum); },
+                let grant = close_grant(&work, 1);
+                match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
+                    semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
+                    semio_framework_job::InteractiveJobCloseStep::Pending { progress } => { assert!(progress.copied_items <= 1); assert!(progress.released_bytes <= grant.maximum_release_bytes); },
                     step => panic!("priced source blocked exact bounded close: {step:?}"),
                 }
             }
@@ -327,9 +340,10 @@ fn cad_media_pricing_retains_exact_source_through_progress_cancel_and_refusal() 
     assert_eq!(work.priced_bytes, 0);
     work.begin_close();
     for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-        match work.close_step(1, maximum) {
-            semio_framework_job::InteractiveJobCloseStep::Complete => break,
-            semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1); assert!(released_bytes <= maximum); },
+        let grant = close_grant(&work, 1);
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => break,
+            semio_framework_job::InteractiveJobCloseStep::Pending { progress } => { assert!(progress.copied_items <= 1); assert!(progress.released_bytes <= grant.maximum_release_bytes); },
             step => panic!("refused source blocked exact bounded close: {step:?}"),
         }
     }

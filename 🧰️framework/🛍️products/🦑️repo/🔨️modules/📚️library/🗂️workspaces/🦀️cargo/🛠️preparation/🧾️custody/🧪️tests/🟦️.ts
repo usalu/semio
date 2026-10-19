@@ -1,4 +1,4 @@
-import{registerBuildTestLawV1}from"../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{nativeCallerPhaseV1}from"../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{cargoPreparationControlV1}from"../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -10,7 +10,7 @@ import {createHash} from "node:crypto";
 import Ajv from "ajv";
 import {buildSync} from "esbuild";
 import {cargoPreparationProgramSourcesV1,admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1} from "../🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "./🧫️fixtures/🔣️.json";
 
 registerBuildTestLawV1("Cargo custody actual preparation program binds distinct fixture and tracked defining roots without source copies","caller-birth",async original=>{

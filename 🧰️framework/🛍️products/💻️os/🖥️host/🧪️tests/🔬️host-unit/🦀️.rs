@@ -6,7 +6,7 @@ mod tests {
     use std::sync::Arc;
     use store::{os_store::backbone::MemoryBackbone, os_store::backbone::MemoryBackbonePort};
     use semio_framework_ui_locale::LocalizedLabel;
-    use ui_wgpu::wgpu::SurfaceKind;
+    use semio_framework_ui_declaration::ui::SurfaceKind;
 
     include!("🔌️plugin-registry-and-hot-swap/🦀️.rs");
 

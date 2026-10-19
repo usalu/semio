@@ -1,4 +1,4 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -9,10 +9,11 @@ import {
   TurnClock,
   TurnLedger,
   setTurnDiagnostics,
-} from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
-import { BrowserFrameTransport, type BrowserFrameFallbackState, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+} from "@semio-tech/framework-renderer-wgpu/turn-budget";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameFallbackState, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "@semio-tech/framework-renderer-wgpu/boot-descriptor";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 /** 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce

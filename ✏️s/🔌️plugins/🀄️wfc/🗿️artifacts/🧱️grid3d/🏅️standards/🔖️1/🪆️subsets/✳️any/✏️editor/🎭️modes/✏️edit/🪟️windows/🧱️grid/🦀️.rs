@@ -217,10 +217,10 @@ pub fn render(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: 
 
 /// 🧱️ The scene `render` paints, minted separately so the pick-lane law can be asserted on the real
 /// struct instead of on a rendered node's debug text.
-pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> semio_framework_ui::wgpu::World3dScene {
+pub fn scene(document: &Grid3dSnapshot, config: &Grid3dWindowConfig, selected: &[String], hovered: Option<&str>, utility: &str) -> semio_framework_ui_declaration::ui::World3dScene {
     let (position, target) = framed_camera(document, config);
     let writes = utility == UTILITY_PIN || utility == UTILITY_MASK;
-    semio_framework_ui::wgpu::World3dScene {
+    semio_framework_ui_declaration::ui::World3dScene {
         domain_id: (!writes).then(|| INTERACTION_DOMAIN.into()),
         domain_granularity_id: (!writes).then(|| INTERACTION_GRANULARITY_CELL.into()),
         ..world3d_scene(

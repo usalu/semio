@@ -204,3 +204,53 @@ fn pdf_stream_roles_native_known_payloads_persist_and_project_semantically() {
     use semio_framework_value::{FromValue,ToValue};
     assert_eq!(PdfSnapshot::from_value(admitted.to_value()).unwrap(),admitted);
 }
+
+#[test]
+fn pdf_stream_roles_multi_object_reorder_delete_and_path_refusal() {
+    use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfIndexedDiff, PdfIndexedItem};
+    use crate::standards::v1_7::subsets::base::schema::mutations::{special_edit, PdfMutation, RemoveObject};
+    use protocol::{DiffAlgebra, Mutation};
+    use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
+    let replay: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🪪️stream-roles/🪢️replay/🔣️.json")).unwrap();
+    let owners: Vec<ObjRef> = replay["owners"].as_array().unwrap().iter().map(|owner| ObjRef { num: owner["num"].as_u64().unwrap() as u32, gen: owner["gen"].as_u64().unwrap() as u16 }).collect();
+    let texts: Vec<String> = serde_json::from_value(replay["texts"].clone()).unwrap();
+    let retained_owner = ObjRef { num: replay["expectedRetainedOwner"]["num"].as_u64().unwrap() as u32, gen: replay["expectedRetainedOwner"]["gen"].as_u64().unwrap() as u16 };
+    let identity = |owner: ObjRef| PdfGraphIdentity { owner, path: Vec::new() };
+    let roles: Vec<PdfAdmittedStreamRole> = owners.iter().zip(&texts).map(|(owner, text)| PdfAdmittedStreamRole { identity: identity(*owner), dependencies: vec![identity(*owner)], value: PdfStreamRoleValue::MetadataText { text: text.clone() } }).collect();
+    let mut base = decode_pdf(&encode_pdf(&text_document(&[(200.0, 300.0, "role")])).unwrap()).unwrap();
+    let (first_object, first_role) = (base.objects.len(), base.admitted_stream_roles.len());
+    base.objects.extend(owners.iter().zip(&texts).map(|(id, text)| PdfIndirectObject { id: *id, value: PdfObject::Stream { dict: Vec::new(), data: text.clone().into_bytes(), filters: Vec::new() } }));
+    base.admitted_stream_roles.extend(roles.iter().cloned());
+    assert!(validate_role_inputs(&base.objects, &base.objects, &[], &base.admitted_stream_roles).is_ok());
+
+    let reordered = PdfDiff { admitted_stream_roles:Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index: first_role, value: roles[1].clone() }, PdfIndexedItem { index: first_role + 1, value: roles[0].clone() }], ..PdfIndexedDiff::default() }), ..Default::default() };
+    let swapped = protocol::apply_diff(&reordered, &base).unwrap();
+    assert_eq!(swapped.admitted_stream_roles[first_role], roles[1]);
+    assert_eq!(swapped.admitted_stream_roles[first_role + 1], roles[0]);
+    assert_eq!(protocol::apply_diff(&reordered.inverse(&base), &swapped).unwrap(), base);
+
+    let special = special_edit(&SnapshotEditEvent::RemoveValue { path: format!("/objects/{first_object}") }, &base).unwrap().unwrap();
+    let [PdfMutation::RemoveObject(RemoveObject { id, admitted_stream_roles: None })] = special.as_slice() else { panic!("object removal leaf") };
+    assert_eq!(*id, owners[0]);
+    let refused = special[0].diff(&base);
+    assert!(protocol::apply_diff(refused.diff(), &base).is_err());
+
+    let deletion = PdfMutation::RemoveObject(RemoveObject { id: owners[0], admitted_stream_roles:Some(PdfIndexedDiff { removed: vec![first_role], ..PdfIndexedDiff::default() }) });
+    let outcome = deletion.diff(&base);
+    let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
+    let remaining: Vec<ObjRef> = next.admitted_stream_roles.iter().map(|role| role.identity.owner).filter(|owner| owners.contains(owner)).collect();
+    assert_eq!(remaining, vec![retained_owner]);
+    assert!(next.objects.iter().all(|object| object.id != owners[0]));
+    assert_eq!(protocol::apply_diff(&outcome.diff().inverse(&base), &next).unwrap(), base);
+
+    assert_eq!(replay["physicalByteEditRefused"], true);
+    let mut physical = base.clone();
+    let PdfObject::Stream { data, .. } = &mut physical.objects[first_object].value else { unreachable!() };
+    data.push(0);
+    assert!(validate_role_transition(&base.objects, &physical.objects, &base.admitted_stream_roles, &base.admitted_stream_roles[..first_role], &[]).is_err());
+
+    let mut pathed = roles[1].clone();
+    pathed.identity.path = vec![PdfGraphPath::Entry { key: "Missing".into() }];
+    let refusal = PdfDiff { admitted_stream_roles:Some(PdfIndexedDiff { modified: vec![PdfIndexedItem { index: first_role + 1, value: pathed }], ..PdfIndexedDiff::default() }), ..Default::default() };
+    assert!(protocol::apply_diff(&refusal, &base).is_err());
+}

@@ -12,7 +12,8 @@
     "./image": "./🖼️image/🟦️.ts",
     "./mesh": "./🧊️mesh/🟦️.ts",
     "./document": "./📃️document/🟦️.ts",
-    "./media": "./🎬️media/🟦️.ts"
+    "./media": "./🎬️media/🟦️.ts",
+    "./media/contract.json": "./🎬️media/🧬️contract/🔣️.json"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*"
@@ -25,6 +26,7 @@
   },
   "bundleKind": "library",
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "ajv": "8.20.0"
   }
 }

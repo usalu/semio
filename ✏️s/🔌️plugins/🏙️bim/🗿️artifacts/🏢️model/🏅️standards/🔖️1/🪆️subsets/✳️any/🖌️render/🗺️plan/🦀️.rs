@@ -118,7 +118,7 @@ fn polyline_record(line: &PlanPolyline, selected: bool) -> DslValue {
 /// 🪧️ Where an annotation text starts and how it turns on the canvas. The plan places it by the middle of its baseline; the canvas draws from the left of the baseline, so the start moves back by half the
 /// estimated advance along the text direction, and the transform rotates the text about that start (the canvas y axis is mirrored, so a counter-clockwise plan angle is a clockwise canvas angle).
 fn notation_placement(text: &PlanText, size: f64) -> ([f64; 2], [f64; 6]) {
-    let half = crate::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width(&text.label, size) / 2.0;
+    let half = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::text_width(&text.label, size) / 2.0;
     let (sin, cos) = text.rotation.sin_cos();
     let start = [text.x - half * cos, text.y - half * sin];
     if text.rotation == 0.0 {

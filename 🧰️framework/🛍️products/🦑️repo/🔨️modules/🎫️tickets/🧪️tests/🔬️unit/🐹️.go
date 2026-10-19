@@ -17,13 +17,12 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	providers "github.com/usalu/semio/repo/providers"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestStreamAndListTicketsIgnoreNestedWorkspaceFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRootDir := workspace.GetRootDir()
-	workspace.SetRootDir(tmpDir)
-	defer workspace.SetRootDir(oldRootDir)
+	sandbox.BindRoot(t, tmpDir)
 
 	ticketDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets", model.FormatYearDir(26), model.FormatMonthDir(3), model.FormatDayDir(7), "SAMPLE")
 	if err := os.MkdirAll(filepath.Join(ticketDir, "workspace", "node_modules", "pkg"), 0755); err != nil {
@@ -133,9 +132,7 @@ func setupTicketDir(t *testing.T) (string, string) {
 func setupImportantTicket(t *testing.T, status model.TicketStatus, content []byte) (*model.Ticket, string) {
 	t.Helper()
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	t.Cleanup(func() { workspace.RootDir = oldRoot })
+	sandbox.BindRoot(t, tmpDir)
 	ticket := &model.Ticket{
 		Year:       26,
 		Month:      8,
@@ -172,9 +169,7 @@ func setupImportantTicket(t *testing.T, status model.TicketStatus, content []byt
 
 func TestTicketImportantPathCanonical(t *testing.T) {
 	root := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = root
-	t.Cleanup(func() { workspace.RootDir = oldRoot })
+	sandbox.BindRoot(t, root)
 	want := filepath.Join(GetTicketPath(26, 8, 26, "PATH-TEST"), "📌️important", "📝️.md")
 	if got := GetImportantFilePath(26, 8, 26, "PATH-TEST"); got != want {
 		t.Fatalf("GetImportantFilePath() = %q, want %q", got, want)
@@ -183,9 +178,7 @@ func TestTicketImportantPathCanonical(t *testing.T) {
 
 func TestCreateReadAndRenameTicketUseCanonicalImportantPath(t *testing.T) {
 	root := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = root
-	t.Cleanup(func() { workspace.RootDir = oldRoot })
+	sandbox.BindRoot(t, root)
 	contributors.TestSessionIDOverride = "important-create-session"
 	t.Cleanup(func() { contributors.TestSessionIDOverride = "" })
 	ticket, err := CreateTicket("🎫️", "Canonical Important", "Prompt", "", "", "copilot-chat", "", true, "TEST/GOAL", "", true, "", providers.McpClientGeneric, "", "")
@@ -230,9 +223,7 @@ func TestCreateReadAndRenameTicketUseCanonicalImportantPath(t *testing.T) {
 
 func TestCreateTicketNeverOverwritesExistingImportantDocument(t *testing.T) {
 	root := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = root
-	t.Cleanup(func() { workspace.RootDir = oldRoot })
+	sandbox.BindRoot(t, root)
 	year, month, day := workspace.FormatDate(time.Now())
 	path := GetImportantFilePath(year, month, day, "CANONICAL-IMPORTANT-COLLISION")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
@@ -430,9 +421,7 @@ func writeSparseTicketArtifact(t *testing.T, path string, size int64) {
 
 func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	ticketDir := filepath.Dir(ticketJSON)
 	now := time.Now().UTC()
@@ -493,9 +482,7 @@ func TestFinishTicketPurgesOversizedArtifacts(t *testing.T) {
 
 func TestPurgeAllOversizedTicketArtifacts(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	now := time.Now().UTC()
 	year := now.Year() % 100
@@ -558,9 +545,7 @@ func TestResolvePlanSourceCursorPlanID(t *testing.T) {
 	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmp
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmp)
 
 	got, err := ResolvePlanSource(NewFileTicketStore(), HostPlanRoots(), providers.McpClientCursor, id)
 	if err != nil {
@@ -583,9 +568,7 @@ func TestResolvePlanSourceKiroSpecID(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(specDir, "design.md"), []byte("d"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmp
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmp)
 
 	got, err := ResolvePlanSource(NewFileTicketStore(), HostPlanRoots(), providers.McpClientKiro, "my-spec")
 	if err != nil {
@@ -674,9 +657,7 @@ func TestApplyTicketPlanFromIDsCursor(t *testing.T) {
 	if err := os.WriteFile(planFile, []byte("plan"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmp
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmp)
 
 	ticket := &model.Ticket{}
 	if err := ApplyTicketPlanFromIDs(NewFileTicketStore(), HostPlanRoots(), ticket, providers.McpClientCursor, id, ""); err != nil {
@@ -799,7 +780,7 @@ func TestPostTicketPlanCommentLive(t *testing.T) {
 	if os.Getenv("REPO_LIVE_GH") != "1" {
 		t.Skip("set REPO_LIVE_GH=1 to run live GitHub plan comment test")
 	}
-	planFile := filepath.Join(workspace.RootDir, ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")
+	planFile := filepath.Join(workspace.GetRootDir(), ".cursor", "plans", "post_plan_to_issue_c256e28e.plan.md")
 	if _, err := os.Stat(planFile); err != nil {
 		t.Skip("plan file missing")
 	}

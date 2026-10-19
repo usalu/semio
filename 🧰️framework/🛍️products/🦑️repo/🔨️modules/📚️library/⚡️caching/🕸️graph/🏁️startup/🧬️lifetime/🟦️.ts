@@ -1,5 +1,5 @@
 import {isAbsolute,resolve,basename} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 🌱️ Closed service-birth data binds the actual issuer; this wire value never creates authority. */

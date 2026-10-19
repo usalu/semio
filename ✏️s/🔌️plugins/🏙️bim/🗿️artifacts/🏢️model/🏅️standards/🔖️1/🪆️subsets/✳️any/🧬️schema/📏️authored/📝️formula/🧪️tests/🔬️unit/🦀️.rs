@@ -1,8 +1,9 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ParametricProfile, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::FamilySolid;
 use std::collections::BTreeSet;
 #[allow(unused_imports)]
 use semio_framework_expression::{dependencies, parse, print, Expr, ParseError};
-use crate::standards::v1::subsets::any::schema::authored::formula::*;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::{is_name, parameter_id, split_parameter_id, canonical, is_canonical, references, solid_slots, set_slot};
 
 #[test]
 fn parameter_names_follow_the_expression_grammar() {
@@ -46,7 +47,7 @@ fn references_name_every_parameter_of_the_text_and_none_for_broken_text() {
 
 fn solid(shape: SolidShape) -> FamilySolid {
     let zero = || "0 m".to_string();
-    FamilySolid { family: "f".into(), name: "s".into(), shape, material: "\"m\"".into(), visible: "true".into(), offset: crate::standards::v1::subsets::any::schema::snapshot::ExprPoint3 { x: zero(), y: zero(), z: zero() } }
+    FamilySolid { family: "f".into(), name: "s".into(), shape, material: "\"m\"".into(), visible: "true".into(), offset: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ExprPoint3 { x: zero(), y: zero(), z: zero() } }
 }
 
 #[test]
@@ -58,7 +59,7 @@ fn every_formula_slot_of_a_solid_is_listed_once_with_its_field_name() {
     let points = vec![ExprPoint { x: "0 m".into(), y: "0 m".into() }, ExprPoint { x: "1 m".into(), y: "2 m".into() }];
     let sweep = solid(SolidShape::Sweep { profile: ParametricProfile::Circle { diameter: "d".into() }, path: points.clone() });
     assert_eq!(fields(&sweep), ["profile.diameter", "path[0].x", "path[0].y", "path[1].x", "path[1].y", "material", "visible", "offset.x", "offset.y", "offset.z"]);
-    let turned = solid(SolidShape::Revolution { profile: ParametricProfile::Polygon { points }, axis: crate::standards::v1::subsets::any::schema::snapshot::SolidAxis::Z, angle: "90 deg".into() });
+    let turned = solid(SolidShape::Revolution { profile: ParametricProfile::Polygon { points }, axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidAxis::Z, angle: "90 deg".into() });
     assert_eq!(fields(&turned)[..5], ["profile.points[0].x", "profile.points[0].y", "profile.points[1].x", "profile.points[1].y", "angle"]);
     let cuboid = solid(SolidShape::Cuboid { x: "1 m".into(), y: "2 m".into(), z: "3 m".into(), width: "w".into(), depth: "d".into(), height: "h".into() });
     assert_eq!(fields(&cuboid)[..6], ["x", "y", "z", "width", "depth", "height"]);
@@ -73,7 +74,7 @@ fn every_slot_of_a_solid_can_be_replaced_by_its_name_and_only_that_slot() {
     let points = vec![ExprPoint { x: "0 m".into(), y: "0 m".into() }, ExprPoint { x: "1 m".into(), y: "2 m".into() }, ExprPoint { x: "3 m".into(), y: "1 m".into() }];
     let shapes = [
         SolidShape::Extrusion { profile: ParametricProfile::IShape { width: "a".into(), depth: "b".into(), web: "c".into(), flange: "d".into() }, base: "0 m".into(), height: "1 m".into() },
-        SolidShape::Revolution { profile: ParametricProfile::Polygon { points: points.clone() }, axis: crate::standards::v1::subsets::any::schema::snapshot::SolidAxis::X, angle: "90 deg".into() },
+        SolidShape::Revolution { profile: ParametricProfile::Polygon { points: points.clone() }, axis: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidAxis::X, angle: "90 deg".into() },
         SolidShape::Sweep { profile: ParametricProfile::Circle { diameter: "d".into() }, path: points[..2].to_vec() },
         SolidShape::Cuboid { x: "1 m".into(), y: "2 m".into(), z: "3 m".into(), width: "w".into(), depth: "d".into(), height: "h".into() },
         SolidShape::Extrusion { profile: ParametricProfile::Rectangle { width: "w".into(), depth: "d".into() }, base: "0 m".into(), height: "h".into() },

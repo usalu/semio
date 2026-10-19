@@ -1,5 +1,5 @@
 /** 📦️ Infers every project node of one workspace snapshot with bounded concurrency and settlement. */
-import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { availableParallelism } from "node:os";
 import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";

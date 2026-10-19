@@ -7,7 +7,8 @@ use semio_framework_os_renderer_wgpu_host_base::app_now_ms;
 use semio_framework_os_renderer_wgpu_scene_state::{SceneDrag, SceneDragMode, camera_fixture_grant, camera_fixture_lease, clear_camera_fixture, mutate_scene_state, sweep_expired_scene_camera_dispatches};
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
-use ui_wgpu::wgpu::{Rect, SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
 
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
     UiComponentSceneNode {

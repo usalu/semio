@@ -4,9 +4,9 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
 
 

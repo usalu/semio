@@ -94,13 +94,13 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     let source_bytes=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&export.data).unwrap();assert!(matches!(source_bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(source_bytes.as_ptr(),export.data.as_ptr());assert_eq!(source_bytes.as_ref(),export.data.as_bytes());
     let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
     let actor=law["openedActor"].as_str().unwrap();let mut app=context::app_with_actor(protocol::ActorId(actor.into())).await;app.bind_actor(actor).await;
-    let meta=semio_framework_plugin::artifact_app_laws::meta(actor);app.dispatch_typed(command,&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
-    let mut receipt=semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app,meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
+    let meta=semio_framework_plugin::artifact_app_laws::meta(actor);app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    let mut receipt=semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
     assert_eq!(receipt.completions,1);assert_eq!(receipt.effects.len(),1);
     let Effect::LoadDocument{pack,spr}=receipt.effects.pop().unwrap()else{panic!("canonical natural-file import publishes its original whole-document load")};
     let candidate=Generation3dSnapshotRead::new(<Generation3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap());assert_eq!(*candidate,*incoming);
     let config_files=app.config_pack().await.unwrap();let config=store::os_store::text_format::parse_document_pack::<Generation3dConfig,Generation3dConfigMutation>(&config_files.pack,&config_files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap().into_snapshot();assert_eq!(config.camera,incoming.host_snapshot.camera);assert_eq!(config.selected_generation_id,incoming.generation.selected_generation_id);
-    let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut *app,&files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();app.bind_actor(actor).await;
+    let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();app.bind_actor(actor).await;
     let loaded=context::snapshot(&app);assert_eq!(*loaded,*incoming);assert_eq!(loaded.host_snapshot.widgets.len(),before_groups+fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap()as usize+1);
     let saved=app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack,"canonical load preserves every original Pack source byte");let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&saved.pack,&saved.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty(),"natural-file import starts at its genuine empty history");let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*loaded);
     let inferred=infer_geometry(&crate::test_geometry::geometry_input(&loaded));let expected=infer_geometry(&crate::test_geometry::geometry_input(&incoming));assert_eq!(inferred,expected,"the imported document reaches the same original inference authority");
@@ -441,7 +441,7 @@ impl Drop for Generation3dProductionLease {
     }
 }
 
-fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> Generation3dProductionLease {
+fn admit_production_envelope(app: &mut context::Generation3dAppFixture, wire: &[u8]) -> Generation3dProductionLease {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
     semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_CONTROL_CREDITS })
@@ -452,7 +452,7 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
         let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded P3 production envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P3 production envelope page admission failed: {fault:?}"));
     }
-    assert!(app.seal_artifact_envelope_ingress(handle).expect("P3 production envelope seal"));
+    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("P3 production envelope seal"));
     Generation3dProductionLease { handle, released: false }
 }
 
@@ -466,12 +466,12 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 /// nothing on the ladder names an authority it is waiting for. The stall is inside the decode's own
 /// `WorkerJobSession`, not in this driver (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️remaining-suite-reds-2026-09-13.md` §3.3).
-fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut context::Generation3dAppFixture, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
         semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P3 authority refresh immediately before production maintenance");
-        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P3 production maintenance turn");
-        let poll = app.advance_artifact_envelope_load(handle).expect("P3 production load advancement");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P3 production maintenance turn");
+        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("P3 production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }
@@ -600,7 +600,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
         let rows=GENERATION3D_RETAINED_CAPACITY.rows(emit.artifact_mutations.len());let admission=rows<=law["maximumStagedRows"].as_u64().unwrap()as usize;
         assert!(emit.artifact_mutations.is_empty(),"natural-file import publishes its original load/genesis effect");assert_eq!(emit.effects.len(),1);
         let Effect::LoadDocument{pack,spr}=emit.effects.pop().unwrap()else{panic!("original whole-document load")};
-        let actor=state["openedActor"].as_str().unwrap();let mut restored_app=context::app_with_actor(protocol::ActorId(actor.into())).await;let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut *restored_app,&files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();restored_app.bind_actor(actor).await;
+        let actor=state["openedActor"].as_str().unwrap();let mut restored_app=context::app_with_actor(protocol::ActorId(actor.into())).await;let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut restored_app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), restored_app.1.cx()).await.unwrap();restored_app.bind_actor(actor).await;
         let saved=restored_app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack);let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&saved.pack,&saved.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty());let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*incoming);
         let folded=context::snapshot(&restored_app);let mut folded_config=config.clone();let mut valid=true;
         for mutation in std::mem::take(&mut emit.config_mutations){let(delta,messages)=protocol::Mutation::diff(&mutation,&folded_config).into_parts();valid&=!messages.iter().any(|message|matches!(message.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal));match protocol::apply_diff(&delta,&folded_config){Ok(next)=>folded_config=next,Err(_)=>valid=false}}

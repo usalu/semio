@@ -1,12 +1,14 @@
 /** 🫀️ Boot liveness watchdog: the virtual clock harness, the re-arm, the phase ceilings, the silence and heartbeat laws and the third-party clock replay. */
-import { fixtureOriginalWorkStock } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { BrowserFrameTransport, type BrowserFrameFallbackState } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootPhase, describeBrowserBootSilence, evaluateBrowserBootLiveness } from "../../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
+import { type BrowserFrameFallbackState } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootPhase, describeBrowserBootSilence, evaluateBrowserBootLiveness } from "@semio-tech/framework-renderer-wgpu/boot-liveness";
 import { FakeWorker, TEST_HOST_APPEARANCE, TEST_HOST_PLATFORM, TEST_HOST_STORAGE, testBootDescriptor } from "../🧰️transport-test-support/🟦️.ts";
+import { readFrameWorkerSource } from "../📖️frame-worker-source/🟦️.ts";
 
 type VirtualTimer = { readonly id: number; readonly callback: () => void; readonly dueAtMs: number };
 
@@ -131,7 +133,7 @@ describe("wgpu boot liveness watchdog", () => {
 
   it("declares every browser-owned phase BEFORE it blocks, and brings the renderer wasm up in cached, reporting phases", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     const bootSource = (readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8") + "\n" + readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts"), "utf8"));
     const suspension = workerSource.slice(workerSource.indexOf("async function monitoredSuspension"), workerSource.indexOf("async function macrotask"));
     expect(suspension.indexOf('declarePhase(stage, "enter", 0)')).toBeGreaterThan(-1);
@@ -144,7 +146,7 @@ describe("wgpu boot liveness watchdog", () => {
     expect(workerSource).not.toContain('monitoredSuspension("wasm-instance"');
     expect(bootSource).toContain("describeBrowserBootPhase(state.bootPhase, state.bootPhaseElapsedMs, tongue)");
     expect(workerSource).toContain("if (!bootDeclarationsOpen || closed || closing || failed) return;");
-    expect(workerSource.indexOf("bootDeclarationsOpen = false;")).toBeLessThan(workerSource.indexOf('post({ kind: "booted", lifecycle })'));
+    expect(workerSource.indexOf("setBootDeclarationsOpen(false);")).toBeLessThan(workerSource.indexOf('post({ kind: "booted", lifecycle })'));
   });
 });
 

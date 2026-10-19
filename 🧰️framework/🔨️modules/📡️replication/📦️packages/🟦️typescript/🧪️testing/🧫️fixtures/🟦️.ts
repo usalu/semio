@@ -1,2 +1,3 @@
 /** 🧫️ Public entry `@semio-tech/framework-replication/testing/fixtures`: the explicit surface that importers outside the module use. */
 export { causalHistoryTransitionFixture, codecHistoryLimitsSchemaUrl, conflictReplayReportSchema, formatVerificationFixtureUrl, loadReplicationApplyRefusalFixture, loadReplicationApplyRefusalSchema, mutationOutcomeCodeFixture, replicationIoBinaryFixture, replicationIoBinarySchema, sourceAuthorityDomainsFixtureUrl } from "../../../../🧪️tests/🧫️fixtures/🟦️.ts";
+export { backboneBatchV1FixtureUrl, presenceLivenessV1Fixture } from "../../../../🧪️tests/🧫️fixtures/🟦️.ts";

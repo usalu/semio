@@ -143,7 +143,8 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<A>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<A>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.state.cancelled {
             return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
@@ -170,6 +171,9 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
             input.operation,
         )?;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self,index:usize)->Option<u8>{self.state.checkpoint_byte(index)}

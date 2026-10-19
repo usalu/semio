@@ -1,10 +1,12 @@
 //! 🔺️ Sparse declarative set-element-option diff.
 use crate::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption;
-use crate::standards::v1::subsets::any::schema::{diff::{ElementMembershipPatch, Entry, ModelDiff}, snapshot::{ElementMembership, ModelSnapshot}};
-use crate::standards::v1::subsets::any::schema::authored::option_rules;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::hand_written::ElementMembershipPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ElementMembership, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetElementOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if !option_rules::element_ids(base).contains(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Physical element is missing.", [payload.id.clone()]); }
+    if !semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules::element_ids(base).contains(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Physical element is missing.", [payload.id.clone()]); }
     if payload.option.as_ref().is_some_and(|id| !base.design_options.contains_key(id)) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Membership target is missing.", [payload.id.clone()]); }
     let old = base.element_options.get(&payload.id);
     if old.map(|entry| &entry.target) == payload.option.as_ref() { return MutationOutcome::refuse(OutcomeCode::NoOp, "Membership is unchanged.", [payload.id.clone()]); }

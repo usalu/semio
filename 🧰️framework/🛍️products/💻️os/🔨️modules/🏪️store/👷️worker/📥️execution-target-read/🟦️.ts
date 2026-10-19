@@ -11,9 +11,8 @@ import { type SurfaceArtifactKindV1, type SurfaceKindAppV1, surfaceOpensArtifact
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
 import { type DocumentActorLossCauseV1, documentActorRecoveryStepV1, DOCUMENT_ACTOR_RECOVERY_V1 } from "../🚑️actor-recovery/🟦️.ts";
 import { closeHubSocketV1 } from "@semio-tech/framework/directory/client/socket-close";
-import type { DocumentExecutionTargetAssetV1 } from "../🧊️cold-pair/🟦️.ts";
-import { type ArtifactState, artifactScope, post } from "../🧾️document-state/🟦️.ts";
-import { EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES, EXECUTION_TARGET_PROGRESS_UNIT_BYTES, dropVerifiedColdDocumentPair } from "../⚙️constants/🟦️.ts";
+import { type ArtifactState, artifactScope, dropVerifiedColdDocumentPair, post } from "../🧾️document-state/🟦️.ts";
+import { EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES, EXECUTION_TARGET_PROGRESS_UNIT_BYTES } from "../⚙️constants/🟦️.ts";
 import { retireFolderCanonicalBootstrapMirror } from "../🌉️wire-bridge/🟦️.ts";
 import { requeuePendingBatches } from "../📮️hub-outbox/🟦️.ts";
 
@@ -35,6 +34,8 @@ export function ownedArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   owned.set(bytes);
   return owned.buffer;
 }
+
+export type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor" | "browser-actor";
 
 export function executionTargetAssetPath(spaceId: string, documentId: string, asset: DocumentExecutionTargetAssetV1): string {
   return `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/execution-target/${asset}`;

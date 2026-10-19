@@ -3,7 +3,6 @@
 use crate::editor::bitmap::modes::edit::windows::output;
 use crate::schema::snapshot::BitmapSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_base64;
-use semio_framework_job::{JobOutcomeBorrow, RetainedCloneGrant, RetainedCloneProgress, StepContext};
 use semio_framework_plugin::Fault;
 use semio_framework_tool_run::{ToolRunIdentity, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind};
 use crate::editor::bitmap::modes::edit::tools::fill::*;
@@ -57,7 +56,7 @@ fn drive_once(job: &mut BitmapFillRunJob, operation: OperationId, generation: Ge
     let now = semio_framework_job::default_now_us().expect("clock");
     let budget = StepBudget::new(fuel, now + semio_framework_job::INTERACTIVE_LANE_WALL_US * 4, TEST_GRANT);
     let mut receipt = semio_framework_job::RetainedCloneProgress::default();
-    let mut context = semio_framework_job::StepContext::new(operation, generation, budget, cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
+    let mut context = semio_s_plugin_wfc_engine_oracle::step_context::test_step_context(operation, generation, budget, cancel.clone(), sequence, &mut receipt);
     let mut verdict = None;
     match semio_framework_job::drive_step(job, &mut context, "wfc.bitmap.fill.run.test", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fill step admission") {
         None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. } | semio_framework_job::JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Yield,
@@ -91,13 +90,13 @@ fn close(job: &mut BitmapFillRunJob) {
             maximum_release_bytes: job.next_close_release_byte_demand().expect("a locally owned fill quotes its release demand"),
             maximum_depth: job.next_close_depth_demand().expect("a locally owned fill quotes its depth demand").max(1),
         };
-        match job.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { .. } => {
                 assert!(job.terminal_is_empty());
                 return;
             }
             InteractiveJobCloseStep::Pending { .. } => {}
-            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("fill close blocked or refused"),
+            InteractiveJobCloseStep::Blocked => panic!("fill close blocked or refused"),
         }
     }
     panic!("fill close never completed");

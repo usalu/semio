@@ -1,7 +1,45 @@
 /** 📤️ Tool-job coverage: import preparation, dispatch, publication freshness and bounded publication laws.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
+import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { toolJobProductionSource, toolJobRustBlock } from "../📋️inventory/🟦️.ts";
+
+const PLUGIN = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
+const STORE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
+
+const withoutStrings = (text: string): string => text.replace(/"(?:[^"\\]|\\.)*"/gu, '""');
+
+/** 🧪️ Replaces the first `before` inside the block that starts at the last `owner` needle, for the hostile mutations of the source laws; a target missing from the owner is a failed self-test. */
+export function toolJobSourceMutation(source: string, owner: string, before: string, after: string): string {
+  const start = source.lastIndexOf(owner);
+  const open = start < 0 ? -1 : source.indexOf("{", start);
+  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
+  if (!block || !block.body.includes(before)) throw new Error(`[verify interactivity tool-jobs] self-test hostile target "${before}" is missing from ${owner}.`);
+  const at = source.indexOf(before, open);
+  return source.slice(0, at) + after + source.slice(at + before.length);
+}
+
+/** 🧵️ Reads the text of the mounted-instance family the typed-command publication laws bind: the composer and every use-case crate of the instance, the retained command shell and the lifted full-operation job, each crate family in path order. */
+export function toolJobPluginInstanceSource(root: string): string {
+  return ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job"].map((folder) => readSourceFamilySource(`${root}/${PLUGIN}/${folder}`)).join("\n");
+}
+
+/** 🏪️ Reads the owning files of the Store one-item publication: the item fold first, then the engine bundle, the publication owner, its contract, the cursor and log operations and the ephemeral publications. The first match of a name is the production owner. */
+export function toolJobStoreSource(root: string): string {
+  return [
+    "⚙️engine/🧱️store-components/📥️lifted/🏪️store/📬️store-owners-batch-fold-and-history/🦀️.rs",
+    "⚙️engine/🧳️bundle/🦀️.rs",
+    "📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
+    "🎮️one-item/🦀️.rs",
+    "🎮️one-item/📬️publication/🦀️.rs",
+    "⚙️engine/🧱️store-components/📥️lifted/🏪️store/🖱️store-cursor-operations/🦀️.rs",
+    "⚙️engine/🧱️store-components/📥️lifted/🏪️store/📒️store-log-operations/🦀️.rs",
+    "🫧️ephemeral/📤️ephemeral-one-item-publication/🦀️.rs",
+    "🫧️ephemeral/👥️presence-store-and-peers-publication/🦀️.rs",
+    "🫧️ephemeral/🌫️transient-and-interaction-stores/🦀️.rs",
+  ].map((file) => policyReadFileSafe(root, `${STORE}/${file}`)).join("\n");
+}
 
 export function toolJobImportPreparationBounded(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_import_media");
@@ -14,10 +52,49 @@ export function toolJobTypedCaptureBody(source: string): string | undefined {
   const start = source.lastIndexOf("async fn capture_typed_command_roots(");
   if (start < 0 || source.split("async fn capture_typed_command_roots(").length !== 2) return undefined;
   const body = toolJobRustBlock(source, source.indexOf("{", start))?.body;
-  const expected = "\n            self.refresh_cache().await?;\n            let (snapshot, config, history) = self.command_cache_inputs();\n            let canonical_base_revision = self.store.content_revision();\n            let window_config_authority = self.window_config_store.capture(meta.view_state.as_ref()).await?;\n            let targeted_window_transient_view = match A::retained_window_transient_target(command) {\n                Some((window_id, expected_kind)) => {\n                    let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture requires an exact ViewModel roster\"))?;\n                    let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture requires an attached window instance\"))?;\n                    if window.window_kind_id != expected_kind {\n                        return Err(plugin_sdk_fault(\"targeted window transient capture does not match the command owner's expected window kind\"));\n                    }\n                    Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault(\"targeted window transient capture lost its attached window instance\"))?)\n                }\n                None => None,\n            };\n            let window_transient_authority = self.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;\n            Ok(TypedCommandRoots {\n                snapshot,\n                config,\n                history,\n                children: std::sync::Arc::new(ChildContentView::clone(&self.child_content_root)),\n                draft_snapshot: self.draft_store.snapshot_root(),\n                interaction_state: self.interaction_store.snapshot_root(),\n                interaction_hover: self.interaction_hover.clone(),\n                presence_peers: self.presence_store.peers_root(),\n                transient: self.transient_store.current_root(),\n                peer_presence: std::sync::Arc::clone(&self.peer_presence),\n                canonical_base_revision,\n                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect(\"revision lane width\"))),\n                generation: semio_framework_job::Generation(self.store.generation()),\n                config_generation: self.config_store.generation(),\n                draft_generation: self.draft_store.generation(),\n                presence_generation: self.presence_store.generation().await,\n                transient_generation: self.transient_store.generation().await,\n                window_config_authority,\n                window_transient_authority,\n            })\n        ";
+  const expected = `
+        self.as_render().refresh_cache().await?;
+        let (snapshot, config, history) = self.history.command_cache_inputs();
+        let canonical_base_revision = self.stores.store.content_revision();
+        let window_config_authority = self.stores.window_config_store.capture(meta.view_state.as_ref()).await?;
+        let targeted_window_transient_view = match A::retained_window_transient_target(command) {
+            Some((window_id, expected_kind)) => {
+                let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
+                let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
+                if window.window_kind_id != expected_kind {
+                    return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
+                }
+                Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
+            }
+            None => None,
+        };
+        let window_transient_authority = self.stores.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;
+        Ok(TypedCommandRoots {
+            snapshot,
+            config,
+            history,
+            children: std::sync::Arc::new(ChildContentView::clone(&self.child_composition.child_content_root)),
+            draft_snapshot: self.stores.draft_store.snapshot_root(),
+            interaction_state: self.stores.interaction_store.snapshot_root(),
+            interaction_hover: self.interaction.interaction_hover.clone(),
+            presence_peers: self.stores.presence_store.peers_root(),
+            transient: self.stores.transient_store.current_root(),
+            peer_presence: std::sync::Arc::clone(&self.roster.peer_presence),
+            canonical_base_revision,
+            base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
+            generation: semio_framework_job::Generation(self.stores.store.generation()),
+            config_generation: self.stores.config_store.generation(),
+            draft_generation: self.stores.draft_store.generation(),
+            presence_generation: self.stores.presence_store.generation().await,
+            transient_generation: self.stores.transient_store.generation().await,
+            window_config_authority,
+            window_transient_authority,
+        })
+    `;
   return body && body.replace(/\s+/gu, "") === expected.replace(/\s+/gu, "") ? body : undefined;
 }
 
+/** 🧵️ The typed-command seam: dispatch admits the verb into the latest-wins queue behind the full-operation gate and the fixed slot admission, and the latest-wins advance is the only caller of the setup that captures the roots, reserves the operation slot and mounts the worker. Returns the setup body. */
 export function toolJobRetainedDispatchSetup(source: string): string | undefined {
   const body = (name: string): string | undefined => {
     const start = source.lastIndexOf(`async fn ${name}(`);
@@ -25,17 +102,21 @@ export function toolJobRetainedDispatchSetup(source: string): string | undefined
   };
   const dispatch = body("dispatch_typed_command_inner");
   const setup = body("start_typed_command_operation");
-  if (!dispatch || !setup) return undefined;
-  const guard = dispatch.indexOf("self.require_complete_tool_operation_pipeline(&admission)?");
-  const direct = dispatch.indexOf("self.start_typed_command_operation(command, admission, meta, operation_id, None).await");
-  const retained = dispatch.indexOf("self.latest_wins_commands.insert_admitted(");
-  const reservation = setup.indexOf("assert!(self.tool_operations.can_insert(operation_id.0)");
+  const advance = body("advance_latest_wins_command_one");
+  if (!dispatch || !setup || !advance) return undefined;
+  const guard = dispatch.indexOf("self.media.require_complete_tool_operation_pipeline(&admission)?");
+  const slot = dispatch.indexOf("self.media.admit_typed_operation_slot(");
+  const retained = dispatch.indexOf("self.tools.latest_wins_commands.insert_admitted(");
+  const reservation = setup.indexOf("assert!(self.tools.tool_operations.can_insert(operation_id.0)");
   const capture = toolJobTypedCaptureBody(source);
   const prepare = setup.indexOf("self.capture_typed_command_roots(command.as_ref(), meta).await?");
-  return guard >= 0 && direct > guard && retained > guard && !dispatch.includes("refresh_cache().await")
-    && !!capture && reservation >= 0 && prepare > reservation && setup.includes("self.typed_operation_reservations[") && setup.includes("self.can_admit_typed_operation(operation_id.0)") ? setup : undefined;
+  const callers = source.split("start_typed_command_operation(").length - 1;
+  return guard >= 0 && slot > guard && retained > slot && !dispatch.includes("refresh_cache().await") && !dispatch.includes("start_typed_command_operation(") && !dispatch.includes("tool_jobs.dispatch")
+    && callers === 2 && advance.includes("self.as_dispatch().start_typed_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await")
+    && !!capture && reservation >= 0 && prepare > reservation && setup.includes("self.tools.typed_operation_reservations[") ? setup : undefined;
 }
 
+/** 🧵️ Typed dispatch performs no worker turn: it admits into the latest-wins queue, the setup mounts the dispatched job as a pending original worker admission behind its operation slot, and the mounted operation's `drive_worker_step` admits that session once and pumps it once through the exact work loan. */
 export function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
   const source = toolJobProductionSource(raw);
   const count = (text: string, token: string): number => text.split(token).length - 1;
@@ -43,76 +124,70 @@ export function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner(");
   const inner = start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start));
   const setup = toolJobRetainedDispatchSetup(source);
-  if (!inner || !setup) return false;
-  const workerSignature = "fn drive_worker_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>";
-  if (count(source, workerSignature) !== 1) return false;
-  const direct = "self.start_typed_command_operation(command, admission, meta, operation_id, None).await";
-  const stages = ["dispatch_wire_retained_with_spec", "MountedWorkerJobSession::try_new", "self.tool_operations.insert_admitted(", "active.drive_worker_step(self.mounted_policy.maintenance)"];
+  const workerSignature = "pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>";
+  if (!inner || !setup || count(source, workerSignature) !== 1) return false;
+  const driveOpen = source.indexOf("{", source.indexOf(workerSignature) + workerSignature.length);
+  const drive = toolJobRustBlock(source, driveOpen);
+  if (!drive) return false;
+  const stages = ["dispatch_wire_retained_with_spec", "RefusedWorkerSource::pending(", "self.tools.tool_operations.insert_admitted("];
   const offsets = stages.map((token) => setup.indexOf(token));
-  return count(inner.body, direct) === 1 && stages.every((token) => count(setup, token) === 1)
+  const turns = ["drive_worker_step(", "admit_pending(", "pump_one", "run_to_completion"];
+  const forbidden = ["run_on_worker_async", "run_to_completion", "thread_local!", "A::handle(", "A::ephemeral(", "MountedWorkerJobSession::try_new"];
+  return stages.every((token) => count(setup, token) === 1) && count(setup, "self.tools.tool_jobs.dispatch(operation_spec)") === 1
     && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
-    && !["self.tool_jobs.dispatch", "MountedWorkerJobSession::try_new", "drive_worker_step("].some((token) => inner.body.includes(token))
-    && !["run_on_worker_async", "run_to_completion", "thread_local!", "A::handle(", "A::ephemeral("].some((token) => inner.body.includes(token) || setup.includes(token));
+    && !["tool_jobs.dispatch", "RefusedWorkerSource", ...turns].some((token) => inner.body.includes(token))
+    && !turns.some((token) => setup.includes(token))
+    && !forbidden.some((token) => inner.body.includes(token) || setup.includes(token) || drive.body.includes(token))
+    && count(drive.body, "rejected.admit_pending(config,cx)") === 1 && count(drive.body, "session.pump_one_for_interactive_turn(same)") === 1 && count(drive.body, "pump_one") === 1
+    && drive.body.includes("cx.with_original_work_loan(step_fuel,step_deadline_us,") && !/\b(?:while|loop)\b/.test(withoutStrings(drive.body));
 }
 
+/** 🧵️ The typed-command full operation is bounded end to end: dispatch only admits, the roots are captured by the retained setup, the generic bounded job prepares its roots under cancellation and yield checks and then faults, because only an app-owned retained job owns a reducer, and the mounted operation publishes one funded unit per turn through its pending publication, its result page and its ACK. */
 export function toolJobFullOperationBounded(source: string): boolean {
   const start = source.lastIndexOf("async fn dispatch_typed_command_inner");
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   if (!block) return false;
-  const worker = block.body.indexOf("WorkerJobSession::new");
-  const before = block.body.slice(0, worker);
-  const after = block.body.slice(worker);
-  const preJobWork = ["refresh_cache().await", "draft_store.snapshot().await", "interaction_store.snapshot().await", "ChildContentView::new", "presence_store.peers().await", "transient_store.current().await", "store.content_revision().await", "store.envelope().await"];
-  const postJobWork = ["presence_store.apply", "transient_store.apply", "dispatch_emit("];
+  const preparationWork = ["refresh_cache().await", "draft_store.snapshot().await", "interaction_store.snapshot().await", "ChildContentView::new", "presence_store.peers().await", "transient_store.current().await", "store.content_revision().await", "store.envelope().await", "presence_store.apply", "transient_store.apply", "dispatch_emit(", "WorkerJobSession::new"];
   const operationStart = source.indexOf("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>");
   const operationOpen = operationStart < 0 ? -1 : source.indexOf("{", operationStart);
   const operation = operationOpen < 0 ? undefined : toolJobRustBlock(source, operationOpen);
   const operationJob = source.includes("struct TypedCommandFullOperationJob") && !!operation;
-  const exactStages = ["typed-command-prepare", "typed-command-reducer", "typed-command-output-validation", "typed-command-ephemeral", "typed-command-emit", "typed-command-expose"].every((stage) => source.includes(stage));
-  const boundedControl = !!operation && operation.body.includes("cx.is_cancelled()") && operation.body.includes("cx.should_yield()") && operation.body.includes("max_decoded_items") && operation.body.includes("max_output_bytes") && operation.body.includes("PreviewReady") && operation.body.includes("CheckpointReady");
-  const freshness = !!operation && operation.body.includes("validate_commit") && operation.body.includes("base_revision") && operation.body.includes("generation");
-  const monolithicOutput = !!operation && ["serde_json::to_vec(&emit.effects)", "serde_json::to_vec(&emit.events)", "for child in emit.child_emits.iter()", "bounded_command_output_bytes"].some((needle) => operation.body.includes(needle));
-  const invokesGenericReducer = !!operation && ["resolve_ready(A::ephemeral(", "resolve_ready(A::handle(", "A::ephemeral(command", "A::handle(command"].some((needle) => operation.body.includes(needle));
-  const boundedFirstStepReducer =
-    !!operation &&
-    operation.body.includes("ToolExecutionShape::BoundedFirstStep") &&
-    operation.body.includes("max_work_units_per_step") &&
-    operation.body.includes("max_step_micros") &&
-    source.includes("QualifiedToolProof::Bounded(_) => {") &&
-    source.includes("TypedCommandFullOperationJob::<A>");
-  const monolithicReducer = invokesGenericReducer && !boundedFirstStepReducer;
-  const legacyMountedOperation = worker >= 0 && operationJob && exactStages && boundedControl && freshness && !monolithicOutput && !monolithicReducer && preJobWork.every((needle) => !before.includes(needle)) && postJobWork.every((needle) => !after.includes(needle));
+  const exactStages = ["typed-command-prepare", "typed-command-reducer"].every((stage) => source.includes(`cx.set_stage("${stage}")`));
+  const boundedControl = !!operation && operation.body.includes("cx.is_cancelled()") && operation.body.includes("cx.should_yield()") && operation.body.includes("max_decoded_items") && operation.body.includes("max_output_bytes") && operation.body.includes("ReservedOutcomeKind::Preview") && source.includes("ReservedOutcomeKind::Checkpoint");
+  const genericReducerFaults = !!operation && operation.body.includes("generic bounded proof has no resumable app-owned reducer job");
+  const shortcuts = ["A::handle", "A::ephemeral", "bounded_command_output_bytes", "serde_json::to_vec", "for child in emit.child_emits", "ActiveToolCommand", "BoundedFirstStepCommandJob"];
+  const monolithic = !!operation && shortcuts.some((needle) => operation.body.includes(needle));
   const publisherStart = source.lastIndexOf("fn publish_mounted_typed_operation_unit");
   const publisherOpen = publisherStart < 0 ? -1 : source.indexOf("{", publisherStart);
   const publisher = publisherOpen < 0 ? undefined : toolJobRustBlock(source, publisherOpen);
   const retainedSetup = toolJobRetainedDispatchSetup(source);
   const capturedRoots = toolJobTypedCaptureBody(source);
-  const retainedMountedOperation =
+  return !!(
+    preparationWork.every((needle) => !block.body.includes(needle)) &&
     !!retainedSetup &&
-    retainedSetup.includes("MountedWorkerJobSession::try_new") &&
+    retainedSetup.includes("RefusedWorkerSource::pending(") &&
     retainedSetup.includes("dispatch_wire_retained_with_spec") &&
-    retainedSetup.includes("self.tool_operations.insert_admitted(") &&
-    capturedRoots?.includes("draft_snapshot: self.draft_store.snapshot_root()") &&
-    capturedRoots?.includes("interaction_state: self.interaction_store.snapshot_root()") &&
-    retainedSetup.includes("presence_local: Some(self.presence_store.local_read().map_err(Fault::from)?)") &&
-    capturedRoots?.includes("presence_peers: self.presence_store.peers_root()") &&
-    capturedRoots?.includes("transient: self.transient_store.current_root()") &&
+    retainedSetup.includes("self.tools.tool_operations.insert_admitted(") &&
+    capturedRoots?.includes("draft_snapshot: self.stores.draft_store.snapshot_root()") &&
+    capturedRoots?.includes("interaction_state: self.stores.interaction_store.snapshot_root()") &&
+    retainedSetup.includes("presence_local: Some(self.stores.presence_store.local_read().map_err(Fault::from)?)") &&
+    capturedRoots?.includes("presence_peers: self.stores.presence_store.peers_root()") &&
+    capturedRoots?.includes("transient: self.stores.transient_store.current_root()") &&
     source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
     source.includes("fn acknowledge_result_page") &&
     source.includes("if page.token != token") &&
     source.includes("advance_typed_operation_publication_one") &&
     source.includes("let mut mounted =") &&
     source.includes(".remove(operation_id)") &&
-    source.includes("self.tool_operations.insert_admitted(operation_id, mounted)") &&
+    source.includes("self.tools.tool_operations.insert_admitted(operation_id, mounted)") &&
     !!publisher &&
     !source.includes("async fn publish_mounted_typed_operation_unit") &&
     ["presence", "transient"].every((lane) => publisher.body.includes(`${lane}.pop()`)) &&
-    ["artifact_mutations", "config_mutations", "draft_mutations"].every((lane) => publisher.body.includes(`std::mem::take(&mut emit.${lane})`)) &&
     !publisher.body.includes(".last().cloned()") &&
     !publisher.body.includes(".await") &&
     publisher.body.includes("pending_artifact_publication") &&
-    publisher.body.includes("begin_apply_batch") &&
+    publisher.body.includes("admit_apply_batch") &&
     publisher.body.includes("begin_publish_one") &&
     publisher.body.includes("advance_apply_batch") &&
     publisher.body.includes("advance_publish_one") &&
@@ -120,13 +195,13 @@ export function toolJobFullOperationBounded(source: string): boolean {
     publisher.body.includes(".pop()") &&
     toolJobPublicationFreshnessBeforeEveryTurn(source) &&
     publisher.body.includes("content_revision_now()") &&
-    !publisher.body.includes("while ") &&
+    !/\bwhile\b/.test(withoutStrings(publisher.body)) &&
     operationJob &&
     exactStages &&
     boundedControl &&
-    freshness &&
-    !monolithicOutput;
-  return !!(legacyMountedOperation || retainedMountedOperation);
+    genericReducerFaults &&
+    !monolithic
+  );
 }
 
 /** 🔒️ Requires document freshness before either resuming or beginning one retained publication turn. */
@@ -149,11 +224,13 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
   const freshness = directFreshness >= 0 ? directFreshness : helperExact ? helperFreshness : -1;
   const pendingPublication = publisher.body.indexOf("if let Some(pending) = mounted.pending_artifact_publication.as_mut()");
   const beginTurns = [
-    "self.store.begin_apply_batch",
-    "self.config_store.begin_apply_batch",
-    "self.draft_store.begin_apply_batch",
-    "self.presence_store.begin_publish_one",
-    "self.transient_store.begin_publish_one",
+    "self.stores.store.admit_apply_batch",
+    "self.stores.config_store.admit_apply_batch",
+    "self.stores.draft_store.admit_apply_batch",
+    "self.stores.window_config_store.admit_begin",
+    "self.stores.presence_store.begin_publish_one",
+    "self.stores.transient_store.begin_publish_one",
+    "self.stores.window_transient_store.begin(",
   ]
     .map((needle) => publisher.body.indexOf(needle))
     .filter((index) => index >= 0);
@@ -169,26 +246,29 @@ export function toolJobPublicationFreshnessBeforeEveryTurn(source: string): bool
 
 /** 🧵️ Rejects the last generic typed-command false green: a batched publisher that
  * enters whole mutation replay, history construction, or outbound serialization in one turn.
- * ONE gesture stages N mutations into ONE `Edit` and ONE ledger slot, one fold per turn. */
+ * ONE gesture stages N mutations into ONE `Edit` and ONE ledger slot, one fold per turn.
+ * `storeSource` is the text of {@link toolJobStoreSource}: the item fold first, then the engine bundle, the publication owner and the cursor and log operations. */
 export function toolJobStoreBatchPublicationBounded(storeSource: string, pluginSource: string): boolean {
   const blockOf = (source: string, needle: string, fromEnd = false) => {
     const start = fromEnd ? source.lastIndexOf(needle) : source.indexOf(needle);
     const open = start < 0 ? -1 : source.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(source, open);
   };
-  const begin = blockOf(storeSource, "fn begin_apply_batch");
-  const ownedBegin = blockOf(storeSource, "fn begin_apply_batch_owned");
-  const preparation = begin?.body.includes("self.begin_apply_batch_owned(") && ownedBegin?.body.includes("source.footprint(lane)") ? ownedBegin : begin;
-  const advance = blockOf(storeSource, "fn advance_apply_batch");
-  const cancel = blockOf(storeSource, "fn cancel_apply_batch");
-  const fold = blockOf(storeSource, "fn fold_batch_item");
-  const base = blockOf(storeSource, "fn batch_item_base");
+  const admission = blockOf(storeSource, "pub fn admit_apply_batch(");
+  const advance = blockOf(storeSource, "pub fn advance_apply_batch<P, Mutation>(");
+  const cancel = blockOf(storeSource, "pub fn cancel_apply_batch(");
+  const fold = blockOf(storeSource, "pub fn fold_batch_item(");
+  const base = blockOf(storeSource, "fn batch_item_base<P, Mutation>(");
   const publicationState = blockOf(storeSource, "pub struct ArtifactStoreBatchPublication<P, Mutation>");
   const publication = blockOf(storeSource, "impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation>");
-  const close = publication ? blockOf(publication.body, "fn close_step") : undefined;
-  const terminal = publication ? blockOf(publication.body, "fn terminal_is_empty") : undefined;
+  const close = publication ? blockOf(publication.body, "pub fn close_step(&mut self, grant: RetainedCloneGrant)") : undefined;
+  const terminal = publication ? blockOf(publication.body, "pub fn terminal_is_empty(&self)") : undefined;
   const publisher = blockOf(pluginSource, "fn publish_mounted_typed_operation_unit", true);
-  const monolithic = ["replay_mutations(", "apply_command(", "flush_outbound(", "mutation.diff(", "diff.apply(", "try_reserve", "with_capacity(", ".collect::<Vec", ".to_vec("];
+  const monolithic = ["replay_mutations(", "apply_command(", "flush_outbound(", "mutation.diff(", "diff.apply(", "try_reserve", ".collect::<Vec", ".to_vec("];
+  const publisherText = publisher?.body.replace(/\s+/gu, "") ?? "";
+  const lanes = { store: "artifact_mutations", config_store: "config_mutations", draft_store: "draft_mutations" } as const;
+  const retiredByProposal = (lane: string): boolean => lane === "artifact_mutations" && publisherText.includes("pending_transaction_proposal=Some(TransactionProposalDraft{local_ops,foreign});emit.artifact_mutations.clear();");
+  const admitted = (store: keyof typeof lanes): string => publisherText.match(new RegExp(`self\\.stores\\.${store}\\.admit_apply_batch\\((.*?)\\)\\.map_err`, "u"))?.[1] ?? "";
   return (
     storeSource.includes("pub struct ArtifactStoreBatchPublication") &&
     storeSource.includes("pub enum ArtifactStoreOneItemPublicationPhase") &&
@@ -196,7 +276,7 @@ export function toolJobStoreBatchPublicationBounded(storeSource: string, pluginS
     storeSource.includes("pub trait ArtifactStoreOneItemPreparation") &&
     storeSource.includes("pub struct ArtifactStoreOneItemPrepared") &&
     storeSource.includes("trait ArtifactStoreBatchSource") &&
-    !!begin &&
+    !!admission &&
     !!advance &&
     !!cancel &&
     !!fold &&
@@ -205,22 +285,26 @@ export function toolJobStoreBatchPublicationBounded(storeSource: string, pluginS
     !!publication &&
     !!close &&
     !!terminal &&
-    !!preparation && preparation.body.includes("ArtifactStoreBatchPublication") &&
-    storeSource.includes("fn advance_apply_batch") &&
-    storeSource.includes("fn cancel_apply_batch") &&
+    admission.body.includes("ArtifactStoreBatchPublication") &&
+    admission.body.includes("std::mem::take(mutations)") &&
+    admission.body.includes("grant.maximum_copy_bytes<copied_bytes") &&
+    admission.body.includes("original_is_untouched()") &&
     publication.body.includes("fn begin_close") &&
-    close.body.includes("min(1)") &&
-    close.body.includes("maximum_bytes") &&
+    close.body.includes("maximum_items: 1") &&
+    close.body.includes("maximum_copy_bytes") &&
+    close.body.includes("maximum_capacity_bytes") &&
+    close.body.includes("maximum_release_bytes") &&
     !close.body.includes(".clear()") &&
     terminal.body.includes("ArtifactStoreOneItemPublicationPhase::Complete") &&
     (terminal.body.includes(".is_empty()") || terminal.body.includes(".is_none()")) &&
     publication.body.includes("maximum_items") &&
-    publication.body.includes("maximum_bytes") &&
+    publication.body.includes("maximum_capacity_bytes") &&
     /\b(?:expected_)?generation\b/.test(publicationState.body) &&
     storeSource.includes("impl<P, Mutation> Drop for ArtifactStoreBatchPublication") &&
-    monolithic.every((needle) => !begin.body.includes(needle) && !preparation.body.includes(needle) && !advance.body.includes(needle)) &&
+    monolithic.every((needle) => !admission.body.includes(needle) && !advance.body.includes(needle)) &&
     fold.body.includes("authority.validate_prepared(candidate)") &&
-    fold.body.includes("inverse.reverse();") &&
+    fold.body.includes("original.inverse.pop()") &&
+    fold.body.includes("target.inverse.push_reserved(") &&
     !fold.body.includes("replay_mutations(") &&
     !fold.body.includes("apply_command(") &&
     !advance.body.includes("while ") &&
@@ -231,16 +315,17 @@ export function toolJobStoreBatchPublicationBounded(storeSource: string, pluginS
     pluginSource.includes("draft_one_item_factory: Option<") &&
     pluginSource.includes("unsupported_publication_contracts") &&
     !!publisher &&
-    publisher.body.includes("begin_apply_batch") &&
+    publisher.body.includes("admit_apply_batch") &&
     publisher.body.includes("advance_apply_batch") &&
-    ["artifact_mutations", "config_mutations", "draft_mutations"].every((lane) => publisher.body.includes(`std::mem::take(&mut emit.${lane})`) && !publisher.body.includes(`${lane}.last().cloned()`)) &&
-    publisher.body.includes("self.artifact_one_item_factory.as_ref()") &&
-    publisher.body.includes("self.config_one_item_factory.as_ref()") &&
-    publisher.body.includes("self.draft_one_item_factory.as_ref()") &&
+    (Object.keys(lanes) as (keyof typeof lanes)[]).every((store) => admitted(store).includes(`&mutemit.${lanes[store]},HistoryLane::Document`) && !publisherText.includes(`${lanes[store]}.last().cloned()`) && !publisherText.includes(`emit.${lanes[store]}.clone()`) && publisherText.split(`emit.${lanes[store]}.clear()`).length - 1 === Number(retiredByProposal(lanes[store]))) &&
+    publisher.body.includes("self.stores.artifact_one_item_factory.as_ref()") &&
+    publisher.body.includes("self.stores.config_one_item_factory.as_ref()") &&
+    publisher.body.includes("self.stores.draft_one_item_factory.as_ref()") &&
     !publisher.body.includes("A::build_artifact_store_one_item_preparation_factory") &&
     !publisher.body.includes("A::build_config_store_one_item_preparation_factory") &&
     !publisher.body.includes("A::build_draft_store_one_item_preparation_factory") &&
-    !publisher.body.includes(".apply_one(")
+    !publisher.body.includes(".apply_one(") &&
+    !publisher.body.includes(".await")
   );
 }
 
@@ -258,9 +343,9 @@ export function toolJobEphemeralOneItemPublicationBounded(storeSource: string, p
       cursor = block.end;
     }
   };
-  const advances = blocks(storeSource, "pub fn advance_publish_one");
-  const begins = blocks(storeSource, "pub fn begin_publish_one");
-  const cancels = blocks(storeSource, "pub fn cancel_publish_one");
+  const advances = blocks(storeSource, "pub fn advance_publish_one(");
+  const begins = blocks(storeSource, "pub fn begin_publish_one(");
+  const cancels = blocks(storeSource, "pub fn cancel_publish_one(");
   const publication = storeSource.indexOf("impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation>");
   const publicationOpen = publication < 0 ? -1 : storeSource.indexOf("{", publication);
   const publicationBlock = publicationOpen < 0 ? undefined : toolJobRustBlock(storeSource, publicationOpen);
@@ -287,15 +372,15 @@ export function toolJobEphemeralOneItemPublicationBounded(storeSource: string, p
     pluginSource.includes("presence_local_root_retirement_factory: Option<") &&
     pluginSource.includes("transient_local_root_retirement_factory: Option<") &&
     pluginSource.includes("unsupported_publication_contracts") &&
-    pluginSource.includes("if let Some(lane) = self.unsupported_publication_contracts.get(verb)") &&
+    pluginSource.includes("if let Some(lane) = stores.unsupported_publication_contracts.get(verb)") &&
     publisher.body.includes("PendingArtifactStorePublication::Presence") &&
     publisher.body.includes("PendingArtifactStorePublication::Transient") &&
     (publisher.body.match(/begin_publish_one/g) ?? []).length >= 2 &&
     (publisher.body.match(/advance_publish_one/g) ?? []).length >= 2 &&
-    publisher.body.includes("self.presence_one_item_factory.as_deref()") &&
-    publisher.body.includes("self.transient_one_item_factory.as_deref()") &&
-    publisher.body.includes("self.presence_local_root_retirement_factory.clone()") &&
-    publisher.body.includes("self.transient_local_root_retirement_factory.clone()") &&
+    publisher.body.includes("self.stores.presence_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.stores.transient_one_item_factory.as_deref()") &&
+    publisher.body.includes("self.stores.presence_local_root_retirement_factory.clone()") &&
+    publisher.body.includes("self.stores.transient_local_root_retirement_factory.clone()") &&
     !publisher.body.includes("A::build_presence_store_one_item_preparation_factory") &&
     !publisher.body.includes("A::build_transient_store_one_item_preparation_factory") &&
     !publisher.body.includes("presence_store.apply_one") &&
@@ -310,7 +395,7 @@ export function toolJobTypedRouteFailsClosedBeforePreparation(source: string): b
   const open = start < 0 ? -1 : source.indexOf("{", start);
   const block = open < 0 ? undefined : toolJobRustBlock(source, open);
   const guard = block?.body.indexOf("require_complete_tool_operation_pipeline(&admission)?") ?? -1;
-  const preparation = block?.body.indexOf("self.start_typed_command_operation(") ?? -1;
+  const preparation = block?.body.indexOf("self.tools.latest_wins_commands.insert_admitted(") ?? -1;
   const authorityStart = source.indexOf("fn require_complete_tool_operation_pipeline");
   const authorityOpen = authorityStart < 0 ? -1 : source.indexOf("{", authorityStart);
   const authority = authorityOpen < 0 ? undefined : toolJobRustBlock(source, authorityOpen);
@@ -321,54 +406,47 @@ export function toolJobTypedRouteFailsClosedBeforePreparation(source: string): b
     && !!rejection && rejection.body.includes('FaultCode::new("interactive-job.missing-owned-reducer")') && rejection.body.includes("Err(") && !rejection.body.includes("Ok(");
 }
 
+/** 🧵️ The typed-operation persistence seam: dispatch admits behind the full-operation gate and the fixed slot, the setup captures the roots before it mounts the pending worker session and the operation, the mounted operation steps its worker once per turn through the exact work loan, the maintenance ladder selects the next worker by a bounded fair scan, and one host turn spends its grant on a bounded number of worker steps. */
 export function toolJobTypedPersistentFoundation(source: string): boolean {
   const blockOf = (needle: string) => {
-    const start = source.indexOf(needle);
+    const start = source.lastIndexOf(needle);
     const open = start < 0 ? -1 : source.indexOf("{", start);
     return open < 0 ? undefined : toolJobRustBlock(source, open);
   };
-  const dispatchStart = source.lastIndexOf("async fn dispatch_typed_command_inner");
-  const dispatchOpen = dispatchStart < 0 ? -1 : source.indexOf("{", dispatchStart);
-  const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(source, dispatchOpen);
+  const dispatch = blockOf("async fn dispatch_typed_command_inner(");
   const active = blockOf("impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>");
-  const maintenanceStart = source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp");
-  const maintenanceName = source.indexOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", maintenanceStart);
-  const maintenanceOpen = maintenanceName < 0 ? -1 : source.indexOf("{", maintenanceName);
-  const maintenance = maintenanceOpen < 0 ? undefined : toolJobRustBlock(source, maintenanceOpen);
+  const drive = blockOf("pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>)");
+  const selection = blockOf("fn maintenance_tool_selection(&self) -> MaintenanceTool");
+  const worker = blockOf("pub fn drive_typed_operation_worker(");
   const setup = toolJobRetainedDispatchSetup(source);
-  if (!dispatch || !active || !maintenance || !setup) return false;
+  if (!dispatch || !active || !drive || !selection || !worker || !setup) return false;
   const guard = dispatch.body.indexOf("require_complete_tool_operation_pipeline(&admission)?");
-  const preparation = setup.indexOf("refresh_cache().await");
-  const preAdmission = dispatch.body.indexOf("!self.can_admit_typed_operation(operation_id.0)");
-  const session = setup.indexOf("MountedWorkerJobSession::try_new");
-  const retained = setup.indexOf("self.tool_operations.insert_admitted(");
+  const slot = dispatch.body.indexOf("self.media.admit_typed_operation_slot(");
+  const capture = setup.indexOf("self.capture_typed_command_roots(");
+  const session = setup.indexOf("RefusedWorkerSource::pending(");
+  const retained = setup.indexOf("self.tools.tool_operations.insert_admitted(");
   return (
     guard >= 0 &&
-    preparation >= 0 &&
-    preAdmission >= 0 &&
-    preAdmission > guard &&
-    session > preparation &&
+    slot > guard &&
+    capture >= 0 &&
+    session > capture &&
     retained > session &&
-    setup.includes("active.drive_worker_step(&pool, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES)?") &&
     dispatch.body.includes('DslValue::String(operation_id.0.to_string())') &&
-    !setup.includes("session.step(&pool") &&
+    !setup.includes("session.step(") &&
     !setup.includes("let outcome = loop") &&
     source.includes("tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>") &&
-    active.body.includes("session.pump_one(pool, semio_framework_async::Lane::Interactive)") &&
-    active.body.includes("session.take_checked_out_outcome()") &&
+    drive.body.includes("session.pump_one_for_interactive_turn(same)") &&
+    drive.body.includes("session.checked_out_outcome()") &&
+    drive.body.includes("MountedTypedCommandFullOperationStage::Publishing") &&
+    drive.body.includes('Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"})') &&
     active.body.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&
-    active.body.includes('Ok(_) => Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits its next outcome" })') &&
-    active.body.includes("WorkerJobSubmitFault::Contention(_)") &&
-    active.body.includes("WorkerSubmitErrorKind::Saturated") &&
-    active.body.includes("WorkerJobTakeFault::Pending") &&
-    active.body.includes('Ok(PluginCloseStep::AwaitingInput { reason: "typed operation mounted worker awaits transient scheduler authority" })') &&
-    maintenance.body.includes("for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS") &&
-    maintenance.body.includes("self.tool_operations.entry(index)") &&
-    maintenance.body.includes("every_operation_awaits_presented_ack") &&
-    maintenance.body.includes("PluginCloseStep::AwaitingInput") &&
-    maintenance.body.includes(".drive_worker_step(&pool, maximum_bytes)") &&
-    maintenance.body.includes("operation.retirement_step(maximum_items.min(1), maximum_bytes)?") &&
     active.body.includes("fn terminal_is_empty") &&
-    source.includes("retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document")
+    selection.body.includes("for offset in 0..ARTIFACT_LIVE_OUTPUT_SLOTS") &&
+    selection.body.includes("self.tools.tool_operations.entry(index)") &&
+    selection.body.includes("every_operation_awaits_presented_ack") &&
+    selection.body.includes("MaintenanceTool::Awaiting") &&
+    worker.body.includes("for _ in 0..INTERACTIVE_TURN_WORKER_PUMPS") &&
+    worker.body.includes("operation.drive_worker_step(same)") &&
+    worker.body.includes("INTERACTIVE_TURN_WORKER_WALL_US")
   );
 }

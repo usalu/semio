@@ -29,7 +29,6 @@
     "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript",
     "../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
     "../✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript",
-    "../✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript",
     "../✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
     "../✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript",
     "../✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript",
@@ -186,6 +185,7 @@
     "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute",
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
+    "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
@@ -265,11 +265,10 @@
     "../🧰️framework/🛍️products/💻️os/🏛️ownership/🧮️compute",
     "../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
+    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🏛️ownership/🧮️compute",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
-    "../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
@@ -318,6 +317,9 @@
       ],
       "owners": []
     }
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.6"
   },
   "patchedDependencies": {
     "nx@23.2.0": "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"

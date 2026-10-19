@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-renderer-wgpu/reference-image-decode` entry: explicit re-exports of the source module that owns each member. */
+export { REFERENCE_IMAGE_DECODED_BYTE_CAPACITY, REFERENCE_IMAGE_READBACK_BYTE_CAPACITY, decodeReferenceImage, referenceImageSourceDimensions, referenceImageStripRows, referenceImageTargetSize, streamReferenceImageBitmapRows } from "../../../🖼️reference-image-decode/🟦️.ts";

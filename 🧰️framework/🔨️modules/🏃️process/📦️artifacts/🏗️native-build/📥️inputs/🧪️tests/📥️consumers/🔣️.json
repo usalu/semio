@@ -7,6 +7,7 @@
       "threads": false,
       "outcome": "success",
       "releaseFails": false,
+      "settlement": "settles",
       "trace": [
         "request:1",
         "planning:1",
@@ -25,6 +26,7 @@
       "threads": false,
       "outcome": "undefined",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -43,6 +45,7 @@
       "threads": false,
       "outcome": "frozen",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -61,6 +64,7 @@
       "threads": false,
       "outcome": "success",
       "releaseFails": false,
+      "settlement": "settles",
       "trace": [
         "request:1",
         "planning:1",
@@ -77,6 +81,7 @@
       "threads": false,
       "outcome": "undefined",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -93,6 +98,7 @@
       "threads": false,
       "outcome": "frozen",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -109,6 +115,7 @@
       "threads": false,
       "outcome": "success",
       "releaseFails": false,
+      "settlement": "settles",
       "trace": [
         "request:1",
         "capacity:1",
@@ -117,9 +124,9 @@
         "run:1",
         "consume",
         "capacity-release",
+        "release",
         "remove",
-        "remove",
-        "release"
+        "remove"
       ]
     },
     {
@@ -128,16 +135,17 @@
       "threads": false,
       "outcome": "undefined",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "capacity:1",
         "lease:1",
         "admit:1",
         "run:1",
-        "remove",
-        "remove",
         "release",
-        "capacity-release"
+        "capacity-release",
+        "remove",
+        "remove"
       ]
     },
     {
@@ -146,16 +154,17 @@
       "threads": false,
       "outcome": "frozen",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "capacity:1",
         "lease:1",
         "admit:1",
         "run:1",
-        "remove",
-        "remove",
         "release",
-        "capacity-release"
+        "capacity-release",
+        "remove",
+        "remove"
       ]
     },
     {
@@ -164,6 +173,7 @@
       "threads": true,
       "outcome": "success",
       "releaseFails": false,
+      "settlement": "settles",
       "trace": [
         "request:1",
         "capacity:1",
@@ -173,9 +183,9 @@
         "run:1",
         "consume",
         "capacity-release",
+        "release",
         "remove",
-        "remove",
-        "release"
+        "remove"
       ]
     },
     {
@@ -184,6 +194,7 @@
       "threads": false,
       "outcome": "cancelled",
       "releaseFails": false,
+      "settlement": "rejects",
       "trace": [
         "request:1"
       ]
@@ -194,6 +205,7 @@
       "threads": false,
       "outcome": "cleanup",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -212,6 +224,7 @@
       "threads": false,
       "outcome": "cancelled",
       "releaseFails": false,
+      "settlement": "rejects",
       "trace": [
         "request:1"
       ]
@@ -222,6 +235,7 @@
       "threads": false,
       "outcome": "cleanup",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "planning:1",
@@ -238,6 +252,7 @@
       "threads": false,
       "outcome": "cancelled",
       "releaseFails": false,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "remove",
@@ -250,6 +265,7 @@
       "threads": false,
       "outcome": "cleanup",
       "releaseFails": true,
+      "settlement": "rejects",
       "trace": [
         "request:1",
         "capacity:1",
@@ -258,10 +274,27 @@
         "run:1",
         "consume",
         "capacity-release",
+        "release",
         "remove",
-        "remove",
-        "release"
+        "remove"
       ]
+    }
+  ],
+  "substitutions": [
+    {
+      "kind": "tests",
+      "occurrence": 0,
+      "port": "lease"
+    },
+    {
+      "kind": "lint",
+      "occurrence": 0,
+      "port": "lease"
+    },
+    {
+      "kind": "wasm",
+      "occurrence": 0,
+      "port": "lease"
     }
   ]
 }

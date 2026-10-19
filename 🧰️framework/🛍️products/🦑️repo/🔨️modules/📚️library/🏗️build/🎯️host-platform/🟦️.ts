@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {literalCommandTokensV1} from "../📤️arguments/🟨️.mjs";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 export type BuildHostPlatformV1="darwin"|"linux"|"win32";

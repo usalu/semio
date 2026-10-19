@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 
 const CATALOG_ARTIFACT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 
@@ -66,7 +66,7 @@ export const TRUSTED_STDIO_CATALOG_FILENAME = "trusted-stdio-catalog.json";
 
 /** 🗄️ Resolves this concrete publication owner's source root in the selected workspace. */
 export function stdioOwnerRoot(repoRoot: string): string {
-  return resolve(repoRoot, relative(getWorkspaceRoot(), resolve(import.meta.dirname, "../..")));
+  return resolve(repoRoot, relative(findWorkspaceRoot(), resolve(import.meta.dirname, "../..")));
 }
 
 /** 🗄️ Locates the authored native-codec projection at the concrete Stdio composition owner. */
@@ -79,7 +79,7 @@ export function stdioNativeCodecFactoriesPath(stdioRoot: string): string {
 
 
 /** 🗄️ Reads first-party stdio native codec receipts without trusting generated catalog files. */
-export function loadFirstPartyStdioNativeCodecReceipts(repoRoot = getWorkspaceRoot()): TrustedStdioNativeCodecReceiptV1[] {
+export function loadFirstPartyStdioNativeCodecReceipts(repoRoot = findWorkspaceRoot()): TrustedStdioNativeCodecReceiptV1[] {
   const stdioRoot = stdioOwnerRoot(repoRoot);
   const factoriesPath = stdioNativeCodecFactoriesPath(stdioRoot);
   const factoryInfo = lstatSync(factoriesPath);
@@ -191,7 +191,7 @@ function admittedOpenTargets(codecs: readonly TrustedStdioNativeCodecV1[], targe
 }
 
 /** 🗄️ Builds the exact selected catalog from owner-produced contributions. */
-export function buildTrustedStdioCatalogV1(repoRoot = getWorkspaceRoot(), inventory?: TrustedStdioInventoryV1): TrustedStdioCatalogV1 {
+export function buildTrustedStdioCatalogV1(repoRoot = findWorkspaceRoot(), inventory?: TrustedStdioInventoryV1): TrustedStdioCatalogV1 {
   const codecs = verifyStdioNativeCodecReceipts(inventory?.receipts ?? loadFirstPartyStdioNativeCodecReceipts(repoRoot));
   let targets = inventory?.openTargets;
   if (!inventory) {
@@ -224,7 +224,7 @@ export function encodeTrustedStdioCatalogV1(catalog: TrustedStdioCatalogV1): str
 
 /** 🗄️ Writes a verified selected stdio catalog and returns the Node crypto receipt. */
 export function publishTrustedStdioCatalogV1(options: { readonly outDir: string; readonly repoRoot?: string; readonly inventory?: TrustedStdioInventoryV1 }): TrustedStdioCatalogPublicationV1 {
-  const repoRoot = options.repoRoot ?? getWorkspaceRoot();
+  const repoRoot = options.repoRoot ?? findWorkspaceRoot();
   const catalog = buildTrustedStdioCatalogV1(repoRoot, options.inventory);
   const encoded = encodeTrustedStdioCatalogV1(catalog);
   mkdirSync(options.outDir, { recursive: true });

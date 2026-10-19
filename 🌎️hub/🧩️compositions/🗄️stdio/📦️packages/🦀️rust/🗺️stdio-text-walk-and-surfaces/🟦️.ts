@@ -1,11 +1,10 @@
 /** 🗺️ The stdio text walk, the dwg artifact ownership check and the home io surface script of the hub stdio package. */
-import { buildBudgetMs } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { buildBudgetMs } from "@semio-tech/process/budget";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import { devToolingEnv } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { runCmd } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { devToolingEnv, runCmd } from "@semio-tech/process/execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { prepareStdioComposition } from "../../../🧩️composition/🟦️.ts";
 import { ARTIFACT_OWNER, COMPONENT_MANIFEST } from "../🧮️component-constants/🟦️.ts";
 import { compileStdioScopeExport } from "../🧾️catalog-artifact-io/🟦️.ts";

@@ -1,7 +1,7 @@
 /** 🧬️ BcfDiff schema. */
 export interface BcfDiff {
   schema?: string;
-  bytes?: number[];
+  bytes?: string;
 }
 
 //#region 🚪️Parsers

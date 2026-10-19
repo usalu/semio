@@ -3,7 +3,7 @@
 //! `crate::tui::chrome` (see that mod's `use crate::tui::window::paint_window;`). `paint_corner_tab` is a
 //! private helper used only by `paint_window` and stays module-private here. `window_chip_layout`,
 //! `WindowTab` and `WindowChipLayout`'s fields stay in `chrome` mod (shared with
-//! `ChromeState::window_target`) and were promoted to `pub(crate)` there so this sibling module
+//! `ChromeState::window_target`) and were promoted to `pub` there so this sibling module
 //! can reach them.
 
 use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
@@ -213,7 +213,7 @@ fn paint_compact(buf: &mut CellBuffer, rect: Rect, w: &WindowState, theme: &Them
 }
 
 /// 🖌️ Paints one closed window outline. Raised chips step out of the body and the notches beside them stay outside it.
-pub(crate) fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     if rect.width < 2 || rect.height < 2 {
         return;
     }

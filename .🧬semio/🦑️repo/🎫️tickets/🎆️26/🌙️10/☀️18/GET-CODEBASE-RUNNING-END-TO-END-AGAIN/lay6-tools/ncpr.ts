@@ -1,0 +1,10 @@
+import { readFileSync } from "node:fs";
+const r = JSON.parse(readFileSync(process.argv[2]!, "utf8"));
+const OS = "🧰️framework/🛍️products/💻️os/";
+const rend = OS + "🔨️modules/📺️renderer/";
+const v = (r.summary.violations as any[]).filter((x) => x.rule.name.startsWith("no-cross-package-relative") && !x.from.startsWith(rend) && x.to.startsWith(OS));
+const by: Record<string, number> = {};
+for (const x of v) by[x.rule.name] = (by[x.rule.name] ?? 0) + 1;
+console.log(by);
+const strip=(s:string)=>s.replace(OS,"");
+for (const x of v.slice(0, 25)) console.log(strip(x.from), "->", strip(x.to), x.rule.name);

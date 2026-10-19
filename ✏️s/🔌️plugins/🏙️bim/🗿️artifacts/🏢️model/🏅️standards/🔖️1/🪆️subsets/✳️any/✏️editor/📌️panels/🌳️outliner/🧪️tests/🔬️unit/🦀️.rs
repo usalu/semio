@@ -1,14 +1,19 @@
-use crate::editor::bim::entities::kind_of;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{fields_of, ordered_storeys, EntityKind, ENTITIES};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, ENTITIES};
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::Buildable;
 #[allow(unused_imports)]
@@ -43,14 +48,14 @@ use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    let node = render(snapshot, inference, crate::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
+    let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
@@ -84,14 +89,14 @@ async fn a_huge_group_stays_closed_and_an_opened_one_materialises_only_the_reque
     let (mut snapshot, inference) = demo();
     let template = snapshot.walls["w-south"].clone();
     for index in 0..600 {
-        snapshot.walls.insert(format!("bulk-{index:04}"), crate::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
+        snapshot.walls.insert(format!("bulk-{index:04}"), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
     }
     assert_eq!(text(&snapshot, &inference, Locale::En).matches("Bulk ").count(), 0, "a group over the open limit is not built until the host opens it");
     let group = ["bim-outliner.model", "site-1", "bldg-1", "st-ground", "st-ground::wall"].join(semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR);
     let mut view = ViewModel::new(Locale::En, Terminology::Native);
     view.tree_windows = vec![semio_framework_plugin::TreeWindowRequest { body_key: BODY_KEY.into(), node_key: group, open: Some(true), offset: 100, rows: 20 }];
     let windows = TreeWindows::for_body(&view, BODY_KEY);
-    let node = render(&snapshot, &inference, crate::editor::bim::terminology::bim_labels(&view), &windows).expect("renders");
+    let node = render(&snapshot, &inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &windows).expect("renders");
     let rendered = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects");
     let materialised = rendered.matches("Bulk ").count();
     assert!((1..=60).contains(&materialised), "{materialised} of 600 rows were built for a 20-row request");
@@ -137,8 +142,8 @@ async fn every_kind_of_view_can_be_added_from_the_outliner_in_both_languages() {
 async fn a_wall_sweep_hangs_under_its_wall_and_makes_no_storey_group() {
     let (snapshot, _) = demo();
     let create = kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
-    let snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     for locale in [Locale::En, Locale::De] {
         let rendered = text(&snapshot, &inference, locale);
         assert!(!rendered.contains("Wall sweeps") && !rendered.contains("Wandprofile"), "{rendered}");

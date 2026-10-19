@@ -6,7 +6,7 @@ import{randomUUID}from"node:crypto";
 import{mkdir,readFile,rm}from"node:fs/promises";
 import{join}from"node:path";
 import{captureOwnedCommandResultV1}from"../../🟦️.ts";
-import{withBuildTestInvocationV1}from"../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../🧪️testing/📥️invocation/🟦️.ts";
 import{createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from"../../🧬️schema/📬️output.json";
 import corpus from"./🔣️.json";

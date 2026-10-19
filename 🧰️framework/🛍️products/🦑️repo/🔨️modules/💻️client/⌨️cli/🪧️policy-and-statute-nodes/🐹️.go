@@ -81,13 +81,6 @@ type AnalyzeResult struct {
 	Metrics *AnalyzeMetrics `json:"metrics"`
 }
 
-// 🔖️FixResult holds the data fields for a fix result record.
-type FixResult struct {
-	Fixed     int       `json:"fixed"`
-	Remaining int       `json:"remaining"`
-	Breachs   []*Breach `json:"breachs"`
-}
-
 // 🔖️ContributorContributions holds the data fields for a contributor contributions record.
 type ContributorContributions struct {
 	Bundles     []ContributionBundle     `json:"bundles"`

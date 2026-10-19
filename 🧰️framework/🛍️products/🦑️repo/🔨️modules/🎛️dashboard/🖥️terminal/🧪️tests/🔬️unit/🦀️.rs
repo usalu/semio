@@ -8,11 +8,11 @@ use dashboard_wire::client::Message;
 use dashboard_wire::ipc::{ClientMsg, ServerMsg, SessionCommand, SessionInfo, SessionStatus};
 use std::sync::Arc;
 use ui_styling::appearance::AppearanceName;
-use ui_tui::tui::chrome::ChromeState;
-use ui_tui::tui::engine::Tui;
-use ui_tui::tui::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use ui_tui::tui::geometry::{Pos, Size};
-use ui_tui::tui::theme::{Status, Theme};
+use semio_framework_ui_tui_frame::chrome::ChromeState;
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_core::theme::{Status, Theme};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔎️launcher/🔣️.json")).unwrap() }
 
@@ -55,8 +55,8 @@ fn press(dashboard: &mut Dashboard, tui: &mut Tui, events: &[Event]) -> Flow {
     flow
 }
 
-fn tree_of<R>(dashboard: &Dashboard, tui: &mut Tui, index: usize, read: impl FnOnce(&ui_tui::tui::widget::TreeState) -> R) -> R {
-    match &tui.scene.node(dashboard.windows[index].tree.expect("a launcher has a tree")).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::Tree(tree)) => read(tree), _ => panic!("tree expected") }
+fn tree_of<R>(dashboard: &Dashboard, tui: &mut Tui, index: usize, read: impl FnOnce(&semio_framework_ui_tui_widgets::widget::TreeState) -> R) -> R {
+    match &tui.scene.node(dashboard.windows[index].tree.expect("a launcher has a tree")).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Tree(tree)) => read(tree), _ => panic!("tree expected") }
 }
 
 fn visible(dashboard: &Dashboard, tui: &mut Tui, index: usize) -> Vec<String> {
@@ -97,7 +97,7 @@ fn spawned(dashboard: &Dashboard) -> Vec<(String, SessionCommand)> {
 fn native_leader_bytes_match_the_shared_control_vectors() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-    let mut parser = ui_tui::tui::ansi::AnsiParser::new();
+    let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&bytes, &mut events);
     let projection: Vec<_> = events.into_iter().map(|event| match event { Event::Key(KeyEvent { key: Key::Char(character), mods: modifiers }) => serde_json::json!({"key": character.to_string(), "ctrl": modifiers & mods::CTRL != 0}), _ => panic!("unexpected control event") }).collect();
@@ -108,7 +108,7 @@ fn native_leader_bytes_match_the_shared_control_vectors() {
 fn decoded_terminal_keys_resolve_through_the_keymap_exactly_as_written() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️controls/🔣️.json")).unwrap();
     let bytes: Vec<u8> = fixture["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-    let mut parser = ui_tui::tui::ansi::AnsiParser::new();
+    let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
     let mut events = Vec::new();
     parser.feed(&bytes, &mut events);
     let keymap = Preferences::default().keymap().0;
@@ -123,7 +123,7 @@ fn terminal_bytes_become_the_keymaps_canonical_spellings() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/⌨️keymap/🔣️.json")).unwrap();
     for row in fixture["terminal"].as_array().unwrap() {
         let bytes: Vec<u8> = row["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
-        let mut parser = ui_tui::tui::ansi::AnsiParser::new();
+        let mut parser = semio_framework_ui_tui_terminal::ansi::AnsiParser::new();
         let mut events = Vec::new();
         parser.feed(&bytes, &mut events);
         let specs: Vec<String> = events.iter().filter_map(|event| if let Event::Key(key) = event { super::controls::spec_of(key).map(|spec| spec.to_string()) } else { None }).collect();
@@ -361,7 +361,7 @@ fn launcher_text_editing_follows_the_shared_input_caret() {
     press(&mut dashboard, &mut tui, &[named(Key::Left), key('x')]);
     let index = dashboard.focused_index(&tui);
     let input = dashboard.windows[index].input.unwrap();
-    let value = |tui: &Tui| match &tui.scene.node(input).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::Input(state)) => state.value.clone(), _ => panic!("editor expected") };
+    let value = |tui: &Tui| match &tui.scene.node(input).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Input(state)) => state.value.clone(), _ => panic!("editor expected") };
     assert_eq!(value(&tui), "A界xe\u{301}");
     press(&mut dashboard, &mut tui, &[named(Key::Backspace), named(Key::Delete)]);
     assert_eq!(value(&tui), "A界");
@@ -410,7 +410,7 @@ fn confirmation_is_operable_with_the_mouse() {
     press(&mut dashboard, &mut tui, &[click(0)]);
     assert!(spawned(&dashboard).is_empty());
     let row = match &tui.scene.node(dashboard.windows[index].list).content {
-        ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
         _ => panic!("confirmation list expected"),
     };
     press(&mut dashboard, &mut tui, &[click(row as u16)]);
@@ -449,7 +449,7 @@ fn terminal_sizes_follow_their_widget_rectangles_through_every_layout_change() {
     let first = *resizes(&dashboard).last().expect("the first frame tells the daemon the size");
     let rect = tui.scene.rect(dashboard.windows[1].list);
     assert_eq!((rect.width, rect.height), first);
-    let size = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(ui_tui::tui::widget::WidgetState::Terminal(terminal)) => terminal.screen.size, _ => panic!("terminal expected") };
+    let size = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => terminal.screen.size, _ => panic!("terminal expected") };
     assert_eq!((size.width, size.height), first);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('|')]);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('[')]);
@@ -506,7 +506,7 @@ fn copying_a_selection_asks_the_terminal_to_copy() {
     dashboard.focus_window(&mut tui, 1);
     dashboard.frame(&mut tui);
     dashboard.feed(&mut tui, 1, "copy me");
-    if let Some(ui_tui::tui::widget::WidgetState::Terminal(terminal)) = tui.scene.node_mut(dashboard.windows[1].list).widget() { terminal.select_all(); }
+    if let Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) = tui.scene.node_mut(dashboard.windows[1].list).widget() { terminal.select_all(); }
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('y')]);
     assert!(dashboard.effects.iter().any(|effect| matches!(effect, Effect::Copy(text) if text.contains("copy me"))), "{:?}", dashboard.effects);
 }
@@ -610,7 +610,7 @@ fn a_replay_clears_only_the_terminal_it_replays() {
     dashboard.feed(&mut tui, 1, "alpha-output");
     dashboard.feed(&mut tui, 2, "beta-output");
     dashboard.apply(&mut tui, Message::Control(ServerMsg::ReplayStart { session_id: "a".into(), truncated: true }));
-    let text = |dashboard: &Dashboard, tui: &mut Tui, index: usize| match tui.scene.node_mut(dashboard.windows[index].list).widget() { Some(ui_tui::tui::widget::WidgetState::Terminal(terminal)) => { terminal.select_all(); terminal.selected_text().unwrap_or_default() } _ => String::new() };
+    let text = |dashboard: &Dashboard, tui: &mut Tui, index: usize| match tui.scene.node_mut(dashboard.windows[index].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => { terminal.select_all(); terminal.selected_text().unwrap_or_default() } _ => String::new() };
     assert!(!text(&dashboard, &mut tui, 1).contains("alpha-output"));
     assert!(text(&dashboard, &mut tui, 2).contains("beta-output"));
     assert!(dashboard.link.restoring && dashboard.notice.is_some());
@@ -624,9 +624,9 @@ fn a_terminal_without_unicode_gets_ascii_status_glyphs() {
     dashboard.apply_capabilities(&mut tui, false);
     dashboard.update_session(&mut tui, session("a", label("test", "quiz", ""), SessionStatus::Exited, Some(0)));
     assert_eq!(statuses(&dashboard, &mut tui, 0)[1], Some(Status::Success));
-    assert_eq!(tui.theme.glyphs, ui_tui::tui::theme::GlyphSet::Ascii);
+    assert_eq!(tui.theme.glyphs, semio_framework_ui_tui_core::theme::GlyphSet::Ascii);
     assert_eq!(Status::Success.glyph(tui.theme.glyphs, 0), "+");
-    assert_eq!(tui.width_mode(), ui_tui::tui::text::WidthMode::Scalar);
+    assert_eq!(tui.width_mode(), semio_framework_ui_tui_core::text::WidthMode::Scalar);
 }
 
 #[test]
@@ -636,7 +636,7 @@ fn the_search_action_starts_a_search_in_the_focused_terminal() {
     dashboard.focus_window(&mut tui, 1);
     dashboard.frame(&mut tui);
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('/')]);
-    let searching = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(ui_tui::tui::widget::WidgetState::Terminal(terminal)) => terminal.search().is_some(), _ => false };
+    let searching = match tui.scene.node_mut(dashboard.windows[1].list).widget() { Some(semio_framework_ui_tui_widgets::widget::WidgetState::Terminal(terminal)) => terminal.search().is_some(), _ => false };
     assert!(searching);
     assert!(!dashboard.link.outbox.iter().any(|message| matches!(message, ClientMsg::Input { .. })), "the search consumes the keys");
 }
@@ -659,7 +659,7 @@ fn p1_6_the_tasks_list_keeps_its_selection_on_the_same_task_and_shows_status_per
     dashboard.frame(&mut tui);
     let window = &dashboard.windows[overview];
     assert!(matches!(window.pane.current(), Some(super::panes::RowAction::Session(id)) if id == "d"), "the selection stays on task d although a row appeared above it and its status changed");
-    let statuses = match &tui.scene.node(window.list).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::List(list)) => list.statuses.clone(), _ => Vec::new() };
+    let statuses = match &tui.scene.node(window.list).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.statuses.clone(), _ => Vec::new() };
     assert!(statuses.contains(&Some(Status::Success)) && statuses.contains(&Some(Status::Running)), "{statuses:?}");
 }
 
@@ -692,7 +692,7 @@ fn p1_8_the_launcher_filter_pages_jumps_edits_and_previews() {
     press(&mut dashboard, &mut tui, &[ctrl('b'), key('n')]);
     let _ = tui.render();
     press(&mut dashboard, &mut tui, &type_text("quiz test"));
-    let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
+    let caption = |dashboard: &Dashboard, tui: &mut Tui| match &tui.scene.node(dashboard.windows[1].caption.unwrap()).content { semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::Label(label)) => label.text.clone(), _ => String::new() };
     let text = caption(&dashboard, &mut tui);
     assert!(text.contains("1 of") && text.contains("bun repo run @fx/quiz:test"), "match count and preview: {text}");
     press(&mut dashboard, &mut tui, &[Event::Key(KeyEvent { key: Key::Backspace, mods: mods::ALT })]);
@@ -857,7 +857,7 @@ fn the_configured_start_action_needs_one_click() {
     tui.render();
     let rect = tui.scene.rect(dashboard.windows[index].list);
     let row = match &tui.scene.node(dashboard.windows[index].list).content {
-        ui_tui::tui::scene::NodeContent::Widget(ui_tui::tui::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
+        semio_framework_ui_tui_frame::scene::NodeContent::Widget(semio_framework_ui_tui_widgets::widget::WidgetState::List(list)) => list.items.iter().position(|line| line.contains("[ Start ]")).unwrap(),
         _ => panic!("configuration list expected"),
     };
     press(&mut dashboard, &mut tui, &[Event::Mouse(MouseEvent { kind: MouseKind::Down(MouseButton::Left), pos: Pos { x: rect.x + 2, y: rect.y + row as u16 }, mods: 0, clicks: 1 })]);
@@ -868,7 +868,7 @@ fn the_configured_start_action_needs_one_click() {
 
 #[test]
 fn glyph_capabilities_preserve_the_framework_width_policy() {
-    use ui_tui::tui::text::WidthMode;
+    use semio_framework_ui_tui_core::text::WidthMode;
     let (mut dashboard, mut tui) = view();
     dashboard.apply_capabilities(&mut tui, true);
     assert_eq!(tui.width_mode(), WidthMode::Scalar);
@@ -886,7 +886,7 @@ fn an_armed_prefix_notice_precedes_routine_footer_status() {
         press(&mut dashboard, &mut tui, &[ctrl('b')]);
         let notice = dashboard.text().key_armed.as_str();
         let status = match &tui.scene.node(dashboard.shell.footer).content {
-            ui_tui::tui::scene::NodeContent::Chrome(ChromeState::Footer(footer)) => &footer.status,
+            semio_framework_ui_tui_frame::scene::NodeContent::Chrome(ChromeState::Footer(footer)) => &footer.status,
             _ => panic!("footer expected"),
         };
         assert!(status.starts_with(notice), "the pending action must fit before routine status: {status}");

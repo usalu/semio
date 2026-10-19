@@ -9,7 +9,10 @@
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, UiComponentSceneNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
 use semio_framework_os_renderer_wgpu_scene_state::{GUMBALL, GumballConfig, GumballGesture, GumballHandle, GumballMotion, GumballSlot, GumballView, MOVE_EPSILON, ModelToLayer, TURN_EPSILON, pivot_screen, total};
 
 //#region 📐️Geometry
@@ -219,7 +222,7 @@ pub fn armed(scene: &UiComponentSceneNode) -> bool {
     semio_framework_os_renderer_wgpu_scene_state::canvas_active_utility(scene).as_deref() == Some("transform")
 }
 
-pub fn publish(slot: &GumballSlot, dispatch: Option<GumballDispatch>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn publish(slot: &GumballSlot, dispatch: Option<GumballDispatch>, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, commit: impl FnOnce()) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let Some(dispatch) = dispatch else {
         commit();
         return Ok(());
@@ -257,8 +260,8 @@ pub fn pointer_button_into(
     down: bool,
     button: i16,
     camera: (f64, f64, f64),
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<Option<bool>, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<Option<bool>, semio_framework_ui_action::BoundedActionFault> {
     if !down {
         let Some(slot) = GUMBALL.with(|cell| cell.borrow().clone().filter(|slot| owns(slot, pointer_id, window_id, &scene.host_id, document_generation))) else { return Ok(None) };
         let (local_x, local_y) = local(inner, x, y);
@@ -303,8 +306,8 @@ pub fn pointer_move_into(
     x: f32,
     y: f32,
     camera: (f64, f64, f64),
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<Option<bool>, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<Option<bool>, semio_framework_ui_action::BoundedActionFault> {
     let Some(mut slot) = GUMBALL.with(|cell| cell.borrow().clone().filter(|slot| owns(slot, pointer_id, window_id, &scene.host_id, document_generation))) else { return Ok(None) };
     slot.view = view_of(inner, camera);
     slot.pointer = local(inner, x, y);
@@ -316,7 +319,7 @@ pub fn pointer_move_into(
 
 /// 🛑️ Cancels the gumball gesture `pointer_id` owns (any, when `None`): a live gesture that streamed sends its abort with
 /// `reason`; the slot clears either way. `true` when a gesture was cancelled.
-pub fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'static str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'static str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(slot) = GUMBALL.with(|cell| cell.borrow().clone().filter(|slot| pointer_id.is_none_or(|pointer_id| slot.pointer_id == pointer_id))) else { return Ok(false) };
     if crate::element_contracts::ui_document_close_pending_for(&slot.window_id) || semio_framework_os_renderer_wgpu_scene_state::scene_host_retiring(&slot.host_id) {
         clear_slot();
@@ -327,7 +330,7 @@ pub fn cancel_into(pointer_id: Option<ui_render::PointerId>, reason: &'static st
 }
 
 /// 🥀️ Cancels a gesture of `window_id`/`host_id` opened on another document generation than the live one.
-pub fn cancel_stale_into(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn cancel_stale_into(window_id: &str, host_id: &str, document_generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let stale = GUMBALL.with(|cell| cell.borrow().as_ref().filter(|slot| slot.window_id == window_id && slot.host_id == host_id && slot.document_generation != document_generation).map(|slot| slot.pointer_id));
     if let Some(pointer_id) = stale {
         cancel_into(Some(pointer_id), "captureLost", input)?;
@@ -361,11 +364,11 @@ fn circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[f32; 2]
     (0..segments).map(|index| index as f32 / segments as f32 * std::f32::consts::TAU).map(|angle| [cx + radius * angle.cos(), cy + radius * angle.sin()]).collect()
 }
 
-fn disc(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba) {
+fn disc(draw: &mut semio_framework_ui_draw_contract::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba) {
     draw.push_triangle_fan(&circle_points(cx, cy, radius, CIRCLE_SEGMENTS), color);
 }
 
-pub fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32, dashed: bool) {
+pub fn ring(draw: &mut semio_framework_ui_draw_contract::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32, dashed: bool) {
     let points = circle_points(cx, cy, radius, if dashed { RING_DASHES * 2 } else { CIRCLE_SEGMENTS });
     for index in (0..points.len()).step_by(if dashed { 2 } else { 1 }) {
         let (a, b) = (points[index], points[(index + 1) % points.len()]);
@@ -375,7 +378,7 @@ pub fn ring(draw: &mut ui_wgpu::wgpu::DrawList, cx: f32, cy: f32, radius: f32, c
 
 /// 🎨️ Paints the armed gumball of `scene` over its canvas `inner` under `camera` — the handles of
 /// `🧭️gumball/🟦️.tsx`, the press marker while a gesture is open and the ghost of a non-live gesture.
-pub fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &ui_wgpu::wgpu::Theme, draw: &mut ui_wgpu::wgpu::DrawList) {
+pub fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64), theme: &semio_framework_ui_theme::Theme, draw: &mut semio_framework_ui_draw_contract::DrawList) {
     if !armed(scene) || inner.w <= 0.0 || inner.h <= 0.0 {
         return;
     }
@@ -383,7 +386,7 @@ pub fn paint(scene: &UiComponentSceneNode, inner: Rect, camera: (f64, f64, f64),
     let view = view_of(inner, camera);
     let (px, py) = pivot_screen(meta.pivot_layer, &view);
     let (cx, cy) = (inner.x + px as f32, inner.y + py as f32);
-    let axis = |index: u8, alpha: f32| ui_wgpu::wgpu::draw_types::gizmo::spatial_axis_rgba(index, alpha);
+    let axis = |index: u8, alpha: f32| semio_framework_ui_draw_contract::gizmo::spatial_axis_rgba(index, alpha);
     let knob = |kind: GumballHandle| knobs((px, py)).into_iter().find(|(candidate, _, _)| *candidate == kind).map_or((cx, cy), |(_, x, y)| (inner.x + x as f32, inner.y + y as f32));
     let radius = HIT_RADIUS as f32;
     if meta.config.rotate {

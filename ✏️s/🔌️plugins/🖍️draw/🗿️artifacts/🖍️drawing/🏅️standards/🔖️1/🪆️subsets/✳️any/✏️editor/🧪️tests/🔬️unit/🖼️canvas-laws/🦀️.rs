@@ -2,7 +2,7 @@
 
 use super::*;
 
-pub(super) fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
+pub(super) fn canvas_scene_of_tree(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
     let decoded = match &tree.root.component {
         semio_framework_plugin::Component::Surface(surface) => semio_framework_ui_scene::decode(surface).map_err(|_| "canvas payload"),
         _ => Err("canvas surface"),
@@ -11,7 +11,11 @@ pub(super) fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio
     decoded.expect("typed canvas")
 }
 
-pub(super) async fn settle_drawing_geometry(app:&mut DrawingApp,view:Option<&ViewModel>){
+pub(super) fn canvas_scene(projection: String) -> semio_framework_plugin::Canvas2dScene {
+    artifact_laws::decode_fixture_scene::<semio_framework_plugin::Canvas2dScene>(&projection).expect("typed canvas")
+}
+
+pub(super) async fn settle_drawing_geometry(app:&mut DrawingAppFixture,view:Option<&ViewModel>){
     use semio_framework_plugin::reactor::jobs::{start_job,step_job,cancel_job,JobBudget,JobStep};
     for effect in app.pending_effects(view).await{match effect{
         Effect::CancelJob{job}=>cancel_job(job).await,
@@ -20,16 +24,16 @@ pub(super) async fn settle_drawing_geometry(app:&mut DrawingApp,view:Option<&Vie
     }}
 }
 
-pub(super) async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&ViewModel)->Result<semio_framework_plugin::ComponentTree,semio_framework_plugin::Fault>{
+pub(super) async fn rendered_drawing_canvas(app:&mut DrawingAppFixture,fixture:Option<&str>,view:&ViewModel)->Result<String,String>{
     settle_drawing_geometry(app,Some(view)).await;
-    app.render(DRAWING_PLAY_BODY_COMPOSITE,fixture,view).await
+    artifact_laws::render_registered_fixture_app_over(&mut app.0,DRAWING_PLAY_BODY_COMPOSITE,fixture,view,app.1.cx()).await.map_err(|error|format!("{error:?}"))
 }
 
-pub(super) fn first_layer_id(app: &DrawingApp) -> String {
+pub(super) fn first_layer_id(app: &DrawingAppFixture) -> String {
     layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()
 }
 
-pub(super) fn last_layer_id(app: &DrawingApp) -> String {
+pub(super) fn last_layer_id(app: &DrawingAppFixture) -> String {
     let projection = app.snapshot().expect("materialize projection");
     layer_id(projection.layers.last().expect("layer")).to_string()
 }
@@ -64,8 +68,7 @@ async fn default_document_exposes_artboard_dimensions_on_canvas() {
 #[semio_framework_async_macros::async_test]
 async fn layers_panel_lists_default_layer() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
+    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_LAYERS, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
     assert!(json.contains("drawing-play-layers.add.path"));
     assert!(json.contains("Layer 1"));
 }
@@ -73,8 +76,7 @@ async fn layers_panel_lists_default_layer() {
 #[semio_framework_async_macros::async_test]
 async fn catalogue_panel_lists_boolean_operations() {
     let mut app = drawing_app().await;
-    let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_laws::project_and_retire_fixture_tree(node).expect("retire semantic tree");
+    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, DRAWING_PLAY_BODY_CATALOGUE, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("retire semantic tree");
     assert!(json.contains("drawing-play-catalogue.path"));
     assert!(json.contains("Boolean union"));
 }
@@ -143,8 +145,7 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let before = app.snapshot().unwrap();
     let pen_meta = meta_with_utility("pen");
     let pen_view = pen_meta.view_state.as_ref().expect("host view");
-    let tree = rendered_drawing_canvas(&mut app, None, pen_view).await.expect("render after utility change");
-    artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
+    drop(rendered_drawing_canvas(&mut app, None, pen_view).await.expect("render after utility change"));
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
     let (up, _) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await;
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
@@ -202,7 +203,7 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
     assert!(receipt.effects.iter().any(|effect| matches!(effect, Effect::SetActiveUtility { utility_id, .. } if utility_id == "selectDirect")), "the canvas returns to select-direct: {:?}", receipt.effects);
     assert_eq!(drawing_active_utility(&ViewModel { active_utility_id: Some("pen".into()), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), "pen", "the flat field still resolves when no map entry addresses the window");
     assert_eq!(drawing_active_utility(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), DRAWING_DEFAULT_UTILITY);
-    artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 📤️ `exportDocument` (palette default `pdf`) hands the host one `DownloadMediaExport` whose base64
@@ -223,5 +224,5 @@ async fn export_document_downloads_a_real_pdf_of_the_document() {
     let (_result, receipt) = settled(&mut app, DrawingCommand::ExportDocument(export_document::ExportDocument { format: "svg".into(), ..Default::default() }), &meta).await;
     let [Effect::DownloadMediaExport { mime_type, data, encoding, .. }] = receipt.effects.as_slice() else { panic!("one SVG download required") };
     assert_eq!(mime_type,"image/svg+xml");assert_eq!(encoding.as_deref(),Some("base64"));assert!(base64_codec::base64_standard_decode(data).unwrap().starts_with(b"<svg"));
-    artifact_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    artifact_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

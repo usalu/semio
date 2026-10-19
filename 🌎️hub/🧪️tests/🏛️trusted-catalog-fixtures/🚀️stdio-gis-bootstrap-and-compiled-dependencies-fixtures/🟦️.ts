@@ -1,5 +1,5 @@
 /** 🚀️ The trusted stdio gis bootstrap fixture proof and the trusted compiled dependencies fixture proof. */
-import { type ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { type ScriptInvocation } from "@semio-tech/process/routing";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -7,8 +7,8 @@ import { blake3Hex } from "@semio-tech/framework/hash";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
-import { componentReceiptBindsV1, componentReceiptValueV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { verifySemanticDescriptorPairBytesV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { componentReceiptBindsV1, componentReceiptValueV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { verifySemanticDescriptorPairBytesV1 } from "@semio-tech/plugin-registry/catalog-verification/descriptor-pair";
 import { hubSchemaExport } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { readHubScriptModule } from "../../../🧪️testing/📜️script-sources/🟦️.ts";
 import { projectTrustedBootstrapCodecsV1 } from "../../../🏗️bootstrap/🧾️provenance/🗃️bootstrap-bundle/🟦️.ts";
@@ -23,7 +23,7 @@ import { proveTrustedGisMapCollaborationContractFixture, proveTrustedGisPublicat
 export async function proveTrustedStdioGisBootstrapFixture(invocation: ScriptInvocation, repoRoot: string): Promise<void> {
   await proveTrustedCompiledDependenciesFixture(repoRoot);
   await proveDocumentBrowserActorIdentityFixture(repoRoot);
-  const { createFreshComponentTests } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts");
+  const { createFreshComponentTests } = await import("@semio-tech/framework-plugin/describe/testing/fresh-component");
   const { testFreshComponentStagingV1, testFreshComponentSourceEpochV1, testFreshComponentProcessV1 } = createFreshComponentTests(invocation);
   await testFreshComponentStagingV1(repoRoot);
   await testFreshComponentSourceEpochV1(repoRoot);

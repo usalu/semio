@@ -15,12 +15,12 @@ use super::*;
 pub fn render_world_3d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
-    ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>,
+    ctx: &mut semio_framework_ui_wgpu_widget_kit::WidgetContext<'_, ActionDescriptor>,
     state: &mut World3dState,
     gpu: &mut World3dBuildContext,
     shadow_profile: World3dShadowProfile,
 ) {
-    use ui_wgpu::wgpu::widgets::{draw_text, gizmo as gpu_gizmo};
+    use semio_framework_ui_wgpu_widget_kit::{draw_text, gizmo as gpu_gizmo};
     let theme = ctx.theme;
     let modelling = scene.world_3d.as_ref();
     let section = modelling.and_then(|world| world.modelling_options.as_ref()).and_then(|options| options.section);
@@ -61,7 +61,7 @@ pub fn render_world_3d(
     }
     update_visible_chunks(&mut state.scene, camera.position);
     let projection_height = state.session.presentation.source_aspect.map_or(inner.h, |aspect| inner.w / aspect as f32);
-    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, projection_height);
+    let view_proj = ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, projection_height);
     let planes = frustum_planes(view_proj);
     let shadow_planes = directional_shadow_frustum_planes(light_dir);
     let mut culled_draws = Vec::new();
@@ -368,7 +368,7 @@ pub fn render_world_3d(
         material_draws,
         textured_draws,
         curvilinear: match state.camera.projection_spec.mode {
-            Viewport3dProjectionMode::Curvilinear { fov, strength, .. } => Some(ui_wgpu::wgpu::SceneCurvilinear3d { fov_radians: (fov as f32).min(160.0).to_radians(), strength: strength as f32 }),
+            Viewport3dProjectionMode::Curvilinear { fov, strength, .. } => Some(ui_scene::math::SceneCurvilinear3d { fov_radians: (fov as f32).min(160.0).to_radians(), strength: strength as f32 }),
             _ => None,
         },
         ..Default::default()

@@ -4,7 +4,7 @@
 #[semio_framework_async_macros::async_test]
 async fn export_drawing_out_returns_vector_media() {
     let mut app = app().await;
-    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("drawing:out")).expect("export drawing:out");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "drawing:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export drawing:out");
     close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Vector });
 }
@@ -12,7 +12,7 @@ async fn export_drawing_out_returns_vector_media() {
 #[semio_framework_async_macros::async_test]
 async fn export_document_out_returns_flow_media() {
     let mut app = app().await;
-    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("artifact:out")).expect("export document:out");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "artifact:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export document:out");
     close(app);
     assert_eq!(media.media_type, MediaType { class: MediaClass::TwoD, form: MediaForm::Flow });
     assert!(matches!(media.payload, semio_framework_plugin::MediaPayload::Structured { schema, .. } if schema == GENERATION_2D_SCHEMA));
@@ -35,7 +35,7 @@ async fn import_params_in_patches_matching_input_slider() {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ slider_id.clone(): 42.0 }).to_string() },
     };
-    app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
+    app.0.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import params");
     let value = snapshot_read(&app).host_snapshot.widgets.iter().find_map(|widget| match widget {
         Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value),
         _ => None,
@@ -56,7 +56,7 @@ async fn import_intrinsic_params_borrows_the_canonical_numeric_rows_and_retires_
         assert!(snapshot_read(&app).host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::InputSlider { id, value, .. } if id == &slider_id && *value == fixture["initialValue"].as_f64().unwrap())));
         let source = semio_framework_value::DslValue::Object(case["input"].as_object().unwrap().iter().map(|(key, value)| (if key == "slider" { slider_id.clone() } else { key.clone() }, semio_framework_value::DslValue::from(value))).collect());
         let media = semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: semio_framework_plugin::MediaPayload::Intrinsic { schema: fixture["schema"].as_str().unwrap().into(), value: source } };
-        let result = app.import_media(fixture["port"].as_str().unwrap(), media, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
+        let result = app.0.import_media(fixture["port"].as_str().unwrap(), media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await;
         let value = snapshot_read(&app).host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::InputSlider { id, value, .. } if id == &slider_id => Some(*value), _ => None });
         close(app);
         assert!(result.is_ok(), "{}: {result:?}", case["id"]);
@@ -88,7 +88,7 @@ async fn import_media_fails_closed_off_its_own_params_in_contract() {
     ] {
         let mut app = app().await;
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        let rejected = app.import_media(port, media, &semio_framework_plugin::artifact_app_laws::meta("local")).await;
+        let rejected = app.0.import_media(port, media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await;
         let after = snapshot_read(&app).host_snapshot.widgets.len();
         close(app);
         assert!(rejected.is_err(), "generation2d import must reject '{port}' instead of publishing");
@@ -106,7 +106,7 @@ async fn import_params_skips_unmatched_keys_and_non_numeric_values() {
         media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         payload: semio_framework_plugin::MediaPayload::Structured { schema: "params".into(), json: serde_json::json!({ "no-such-widget": 1.0, "another": "text" }).to_string() },
     };
-    app.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("import params");
+    app.0.import_media("params:in", media, &semio_framework_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import params");
     let after: Vec<String> = snapshot_read(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     close(app);
     assert_eq!(after, before);

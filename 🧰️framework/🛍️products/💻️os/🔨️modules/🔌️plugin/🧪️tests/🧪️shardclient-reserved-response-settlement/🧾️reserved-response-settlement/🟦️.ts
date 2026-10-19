@@ -1,5 +1,5 @@
 /** 🧾️ The reserved response settlement tests. */
-import { loadInstanceOutputAdmissionFixture, loadActivationInstanceOutputFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadInstanceOutputAdmissionFixture, loadActivationInstanceOutputFixture } from "@semio-tech/framework-actor/testing/fixtures";
 import { afterSettle, shardClientInternals } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { OutboundMessage, OwnedActorTurnOutput, OwnedActorTurnOutputs, PendingEntry, ShardClientSettlementTestKit, ShardSlot } from "../🧰️settlement-test-kit/🟦️.ts";
 
@@ -23,7 +23,7 @@ export function registerReservedResponseSettlementTests(kit: ShardClientSettleme
       const order: string[] = [];
       const remove = pendingEntries.delete.bind(pendingEntries);
       pendingEntries.delete = key => { expect(output.responseEnvelope).toBe(raw); order.push("pending-removal"); return remove(key); };
-      const transport = shardClientInternals(client).hub.transport; const recompute = transport.recomputeOldestPending.bind(transport);
+      const transport = shardClientInternals(client).hub.transport; const recompute = (Reflect.get(transport, "recomputeOldestPending") as (target: ShardSlot) => unknown).bind(transport);
       Reflect.set(transport, "recomputeOldestPending", (target: ShardSlot) => { expect(output.responseEnvelope).toBe(raw); order.push("heartbeat-recompute"); return recompute(target); });
       const result = output.run(() => send(slot, { kind: "turn", requestId: raw.requestId, actorId: "reserved-fixture", activationGeneration: 1n, events: [], budget: BUDGET }, raw.requestId, undefined, output));
       const chained = result.then(() => { expect(output.responseEnvelope).toBe(raw); order.push("external-continuation"); throw new Error("fixture publication fault"); }); const observed = afterSettle(chained, () => expect(chained).rejects.toThrow("fixture publication fault"));

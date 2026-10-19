@@ -2,16 +2,17 @@
 //! names and a non-negative sill override (when authored) must hold, the centre offset must keep the opening inside the host axis and clear of its
 //! neighbours. An authored reveal (depth not negative, material existing) is checked as well. Only the offset, the optional sill override (which replaces the sill of the window type) and the optional reveal are stored; the frame follows the host parametrically by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::reveal_flaw;
-use crate::standards::v1::subsets::any::schema::mutations::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::reveal_flaw;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
 use crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateOpening, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let opening = &payload.opening;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     let Some(length) = host_length(base, &opening.host) else {

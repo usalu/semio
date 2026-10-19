@@ -220,7 +220,7 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 	if len(paths) == 0 {
 		return make(map[string]bool)
 	}
-	args := append([]string{"check-ignore"}, paths...)
+	args := append([]string{"-c", "core.quotepath=false", "check-ignore"}, paths...)
 	stdout, _, _ := ExecCommand("git", args, "")
 	ignored := make(map[string]bool)
 	for _, line := range strings.Split(stdout, "\n") {

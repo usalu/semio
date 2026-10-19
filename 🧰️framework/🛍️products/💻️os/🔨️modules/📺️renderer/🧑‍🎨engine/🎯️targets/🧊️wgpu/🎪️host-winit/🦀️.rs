@@ -23,7 +23,8 @@ use semio_framework_os_renderer_wgpu_host_plumbing::native_caller;
 use semio_framework_os_renderer_wgpu_native_platform::native_accessibility;
 use std::sync::{Arc, OnceLock};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use ui_wgpu::wgpu::{SemioCursor, Theme};
+use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
+use semio_framework_ui_theme::Theme;
 use winit::window::Window;
 use semio_framework_os_renderer_wgpu_media_slots as media_slots;
 

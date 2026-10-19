@@ -1,3 +1,7 @@
+//! 🔬️ tui unit corpus: layout, window, table, parser, theme, geometry, text, cell, ANSI, vt and widget laws.
+
+#![cfg(test)]
+
 
 use semio_framework_ui_tui_terminal::ansi::{AnsiParser, AnsiPatch, emit_runs, setup_sequence, teardown_sequence};
 use semio_framework_ui_tui_core::cell::{Cell, CellBuffer, DiffRun, attr, diff};

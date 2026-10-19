@@ -1,7 +1,7 @@
-import {scriptCompilerAdmissionControlV1} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {join} from "node:path";
-import {BundleScript} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {withRepositoryDevelopmentStateV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💾️development/🟦️.ts";
+import {BundleScript} from "@semio-tech/process/routing";
+import { withRepositoryDevelopmentStateV1 } from "@semio-tech/repo-lib/storage";
 import {DEV_LOCAL_HUB_DEFAULT_URL,parseHubPort} from "@semio-tech/framework-os-dev/local-hub/execution";
 import { validateAndPublishTrustedStdioGisCandidate } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts";
 import { withMaterializedTrustedCatalogBundleV1 } from "../../🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts";

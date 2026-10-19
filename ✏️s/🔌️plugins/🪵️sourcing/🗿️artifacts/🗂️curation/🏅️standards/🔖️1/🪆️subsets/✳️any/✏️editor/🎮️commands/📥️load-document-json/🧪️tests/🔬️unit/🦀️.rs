@@ -8,7 +8,7 @@ use crate::editor::sourcing::commands::load_document_json::{LoadDocumentJson, ha
 use crate::editor::sourcing::SourcingCurationCommand;
 use crate::editor::sourcing::commands::{set_active_example, stock_from_catalogue};
 use crate::editor_unit_tests::context::new_app;
-use crate::editor::sourcing::base::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
+use crate::editor::sourcing::editor_vocabulary::{DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID};
 use crate::schema::{SourcingModule};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_document};
 use semio_framework::kernel::Effect;
@@ -57,7 +57,7 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    app.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("set example");
+    app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set example");
     let effects = crate::editor_unit_tests::context::settle(&mut app).await;
     let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
     let loaded = <CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
@@ -65,7 +65,7 @@ async fn curation_and_example_actions_survive_registry_enforcement() {
     let object_id = app.snapshot().expect("snapshot").stock_extra[2].id.clone();
     crate::editor_unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 1, "curationAdd is a document operation");
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
     crate::editor_unit_tests::context::settle(&mut app).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 0, "undo reverts the curation edit");

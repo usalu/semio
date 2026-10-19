@@ -7,11 +7,10 @@ import nativeSchema from "../../../../🧬️schema/📸️snapshot/🔣️.json
 import artifactSchema from "../../../../🧬️schema/🔣️.json";
 import diffSchema from "../../../../🧬️schema/🔺️diff/🔣️.json";
 import replaceSourceSchema from "../../../../🧬️schema/🧬️mutations/🖼️replace-source/🧬️schema/🔣️.json";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import { artifactReferenceBindingFixture as references } from "@semio-tech/framework/io/text/artifact-reference/binding/testing";
 import * as sqliteOwner from "../🟦️.ts";
-import { artifactReferenceSchema as referenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as referenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import * as owner from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";

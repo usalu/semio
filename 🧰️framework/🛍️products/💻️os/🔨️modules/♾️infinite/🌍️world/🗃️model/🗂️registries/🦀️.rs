@@ -9,8 +9,8 @@ pub fn world_mesh_ownership_grant(copy: usize, capacity: usize, release: usize, 
 }
 
 /// 🧾️ Verifies the original owner receipt before World advances its publication or close phase.
-pub fn world_mesh_ownership_complete(grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: ui_wgpu::wgpu::Mesh3dOwnershipStep) -> Result<bool, ui_wgpu::wgpu::Mesh3dFault> {
-    if !step.progress.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::Closing); }
+pub fn world_mesh_ownership_complete(grant: semio_framework_value::retained_clone::RetainedCloneGrant, step: ui_scene::math::Mesh3dOwnershipStep) -> Result<bool, ui_scene::math::Mesh3dFault> {
+    if !step.progress.fits(grant) { return Err(ui_scene::math::Mesh3dFault::Closing); }
     Ok(step.complete)
 }
 
@@ -36,7 +36,7 @@ pub struct WorldDynamicToken {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WorldDynamicFault {
-    Mesh(ui_wgpu::wgpu::Mesh3dFault),
+    Mesh(ui_scene::math::Mesh3dFault),
     Ownership(semio_framework_value::ValueRefusalKind),
     Canceled,
     IdCapacity,
@@ -88,8 +88,8 @@ pub struct WorldNativeMeshSource {
 
 impl WorldMeshSource {
     pub fn lease(&self)->Option<&Mesh3dLease>{match self{Self::Owned{lease,..}=>lease.as_ref(),Self::Native(source) if !source.frozen=>source.loan.lease_ref(),Self::Native(_)=>None}}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ui_wgpu::wgpu::Mesh3dFault>{match self{
-        Self::Owned{lease,closing}=>{let Some(value)=*lease else{return Ok((true,Default::default()))};if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}if !*closing{match mesh3d_begin_close(value){Ok(())|Err(ui_wgpu::wgpu::Mesh3dFault::Closing)=>*closing=true,Err(ui_wgpu::wgpu::Mesh3dFault::Stale)=>{lease.take();return Ok((true,RetainedCloneProgress{copied_items:1,..Default::default()}))},Err(fault)=>return Err(fault)}return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))}let step=mesh3d_close_step(value,grant)?;if step.complete{lease.take();}Ok((step.complete,step.progress))},
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ui_scene::math::Mesh3dFault>{match self{
+        Self::Owned{lease,closing}=>{let Some(value)=*lease else{return Ok((true,Default::default()))};if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}if !*closing{match mesh3d_begin_close(value){Ok(())|Err(ui_scene::math::Mesh3dFault::Closing)=>*closing=true,Err(ui_scene::math::Mesh3dFault::Stale)=>{lease.take();return Ok((true,RetainedCloneProgress{copied_items:1,..Default::default()}))},Err(fault)=>return Err(fault)}return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))}let step=mesh3d_close_step(value,grant)?;if step.complete{lease.take();}Ok((step.complete,step.progress))},
         Self::Native(source)=>{if !source.gpu_returned{return Ok((false,Default::default()))}let step=source.loan.return_step(grant)?;Ok((step.complete,step.progress))}
     }}
 }
@@ -111,7 +111,7 @@ impl WorldMeshRegistry {
 }
 
 pub struct WorldNativeMeshAdmission {
-    pub identity:ui_wgpu::wgpu::kernel_3d_scene::Mesh3dResourceIdentity,
+    pub identity:ui_scene::math::Mesh3dResourceIdentity,
     pub lease:Mesh3dLease,
     pub receipt:semio_framework::kernel::ActorUiPatchReceipt,
     pub revision:WorldNativeUiRevision,
@@ -124,7 +124,7 @@ pub struct WorldNativeMeshAdmission {
 }
 
 #[derive(Debug)]
-pub enum WorldNativeMeshFailure { Binding, Registry(WorldDynamicFault), Mesh(ui_wgpu::wgpu::Mesh3dFault), Gpu(&'static str), Close(semio_framework_value::ValueError) }
+pub enum WorldNativeMeshFailure { Binding, Registry(WorldDynamicFault), Mesh(ui_scene::math::Mesh3dFault), Gpu(&'static str), Close(semio_framework_value::ValueError) }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct WorldDynamicInsertPlan {
@@ -681,11 +681,11 @@ impl World3dMeshAsset {
             return false;
         }
         match mesh3d_begin_close(self.mesh) {
-            Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => {}
-            Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => return true,
+            Ok(()) | Err(ui_scene::math::Mesh3dFault::Closing) => {}
+            Err(ui_scene::math::Mesh3dFault::Stale) => return true,
             Err(_) => return false,
         }
-        ui_wgpu::wgpu::mesh3d_close_demands(self.mesh, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(self.mesh, grant)?) }).is_ok_and(|complete| complete) || mesh3d_terminal_is_empty(self.mesh)
+        ui_scene::math::mesh3d_close_demands(self.mesh, ui_scene::math::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_scene::math::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(self.mesh, grant)?) }).is_ok_and(|complete| complete) || mesh3d_terminal_is_empty(self.mesh)
     }
 
     /// 🧾️ Exact terminal witness for cancellation before World publication.
@@ -870,13 +870,13 @@ impl WorldInteractionState {
 }
 
 #[cfg(any(test, feature = "testkit"))]
-pub fn world_test_mesh_query<T>(mut query:impl FnMut()->Result<T,ui_wgpu::wgpu::Mesh3dFault>)->Result<T,ui_wgpu::wgpu::Mesh3dFault>{
+pub fn world_test_mesh_query<T>(mut query:impl FnMut()->Result<T,ui_scene::math::Mesh3dFault>)->Result<T,ui_scene::math::Mesh3dFault>{
     let deadline=std::time::Instant::now()+std::time::Duration::from_millis(5000);
     let cancel=std::sync::atomic::AtomicBool::new(false);
     for _ in 0..4096{
-        if cancel.load(std::sync::atomic::Ordering::Acquire)||std::time::Instant::now()>=deadline{return Err(ui_wgpu::wgpu::Mesh3dFault::Busy);}
-        match query(){Err(ui_wgpu::wgpu::Mesh3dFault::Busy)=>std::thread::yield_now(),result=>return result}
+        if cancel.load(std::sync::atomic::Ordering::Acquire)||std::time::Instant::now()>=deadline{return Err(ui_scene::math::Mesh3dFault::Busy);}
+        match query(){Err(ui_scene::math::Mesh3dFault::Busy)=>std::thread::yield_now(),result=>return result}
     }
-    Err(ui_wgpu::wgpu::Mesh3dFault::Busy)
+    Err(ui_scene::math::Mesh3dFault::Busy)
 }
 //#endregion World3dState

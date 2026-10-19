@@ -152,3 +152,46 @@ fn reports_the_operation_type() {
     assert_eq!(operation_type("mutation { a }").expect("mutation"), "mutation");
     assert!(validate("{").is_err());
 }
+
+#[test]
+fn resolves_a_bundle_node_by_its_identifier() {
+    let context = records();
+    let executor = Executor::new(&context);
+    let bundle = "{\n  \"node\": {\n    \"__typename\": \"Bundle\"\n  }\n}";
+    assert_eq!(executor.execute_json("{ node(id: \"🧰repo📚go\") { __typename } }", &Map::new()).expect("executes"), bundle);
+    assert_eq!(executor.execute_json("{ node(id: \"🧰\u{FE0F}repo📚\u{FE0F}go\") { __typename } }", &Map::new()).expect("executes"), bundle);
+    assert_eq!(executor.execute_json("{ node(id: \"🧰repo📚nothing\") { __typename } }", &Map::new()).expect("executes"), "{\n  \"node\": null\n}");
+}
+
+#[test]
+fn fixes_the_autofixable_breachs_of_a_scope_and_keeps_the_rest() {
+    let context = RecordingContext::from_text(
+        r#"{
+          "rootDir": "/repo",
+          "statutes": [{"kind": "code/section/empty", "policyId": "repo/lint", "priority": "high", "reason": "Empty section", "solution": "Remove it", "autofixable": true}],
+          "analyze": {"breachs": [
+            {"id": "b1", "summary": "empty", "kind": "code/section/empty", "scope": "a/one.rs"},
+            {"id": "b2", "summary": "empty", "kind": "code/section/empty", "scope": "b/two.rs"},
+            {"id": "b3", "summary": "unknown", "kind": "code/unknown/kind", "scope": "a/three.rs"}
+          ], "metrics": {"total": 3, "byPriority": {"high": 2, "medium": 0, "low": 1}, "autofixable": 2}}
+        }"#,
+    )
+    .expect("records");
+    let executor = Executor::new(&context);
+    let scoped = executor.execute("mutation { fix(scope: \"a/\") { fixed remaining breachs { id } } }", &Map::new()).expect("executes");
+    assert_eq!(scoped["fix"]["fixed"], json!(1));
+    assert_eq!(scoped["fix"]["remaining"], json!(1));
+    assert_eq!(scoped["fix"]["breachs"].as_array().expect("breachs").len(), 1);
+    let everything = executor.execute("mutation { fix { fixed remaining } }", &Map::new()).expect("executes");
+    assert_eq!(everything["fix"]["fixed"], json!(1));
+    assert_eq!(everything["fix"]["remaining"], json!(1));
+    let nothing = executor.execute("mutation { fix { fixed remaining } }", &Map::new()).expect("executes");
+    assert_eq!(nothing["fix"]["fixed"], json!(0));
+    let analyzed = executor.execute("{ analyze { metrics { total autofixable } } }", &Map::new()).expect("executes");
+    assert_eq!(analyzed["analyze"]["metrics"]["total"], json!(1));
+    assert_eq!(analyzed["analyze"]["metrics"]["autofixable"], json!(0));
+    let kinds: Vec<_> = context.events().iter().map(|event| event["kind"].clone()).collect();
+    assert_eq!(kinds, vec![json!("fix"), json!("fix"), json!("fix")]);
+    assert_eq!(context.events()[0]["payload"], json!(["a/"]));
+    assert_eq!(context.events()[1]["payload"], json!([null]));
+}

@@ -1,5 +1,5 @@
 /** 🧬️ Playbook document fields reference the canonical composed `flow` child that holds the steps. */
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface PlaybookArtifact {
   /** @state artifact */

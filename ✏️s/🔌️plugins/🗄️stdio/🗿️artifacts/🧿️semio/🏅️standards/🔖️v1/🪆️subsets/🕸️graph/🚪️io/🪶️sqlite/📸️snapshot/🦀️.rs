@@ -4,17 +4,19 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::schema::snapshot::{SemioGraphSnapshot, SemioGraphNode, SemioGraphEdge, SemioGraphPort, SemioGraphPortKind, GraphNodeId, GraphEdgeId};
-use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::schema::snapshot::{SemioGraphSnapshot, SemioGraphNode, SemioGraphEdge, SemioGraphPort, SemioGraphPortKind};
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::project_value_tree;
-use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::reconstruct_value_forest;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::ValueSqliteTables;
-use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
-use semio_framework_os_kernel::sqlite_snapshot::transfer::{reserve,heap_sort,compare_text};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text;
 const VALUES:ValueSqliteTables=ValueSqliteTables{value:"semio_graph_value",list_element:"semio_graph_list_element",map_entry:"semio_graph_map_entry"};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
+#[path="🫙️projection/🦀️.rs"]
+pub(crate)mod projection;
+#[path="💰️reconstruction/🦀️.rs"]
+mod reconstruction;
 /// 🫳️ Visits the exact Graph and property forest through one owned or borrowed writer.
 pub fn visit_rows(snapshot:&SemioGraphSnapshot,projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  projection.check_rows(snapshot.nodes.len().checked_add(snapshot.edges.len()).and_then(|count|count.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio graph row count overflow"))?)?;
@@ -42,7 +44,7 @@ pub fn visit_rows(snapshot:&SemioGraphSnapshot,projection:&mut RowWriter<'_,'_>)
 /// 🔎️ Resolves the actual sorted node frontier through bounded full literal comparisons.
 fn node_reference(nodes:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{let mut lo=0;let mut hi=nodes.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(nodes[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid,std::cmp::Ordering::Equal=>return Ok(nodes[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio graph edge node"))}
 /// 🎟️ Admits every typed Graph cell before native forecasting or materialization.
-pub(crate)fn admit_values(snapshot:&SemioGraphSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
+pub(crate)fn admit_values(snapshot:&SemioGraphSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;projection::admit(snapshot,phase,control)}
 /// 🏛️ Admits every authored table and companion column before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
 /// 📦️ Counts the original Graph binary grammar before typed construction.
@@ -78,69 +80,11 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 }
 
 impl SemioGraphSnapshot {
-    /// 🧩️ Restores every typed child field through paid relational reference frontiers.
-    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{
-     control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;semio_framework_os_kernel::sqlite_snapshot::validate_sqlite_database_schema_controlled(database,declared_schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
-     let document=single_float_row(database,"semio_graph_document")?;identity(document,2)?;if document.rowid!=1{return Err(invalid("invalid Semio graph document identifier"))}
-     let mut result=Owned::new(Self{schema:String::new(),nodes:Vec::new(),edges:Vec::new()});let nodes=ordered_float_rows(database,"semio_graph_node",2,control)?;let edges=ordered_float_rows(database,"semio_graph_edge",2,control)?;
-     let mut names=reserve(nodes.len(),control)?;let mut native_ids=reserve(nodes.len(),control)?;
-     for row in &nodes{identity(*row,10)?;if row.integer(1)?!=1{return Err(invalid("invalid Semio graph node owner"))}names.push((row.rowid,row.text(3)?));native_ids.push(row.text(3)?);}
-     heap_sort(&mut names,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.0.cmp(&b.0)))?;if names.windows(2).any(|pair|pair[0].0==pair[1].0){return Err(invalid("duplicate Semio graph node row identity"))}heap_sort(&mut native_ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,c|compare_text(a,b,SqliteSnapshotPhase::ReconstructSnapshot,c))?;if native_ids.windows(2).any(|pair|pair[0]==pair[1]){return Err(invalid("duplicate Semio graph node identity"))}
-     let mut ports=float_rows(database,"semio_graph_port",control)?;let mut port_ids=reserve(ports.len(),control)?;
-     for row in &ports{identity(*row,6)?;node_name(&names,row.integer(1)?)?;port_ids.push(row.rowid);}heap_sort(&mut port_ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;if port_ids.windows(2).any(|pair|pair[0]==pair[1]){return Err(invalid("duplicate Semio graph port identity"))}order_relationships(&mut ports,control)?;
-     let mut edge_ids=reserve(edges.len(),control)?;let mut edge_native_ids=reserve(edges.len(),control)?;
-     for row in &edges{identity(*row,10)?;if row.integer(1)?!=1{return Err(invalid("invalid Semio graph edge owner"))}node_name(&names,row.integer(4)?)?;node_name(&names,row.integer(5)?)?;edge_ids.push(row.rowid);edge_native_ids.push(row.text(3)?);}
-     heap_sort(&mut edge_ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;if edge_ids.windows(2).any(|pair|pair[0]==pair[1]){return Err(invalid("duplicate Semio graph edge row identity"))}heap_sort(&mut edge_native_ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,c|compare_text(a,b,SqliteSnapshotPhase::ReconstructSnapshot,c))?;if edge_native_ids.windows(2).any(|pair|pair[0]==pair[1]){return Err(invalid("duplicate Semio graph edge identity"))}
-     let mut node_properties=float_rows(database,"semio_graph_property",control)?;let mut port_properties=float_rows(database,"semio_graph_port_property",control)?;let mut edge_properties=float_rows(database,"semio_graph_edge_property",control)?;
-     let count=node_properties.len().checked_add(port_properties.len()).and_then(|count|count.checked_add(edge_properties.len())).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio graph property count overflow"))?;
-     let mut roots=reserve(count,control)?;let mut root_indices=reserve(count,control)?;
-     for(family,rows)in [&mut node_properties,&mut port_properties,&mut edge_properties].into_iter().enumerate(){
-      for row in rows.iter(){identity(*row,5)?;let parent=row.integer(1)?;let admitted=match family{0=>names.binary_search_by_key(&parent,|row|row.0).is_ok(),1=>port_ids.binary_search(&parent).is_ok(),_=>edge_ids.binary_search(&parent).is_ok()};if !admitted{return Err(invalid("dangling Semio graph property owner"))}let root=row.integer(4)?;root_indices.push((root,roots.len()));roots.push(root);}
-      order_relationships(rows,control)?;
-     }
-     heap_sort(&mut root_indices,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.0.cmp(&b.0)))?;if root_indices.windows(2).any(|pair|pair[0].0==pair[1].0){return Err(invalid("multiply owned Semio graph property value"))}
-     let mut decoded=Owned::new(reconstruct_value_forest(database,VALUES,&roots,None,control)?);let mut values=Owned::new(reserve(decoded.get_mut().len(),control)?);for value in decoded.get_mut().drain(..){values.get_mut().push(Some(value));}
-          result.get_mut().nodes=reserve(nodes.len(),control)?;
-     for(row_ordinal,row)in nodes.into_iter().enumerate(){
-      let mut node=Owned::new(SemioGraphNode{id:GraphNodeId::new(String::new()),kind:String::new(),label:String::new(),position:SemioPoint2{x:0.0,y:0.0},width:0.0,height:0.0,ports:Vec::new(),properties:Vec::new()});
-      
-      node.get_mut().ports=reserve(group(&ports,row.rowid).len(),control)?;
-      for port in group(&ports,row.rowid){
-       let kind=match port.text(4)?{"in"=>SemioGraphPortKind::In,"out"=>SemioGraphPortKind::Out,"in_out"=>SemioGraphPortKind::InOut,_=>return Err(invalid("unknown Semio graph port kind"))};
-       let mut native=Owned::new(SemioGraphPort{name:String::new(),kind,category:String::new(),properties:Vec::new()});
-       native.get_mut().name=reconstruct_text(control,port.text(3)?)?;native.get_mut().category=reconstruct_text(control,port.text(5)?)?;native.get_mut().properties=restore_properties(&port_properties,port.rowid,&root_indices,values.get_mut(),control)?;
-       node.get_mut().ports.push(native.take());control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,row_ordinal,node.get_mut().ports.len())?;
-      }
-      node.get_mut().id=GraphNodeId::new(reconstruct_text(control,row.text(3)?)?);node.get_mut().kind=reconstruct_text(control,row.text(4)?)?;node.get_mut().label=reconstruct_text(control,row.text(5)?)?;node.get_mut().position=SemioPoint2{x:row.real(6)?,y:row.real(7)?};node.get_mut().width=row.real(8)?;node.get_mut().height=row.real(9)?;node.get_mut().properties=restore_properties(&node_properties,row.rowid,&root_indices,values.get_mut(),control)?;result.get_mut().nodes.push(node.take());control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,row_ordinal+1,0)?;
-     }
-     result.get_mut().edges=reserve(edges.len(),control)?;
-     for(ordinal,row)in edges.into_iter().enumerate(){
-      let mut edge=Owned::new(SemioGraphEdge{id:GraphEdgeId::new(String::new()),source:GraphNodeId::new(String::new()),target:GraphNodeId::new(String::new()),kind:String::new(),label:String::new(),source_port:None,target_port:None,properties:Vec::new()});
-      edge.get_mut().id=GraphEdgeId::new(reconstruct_text(control,row.text(3)?)?);edge.get_mut().source=GraphNodeId::new(reconstruct_text(control,node_name(&names,row.integer(4)?)?)?);edge.get_mut().target=GraphNodeId::new(reconstruct_text(control,node_name(&names,row.integer(5)?)?)?);
-      edge.get_mut().kind=reconstruct_text(control,row.text(6)?)?;edge.get_mut().label=reconstruct_text(control,row.text(7)?)?;edge.get_mut().source_port=optional_text(row,8,control)?;edge.get_mut().target_port=optional_text(row,9,control)?;edge.get_mut().properties=restore_properties(&edge_properties,row.rowid,&root_indices,values.get_mut(),control)?;
-      result.get_mut().edges.push(edge.take());control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal+1,0)?;
-     }
-     if values.get_mut().iter().any(Option::is_some){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"unconsumed Semio graph property value"))}
-     result.get_mut().schema=reconstruct_text(control,document.text(1)?)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,roots.len(),roots.len())?;Ok(result.take())
-    }
-}
-fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
-fn node_name<'a>(names:&[(i64,&'a str)],id:i64)->Result<&'a str,ValueError>{names.binary_search_by_key(&id,|row|row.0).map(|index|names[index].1).map_err(|_|invalid("dangling Semio graph node"))}
-fn optional_text(row:SqliteRow<'_>,index:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Option<String>,ValueError>{if row.is_null(index)?{Ok(None)}else{Ok(Some(reconstruct_text(control,row.text(index)?)?))}}
-fn group<'r,'a>(rows:&'r[SqliteRow<'a>],parent:i64)->&'r[SqliteRow<'a>]{let start=rows.partition_point(|row|row.integer(1).unwrap_or(-1)<parent);let end=rows.partition_point(|row|row.integer(1).unwrap_or(-1)<=parent);&rows[start..end]}
-fn order_relationships(rows:&mut[SqliteRow<'_>],control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
- for row in rows.iter(){row.integer(1)?;row.integer(2)?;}heap_sort(rows,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok((a.integer(1)?,a.integer(2)?).cmp(&(b.integer(1)?,b.integer(2)?))))?;
- let mut parent=None;let mut ordinal=0;for(index,row)in rows.iter().enumerate(){let owner=row.integer(1)?;if parent!=Some(owner){parent=Some(owner);ordinal=0;}if row.integer(2)?!=number(ordinal)?{return Err(invalid("Semio graph relationship ordinals must be contiguous"))}ordinal+=1;if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,rows.len())?;}}Ok(())
-}
-fn restore_properties(rows:&[SqliteRow<'_>],owner:i64,indices:&[(i64,usize)],values:&mut[Option<semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue>],control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SemioValueEntry>,ValueError>{
- let rows=group(rows,owner);let mut properties=Owned::new(reserve(rows.len(),control)?);
- for(ordinal,row)in rows.iter().enumerate(){let mut entry=Owned::new(SemioValueEntry{key:String::new(),value:semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Null});entry.get_mut().key=reconstruct_text(control,row.text(3)?)?;let id=row.integer(4)?;let index=indices.binary_search_by_key(&id,|row|row.0).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"missing admitted Semio graph property root"))?;let value=values[indices[index].1].take().ok_or_else(||invalid("multiply owned Semio graph property"))?;entry.get_mut().value=value;properties.get_mut().push(entry.take());if ordinal%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal,rows.len())?;}}
- Ok(properties.take())
+    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
 fn float_columns(table:&str)->&'static [FloatColumn]{match table{"semio_graph_node"=>&[FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9)],_=>&[]}}
-fn float_rows<'a>(db:&'a SqliteDatabase,table:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let table_rows=db.table(table)?;control.check_rows(table_rows.rows.len())?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,table_rows.rows.len())?;let mut result=reserve(table_rows.rows.len(),control)?;for(count,row)in table_rows.rows.iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,table_rows.rows.len())?;}}heap_sort(&mut result,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.rowid.cmp(&b.rowid)))?;if result.windows(2).any(|pair|pair[0].rowid==pair[1].rowid){return Err(invalid("duplicate Semio graph relationship identity"))}Ok(result)}
-fn ordered_float_rows<'a>(db:&'a SqliteDatabase,table:&str,ordinal:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SqliteRow<'a>>,ValueError>{let references=semio_framework_os_kernel::sqlite_snapshot::artifact::ordered_row_refs(db.table(table)?,ordinal,control)?;let mut result=reserve(references.len(),control)?;for(count,row)in references.into_iter().enumerate(){result.push(SqliteRow::new(row,float_columns(table))?);if count%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,0)?;}}Ok(result)}
 fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,ValueError>{SqliteRow::new(db.table(table)?.single_row()?,float_columns(table))}
 
 impl SemioGraphSnapshot{
@@ -151,7 +95,7 @@ pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&s
 impl SemioGraphSnapshot{
 /// 🧮️ Projects full node, port and edge state with paid literal reference indexes.
 pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
+semantic::layout(control.limits())?;projection::project(self,Self::SQLITE_SCHEMA,control)
 }
 }
 fn project_properties(properties:&[SemioValueEntry],table:&str,owner:i64,projection:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

@@ -10,7 +10,7 @@ use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use serde::{Deserialize, Serialize};
 use semio_framework_os_spr::{Edit, HybridLogicalTimestamp, SchemaId};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_test_support; use super::canonical_edit_tests as tests;
+use semio_framework_os_store_test_support as test_support; use super::canonical_edit_tests as tests;
 
 #[test]
 fn canonical_sealer_constructor_refusal_keeps_every_original_owner_without_heap_work() {
@@ -169,9 +169,9 @@ impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRet
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub(super) struct FixtureSnapshotRetirement;
 impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
-    fn retirement_birth_bytes(&self, _: &Arc<u64>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<u64>() }
+    fn retirement_birth_bytes(&self, _: &Arc<u64>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<u64>() }
     fn retire(&self, snapshot: Arc<u64>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<u64>)> {
-        semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, false)
+        semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, false)
     }
 }
 

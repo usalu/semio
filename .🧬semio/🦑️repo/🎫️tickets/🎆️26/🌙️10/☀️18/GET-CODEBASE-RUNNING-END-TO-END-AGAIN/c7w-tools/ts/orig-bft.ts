@@ -1,0 +1,1315 @@
+import {emptyNativeCatalogV1,readNativeCatalogV1,type NativeCatalogV1} from "../../../../../🔌️plugin/📇️registry/📥️runtime/🟦️.ts";
+import { OriginalBootstrapRootPort, type OriginalBootstrapRequest, type OriginalBootstrapResponse } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/📮️port/🟦️.ts";
+import type { OriginalBootstrapOwner } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts";
+import type { PluginCatalogRowsV1 } from "@semio-tech/framework/plugin-catalog";
+import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
+import { BROWSER_MEDIA_CAPACITY, mediaSlotAuthorityKey, parsePresentedMediaSlots, type BrowserMediaCommand, type BrowserMediaOperation, type BrowserMediaResult, type BrowserMediaRelease, type BrowserMediaValue, type PresentedMediaSlot } from "../../../🎬️media/🌐️browser/🟦️.ts";
+import type { MediaTransportPort } from "../../../🎬️media/🚚️lifecycle/🟦️.ts";
+// #region 🔖️Protocol
+/** 🧵️ Browser UI-to-frame-Worker protocol with bounded lossless and latest-wins lanes. */
+
+import { BrowserInteractiveJobPort, type InteractiveJobUiMessage, type InteractiveJobWorkerMessage } from "../🔌️browser-interactive-job-port/🟦️.ts";
+import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict } from "../⏱️turn-budget/🟦️.ts";
+import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootSilence, evaluateBrowserBootLiveness, type BrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
+import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
+import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
+import { decodeReferenceImageOnPage, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
+import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
+
+export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
+export const FRAME_WORKER_HUB_DOCUMENT_CAPACITY = 64;
+export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
+/** ⏳️ Outer bound on a Worker that is silent AND has declared no long phase — the only state that
+ * is really a wedged event loop. It is NOT a total-boot deadline and no longer a bare stall bound either:
+ * a Worker blocked inside a browser-owned compile cannot post anything, so silence alone was never
+ * evidence of death. The law, its per-phase ceilings and its diagnosis live in `../🫀️boot-liveness/🟦️.ts`;
+ * this mirror exists so a reader of the transport sees the ceiling its watchdog is priced against. */
+export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs;
+export const FRAME_WORKER_POINTER_CAPACITY = 16;
+export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
+export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
+export const FRAME_WORKER_ACCESSIBILITY_ID_BYTES = 512;
+/** ⏱️ Re-exported so a reader of the transport sees the ceiling its turns are priced against;
+ * the law itself — executing-time pricing and the sustained-run attribution — lives in
+ * `../⏱️turn-budget/🟦️.ts`. */
+export const FRAME_UI_TURN_BUDGET_MS = UI_TURN_BUDGET_MS;
+export const FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
+export const FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 10_000;
+export const FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY = 16 * 1024 * 1024;
+
+export type BrowserFrameWorkerFaultCode =
+  | "worker-unavailable"
+  | "offscreen-canvas-unavailable"
+  | "offscreen-transfer-failed"
+  | "worker-construction-failed"
+  | "worker-boot-timeout"
+  | "worker-boot-failed"
+  | "worker-runtime-failed"
+  | "worker-step-overrun"
+  | "worker-present-failed"
+  | "worker-input-failed"
+  | "worker-frame-failed"
+  | "worker-message-failed"
+  | "ui-hook-failed"
+  | "interactive-job-violation"
+  | "protocol-violation"
+  | "replaceable-overflow"
+  | "lossless-overflow"
+  | "transport-closed";
+
+export type BrowserFrameWorkerStatus = "booting" | "ready" | "quarantined" | "faulted" | "closed";
+
+/** 🪂️ The surface's REAL fallback state, reported instead of asserting one. `uiThreadFrames` is
+ * `unavailable-offscreen-transferred` by construction on this path: `transferControlToOffscreen()`
+ * detaches the canvas from the UI isolate, so no UI-thread frame path exists to attempt afterwards —
+ * a fact the fault banner must state rather than imply a fallback was skipped by choice. The remaining
+ * fields say what the surface actually did: whether the Worker still holds the canvas, whether input is
+ * still admitted, and the surface's own UI-turn ledger. */
+export type BrowserFrameFallbackState = {
+  readonly surface: BrowserFrameWorkerStatus;
+  readonly uiThreadFrames: "unavailable-offscreen-transferred";
+  readonly workerTerminated: boolean;
+  readonly inputAccepted: boolean;
+  readonly deferredCadence: boolean;
+  readonly uiTurns: TurnLedgerSnapshot;
+  /** 🧵️ The frame Worker's own step ledger, so a banner reports which isolate ran long. */
+  readonly workerSteps: BrowserFrameWorkerStepReport;
+  /** 🧭️ The long boot phase the Worker had declared and not yet left, with how long it had been in
+   * flight — so a fault card names the work that was actually running instead of only the last stage that
+   * happened to fit into a `boot-progress` before the isolate blocked. */
+  readonly bootPhase: BrowserBootPhase | undefined;
+  readonly bootPhaseElapsedMs: number;
+  readonly bootStage: string;
+  readonly bootSilentForMs: number;
+};
+
+export type BrowserFrameModifiers = {
+  readonly shift: boolean;
+  readonly ctrl: boolean;
+  readonly alt: boolean;
+  readonly meta: boolean;
+};
+
+export type BrowserFramePointer = BrowserFrameModifiers & {
+  readonly pointerId: number;
+  readonly pointerKind: "mouse" | "touch" | "pen" | "eraser";
+  readonly x: number;
+  readonly y: number;
+  readonly pressure?: number;
+  readonly tiltX?: number;
+  readonly tiltY?: number;
+};
+
+export type BrowserFrameReplaceableEvent =
+  | ({ readonly kind: "pointer-move" } & BrowserFramePointer)
+  | ({ readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
+  | { readonly kind: "resize"; readonly width: number; readonly height: number; readonly dpr: number };
+
+export type BrowserHubDocumentRemote =
+  | { readonly kind: "detached" }
+  | { readonly kind: "connecting" }
+  | { readonly kind: "live"; readonly peerCount: number }
+  | { readonly kind: "backoff"; readonly retryInMs: number };
+
+export type BrowserFrameAccessibilityAddress = {
+  readonly windowId: string;
+  readonly windowGeneration: number;
+  readonly nodeId: number;
+  readonly nodeKey: string;
+};
+
+export type BrowserFrameLosslessEvent =
+  | ({ readonly kind: "pointer-cancel" } & BrowserFramePointer)
+  | ({ readonly kind: "pointer-down" | "pointer-up"; readonly button: "primary" | "secondary" | "middle" } & BrowserFramePointer)
+  | { readonly kind: "key-down" | "key-up"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
+  | { readonly kind: "text" | "paste" | "paste-image-data-url"; readonly text: string }
+  | { readonly kind: "ime-start" | "ime-cancel" }
+  | { readonly kind: "ime-update"; readonly text: string; readonly cursor: number }
+  | { readonly kind: "ime-commit"; readonly text: string }
+  | ({ readonly kind: "accessibility-focus" | "accessibility-blur" | "accessibility-activate" } & BrowserFrameAccessibilityAddress)
+  | ({ readonly kind: "accessibility-value"; readonly value: string } & BrowserFrameAccessibilityAddress)
+  // ⏱️ These two are minted straight into a wire batch by `takeLosslessWireBatch` rather than enqueued
+  // as input, so unlike every other member they carry the batch stamp on the type instead of
+  // acquiring it at flush.
+  | { readonly kind: "hub-document-status"; readonly documentKey: string; readonly remote: BrowserHubDocumentRemote; readonly timestampMs: number }
+  | { readonly kind: "hub-document-close"; readonly documentKey: string; readonly timestampMs: number };
+
+/** 🖱️ One DOM input as the UI isolate observes it on `#semio-wgpu-canvas`, reduced to the fields
+ * the wire carries. Deliberately NOT `PointerEvent`/`WheelEvent`/`KeyboardEvent`: this shape is what the
+ * language-neutral oracle `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` names, so the projection below
+ * can be exercised without a DOM and the Rust law can read the same rows. */
+type BrowserFramePointerDomFields = BrowserFrameModifiers & { readonly pointerId: number; readonly pointerType: string; readonly offsetX: number; readonly offsetY: number; readonly pressure?: number; readonly tiltX?: number; readonly tiltY?: number; readonly button?: number };
+
+type BrowserFrameKeyDomFields = { readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean };
+
+export type BrowserFrameDomEvent =
+  | ({ readonly type: "pointercancel" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointermove" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointerdown" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointerup" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "wheel"; readonly offsetX: number; readonly offsetY: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
+  | ({ readonly type: "keydown" } & BrowserFrameKeyDomFields)
+  | ({ readonly type: "keyup" } & BrowserFrameKeyDomFields)
+  | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
+
+/** 📏️ The ONE place a CSS pixel becomes a physical pixel — and it is used for the SURFACE
+ * EXTENT ONLY. The GPU surface is configured in device pixels; the renderer's layout, hit registry,
+ * dock plan and every chrome constant are CSS/logical pixels, exactly like the React host's DOM, so
+ * pointer coordinates cross this wire unscaled. Scroll deltas are device-independent either way.
+ * Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g. */
+function physical(css: number, devicePixelRatio: number): number {
+  return css * devicePixelRatio;
+}
+
+/** 🖱️ Names a DOM `button` integer. The wire carries a name so neither side has to agree on
+ * the DOM's numbering, and an unknown button is the primary one rather than a dropped event. */
+function pointerButtonName(button: number | undefined): "primary" | "secondary" | "middle" {
+  return button === 2 ? "secondary" : button === 1 ? "middle" : "primary";
+}
+
+/** 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
+ * renderer hit-tests in logical pixels. */
+function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" }>): BrowserFramePointer {
+  return {
+    pointerId: event.pointerId,
+    pointerKind: event.pointerType === "touch" || event.pointerType === "pen" || event.pointerType === "eraser" ? event.pointerType : "mouse",
+    x: event.offsetX,
+    y: event.offsetY,
+    ...(event.pressure ? { pressure: event.pressure } : {}),
+    ...(event.tiltX ? { tiltX: event.tiltX } : {}),
+    ...(event.tiltY ? { tiltY: event.tiltY } : {}),
+    shift: event.shift,
+    ctrl: event.ctrl,
+    alt: event.alt,
+    meta: event.meta,
+  };
+}
+
+/** ⌨️ Reads the event-time modifier snapshot carried by every DOM pointer and wheel event. */
+export function browserFrameModifiersFromDom(event: Pick<MouseEvent, "shiftKey" | "ctrlKey" | "altKey" | "metaKey">): BrowserFrameModifiers {
+  return { shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey };
+}
+
+/** 🖱️ Reduces one real DOM pointer event into the owned input vocabulary. */
+export function browserFramePointerDomEvent(event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel"): BrowserFrameDomEvent {
+  return {
+    type,
+    pointerId: event.pointerId,
+    pointerType: event.pointerType,
+    offsetX: event.offsetX,
+    offsetY: event.offsetY,
+    pressure: event.pressure,
+    tiltX: event.tiltX,
+    tiltY: event.tiltY,
+    button: event.button,
+    ...browserFrameModifiersFromDom(event),
+  };
+}
+
+/** 🎡️ Reduces one real DOM wheel event into the owned input vocabulary. */
+export function browserFrameWheelDomEvent(event: WheelEvent): BrowserFrameDomEvent {
+  return { type: "wheel", offsetX: event.offsetX, offsetY: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, ...browserFrameModifiersFromDom(event) };
+}
+
+/** 🎮️ Projects one observed DOM input onto the single wire event the frame Worker decodes.
+ *
+ * This is the UI isolate's whole share of input semantics — the listeners in `🚀️browser-boot/🟦️.ts`
+ * add nothing but focus/capture and the lossless-versus-replaceable lane choice. Keeping the projection
+ * HERE, beside the wire types it produces and inside the module the transport's own vitest suite already
+ * imports, is what lets `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` be answered without a browser and
+ * by the Rust law on the other side of the same fixture.
+ *
+ * `devicePixelRatio` reaches exactly one event kind: `resize`, whose width/height ARE the physical
+ * surface extent. Pointer and wheel positions stay CSS pixels. */
+export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixelRatio: number): BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent {
+  if (event.type === "pointercancel") return { kind: "pointer-cancel", ...pointerFields(event) };
+  if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event) };
+  if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event), button: pointerButtonName(event.button) };
+  if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
+  if (event.type === "resize") return { kind: "resize", width: Math.max(1, Math.round(physical(event.clientWidth, devicePixelRatio))), height: Math.max(1, Math.round(physical(event.clientHeight, devicePixelRatio))), dpr: devicePixelRatio };
+  return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
+}
+
+/** 🫧 Whether a projected wire event belongs to the coalescing lane (`enqueueReplaceable`) rather
+ * than the credit-bearing lossless lane. A pointer MOVE, a wheel and a resize are each "the newest one
+ * wins"; a button transition and a key transition are not, because dropping one latches shell state. */
+export function browserFrameEventIsReplaceable(event: BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent): event is BrowserFrameReplaceableEvent {
+  return event.kind === "pointer-move" || event.kind === "wheel" || event.kind === "resize";
+}
+
+export type BrowserFrameWorkerBoot = {
+  readonly catalog: PluginCatalogRowsV1;
+  readonly nativeCatalog?: NativeCatalogV1;
+  readonly plugins?: readonly WgpuPluginModule[];
+  readonly pluginRegistrySelection?: WgpuPluginRegistrySelection;
+  readonly kind: "boot";
+  readonly lifecycle: number;
+  readonly bindingsModuleUrl: string;
+  readonly bindingsWasmUrl: string;
+  readonly canvas: OffscreenCanvas;
+  readonly width: number;
+  readonly height: number;
+  readonly dpr: number;
+  readonly locale: "en" | "de";
+  /** 🧭️ Every boot axis in ONE shape (`../🧭️boot-descriptor/🟦️.ts`), forwarded verbatim to the
+   * renderer wasm's `semioWgpuSetBootDescriptor`. It used to be four loose fields here, which is how
+   * the three wgpu doors came to carry three different subsets of the same vocabulary. */
+  readonly descriptor: WgpuBootDescriptor;
+  /** 🌓️ The page realm's appearance reads (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+   * renderer's `semioWgpuSetHostAppearance`. An environment axis beside `locale`/`dpr`, never a boot
+   * axis: the Worker cannot make either read itself, and both keep changing after boot. */
+  readonly appearance: WgpuHostAppearance;
+  /** ⌨️ The page realm's platform read (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the
+   * renderer's `semioWgpuSetHostPlatform` so `mod` formats as `⌘️` on Apple and `Ctrl` elsewhere.
+   * Constant for the life of a navigation, so unlike `appearance` it never gets a live message. */
+  readonly platform: WgpuHostPlatform;
+  /** 🗄️ The page realm's read of every durable preference key the shell owns
+   * (`../🧭️boot-descriptor/🟦️.ts`'s 🗄️HostStorage census), forwarded to the renderer's
+   * `semioWgpuSetHostStorage`. It travels WITH the boot so the shell's first frame answers
+   * appearance, `ui.introduction.seen.*` and the dock skeleton synchronously instead of painting a
+   * default and correcting it a frame later. Later writes cross the host-io door one at a time. */
+  readonly storage: WgpuHostStorageSnapshot;
+  readonly introductionSuppressed?: boolean;
+};
+
+/** 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
+ * is the only way the page learns of one (`storage` never fires for the writer's own document). Carries
+ * the whole re-read snapshot rather than a delta: the page's store IS the authority and a delta would
+ * need a second ordering guarantee against the door's own write-through. */
+export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly lifecycle: number; readonly storage: WgpuHostStorageSnapshot };
+
+/** 🌓️ One live appearance change — the OS flipped `prefers-color-scheme`, or another tab
+ * rewrote the persisted preference. Same shape as the boot field, so the Worker applies both through
+ * one call. */
+/** 🎓️ One independently rooted host can suppress its own introduction without affecting peers. */
+export type BrowserFrameHostIntroductionPolicy = { readonly kind: "host-introduction-policy"; readonly lifecycle: number; readonly suppressed: boolean };
+
+export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
+
+/** 🫥️ The page was hidden (`visibilitychange` to hidden, which a closing tab fires before `pagehide` retires the mount): the Worker ends every open text-editor typing run
+ * (`hidden`, design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING) so the keystrokes of its last idle bound are never lost. */
+export type BrowserFrameHostPageHidden = { readonly kind: "host-page-hidden"; readonly lifecycle: number };
+
+/** 🫥️ The page's `window` lost the system focus (the person switched applications or windows): the Worker ends every open
+ * text-editor typing run (`blur`) and blurs the focused pane for its program (`hostEvent{kind: blur}`), React's pane `onBlur`. */
+export type BrowserFrameHostWindowBlur = { readonly kind: "host-window-blur"; readonly lifecycle: number };
+
+/** 🛰️ The local supervisor's agent-bridge offer as the page last read it (`🔗️AgentBridge/🛰️offer`), `null` once no
+ * gateway offers one. The Worker owns no page and dials nothing it discovered itself: the page reads the offer, the
+ * Worker hands it to the renderer's `semioWgpuSetAgentBridgeConfig`, and the bridge socket goes through the page door. */
+export type BrowserFrameHostAgentBridge = { readonly kind: "host-agent-bridge"; readonly lifecycle: number; readonly offer: { readonly url: string; readonly admissionProof: string } | null };
+
+export type BrowserFrameWorkerBatch = {
+  readonly kind: "batch";
+  readonly lifecycle: number;
+  readonly inputSequence: number;
+  readonly generation: number;
+  readonly timestampMs: number;
+  readonly replaceable: readonly BrowserFrameReplaceableEvent[];
+  readonly lossless: readonly BrowserFrameWireLosslessEvent[];
+};
+
+export type BrowserFrameWireLosslessEvent =
+  | (Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit" }> & { readonly timestampMs: number })
+  | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly timestampMs: number; readonly cursor?: number };
+
+/** 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
+ * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
+ * The UI isolate therefore cannot call them directly and asks across the same fail-closed seam every other
+ * frame message uses. Read-only by construction: no probe mutates renderer state.
+ *
+ * ♿️ `accessibility` is the one probe that is NOT a test hook: it carries the window's accessibility
+ * tree out of the isolate so the UI thread can mirror it into a real ARIA subtree beside the canvas.
+ * A DOM renderer writes those attributes onto the elements it already renders; a GPU canvas has no
+ * elements, so the tree has to cross this seam as data (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+ *
+ * 🛰️ `agent-bridge-scope` is production too: the shell's agent-bridge offer scope (hub origin, space, its human's agent
+ * principals — never the session capability) for the page's offer watcher (ticket 26/09/23, G12 × WG11 session 14c). */
+export type BrowserFrameIntrospectionProbe = "structure" | "frame-stats" | "accessibility" | "mesh-stats" | "board2d" | "chrome" | "agent-bridge-scope";
+
+export type BrowserFrameWorkerIntrospect = { readonly kind: "introspect"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly windowId?: string };
+
+/** 🧵️ One shard worker the UI isolate spawned on the frame worker's behalf, handed back as a
+ * `MessagePort`. Nested dedicated workers are unavailable in some embedded browsers, so the frame worker
+ * never constructs a shard `Worker` itself — see `shardWorkerPortBridge` in the wgpu plugin bridge. */
+export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shardIndex: number; readonly port: MessagePort };
+
+/** 🚪️ The page's answer to one {@link BrowserFrameWorkerHostIo} request — the JSON the shell's
+ * `semioWgpuHostIo` call resolves with, or a `detail` the shell refuses on. Addressed by `requestId`
+ * alone, exactly like `introspection`, so no host-side request table beyond the pending map exists. */
+export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readonly lifecycle: number; readonly requestId: number; readonly json: string | null; readonly detail?: string };
+
+export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
+
+export type BrowserFrameUiMessage =
+  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
+
+/** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
+ * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
+ * (`../⏱️turn-budget/🟦️.ts`), so this is a MEASUREMENT the boot UI renders — never a verdict. */
+export type BrowserFrameWorkerStepReport = {
+  readonly degraded: boolean;
+  readonly recordedOverruns: number;
+  readonly sustainedOverruns: number;
+  readonly worstStepMs: number;
+  readonly worstStepSite: string;
+};
+
+export type BrowserFrameWorkerMessage =
+  | OriginalBootstrapRequest
+  | BrowserMediaResult
+  | { readonly kind: "boot-progress"; readonly lifecycle: number; readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport }
+  | { readonly kind: "boot-liveness"; readonly lifecycle: number }
+  /** 🧭️ The Worker DECLARING that it is about to block on one browser-owned phase, posted while its
+   * event loop still runs so the declaration always arrives — and withdrawing it when the phase ends. This
+   * is what lets the watchdog tell a busy Worker from a wedged one: a `WebAssembly` compile of the 76 MB
+   * renderer, `semioWgpuWorkerBootstrap`'s synchronous prologue and one Rust bootstrap phase all stop the
+   * Worker's liveness ticker dead, so silence during a declared phase proves nothing. */
+  | { readonly kind: "boot-phase"; readonly lifecycle: number; readonly phase: string; readonly state: "enter" | "leave"; readonly elapsedMs?: number }
+  | { readonly kind: "booted"; readonly lifecycle: number }
+  | { readonly kind: "wake"; readonly lifecycle: number }
+  | { readonly kind: "batch-accepted"; readonly lifecycle: number; readonly inputSequence: number; readonly generation: number }
+  | {
+      readonly kind: "frame";
+      readonly mediaSlots: readonly PresentedMediaSlot[];
+      readonly lifecycle: number;
+      readonly frameSequence: number;
+      readonly generation: number;
+      readonly cursor: string;
+      readonly fullscreen: boolean | null;
+      readonly requestFrame: boolean;
+      readonly nextDeadlineDelayMs: number | null;
+      readonly progress: number;
+      readonly workerDurationMs: number;
+      /** ⏳️ The step's EXECUTING milliseconds — what the Worker's own ledger priced. */
+      readonly workerExecutingMs: number;
+      readonly workerStepVerdict: TurnVerdict;
+      readonly quarantined?: boolean;
+      readonly faultCode?: string;
+      readonly faultDetail?: string;
+    }
+  | { readonly kind: "introspection"; readonly lifecycle: number; readonly requestId: number; readonly probe: BrowserFrameIntrospectionProbe; readonly json: string | null; readonly detail?: string }
+  | { readonly kind: "diagnostic"; readonly lifecycle: number; readonly channel: "world3d-accepted-frame"; readonly generation: number; readonly frameSequence: number; readonly json: string }
+  | { readonly kind: "fault"; readonly lifecycle: number; readonly code: string; readonly detail: string;readonly originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array} }
+  | { readonly kind: "closed"; readonly lifecycle: number }
+  | { readonly kind: "shard-spawn"; readonly shardIndex: number; readonly url: string }
+  | { readonly kind: "shard-terminate"; readonly shardIndex: number }
+  /** 🚪️ The Worker asking the PAGE for the one thing it cannot do itself: a `<a download>` or an
+   * `<input type="file">`. A dedicated Worker has no `window` and no `document`, so the shell's own
+   * browser halves used to answer `None` and return silently — an export produced its bytes and handed
+   * them to nobody, an import opened nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
+  | { readonly kind: "host-io"; readonly lifecycle: number; readonly requestId: number; readonly request: string; readonly bytes: Uint8Array | null }
+  | { readonly kind: "image-decode"; readonly lifecycle: number; readonly requestId: number; readonly source: Uint8Array<ArrayBuffer>; readonly dimensions: ReferenceImageDimensions }
+  | { readonly kind: "image-decode-cancel"; readonly lifecycle: number; readonly requestId: number }
+  | InteractiveJobWorkerMessage;
+
+export interface BrowserFrameWorkerPort {
+  onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null;
+  onmessageerror: ((event: MessageEvent) => void) | null;
+  onerror: ((event: ErrorEvent) => void) | null;
+  postMessage(message: BrowserFrameUiMessage, transfer?: Transferable[]): void;
+  terminate(): void;
+}
+
+export type BrowserFrameDirectives = {
+  readonly mediaSlots: readonly PresentedMediaSlot[];
+  readonly cursor: string;
+  readonly fullscreen: boolean | null;
+  readonly generation: number;
+  readonly workerDurationMs: number;
+};
+
+export type BrowserFrameDiagnostic = {
+  readonly channel: "world3d-accepted-frame";
+  readonly generation: number;
+  readonly frameSequence: number;
+  readonly json: string;
+};
+
+export type BrowserFrameTransportOptions = {
+  readonly originalWorkStock: OriginalBootstrapOwner;
+  readonly worker: BrowserFrameWorkerPort;
+  readonly boot: Omit<BrowserFrameWorkerBoot, "kind" | "lifecycle">;
+  readonly now?: () => number;
+  readonly setTimer?: (callback: () => void, delayMs: number) => number;
+  readonly clearTimer?: (handle: number) => void;
+  readonly onReady?: () => void;
+  readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
+  readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
+  readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
+  readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}) => void;
+  /** 🐢️ Reported for every UI turn that breached its ceiling — a measured signal, never a verdict. */
+  readonly onUiTurn?: (outcome: TurnOutcome) => void;
+  readonly requestAnimationFrame?: (callback: FrameRequestCallback) => number;
+  readonly cancelAnimationFrame?: (handle: number) => void;
+  /** 🚪️ The PAGE half of the shell's file door (`🚪️host-io/🟦️.ts`). A dedicated Worker has no
+   * `document`, so the shell's `<a download>` and `<input type="file">` live on this side of the wire.
+   * Absent, a `host-io` request is refused with a named detail rather than silently ignored — a silent
+   * ignore is exactly how both io journeys died on this renderer. */
+  readonly hostIo?: (requestJson: string, bytes: Uint8Array | null) => Promise<string>;
+};
+
+type QueuedLossless = {
+  readonly event: Exclude<BrowserFrameLosslessEvent, { readonly kind: "hub-document-status" | "hub-document-close" }>;
+  readonly bytes: number;
+  readonly streamId: number;
+  readonly timestampMs: number;
+  cursor: number;
+};
+// #endregion 🔖️Protocol
+
+// #region 📮️Transport
+/** 📮️ Owns one fail-closed frame Worker lifecycle and its bounded admission state. */
+export class BrowserFrameTransport {
+  private resolveRetirement: () => void = () => {};
+  readonly retirement = new Promise<void>(resolve => { this.resolveRetirement = resolve; });
+  readonly lifecycle = 1;
+  readonly interactiveJobs: BrowserInteractiveJobPort;
+  status: BrowserFrameWorkerStatus = "booting";
+  fault: { readonly code: BrowserFrameWorkerFaultCode; readonly detail: string;readonly originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array} } | undefined;
+  private readonly worker: BrowserFrameWorkerPort;
+  private readonly shardWorkers = new Map<number, Worker>();
+  private readonly shardChannels = new Map<number, MessagePort>();
+  private workerRetired = false;
+  private readonly now: () => number;
+  private readonly clearTimer: (handle: number) => void;
+  private readonly setTimer: (callback: () => void, delayMs: number) => number;
+  private readonly onReady?: () => void;
+  private readonly onProgress?: (stage: string, progress: number, worker: BrowserFrameWorkerStepReport) => void;
+  private readonly hostIo?: (requestJson: string, bytes: Uint8Array | null) => Promise<string>;
+  /** 🧵️ The frame Worker's last reported step ledger — a measurement the boot UI renders. */
+  private workerSteps: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
+  /** 🧵️ Frame steps the Worker attributed to its OWN work (a sustained run, not one wall sample). */
+  private workerStepOverruns = 0;
+  private readonly onDirectives?: (directives: BrowserFrameDirectives) => void;
+  private readonly onDiagnostic?: (diagnostic: BrowserFrameDiagnostic) => void;
+  private readonly onFault?: (code: BrowserFrameWorkerFaultCode, detail: string, fallback: BrowserFrameFallbackState,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}) => void;
+  private readonly onUiTurn?: (outcome: TurnOutcome) => void;
+  private readonly requestRaf?: (callback: FrameRequestCallback) => number;
+  private readonly cancelRaf?: (handle: number) => void;
+  private readonly pointerIds = new Array<number>(FRAME_WORKER_POINTER_CAPACITY);
+  private readonly pointerMoves = new Array<BrowserFrameReplaceableEvent | undefined>(FRAME_WORKER_POINTER_CAPACITY);
+  private pointerCount = 0;
+  private wheel: BrowserFrameReplaceableEvent | undefined;
+  private resize: BrowserFrameReplaceableEvent | undefined;
+  private lossless: QueuedLossless[] = [];
+  private losslessBytes = 0;
+  private readonly hubDocuments = new Map<string, BrowserHubDocumentRemote | null>();
+  private nextStreamId = 1;
+  private generation = 0;
+  private inputSequence = 0;
+  private acceptedInputSequence = 0;
+  private acceptedFrameSequence = 0;
+  private inFlight = false;
+  private frameRequested = false;
+  private mediaSlots = new Map<string, PresentedMediaSlot>();
+  private mediaRequestId = 0;
+  private readonly mediaPending = new Map<number, { readonly token: string; readonly resolve: (value: BrowserMediaValue) => void; readonly reject: (error: Error) => void; readonly timer: number }>();
+  private rafHandle: number | undefined;
+  private deadlineTimer: number | undefined;
+  private bootTimer: number | undefined;
+  /** 🫀️ The last instant ANY message arrived from the frame Worker — the clock silence is measured
+   * against. `NEGATIVE_INFINITY` until the Worker speaks for the first time, so "never sent a single
+   * message" stays distinguishable from "went quiet". */
+  private lastLivenessAtMs = Number.NEGATIVE_INFINITY;
+  private bootStage = "";
+  private bootPhase: BrowserBootPhase | undefined;
+  private bootStartedAtMs = 0;
+  private readonly locale: "en" | "de";
+  private closeRequested = false;
+  private readonly uiTurns = new TurnLedger();
+  private readonly uiTurnClock: TurnClock;
+  private deferredWork: (() => void)[] = [];
+  private deferredScheduled = false;
+  private readonly introspections = new Map<number, { readonly resolve: (json: string | null) => void; readonly timer: number }>();
+  private nextIntrospectionId = 1;
+  private readonly imageDecodes = new Map<number, AbortController>();
+
+  readonly #originalWork: OriginalBootstrapRootPort;
+  constructor(options: BrowserFrameTransportOptions) {
+    this.#originalWork = new OriginalBootstrapRootPort(options.originalWorkStock, response => this.worker.postMessage(response));
+    this.worker = options.worker;
+    this.now = options.now ?? (() => performance.now());
+    this.locale = options.boot.locale === "de" ? "de" : "en";
+    this.bootStartedAtMs = this.now();
+    const setTimer = options.setTimer ?? ((callback, delayMs) => window.setTimeout(callback, delayMs));
+    this.setTimer = setTimer;
+    this.clearTimer = options.clearTimer ?? ((handle) => window.clearTimeout(handle));
+    this.onReady = options.onReady;
+    this.onProgress = options.onProgress;
+    this.onDirectives = options.onDirectives;
+    this.onDiagnostic = options.onDiagnostic;
+    this.onFault = options.onFault;
+    this.onUiTurn = options.onUiTurn;
+    this.uiTurnClock = new TurnClock(this.now);
+    this.requestRaf = options.requestAnimationFrame;
+    this.cancelRaf = options.cancelAnimationFrame;
+    this.hostIo = options.hostIo;
+    this.interactiveJobs = new BrowserInteractiveJobPort(this.lifecycle, (message) => this.worker.postMessage(message), this.now, (detail) => this.quarantine("interactive-job-violation", detail), (callback) => void this.setTimer(callback, 0));
+    this.worker.onmessage = (event) => this.receive(event.data);
+    this.worker.onerror = (event) => { this.fail("worker-message-failed", event.message || "Worker error"); this.retireWorker(); };
+    this.worker.onmessageerror = () => this.fail("worker-message-failed", "Worker message could not be decoded");
+    this.armBootWatchdog(FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs);
+    try {
+      this.worker.postMessage({ kind: "boot", lifecycle: this.lifecycle, ...options.boot }, [options.boot.canvas]);
+    } catch (error) {
+      this.fail("worker-boot-failed", error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  /** 🫧 Coalesces replaceable input without consuming lossless credits. */
+  enqueueReplaceable(event: BrowserFrameReplaceableEvent): boolean {
+    if (!this.accepting()) return false;
+    this.generation++;
+    if (event.kind === "pointer-move") {
+      let slot = -1;
+      for (let index = 0; index < this.pointerCount; index++) {
+        if (this.pointerIds[index] === event.pointerId) {
+          slot = index;
+          break;
+        }
+      }
+      if (slot < 0) {
+        if (this.pointerCount === FRAME_WORKER_POINTER_CAPACITY) {
+          this.fail("replaceable-overflow", `pointer lane exceeded ${FRAME_WORKER_POINTER_CAPACITY} active identities`);
+          return false;
+        }
+        slot = this.pointerCount++;
+        this.pointerIds[slot] = event.pointerId;
+      }
+      this.pointerMoves[slot] = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
+    }
+    if (event.kind === "wheel") {
+      const prior = this.wheel?.kind === "wheel" ? this.wheel : undefined;
+      this.wheel = prior ? { ...event, deltaX: prior.deltaX + event.deltaX, deltaY: prior.deltaY + event.deltaY, timestampMs: this.now() } as BrowserFrameReplaceableEvent : { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
+    }
+    if (event.kind === "resize") this.resize = { ...event, timestampMs: this.now() } as BrowserFrameReplaceableEvent;
+    this.requestFrame();
+    return true;
+  }
+
+  /** 🔒 Admits a lossless input only while both item and byte credits remain. */
+  enqueueLossless(event: BrowserFrameLosslessEvent): boolean {
+    if (!this.accepting()) return false;
+    if (event.kind === "hub-document-status") return this.publishHubDocumentStatus(event.documentKey, event.remote);
+    if (event.kind === "hub-document-close") return this.publishHubDocumentStatus(event.documentKey, null);
+    if ((event.kind === "key-down" || event.kind === "key-up") && event.key.length > FRAME_WORKER_TEXT_CHUNK_CODE_UNITS) {
+      this.fail("lossless-overflow", `key payload exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
+      return false;
+    }
+    if ((event.kind === "ime-update" || event.kind === "ime-commit") && event.text.length > FRAME_WORKER_TEXT_CHUNK_CODE_UNITS) {
+      this.fail("lossless-overflow", `IME payload exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
+      return false;
+    }
+    if (event.kind === "accessibility-focus" || event.kind === "accessibility-blur" || event.kind === "accessibility-activate" || event.kind === "accessibility-value") {
+      const invalidText = (value: string) => value.length === 0 || new TextEncoder().encode(value).byteLength > FRAME_WORKER_ACCESSIBILITY_ID_BYTES || /[\u0000-\u001f\u007f]/u.test(value);
+      if (invalidText(event.windowId) || invalidText(event.nodeKey) || !Number.isSafeInteger(event.windowGeneration) || event.windowGeneration < 0 || !Number.isSafeInteger(event.nodeId) || event.nodeId < 0) {
+        this.fail("lossless-overflow", "accessibility address is outside fixed identity credits");
+        return false;
+      }
+      if (event.kind === "accessibility-value" && event.value.length > FRAME_WORKER_TEXT_CHUNK_CODE_UNITS) {
+        this.fail("lossless-overflow", `accessibility value exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
+        return false;
+      }
+    }
+    const bytes = admittedBytes(event);
+    if (this.lossless.length >= FRAME_WORKER_LOSSLESS_ITEM_CAPACITY || this.losslessBytes + bytes > FRAME_WORKER_BYTE_CAPACITY) {
+      this.fail("lossless-overflow", `lossless lane exceeded ${FRAME_WORKER_LOSSLESS_ITEM_CAPACITY} items or ${FRAME_WORKER_BYTE_CAPACITY} bytes`);
+      return false;
+    }
+    this.lossless.push({ event, bytes, streamId: this.nextStreamId++, timestampMs: this.now(), cursor: 0 });
+    this.losslessBytes += bytes;
+    this.generation++;
+    this.requestFrame();
+    return true;
+  }
+
+  publishHubDocumentStatus(documentKey: string, remote: BrowserHubDocumentRemote | null): boolean {
+    if (!this.accepting() || documentKey.length === 0 || documentKey.length > 512 || /[\u0000-\u001f\u007f]/u.test(documentKey)) return false;
+    if (!this.hubDocuments.has(documentKey) && this.hubDocuments.size >= FRAME_WORKER_HUB_DOCUMENT_CAPACITY) return false;
+    this.hubDocuments.set(documentKey, remote);
+    this.generation++;
+    this.requestFrame();
+    return true;
+  }
+
+  /** 🎬️ Creates the serial runner's bounded port for an accepted resource token. */
+  mediaPort(slotToken: string): MediaTransportPort {
+    const send = (instanceId: number, operation: BrowserMediaOperation): Promise<BrowserMediaValue> => {
+      const slot = this.mediaSlots.get(slotToken);
+      if (this.status !== "ready" || !slot || slot.appInstanceId !== instanceId) return Promise.reject(new Error("browser-media.retired"));
+      if ([...this.mediaPending.values()].some((pending) => pending.token === slotToken)) return Promise.reject(new Error("browser-media.in-flight"));
+      if (this.mediaPending.size >= BROWSER_MEDIA_CAPACITY.slots) return Promise.reject(new Error("browser-media.capacity"));
+      const requestId = ++this.mediaRequestId;
+      return new Promise((resolve, reject) => {
+        const timer = this.setTimer(() => {
+          this.mediaPending.delete(requestId);
+          this.mediaSlots.delete(slotToken);
+          try { this.worker.postMessage({ kind: "media-release", lifecycle: this.lifecycle, slotToken }); } catch {}
+          reject(new Error("browser-media.timeout"));
+        }, BROWSER_MEDIA_CAPACITY.commandTimeoutMs);
+        this.mediaPending.set(requestId, { token: slotToken, resolve, reject, timer });
+        try { this.worker.postMessage({ kind: "media-command", lifecycle: this.lifecycle, requestId, slotToken, ...operation }); }
+        catch (error) { this.mediaPending.delete(requestId); this.clearTimer(timer); reject(error instanceof Error ? error : new Error(String(error))); }
+      });
+    };
+    return {
+      submitMediaExport: async (instanceId, port, parentDocumentId, revision) => {
+        const slot = this.mediaSlots.get(slotToken);
+        if (!slot?.props.resource || port !== slot.props.resource.outputPort || parentDocumentId !== slot.parentDocumentId || revision !== BigInt(slot.props.revision)) throw new Error("browser-media.owner");
+        return await send(instanceId, { operation: "submit" }) as Awaited<ReturnType<MediaTransportPort["submitMediaExport"]>>;
+      },
+      pollMediaExport: async (instanceId, handle) => await send(instanceId, { operation: "poll", handle }) as Awaited<ReturnType<MediaTransportPort["pollMediaExport"]>>,
+      cancelMediaExport: async (instanceId, handle) => { await send(instanceId, { operation: "cancel", handle }); },
+      takeMediaExportChunk: async (instanceId, handle) => await send(instanceId, { operation: "take", handle }) as Awaited<ReturnType<MediaTransportPort["takeMediaExportChunk"]>>,
+    };
+  }
+
+  private acceptMediaSlots(value: unknown): readonly PresentedMediaSlot[] {
+    const slots = parsePresentedMediaSlots(value);
+    const next = new Map(slots.map((slot) => [slot.token, slot]));
+    for (const [requestId, pending] of this.mediaPending) {
+      const before = this.mediaSlots.get(pending.token);
+      const after = next.get(pending.token);
+      if (!before || !after || mediaSlotAuthorityKey(before) !== mediaSlotAuthorityKey(after)) {
+        this.mediaPending.delete(requestId);
+        this.clearTimer(pending.timer);
+        pending.reject(new Error("browser-media.retired"));
+      }
+    }
+    this.mediaSlots = next;
+    return slots;
+  }
+
+  /** 🎞️ Coalesces frame requests and schedules at most one UI rAF directive turn. */
+  requestFrame(): void {
+    if (!this.accepting()) return;
+    this.clearDeadlineTimer();
+    this.frameRequested = true;
+    if (this.requestRaf && this.rafHandle === undefined) {
+      this.rafHandle = this.requestRaf((timestampMs) => {
+        this.rafHandle = undefined;
+        this.flush(timestampMs);
+      });
+    }
+  }
+
+  /** 📤 Transfers one bounded batch; never executes frame work on the caller. */
+  flush(timestampMs = this.now()): boolean {
+    if (this.status !== "ready" || this.inFlight || !this.frameRequested) return false;
+    const replaceable: BrowserFrameReplaceableEvent[] = [];
+    for (let index = 0; index < this.pointerCount; index++) {
+      const event = this.pointerMoves[index];
+      if (event) replaceable.push(event);
+    }
+    if (this.wheel) replaceable.push(this.wheel);
+    if (this.resize) replaceable.push(this.resize);
+    const lossless = this.takeLosslessWireBatch();
+    this.pointerMoves.fill(undefined);
+    this.pointerCount = 0;
+    this.wheel = undefined;
+    this.resize = undefined;
+    this.frameRequested = this.lossless.length > 0 || this.hubDocuments.size > 0;
+    try {
+      const inputSequence = nextFrameSequence(this.inputSequence);
+      this.inputSequence = inputSequence;
+      this.inFlight = true;
+      this.uiTurnClock.enter();
+      this.worker.postMessage({ kind: "batch", lifecycle: this.lifecycle, inputSequence, generation: this.generation, timestampMs, replaceable, lossless });
+      this.observeUiTurn("frame-transfer", this.uiTurnClock.leave());
+      return true;
+    } catch (error) {
+      this.uiTurnClock.leave();
+      this.fail("worker-message-failed", error instanceof Error ? error.message : String(error));
+      return false;
+    }
+  }
+
+  /** 🎓️ Publishes the owning host's live introduction policy and schedules its next frame. */
+  setHostIntroductionSuppressed(suppressed: boolean): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    this.worker.postMessage({ kind: "host-introduction-policy", lifecycle: this.lifecycle, suppressed });
+    this.requestFrame();
+  }
+
+  /** 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a
+   * theme flip must never fault a surface, and the Worker simply keeps the last value it was given.
+   * The frame it requests afterwards is what makes the change visible — the renderer re-resolves its
+   * theme every frame build, so nothing else has to be invalidated. */
+  setHostAppearance(appearance: WgpuHostAppearance): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-appearance", lifecycle: this.lifecycle, appearance });
+      this.requestFrame();
+    } catch {
+      /* a Worker that cannot take an appearance change is already failing on its own channel */
+    }
+  }
+
+  /** 🫥️ Tells the Worker the page was hidden. Posted at once, never batched: a hidden page gets no animation frame, so
+   * the Worker runs its own frame turn to send every typing run's `hidden` commit. Fire-and-forget like {@link setHostAppearance}. */
+  setHostPageHidden(): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-page-hidden", lifecycle: this.lifecycle });
+    } catch {
+      /* a Worker that cannot take the hidden page is already failing on its own channel */
+    }
+  }
+
+  /** 🫥️ Tells the Worker the page's `window` lost focus. Posted at once, never batched, fire-and-forget like
+   * {@link setHostPageHidden}. */
+  setHostWindowBlur(): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-window-blur", lifecycle: this.lifecycle });
+    } catch {
+      /* a Worker that cannot take the window blur is already failing on its own channel */
+    }
+  }
+
+  /** 🛰️ Hands the page's latest agent-bridge offer to the Worker. Fire-and-forget like {@link setHostAppearance}:
+   * an offer that cannot cross leaves the bridge `Disabled`, never a faulted surface. */
+  setHostAgentBridge(offer: { readonly url: string; readonly admissionProof: string } | null): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-agent-bridge", lifecycle: this.lifecycle, offer });
+      this.requestFrame();
+    } catch {
+      /* a Worker that cannot take an offer is already failing on its own channel */
+    }
+  }
+
+  /** 🗄️ Re-seeds the Worker's synchronous preference cache from the page's store. Fire-and-forget
+   * for the same reason {@link setHostAppearance} is: a preference another tab changed must never fault
+   * a surface. It requests no frame — nothing repaints on a storage change by itself; the next read of
+   * the affected key is what observes it. */
+  setHostStorage(storage: WgpuHostStorageSnapshot): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-storage", lifecycle: this.lifecycle, storage });
+    } catch {
+      /* a Worker that cannot take a storage change is already failing on its own channel */
+    }
+  }
+
+  /** 🔬️ Requests one read-only introspection dump from the frame Worker's renderer thread-local.
+   * Resolves `null` — never rejects and never faults the surface — when the Worker is not ready, when the
+   * fixed in-flight credit is exhausted, or when the answer misses `FRAME_WORKER_INTROSPECTION_TIMEOUT_MS`,
+   * so a diagnostic can distinguish "no hooks" from "empty dump" without ever taking the shell down. The
+   * batch flushed first is what makes the answer meaningful: message order guarantees the Worker has ticked
+   * at least one frame before it reads the retained tree. */
+  introspect(probe: BrowserFrameIntrospectionProbe, windowId?: string): Promise<string | null> {
+    if (this.status !== "ready" || this.introspections.size >= FRAME_WORKER_INTROSPECTION_CAPACITY) return Promise.resolve(null);
+    const requestId = this.nextIntrospectionId++;
+    this.requestFrame();
+    this.flush();
+    return new Promise<string | null>((resolve) => {
+      const timer = this.setTimer(() => {
+        this.introspections.delete(requestId);
+        resolve(null);
+      }, FRAME_WORKER_INTROSPECTION_TIMEOUT_MS);
+      this.introspections.set(requestId, { resolve, timer });
+      try {
+        this.worker.postMessage({ kind: "introspect", lifecycle: this.lifecycle, requestId, probe, ...(windowId === undefined ? {} : { windowId }) });
+      } catch {
+        this.introspections.delete(requestId);
+        this.clearTimer(timer);
+        resolve(null);
+      }
+    });
+  }
+
+  /** 🛑 Cancels queued work and terminates the dedicated Worker. */
+  close(): void {
+    if (this.status === "closed") return;
+    if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
+    if (this.rafHandle !== undefined) this.cancelRaf?.(this.rafHandle);
+    this.requestWorkerClose();
+    this.interactiveJobs.close();
+    this.drainInteractiveJobs();
+    this.clearQueues();
+    this.status = "closed";
+  }
+
+  /** ⏱️ Prices ONE UI turn and records it. Never a verdict: an overrun cannot quarantine, fail or
+   * close this surface, because on the UI isolate a wall reading over the ceiling is as often the machine
+   * descheduling a hidden pane as it is the turn's own work — the attribution lives in `TurnLedger`'s
+   * sustained-run law, and its only consequence is deferred cadence. Answers whether the turn was
+   * admitted, so a caller may choose to defer its remaining work to the next frame. */
+  observeUiTurn(site: string, executingMs: number | undefined): boolean {
+    const outcome = this.uiTurns.admit(site, executingMs);
+    if (outcome.verdict !== "admitted" && outcome.verdict !== "clock-fault") this.onUiTurn?.(outcome);
+    return outcome.verdict === "admitted" || outcome.verdict === "clock-fault";
+  }
+
+  /** 🐢️ Whether the surface is running its turns on deferred cadence after a sustained run of
+   * overruns. Clears itself on the first turn that fits the ceiling again. */
+  degraded(): boolean {
+    return this.uiTurns.degraded();
+  }
+
+  /** 🪂️ The surface's real fallback state — what a fault banner must report instead of claiming
+   * a UI-thread frame path was or was not attempted. */
+  fallbackState(): BrowserFrameFallbackState {
+    return {
+      surface: this.status,
+      uiThreadFrames: "unavailable-offscreen-transferred",
+      workerTerminated: this.workerRetired,
+      inputAccepted: this.accepting(),
+      deferredCadence: this.uiTurns.degraded(),
+      uiTurns: this.uiTurns.snapshot(),
+      workerSteps: { ...this.workerSteps, sustainedOverruns: this.workerSteps.sustainedOverruns + this.workerStepOverruns },
+      bootPhase: this.bootPhase,
+      bootPhaseElapsedMs: this.bootPhase ? Math.max(0, this.now() - this.bootPhase.enteredAtMs) : 0,
+      bootStage: this.bootStage,
+      bootSilentForMs: Math.max(0, this.now() - (Number.isFinite(this.lastLivenessAtMs) ? this.lastLivenessAtMs : this.bootStartedAtMs)),
+    };
+  }
+
+  /** 📊 Returns bounded fixed-ring p99 telemetry outside the event callback path. */
+  uiTurnP99Ms(): number {
+    return this.uiTurns.p99Ms();
+  }
+
+  /** ⏭️ Yields and continues: hands the remainder of an overrunning turn to the next macrotask so
+   * the isolate can paint and pump input between the pieces. Bounded by the caller's own queue — the
+   * transport enqueues at most one continuation per hook site. */
+  private deferToNextTurn(work: () => void): void {
+    this.deferredWork.push(work);
+    if (this.deferredScheduled) return;
+    this.deferredScheduled = true;
+    void this.setTimer(() => {
+      this.deferredScheduled = false;
+      const pending = this.deferredWork;
+      this.deferredWork = [];
+      for (const item of pending) {
+        if (this.status === "closed") return;
+        this.uiTurnClock.enter();
+        try {
+          item();
+        } catch (error) {
+          this.uiTurnClock.leave();
+          this.fail("ui-hook-failed", `deferred UI turn threw: ${error instanceof Error ? error.message : String(error)}`);
+          return;
+        }
+        this.observeUiTurn("deferred-hook", this.uiTurnClock.leave());
+      }
+    }, 0);
+  }
+
+  /** 🫀️ Arms ONE self-rescheduling watchdog wake. Nothing re-arms it on every inbound message any
+   * more: a message only stamps {@link lastLivenessAtMs}, and the wake below re-reads the whole window and
+   * schedules itself for the exact remaining time. One timer for the whole boot instead of one per
+   * `boot-progress`, and the deadline is exact rather than a whole window late. */
+  private armBootWatchdog(delayMs: number): void {
+    if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
+    this.bootTimer = this.setTimer(() => this.judgeBootLiveness(), Math.max(0, delayMs));
+  }
+
+  /** ⚖️ One watchdog window, decided by `../🫀️boot-liveness/🟦️.ts` and never here — so the same
+   * verdict replays from a timeline with no transport in the picture. A declared long phase inside its own
+   * ceiling is BUSY and re-arms; only an undeclared silence past the ceiling is a wedged event loop, and
+   * the fault it raises names the phase, its elapsed and its ceiling in the reader's tongue. */
+  private judgeBootLiveness(): void {
+    this.bootTimer = undefined;
+    if (this.status !== "booting") return;
+    const nowMs = this.now();
+    const window = { nowMs, lastLivenessAtMs: this.lastLivenessAtMs, silenceTimeoutMs: FRAME_WORKER_BOOT_LIVENESS_POLICY.silenceTimeoutMs, phase: this.bootPhase };
+    const decision = evaluateBrowserBootLiveness(window);
+    if (!decision.terminate) {
+      this.armBootWatchdog(decision.rearmInMs);
+      return;
+    }
+    const detail = describeBrowserBootSilence({ heard: Number.isFinite(this.lastLivenessAtMs), lastStage: this.bootStage, silentForMs: decision.silentForMs, silenceTimeoutMs: window.silenceTimeoutMs, phase: this.bootPhase, phaseElapsedMs: decision.phaseElapsedMs }, this.locale);
+    this.fail("worker-boot-timeout", detail);
+  }
+
+  /** 🫀️ Stamps the instant the Worker last proved it was running. */
+  private witnessWorker(): void {
+    this.lastLivenessAtMs = this.now();
+  }
+
+  private accepting(): boolean {
+    return this.status === "booting" || this.status === "ready";
+  }
+
+  /** 🧵️ Spawns one shard worker HERE, on the UI isolate, and hands the frame worker a
+   * `MessagePort` onto it. The frame worker cannot construct these itself: a nested dedicated worker
+   * fails to load outright in some embedded browsers (measured — even a one-line worker), which
+   * surfaced as four shards dying with a message-less `error` event and `create_app promise failed:
+   * shard 0 terminated`. Messages are relayed verbatim in both directions, and a worker-level `error`
+   * is forwarded as a `shard-worker-error` frame so `ShardClient`'s own failure ladder still runs. */
+  private spawnShardWorker(shardIndex: number, url: string): void {
+    this.terminateShardWorker(shardIndex);
+    const worker = new Worker(stampShardWorkerDiagnostics(url), { type: "module" });
+    const channel = new MessageChannel();
+    worker.onmessage = (event: MessageEvent) => channel.port1.postMessage(event.data);
+    worker.onerror = (event: ErrorEvent) => channel.port1.postMessage({ kind: "shard-worker-error", message: event.message ?? "", filename: event.filename ?? "", lineno: event.lineno ?? 0 });
+    channel.port1.onmessage = (event: MessageEvent) => worker.postMessage(event.data);
+    channel.port1.start();
+    this.shardWorkers.set(shardIndex, worker);
+    this.shardChannels.set(shardIndex, channel.port1);
+    this.worker.postMessage({ kind: "shard-port", shardIndex, port: channel.port2 }, [channel.port2]);
+  }
+
+  private terminateShardWorker(shardIndex: number): void {
+    const existing = this.shardWorkers.get(shardIndex);
+    if (!existing) return;
+    this.shardWorkers.delete(shardIndex);
+    const channel = this.shardChannels.get(shardIndex);
+    this.shardChannels.delete(shardIndex);
+    if (channel) { channel.onmessage = null; channel.close(); }
+    existing.onmessage = null;
+    existing.onerror = null;
+    existing.terminate();
+  }
+
+  /** 🚪️ Runs one Worker-issued file-door request on THIS isolate — the only one with a `document` — and
+   * answers it by `requestId`. A refusal is named on the wire so the shell can log why the user saw
+   * nothing, instead of the silent `None` its own `web_sys::window()` used to return inside the Worker. */
+  private answerHostIo(message: Extract<BrowserFrameWorkerMessage, { readonly kind: "host-io" }>): void {
+    const reply = (json: string | null, detail?: string): void => {
+      try {
+        this.worker.postMessage({ kind: "host-io-result", lifecycle: this.lifecycle, requestId: message.requestId, json, detail });
+      } catch {}
+    };
+    if (!this.hostIo) {
+      reply(null, "wgpu-host-io: this transport was constructed without a page host-io door");
+      return;
+    }
+    void this.hostIo(message.request, message.bytes).then(
+      (json) => reply(json),
+      (error: unknown) => reply(null, error instanceof Error ? error.message : String(error)),
+    );
+  }
+
+  private answerImageDecode(message: Extract<BrowserFrameWorkerMessage, { readonly kind: "image-decode" }>): void {
+    const reply = (bitmap: ImageBitmap | null, detail?: string): void => {
+      if (!this.accepting()) {
+        bitmap?.close();
+        return;
+      }
+      try {
+        this.worker.postMessage({ kind: "image-decode-result", lifecycle: this.lifecycle, requestId: message.requestId, bitmap, ...(detail === undefined ? {} : { detail }) }, bitmap ? [bitmap] : []);
+      } catch {
+        bitmap?.close();
+      }
+    };
+    if (!this.accepting()) return;
+    const expected = Number.isSafeInteger(message.dimensions.width) && Number.isSafeInteger(message.dimensions.height)
+      ? message.dimensions.width * message.dimensions.height * 4
+      : Number.POSITIVE_INFINITY;
+    if (this.imageDecodes.size >= 1 || message.source.byteLength < 1 || message.source.byteLength > FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY || expected < 4 || expected > 64 * 1024 * 1024) {
+      reply(null, "reference-image-decode-credits");
+      return;
+    }
+    const controller = new AbortController();
+    this.imageDecodes.set(message.requestId, controller);
+    const source = new Blob([message.source], { type: message.dimensions.mediaType });
+    void decodeReferenceImageOnPage(source, message.dimensions, controller.signal).then(
+      (bitmap) => reply(bitmap),
+      (error: unknown) => reply(null, error instanceof Error ? `${error.name}: ${error.message}` : String(error)),
+    ).finally(() => {
+      if (this.imageDecodes.get(message.requestId) === controller) this.imageDecodes.delete(message.requestId);
+    });
+  }
+
+  private receive(message: BrowserFrameWorkerMessage): void {
+    if (message.kind === "original-stock-request") { void this.#originalWork.receive(message); return; }
+    if (message.kind === "shard-spawn") {
+      if (this.status !== "booting" && this.status !== "ready") return;
+      this.runUiHook("shard-spawn", () => this.spawnShardWorker(message.shardIndex, message.url));
+      return;
+    }
+    if (message.kind === "shard-terminate") {
+      this.terminateShardWorker(message.shardIndex);
+      return;
+    }
+    if (message.lifecycle !== this.lifecycle) return;
+    if (message.kind === "job-input-pull" || message.kind === "job-output-page" || message.kind === "job-terminal") {
+      this.interactiveJobs.receive(message);
+      return;
+    }
+    if (message.kind === "host-io") {
+      this.answerHostIo(message);
+      return;
+    }
+    if (message.kind === "image-decode") {
+      this.answerImageDecode(message);
+      return;
+    }
+    if (message.kind === "image-decode-cancel") {
+      this.imageDecodes.get(message.requestId)?.abort();
+      return;
+    }
+    if (message.kind === "media-result") {
+      const pending = this.mediaPending.get(message.requestId);
+      if (!pending || pending.token !== message.slotToken) return;
+      this.mediaPending.delete(message.requestId);
+      this.clearTimer(pending.timer);
+      if (message.fault !== undefined) pending.reject(new Error(message.fault));
+      else if (message.result !== undefined) pending.resolve(message.result);
+      else pending.reject(new Error("browser-media.missing-result"));
+      return;
+    }
+    if (message.kind === "introspection") {
+      const pending = this.introspections.get(message.requestId);
+      if (!pending) return;
+      this.introspections.delete(message.requestId);
+      this.clearTimer(pending.timer);
+      pending.resolve(message.json);
+      return;
+    }
+    if (message.kind === "diagnostic") {
+      this.runUiHook("diagnostic-hook", () => this.onDiagnostic?.({ channel: message.channel, generation: message.generation, frameSequence: message.frameSequence, json: message.json }));
+      return;
+    }
+    if (message.kind === "closed") {
+      this.retireWorker();
+      return;
+    }
+    if (this.status === "closed" || this.status === "faulted" || this.status === "quarantined") return;
+    if (message.kind === "booted") {
+      if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
+      this.bootTimer = undefined;
+      this.bootPhase = undefined;
+      this.witnessWorker();
+      this.status = "ready";
+      this.interactiveJobs.ready();
+      if (!this.runUiHook("ready-hook", () => this.onReady?.())) return;
+      this.requestFrame();
+      return;
+    }
+    if (message.kind === "boot-liveness") {
+      if (this.status === "booting") this.witnessWorker();
+      return;
+    }
+    if (message.kind === "boot-phase") {
+      if (this.status !== "booting") return;
+      this.witnessWorker();
+      if (message.state === "enter") this.bootPhase = { phase: message.phase, ceilingMs: bootPhaseCeilingMs(message.phase), enteredAtMs: this.now() };
+      else if (this.bootPhase?.phase === message.phase) this.bootPhase = undefined;
+      return;
+    }
+    if (message.kind === "boot-progress") {
+      if (this.status !== "booting") return;
+      this.witnessWorker();
+      this.bootStage = message.stage;
+      this.workerSteps = message.worker;
+      const report = () => this.onProgress?.(message.stage, message.progress, message.worker);
+      if (this.degraded() || message.worker.degraded) this.deferToNextTurn(report);
+      else this.runUiHook("progress-hook", report);
+      return;
+    }
+    if (message.kind === "wake") {
+      this.requestFrame();
+      return;
+    }
+    if (message.kind === "fault") {
+      this.fail(this.status === "booting" ? "worker-boot-failed" : "worker-runtime-failed", `${message.code}: ${message.detail}`,message.originalFailure);
+      return;
+    }
+    if (message.kind === "batch-accepted") {
+      if (message.generation > this.generation || message.inputSequence > this.inputSequence) {
+        this.fail("protocol-violation", `Worker accepted future input ${message.inputSequence}/${message.generation} while UI is ${this.inputSequence}/${this.generation}`);
+        return;
+      }
+      if (message.inputSequence <= this.acceptedInputSequence) return;
+      this.acceptedInputSequence = message.inputSequence;
+      if (message.inputSequence === this.inputSequence) this.inFlight = false;
+      if (this.frameRequested || message.generation < this.generation) this.requestFrame();
+      return;
+    }
+    if (message.generation > this.generation) {
+      this.fail("protocol-violation", `Worker returned future generation ${message.generation} while UI generation is ${this.generation}`);
+      return;
+    }
+    if (message.frameSequence <= this.acceptedFrameSequence) return;
+    this.acceptedFrameSequence = message.frameSequence;
+    if (message.workerStepVerdict === "sustained-overrun") this.workerStepOverruns++;
+    if (message.quarantined) {
+      // 🏷️ Every renderer fault code keeps its OWN name. `frame-credits` used to land on
+      // `worker-step-overrun`, so a frame the runtime refused to build was reported as a slow step and
+      // read as a budget problem for days (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+      const code = message.faultCode === "present-failed" ? "worker-present-failed" : message.faultCode === "text-input-failed" ? "worker-input-failed" : message.faultCode === "frame-credits" ? "worker-frame-failed" : "worker-step-overrun";
+      this.quarantine(code, message.faultDetail ?? `worker frame step executed ${message.workerExecutingMs.toFixed(3)} ms`);
+      return;
+    }
+    if (message.generation === this.generation) {
+      let mediaSlots: readonly PresentedMediaSlot[];
+      try { mediaSlots = this.acceptMediaSlots(message.mediaSlots); }
+      catch (error) { this.fail("protocol-violation", error instanceof Error ? error.message : String(error)); return; }
+      if (!this.runUiHook("directive-hook", () => this.onDirectives?.({ mediaSlots, cursor: message.cursor, fullscreen: message.fullscreen, generation: message.generation, workerDurationMs: message.workerDurationMs }))) return;
+    }
+    if (message.requestFrame || this.frameRequested || message.generation < this.generation) this.requestFrame();
+    else if (message.generation === this.generation) this.replaceDeadlineTimer(message.nextDeadlineDelayMs);
+  }
+
+  private clearDeadlineTimer(): void {
+    if (this.deadlineTimer !== undefined) this.clearTimer(this.deadlineTimer);
+    this.deadlineTimer = undefined;
+  }
+
+  private replaceDeadlineTimer(delayMs: number | null): void {
+    this.clearDeadlineTimer();
+    if (delayMs === null || !Number.isFinite(delayMs) || delayMs < 0) return;
+    this.deadlineTimer = this.setTimer(() => {
+      this.deadlineTimer = undefined;
+      this.requestFrame();
+    }, Math.min(Math.ceil(delayMs), 2_147_483_647));
+  }
+
+  private fail(code: BrowserFrameWorkerFaultCode, detail: string,originalFailure?:{readonly format:"pack";readonly bytes:Uint8Array}): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    if (this.bootTimer !== undefined) this.clearTimer(this.bootTimer);
+    if (this.rafHandle !== undefined) this.cancelRaf?.(this.rafHandle);
+    this.requestWorkerClose();
+    this.interactiveJobs.close();
+    this.drainInteractiveJobs();
+    this.clearQueues();
+    this.fault = { code, detail,originalFailure };
+    this.status = "faulted";
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback,originalFailure));
+  }
+
+  private quarantine(code: BrowserFrameWorkerFaultCode, detail: string): void {
+    if (this.status !== "ready") return;
+    if (this.rafHandle !== undefined) this.cancelRaf?.(this.rafHandle);
+    this.interactiveJobs.quarantineFromOwner();
+    this.drainInteractiveJobs();
+    this.requestWorkerClose();
+    this.clearQueues();
+    this.fault = { code, detail };
+    this.status = "quarantined";
+    const fallback = this.fallbackState();
+    this.runUiHook("fault-hook", () => this.onFault?.(code, detail, fallback));
+  }
+
+  /** 🪝️ Runs one external UI hook inside the executing clock. A THROW is a real defect and still
+   * fails the surface (`ui-hook-failed`); a budget breach is only recorded, and the answer says whether
+   * the turn fitted so the caller can defer what is left. */
+  private runUiHook(site: string, callback: () => void): boolean {
+    this.uiTurnClock.enter();
+    try {
+      callback();
+    } catch (error) {
+      this.uiTurnClock.leave();
+      const detail = `${site} threw: ${error instanceof Error ? error.message : String(error)}`;
+      if (this.status !== "faulted" && this.status !== "closed") this.fail("ui-hook-failed", detail);
+      return false;
+    }
+    this.observeUiTurn(site, this.uiTurnClock.leave());
+    return true;
+  }
+
+  private clearQueues(): void {
+    for (const pending of this.mediaPending.values()) { this.clearTimer(pending.timer); pending.reject(new Error("browser-media.closed")); }
+    this.mediaPending.clear();
+    this.mediaSlots.clear();
+    this.clearDeadlineTimer();
+    for (const controller of this.imageDecodes.values()) controller.abort();
+    this.imageDecodes.clear();
+    for (const pending of this.introspections.values()) {
+      this.clearTimer(pending.timer);
+      pending.resolve(null);
+    }
+    this.introspections.clear();
+    this.pointerMoves.fill(undefined);
+    this.pointerCount = 0;
+    this.wheel = undefined;
+    this.resize = undefined;
+    const retiredLossless = this.lossless;
+    this.lossless = [];
+    const drain = () => {
+      retiredLossless.pop();
+      if (retiredLossless.length > 0) this.setTimer(drain, 0);
+    };
+    if (retiredLossless.length > 0) this.setTimer(drain, 0);
+    this.losslessBytes = 0;
+    this.hubDocuments.clear();
+    this.frameRequested = false;
+    this.inFlight = false;
+  }
+
+  private drainInteractiveJobs(): void {
+    if (this.interactiveJobs.closeStep()) return;
+    this.setTimer(() => this.drainInteractiveJobs(), 0);
+  }
+
+  private requestWorkerClose(): void {
+    if (this.closeRequested) return;
+    this.closeRequested = true;
+    try {
+      this.worker.postMessage({ kind: "close", lifecycle: this.lifecycle });
+    } catch { this.retireWorker(); }
+  }
+
+  private retireWorker(): void {
+    if (this.workerRetired) return;
+    this.workerRetired = true;
+    this.worker.terminate();
+    const drain = () => {
+      const next = this.shardWorkers.keys().next();
+      if (next.done) { this.resolveRetirement(); return; }
+      this.terminateShardWorker(next.value);
+      this.setTimer(drain, 0);
+    };
+    drain();
+  }
+
+  private takeLosslessWireBatch(): BrowserFrameWireLosslessEvent[] {
+    const batch: BrowserFrameWireLosslessEvent[] = [];
+    let budget = FRAME_WORKER_MESSAGE_BYTE_CAPACITY - 2048;
+    for (const [documentKey, remote] of this.hubDocuments) {
+      const bytes = 2 * documentKey.length + 192;
+      if (batch.length >= 16 || budget <= bytes) break;
+      batch.push(remote === null ? { kind: "hub-document-close", documentKey, timestampMs: this.now() } : { kind: "hub-document-status", documentKey, remote, timestampMs: this.now() });
+      this.hubDocuments.delete(documentKey);
+      budget -= bytes;
+    }
+    while (batch.length < 16 && this.lossless.length > 0 && budget > 256) {
+      const queued = this.lossless[0]!;
+      const event = queued.event;
+      if (event.kind !== "text" && event.kind !== "paste" && event.kind !== "paste-image-data-url" && event.kind !== "ime-update" && event.kind !== "ime-commit") {
+        batch.push({ ...event, timestampMs: queued.timestampMs } as BrowserFrameWireLosslessEvent);
+        budget -= Math.min(queued.bytes, 512);
+        this.lossless.shift();
+        this.losslessBytes -= queued.bytes;
+        continue;
+      }
+      const remaining = event.text.length - queued.cursor;
+      const take = Math.min(remaining, FRAME_WORKER_TEXT_CHUNK_CODE_UNITS, Math.max(1, Math.floor((budget - 512) / 6)));
+      let end = queued.cursor + take;
+      if (end < event.text.length && isHighSurrogate(event.text.charCodeAt(end - 1)) && isLowSurrogate(event.text.charCodeAt(end))) end--;
+      const final = end === event.text.length;
+      batch.push({ kind: "text-chunk", streamId: queued.streamId, target: event.kind, text: event.text.slice(queued.cursor, end), totalBytes: 3 * event.text.length, final, timestampMs: queued.timestampMs, ...(event.kind === "ime-update" ? { cursor: event.cursor } : {}) } as BrowserFrameWireLosslessEvent);
+      queued.cursor = end;
+      budget -= 6 * take + 512;
+      if (final) {
+        this.lossless.shift();
+        this.losslessBytes -= queued.bytes;
+      }
+    }
+    return batch;
+  }
+}
+
+function admittedBytes(event: BrowserFrameLosslessEvent): number {
+  if (event.kind === "text" || event.kind === "paste" || event.kind === "paste-image-data-url" || event.kind === "ime-update" || event.kind === "ime-commit") return 3 * event.text.length + 128;
+  if (event.kind === "key-down" || event.kind === "key-up") return 2 * event.key.length + 128;
+  if (event.kind === "hub-document-status" || event.kind === "hub-document-close") return 2 * event.documentKey.length + 192;
+  if (event.kind === "accessibility-value") return 2 * (event.windowId.length + event.nodeKey.length + event.value.length) + 192;
+  if (event.kind === "accessibility-focus" || event.kind === "accessibility-blur" || event.kind === "accessibility-activate") return 2 * (event.windowId.length + event.nodeKey.length) + 192;
+  return 128;
+}
+
+function isHighSurrogate(value: number): boolean {
+  return value >= 0xd800 && value <= 0xdbff;
+}
+
+function isLowSurrogate(value: number): boolean {
+  return value >= 0xdc00 && value <= 0xdfff;
+}
+// #endregion 📮️Transport

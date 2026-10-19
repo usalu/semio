@@ -11,6 +11,7 @@ package cli
 import (
 	json "encoding/json"
 	filepath "path/filepath"
+	sort "sort"
 	strings "strings"
 	time "time"
 
@@ -259,7 +260,7 @@ func findSectionForLine(sections []model.Section, line int) string {
 // 🔹️ensureRepoResolver lazily initializes the repoResolverInstance on first use.
 func ensureRepoResolver() {
 	if graphqlpkg.RepoResolverInstance == nil {
-		graphqlpkg.RepoResolverInstance = graphqlpkg.NewResolver(workspace.RootDir)
+		graphqlpkg.RepoResolverInstance = graphqlpkg.NewResolver(workspace.GetRootDir())
 	}
 }
 
@@ -299,10 +300,17 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) workspace.ToolResult {
 	return workspace.ToolResult{Output: *output, Data: report}
 }
 
+// 🔠️sortedRegisteredPolicies returns the registered policies ordered by identifier, the order every surface renders.
+func sortedRegisteredPolicies() []statutes.PolicyDef {
+	policies := append([]statutes.PolicyDef(nil), statutes.GetRegisteredPolicies()...)
+	sort.SliceStable(policies, func(left, right int) bool { return policies[left].ID < policies[right].ID })
+	return policies
+}
+
 // 📜️ToolPolicyList MUST complete the operation successfully.
 // Uses registered policy metadata only — avoids building the monorepo tree.
 func ToolPolicyList() workspace.ToolResult {
-	allPolicies := statutes.GetRegisteredPolicies()
+	allPolicies := sortedRegisteredPolicies()
 	var sb strings.Builder
 	for _, p := range allPolicies {
 		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
@@ -315,7 +323,7 @@ func ToolPolicyList() workspace.ToolResult {
 
 // 🌳️ToolPolicyTree MUST complete the operation successfully.
 func ToolPolicyTree() workspace.ToolResult {
-	allPolicies := statutes.GetRegisteredPolicies()
+	allPolicies := sortedRegisteredPolicies()
 	var sb strings.Builder
 	for _, p := range allPolicies {
 		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}

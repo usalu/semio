@@ -1,6 +1,5 @@
 //! 🔀️ Host-action bridge of the BIM editor: folds the shell `{action, args}` vocabulary into the closed `BimCommand` enum. See [`super`].
 
-use crate::editor::bim::panels::outliner as outliner_panel;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::Fault;
 //#region 🔖️ActionBridge
@@ -118,7 +117,7 @@ pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<BimC
         "createView" => BimCommand::CreateView(decode(action, fold(args, &[("type", "kind"), ("value", "kind"), ("parent_id", "parent")], &[("parent", text("")), ("name", text(""))]))?),
         "deleteSelection" => BimCommand::DeleteSelection(decode(action, ids_as_list(fold(args, &[("id", "ids")], &[("ids", DslValue::Array(Vec::new()))])))?),
         "renameEntity" => BimCommand::RenameEntity(decode(action, fold(args, &[("value", "name")], &[]))?),
-        "setField" => BimCommand::SetField(decode(action, ids_as_list(value_as_text(fold(args, &[("id", "ids"), (outliner_panel::DRAG_ELEMENT_MIME, "ids")], &[("ids", DslValue::Array(Vec::new()))]))))?),
+        "setField" => BimCommand::SetField(decode(action, ids_as_list(value_as_text(fold(args, &[("id", "ids"), (semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::DRAG_ELEMENT_MIME, "ids")], &[("ids", DslValue::Array(Vec::new()))]))))?),
         "setView" => BimCommand::SetView(decode(action, value_as_text(fold(args, &[], &[("value", text(""))])))?),
         "editFamily" => BimCommand::EditFamily(decode(action, fold(args, &[], &[("key", text("")), ("value", text(""))]))?),
         "editSchedule" => BimCommand::EditSchedule(decode(action, fold(args, &[], &[("key", text("")), ("value", text(""))]))?),

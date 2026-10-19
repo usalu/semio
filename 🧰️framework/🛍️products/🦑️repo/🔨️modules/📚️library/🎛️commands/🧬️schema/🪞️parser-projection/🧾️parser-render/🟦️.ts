@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
 import { BARE_TYPE_NAME, EXPORT_NAME, asDict, has, isDict, jsonString, jsonValue, keyText, orderedEntries, truthy, type Dict } from "../🔡️json-text/🟦️.ts";
-import { aliasMembers, aliasText, aliasVariants, declaredTypes, definesParser, importsParser, memberTypes, normalizeType, reexportedBinding, splitTop, unionMembers } from "../📖️declared-types/🟦️.ts";
+import { aliasMembers, aliasText, aliasVariants, declaredTypes, definesParser, importsParser, instantiatesGeneric, memberTypes, normalizeType, reexportedBinding, splitTop, unionMembers } from "../📖️declared-types/🟦️.ts";
 import { dirname, resolve } from "node:path";
 import { isAny, nullableOf } from "../📐️type-render/🟦️.ts";
 
@@ -347,7 +347,7 @@ function alternativesExpression(alternatives: readonly Dict[], access: string, p
 //#endregion 🔖️Objects
 
 //#region 🔖️Expressions
-/** 🧬️ The parser expression of one schema node. `path` is the INNER text of a template literal (for example `${at}.edits`), so an array element extends it positionally without nesting one template literal in another; `depth` names the row, item and index bindings of nested levels so an inner level never shadows an outer one. */
+/** 🧬️ The parser expression of one schema node. `path` is the INNER text of a template literal (for example `${at}.edits`), so an array element extends it positionally without nesting one template literal in another; `depth` names the row, item and index bindings of nested levels so an inner level never shadows an outer one. A node that states no structure (or any value) whose declared type instantiates a generic of the codebase (`Box<Point>`) has no expression: an opaque read cannot produce that type, so the parser is refused instead of emitted with a type error or a cast. */
 export function parserExpression(node: Dict, access: string, path: string, context: Context, depth = 0, declared?: string): string | undefined {
   const helper = context.helper;
   const at = `\`${path}\``;
@@ -355,6 +355,7 @@ export function parserExpression(node: Dict, access: string, path: string, conte
   if (declared !== undefined && (opaque(node) || isAny(node) || (node.type === "array" && !Array.isArray(node.items) && !fixedItems(node) && declared.startsWith("[") && declared.endsWith("]")))) {
     const typed = typedExpression(declared, access, path, context, depth);
     if (typed !== undefined) return typed;
+    if (instantiatesGeneric(declared, (name) => aliasText(context.declared, name))) return undefined;
   }
   const nullable = nullableOf(node);
   if (nullable !== undefined) {

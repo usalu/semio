@@ -1,2 +1,6 @@
 export { readCargoTestPolicyV1, partitionNextestExecutionFilters, cargoTestPlanV1, cargoTestBuildLeaseIdentityV1, runCargoTestsV1, cargoLintPlanV1, runCargoLintV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 export type { CargoTestPolicyV1, CargoTestRequestV1, CargoTestStepV1, CargoTestExecutionPortV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+export { ARTIFACT_PACKAGE_PROVIDER_V1, runArtifactRustPackageMain, runArtifactRustPackagesTests, runArtifactRustTests } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+export type { ArtifactPackageProviderV1, ArtifactRustPackageOptions, ArtifactTwinSelfTest } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+export { CARGO_ADMISSION_PROVIDER_V1, runAdmittedCargoTestsV1, runAdmittedCargoLintV1, runAdmittedCargoCommandV1, runAdmittedCargoPackageTestsV1, admittedCargoTestPolicyV1, runAdmittedExactCargoLawsV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+export type { CargoAdmissionProviderV1, ExactCargoLawRequestV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";

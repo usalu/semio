@@ -83,7 +83,7 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
     assert_eq!(store.applied_edit_ids(), applied.as_slice(), "a supersession keeps every slot");
     assert_ne!(store.0.content_revision(), revision, "the revision names the effective forwards");
     assert_eq!(store.supersessions().len(), 1);
-    assert_eq!(store.0.last_projection_cause, Some(ArtifactProjectionCause::Replay));
+    assert_eq!(store.0.cursor.last_projection_cause, Some(ArtifactProjectionCause::Replay));
     let transition = store.envelope().transitions.last().expect("the supersession is an event");
     assert_eq!(transition.dependencies, vec![ids[0].clone()], "a supersession depends on its targets");
     assert_eq!(transition.target, vec!["n".to_string()], "a supersession declares the address it writes");

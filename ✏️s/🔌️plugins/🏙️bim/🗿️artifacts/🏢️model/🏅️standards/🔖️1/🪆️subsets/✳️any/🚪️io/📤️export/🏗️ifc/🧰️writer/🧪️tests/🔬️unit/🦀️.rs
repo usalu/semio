@@ -3,8 +3,8 @@ use semio_s_artifact_stdio_contract::part21::Part21Value;
 use semio_s_artifact_stdio_contract::part21::{Part21Builder, Part21Decimal};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{ALPHABET};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::ALPHABET;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{Ifc, global_id, real, V, unset, Schema};
 use semio_s_artifact_stdio_contract::part21::{write_part21, Part21Document, Part21Header};
 
 fn finished(ifc: Ifc) -> Part21Document {

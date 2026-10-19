@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/
 /** 📕️ Norm TypeScript package. */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
@@ -97,13 +97,6 @@ class TestScript extends BundleScript {
 }
 //#endregion 🔖️Test
 
-/** 🔮️ Runs the portable source-owner contract and installed Python host import proof. */
-class OracleSourceScript extends BundleScript {
-  run(): void {
-    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🔮️oracle-source-ownership/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
-  }
-}
-
 /** 🧾️ Runs the wire-twin witness: every committed norm mutation and snapshot against its generated TypeScript twin and the strict Ajv oracle. */
 class WireTwinsScript extends BundleScript {
   run(): void {
@@ -111,5 +104,5 @@ class WireTwinsScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("oracle-source", OracleSourceScript).register("wire-twins", WireTwinsScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("wire-twins", WireTwinsScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

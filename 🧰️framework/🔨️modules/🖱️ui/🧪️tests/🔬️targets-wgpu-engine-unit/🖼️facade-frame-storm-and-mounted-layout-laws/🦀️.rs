@@ -106,7 +106,7 @@ fn dispatch_event_emits_a_button_click_command_once() {
 #[test]
 fn set_window_layout_wires_into_the_facades_shell() {
     let mut ui = Ui::new(semio_framework_ui_locale::Locale::En);
-    ui.set_window_layout(crate::wgpu::even_window_layout(&["app.viewport".to_string()]));
+    ui.set_window_layout(semio_framework_ui_declaration::layout::even_window_layout(&["app.viewport".to_string()]));
     assert!(ui.shell().window_layout().is_some());
 }
 

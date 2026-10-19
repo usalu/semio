@@ -13,13 +13,13 @@ impl ShellChromeBuildState {
     /// 🎯️ WHICH retained node holds focus in `window_id` — React's `surfaceActiveRoot`. A chrome verb
     /// that must address the focused content node (a panel-level Copy, an inspector commit) reads this
     /// instead of re-deriving focus from the tree.
-    fn content_focus_node(&self, window_id: &str) -> Option<ui_wgpu::wgpu::NodeId> {
+    fn content_focus_node(&self, window_id: &str) -> Option<semio_framework_ui_arena::NodeId> {
         self.content_focus.get(window_id).and_then(Option::as_ref).map(|focus| focus.node)
     }
 
-    pub fn note_content_focus_commands(&mut self, commands: &[ui_wgpu::wgpu::UiCommand]) {
+    pub fn note_content_focus_commands(&mut self, commands: &[semio_framework_ui_wgpu_events::UiCommand]) {
         for command in commands {
-            if let ui_wgpu::wgpu::UiCommand::FocusChanged { window_id, node } = command {
+            if let semio_framework_ui_wgpu_events::UiCommand::FocusChanged { window_id, node } = command {
                 debug_log(&format!("[TRACE] wgpu-shell content focus window={window_id} node={node:?}"));
                 let focus = node.and_then(|node| semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_node_focus_identity(window_id, node).map(|(key, kind)| RetainedContentFocus { node, key, kind }));
                 if focus.is_some() {

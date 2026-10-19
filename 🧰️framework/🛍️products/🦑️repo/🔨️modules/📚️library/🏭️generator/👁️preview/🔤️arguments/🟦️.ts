@@ -1,5 +1,5 @@
-import policy from "./🧬️schema/🔣️.json";
-import literalPolicy from "./🧬️schema/🔣️literal-command.json";
+import policy from "./🧬️schema/🔣️.json" with { type: "json" };
+import literalPolicy from "./🧬️schema/🔣️literal-command.json" with { type: "json" };
 
 /** 🔤️ Admits bounded literal argv without interpreting argument data as shell syntax. */
 export function parseGeneratorPreviewArgumentsV1(value: unknown): readonly string[] {

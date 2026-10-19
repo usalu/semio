@@ -1,5 +1,5 @@
 /** 📥️ The segmented download transport and actor id multiplexing tests. */
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { flushAdmission } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 
@@ -81,7 +81,7 @@ export function registerSegmentedDownloadAndMultiplexingTests(kit: ShardClientSe
     it("unwraps the guest's tagged option in the generated bridge bytes, so no hop ever sees [object Object]", async () => {
       const { PLUGIN_HOST_SHIM_FILE } = await import("../../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts");
       const { pluginComponentBridgeSource } = await import("../../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
-      const { APP_CHANNEL_VERSION } = await import("../../../../../🟦️.ts");
+      const { APP_CHANNEL_VERSION } = await import("@semio-tech/framework-os");
       const { mkdtempSync, writeFileSync } = await import("node:fs");
       const { tmpdir } = await import("node:os");
       const { join } = await import("node:path");

@@ -13,5 +13,47 @@
     "target": "test-registry-catalog-gitlink-boundary",
     "command": "bun ./📜️script.ts test registry-catalog-gitlink-boundary",
     "cache": false
+  },
+  "ownerIndex": {
+    "packagesDirName": "📦️packages",
+    "rows": [
+      "🔣️top-level.json",
+      ".hidden/📦️packages/🦀️rust/Cargo.toml",
+      "a/b/📦️packages/🦀️rust/Cargo.toml",
+      "a/b/🧬️schema/🔣️.json",
+      "a/c/notes.md",
+      "a/c/d/notes.md",
+      "a/e/📦️packages/🦀️rust/Cargo.toml",
+      "a/e/f/g/🔣️.json",
+      "📦️packages/🦀️rust/Cargo.toml",
+      "résistance/📦️packages/🦀️rust/Cargo.toml"
+    ],
+    "known": [
+      "",
+      "a",
+      "a/b",
+      "a/b/📦️packages",
+      "a/b/📦️packages/🦀️rust",
+      "a/b/🧬️schema",
+      "a/c",
+      "a/c/d",
+      "a/e",
+      "a/e/📦️packages",
+      "a/e/📦️packages/🦀️rust",
+      "a/e/f",
+      "a/e/f/g",
+      "📦️packages",
+      "📦️packages/🦀️rust",
+      "résistance",
+      "résistance/📦️packages",
+      "résistance/📦️packages/🦀️rust"
+    ],
+    "candidates": [
+      "",
+      "a",
+      "a/b",
+      "a/e",
+      "résistance"
+    ]
   }
 }

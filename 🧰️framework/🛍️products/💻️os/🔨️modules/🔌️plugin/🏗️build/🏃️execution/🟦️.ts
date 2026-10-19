@@ -1,12 +1,12 @@
 import {existsSync} from "node:fs";
 import {BundleScript,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {semioBuildParallel} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
+import { repositoryCargoNetworkV1 } from "@semio-tech/repo-lib/cargo";
+import { semioBuildParallel } from "@semio-tech/process/execution";
 import {resolvePluginBuildTargets} from "../📋️plan/🟦️.ts";
 import {buildComponentClosureV1} from "../🧩️driver-stages/🟦️.ts";
-import type {PluginBuildTargetV1} from "../../📇️registry/🔎️discovery/🟦️.ts";
+import type {PluginBuildTargetV1} from "@semio-tech/plugin-registry/discovery";
 
 function createConcurrencyLimiter(limit: number): { run: <T>(fn: () => Promise<T>) => Promise<T> } {
   let active = 0;

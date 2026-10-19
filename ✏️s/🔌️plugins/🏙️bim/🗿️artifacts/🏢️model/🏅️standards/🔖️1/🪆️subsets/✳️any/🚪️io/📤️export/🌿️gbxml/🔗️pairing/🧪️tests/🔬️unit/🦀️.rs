@@ -1,9 +1,9 @@
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use std::collections::BTreeSet;
-use crate::standards::v1::subsets::any::io::export::gbxml::pairing::*;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing::merge;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 
 fn v(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x, y, z }

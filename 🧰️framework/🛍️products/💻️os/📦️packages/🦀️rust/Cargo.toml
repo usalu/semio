@@ -77,7 +77,7 @@ semio-framework-os-store-document = { path = "../../🔨️modules/🏪️store/
 semio-framework-os-store-durable-group = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
@@ -111,8 +111,8 @@ semio-framework-pack-source = { path = "../../../../🔨️modules/🎒️pack/�
 semio-framework-job-worker = { path = "../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
-semio-framework-os-store-link-schema = { path = "../../🔨️modules/🏪️store/🔗️link/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-os-store-blob-identity = { path = "../../🔨️modules/🏪️store/📦️blob/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-link-schema = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-blob-identity = { path = "../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-mutation-diff={path="../../../../🔨️modules/📡️replication/🎮️mutation/🔺️diff/📦️packages/🦀️rust"}
 semio-framework-io-control = { path = "../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }

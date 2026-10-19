@@ -590,8 +590,8 @@ pub use semio_framework_value_allocation_return as allocation_return;
 #[path = "🎮️controlled/🦀️.rs"]
 pub mod controlled;
 
-#[path="🔗️shared/🦀️.rs"]
-pub mod shared;
+#[path="🔗️arc-custody/🦀️.rs"]
+pub mod arc_custody;
 #[path="🔐️mutex/🦀️.rs"]
 mod owned_mutex;
 

@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {},
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@iarna/toml": "2.2.5",
+    "@semio-tech/process": "workspace:*",
+    "ajv": "8.20.0"
   }
 }

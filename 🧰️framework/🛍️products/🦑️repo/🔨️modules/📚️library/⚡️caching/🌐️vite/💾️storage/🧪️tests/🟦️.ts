@@ -1,4 +1,4 @@
-import{readNativeStorageReservationPolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{readNativeStorageReservationPolicyV1}from"@semio-tech/process/artifacts/native-build/storage";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -11,7 +11,7 @@ import {receiveScriptProcessInvocation} from "../../../../../../../../🔨️mod
 import {withViteStorageV1,viteStorageLayoutV1,viteWriterResourceV1,withViteArtifactV1} from "../🟦️.ts";
 import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../📦️artifacts/🟦️.ts";
 import {compilerStateResourceV1,withCompilerState} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗃️state/🟦️.ts";
-import {acquireResourceLease} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireResourceLease} from "@semio-tech/process/leases";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 test("Vite paths retain canonical bounded owner and closed build intent",()=>{const database=new Database(":memory:"),require=createRequire(import.meta.url),oracle=new(require("ajv").default)().compile(schema);try{const layouts=fixture.modes.map(mode=>viteStorageLayoutV1("/fixed/products",mode,fixture.owner));expect(layouts[0]!.output).not.toBe(layouts[1]!.output);for(let i=0;i<fixture.modes.length;i++){expect(oracle({version:1,mode:fixture.modes[i],owner:fixture.owner})).toBe(true);for(const value of Object.values(layouts[i]!))expect((database.query("SELECT instr(?,?)=1 AS valid").get(value,"/fixed/products/"+fixture.root+"/") as {valid:number}).valid).toBe(1);}for(const mode of fixture.invalidModes){expect(oracle({version:1,mode,owner:fixture.owner})).toBe(false);expect(()=>viteStorageLayoutV1("/fixed/products",mode,fixture.owner)).toThrow();}expect(new Set(Array.from({length:1024},(_,i)=>viteWriterResourceV1(String(i)))).size).toBe(fixture.writerShards);}finally{database.close();}});

@@ -1,11 +1,12 @@
 //! 🫧️ The overlay of the authoring tools: a window transient's preview turned into canvas records painted over the plan or section. Marks arrive in model metres (`x`, `y` or
 //! section `u`, `v`) and leave in the window's mirrored logical space; sizes that must stay legible at any zoom (markers, handles, labels) are scaled by the metres one pixel spans.
 
-use crate::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
 use crate::editor::bim::gestures::select;
-use crate::editor::bim::marks::{Preview, Shape, Style};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
-use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Preview, Shape, Style};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
 use semio_framework_plugin::DslValue;
 use std::f64::consts::TAU;
 
@@ -82,24 +83,24 @@ pub fn records(preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
 }
 
 /// 📄️ The overlay of a sheet window: the scale handles of the selected viewports while the select utility is armed, then the preview of the gesture in progress. Marks arrive in paper millimetres, y downward, which is the canvas of the sheet.
-pub fn sheet_records(layout: Option<&crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout>, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
+pub fn sheet_records(layout: Option<&semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout>, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
     let handles = match layout {
-        Some(layout) if utility == crate::editor::bim::utilities::DEFAULT_UTILITY => crate::editor::bim::gestures::viewports::handles(layout, selected),
+        Some(layout) if utility == semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY => semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports::handles(layout, selected),
         _ => Vec::new(),
     };
-    let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| crate::editor::bim::marks::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
+    let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
     records(&Preview::of(mirrored), per_pixel)
 }
 
 /// 🗺️ The overlay of a plan window: the live handles of the one selected wall while the select utility is armed, then the preview of the gesture in progress.
 pub fn plan_records(snapshot: &ModelSnapshot, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
-    let handles = if utility == crate::editor::bim::utilities::DEFAULT_UTILITY { select::plan_marks(snapshot, selected) } else { Vec::new() };
+    let handles = if utility == semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY { select::plan_marks(snapshot, selected) } else { Vec::new() };
     records(&Preview::of(handles.into_iter().chain(preview.marks.iter().cloned()).collect()), per_pixel)
 }
 
 /// 📐️ The overlay of a section window: the storey top handles while the select utility is armed, then the preview of the gesture in progress.
 pub fn section_records(inference: &ModelInference, start: P, end: P, utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
-    let handles = if utility == crate::editor::bim::utilities::DEFAULT_UTILITY { select::section_marks(inference, start, end) } else { Vec::new() };
+    let handles = if utility == semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY { select::section_marks(inference, start, end) } else { Vec::new() };
     records(&Preview::of(handles.into_iter().chain(preview.marks.iter().cloned()).collect()), per_pixel)
 }
 

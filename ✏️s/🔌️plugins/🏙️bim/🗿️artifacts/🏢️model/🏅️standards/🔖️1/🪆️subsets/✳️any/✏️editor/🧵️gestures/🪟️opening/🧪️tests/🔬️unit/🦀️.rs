@@ -1,21 +1,24 @@
-use crate::editor::bim::marks::Style;
-use crate::standards::v1::subsets::any::schema::{snapshot::OpeningKind, mutations::ModelMutation};
-use crate::editor::bim::gestures::session::{Step, REJECTED, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Style;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Step, REJECTED, TYPE_MISSING};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent};
 #[allow(unused_imports)]
-use crate::editor::bim::marks::{Mark, Preview};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Opening};
-use crate::editor::bim::gestures::opening::*;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::{room, Rig};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::{VOID_WIDTH, VOID_HEIGHT, nearest_host, fitted_offset};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{room, Rig};
 
-fn created(step: &Step) -> &crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening {
+fn created(step: &Step) -> &semio_s_artifact_bim_model_mut_any_175::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening {
     match step.mutations.as_slice() {
         [ModelMutation::CreateOpening(create)] => create,
         other => panic!("one create-opening expected, got {other:?}"),

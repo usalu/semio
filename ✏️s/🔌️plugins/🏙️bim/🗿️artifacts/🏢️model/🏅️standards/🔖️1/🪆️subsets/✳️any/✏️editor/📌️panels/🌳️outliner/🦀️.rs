@@ -2,11 +2,14 @@
 //! say, each storey holds one group per element kind, and openings and wall sweeps sit under the wall that hosts them. Every container is a windowed node that stamps its full extent and builds only the
 //! slice the host scrolled to, so a model of thousands of elements costs the first paint one slice. Rows are the element ids, so a click selects the same element the plan and the world do.
 
-use crate::editor::bim::entities::{fields_of, kind_of, ordered_storeys, EntityKind, ENTITIES};
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_of, ENTITIES};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::EntityKind;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
@@ -85,7 +88,7 @@ fn roster<'a>(snapshot: &'a ModelSnapshot) -> Vec<Row<'a>> {
 
 /// 🌳️ A tree row with a label, an icon and, when it has them, a granularity and a description.
 pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
-    let mut item = semio_framework_ui_contract::tree_item(ui_label(name)?).try_id(row_id).map_err(|_| crate::editor::bim::kit::ui_capacity_error())?.icon(ui_text(icon)?);
+    let mut item = semio_framework_ui_contract::tree_item(ui_label(name)?).try_id(row_id).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())?.icon(ui_text(icon)?);
     if let Some(granularity) = granularity {
         item = item.granularity(ui_text(granularity)?);
     }
@@ -97,7 +100,7 @@ pub fn item(row_id: &str, name: &str, icon: &str, granularity: Option<&str>, des
 
 /// 🍃️ The builder as a closed row without children.
 pub fn leaf(builder: semio_framework_ui_contract::TreeItemBuilder) -> UiAssemblyResult<BuiltNode> {
-    builder.default_open(false).try_build().map_err(|_| crate::editor::bim::kit::ui_capacity_error())
+    builder.default_open(false).try_build().map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())
 }
 
 pub fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, description: Option<&str>) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
@@ -112,7 +115,7 @@ pub fn movable(row: &EntityKind) -> bool {
 /// 🖐️ The payload a drag of the element row `id` carries.
 fn drag_data(id: &str) -> UiAssemblyResult<UiFixedMap<UiText>> {
     let mut data = UiFixedMap::default();
-    data.try_push(ui_text(DRAG_ELEMENT_MIME)?, ui_text(id)?).map_err(|_| crate::editor::bim::kit::ui_capacity_error())?;
+    data.try_push(ui_text(DRAG_ELEMENT_MIME)?, ui_text(id)?).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())?;
     Ok(data)
 }
 
@@ -120,13 +123,13 @@ fn drag_data(id: &str) -> UiAssemblyResult<UiFixedMap<UiText>> {
 fn drop_onto(builder: semio_framework_ui_contract::TreeItemBuilder, storey: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     let args = ui_value_map([("field", ui_value_text("storey")?), ("value", ui_value_text(storey)?)])?;
     let (action, args) = bim_action("setField", Some(args))?;
-    builder.try_on_with(Trigger::Drop, action, args.ok_or_else(crate::editor::bim::kit::ui_capacity_error)?).map_err(|_| crate::editor::bim::kit::ui_capacity_error())
+    builder.try_on_with(Trigger::Drop, action, args.ok_or_else(semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error)?).map_err(|_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())
 }
 
 /// 🪜️ The row of an element that can change its storey: draggable onto a storey row, and its menu offers the move to the storey above and below, the keyboard and screen-reader way to the same `set-element-storey`.
 fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &BimLabels, id: &str) -> UiAssemblyResult<semio_framework_ui_contract::TreeItemBuilder> {
     let target = row_target(BIM_EDITOR_CONTROLLER_ID, Some(ui_value_map([("id", ui_value_text(id)?)])?), None)?;
-    let full = |_| crate::editor::bim::kit::ui_capacity_error();
+    let full = |_| semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error();
     builder
         .draggable(true)
         .drag_data(drag_data(id)?)
@@ -141,7 +144,7 @@ fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &
 fn sheet_children(snapshot: &ModelSnapshot, sheet: &str) -> Vec<(&'static EntityKind, String)> {
     let (Some(viewport), Some(revision)) = (kind_of("viewport"), kind_of("sheet-revision")) else { return Vec::new() };
     let viewports = snapshot.viewports.iter().filter(|(_, row)| row.sheet == sheet).map(|(id, _)| (viewport, id.clone()));
-    let revisions = crate::standards::v1::subsets::any::schema::snapshot::revisions_of(snapshot, sheet).into_iter().map(|(id, _)| (revision, id.clone()));
+    let revisions = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::revisions_of(snapshot, sheet).into_iter().map(|(id, _)| (revision, id.clone()));
     viewports.chain(revisions).collect()
 }
 
@@ -161,7 +164,7 @@ fn element_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: &
         return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, nested.len(), |index| leaf(entity_item(snapshot, nested[index].0, &nested[index].1, None)?));
     }
     if let (true, Some(conditions)) = (row.kind == "space", snapshot.space_conditions.get(id)) {
-        let summary = crate::editor::bim::entities::energy::summary(conditions);
+        let summary = semio_s_artifact_bim_model_entities::editor::bim::entities::energy::summary(conditions);
         return semio_framework_plugin::tree_window_indexed_item(windows, builder, id, false, 1, |_| leaf(item(&format!("{id}::conditions"), labels.env_conditions_row.as_str(), "thermometer", None, Some(&summary))?));
     }
     if hosted.is_empty() {
@@ -206,7 +209,7 @@ fn building_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, inference: 
     semio_framework_plugin::tree_window_indexed_item(windows, builder, id, true, total, |index| match storeys.get(index) {
         Some(storey) => storey_row(windows, snapshot, inference, labels, storey),
         None if index < storeys.len() + grids.len() => leaf(entity_item(snapshot, grid, grids[index - storeys.len()], None)?),
-        None => views::views_row(windows, snapshot, labels, id).unwrap_or_else(|| Err(crate::editor::bim::kit::ui_capacity_error())),
+        None => views::views_row(windows, snapshot, labels, id).unwrap_or_else(|| Err(semio_s_artifact_bim_model_kit::editor::bim::kit::ui_capacity_error())),
     })
 }
 

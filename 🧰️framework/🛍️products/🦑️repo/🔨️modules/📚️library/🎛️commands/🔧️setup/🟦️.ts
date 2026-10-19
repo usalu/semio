@@ -2,7 +2,7 @@
  * @see 📜️script.ts
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
-import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { ensureMcpBinary } from "@semio-tech/framework-os-mcp";
 import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
 import { runCmd } from "../../🏃️process/🟦️.ts";
 import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";

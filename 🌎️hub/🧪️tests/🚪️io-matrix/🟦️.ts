@@ -1,6 +1,6 @@
-import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "@semio-tech/process/routing";
 import type {ResourceLeaseControl} from "@semio-tech/process/leases";
-import {readNativeCallerAuthorityV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 /** 🚪️ Export and import through the served `s` React shell, per kind, as a user drives them (acceptance 1.7), plus the
  * live half of command reachability (1.8): every verb that was `BatchOnlyPendingRewrite` must dispatch from its rail row.
  *
@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { Download, FileChooser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "@semio-tech/framework-os-dev/parity/execution";
 import { FAULT, NOISE, awaitBeacon, click, clickUncovered, dismissIntroduction, driveRenderedEdit, fillStagedArgument, keyOf, readMatrixPins, readShell, roleOf, seatLocale, unfoldActionsRail, windowIds, withDevServe, witness, type MatrixPins, type MatrixProgram, type MatrixRenderedEdit } from "@semio-tech/framework-os-dev/testing/program-matrix";
 import { createKind, openSweepSpace, stagedKinds, type HubDocumentSweepOptions, type HubSweepRow } from "../🗂️document-sweep/🟦️.ts";

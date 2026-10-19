@@ -1,6 +1,0 @@
-📂️io-operators
-📐️measurement-utility-and-topology-operators
-🔍️intersection-and-evaluation-operators
-🧊️schemas-primitives-and-curves
-🧮️booleans-transforms-and-solid-features
-🪡️surfaces-and-sweeps

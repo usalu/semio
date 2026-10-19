@@ -5,7 +5,7 @@ import type { SemanticPackageProjectionCase } from "../📦️package-projection
 import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
 import { type FixedSourceDispositionDecision, classifyPackageSource, classifyPackageSourceDisposition } from "../🏷️package-source-classification/🟦️.ts";
 import { type DiscoveredOwner, type DiscoveredPackage, type DiscoveryBurndown, type DiscoveryProblem, type DiscoveryScan, type OwnerAccumulator, type PackageLang, type PackageRole, type PackageTarget, fallbackPackageId, isDiscoverySkipDirectory, jsonTable, parseSemioMarker, readdirSafe, scanCache, tomlTableBody, tomlTableValues } from "../🪧️owner-markers/🟦️.ts";
-import { type RegistryCatalogInputView, gitlinkBoundaryCache } from "../📇️registry-catalog-inputs/🟦️.ts";
+import { type RegistryCatalogInputView, type RegistryCatalogOwnerIndex, gitlinkBoundaryCache } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { exactContractFilename, fixedContractFilename } from "../🎯️taxonomy-path-matching/🟦️.ts";
 import { projectionByteCompare } from "../🧱️path-projection-contracts/🟦️.ts";
 import { semanticPackageGenerationAuthority } from "../🎁️package-projection/🟦️.ts";
@@ -96,7 +96,7 @@ export function fixedSourceDispositionDecision(contractId: string | undefined, c
  * can drift. A markerless manifest is skipped silently in a `legacy`/`mixed`/`exempt`/undeclared area (not yet
  * migrated) but always shows up in `discoverBurndown`, so nothing vanishes unnoticed.
  */
-export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly view: RegistryCatalogInputView; readonly inputs: Set<string> }): DiscoveryScan {
+export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly view: RegistryCatalogInputView; readonly inputs: Set<string>; readonly ownerIndex?: RegistryCatalogOwnerIndex }): DiscoveryScan {
   if (typeof taxonomy.packagesDirName !== "string" || typeof taxonomy.targetsDirName !== "string" || !taxonomy.roles || !taxonomy.areas || !taxonomy.configurableEntryContracts) throw new Error("Catalog discovery requires the complete validated taxonomy vocabulary.");
   const packagesDirName = taxonomy.packagesDirName;
   const targetsDirName = taxonomy.targetsDirName;
@@ -303,6 +303,7 @@ export function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { reado
         problems.push({ kind: "package-implementation", path: rel(path), message: `"${rel(path)}" is a forbidden implementation boundary in a clean-enforced area.` });
         continue;
       }
+      if (catalog?.ownerIndex) { const key = rel(path).normalize("NFC"); if (catalog.ownerIndex.known.has(key) && !catalog.ownerIndex.candidates.has(key)) continue; }
       walk(path, stack);
     }
   };

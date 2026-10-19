@@ -34,12 +34,6 @@ pub mod standards {
                         mod component;
                         pub use component::*;
                     }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "../../../🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
                 }
                 #[path = "."]
                 pub mod io {
@@ -47,15 +41,11 @@ pub mod standards {
                     pub mod binary {
                         #[path = "../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
-                        #[path = "../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod text {
                         #[path = "../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
-                        #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod sqlite {

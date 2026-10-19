@@ -1,0 +1,26 @@
+/** 🏭️ Heavy build-time owners of the OS dev Vite configuration. The configuration module loads this module at config-resolve time through one opaque dynamic import, so Vite's native config parse and watch set keeps only the vite-plugin owners and the registry views (see the config-graph fixture). */
+export { frameworkOsEngineDeliveriesV1, frameworkOsEnginePackageNameV1, frameworkOsEngineFacetV1 } from "../📥️artifacts/🕸️engines/🟦️.ts";
+export { frameworkOsViteArtifactPathsV1 } from "../📥️artifacts/🟦️.ts";
+export { managedWasmPackagesVitePluginV1 } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
+export { flowBrowserDeliveryV1 } from "../../../../../📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
+export { runtimeAssetDeliveries } from "../../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
+export { repositoryCachePartitionRootDataV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+export { canonicalWasmBuildVitePlugin } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+export { builtPluginModulesRootIn, developmentRuntimeRoot, playgroundSessionViteAlias, readActivationReceipt } from "../../../♻️activation/🟦️.ts";
+export { buildModePolicy, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+export { viteCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+export { createAssetBuildPluginsV1, resolveAssetDeliveryModeV1 } from "../../../../../../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
+export { requirePlaygroundVariant } from "../../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
+export { resolveShellBrandById } from "../../../🏷️brand/🟦️.ts";
+export { uiReactBuildPlugin, uiTailwindBuildPlugins } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
+export { PREVIEW2_VENDOR_RELATIVE } from "../../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🕸️imports/🟦️.ts";
+export { packageAssetDeliveries } from "../../../../../../../🔨️modules/🎠️kernel/📦️packages/🟦️typescript/📦️package-assets/🟦️.ts";
+export { productionBrowserArtifactsVitePlugin, selectProductionBrowserComponents } from "../../../🚚️distribution/🔌️components/🟦️.ts";
+export { DISTRIBUTION_LAYOUT, distributionLayoutForModeV1, distributionChunkName, distributionAssetName } from "../../../🚚️distribution/🟦️.ts";
+export { playgroundFlowWasmDevStubPlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
+export { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host/🟦️.ts";
+export { semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+export { semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+export { semioAssetsVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+export { semioServeCloseVitePlugin } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
+export { semioExtensionStoreVitePlugin } from "../../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";

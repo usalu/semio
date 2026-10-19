@@ -146,7 +146,7 @@ test("JSON-schema equality preserves array order and ignores object member order
 
 test("source playground catalogs retain example membership while compiled channels are withheld", async () => {
   const { generateWithheldPlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
-  const { registryCatalogInputView } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts");
+  const { registryCatalogInputView } = await import("@semio-tech/repo-lib/inventory");
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR!;
   const root = mkdtempSync(join(output, "source-playground-")), cratePath = "owner/📦️packages/🦀️rust";
   const cargo = '[package]\nname="owner"\n[[package.metadata.semio.playground]]\nvariant="owner"\napp="owner.drawing@1/*#editor"\nports={react=6000,wgpu=6100}\nengines=["engine/📦️packages/🦀️rust"]\n[package.metadata.semio.sources]\nartifacts=["../../🗿️artifacts"]\n';
@@ -174,7 +174,7 @@ test("pure session file DATA carries its supplied catalog independently of the g
 });
 
 test("descriptor emitter product request is selected-mode DATA without a checkout binary probe",async()=>{
- const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe((await import("../../../../../../../🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json")).default.properties.maximumFiles.const);}
+ const {descriptorEmitterRequestV1}=await import("../../../🖨️describe/🛠️emitter/📋️contract/🟦️.ts");for(const mode of["prototype","release"]as const){const request=descriptorEmitterRequestV1(join(process.cwd(),".fixture-products"),{version:1,mode,platform:process.platform});expect(request.path).toContain("/browser/"+mode+"/tools/descriptor-emitter/");expect(request.maximumFiles).toBe((await import("@semio-tech/process/artifacts/publication/sources/schema.json")).default.properties.maximumFiles.const);}
 });
 
 

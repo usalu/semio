@@ -1,13 +1,13 @@
-import{requireIssuedResourceControlInvocationV1}from"./../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{createHash,randomUUID}from"node:crypto";
 import{lstat,readFile,readdir}from"node:fs/promises";
 import{join,resolve}from"node:path";
-import{acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"./../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{requireNativeStoragePathV1}from"./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{validateJsonSchemaSubset}from"./../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{NxAuthorizerSourceManifestV1}from"./../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
-import type{ScriptInvocation}from"./../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import type{ScriptInvocation}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import receiptSchema from"../🧬️schema/📜️receipt.json";
 const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");

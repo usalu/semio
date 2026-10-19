@@ -2,9 +2,10 @@
 //! has none in that system is skipped; when none has it the command is refused instead of doing nothing silently.
 
 use crate::editor::bim::commands::set_property::elements_of;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -22,7 +23,7 @@ pub fn handle(payload: &RemoveClassification, doc: &ArtifactView<'_, ModelSnapsh
     if holders.is_empty() {
         return Err(fault("bim.classification.missing", "none of the targets is classified in that system"));
     }
-    Ok(Emit::mutations(holders.into_iter().map(|id| ModelMutation::RemoveElementClassification(crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification { id: id.clone(), system: system.to_string() })).collect()))
+    Ok(Emit::mutations(holders.into_iter().map(|id| ModelMutation::RemoveElementClassification(semio_s_artifact_bim_model_mut_any_88::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification { id: id.clone(), system: system.to_string() })).collect()))
 }
 
 

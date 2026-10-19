@@ -1,6 +1,6 @@
 import {defineOwnedBuildConfig,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
-import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
-import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
@@ -30,7 +30,7 @@ export default defineOwnedBuildConfig({
     ...uiTailwindBuildPlugins(),
     uiReactBuildPlugin(),
   ],
-  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
+  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE))), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
   define: { "import.meta.vitest": "undefined" },
   server: {
     fs: { allow: [repoRoot] },

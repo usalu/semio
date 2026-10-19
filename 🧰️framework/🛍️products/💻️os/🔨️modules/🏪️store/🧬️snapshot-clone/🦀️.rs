@@ -11,7 +11,7 @@ use semio_framework_os_store_one_item_publication::lifted_canonical_edit::Artifa
 use semio_framework_os_store_command::HistoryLane;
 use semio_framework_value_snapshot_read::SnapshotRead;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_close};
-use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement, shared::SharedControlledRetirement}, FactoryAuthority};
+use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement}, FactoryAuthority};
 use std::{marker::PhantomData, mem::size_of, sync::Arc};
 use semio_framework_value::retirement::original_vector::OriginalVectorCursor;
 #[path="🪪️metadata/🦀️.rs"]
@@ -310,7 +310,7 @@ impl<P: RetainedClone, M: ArtifactCanonicalJsonTree + RetireOwned + Sync, E: Ret
     }
 
     fn build_sealer(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<bool, ValueError> {
-        use semio_framework_value::{RetirementDemand,retirement::shared::shared_retirement_allocation_bytes};
+        use semio_framework_value::{RetirementDemand,retirement::arc_custody::shared_retirement_allocation_bytes};
         let g=grant.retained_grant();
         let demand=match self.build_stage{
             0=>{let source=self.mutation.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original forward source missing before publication detach").with_retained_progress(self.ownership))?;let body=source.next_take_copy_byte_demand()?;RetirementDemand{copy_bytes:body,capacity_bytes:source.next_take_capacity_byte_demand(body)?,release_bytes:source.next_take_release_byte_demand()?,depth:source.next_take_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original forward source depth overflow").with_retained_progress(self.ownership))?}},

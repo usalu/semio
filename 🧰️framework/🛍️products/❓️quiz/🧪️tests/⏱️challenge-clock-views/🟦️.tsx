@@ -6,7 +6,7 @@ import { computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type Answer, type RunView, type Sheet, type SheetClassificationTask, type SheetMatchingTask } from "@semio-tech/quiz";
 import { formatCountdown, formatDuration, initialQuizState, quizText, type OthersChoice, type QuizSession, type QuizText } from "@semio-tech/quiz-react";
-import { RunScreen, clockStage } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
+import { RunScreen, clockStage } from "@semio-tech/quiz-react/modules/run/.tsx";
 import { en, said, sheetAt } from "../🪞️challenge-views-kit/🟦️.ts";
 
 afterEach(() => {

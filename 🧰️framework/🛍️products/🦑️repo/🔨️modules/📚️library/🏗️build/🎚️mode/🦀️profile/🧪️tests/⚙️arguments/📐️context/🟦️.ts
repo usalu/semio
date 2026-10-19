@@ -2,7 +2,7 @@ import{createCargoProfileFixtureV1,type CargoProfileFixtureV1}from"../📥️fix
 import cases from"../🔣️.json"with{type:"json"};
 import corpus from"./🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 type Files=CargoProfileFixtureV1["files"];
 /** 🧫️ Authors only the already characterized tiny ordinary target-rlib dependency fixture. */
 export function createCargoContextFixtureV1():Files{if(validateJsonSchemaSubset(schema,corpus).length)throw Error("Closed context observation corpus required");const row=cases.cases.find(row=>row.name===corpus.case);if(!row)throw Error("Actual characterized context case required");return createCargoProfileFixtureV1(row,corpus.context).files;}

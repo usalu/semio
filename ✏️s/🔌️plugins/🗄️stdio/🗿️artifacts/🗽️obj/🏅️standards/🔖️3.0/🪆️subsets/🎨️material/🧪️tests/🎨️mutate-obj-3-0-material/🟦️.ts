@@ -12,7 +12,7 @@ import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
  *  nothing: each row's expected document is the COMMITTED fixture — `➡️after.obj` for a mutation, `⬅️before.obj` for its
  *  inverse — handed to the `obj-3-0-document-compare-v1` pipeline as `expected-obj`, where three's OBJLoader reads it
  *  and the subject's `actual-obj`. */
-import { committedArtifact } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { committedArtifact } from "@semio-tech/framework/test/adapter";
 
 //#region 🧭️Adapter
 export default defineTestAdapter({

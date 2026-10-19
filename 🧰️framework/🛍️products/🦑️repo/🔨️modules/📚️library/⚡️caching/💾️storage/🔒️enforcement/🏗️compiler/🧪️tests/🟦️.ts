@@ -7,10 +7,10 @@ import fixture from "./🔣️.json" with {type:"json"};
 import schema from "./🧬️.json" with {type:"json"};
 import {repositoryCompilerReservationV1} from "../🟦️.ts";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {ordinaryNativeStoragePortV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {recoverNativeStorageReservationV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
+import {ordinaryNativeStoragePortV1} from "@semio-tech/process/artifacts/native-build/storage";
 import type {NativeImageStorageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 test("neutral unsupported build modes refuse before storage observation",async()=>{

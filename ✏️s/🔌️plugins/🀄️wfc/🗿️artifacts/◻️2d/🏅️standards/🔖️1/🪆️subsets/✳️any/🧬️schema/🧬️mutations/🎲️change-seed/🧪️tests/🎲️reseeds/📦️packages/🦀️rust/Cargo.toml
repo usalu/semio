@@ -41,7 +41,6 @@ semio-framework-schema-registry = { path = "../../../../../../../../../../../../
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
-semio-framework-ui = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-styling = { workspace = true }

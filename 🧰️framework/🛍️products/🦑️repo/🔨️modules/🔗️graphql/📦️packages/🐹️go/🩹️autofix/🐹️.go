@@ -34,7 +34,7 @@ type autofixState struct {
 
 // 📥️loadAutofixState reads the file and prepares its line buffer.
 func loadAutofixState(file string) (*autofixState, error) {
-	absPath := filepath.Join(workspace.RootDir, file)
+	absPath := filepath.Join(workspace.GetRootDir(), file)
 	content, err := workspace.ReadTextFile(absPath)
 	if err != nil {
 		return nil, err
@@ -141,6 +141,49 @@ func (s *autofixState) fixMissingHeaderRegion(v model.Breach) {
 			s.fixed++
 		}
 	}
+}
+
+// 🛠️Fix applies the autofixes of every file the scope names and reports what the analyzer still finds.
+func (c *RepoContext) Fix(scope *string) (*model.FixResult, error) {
+	text := "compose"
+	if scope != nil {
+		text = *scope
+	}
+	parsed := workspace.ParseScope(text)
+	check := func() ([]model.Breach, error) {
+		return statutespkg.CheckPoliciesWithContext(statutespkg.NewPolicyContext(parsed, c.bundles), nil)
+	}
+	before, err := check()
+	if err != nil {
+		return nil, err
+	}
+	byFile := map[string][]model.Breach{}
+	files := []string{}
+	for _, breach := range before {
+		file := workspace.ParseScope(breach.Scope).FilePath
+		if file == "" || !breach.Autofixable() {
+			continue
+		}
+		if _, seen := byFile[file]; !seen {
+			files = append(files, file)
+		}
+		byFile[file] = append(byFile[file], breach)
+	}
+	sort.Strings(files)
+	for _, file := range files {
+		if _, err := applyAutofixes(file, byFile[file]); err != nil {
+			return nil, err
+		}
+	}
+	after, err := check()
+	if err != nil {
+		return nil, err
+	}
+	remaining := make([]*model.Breach, len(after))
+	for index := range after {
+		remaining[index] = &after[index]
+	}
+	return &model.FixResult{Fixed: max(len(before)-len(after), 0), Remaining: len(after), Breachs: remaining}, nil
 }
 
 // #endregion 🩹️Autofix

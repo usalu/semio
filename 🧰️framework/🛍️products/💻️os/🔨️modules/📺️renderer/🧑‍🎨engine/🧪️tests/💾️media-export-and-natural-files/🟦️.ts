@@ -13,7 +13,7 @@ import {
   openNaturalFileOwnerV1
 } from "../../🧱️elements/🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { OPEN_ARTIFACT_FILE_ACTION_ID, SAVE_ARTIFACT_FILE_ACTION_ID } from "@semio-tech/framework";
-import naturalFileLifecycleFixture from "../../../../🔌️plugin/🧪️tests/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json" with { type: "json" };
+import naturalFileLifecycleFixture from "@semio-tech/framework-plugin/testing/fixtures/natural-file-lifecycle.json";
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type AppDefinition } from "@semio-tech/framework";

@@ -4,13 +4,12 @@
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
 
 #[path = "🧱️entities/🦀️.rs"]
 pub mod entities;
 
 pub use entities::*;
-pub use values::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Project, PropertySet, ClassificationSet};
 
 #[path = "✅️validity/🦀️.rs"]
 pub mod validity;
@@ -37,8 +36,6 @@ pub use anchors::*;
 #[path = "🏷️property-kit/🦀️.rs"]
 pub mod property_kit;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values;
-pub use property_kit_values::*;
 
 pub use property_kit::*;
 
@@ -52,8 +49,6 @@ pub use views::*;
 #[path = "📄️sheets/🦀️.rs"]
 pub mod sheets;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::sheets_values;
-pub use sheets_values::*;
 
 pub use sheets::*;
 
@@ -65,8 +60,6 @@ pub use conditions::*;
 #[path = "🤝️coordination/🦀️.rs"]
 pub mod coordination;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::coordination_values;
-pub use coordination_values::*;
 
 pub use coordination::*;
 
@@ -280,7 +273,7 @@ pub struct ModelSnapshot {
 impl Default for ModelSnapshot {
     fn default() -> Self {
         Self {
-            schema: crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.into(),
             supports: BTreeMap::new(),
             load_cases: BTreeMap::new(),
             loads: BTreeMap::new(),

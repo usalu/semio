@@ -229,12 +229,12 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
             let before = job.released_field_bytes();
             let exact = job_grant(&job);
             let subexact = store::RetainedCloneGrant { maximum_release_bytes: release - 1, ..exact };
-            assert_eq!(InteractiveJob::close_step(&mut job, subexact), semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            assert_eq!(semio_framework_job::close_with_self_funded_context(subexact, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
             assert_eq!(InteractiveJob::next_close_release_byte_demand(&job).expect("preserved outer retained Pack close demand"), release);
             assert_eq!(job.released_field_bytes(), before);
             refused_subexact = true;
         }
-        let step = InteractiveJob::close_step(&mut job, job_grant(&job));
+        let step = semio_framework_job::close_with_self_funded_context(job_grant(&job), |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         let released = job.released_field_bytes();
         released_source_bytes += released - prior_released_source_bytes;
         prior_released_source_bytes = released;

@@ -26,7 +26,7 @@ import {
 } from "@semio-tech/framework-replication";
 import { describe, expect, it } from "vitest";
 import { type HubHandle, findFreePort, getWorkspaceRoot, hubSchemaExport, resolveHubBinaryPath, startHub, waitForHttpReady } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
 import { parseInviteCapabilityV1, parseSessionCapabilityV1, parseShareCapabilityV1, parseSocketGrantCapabilityV1 } from "../../🔐️auth/🧬️schema/🟦️.ts";
 
 const HUB_E2E = process.env.HUB_E2E === "1";

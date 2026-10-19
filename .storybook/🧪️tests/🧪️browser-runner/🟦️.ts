@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { playwrightTestTimeoutMs } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts";
+import { playwrightTestTimeoutMs } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");

@@ -160,6 +160,12 @@ func (run *execution) node(args map[string]interface{}) (interface{}, *Execution
 	if clean == "" {
 		return run.repoSource(), nil
 	}
+	selectorFree := strings.NewReplacer("︎", "", "️", "")
+	for _, bundle := range run.repo.GetBundles() {
+		if selectorFree.Replace(bundleID(bundle, run.technologies)) == clean {
+			return bundleSource(bundle, run.technologies, run.rootDir), nil
+		}
+	}
 	for _, kind := range []string{"technology-user", "technology-infrastructure", "technology-research", "technology-mono"} {
 		rest, found := stripEntityPrefix(clean, entityEmoji(kind))
 		if !found {

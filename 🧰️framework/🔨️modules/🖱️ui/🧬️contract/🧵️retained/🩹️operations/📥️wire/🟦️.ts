@@ -1,5 +1,5 @@
 //#region 🧬️NativeOperationContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../../🔌️host/🟦️.ts";
 import { OwnedUiOperation, type OwnedUiOperationRetirement } from "../🟦️.ts";
 import { RetainedUiTypedCursor, RetainedUiChildIdsCursor, type RetainedUiTypedValues, type OwnedUiPayload, type UiPayloadRetirement } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiWireStep } from "../../📦️wire/🟦️.ts";
@@ -7,9 +7,9 @@ import { OwnedUiSurface, type OwnedUiSurfacePatch, type OwnedUiSurfaceAcknowledg
 
 type Profile = Exclude<keyof RetainedUiTypedValues, "children">;
 type Packed = { [P in Profile]: { readonly kind: P; readonly cursor: RetainedUiTypedCursor<P> } }[Profile];
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
-function childStep(current: RetainedUiWireStep, grant: NumericIndexGrant): RetainedUiWireStep {
+function childStep(current: RetainedUiWireStep, grant: UiIndexGrant): RetainedUiWireStep {
   if (!Number.isSafeInteger(current.items) || current.items < 0 || current.items > 1 || !Number.isSafeInteger(current.bytes) || current.bytes < 0 || current.bytes > grant.maxBytes) return { ...current, kind: "rejected" };
   return current.kind === "complete" || current.kind === "ready" ? { ...current, kind: "pending" } : current;
 }
@@ -96,7 +96,7 @@ export class OwnedUiWireOperationCursor {
       case "activity": this.#capture(packed.cursor.takeResult(), value => OwnedUiOperation.activity(this.#id!, value)); break;
     }
   }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", this.#phase); if (this.#closing || this.#failure) return step("rejected", this.#phase); if (this.#ready) return step("ready", this.#phase);
     try {
       if (this.#phase === "native-operation-decode") {
@@ -114,7 +114,7 @@ export class OwnedUiWireOperationCursor {
       this.#ready = true; this.#phase = "native-operation-ready"; return step("ready", this.#phase, 32);
     } catch (error) { this.#failure = error instanceof Error ? error.message : "Native operation intake failed"; return step("rejected", this.#phase, 128); }
   }
-  #closeInput(grant: NumericIndexGrant): RetainedUiWireStep | null {
+  #closeInput(grant: UiIndexGrant): RetainedUiWireStep | null {
     if (this.#payload) { this.#payloadClose = this.#payload.beginClose(); this.#payload = null; return step("pending", "native-payload-release", 64); }
     if (this.#payloadClose) { if (this.#payloadClose.terminalIsEmpty()) { this.#payloadClose = null; return step("pending", "native-payload-retirement-release", 64); } return childStep(this.#payloadClose.advance(grant), grant); }
     const decoder = this.#packed?.cursor ?? this.#children;
@@ -123,11 +123,11 @@ export class OwnedUiWireOperationCursor {
   }
   takeResult(): OwnedUiOperation | null { if (!this.#ready || this.#closing || this.#failure) return null; const result = this.#operation; this.#operation = null; return result; }
   beginClose(): void { if (this.#closing) return; this.#closing = true; this.#packed?.cursor.beginClose(); this.#children?.beginClose(); }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "native-operation-close"); if (!this.#closing) throw new Error("Native operation close has not begun");
     try { return this.#closeStep(grant); } catch (error) { this.#failure = error instanceof Error ? error.message : "Native operation close failed"; return step("rejected", "native-operation-close-failed"); }
   }
-  #closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  #closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (this.#operation) { this.#operationClose = this.#operation.beginClose(); this.#operation = null; return step("pending", "native-operation-close", 64); }
     if (this.#operationClose) { if (this.#operationClose.terminalIsEmpty()) { this.#operationClose = null; return step("pending", "native-operation-retirement-release", 64); } return childStep(this.#operationClose.advance(grant), grant); }
     return this.#closeInput(grant) ?? step("complete", "native-operation-close");
@@ -165,7 +165,7 @@ export class OwnedUiWirePatchCursor {
   }
   takePageReceipt(): OwnedUiWirePageReceipt | null { const result = this.#receipt; this.#receipt = null; return result; }
   takeAcknowledgement(): OwnedUiSurfaceAcknowledgement | null { return this.#patch?.takeAcknowledgement() ?? null; }
-  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+  advance(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "native-patch");
     if (this.#closing || this.#failure) return step("rejected", "native-patch");
     if (this.#phase === "input" || this.#phase === "ready") return step("ready", `native-patch-${this.#phase}`);
@@ -195,11 +195,11 @@ export class OwnedUiWirePatchCursor {
     } catch (error) { this.#failure = error instanceof Error ? error.message : "Native patch intake failed"; return step("rejected", "native-patch", 128); }
   }
   beginClose(): void { if (this.#closing) return; this.#closing = true; this.#input?.beginClose(); this.#patch?.beginClose(); }
-  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (!admitted(grant)) return step("blocked", "native-patch-close"); if (!this.#closing) throw new Error("Native patch close has not begun");
     try { return this.#closeStep(grant); } catch (error) { this.#failure = error instanceof Error ? error.message : "Native patch close failed"; return step("rejected", "native-patch-close-failed"); }
   }
-  #closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+  #closeStep(grant: UiIndexGrant): RetainedUiWireStep {
     if (this.#receipt) return step("blocked", "native-page-receipt");
     if (this.#operation) { this.#operationClose = this.#operation.beginClose(); this.#operation = null; return step("pending", "native-operation-release", 64); }
     if (this.#operationClose) { if (this.#operationClose.terminalIsEmpty()) { this.#operationClose = null; return step("pending", "native-operation-retirement-release", 64); } return childStep(this.#operationClose.advance(grant), grant); }

@@ -1,4 +1,4 @@
-import { requireRecord } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord } from "@semio-tech/schema-validator-ts";
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -104,7 +104,7 @@ describe("loadTaxonomy", () => {
     expect(validateTaxonomy(broadCargo).some((problem) => problem.includes("cargo-target-triple-wasm32-wasip2") && problem.includes("exact governed ticket"))).toBe(true);
     const unscopedNx = probeClone(taxonomy);
     unscopedNx.fixedFilenameContracts["build-owned-node-package-manifest"]!.scope = { kind: "path-pattern" };
-    expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("build-owned-node-package-manifest") && problem.includes("adjacent exact Nx"))).toBe(true);
+    expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("build-owned-node-package-manifest") && problem.includes("adjacent exact build project manifest"))).toBe(true);
   });
 
   test("validates the exact transaction edit preparation directory and sole rendered candidate", () => {
@@ -243,7 +243,7 @@ describe("loadTaxonomy", () => {
     for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(selected.join("\n") + "\nreturn invokeGeneratorPreview;"), ts.transpileModule(selected.join("\n") + "\nreturn invokeGeneratorPreview;", { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
       let command = "bun ./📜️script.ts browser preview", cwd = "compiler";
       const invocations: unknown[] = [];
-      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "repo:script", options: { cwd, command } }), requireRecord, generatorPreviewExecution, (generatorPreviewResourceLimits), (await import("../../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
+      const invoke = new Function("buildTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => ({ executor: "repo:script", options: { cwd, command } }), requireRecord, generatorPreviewExecution, (generatorPreviewResourceLimits), (await import("../../../🏭️generator/👁️preview/📈️progress/🟦️.ts")).receiveGeneratorPreviewProgressV1, () => {}, join, (executable: string, args: string[], options: unknown) => { invocations.push({ executable, args, options }); return { stdout: "{}\n", stderr: "", status: 0, signal: null }; }, () => ({}), (left: string, right: string) => left.localeCompare(right), () => "digest");
       invoke({ repoRoot: "/neutral" }, "neutral", contract, { exclusions: [] });
       expect(invocations).toMatchObject([{ executable: "bun", args: ["./📜️script.ts", "browser", "preview"], options: { cwd: "/neutral/compiler", maxBuffer: 268435456, timeout: 240000 } }]);
       command = fixture.ownerExecutionRoutes.find((row: { id: string }) => row.id === "native-owner").command.replace("preview-generated", "browser preview");
@@ -264,7 +264,7 @@ describe("loadTaxonomy", () => {
     expect(contract.previewProgress).toBeUndefined();
     for (const javascript of [ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText, (await esbuild.transform(code, { loader: "ts", target: "es2022" })).code]) {
       const controller = new AbortController();
-      const invoke = new Function("nxTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => target, requireRecord, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, progress.receiveGeneratorPreviewProgressV1, () => { if (controller.signal.aborted) throw new Error("owned test cancellation"); }, join, spawnSync, parseGeneratorPreviewManifest, (left: string, right: string) => Buffer.from(left).compare(Buffer.from(right)), (text: string) => createHash("sha256").update(text).digest("hex"));
+      const invoke = new Function("buildTargetRecord", "requireRecord", "generatorPreviewExecution", "generatorPreviewResourceLimits", "receiveGeneratorPreviewProgressV1", "checkCancellation", "absolutePath", "spawnSync", "parseGeneratorPreviewManifest", "generatorPathCompare", "sha256", javascript)(() => target, requireRecord, discovery.generatorPreviewExecution, discovery.generatorPreviewResourceLimits, progress.receiveGeneratorPreviewProgressV1, () => { if (controller.signal.aborted) throw new Error("owned test cancellation"); }, join, spawnSync, parseGeneratorPreviewManifest, (left: string, right: string) => Buffer.from(left).compare(Buffer.from(right)), (text: string) => createHash("sha256").update(text).digest("hex"));
       const actual = invoke({ repoRoot: workspace }, "playground-session", contract, { exclusions: [] });
       expect(actual.manifest.contractId).toBe("playground-session");
       expect(actual.manifest.nodes).toHaveLength(1);
@@ -454,6 +454,52 @@ describe("loadTaxonomy", () => {
 describe("validateTaxonomy", () => {
   test("the shipped vocabulary is internally consistent", () => {
     expect(validateTaxonomy()).toEqual([]);
+  });
+
+  test("each rule group of the decomposed validator reports its corruption exactly as the pre-split validator did", () => {
+    const base = JSON.parse(readFileSync(join(findWorkspaceRoot(contractRoot), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
+    const rows: readonly Readonly<{ group: string; path: readonly (string | number)[]; value: unknown; expected: readonly string[] }>[] = [
+    { group: "auditSchemaVersionAndEvidence", path: ["schemaVersion"], value: 6, expected: ["schemaVersion must be exactly 7, got 6."] },
+    { group: "auditLeafAndReferencePolicies", path: ["physicalLeafRendering"], value: {}, expected: ["physicalLeafRendering must be a non-empty object.", "physicalLeafRendering must declare exact forward-only kind-only rendering, longest source extension, primary authoring extension, and canonical-only runtime lookup."] },
+    { group: "auditFileKinds", path: ["fileKinds", "json", "emoji"], value: "x", expected: ["fileKinds[\"json\"].emoji must be one canonical NFC emoji sequence.", "transaction-attempt-preparation must retain its validate-all exact child and duplicate-sibling authority.", "transaction-lease-preparation must admit one complete canonical JSON lease before publication.", "semanticDescendantContracts[\"mutation-fixture-bundle-v1\"].pathBudgetReserve.bytes must equal derived longest suffix 36.", "semanticDescendantContracts.mutation-fixture-bundle-v1 must encode the exact 12-node data bundle and exclusive diff alternatives."] },
+    { group: "auditScopedAndDirectoryKinds", path: ["scopedFileKinds"], value: [], expected: ["scopedFileKinds must be an object.", "scopedFileKinds.transaction-edit-candidate must remain the exact transaction edit candidate authority.", "scopedFileKinds.transaction-edit-preimage must remain the exact transaction edit displaced-preimage authority.", "scopedFileKinds.transaction-edit-write-candidate must remain the exact unpublished edit-writer authority.", "scopedFileKinds.transaction-backup-write-candidate must remain the exact unpublished backup-writer authority.", "scopedFileKinds.transaction-json-previous must remain the exact displaced canonical JSON authority.", "scopedFileKinds.transaction-backup-candidate must remain the exact transaction restore preimage authority.", "scopedFileKinds.transaction-postimage-candidate must remain the exact transaction restore postimage authority."] },
+    { group: "auditTransactionArtifacts", path: ["scopedFileKinds", "transaction-edit-candidate", "pathPattern"], value: "**/x", expected: ["scopedFileKinds.transaction-edit-candidate must remain the exact transaction edit candidate authority."] },
+    { group: "auditMemberAndDescendantContracts", path: ["semanticPathProjectionProfileRenderers"], value: 1, expected: ["semanticPathProjectionProfileRenderers must be a non-empty object.", "semanticPathProjectionContracts[\"artifact-example-model-catalog-v1\"].profileRendererId is missing.", "semanticPathProjectionContracts[\"artifact-example-model-catalog-v1\"] has invalid forward profile authority: Invalid forward profile vector for artifact-example-model-catalog-v1: Unknown or incomplete semantic projection \"artifact-example-model-catalog-v1\".", "semanticPathProjectionContracts[\"artifact-editor-command-bundle-v1\"].profileRendererId is missing.", "semanticPathProjectionContracts[\"artifact-editor-command-bundle-v1\"] has invalid forward profile authority: Invalid forward profile vector for artifact-editor-command-bundle-v1: Unknown or incomplete semantic projection \"artifact-editor-command-bundle-v1\"."] },
+    { group: "auditProjectionAndPackageContracts", path: ["semanticPolicyStateCoordinateContracts"], value: 1, expected: ["semanticPolicyStateCoordinateContracts must be a non-empty object."] },
+    { group: "auditOwnedFileProjection", path: ["semanticOwnedFileProjectionContracts"], value: {}, expected: ["semanticOwnedFileProjectionContracts must be a non-empty object.", "semanticOwnedFileProjectionContracts must contain the exact artifact-facet, README/LICENSE, ticket-document, active ticket-important, and history ticket-important contracts."] },
+    { group: "auditReferenceConsumersAndMutationCatalog", path: ["semanticPathProjectionReferenceConsumerContracts"], value: 1, expected: ["semanticPathProjectionReferenceConsumerContracts must be a non-empty object."] },
+    { group: "auditFixedContracts", path: ["fixedFilenameRejectionContracts"], value: 1, expected: ["fixedFilenameRejectionContracts must be a non-empty object."] },
+    { group: "auditPackageBoundaryContracts", path: ["packageSourceDispositions"], value: 1, expected: ["packageSourceDispositions must be a non-empty object."] },
+    { group: "auditGeneratorContracts", path: ["generatorContracts"], value: {}, expected: ["semanticOwnedFileProjectionContracts[\"readme-license-owner-leaves-v1\"] has an unregistered generator owner.", "generatorContracts must be a non-empty object."] },
+    { group: "auditPathPoliciesAndAreas", path: ["unicodeNormalization"], value: {}, expected: ["unicodeNormalization must be NFC/lower/und."] },
+    { group: "auditDependencyDirections", path: ["areaLayers"], value: {}, expected: ["areaLayers must be a non-empty object."] },
+    { group: "auditEcosystemsAndTargets", path: ["targets", "__probe__"], value: {}, expected: ["targets[\"__probe__\"].lang is missing.", "targets[\"__probe__\"].componentFileKindId is missing.", "targets[\"__probe__\"].entryContractIds must be an array."] },
+    { group: "auditTestVocabulary", path: ["testExamplesDirName"], value: "x", expected: ["testExamplesDirName must select the canonical \"📚️examples\" collection.", "Semantic directory \"x\" is not uniquely registered."] },
+    { group: "auditManifestAndRootContracts", path: ["rootDataContractIds"], value: ["missing"], expected: ["rootDataContractIds references missing id \"missing\"."] },
+    { group: "auditSchemaFormatsAndFacets", path: ["schemaJsonDialect"], value: "x", expected: ["schemaJsonDialect must be the single dialect mutationPayloadSchemaAuthority already declares."] },
+    { group: "auditMutationVocabulary", path: ["mutationComponentFileKindId"], value: "x", expected: ["mutationComponentFileKindId references a missing file kind.", "mutationComponentFileKindId must select the direct owner \"rust-source\" kind."] },
+    { group: "auditRepresentationAndChildDirectories", path: ["nativeRepresentationDirs"], value: [], expected: ["nativeRepresentationDirs must be a non-empty unique subset of representationDirs."] },
+    ];
+    expect(new Set(rows.map((row) => row.group)).size).toBe(20);
+    for (const row of rows) {
+      const clone = structuredClone(base) as Record<string, any>;
+      const parent = row.path.slice(0, -1).reduce<any>((value, key) => value[key], clone);
+      parent[row.path[row.path.length - 1]!] = row.value;
+      expect(validateTaxonomy(clone as unknown as Taxonomy), `${row.group}: ${row.path.join(".")}`).toEqual([...row.expected]);
+    }
+  }, 120_000);
+
+  test("no rule group, audit context or scope vocabulary module reaches the authority module that injects its ports", () => {
+    const library = join(findWorkspaceRoot(contractRoot), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library"), discovery = join(library, "🔍️discovery"), authority = join(discovery, "🔐️taxonomy-authority/🟦️.ts");
+    const relativeImports = (file: string): string[] => [...readFileSync(file, "utf8").matchAll(/^(?:import|export)\s[^;]*?\sfrom\s"(\.[^"]+)";$/gmu)].map((match) => join(file, "..", match[1]!));
+    const owners = relativeImports(authority).filter((file) => /\/(?:[^/]*audit[^/]*)\/🟦️\.ts$/u.test(file));
+    expect(owners).toHaveLength(21);
+    for (const owner of owners) {
+      expect(readFileSync(owner, "utf8").split("\n").length, owner).toBeLessThanOrEqual(600);
+      const seen = new Set<string>([owner]), queue = [owner];
+      while (queue.length > 0) for (const next of relativeImports(queue.pop()!)) if (!seen.has(next)) { seen.add(next); queue.push(next); }
+      expect(seen.has(authority), `${owner} reaches the authority module`).toBe(false);
+    }
   });
 
   test("freezes the four canonical testing collections and the obsolete-category stems", () => {

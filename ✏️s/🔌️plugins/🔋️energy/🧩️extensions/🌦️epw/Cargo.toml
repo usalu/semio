@@ -1,0 +1,60 @@
+cargo-features = [ "trim-paths" ]
+
+# 🌦️ Energy EPW extension workspace: removable child of the energy plugin; it depends on the parent, never the reverse.
+[workspace]
+resolver = "2"
+members = [
+  "📦️packages/🦀️rust",
+]
+exclude = [ "**/🏅️standards/**", "**/🏭️bridge/**", "**/👽️guest/**", "**/🔮️oracles/**" ]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [ "**/🏅️standards/**", "**/🏭️bridge/**", "**/👽️guest/**", "**/🔮️oracles/**" ]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.semio-s-artifact-stdio-epw]
+path = "../../../🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-bestest]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-error]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🚨️error/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-results]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/🧾️results/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-site]
+path = "../../🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1

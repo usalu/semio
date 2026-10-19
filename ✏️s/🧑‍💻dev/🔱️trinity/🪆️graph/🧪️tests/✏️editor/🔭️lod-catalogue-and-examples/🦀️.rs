@@ -9,8 +9,7 @@ async fn graph_scene_has_lod_json() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = app.render("trinity.jack.play.main", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree");
+    let json = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.main", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     let scene = artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&json).expect("node-graph scene");
     assert!(scene.lod_json.as_deref().is_some_and(|lod| lod.contains("automatic")), "lodJson lane: {:?}", scene.lod_json);
 
@@ -51,8 +50,8 @@ async fn catalogue_tree_renders() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let node = app.render("trinity.jack.play.catalogue", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("trinity-jack-catalogue"));
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.catalogue", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
+    assert!(node.contains("trinity-jack-catalogue"));
 
     app.close(cx);
 
@@ -70,10 +69,10 @@ async fn inspection_panel_renders_the_selection_prompt() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
-    let node = app.render("trinity.jack.play.inspection", None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.inspection", &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), cx).await.expect("render");
     // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
     // build per-selection fields, so it always renders the static prompt.
-    assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("trinity-inspector.empty"));
+    assert!(node.contains("trinity-inspector.empty"));
 
     app.close(cx);
 
@@ -90,8 +89,8 @@ async fn document_tree_de_locale_translates_labels() {
 
     let mut app = new_app().await;
     let view = ViewModel { locale: semio_framework_ui_locale::Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let node = app.render("trinity.jack.play.artifact", None, &view).await.expect("render");
-    assert!(artifact_app_laws::project_and_retire_fixture_tree(node).expect("project semantic UI test tree").contains("Stücke"));
+    let node = artifact_app_laws::render_registered_fixture_app(&mut app.app, "trinity.jack.play.artifact", &view, cx).await.expect("render");
+    assert!(node.contains("Stücke"));
 
     app.close(cx);
 

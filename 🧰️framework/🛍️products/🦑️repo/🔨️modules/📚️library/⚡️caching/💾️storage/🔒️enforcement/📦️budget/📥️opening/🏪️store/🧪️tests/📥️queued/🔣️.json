@@ -1,0 +1,165 @@
+{
+  "version": 1,
+  "roots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/",
+    "🧰️framework/🔨️modules/🏃️process"
+  ],
+  "excludedSegments": [
+    "🧪️tests",
+    "node_modules",
+    ".cache"
+  ],
+  "queued": [
+    {
+      "id": "nx-graph-snapshot-headroom",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts",
+      "tokens": [
+        "repositoryCacheOrdinaryMaintenanceV1()",
+        "{minimumAvailableBytes,wait}"
+      ]
+    },
+    {
+      "id": "nx-graph-headroom",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🟦️.ts",
+      "tokens": [
+        "wait:request.wait"
+      ]
+    },
+    {
+      "id": "products-layout",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📐️layout/🟦️.ts",
+      "tokens": [
+        "{version:1,wait:true}"
+      ]
+    },
+    {
+      "id": "bazel-reset",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/💾️storage/🗑️reset/🟦️.ts",
+      "tokens": [
+        "withRepositoryCacheStoreQueuedMaintenanceV1(root,\"products\"",
+        "repositoryCacheOrdinaryMaintenanceV1()"
+      ]
+    },
+    {
+      "id": "nx-publication-writer",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+      "tokens": [
+        "{version:1,wait:true},body"
+      ]
+    },
+    {
+      "id": "tools-headroom",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+      "tokens": [
+        "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"tools\"",
+        "repositoryCacheOrdinaryMaintenanceV1()"
+      ]
+    },
+    {
+      "id": "tools-retention",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📥️physical/🟦️.ts",
+      "tokens": [
+        "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"tools\"",
+        "repositoryCacheOrdinaryMaintenanceV1()"
+      ]
+    },
+    {
+      "id": "dependencies-install",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "tokens": [
+        "withRepositoryCacheStoreQueuedMaintenanceV1(workspace,\"dependencies\""
+      ]
+    }
+  ],
+  "nonwaiting": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/🟦️.ts",
+      "sites": 2,
+      "kind": "explicit-command",
+      "reason": "Operator cache-retire-inactive previews or retires only what is idle and never waits behind live builds."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
+      "sites": 1,
+      "kind": "explicit-command",
+      "reason": "Historical Rust image retirement is an operator command that skips an image any build still holds."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/⚙️execution/🟦️.ts",
+      "sites": 2,
+      "kind": "explicit-command",
+      "reason": "Inactive Cargo store retirement refuses to take the compiler writer from a running build."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Idle lease retirement is skipped when another invocation holds the lease image and loses nothing."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Selected tooling object retirement skips objects whose shard writer is busy."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/♻️recovery/🟦️.ts",
+      "sites": 1,
+      "kind": "inside-own-writer",
+      "reason": "Compact headroom recovery runs beneath the caller's own compiler writer and cannot queue behind its own readers."
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+      "sites": 1,
+      "kind": "opportunistic",
+      "reason": "Optional graph cache trimming defers to readers because mandatory headroom recovery queues separately."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+      "sites": 1,
+      "kind": "explicit-command",
+      "reason": "Protected parent image retirement is a maintenance command that refuses a held image."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+      "sites": 1,
+      "kind": "type-only",
+      "reason": "The protected mounted-parent read request type pins its nonwaiting literal."
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "queued-waits-then-succeeds",
+      "holder": "shared",
+      "requester": "queued",
+      "event": "release",
+      "expect": "acquired-after-release"
+    },
+    {
+      "name": "queued-cancelled-while-waiting",
+      "holder": "shared",
+      "requester": "queued",
+      "event": "cancel",
+      "expect": "cancelled-holder-intact"
+    },
+    {
+      "name": "queued-orders-late-readers-behind-it",
+      "holder": "shared",
+      "requester": "queued",
+      "event": "late-reader",
+      "expect": "maintenance-before-late-reader"
+    },
+    {
+      "name": "opportunistic-defers-immediately",
+      "holder": "shared",
+      "requester": "opportunistic",
+      "event": "none",
+      "expect": "not-acquired"
+    }
+  ],
+  "request": {
+    "version": 1,
+    "mode": "queued",
+    "maximumWaitMilliseconds": 1800000
+  }
+}

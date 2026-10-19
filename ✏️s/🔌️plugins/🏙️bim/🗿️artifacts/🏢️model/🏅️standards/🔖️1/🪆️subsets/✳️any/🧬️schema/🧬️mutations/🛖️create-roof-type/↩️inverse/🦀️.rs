@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::delete_roof_type::DeleteRoofType;
 use crate::standards::v1::subsets::any::schema::mutations::create_roof_type::CreateRoofType;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &CreateRoofType, base: &ModelSnapshot) -> Vec<Op>
 where

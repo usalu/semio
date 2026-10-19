@@ -1,7 +1,7 @@
 /** 🔏️ Document open plan and execution-target lease admission: the strict parsers and full-field relations that hold a verified package projection to its shipped component receipt. The wire shapes are the types of the neutral directory schema; only these parsers depend on the receipt schema authority. */
 import { type ArtifactFrontier, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_CLIENT_INSTANCE_MAX_BYTES, DOCUMENT_OPEN_ID_MAX_BYTES, DOCUMENT_OPEN_PLAN_MAX_TTL_MS, type DocumentExecutionTargetLeaseFieldsV1, type DocumentOpenIntentV1, type DocumentOpenPackageV1, type DocumentOpenPlanV1, type DocumentPlanSocketGrantIntentV1, type DocumentScope, artifactFrontierIsEditedForV1, artifactFrontierIsGenesisForV1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenBrowserActorV1, parseDocumentExecutionTargetBrowserActorV1, documentBrowserActorLeaseFromPlanV1, sameDocumentBrowserActorV1 } from "@semio-tech/framework/directory/schema/browser-actor";
-import { SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1 } from "../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt/schema";
 
 
 /** 📦️ Strictly parses one package projection and holds its receipt to the package law: a valid shipped receipt naming exactly

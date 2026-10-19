@@ -1,6 +1,7 @@
 //! 💠️ `array-elements` payload. Repeats placed elements in a linear array (each copy a further spacing) or a radial array (each copy a further step about a centre), as one set of created records with ids minted from the prefix, the copy number and the position of the source; every copy is computed from the source, so no rounding accumulates.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -9,12 +10,12 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct ArrayElements {
     pub ids: Vec<String>,
     pub prefix: String,
-    pub pattern: crate::standards::v1::subsets::any::schema::mutations::modify::ArrayPattern,
+    pub pattern: semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::ArrayPattern,
 }
 
 impl<Op> MutationKind<ModelSnapshot, Op> for ArrayElements
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<ArrayElements> + From<crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<ArrayElements> + From<semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "duplicate", entity: "elements", kind: "array-elements", record: "ArrayElements" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

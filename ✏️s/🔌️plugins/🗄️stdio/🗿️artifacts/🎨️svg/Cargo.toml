@@ -9,6 +9,7 @@ members = [
   "🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🧪️tests/🔬️handcrafted-diff-codec/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust",

@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-wgpu-widgets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio wgpu immediate-mode widget measure and render dispatch with the tree element"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-wgpu-widgets"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-declaration = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-controls = { path = "../../../🔘️controls/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../📥️input/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-layout = { path = "../../../🧱️layout-stack/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-paint = { path = "../../../🖌️paint/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-widget-kit = { path = "../../🧰️kit/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-locale = { path = "../../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-select-behavior = { path = "../../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
+semio-framework-ui-text = { path = "../../../../../🔤️typography/📦️packages/🦀️rust", features = ["testkit"] }
+serde_json = "1.0.140"
+ui_scene = { path = "../../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }

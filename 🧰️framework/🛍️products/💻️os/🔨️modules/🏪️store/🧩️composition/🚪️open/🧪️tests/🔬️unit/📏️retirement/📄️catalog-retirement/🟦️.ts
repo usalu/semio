@@ -5,7 +5,7 @@ import { retirementContractSchema as retirementContract } from "@semio-tech/valu
 import fixture from "../../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { Buffer } from "node:buffer";
 import { applyPatch } from "fast-json-patch";
-import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
+import { frameworkSourcePath, readStoreSourceText } from "@semio-tech/framework/test/source-text";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("erased retirement uses separate fallible demands and a paid terminal box turn", async () => {
@@ -27,8 +27,8 @@ test("erased retirement uses separate fallible demands and a paid terminal box t
     expect(result.released).toBe(row.released);
     expect(result.retained + result.released).toBe(storage.byteLength);
   }
-  const source = readStoreSourceText();
-  const helpers = source.slice(source.indexOf("pub fn artifact_retirement_box_"), source.indexOf("struct ArtifactStoreVcsRetirement"));
+  const source = readModuleTreeSource(frameworkSourcePath("🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"));
+  const helpers = source.slice(source.indexOf("pub fn artifact_retirement_box_"));
   expect(helpers).toContain("pub fn artifact_retirement_box_demands");
   const native=readModuleTreeSource(new URL("../../../../../../🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs",import.meta.url));
   const law=native.slice(native.indexOf("fn current_box_retirement_preserves_denied_owner"),native.indexOf("fn artifact_store_group_visibility",native.indexOf("fn current_box_retirement_preserves_denied_owner")));
@@ -36,7 +36,8 @@ test("erased retirement uses separate fallible demands and a paid terminal box t
   expect(law.indexOf("let policy = physical_test_close_grant();")).toBeLessThan(law.indexOf("observe_backing"));
   expect(helpers).not.toContain("SnapshotRetirementStep");
   expect(helpers).not.toContain("next_close_byte_demand");
-  for (const axis of ["copy", "capacity", "release", "depth"]) expect(helpers).toContain(`next_${axis}_`);
+  expect(helpers).toContain("owner.next_demand(maximum_body_bytes)");
+  expect(helpers).toContain("owner.next_depth_demand()");
   expect(helpers).toContain("maximum_depth - 1");
   expect(helpers).toContain("admit_retained_clone_close");
   expect(helpers.indexOf("maximum_release_bytes < extent")).toBeLessThan(helpers.indexOf("drop(slot.take())"));
@@ -77,7 +78,7 @@ test("member-open retirement requires the original full allocation including emp
       expect(bytes).toBeLessThanOrEqual(fixture.maximumAdmissionBytes);
     }
   }
-  const source = await Bun.file(new URL("../../../../🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../🦀️.rs",import.meta.url));
   const request = source.slice(source.indexOf("impl MemberOpenRequest {"), source.indexOf("impl ErasedSnapshotRetirement for MemberOpenRequest"));
   expect(request.includes("owned_retirement(")).toBe(false);
   expect(request.includes("drop(std::mem::take(field))")).toBe(true);
@@ -111,7 +112,7 @@ test("member-open inline page work and whole backing release remain separate aut
       expect(released).toBe(paid === original.byteLength ? original.byteLength : 0);
     }
   }
-  const source = await Bun.file(new URL("../../../../🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../🦀️.rs",import.meta.url));
   const request = source.slice(source.indexOf("pub struct MemberOpenRequest"), source.indexOf("impl ErasedSnapshotRetirement for MemberOpenRequest"));
   expect(request).not.toContain("closing_page");
   expect(request).not.toContain("closing_bytes");
@@ -163,13 +164,13 @@ test("catalog constructor admits exact factory births and retains partial refusa
   }
   const source = readStoreSourceText();
   const start = source.indexOf("pub fn admit_constructor");
-  const admission = source.slice(start, source.indexOf("/// 🏭️ Prices", start));
+  const admission = source.slice(start, source.indexOf("fn constructor_header_copy_bytes", start));
   expect(start).toBeGreaterThan(0);
-  expect(admission.indexOf("grant.maximum_items == 0")).toBeLessThan(admission.indexOf("preborn_factory_retirement"));
-  expect(admission.indexOf("grant.maximum_capacity_bytes < capacity")).toBeLessThan(admission.indexOf("preborn_factory_retirement"));
-  expect(admission.indexOf("grant.maximum_depth < depth")).toBeLessThan(admission.indexOf("preborn_factory_retirement"));
-  expect(admission).toContain("Err((error, progress))");
-  expect(admission).toContain("factory_retirement_depth_demand");
+  expect(admission.indexOf("grant.maximum_items==0")).toBeGreaterThanOrEqual(0);expect(admission.indexOf("grant.maximum_items==0")).toBeLessThan(admission.indexOf("slot.prepare_step("));
+  expect(admission.indexOf("grant.maximum_capacity_bytes<demand.capacity_bytes")).toBeGreaterThanOrEqual(0);expect(admission.indexOf("grant.maximum_capacity_bytes<demand.capacity_bytes")).toBeLessThan(admission.indexOf("slot.prepare_step("));
+  expect(admission.indexOf("grant.maximum_depth<demand.depth")).toBeGreaterThanOrEqual(0);expect(admission.indexOf("grant.maximum_depth<demand.depth")).toBeLessThan(admission.indexOf("slot.prepare_step("));
+  expect(admission).toContain("return Err((error,receipt))");
+  expect(admission).toContain("constructor_demands(grant.maximum_copy_bytes)");
   expect(source).toContain("pub struct DocumentStoreOwnersAdmissionError");
 });
 
@@ -205,9 +206,10 @@ test("one-item catalog admission makes finite progress without enlarging the sup
   expect(born).toBe(3);
   const source = readStoreSourceText();
   const start = source.indexOf("pub fn admit_constructor");
-  const admission = source.slice(start, source.indexOf("/// 🏭️ Prices", start));
-  expect(admission).toContain("progress.copied_items == grant.maximum_items");
-  expect(admission).toContain("pub fn constructor_is_complete");
+  const admission = source.slice(start, source.indexOf("fn constructor_header_copy_bytes", start));
+  expect(admission).toContain("..grant};");
+  expect(admission).toContain("if !receipt.fits(child)");
+  expect(source).toContain("pub fn constructor_is_complete");
   expect(admission).not.toContain("grant.maximum_items < items");
 });
 
@@ -222,14 +224,14 @@ test("member advancement preserves the actual full grant through child retiremen
     expect(validate(child)).toBe(true);
     for (const key of ["maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"] as const) expect(child[key]).toBe(original[key]);
   }
-  const source = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
   const drive = source.slice(source.indexOf("fn drive_active_hydration_retirement"), source.indexOf("/// Admits the selected history"));
   expect(drive).toContain("grant: RetainedCloneGrant");
   expect(drive).toContain("artifact_retirement_box_close_step");
   expect(drive).not.toContain("fuel_remaining()");
   expect(drive).not.toContain("SnapshotRetirementStep");
-  expect(source).toContain("step_store(&mut self, cx: &mut StepContext");
-  const root = readStoreSourceText();
+  expect(source).toContain("step_store(&mut self,cx:&mut StepContext");
+  const root = readModuleTreeSource(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🎲️space-members-macro/🦀️.rs"));
   const macro = root.slice(root.indexOf("impl $crate::os_store::MemberOpenOperation for $open_name"), root.indexOf("impl $crate::os_store::SpaceMember for $enum_name", root.indexOf("impl $crate::os_store::MemberOpenOperation for $open_name")));
   expect(macro).toContain("open.step_store(cx, grant)");
   expect(macro).not.toContain("maximum_bytes");
@@ -243,7 +245,7 @@ test("typed option admission retains the original owner on all denied birth axes
     expect(Number(custody.pending) + Number(custody.active)).toBe(1);
     expect(custody.pending).toBe(!admitted);
   }
-  const root = readStoreSourceText();
+  const root = readModuleTreeSource(frameworkSourcePath("🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"));
   const start = root.indexOf("pub fn artifact_retirement_admit_owned");
   expect(start).toBeGreaterThan(0);
   const body = root.slice(start, root.indexOf("///", start + 10));
@@ -261,8 +263,8 @@ test("initial member close keeps original inputs and independent controlled curr
     expect(result.allocation).toBe(original.allocation);
     expect(result.pending).toBe(!transferred);
   }
-  const source = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
-  const start = source.indexOf("impl<F, P, M, C> MemberOpenOperation for InitialMemberStoreOpen");
+  const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
+  const start = source.indexOf("impl<F, P, M, C> InitialMemberStoreOpen<F, P, M, C>");
   const body = source.slice(start, source.indexOf("impl<F, P, M, C> Drop for InitialMemberStoreOpen", start));
   expect(body).toContain("grant: RetainedCloneGrant");
   expect(body).toContain("artifact_retirement_admit_owned");
@@ -287,9 +289,10 @@ test("envelope custody keeps seven original message arrays and whole metadata ow
   expect(retained).toBe(0);
   expect(released).toBe(arrays.reduce((total, array) => total + array.byteLength, 0));
   const source = readStoreSourceText();
-  expect(source).toContain("struct ArtifactEditMessageLedgerRetirement");
-  const start = source.indexOf("struct ArtifactStoreEnvelopeRetirement");
-  const body = source.slice(start, source.indexOf("struct ArtifactGenesisRetirement", start));
+  expect(readModuleTreeSource(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs"))).toContain("struct ArtifactEditMessageLedgerRetirement");
+  const envelope = readModuleTreeSource(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs"));
+  const start = envelope.indexOf("struct ArtifactStoreEnvelopeRetirement");
+  const body = envelope.slice(start, envelope.indexOf("struct ArtifactGenesisRetirement", start));
   expect(body).toContain("retirement_owner_close");
   expect(body).toContain("ArtifactStoreVcsRetirement");
   expect(body).toContain("ArtifactEnvelopeMetadata");
@@ -304,11 +307,11 @@ test("member hot retirement preserves pending decoder and original rejected inpu
     const admitted = row.items > 0 && row.capacity >= original.byteLength && row.depth >= 2;
     expect(applyPatch({ original: true }, admitted ? [{ op: "replace", path: "/original", value: false }] : [], true).newDocument.original).toBe(!admitted);
   }
-  const source = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
+  const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
   const start = source.indexOf("fn drive_active_hydration_retirement");
   const hot = source.slice(start, source.indexOf("impl<F, P, M, C> MemberOpenOperation for InitialMemberStoreOpen"));
-  expect(hot).toContain("artifact_retirement_admit_owned");
-  expect(hot).toContain("*self.history_auxiliary = Some(auxiliary)");
+  expect(hot).toContain("artifact_retirement_box_close_step(&mut self.active, child)");
+  expect(hot).toContain("maximum_items: grant.maximum_items.min(1), ..grant");
   expect(hot).toContain("*self.rejected_history_input = Some(rejected.input)");
   expect(hot).not.toContain("retirement::owned_retirement(");
   expect(hot).not.toContain("bytes.truncate(");

@@ -17,7 +17,7 @@ import { cpus, loadavg, tmpdir } from "node:os";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { devServePortV1, ensureDevServe, type DevServerV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";

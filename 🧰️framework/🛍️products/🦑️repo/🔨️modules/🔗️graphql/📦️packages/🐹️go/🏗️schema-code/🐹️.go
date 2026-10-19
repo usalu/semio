@@ -48,6 +48,7 @@ func schemaMetrics() []NamedType {
 		&ObjectType{Name: "PriorityCount", Fields: []Field{NewField("high", NN(Ty("Int"))), NewField("medium", NN(Ty("Int"))), NewField("low", NN(Ty("Int")))}},
 		&ObjectType{Name: "AnalyzeMetrics", Fields: []Field{NewField("total", NN(Ty("Int"))), NewField("byPriority", Ty("PriorityCount")), NewField("autofixable", NN(Ty("Int")))}},
 		&ObjectType{Name: "AnalyzeResult", Fields: []Field{NewField("breachs", NNList(Ty("Breach"))), NewField("metrics", NN(Ty("AnalyzeMetrics")))}},
+		&ObjectType{Name: "FixResult", Fields: []Field{NewField("fixed", NN(Ty("Int"))), NewField("remaining", NN(Ty("Int"))), NewField("breachs", NNList(Ty("Breach")))}},
 	}
 }
 

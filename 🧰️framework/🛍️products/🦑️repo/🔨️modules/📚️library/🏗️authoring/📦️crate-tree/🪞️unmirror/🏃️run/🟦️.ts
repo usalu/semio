@@ -88,8 +88,6 @@ export function dependencyCycles(graph: ReadonlyMap<string, readonly string[]>):
 
 /** 🪞️ Unwinds the path-preserving re-export layers of the given artifact trees. */
 export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
-  const t0 = Date.now();
-  const dbg = (label: string): void => { const m = process.memoryUsage(); console.error(`[DEBUG] ${((Date.now() - t0) / 1000).toFixed(1)}s rss=${(m.rss / 1e9).toFixed(2)}G heap=${(m.heapUsed / 1e9).toFixed(2)}G ${label}`); if (m.heapUsed > 6e9) process.exit(3); };
   const { repoRoot } = options;
   const log = options.log ?? (() => {});
   const excluded = options.excluded ?? [];
@@ -106,13 +104,11 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     const root = posix.normalize(posix.join(dir, parsed.lib?.path ?? "src/lib.rs"));
     if (existsSync(join(repoRoot, root))) universe.addCrate(name, dir, root);
   }
-  dbg(`crates ${universe.crates.size}`);
   const all = [...universe.crates.values()];
   const targets = all.filter((crate) => options.artifacts.some((artifact) => crate.dir.startsWith(`${artifact}/`)));
   for (const crate of targets) universe.root(crate.ident);
   const isExcluded = (path: string): boolean => excluded.some((prefix) => path.startsWith(prefix));
   const targetFiles = new Set([...universe.files.keys()].filter((path) => !isExcluded(path)));
-  dbg(`targets ${targets.length} files ${universe.files.size}`);
   const referencing = new Set<string>();
   if (targets.length) {
     let listing: string[] = [];
@@ -121,13 +117,17 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     try { listing = git(repoRoot, "grep", "-l", "-w", "-z", "-F", "-f", patterns, "--", "*.rs", ":!.🧬semio").split("\0").filter(Boolean); } catch (error) { if ((error as { status?: number }).status !== 1) throw error; }
     for (const path of listing) if (!targetFiles.has(path) && !isExcluded(path)) referencing.add(path);
   }
-  dbg(`referencing ${referencing.size}`);
   const nearestCrate = (path: string): CrateInfo | null => all.filter((crate) => path.startsWith(`${crate.dir}/`)).sort((left, right) => right.dir.length - left.dir.length)[0] ?? null;
   const roots = packageRoots(repoRoot);
+  const packageCrates = new Map<string, string>();
   const manifestOf = (path: string): string | null => {
     let best: { manifest: string; length: number } | null = null;
     for (const row of roots) for (const dir of row.dirs) if (path.startsWith(`${dir}/`) && (!best || dir.length > best.length)) best = { manifest: row.manifest, length: dir.length };
-    return best?.manifest ?? null;
+    if (best) return best.manifest;
+    const owner = universe.files.get(path)?.nodes[0]?.crate;
+    if (!owner || owner.name.startsWith("__loose")) return null;
+    if (!owner.name.startsWith("__pkg_")) return `${owner.dir}/Cargo.toml`;
+    return [...packageCrates].find(([, ident]) => ident === owner.ident)?.[0] ?? null;
   };
   const consumers = new Set<string>();
   const loadClosure = (load: () => void): void => {
@@ -135,7 +135,6 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     load();
     for (const path of universe.files.keys()) if (!known.has(path) && !isExcluded(path)) consumers.add(path);
   };
-  const packageCrates = new Map<string, string>();
   let loose = 0;
   for (const path of referencing) {
     if (universe.files.has(path)) continue;
@@ -151,13 +150,10 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     }
     if (!universe.files.has(path)) loadClosure(() => { universe.root(universe.addCrate(`__loose_${loose++}`, posix.dirname(path), path).ident); });
   }
-  dbg(`consumers ${consumers.size} files ${universe.files.size}`);
   const engine = new Unmirror(universe, { apiRoots: facadeIdents(all), targets: new Set(targets.map((crate) => crate.ident)), editable: (path) => !isExcluded(path) });
-  let nth = 0;
-  for (const path of new Set([...targetFiles, ...consumers])) { const s0 = Date.now(); console.error(`[DEBUG] start ${path.slice(-110)}`); engine.processFile(path); nth += 1; const dt = Date.now() - s0; if (dt > 500 || nth % 50 === 0) dbg(`processed ${nth} ${path.slice(-90)} ${dt}ms`); if (process.memoryUsage().rss > 5e9) { dbg("rss limit"); process.exit(3); } }
+  for (const path of new Set([...targetFiles, ...consumers])) engine.processFile(path);
   const report = engine.report;
 
-  dbg(`processed all edits ${report.edits.size}`);
   const crateFiles = new Map<string, string[]>();
   for (const path of report.edits.keys()) { const manifest = manifestOf(path); if (manifest) crateFiles.set(manifest, [...(crateFiles.get(manifest) ?? []), path]); }
   const textOf = (path: string): string => report.edits.get(path) ?? universe.read(path) ?? "";
@@ -193,7 +189,6 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     if (unused.size) { text = removeDependencyLines(text, unused); log(`${manifest}: removes ${[...unused].join(", ")}`); }
     manifests.set(manifest, text);
   }
-  dbg("manifests done");
   const regressions: string[] = [];
   const post = new Universe(repoRoot, report.edits);
   for (const crate of universe.crates.values()) post.addCrate(crate.name, crate.dir, crate.root);
@@ -205,7 +200,6 @@ export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
     for (const row of before.audit(path)) known.set(row, (known.get(row) ?? 0) + 1);
     for (const row of after.audit(path)) { const left = known.get(row) ?? 0; if (left > 0) known.set(row, left - 1); else regressions.push(`${path}: ${row}`); }
   }
-  dbg(`audit done regressions ${regressions.length}`);
   const graph = new Map<string, string[]>();
   for (const crate of all) {
     const manifest = `${crate.dir}/Cargo.toml`;

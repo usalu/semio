@@ -4,7 +4,6 @@ export function nxBuildDependencyImplementationV1():string;
 export function nxBuildEngineReferencesV1(source:string):readonly Readonly<{kind:"module"|"directory-url"|"file-url";specifier:string}>[];
 export function nxBuildEngineSourceFileV1(owner:string,specifier:string):string;
 export function nxBuildEngineInputsV1():readonly unknown[];
-export function readPrivateNxBuildGraphV1(workspaceRoot:string,environment:Readonly<Record<string,string|undefined>>):Promise<BuildGraphV1>;
 export function projectBuildTargetForNxV1(target:BuildTargetV1):NxProjectedTargetV1;
 export function projectBuildGraphForNxV1(graph:BuildGraphV1):NxProjectedGraphV1;
 export function projectBuildDependenciesForNxV1(graph:BuildGraphV1,context:NxDependencyContextV1):BuildGraphV1["dependencies"];

@@ -283,7 +283,7 @@ fn decoder_denied_original_invocation_preserves_exact_owner_and_receipt() {
     assert!(job.result.is_none());
     let recovered = job.take_probe().expect("denied original job returns its exact unchanged response");
     job.begin_close();
-    assert!(matches!(job.close_step(original), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
+    assert!(matches!(semio_framework_job::close_with_self_funded_context(original, |cx| job.close_step(cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete { .. }));
     assert!(job.terminal_is_empty());
     close_owned_decoder_fixture(authority, recovered);
 }

@@ -4,16 +4,18 @@
 //!
 //! The same options can be typed as a line: `z <length>` (the elevation), `duct <width> x <height>`, `tray <width> x <height>`, `pipe <diameter>` and `sys <system>`; a length is in metres, or with its unit `mm`, `cm` or `m`.
 
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::gestures::place::{length, next_system};
-use crate::editor::bim::gestures::plane::P;
-use crate::editor::bim::gestures::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::gestures::snap::SnapHit;
-use crate::editor::bim::gestures::typed::INVALID;
-use crate::editor::bim::entities::components::{system_label, system_of, SYSTEMS};
-use crate::editor::bim::entities::mep::{default_shape, shape_token, size_text, DUCT, ELEVATION, PIPE, TRAY};
-use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, MepShape, MepSystem, Point3}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place::{length, next_system};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::P;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit;
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{system_label, system_of, SYSTEMS};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::mep::{default_shape, shape_token, size_text, DUCT, ELEVATION, PIPE, TRAY};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 🔬️ Two vertices closer than this (metres) are the same vertex.
 const SAME: f64 = 1e-6;
@@ -76,7 +78,7 @@ impl Route {
         let name = ctx.name_of(|labels| labels.kind_mep_element, ctx.snapshot.mep_elements.values().filter(|element| element.storey == storey).count());
         let id = ctx.mint("mep");
         let mep = MepElement { storey, system: self.system, shape: self.shape.clone(), path: path.clone(), name };
-        let step = Step::write(ctx, ModelMutation::CreateMepElement(crate::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement { id, mep }));
+        let step = Step::write(ctx, ModelMutation::CreateMepElement(semio_s_artifact_bim_model_mut_any_157::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement { id, mep }));
         if step.refused.is_some() {
             self.vertices = path;
         }
@@ -149,7 +151,7 @@ impl Tool for Route {
             ToolEvent::Escape => {
                 if self.vertices.is_empty() {
                     self.hover = None;
-                    return Step { arm: Some(crate::editor::bim::utilities::DEFAULT_UTILITY.to_string()), ..Step::default() };
+                    return Step { arm: Some(semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY.to_string()), ..Step::default() };
                 }
                 self.vertices.clear();
                 Step::default()

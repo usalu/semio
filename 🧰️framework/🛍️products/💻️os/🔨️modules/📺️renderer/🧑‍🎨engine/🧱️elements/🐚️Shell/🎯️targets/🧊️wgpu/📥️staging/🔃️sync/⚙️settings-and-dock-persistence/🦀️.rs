@@ -77,7 +77,7 @@ impl SyncState {
                 label: Label::data(shell_chrome_string("sync.attach", is_de)),
                 action: ActionDescriptor { controller_id: "framework.sync".into(), action: "attach".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "kind": kind }) },
                 style: None,
-                presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                presence: UiPresence { state: if self.sync_card_draft.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
         }

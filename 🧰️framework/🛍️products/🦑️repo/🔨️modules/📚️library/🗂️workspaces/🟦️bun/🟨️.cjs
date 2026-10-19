@@ -203,33 +203,57 @@ function retainOwnershipObservationV1(observations, operation, path, value) {
   else record.list = value;
   observations.order.push(Object.freeze({ record, operation }));
 }
+/** 🧊️ Remembers one directory listing under the directory's physical stamp, so a later derivation re-lists only directories whose entries could have changed. */
+const listingCache = new Map();
+const directoryStamp = entry => entry.dev + ":" + entry.ino + ":" + entry.mode + ":" + entry.mtimeMs + ":" + entry.ctimeMs;
+const byName = (a, b) => Buffer.from(a.name).compare(Buffer.from(b.name));
+const kindOf = entry => entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
 function nativeOperations(observations, root, budget = physicalBudget()) {
   const retain = (operation, path, value) => retainOwnershipObservationV1(observations, operation, path, value);
-  return {
+  let recent;
+  const observe = path => {
+    if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
+    try {
+      const entry = fs.lstatSync(path), kind = kindOf(entry);
+      retain("state", path, [kind, String(entry.dev), String(entry.ino), entry.mode]); return { kind, entry };
+    } catch (error) { if (error.code === "ENOENT") { retain("state", path, ["missing"]); return { kind: "missing" }; } throw error; }
+  };
+  const operations = {
     state(path) {
-      if (typeof path !== "string" || path.length > limits.maximumPathUnits) throw Error("Bun workspace physical path capacity exceeded");
-      try {
-        const entry = fs.lstatSync(path), kind = entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other";
-        retain("state", path, [kind, String(entry.dev), String(entry.ino), entry.mode]); return kind;
-      } catch (error) { if (error.code === "ENOENT") { retain("state", path, ["missing"]); return "missing"; } throw error; }
+      const { kind, entry } = observe(path);
+      recent = kind === "directory" ? { path, entry } : undefined; return kind;
     },
     list(path) {
-      if (this.state(path) !== "directory") throw Error("Bun workspace requires a real directory: " + path);
-      const entries = [], directory = fs.opendirSync(path, { bufferSize: 1 }), prior = budget.lists.get(path) ?? 0; let failed = false;
-      try { for (let entry; (entry = directory.readSync()) !== null;) { if (entries.length >= limits.maximumDirectoryEntries || budget.entries - prior + entries.length + 1 > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path); entries.push({ name: entry.name, kind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other" }); } }
-      catch (error) { failed = true; throw error; } finally { try { directory.closeSync(); } catch (error) { if (!failed) throw error; } }
-      if (this.state(path) !== "directory") throw Error("Bun workspace requires a real directory: " + path);
-      budget.entries = budget.entries - prior + entries.length; budget.lists.set(path, entries.length); entries.sort((a, b) => Buffer.from(a.name).compare(Buffer.from(b.name)));
-      retain("list", path, observations ? entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !opaque.has(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name)))) : entries); return entries;
+      let before = recent?.path === path ? recent.entry : undefined; recent = undefined;
+      if (!before) { const current = observe(path); if (current.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path); before = current.entry; }
+      const listedAt = Date.now(), stamp = directoryStamp(before), prior = budget.lists.get(path) ?? 0, cached = listingCache.get(path);
+      let record = cached?.stamp === stamp && cached.root === root ? cached : undefined;
+      if (!record) {
+        const entries = [], directory = fs.opendirSync(path, { bufferSize: limits.directoryReadBatch }); let failed = false;
+        try { for (let entry; (entry = directory.readSync()) !== null;) { if (entries.length >= limits.maximumDirectoryEntries || budget.entries - prior + entries.length + 1 > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path); entries.push({ name: entry.name, kind: kindOf(entry) }); } }
+        catch (error) { failed = true; throw error; } finally { try { directory.closeSync(); } catch (error) { if (!failed) throw error; } }
+        entries.sort(byName);
+        const after = observe(path);
+        if (after.kind !== "directory") throw Error("Bun workspace requires a real directory: " + path);
+        record = { stamp, root, entries, projected: undefined };
+        if (directoryStamp(after.entry) === stamp && after.entry.ctimeMs < listedAt - limits.listingSettleMilliseconds) { if (listingCache.size >= limits.maximumListingCacheDirectories) listingCache.clear(); listingCache.set(path, record); }
+        else listingCache.delete(path);
+      } else if (record.entries.length > limits.maximumDirectoryEntries || budget.entries - prior + record.entries.length > limits.maximumAggregateDirectoryEntries) throw Error("Bun directory observation capacity exceeded: " + path);
+      budget.entries = budget.entries - prior + record.entries.length; budget.lists.set(path, record.entries.length);
+      if (observations) retain("list", path, record.projected ??= record.entries.filter(entry => entry.name === "package.json" || !entry.name.startsWith(".") && !opaque.has(entry.name) && (entry.kind === "symlink" || entry.kind === "directory" && !collectionRoot(root, join(path, entry.name)))));
+      return record.entries;
     },
     readText(path) {
+      recent = undefined;
       const ancestry = [];
       for (let current = dirname(path); ; current = dirname(current)) { ancestry.push(current); if (current === dirname(current)) break; }
-      for (const current of ancestry.reverse()) if (this.state(current) !== "directory") throw Error("Bun workspace ancestor must be a real directory: " + current);
-      if (this.state(path) !== "file") throw Error("Bun workspace requires a regular manifest: " + path);
+      for (const current of ancestry.reverse()) if (operations.state(current) !== "directory") throw Error("Bun workspace ancestor must be a real directory: " + current);
+      if (operations.state(path) !== "file") throw Error("Bun workspace requires a regular manifest: " + path);
+      recent = undefined;
       return readManifestText(path, budget);
     },
   };
+  return operations;
 }
 const readBunRepositoryMembership = (root, operations) => drain(membershipPlan(context(root), { kind: "all" }), operations);
 const bunRepositoryMembership = root => readBunRepositoryMembership(root, nativeOperations());

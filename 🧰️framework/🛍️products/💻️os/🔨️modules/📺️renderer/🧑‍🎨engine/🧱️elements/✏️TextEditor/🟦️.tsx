@@ -8,7 +8,7 @@ import { WasmCanvas } from "@semio-tech/framework/canvas/react-renderer";
 import { cn, ContextMenuController, glassClass, Textarea, useLabel } from "@semio-tech/ui-react";
 import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { useLocalDocumentOwnerV1, useLocalDocumentWindowV1 } from "../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
-import { useClient } from "../🕸️NodeGraph/🟦️.tsx";
+import { useClient } from "@semio-tech/framework-os-node-graph-rs/index";
 import { openSurfaceContextMenu, mapContextMenuSpecs } from "../🗣️Interpreter/🖱️surface-menu/🟦️.ts";
 import { parseSceneJsonField } from "../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { TextPeerCaretsOverlayV1 } from "../👕️canvas-presence/🟦️.tsx";

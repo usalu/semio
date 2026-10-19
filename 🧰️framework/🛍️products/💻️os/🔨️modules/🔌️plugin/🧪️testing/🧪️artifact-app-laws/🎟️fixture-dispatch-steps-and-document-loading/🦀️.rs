@@ -15,6 +15,77 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
     result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original action fixture dispatch exceeded its authored turn bound").into())
 }
 
+/// 🧭️ Drives the actual addressed command endpoint and pays remaining original fixture sources under its authored close loan.
+pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_framework::manifest::CommandAddress,args:Option<semio_framework_value::DslValue>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    let mut original_args=args;let mut original_fault=None;
+    let mut result=Ok(None);
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        result=app.handle_command(address,&mut original_args,&mut original_fault,active_mode,meta,identity,cx).await;
+        if !matches!(result,Ok(None)){break}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
+    }
+    close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
+    result?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original command fixture dispatch exceeded its authored turn bound").into())
+}
+
+/// 📤️ Exports one media port through the real original-caller loop: each pending turn funds one maintenance step under the authored close loan until the port answers.
+pub async fn export_fixture_media<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::Media,semio_framework_job::OriginalTurnFailure>{
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if let Some(media)=app.export_media(port,cx).await?{return Ok(media)}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media export fixture exceeded its authored turn bound").into())
+}
+
+/// 💾️ Produces one natural media artifact through the real original caller: each pending turn funds one maintenance step under the authored close loan until the port answers.
+pub async fn produce_fixture_media<P:PluginApp>(app:&mut P,port:&str,owner:&mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_document_media::MediaArtifact,semio_framework_plugin_decl_app::MediaArtifactOperationFailure>{
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if let Some(artifact)=app.produce_media(port,owner,cx).await?{return Ok(artifact)}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(semio_framework_job::OriginalTurnFailure::from(failure).into())}
+    }
+    Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media production fixture exceeded its authored turn bound")).into())
+}
+
+/// 🎬️ Submits one interactive media export through the real original receiving port: each pending turn funds one maintenance step under the authored close loan until the handle is received.
+pub async fn submit_fixture_media_export<P:PluginApp>(app:&mut P,port:&str,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle,semio_framework_job::OriginalTurnFailure>{
+    let mut receiver=None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.submit_media_export(port,&mut receiver,cx).await?{break}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
+    }
+    receiver.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media submission fixture exceeded its authored turn bound").into())
+}
+
+/// 📡️ Advances one submitted media export to its next poll answer through the real original receiving port.
+pub async fn poll_fixture_media_export<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll,semio_framework_job::OriginalTurnFailure>{
+    let mut receiver=None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.poll_media_export(handle.original_loan(),&mut receiver,cx).await?{break}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
+    }
+    receiver.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media poll fixture exceeded its authored turn bound").into())
+}
+
+/// 📦️ Publishes one completed media export result as the segmented download the host would hand out.
+pub async fn retain_fixture_media_export_result<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle,result:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus,semio_framework_job::OriginalTurnFailure>{
+    let mut source=Some(semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll::Complete(result));let mut status=None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.retain_media_export_result(handle.original_loan(),&mut source,&mut status,cx).await?{break}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
+    }
+    status.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media download publication fixture exceeded its authored turn bound").into())
+}
+
+/// ⬇️ Takes the next segmented download chunk of one retained media export; `None` is the end of the download.
+pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<Option<Vec<u8>>,semio_framework_job::OriginalTurnFailure>{
+    let mut receiver=None;
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.take_media_export_chunk(handle.original_loan(),&mut receiver,terminal,cx).await?{return Ok(receiver)}
+        if let Err(failure)=app.maintenance_step(cx,close_loan){return Err(failure.into())}
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original media chunk fixture exceeded its authored turn bound").into())
+}
+
 /// 📨️ Exercises the real continuation receiver with one original argument and fault pair.
 pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let(mut original_args,mut original_fault)=(args,fault);let mut result=Ok(None);

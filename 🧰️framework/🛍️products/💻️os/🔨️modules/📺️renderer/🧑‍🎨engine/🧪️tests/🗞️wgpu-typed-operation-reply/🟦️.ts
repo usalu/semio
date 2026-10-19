@@ -8,10 +8,11 @@
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). Oracle: the SAME neutral fixture the native renderer's
  * `🗞️typed-result-page/🦀️.rs` law and the shared `🖼️wire-turn/🟦️.ts` twin read. */
 import { describe, expect, it } from "vitest";
-import { typedOperationPageFixture as lanes } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { typedOperationPageFixture as lanes } from "@semio-tech/framework-actor/testing/fixtures";
 import { decodeAppFrame, encodeAppFrame } from "../../../../../🟦️.ts";
 import { TYPED_OPERATION_PAGE_MAGIC, scanTypedOperationPages, shellFrameBytes } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
-import { WGPU_TYPED_OPERATION_DRAIN_BUDGET, WGPU_TYPED_OPERATION_EFFECT_CAPACITY, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive, invocationResponseJson } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { WGPU_TYPED_OPERATION_DRAIN_BUDGET, WGPU_TYPED_OPERATION_EFFECT_CAPACITY, WGPU_TYPED_OPERATION_SETTLE_LIMIT, WgpuTypedOperationDrive } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
+import { invocationResponseJson } from "@semio-tech/framework-renderer-wgpu/plugin-bridge";
 
 const stream = lanes.shellMessageStream;
 const token = stream.token;

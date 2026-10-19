@@ -41,15 +41,13 @@ for (const row of corpus.crates) test(row.package + " owns an acyclic production
     for (const forbidden of ["semio_framework_ui", "semio_framework_os_kernel", "semio_framework_plugin", "wgpu"]) expect(tokens.some(token => token.text === forbidden), input.path).toBe(false);
   }
   if (row.package === "semio-framework-ui-text") {
-    const consumer = Bun.TOML.parse(read("📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest;
+    const consumerDirectory = "🎯️targets/🧊️wgpu/🪀️widgets/🧰️kit/📦️packages/🦀️rust";
+    const consumer = Bun.TOML.parse(read(consumerDirectory + "/Cargo.toml")) as unknown as Manifest;
     const edge = consumer.dependencies[row.package];
     if (!edge?.path) throw Error("Missing authored text producer dependency");
-    expect(resolve(ui, "📦️packages/🦀️rust", edge.path, "Cargo.toml")).toBe(resolve(ui, row.manifest));
-    expect(read("🎯️targets/🧊️wgpu/🦀️.rs")).toContain("pub use semio_framework_ui_text as text;");
-    expect(read("🎯️targets/🧊️wgpu/🦀️.rs")).not.toContain('"📝️text/🦀️.rs"');
+    expect(resolve(ui, consumerDirectory, edge.path, "Cargo.toml")).toBe(resolve(ui, row.manifest));
   }
-  expect(read("🎯️targets/🧊️wgpu/🦀️.rs")).toContain("pub use semio_framework_ui_declaration as component;");
-  expect(read("🎯️targets/🧊️wgpu/🦀️.rs")).not.toContain('"🧩️component/🦀️.rs"');
+  expect(existsSync(resolve(ui, "🎯️targets/🧊️wgpu/🦀️.rs"))).toBe(false);
 });
 
 for (const row of corpus.crates.filter(row => ["semio-framework-ui-draw-contract", "semio-framework-ui-prepared-staging", "semio-framework-ui-prepared", "semio-framework-ui-surface-identity"].includes(row.package))) test(row.package + " owns production and native test inputs across target cfgs", async () => {
@@ -130,17 +128,17 @@ test("every authored firstparty producer closure is acyclic with an independent 
   expect(independent.alg.findCycles(graph)).toEqual([]);
 });
 
-test("the enclosing renderer consumes declared producers without duplicating original source mounts", async () => {
-  const workspace = resolve(ui, "../../.."), cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix", "feature=wgpu", "feature=wgpu-engine"];
-  const enclosing = await readRustSourceClosureV1([resolve(ui, "📦️packages/🦀️rust/🦀️.rs")], workspace, cfg, async path => await readFile(path).catch(error => error.code === "ENOENT" ? null : Promise.reject(error)));
-  const consumer = Bun.TOML.parse(read("📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest;
+test("the carved wgpu crates consume declared producers without duplicating original source mounts", async () => {
+  const workspace = resolve(ui, "../../.."), cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix", "feature=testkit"];
+  const consumers = ["⚙️engine", "🖌️paint", "⚡️events", "🪀️widgets/🧰️kit", "🧭️hosting", "📌️mounted_layout", "📥️input"].map(directory => "🎯️targets/🧊️wgpu/" + directory);
+  const closures = (await Promise.all(consumers.map(directory => readRustSourceClosureV1([resolve(ui, directory, "🦀️.rs")], workspace, cfg, async path => await readFile(path).catch(error => error.code === "ENOENT" ? null : Promise.reject(error)))))).flat();
+  const manifests = consumers.map(directory => Bun.TOML.parse(read(directory + "/📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest & { dependencies: Record<string, { path?: string }> });
   for (const row of corpus.crates.filter(row => ["semio-framework-ui-draw-contract", "semio-framework-ui-prepared", "semio-framework-ui-surface-identity"].includes(row.package))) {
-    const edge = consumer.dependencies[row.package];
-    expect(edge?.path).toBeDefined();
-    expect(resolve(ui, "📦️packages/🦀️rust", edge.path!, "Cargo.toml")).toBe(resolve(ui, row.manifest));
-    expect(enclosing.some(input => resolve(workspace, input.path) === resolve(ui, row.entry))).toBe(false);
+    const consumed = manifests.some((manifest, index) => { const edge = manifest.dependencies[row.package]; return edge?.path !== undefined && resolve(ui, consumers[index]!, "📦️packages/🦀️rust", edge.path, "Cargo.toml") === resolve(ui, row.manifest); });
+    if (row.package !== "semio-framework-ui-prepared") expect(consumed).toBe(true);
+    expect(closures.some(input => resolve(workspace, input.path) === resolve(ui, row.entry))).toBe(false);
   }
   const prepared = Bun.TOML.parse(read("🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/Cargo.toml")) as unknown as Manifest;
   expect(prepared.dependencies["semio-framework-ui-prepared-staging"]?.path).toBe("../../📤️staging/📦️packages/🦀️rust");
-  expect(enclosing.some(input => input.path.includes("🎟️prepared/📤️staging/"))).toBe(false);
+  expect(closures.some(input => input.path.includes("🎟️prepared/📤️staging/"))).toBe(false);
 });

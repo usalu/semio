@@ -52,9 +52,9 @@ async fn a_rail_patch_nodes_is_undone_and_redone_as_one_local_edit() {
         select_ast(&mut app, &ids.iter().map(String::as_str).collect::<Vec<_>>(),cx).await;
         dispatch_rail(&mut app, "patchNodes", &[("field", "name"), ("value", "S15 Undo")],cx).await.expect("patch the selection");
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "{selected} selected");
-        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "undo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
         assert_eq!(node_names(&app, Some(&ids)).await, before, "undo restores all {selected} renamed nodes");
-        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        artifact_app_laws::settle_history_verb(&mut app.app, "redo", JACK_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
         assert_eq!(node_names(&app, Some(&ids)).await, vec!["S15 Undo".to_string(); selected], "redo renames all {selected} again");
     
     app.close(cx);

@@ -41,9 +41,10 @@ mod context {
     use semio_s_artifact_sequence_sequence::editor::sequence::retained::SequenceCommand;
     use semio_s_artifact_sequence_sequence::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_WINDOW_SCRIPT;
     use semio_s_artifact_stdio_semio::SemioMembers;
-    use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation, close_registered_fixture_app, project_and_retire_fixture_tree};
+    use semio_framework_plugin::artifact_app_laws::{settle_registered_typed_operation, close_registered_fixture_app};
 
-    pub struct SequenceApp(pub(crate) VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct SequenceApp(pub(crate) VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>, pub(crate) semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     impl std::ops::Deref for SequenceApp {
         type Target = VcsArtifactApp<EditorApp<SequencePlayApp>, SemioMembers>;
         fn deref(&self) -> &Self::Target { &self.0 }
@@ -53,25 +54,27 @@ mod context {
     }
     impl Drop for SequenceApp {
         fn drop(&mut self) {
-            if !std::thread::panicking() { close_registered_fixture_app(&mut self.0); }
+            if !std::thread::panicking() { close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close"); }
         }
     }
     pub async fn new_app() -> SequenceApp {
         super::installed();
-        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&create_sequence_app()), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::with_registry(EditorApp::default(), AppActionRegistry::from_definition(&create_sequence_app()), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
-        SequenceApp(app)
+        semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        SequenceApp(app, scope)
     }
     pub fn script_window_meta() -> semio_framework_plugin::ActionMeta {
         let window = ViewWindowInstance { id: format!("{SEQUENCE_PLAY_WINDOW_SCRIPT}#1"), window_kind_id: SEQUENCE_PLAY_WINDOW_SCRIPT.into() };
         semio_framework_plugin::ActionMeta { view_state: Some(ViewModel { window_id: Some(window.id.clone()), active_window_kind_id: Some(window.window_kind_id.clone()), window_instances: vec![window], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }), ..meta("local") }
     }
     pub async fn dispatch_in_script(app: &mut SequenceApp, command: SequenceCommand) {
-        app.0.dispatch_typed(command, &script_window_meta()).await.expect("dispatch");
-        settle_registered_typed_operation(&mut app.0, 1).await.expect("settle typed operation");
+        app.0.dispatch_typed(command, &script_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
     }
     pub async fn render_in(app: &mut SequenceApp, body_key: &str, view: &ViewModel) -> String {
-        project_and_retire_fixture_tree(app.0.render(body_key, None, view).await.expect("render")).expect("retire rendered tree")
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, view, app.1.cx()).await.expect("render")
     }
 }
 #[path = "🏃️playback/🦀️.rs"]

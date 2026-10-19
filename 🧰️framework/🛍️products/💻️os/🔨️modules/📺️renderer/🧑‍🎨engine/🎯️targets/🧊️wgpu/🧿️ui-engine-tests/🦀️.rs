@@ -80,7 +80,9 @@ mod laws {
     use std::collections::HashMap;
     use std::mem::ManuallyDrop;
     use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText};
-    use ui_wgpu::wgpu::{DrawList, HitKind, HitTarget, IconAtlas, InputState, PointerModifiers, UiStackNode, UiTextNode};
+    use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers};
+use semio_framework_ui_declaration::ui::{UiStackNode, UiTextNode};
 
     #[path = "../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs"]
     mod engine_surface_attach_tests;

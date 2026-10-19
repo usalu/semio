@@ -3,22 +3,19 @@
 //! The indexes the edges need are built once per run, never per element: the walls of each storey and the walls each wall touches (one sweep per storey), the openings of each host, the elements of
 //! each storey. The functions here only decide *which* nodes exist and *which* nodes are their parents; what a node computes is in `compute`.
 
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout;
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets;
-use crate::standards::v1::subsets::any::schema::inferences::rule_results;
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties;
-use crate::standards::v1::subsets::any::schema::inferences::families;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::beams;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::family_of;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{candidates, property_keys};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{constraint_storeys, stackings};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{band_of, joins};
-use crate::standards::v1::subsets::any::schema::authored::references;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Climate, EnergyScope};
-use crate::standards::v1::subsets::any::schema::inferences::zones::counts;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::beams;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::fillers::family_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::rows::{candidates, property_keys};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{constraint_storeys, stackings};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::band_of;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Climate, EnergyScope};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::counts;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{DiagnosticScope, ModelNode, NodeKind, TotalsScope};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{TopConstraint, ViewKind};
 use protocol::InferenceStep;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -59,8 +56,8 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
         steps.extend(stackings(snapshot).into_iter().map(|(id, below)| step(ModelNode::Storey(id), below.into_iter().map(ModelNode::Storey).collect())));
     }
 
-    let walls: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Wall)> = snapshot.walls.iter().filter(|(_, wall)| on_storey(&wall.storey)).collect();
-    let curtains: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::CurtainWall)> = snapshot.curtain_walls.iter().filter(|(_, curtain)| on_storey(&curtain.storey)).collect();
+    let walls: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall)> = snapshot.walls.iter().filter(|(_, wall)| on_storey(&wall.storey)).collect();
+    let curtains: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall)> = snapshot.curtain_walls.iter().filter(|(_, curtain)| on_storey(&curtain.storey)).collect();
 
     if has(NodeKind::Band) {
         steps.extend(walls.iter().map(|(id, _)| step(ModelNode::Band((*id).clone()), Vec::new())));
@@ -69,7 +66,7 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
         steps.extend(snapshot.openings.keys().map(|id| step(ModelNode::Cut(id.clone()), Vec::new())));
     }
     let properties: BTreeSet<String> = if has(NodeKind::Properties) {
-        let holders = effective_properties::holders(snapshot);
+        let holders = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::holders(snapshot);
         steps.extend(holders.iter().map(|(id, parent)| step(ModelNode::Properties(id.clone()), parent.iter().cloned().map(ModelNode::Properties).collect())));
         holders.into_iter().map(|(id, _)| id).collect()
     } else {
@@ -81,24 +78,24 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
     if has(NodeKind::CurtainLayout) {
         steps.extend(curtains.iter().map(|(id, curtain)| step(ModelNode::CurtainLayout((*id).clone()), storeys_of(snapshot, &curtain.storey, Some(&curtain.top)))));
     }
-    let surfaces: BTreeSet<&str> = walls.iter().flat_map(|(_, wall)| references::targets_of(wall)).filter(|id| references::storey_of(snapshot, id).is_some_and(|storey| on_storey(storey))).collect();
+    let surfaces: BTreeSet<&str> = walls.iter().flat_map(|(_, wall)| semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::targets_of(wall)).filter(|id| semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::storey_of(snapshot, id).is_some_and(|storey| on_storey(storey))).collect();
     if has(NodeKind::Surface) {
-        steps.extend(surfaces.iter().filter_map(|id| references::storey_of(snapshot, id).map(|storey| step(ModelNode::Surface((*id).to_string()), vec![ModelNode::Storey(storey.clone())]))));
+        steps.extend(surfaces.iter().filter_map(|id| semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::storey_of(snapshot, id).map(|storey| step(ModelNode::Surface((*id).to_string()), vec![ModelNode::Storey(storey.clone())]))));
     }
     if has(NodeKind::WallLayout) {
-        let mut bands: BTreeMap<&str, BTreeMap<String, joins::Band>> = BTreeMap::new();
+        let mut bands: BTreeMap<&str, BTreeMap<String, semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band>> = BTreeMap::new();
         for (id, wall) in &walls {
             if let Some(band) = band_of(snapshot, wall) {
                 bands.entry(wall.storey.as_str()).or_default().insert((*id).clone(), band);
             }
         }
-        let touching: BTreeMap<&str, BTreeMap<String, BTreeSet<String>>> = bands.iter().map(|(storey, set)| (*storey, joins::touching(set))).collect();
+        let touching: BTreeMap<&str, BTreeMap<String, BTreeSet<String>>> = bands.iter().map(|(storey, set)| (*storey, semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::touching(set))).collect();
         steps.extend(walls.iter().map(|(id, wall)| {
             let mut parents = storeys_of(snapshot, &wall.storey, Some(&wall.top));
             parents.push(ModelNode::Band((*id).clone()));
-            parents.extend(references::targets_of(wall).into_iter().filter(|target| surfaces.contains(target)).map(|target| ModelNode::Surface(target.to_string())));
+            parents.extend(semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::references::targets_of(wall).into_iter().filter(|target| surfaces.contains(target)).map(|target| ModelNode::Surface(target.to_string())));
             if let Some(touch) = touching.get(wall.storey.as_str()) {
-                parents.extend(joins::neighbourhood(touch, id).into_iter().map(ModelNode::Band));
+                parents.extend(semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::neighbourhood(touch, id).into_iter().map(ModelNode::Band));
             }
             step(ModelNode::WallLayout((*id).clone()), parents)
         }));
@@ -127,24 +124,24 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
             steps.push(step(ModelNode::OpeningFrame(id.clone()), parents));
         }
     }
-    let stairs: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Stair)> = snapshot.stairs.iter().filter(|(_, stair)| on_storey(&stair.storey)).collect();
+    let stairs: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair)> = snapshot.stairs.iter().filter(|(_, stair)| on_storey(&stair.storey)).collect();
     if has(NodeKind::StairRun) {
         steps.extend(stairs.iter().map(|(id, stair)| step(ModelNode::StairRun((*id).clone()), storeys_of(snapshot, &stair.storey, Some(&stair.top)))));
     }
-    let ramps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Ramp)> = snapshot.ramps.iter().filter(|(_, ramp)| on_storey(&ramp.storey)).collect();
+    let ramps: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp)> = snapshot.ramps.iter().filter(|(_, ramp)| on_storey(&ramp.storey)).collect();
     if has(NodeKind::RampRun) {
         steps.extend(ramps.iter().map(|(id, ramp)| step(ModelNode::RampRun((*id).clone()), storeys_of(snapshot, &ramp.storey, Some(&ramp.top)))));
     }
 
-    let walls_by_id: BTreeMap<&str, &crate::standards::v1::subsets::any::schema::snapshot::Wall> = walls.iter().map(|(id, wall)| (id.as_str(), *wall)).collect();
-    let sweeps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::WallSweep)> = snapshot.wall_sweeps.iter().filter(|(_, sweep)| walls_by_id.contains_key(sweep.host.as_str())).collect();
+    let walls_by_id: BTreeMap<&str, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall> = walls.iter().map(|(id, wall)| (id.as_str(), *wall)).collect();
+    let sweeps: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::WallSweep)> = snapshot.wall_sweeps.iter().filter(|(_, sweep)| walls_by_id.contains_key(sweep.host.as_str())).collect();
     let filler = |id: &String| snapshot.openings.get(id).and_then(|opening| family_of(&opening.kind));
     let fillers: Vec<(&String, SolidFamily)> = snapshot.openings.keys().filter(|id| opening_storey(snapshot, id).is_some_and(|storey| on_storey(&storey))).filter_map(|id| filler(id).map(|family| (id, family))).collect();
     if has(NodeKind::Family) {
         steps.extend(snapshot.families.keys().map(|id| step(ModelNode::Family(id.clone()), Vec::new())));
     }
-    let components: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Component)> = snapshot.components.iter().filter(|(_, component)| on_storey(&component.storey)).collect();
-    let meps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::MepElement)> = snapshot.mep_elements.iter().filter(|(_, mep)| on_storey(&mep.storey)).collect();
+    let components: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Component)> = snapshot.components.iter().filter(|(_, component)| on_storey(&component.storey)).collect();
+    let meps: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement)> = snapshot.mep_elements.iter().filter(|(_, mep)| on_storey(&mep.storey)).collect();
     let mut meps_by_storey: BTreeMap<&str, Vec<&String>> = BTreeMap::new();
     for (id, mep) in &meps {
         meps_by_storey.entry(mep.storey.as_str()).or_default().push(id);
@@ -200,7 +197,7 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
         }
         for (id, beam) in snapshot.beams.iter().filter(|(_, row)| on_storey(&row.storey)) {
             let mut parents = vec![ModelNode::Storey(beam.storey.clone())];
-            for (_, column) in beams::joining(snapshot, beam) {
+            for (_, column) in semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::beams::joining(snapshot, beam) {
                 for node in storeys_of(snapshot, &column.storey, Some(&column.top)) {
                     if !parents.contains(&node) {
                         parents.push(node);
@@ -240,10 +237,10 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
         }
     }
     let wall_ids: BTreeSet<&String> = walls.iter().map(|(id, _)| *id).collect();
-    let annotated: BTreeSet<&String> = snapshot.storeys.keys().filter(|storey| annotation_layout::is_annotated(snapshot, storey)).collect();
+    let annotated: BTreeSet<&String> = snapshot.storeys.keys().filter(|storey| semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::is_annotated(snapshot, storey)).collect();
     if has(NodeKind::Annotation) {
         for storey in &annotated {
-            let parents = annotation_layout::face_walls(snapshot, storey).into_iter().filter(|wall| wall_ids.contains(wall)).map(ModelNode::WallLayout).collect();
+            let parents = semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::face_walls(snapshot, storey).into_iter().filter(|wall| wall_ids.contains(wall)).map(ModelNode::WallLayout).collect();
             steps.push(step(ModelNode::Annotation((*storey).clone()), parents));
         }
     }
@@ -349,7 +346,7 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
 
         if has(NodeKind::Zone) || has(NodeKind::Scheme) {
             let measured: BTreeSet<&str> = quantities.iter().map(|(id, _)| id.as_str()).collect();
-            let spaces_of = |counted: &dyn Fn(&crate::standards::v1::subsets::any::schema::snapshot::Space) -> bool| -> Vec<ModelNode> { snapshot.spaces.iter().filter(|(id, space)| measured.contains(id.as_str()) && counted(space)).map(|(id, _)| ModelNode::Quantity(id.clone())).collect() };
+            let spaces_of = |counted: &dyn Fn(&semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space) -> bool| -> Vec<ModelNode> { snapshot.spaces.iter().filter(|(id, space)| measured.contains(id.as_str()) && counted(space)).map(|(id, _)| ModelNode::Quantity(id.clone())).collect() };
             if has(NodeKind::Zone) {
                 steps.extend(snapshot.zones.keys().map(|zone| step(ModelNode::Zone(zone.clone()), spaces_of(&|space| space.zone.as_deref() == Some(zone.as_str())))));
             }
@@ -483,7 +480,7 @@ fn clash_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> 
     let mut probes: BTreeSet<SolidKey> = BTreeSet::new();
     let mut sets: Vec<InferenceStep<ModelNode>> = Vec::new();
     for (id, set) in &snapshot.clash_sets {
-        let picked = clash_sets::needed(snapshot, set, &solids);
+        let picked = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::needed(snapshot, set, &solids);
         probes.extend(picked.iter().map(|key| (*key).clone()));
         sets.push(step(ModelNode::ClashSet(id.clone()), picked.into_iter().map(|key| ModelNode::Probe(key.clone())).collect()));
     }
@@ -492,13 +489,13 @@ fn clash_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> 
 
 /// ⚖️ The `Rule` nodes: one per rule, the planned nodes that hold the measures of its members as parents (stair runs, opening frames, ramp runs, rooms of the storeys of its spaces or zones).
 fn rule_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> Vec<InferenceStep<ModelNode>> {
-    use crate::standards::v1::subsets::any::schema::snapshot::RuleKind::{MaxCompartmentArea, MaxRampSlope, MaxRiser, MinClearHeight, MinCorridorWidth, MinDoorWidth, MinStairWidth, MinTread};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::RuleKind::{MaxCompartmentArea, MaxRampSlope, MaxRiser, MinClearHeight, MinCorridorWidth, MinDoorWidth, MinStairWidth, MinTread};
     let planned: BTreeSet<&ModelNode> = steps.iter().map(|planned| &planned.key).collect();
     snapshot
         .rules
         .iter()
         .map(|(id, rule)| {
-            let members = rule_results::members(snapshot, rule);
+            let members = semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::members(snapshot, rule);
             let nodes: BTreeSet<ModelNode> = members
                 .iter()
                 .filter_map(|member| match rule.kind {
@@ -554,7 +551,7 @@ fn view_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>], on_s
 
 /// 🧭️ The storeys whose levels an element set of `storey` depends on: its own, then every storey a top constraint targets, sorted and unique.
 pub fn level_storeys(snapshot: &ModelSnapshot, storey: &str) -> Vec<String> {
-    crate::standards::v1::subsets::any::schema::inferences::bodies::level_storeys(snapshot, storey)
+    semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::level_storeys(snapshot, storey)
 }
 
 /// 🪜️ The storey an element stands on (a space, wall, … by its record; an opening by its host).
@@ -580,18 +577,18 @@ pub fn element_storey(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
 }
 
 /// 🧩️ The family nodes of the profile families the given profiles name (only families that exist).
-pub fn family_parents(snapshot: &ModelSnapshot, profiles: Vec<&crate::standards::v1::subsets::any::schema::snapshot::Profile>) -> Vec<ModelNode> {
-    let named: BTreeSet<&str> = profiles.into_iter().filter_map(families::family_of_profile).filter(|id| snapshot.families.contains_key(*id)).collect();
+pub fn family_parents(snapshot: &ModelSnapshot, profiles: Vec<&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile>) -> Vec<ModelNode> {
+    let named: BTreeSet<&str> = profiles.into_iter().filter_map(semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of_profile).filter(|id| snapshot.families.contains_key(*id)).collect();
     named.into_iter().map(|id| ModelNode::Family(id.to_string())).collect()
 }
 
 /// 🛤️ The rail, post and baluster sections of a railing.
-pub fn railing_profiles(railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<&crate::standards::v1::subsets::any::schema::snapshot::Profile> {
+pub fn railing_profiles(railing: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<&semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile> {
     [Some(&railing.profile), Some(&railing.post_profile), railing.baluster.as_ref().map(|row| &row.profile)].into_iter().flatten().collect()
 }
 
 /// 🪝️ The nodes the solid of a railing is computed from: the storey it stands on and, when it is hosted, the run of its stair or ramp host or the storey of its slab host.
-pub fn railing_parents(snapshot: &ModelSnapshot, railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<ModelNode> {
+pub fn railing_parents(snapshot: &ModelSnapshot, railing: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<ModelNode> {
     let mut parents = vec![ModelNode::Storey(railing.storey.clone())];
     let Some(host) = railing.host.as_ref() else { return parents };
     if let Some(stair) = snapshot.stairs.get(&host.element).filter(|stair| snapshot.storeys.contains_key(&stair.storey)) {

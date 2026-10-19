@@ -1,6 +1,6 @@
-import {validateSceneSourceAddress} from "../📋️prepare/🟦️.ts";
+import { validateSceneSourceAddress } from "../🗺️plan-model/🟦️.ts";
 /** 🔀️ Complete prepared documents resolve referenced filled geometry under grants. */
-import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode } from "../🗺️plan-model/🟦️.ts";
 import {PathBooleanJob,type PathBooleanOperand,type PathBooleanProgress} from "@semio-tech/framework/2d/booleans/paths";
 import type {PathSegment,Vec2} from "@semio-tech/framework/2d";
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "@semio-tech/framework/2d/retire";

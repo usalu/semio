@@ -4,10 +4,11 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::mep;
 use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentIssueCode, ComponentValue};
-use crate::standards::v1::subsets::any::schema::inferences::bodies::{region, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies::region;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::mep::{MepValue, CONNECT_DISTANCE};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_geometry::loops::{self, Vertex as Corner};

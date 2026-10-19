@@ -9,7 +9,7 @@ use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentTraceRetirementProgress=WorkRetirementProgress;
 use std::sync::Arc;
 
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
 use semio_framework_pixels::retirement::RasterLease;
 use crate::preparation::OwnedTable;
 use crate::preparation::OwnedSet;

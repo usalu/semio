@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import { nodeGraphSceneFixture as corpus, graphSceneBodyFixture as wire } from "@semio-tech/framework-surface-ts/testing/fixtures";
 import {encodePackValue,decodePackValue,packValueToExactJson,packValueToBase64} from "../../🟦️.ts";
-import type {PackValue} from "../../../../🔨️modules/🎁️packs/🟦️.ts";
+import type {PackValue} from "@semio-tech/framework/packs";
 
 test("the actual OS browser producer emits explicit Body vectors for the scene and every embedded slot",()=>{
  const body=encodePackValue(corpus.scene);expect(Buffer.from(body).toString("hex")).toBe(wire.bodyHex);expect(packValueToExactJson(decodePackValue(body))).toEqual(corpus.scene);

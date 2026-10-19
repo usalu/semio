@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import fixture from "../../../🧪️tests/🧫️fixtures/✅️validation/🔣️answers.json";
 import { answerError } from "../🟦️.ts";
-import type { FormQuestion, DslValue } from "../../🧬️mutations/🟦️.ts";
+import type { FormQuestion, DslValue } from "../../🧱️form-model/🟦️.ts";
 export function testFormsValidation(): void {
   const ajv = new Ajv({ multipleOfPrecision: 10 });
   addFormats(ajv);

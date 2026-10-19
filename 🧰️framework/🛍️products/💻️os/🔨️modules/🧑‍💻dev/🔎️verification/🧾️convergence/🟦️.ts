@@ -4,10 +4,10 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { developmentRuntimeRoot, builtPluginModulesRootIn, readActivationReceipt } from "../../♻️activation/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { moduleDirectoryName } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
-import { readGeneratedCatalogProjection, runtimeCatalogProjectionRootV1, registryModuleDirectories } from "../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
+import { moduleDirectoryName } from "@semio-tech/plugin-registry/deployment";
+import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "@semio-tech/plugin-registry/discovery";
+import { readGeneratedCatalogProjection, runtimeCatalogProjectionRootV1, registryModuleDirectories } from "@semio-tech/plugin-registry/catalog-view";
 
 /** 🧾️ One component's convergence row: its committed semantic descriptor, the receipt of its shipped `dist/components`
  * deliverable, the module page staged from it and the activation receipt must name ONE build. */

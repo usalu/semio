@@ -11,11 +11,14 @@ use semio_framework_os_infinite_world_interaction::step_world3d_draw_rebuild;
 use semio_framework_os_infinite_world_host::{apply_runtime_draw_flags, step_world3d_dynamic_retirement, step_world3d_scene_bridge, step_world3d_snapshot, sync_world3d_state, world3d_dynamic_retirement_terminal_is_empty, world3d_modelling_accessibility, World3dState};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use semio_framework_os_infinite_world_host::render_world_3d;
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, Rgba, SceneDraw3d, SurfaceKind, Theme, UiComponentSceneNode, UiPresence, Vec3, World3dScene};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use ui_scene::math::{SceneDraw3d, Vec3};
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
 use std::collections::HashMap;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{ScenePass3d, SceneSectionRole3d};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))] use ui_scene::math::{ScenePass3d, SceneSectionRole3d};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -179,14 +182,14 @@ fn state_with_guest_selection(granularity: &str) -> World3dState {
 #[test]
 fn the_scene_pick_filter_admits_exactly_the_fixture_granularity_on_the_native_selection_channels() {
     for row in modelling_fixture()["pickTargets"].as_array().unwrap() {
-        let filter = ui_wgpu::wgpu::World3dPickGranularity::parse(row["filter"].as_str().unwrap()).unwrap();
+        let filter = semio_framework_ui_declaration::ui::World3dPickGranularity::parse(row["filter"].as_str().unwrap()).unwrap();
         let mut state = state_with_guest_selection("face");
         apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, Some(filter));
         let targets = &row["targets"];
         assert_eq!((state.selection.selection_targets.vertex, state.selection.selection_targets.edge, state.selection.selection_targets.face), (targets["vertex"].as_bool().unwrap(), targets["edge"].as_bool().unwrap(), targets["face"].as_bool().unwrap()), "{filter:?}");
-        let mode = if filter == ui_wgpu::wgpu::World3dPickGranularity::Shape { "mesh" } else { filter.as_str() };
+        let mode = if filter == semio_framework_ui_declaration::ui::World3dPickGranularity::Shape { "mesh" } else { filter.as_str() };
         assert_eq!(state.selection.granularity, mode);
-        let keeps = filter == ui_wgpu::wgpu::World3dPickGranularity::Face;
+        let keeps = filter == semio_framework_ui_declaration::ui::World3dPickGranularity::Face;
         assert_eq!(state.selection.component_ids.is_empty(), !keeps, "components of another granularity are dropped, those of the chosen one kept ({filter:?})");
         assert_eq!(state.selection.hovered_component_mode.is_some(), keeps);
     }
@@ -198,14 +201,14 @@ fn the_scene_pick_filter_is_idempotent_and_absent_filter_leaves_the_guest_channe
     let before = (state.selection.granularity.clone(), state.selection.selection_targets.clone(), state.selection.component_ids.clone(), state.session.interaction_revision);
     apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, None);
     assert_eq!((state.selection.granularity.clone(), state.selection.selection_targets.clone(), state.selection.component_ids.clone(), state.session.interaction_revision), before);
-    apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, Some(ui_wgpu::wgpu::World3dPickGranularity::Edge));
+    apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, Some(semio_framework_ui_declaration::ui::World3dPickGranularity::Edge));
     let after_first = state.session.interaction_revision;
     assert_ne!(after_first, before.3);
-    apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, Some(ui_wgpu::wgpu::World3dPickGranularity::Edge));
+    apply_world3d_pick_filter(&mut state.session, &mut state.selection, &mut state.scene, Some(semio_framework_ui_declaration::ui::World3dPickGranularity::Edge));
     assert_eq!(state.session.interaction_revision, after_first, "re-applying the same filter must not churn the view revision");
 }
 
-fn field_named(name: &str, values: serde_json::Value) -> ui_wgpu::wgpu::World3dScalarField {
+fn field_named(name: &str, values: serde_json::Value) -> semio_framework_ui_declaration::ui::World3dScalarField {
     let entry = modelling_fixture()["valid"].as_array().unwrap().iter().find(|entry| entry["name"] == name).unwrap().clone();
     let mut value = entry["value"].clone();
     value["values"] = values;
@@ -215,7 +218,7 @@ fn field_named(name: &str, values: serde_json::Value) -> ui_wgpu::wgpu::World3dS
 //#region 🔖️ModellingWgpu
 const UNIT_CUBE_MESHES: &str = r#"[{"id":"cube","data":{"positions":[0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,1,0,1,1,1,1,0,1,1],"indices":[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,3,7,6,3,6,2,0,4,7,0,7,3,1,2,6,1,6,5]}}]"#;
 
-fn modelling_cube_scene(options: Option<ui_wgpu::wgpu::World3dModellingOptions>) -> UiComponentSceneNode {
+fn modelling_cube_scene(options: Option<semio_framework_ui_declaration::ui::World3dModellingOptions>) -> UiComponentSceneNode {
     let mut scene = scene_with_selection("{}");
     let world = scene.world_3d.as_mut().expect("world fixture");
     world.meshes_json = UNIT_CUBE_MESHES.into();
@@ -224,14 +227,14 @@ fn modelling_cube_scene(options: Option<ui_wgpu::wgpu::World3dModellingOptions>)
     scene
 }
 
-fn paint_world(scene: &UiComponentSceneNode, state: &mut World3dState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, bounds: Rect) -> (ui_wgpu::wgpu::DrawList, ui_wgpu::wgpu::FontAtlas) {
-    let mut draw = ui_wgpu::wgpu::DrawList::default();
+fn paint_world(scene: &UiComponentSceneNode, state: &mut World3dState, gpu: &mut World3dBuildContext, theme: &semio_framework_ui_theme::Theme, bounds: Rect) -> (semio_framework_ui_draw_contract::DrawList, semio_framework_ui_text::FontAtlas) {
+    let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     draw.set_screen_height(bounds.h);
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
     {
-        let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+        let mut ctx = semio_framework_ui_wgpu_widget_kit::WidgetContext {
             draw: &mut draw,
             overlay: None,
             atlas: &mut atlas,
@@ -250,7 +253,7 @@ fn paint_world(scene: &UiComponentSceneNode, state: &mut World3dState, gpu: &mut
     (draw, atlas)
 }
 
-fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &ui_wgpu::wgpu::Theme, bounds: Rect, ready: impl Fn(&ScenePass3d) -> bool) -> ui_wgpu::wgpu::DrawList {
+fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &semio_framework_ui_theme::Theme, bounds: Rect, ready: impl Fn(&ScenePass3d) -> bool) -> semio_framework_ui_draw_contract::DrawList {
     let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     drive_scene_bridge(state, scene, bounds);
     for turn in 0..4_096 {
@@ -262,18 +265,18 @@ fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &
     panic!("the world pass never satisfied its readiness predicate");
 }
 
-fn section_roles(draws: &[SceneDraw3d]) -> Vec<(String, ui_wgpu::wgpu::SceneSectionRole3d)> {
+fn section_roles(draws: &[SceneDraw3d]) -> Vec<(String, ui_scene::math::SceneSectionRole3d)> {
     draws.iter().flat_map(|draw| draw.instances.iter().map(|instance| (draw.mesh_key.clone(), instance.material.section))).collect()
 }
 
 #[test]
 fn a_capped_section_clips_the_scene_and_brackets_the_cap_plane_between_two_stencil_toggles() {
-    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
+    use ui_scene::math::SceneSectionRole3d as Role;
     let fixture = modelling_fixture();
     let row = &fixture["sectionPlanes"][1];
-    let section: ui_wgpu::wgpu::World3dSection = serde_json::from_value(row["section"].clone()).expect("fixture section");
-    let options = ui_wgpu::wgpu::World3dModellingOptions { section: Some(section), ..Default::default() };
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let section: semio_framework_ui_declaration::ui::World3dSection = serde_json::from_value(row["section"].clone()).expect("fixture section");
+    let options = semio_framework_ui_declaration::ui::World3dModellingOptions { section: Some(section), ..Default::default() };
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&modelling_cube_scene(Some(options)), &mut state, &theme, bounds, |pass| pass.translucent_draws.iter().any(|draw| draw.instances.iter().any(|instance| instance.material.section == Role::Cap)));
@@ -298,10 +301,10 @@ fn a_capped_section_clips_the_scene_and_brackets_the_cap_plane_between_two_stenc
 
 #[test]
 fn an_open_section_clips_without_a_cap_and_no_section_changes_nothing() {
-    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
-    let theme = ui_wgpu::wgpu::Theme::default();
+    use ui_scene::math::SceneSectionRole3d as Role;
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
-    let open = ui_wgpu::wgpu::World3dModellingOptions { section: Some(ui_wgpu::wgpu::World3dSection::new([0.0, 0.0, 0.5], [0.0, 0.0, 1.0])), ..Default::default() };
+    let open = semio_framework_ui_declaration::ui::World3dModellingOptions { section: Some(semio_framework_ui_declaration::ui::World3dSection::new([0.0, 0.0, 0.5], [0.0, 0.0, 1.0])), ..Default::default() };
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&modelling_cube_scene(Some(open)), &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
     let pass = draw.scene_passes.last().unwrap();
@@ -317,11 +320,11 @@ fn an_open_section_clips_without_a_cap_and_no_section_changes_nothing() {
     retire_bridged_surface(&mut plain);
 }
 
-fn overlay_vertices(draw: &ui_wgpu::wgpu::DrawList) -> Vec<[f32; 2]> {
+fn overlay_vertices(draw: &semio_framework_ui_draw_contract::DrawList) -> Vec<[f32; 2]> {
     draw.layers.iter().flat_map(|layer| layer.overlay_vector_vertices.iter().map(|vertex| vertex.position)).collect()
 }
 
-fn overlay_glyphs(draw: &ui_wgpu::wgpu::DrawList) -> usize {
+fn overlay_glyphs(draw: &semio_framework_ui_draw_contract::DrawList) -> usize {
     draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).filter(|instance| instance.uv_rect != [0.0, 0.0, 1.0, 1.0]).count()
 }
 
@@ -336,13 +339,13 @@ fn annotations_paint_the_shared_projection_as_screen_constant_overlay_geometry()
     let fixture = modelling_fixture();
     let layer = fixture["annotationProjection"]["layer"].clone();
     let scene = annotation_scene(layer.clone());
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(40.0, 30.0, 640.0, 480.0);
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
     let pass = draw.scene_passes.last().unwrap();
-    let typed: ui_wgpu::wgpu::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let projected = ui_wgpu::wgpu::project_world3d_annotations(&typed, &pass.view_proj, bounds.w, bounds.h);
+    let typed: semio_framework_ui_declaration::ui::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let projected = semio_framework_ui_declaration::ui::project_world3d_annotations(&typed, &pass.view_proj, bounds.w, bounds.h);
     assert!(projected.iter().any(|entry| entry.visible) && projected.iter().any(|entry| !entry.visible));
     let vertices = overlay_vertices(&draw);
     let near = |x: f64, y: f64| vertices.iter().any(|vertex| (f64::from(vertex[0]) - (x + f64::from(bounds.x))).abs() < 1.0 && (f64::from(vertex[1]) - (y + f64::from(bounds.y))).abs() < 1.0);
@@ -365,7 +368,7 @@ fn annotations_paint_the_shared_projection_as_screen_constant_overlay_geometry()
 #[test]
 fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
     let layer = serde_json::json!({"items":[{"kind":"dimension","id":"d","from":[0,0,0],"to":[1,0,0],"offset":[0,-0.2,0],"text":{"en":"1","de":"1"}}]});
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let mut arrow_sizes = Vec::new();
     for distance in [4.0, 40.0] {
@@ -373,8 +376,8 @@ fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
         scene.world_3d.as_mut().unwrap().camera_json = format!(r#"{{"position":[{distance},{distance},{distance}],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}}"#);
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
-        let typed: ui_wgpu::wgpu::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let projected = ui_wgpu::wgpu::project_world3d_annotations(&typed, &draw.scene_passes.last().unwrap().view_proj, bounds.w, bounds.h);
+        let typed: semio_framework_ui_declaration::ui::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let projected = semio_framework_ui_declaration::ui::project_world3d_annotations(&typed, &draw.scene_passes.last().unwrap().view_proj, bounds.w, bounds.h);
         let arrows = &projected[0].arrows;
         assert_eq!(arrows.len(), 2, "the original dimension projects both arrowheads");
         let triangles: Vec<_> = draw.layers.iter().flat_map(|layer| layer.overlay_vector_vertices.iter().map(|vertex| vertex.position)).collect();
@@ -392,14 +395,14 @@ fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
 #[test]
 fn annotation_text_follows_the_active_language() {
     let layer = serde_json::json!({"items":[{"kind":"leader","id":"m","anchor":[0.5,0.5,0.5],"labelOffsetPx":[10,10],"text":{"en":"Centre point","de":"Mitte"}}]});
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let mut counts = Vec::new();
     for german in [false, true] {
         let mut scene = annotation_scene(layer.clone());
         scene.world_3d.as_mut().unwrap().annotations = scene.world_3d.as_ref().unwrap().annotations.clone().map(|mut layer| {
-            if let ui_wgpu::wgpu::World3dAnnotation::Leader(leader) = &mut layer.items[0] {
-                leader.text = ui_wgpu::wgpu::World3dText::new("Centre point", "Mitte");
+            if let semio_framework_ui_declaration::ui::World3dAnnotation::Leader(leader) = &mut layer.items[0] {
+                leader.text = semio_framework_ui_declaration::ui::World3dText::new("Centre point", "Mitte");
             }
             layer
         });
@@ -420,13 +423,13 @@ fn legend_scene(values: serde_json::Value) -> UiComponentSceneNode {
     scene
 }
 
-fn ramp_slices(draw: &ui_wgpu::wgpu::DrawList) -> Vec<[f32; 4]> {
+fn ramp_slices(draw: &semio_framework_ui_draw_contract::DrawList) -> Vec<[f32; 4]> {
     draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).filter(|instance| instance.uv_rect == [0.0, 0.0, 1.0, 1.0] && instance.rect[2] == 12.0).map(|instance| instance.color).collect()
 }
 
 #[test]
 fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_colours() {
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 1.0]));
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
@@ -434,10 +437,10 @@ fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_c
     assert_eq!(state.overlay.scalar_field_status(), World3dScalarFieldStatus::Applied);
     let slices = ramp_slices(&draw);
     assert_eq!(slices.len(), 32);
-    let ramp = ui_wgpu::wgpu::World3dColorRamp::Inferno;
+    let ramp = semio_framework_ui_declaration::ui::World3dColorRamp::Inferno;
     let colour = |t: f64| {
         let [r, g, b] = ramp.sample(t);
-        let linear = ui_wgpu::wgpu::Rgba::from_srgb8(r, g, b, 255);
+        let linear = semio_framework_ui_theme::Rgba::from_srgb8(r, g, b, 255);
         [linear.r, linear.g, linear.b, 1.0]
     };
     assert_eq!(slices[0], colour(1.0 - 0.5 / 32.0), "the top of the bar is the range maximum");
@@ -456,25 +459,25 @@ fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_c
 
 #[test]
 fn a_scalar_field_that_does_not_fit_its_mesh_announces_the_mismatch_instead_of_a_legend() {
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let scene = legend_scene(serde_json::json!([0.0, 1.0]));
     let mut state = World3dState::new("surface-1".into(), "controller-1".into());
     let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
     assert_eq!(state.overlay.scalar_field_status(), World3dScalarFieldStatus::Mismatch);
     assert!(ramp_slices(&draw).is_empty());
-    assert_eq!(overlay_glyphs(&draw), ui_wgpu::wgpu::world3d_modelling_strings("en").mismatch.chars().count());
+    assert_eq!(overlay_glyphs(&draw), semio_framework_ui_declaration::ui::world3d_modelling_strings("en").mismatch.chars().count());
     retire_bridged_surface(&mut state);
     let mut german = World3dState::new("surface-1".into(), "controller-1".into());
     german.set_modelling_locale(true);
     let draw = painted_pass(&scene, &mut german, &theme, bounds, |pass| !pass.draws.is_empty());
-    assert_eq!(overlay_glyphs(&draw), ui_wgpu::wgpu::world3d_modelling_strings("de").mismatch.chars().count());
+    assert_eq!(overlay_glyphs(&draw), semio_framework_ui_declaration::ui::world3d_modelling_strings("de").mismatch.chars().count());
     retire_bridged_surface(&mut german);
 }
 
 #[test]
 fn the_modelling_overlays_publish_a_text_alternative_in_the_active_language() {
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
     let mut scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, null, 0.5, 0.6, 1.0]));
     scene.world_3d.as_mut().unwrap().annotations = Some(semio_framework_pack_json::from_json_str(&modelling_fixture()["valid"][0]["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture layer"));
@@ -507,10 +510,10 @@ fn the_modelling_overlays_publish_a_text_alternative_in_the_active_language() {
 
 /// 🧊️ Renders one painted world draw list through the real prepared pipeline on a headless GPU and reads the pixels back, `None` when the machine has no adapter.
 #[cfg(not(target_arch = "wasm32"))]
-fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &ui_wgpu::wgpu::Theme, size: u32, ready: impl Fn(&ScenePass3d) -> bool) -> Option<Vec<u8>> {
+fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &semio_framework_ui_theme::Theme, size: u32, ready: impl Fn(&ScenePass3d) -> bool) -> Option<Vec<u8>> {
     use semio_framework_job::{InteractiveJob, StepOutcome};
     use ui_gpu::{RasterTextureCleanupStep, RasterTextureWitness};
-    use ui_wgpu::wgpu::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, UiPresentToken};
+    use semio_framework_ui_prepared::{PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, UiPresentToken};
 use ui_gpu::{GpuContext};
     let source = match semio_framework_async::block_on(GpuContext::headless(1, 1)) {
         Ok(source) => source,
@@ -549,7 +552,7 @@ use ui_gpu::{GpuContext};
             other => panic!("prepared job ended in {other:?}: {:?}", job.fault()),
         }
     }
-    while !matches!(PreparedRenderJob::close_step(&mut job,world_original_fixture_grant()),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
+    while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| PreparedRenderJob::close_step(&mut job, cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}
     let mut packet = packet.expect("a prepared packet");
     let mut gpu = source.offscreen(size, size).expect("offscreen target");
     gpu.begin_prepared(&UiPresentToken::mint_for_current_thread(), &PreparedRenderGate::default(), &packet, packet.scene_revision(), packet.preview_generation()).expect("packet admitted");
@@ -607,14 +610,14 @@ fn distance(left: [u8; 4], right: [u8; 4]) -> i32 {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_without_leaking_stencil() {
-    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
+    use ui_scene::math::SceneSectionRole3d as Role;
     const SIZE: u32 = 128;
-    let theme = ui_wgpu::wgpu::Theme::default();
+    let theme = semio_framework_ui_theme::Theme::default();
     let section = |cap: bool| {
-        let section = ui_wgpu::wgpu::World3dSection::new([0.5, 0.5, 0.5], [0.0, 0.0, 1.0]);
-        Some(ui_wgpu::wgpu::World3dModellingOptions { section: Some(if cap { section.capped(ui_wgpu::wgpu::World3dTone::Danger) } else { section }), ..Default::default() })
+        let section = semio_framework_ui_declaration::ui::World3dSection::new([0.5, 0.5, 0.5], [0.0, 0.0, 1.0]);
+        Some(semio_framework_ui_declaration::ui::World3dModellingOptions { section: Some(if cap { section.capped(semio_framework_ui_declaration::ui::World3dTone::Danger) } else { section }), ..Default::default() })
     };
-    let render = |options: Option<ui_wgpu::wgpu::World3dModellingOptions>, camera: fn(&mut UiComponentSceneNode)| -> Option<Vec<u8>> {
+    let render = |options: Option<semio_framework_ui_declaration::ui::World3dModellingOptions>, camera: fn(&mut UiComponentSceneNode)| -> Option<Vec<u8>> {
         let mut scene = modelling_cube_scene(options.clone());
         camera(&mut scene);
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());

@@ -201,7 +201,7 @@ function runCase(testCase: Case, budget: number | null, steps: Step[] = testCase
 //#endregion 🧮️Twin
 
 //#region 🧪️Corpus
-const corpus = read("../../🧫️fixtures/🧫️deferred-reprojection/🔣️.json");
+const corpus = read("../🧫️fixtures/🧫️deferred-reprojection/🔣️.json");
 const cases = corpus.cases as Case[];
 
 
@@ -268,7 +268,7 @@ test("🎲️ every corpus case adopts the same history under any budget", () =>
 
 
 test("operation-capped replay counts folded mutations independently of structural checkpoints", () => {
-  const law = read("../../🧫️fixtures/📏️reprojection-operation-authority.json");
+  const law = read("../🧫️fixtures/📏️reprojection-operation-authority.json");
   const operations: Patch[] = Array.from({length:law.mutationCount},(_, index)=>({op:"replace",path:"/n",value:(index+1)*law.delta}));
   let state = {n:0};
   let turns = 0;

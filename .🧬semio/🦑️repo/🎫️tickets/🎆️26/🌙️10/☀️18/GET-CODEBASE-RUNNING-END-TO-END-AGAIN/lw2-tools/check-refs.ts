@@ -1,0 +1,16 @@
+import Ajv from "ajv";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+const ROOT = "/Users/ueli/Documents/semio";
+const SKIP = new Set(["node_modules", "dist", "target", "pkg", ".cache", "🗑️generated", ".git", "📤️dist"]);
+const idFiles = new Map<string, string>(), docs: any[] = [];
+const walk = (d: string) => { let es; try { es = readdirSync(d, { withFileTypes: true }); } catch { return; } for (const e of es) { if (SKIP.has(e.name)) continue; const p = join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name.endsWith(".json") && !/tsconfig|package|launch|taxonomy/.test(e.name)) { try { const s = readFileSync(p, "utf8"); if (!s.includes('"$id"')) continue; const j = JSON.parse(s); if (typeof j.$id === "string" && !idFiles.has(j.$id)) { idFiles.set(j.$id, p); docs.push(j); } } catch {} } } };
+for (const r of ["✏️s", "🧰️framework", "🌎️hub"]) walk(join(ROOT, r));
+console.log("schemas with $id:", idFiles.size);
+const refs = new Set<string>(); const collect = (v: any) => { if (Array.isArray(v)) v.forEach(collect); else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) { if (k === "$ref" && typeof x === "string" && x.startsWith("http")) refs.add(x.split("#")[0]!); else collect(x); } };
+docs.forEach(collect);
+const missing = [...refs].filter(r => !idFiles.has(r) && r.includes("semio-tech.com"));
+console.log("external refs:", refs.size, "unresolved semio refs:", missing.length); for (const m of missing.slice(0, 30)) console.log("  MISSING", m);
+const child = "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-child.json";
+console.log("child schema registered:", idFiles.get(child)?.slice(0, 100), "refs to it:", [...docs].filter(d => JSON.stringify(d).includes(child)).length);
+console.log("stale old id refs:", [...docs].filter(d => JSON.stringify(d).includes("os/store/child/schema.json")).length);

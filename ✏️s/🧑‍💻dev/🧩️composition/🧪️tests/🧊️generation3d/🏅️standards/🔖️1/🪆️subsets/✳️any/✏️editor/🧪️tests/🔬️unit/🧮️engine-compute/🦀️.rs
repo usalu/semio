@@ -7,7 +7,7 @@ use semio_framework_test_fixtures::repo_text;
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — these tests exercise
 /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
 /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
-use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
+use ui_scene::math::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
 use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> (String, String) {

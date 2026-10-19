@@ -2,10 +2,6 @@
 import{createIssuedResourceControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {verifyCapturedCargoArtifactsV1} from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import {repositoryCargoNetworkV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {buildRepositoryCargoArtifacts} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
@@ -19,9 +15,9 @@ import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️type
 import assert from "node:assert/strict";
 import{unsignedLebOracleV1}from"../../../🎒️pack/📦️packages/🟦️typescript/📐️format/🧪️testing/🔮️oracles/🔢️leb/🟦️.ts";
 import { readFileSync } from "node:fs";
-import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { join, resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoTestsV1 as runCargoTestsV1, buildAdmittedCargoArtifactsV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -41,7 +37,7 @@ class TestScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
+    await buildAdmittedCargoArtifactsV1(`${this.root}/Cargo.toml`, segments, this.repoRoot,{producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 
@@ -306,7 +302,7 @@ export class RetainedVerificationScript extends BundleScript {
     console.log(`retained SPR resume oracle: ${fixture.resume.cuts.length} exact prefixes, next sequence/previous offset/hash chain preserved`);
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod retained;"), "retained SPR module is not mounted; native selection cannot run");
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-format": resolve(this.root, "../../📐️format/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-format", target: { kind: "lib", name: "semio_framework_replication_format" }, laws: laws.map(law => `component::retained::tests::${law}`) }]});
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-format": resolve(this.root, "../../📐️format/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-format", target: { kind: "lib", name: "semio_framework_replication_format" }, laws: laws.map(law => `component::retained::tests::${law}`) }]});
     assert.equal(receipts[0]!.assertions, laws.length);
   }
 }
@@ -350,7 +346,7 @@ class RetainedRecordObservationScript extends BundleScript {
     assert(source.includes("impl RetainedSprVerification") && !source.includes("fn push("), "metadata must observe the existing scanner, not parse a second framing grammar");
     if (segments.includes("--oracle-only")) return;
     assert(readFileSync(join(owner, "../🦀️.rs"), "utf8").includes("pub mod record;"), "retained record observation remains unmounted");
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-format": resolve(this.root, "../../📐️format/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-format", target: { kind: "lib", name: "semio_framework_replication_format" }, laws: [`component::retained::record::tests::${law}`] }]});
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-format": resolve(this.root, "../../📐️format/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-format", target: { kind: "lib", name: "semio_framework_replication_format" }, laws: [`component::retained::record::tests::${law}`] }]});
     assert.equal(receipts[0]!.assertions, 1);
   }
 }
@@ -395,7 +391,7 @@ class PresencePeerCodecScript extends BundleScript {
     assert(source.includes("PRESENCE_PEER_WIRE_LIMITS_V1") && source.includes("reader.position != bytes.len()"), "Rust bounded exact decoder is absent");
     console.log(`presence peer codec oracle: ${fixture.cases.length} neutral Rust/TypeScript vectors, ${fixture.cases.filter((row: { accepted: boolean }) => !row.accepted).length} hostile inputs rejected exactly`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-presence": resolve(this.root, "../../📡️wire/👥️presence/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-presence", target: { kind: "lib", name: "semio_framework_replication_presence" }, laws: laws.map(law => `presence_codec_tests::${law}`) }]});
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },manifestPaths: { "semio-framework-replication-presence": resolve(this.root, "../../📡️wire/👥️presence/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-replication-presence", target: { kind: "lib", name: "semio_framework_replication_presence" }, laws: laws.map(law => `presence_codec_tests::${law}`) }]});
     assert.equal(receipts[0]!.assertions, laws.length);
   }
 }

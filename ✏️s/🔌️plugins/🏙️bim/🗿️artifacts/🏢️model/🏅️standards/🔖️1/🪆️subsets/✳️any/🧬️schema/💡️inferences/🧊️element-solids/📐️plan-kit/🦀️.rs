@@ -2,10 +2,11 @@
 //!
 //! Everything here is pure and total: a malformed input yields an empty or degenerate value that the caller turns into an absent solid.
 
-pub use crate::standards::v1::subsets::any::schema::authored::plan::{mark, point, segment_of as seg};
-use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, Profile, StairFlight, Vertex as PlanVertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, Profile, StairFlight, Vertex as PlanVertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::{Point, Vec2};
 
@@ -103,8 +104,10 @@ pub fn is_curved(snapshot: &ModelSnapshot, id: &str) -> bool {
 #[cfg(any(test, feature = "testkit"))]
 pub mod testing {
     use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-    use crate::standards::v1::subsets::any::schema::diff::{patches::StoreyPatch, Entry, ModelDiff};
-    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
     use std::collections::BTreeMap;
 

@@ -1,4 +1,12 @@
-import { ShardClientHub } from "./🧩️wiring/🟦️.ts";
+import { ShardResidentBootstrap } from "./💾️resident-bootstrap/🟦️.ts";
+import { ShardRequestTransport } from "./📬️request-transport/🟦️.ts";
+import { ShardRouting } from "./🧭️routing/🟦️.ts";
+import { ShardExactActivations } from "./🪪️exact-activation/🟦️.ts";
+import { ShardInstanceLifecycles } from "./🚪️instance-lifecycle/🟦️.ts";
+import { ShardCapturedReturns } from "./↩️captured-return/🟦️.ts";
+import { ShardUiAcknowledgements } from "./📥️ui-acknowledgement/🟦️.ts";
+import { ShardHostEffectBridge } from "./🌉️host-effect-bridge/🟦️.ts";
+import { ShardWatchdog } from "./⏱️watchdog/🟦️.ts";
 import { ShardClientState } from "./🗃️state/🟦️.ts";
 import { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
 import { OwnedResidentLedger, OwnedResidentRetirement, type ResidentGrant, type ResidentStep } from "@semio-tech/value-ts/resident";
@@ -15,6 +23,8 @@ import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENT
 import { NO_RESIDENT_FAULT, OwnedShardReturn, OwnedShardReturnPage, RETRYABLE_LIFECYCLE_TURN, RETRYABLE_LIFECYCLE_TURN_ATTEMPTS, type ShardActorActivationLease, type ShardInstanceLifecycleLease, type ShardSlot, capturedActivationMatches, capturedReturnState, graftWorkerStack, isRetryableLifecycleTurn, bindCapturedReturnDispatch, poolControllerEnvelope, poolUiEnvelope } from "./🔐️activation/🟦️.ts";
 import { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt } from "./🩹️ui-patch/🟦️.ts";
 import type { ShardClientOptions } from "./⚙️options/🟦️.ts";
+import type { ShardClientHubPort } from "./🧩️hub/🟦️.ts";
+import { bindUiResidentComposition } from "../../🖱️ui/🧬️contract/🧵️retained/🔌️host/🏦️composition/🟦️.ts";
 import { SHARD_JSPI_FAULT_CODE, ShardJspiUnavailableError, assertShardJspiAvailable, describeShardMessageError, describeShardSilence, describeShardWorkerError, evaluateShardLiveness, isShardLostError, settleFailedInstanceOpen, shardJspiAvailable } from "./💓️heartbeat/🟦️.ts";
 import type { OutboundMessage } from "./📨️messages/🟦️.ts";
 import { MAINTENANCE_LANE_DEFAULT_BUDGET, SHARD_COMMAND_MAXIMUM_PAGES, SHARD_FRAME_VARIANT_FIELDS, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardCommandIngressPage, type ShardEnvelope, type ShardEventEnvelope, type ShardJobBudget, type ShardJobStep, type ShardMetricsSample, createGrantedBudgetTracker, createShardCommandIngressPages, interpretShardFrame, orderEnvelopesByLane } from "./📜️wire/🟦️.ts";
@@ -40,6 +50,32 @@ export { SHARD_LIVENESS_POLICY } from "./🫀️liveness/🟦️.ts";
  * doc for the encoding decision (structured clone, no hand-rolled pack codec, on purpose, for now).
  */
 
+/** 🧩️ Wires the collaborators of one {@link ShardClient} around its shell and its single private state; collaborators reach each other only through this hub, and only at call time, never while they are constructed. */
+export class ShardClientHub implements ShardClientHubPort<ShardClient> {
+  readonly residents: ShardResidentBootstrap;
+  readonly transport: ShardRequestTransport;
+  readonly routing: ShardRouting;
+  readonly activations: ShardExactActivations;
+  readonly lifecycles: ShardInstanceLifecycles;
+  readonly returns: ShardCapturedReturns;
+  readonly uiAcknowledgements: ShardUiAcknowledgements;
+  readonly effects: ShardHostEffectBridge;
+  readonly watchdog: ShardWatchdog;
+  readonly shell: ShardClient;
+  readonly state: ShardClientState;
+  constructor(shell: ShardClient, state: ShardClientState) {
+    this.shell = shell; this.state = state; this.residents = new ShardResidentBootstrap(this);
+    this.transport = new ShardRequestTransport(this);
+    this.routing = new ShardRouting(this);
+    this.activations = new ShardExactActivations(this);
+    this.lifecycles = new ShardInstanceLifecycles(this);
+    this.returns = new ShardCapturedReturns(this);
+    this.uiAcknowledgements = new ShardUiAcknowledgements(this);
+    this.effects = new ShardHostEffectBridge(this);
+    this.watchdog = new ShardWatchdog(this);
+  }
+}
+
 //#region 🧵️ShardClient
 /** 🧵️ One `ShardClient` instance owns the WHOLE bounded pool (design: "ShardClient... replaces both
  * `PluginWorkerClient`s [both former per-plugin copies] and `pluginHandleForBridge`") — internally one
@@ -55,7 +91,7 @@ export class ShardClient {
     for (let index = 0; index < options.shardCount; index += 1) state.shards.push(this.hub.transport.spawnShard(index));
   }
 
-  static { bindCapturedReturnDispatch((client, state, work, budget) => client.hub.returns.sendCapturedReturn(state, work, budget), (client, state, grant) => client.hub.returns.reserveReturnResponse(state, grant)); }
+  static { bindCapturedReturnDispatch<ShardClient>((client, state, work, budget) => client.hub.returns.sendCapturedReturn(state, work, budget), (client, state, grant) => client.hub.returns.reserveReturnResponse(state, grant)); bindUiResidentComposition({ matchesResidentLedger: ShardClient.matchesResidentLedger, matchesActivation: ShardClient.matchesActivation, ownsPool: (client, pool) => Reflect.apply(ShardClient.prototype.ownsUiResidentPool, client, [pool]) }); }
   static matchesResidentLedger(client: unknown, ledger: unknown): client is ShardClient { return client !== null && typeof client === "object" && #residentLedger in client && client.#residentLedger === ledger; }
 
   /** 🧭️ Checks the privately captured original client; operation liveness is independently asserted. */

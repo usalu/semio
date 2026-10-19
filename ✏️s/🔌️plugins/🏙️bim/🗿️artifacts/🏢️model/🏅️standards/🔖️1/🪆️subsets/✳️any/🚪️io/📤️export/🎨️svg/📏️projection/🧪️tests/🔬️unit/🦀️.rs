@@ -1,28 +1,28 @@
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanStyle;
-use crate::standards::v1::subsets::any::io::export::svg::style::style_class;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanStyle;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::style_class;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::drawing::tint;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing::tint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, view_class};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, view_class};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::svg::projection::*;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags};
-use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
-use crate::standards::v1::subsets::any::io::export::svg::sheet::is_drawn;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::svg::projection::{project, projection};
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet::is_drawn;
 
 #[test]
 fn the_report_counts_the_primitives_of_every_drawn_view() {
@@ -124,7 +124,7 @@ fn the_sampled_poche_area_of_curved_regions_agrees_with_the_closed_form_of_the_b
             .iter()
             .filter(|region| region.style == PlanStyle::Cut)
             .map(|region| {
-                let area = |ring: &[crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex]| semio_framework_geometry::loops::area(&ring.iter().map(|v| semio_framework_geometry::loops::Vertex::new(semio_framework_geometry::Point::new(v.x, v.y), v.bulge)).collect::<Vec<_>>());
+                let area = |ring: &[semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex]| semio_framework_geometry::loops::area(&ring.iter().map(|v| semio_framework_geometry::loops::Vertex::new(semio_framework_geometry::Point::new(v.x, v.y), v.bulge)).collect::<Vec<_>>());
                 area(&region.outer) - region.holes.iter().map(|hole| area(hole)).sum::<f64>()
             })
             .sum();
@@ -133,7 +133,7 @@ fn the_sampled_poche_area_of_curved_regions_agrees_with_the_closed_form_of_the_b
     }
 }
 
-fn shoelace(vertices: &[crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex]) -> f64 {
+fn shoelace(vertices: &[semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex]) -> f64 {
     let at = |index: usize| vertices[index % vertices.len()];
     (0..vertices.len()).map(|index| at(index).x * at(index + 1).y - at(index + 1).x * at(index).y).sum::<f64>().abs() / 2.0
 }
@@ -164,7 +164,7 @@ fn the_written_geometry_measures_what_the_plan_measures_in_metres_at_the_drawing
 
 #[test]
 fn the_notation_of_the_notated_room_equals_the_table_the_lxml_and_shapely_oracle_measured_from_its_file() {
-    use crate::standards::v1::subsets::any::io::export::svg::testkit::{notated, read_notated};
+    use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{notated, read_notated};
     let oracle: serde_json::Value = serde_json::from_slice(&read_notated("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&notated()).to_json()).unwrap();
     assert_eq!(oracle["views"].as_object().unwrap().len(), ours["views"].as_object().unwrap().len());

@@ -76,6 +76,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-ownership",
         "forwardAllArgs": false
       },

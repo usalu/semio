@@ -6,12 +6,12 @@
 import { reactHostPort, type ThreeEvent, type ReactNode, type BufferGeometry as ThreeBufferGeometry } from "@semio-tech/framework/ui/targets/react";
 
 // #endregion 🔌️Adapters
-import { createTemplatePool, ViewRadiusLayer } from "@semio-tech/infinite-world-r3f";
+import { createTemplatePool, ViewRadiusLayer } from "../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { type FaceInfo, type MeshTransfer, type Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import { type ResolvedTypologyStyle } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
 import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { isEmptyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import { type DisplayItem, type DisplayModel } from "../../🎬️actions/🟦️.ts";
+import type { DisplayItem, DisplayModel } from "../../🎬️actions/🖼️display-model/🟦️.ts";
 import { DocumentHistory, type InteractionSnapshot } from "../../🗿️artifact/📨️interaction-model/🟦️.ts";
 import { type SolidRef, THREE } from "../🔌️ports/🟦️.ts";
 import { spatialSceneColors } from "../🎨️style/🟦️.ts";

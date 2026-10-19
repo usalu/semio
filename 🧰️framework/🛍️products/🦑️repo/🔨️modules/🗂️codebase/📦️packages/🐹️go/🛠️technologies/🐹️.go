@@ -53,7 +53,7 @@ func LoadTechnologies() []model.Technology {
 
 // ◽isTechnologyDir holds the data fields for a isTechnologyDir record.
 func isTechnologyDir(name string) bool {
-	readmePath := filepath.Join(workspace.RootDir, name, "README.md")
+	readmePath := filepath.Join(workspace.GetRootDir(), name, "README.md")
 	content, err := workspace.ReadTextFile(readmePath)
 	if err != nil || !strings.HasPrefix(content, "---") {
 		return false
@@ -70,7 +70,7 @@ func isTechnologyDir(name string) bool {
 // ◻loadTechnologiesInternal holds the data fields for a loadTechnologiesInternal record.
 func loadTechnologiesInternal() []model.Technology {
 	var technologies []model.Technology
-	technologiesDir := workspace.RootDir
+	technologiesDir := workspace.GetRootDir()
 	entries, err := os.ReadDir(technologiesDir)
 	if err != nil {
 		return nil
@@ -89,7 +89,7 @@ func loadTechnologiesInternal() []model.Technology {
 
 		technologyName := rawName
 		technologyKind := model.DeriveTechnologyKind(rawName)
-		readmePath := filepath.Join(workspace.RootDir, name, "README.md")
+		readmePath := filepath.Join(workspace.GetRootDir(), name, "README.md")
 		if content, err := workspace.ReadTextFile(readmePath); err == nil && strings.HasPrefix(content, "---") {
 			endIdx := strings.Index(content[3:], "---")
 			if endIdx > 0 {
@@ -124,7 +124,7 @@ func loadTechnologiesInternal() []model.Technology {
 		}
 
 		// Read technology emoji from AGENTS.md frontmatter
-		agentsPath := filepath.Join(workspace.RootDir, name, "AGENTS.md")
+		agentsPath := filepath.Join(workspace.GetRootDir(), name, "AGENTS.md")
 		if content, err := workspace.ReadTextFile(agentsPath); err == nil && strings.HasPrefix(content, "---") {
 			endIdx := strings.Index(content[3:], "---")
 			if endIdx > 0 {
@@ -170,7 +170,7 @@ func loadTechnologiesInternal() []model.Technology {
 						Kind:           model.BundleKindSite,
 					}
 					// Read site bundle emoji from AGENTS.md frontmatter
-					siteAgentsPath := filepath.Join(workspace.RootDir, bundlePath, "AGENTS.md")
+					siteAgentsPath := filepath.Join(workspace.GetRootDir(), bundlePath, "AGENTS.md")
 					if content, err := workspace.ReadTextFile(siteAgentsPath); err == nil && strings.HasPrefix(content, "---") {
 						endIdx := strings.Index(content[3:], "---")
 						if endIdx > 0 {
@@ -185,7 +185,7 @@ func loadTechnologiesInternal() []model.Technology {
 							}
 						}
 					}
-					bundle.Packages = loadPackages(filepath.Join(workspace.RootDir, bundlePath))
+					bundle.Packages = loadPackages(filepath.Join(workspace.GetRootDir(), bundlePath))
 					configPath := filepath.Join(technologyPath, bunName, siteName, "project.json")
 					if !workspace.FileExists(configPath) {
 						configPath = filepath.Join(technologyPath, bunName, siteName, "package.json")
@@ -220,7 +220,7 @@ func loadTechnologiesInternal() []model.Technology {
 			}
 
 			// Read bundle emoji from AGENTS.md frontmatter
-			bundleAgentsPath := filepath.Join(workspace.RootDir, bundlePath, "AGENTS.md")
+			bundleAgentsPath := filepath.Join(workspace.GetRootDir(), bundlePath, "AGENTS.md")
 			if content, err := workspace.ReadTextFile(bundleAgentsPath); err == nil && strings.HasPrefix(content, "---") {
 				endIdx := strings.Index(content[3:], "---")
 				if endIdx > 0 {
@@ -236,7 +236,7 @@ func loadTechnologiesInternal() []model.Technology {
 				}
 			}
 
-			bundle.Packages = loadPackages(filepath.Join(workspace.RootDir, bundlePath))
+			bundle.Packages = loadPackages(filepath.Join(workspace.GetRootDir(), bundlePath))
 
 			configPath := filepath.Join(technologyPath, bunName, "project.json")
 			if !workspace.FileExists(configPath) {
@@ -369,7 +369,7 @@ func loadPackages(bundleRoot string) []model.Package {
 func FileHeaderId(path string) string {
 	kind := model.DeriveFileKind(filepath.Base(path))
 	if kind == model.FileKindCode {
-		absPath := filepath.Join(workspace.RootDir, path)
+		absPath := filepath.Join(workspace.GetRootDir(), path)
 		if content, err := os.ReadFile(absPath); err == nil {
 			text := string(content)
 			if strings.HasPrefix(text, "#!") || strings.HasPrefix(text, "\xEF\xBB\xBF#!") {

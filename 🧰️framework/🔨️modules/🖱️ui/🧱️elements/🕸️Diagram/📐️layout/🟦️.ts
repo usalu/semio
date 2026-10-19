@@ -5,8 +5,8 @@
 // #endregion 🧲️Header
 
 import type { Edge, Node } from "@xyflow/react";
-import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_OUTPUT_ITEMS, type DiagramLayoutDescriptor, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire, type DiagramLayoutOptions, type DiagramLayoutPositionPage, type DiagramLayoutTerminal, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes } from "./📜️wire/🟦️.ts";
-import { type DiagramLayoutJobStatus, type DiagramLayoutPosition, type DiagramLayoutStepResult, type DiagramLayoutWork, diagramLayoutFrame, diagramLayoutLimits } from "./📊️job-types/🟦️.ts";
+import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_OUTPUT_ITEMS, type DiagramLayoutDescriptor, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire, type DiagramLayoutOptions, type DiagramLayoutPosition, type DiagramLayoutPositionPage, type DiagramLayoutTerminal, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes } from "./📜️wire/🟦️.ts";
+import { type DiagramLayoutJobStatus, type DiagramLayoutStepResult, type DiagramLayoutWork, diagramLayoutFrame, diagramLayoutLimits } from "./📊️job-types/🟦️.ts";
 import { DiagramPagedStore, finiteLayoutValue, optionalFiniteLayoutValue } from "./🗃️paged-store/🟦️.ts";
 import type { DiagramLayoutOwnedResult } from "./📢️publication/🟦️.ts";
 import { DiagramLayoutJob } from "./⚙️job/🟦️.ts";

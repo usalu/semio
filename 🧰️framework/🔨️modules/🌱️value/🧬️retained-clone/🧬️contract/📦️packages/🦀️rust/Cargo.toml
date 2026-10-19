@@ -25,7 +25,7 @@ semio-framework-value-intrinsic = { path="../../../../🌳️intrinsic/📦️pa
 semio-framework-value-control-contract = { path="../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-clone-source = { path="../../../🔗️source/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../../../♻️retirement/📦️packages/🦀️rust" }
-semio-framework-value-shared-issuance = { path="../../../../♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path="../../../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path="../../../../📋️list/📦️packages/🦀️rust" }
 
 [dev-dependencies]

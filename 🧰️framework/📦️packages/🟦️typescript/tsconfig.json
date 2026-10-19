@@ -13,7 +13,7 @@
   "include": [
     "./🟦️.ts",
     "./📜️script.ts",
-    "./🌿️ambient/🟦️.d.ts",
+    "./🌿️ambient/**/*.d.ts",
     "../🦀️rust/📜️script.ts",
     "../../🔨️modules/**/*.ts",
     "../../🔨️modules/**/*.tsx"

@@ -18,8 +18,8 @@ const OPENINGS_CASE: &str = "shared://💡️inferences/🧊️element-solids/�
 mod subject {
     use super::{OPENINGS_CASE, SNAPSHOT};
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     /// 🧊️ `{wall id: {base_z, top_z, volume}}` of every wall whose axis is a straight line.
     pub fn wall_solids(ctx: &Context) -> Result<Outcome, String> {
@@ -32,14 +32,13 @@ mod subject {
 
     /// 🧊️ `{wall id: {volume, z_min, z_max}}` of every straight wall of the committed `straight-openings` case, from the inferred `element-solids` (openings subtracted).
     pub fn wall_solids_openings(ctx: &Context) -> Result<Outcome, String> {
-        use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
         let document = ctx.input_json(OPENINGS_CASE)?;
         let snapshot = decode_model_snapshot_json(&document.get("snapshot").ok_or_else(|| "the case has no snapshot".to_string())?.to_string())?;
-        let solids = inference::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
+        let solids = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
         let rows: Vec<String> = snapshot
             .walls
             .iter()
-            .filter(|(_, wall)| matches!(wall.axis, semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::Axis::Line { .. }))
+            .filter(|(_, wall)| matches!(wall.axis, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis::Line { .. }))
             .filter_map(|(id, _)| solids.get(id).map(|solid| format!("\"{id}\":{{\"volume\":{:?},\"z_min\":{:?},\"z_max\":{:?}}}", solid.volume, solid.bounds.min.z, solid.bounds.max.z)))
             .collect();
         let text = format!("{{{}}}", rows.join(","));

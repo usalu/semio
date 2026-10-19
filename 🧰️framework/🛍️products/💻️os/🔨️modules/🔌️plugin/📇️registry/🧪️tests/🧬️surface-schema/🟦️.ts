@@ -4,12 +4,9 @@ import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import { buildSchema, parse } from "graphql";
 import { describe, expect, it } from "vitest";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { policyExtractGraphqlSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts";
-import { policyExtractJsonSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts";
-import { policyExtractProtobufSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";
-import { policyExtractRustSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts";
-import type { PolicySchemaLeafExtract } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { policyExtractGraphqlSchemaFields, policyExtractJsonSchemaFields, policyExtractProtobufSchemaFields, policyExtractRustSchemaFields } from "@semio-tech/repo-lib/inventory";
+import type { PolicySchemaLeafExtract } from "@semio-tech/repo-lib/inventory";
 import { GRAPHQL_STATE_PREAMBLE } from "@semio-tech/schema-ts";
 import { SURFACE_SCHEMA_BANNER, projectSurfaceSchemaLane, resetSurfaceSchemaIndexes, resolveSurfaceSchemaDefinitions, surfaceSchemaBinding, surfaceSchemaLaneOwnership, surfaceSchemaProjectionBlocker, surfaceSchemaTypeTail, type SurfaceSchemaLane, type SurfaceSchemaOwner } from "../../🧬️surface-schema/🟦️.ts";
 
@@ -24,7 +21,7 @@ type FixtureCase = {
   readonly expected: Readonly<Record<string, string>>;
 };
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/🧫️fixtures/🧬️surface-schema/🔣️.json"), "utf8")) as { readonly version: number; readonly cases: readonly FixtureCase[] };
 
 const ownerOf = (row: FixtureCase): SurfaceSchemaOwner => {

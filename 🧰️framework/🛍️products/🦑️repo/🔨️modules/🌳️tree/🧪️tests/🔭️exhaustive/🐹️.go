@@ -7,20 +7,120 @@ package tree
 import (
 	context "context"
 	os "os"
+	exec "os/exec"
+	filepath "path/filepath"
 	strings "strings"
 	testing "testing"
 
 	codebase "github.com/usalu/semio/repo/codebase"
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
+
+const exhaustiveSectionedGo = `// #region 🔖️Header
+// [💻️client/main.go](repo://file/💻️main)
+// #endregion 🔖️Header
+
+package main
+
+// #region 🎖️Entry
+func main() {}
+// #endregion 🎖️Entry
+`
+
+const exhaustiveSectionedTypeScript = `// #region 🔖️Header
+// [💻️js/index.ts](repo://file/💻️index)
+// #endregion 🔖️Header
+
+// #region 🧩️State
+export const state = 1;
+
+// #region 🏪️Store
+export const store = 2;
+// #endregion 🏪️Store
+// #endregion 🧩️State
+`
+
+func withExhaustiveMonorepo(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	write := func(rel, content string) {
+		abs := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", rel, err)
+		}
+		if err := os.WriteFile(abs, []byte(content), 0o644); err != nil {
+			t.Fatalf("write %s: %v", rel, err)
+		}
+	}
+	write("compose/README.md", "---\nname: compose\nkind: user\n---\n\n# compose\n")
+	write("repo/README.md", "---\nname: repo\nkind: infrastructure\n---\n\n# repo\n")
+	write("coda/README.md", "---\nname: coda\nkind: research\n---\n\n# coda\n")
+	for name, emoji := range map[string]string{"compose/js": "📜️", "compose/go": "🐹️", "compose/antlr": "🔤️", "compose/engine": "⚙️", "compose/desktop": "🖥️", "repo/client": "⌨️", "repo/server": "🌍️", "repo/vscode": "🧩️", "coda/notes": "📝️"} {
+		write(name+"/AGENTS.md", "---\nbundle:\n  emoji: "+emoji+"\n---\n")
+		write(name+"/main.go", exhaustiveSectionedGo)
+		write(name+"/index.ts", exhaustiveSectionedTypeScript)
+	}
+	previous := workspace.GetRootDir()
+	workspace.SetRootDir(root)
+	codebase.InvalidateTechnologyCache()
+	t.Cleanup(func() {
+		workspace.SetRootDir(previous)
+		codebase.InvalidateTechnologyCache()
+	})
+	return root
+}
+
+// 🧫️withExhaustiveHistory extends the exhaustive monorepo with two goals, the contributor ueli and a git history authored by ueli, so the goal, contributor and checkpoint nodes of the tree are filled by a repository this test owns.
+func withExhaustiveHistory(t *testing.T) string {
+	t.Helper()
+	root := withExhaustiveMonorepo(t)
+	for _, id := range []string{"AI-OPTIMIZED-REPO", "AI-OPTIMIZED-REPO/REPO-CLIENT"} {
+		sandbox.WriteFile(t, root, ".🧬semio/🦑️repo/🎯️goals/"+id+"/🎯️goal.json", "{\n  \"title\": \""+id+"\"\n}\n")
+	}
+	sandbox.WriteFile(t, root, ".🧬semio/🦑️repo/🧑️‍💻️devs/ueli/🧑️‍💻️contributor.json", "{\n  \"alias\": \"ueli\",\n  \"github\": \"ueli\",\n  \"name\": \"ueli\"\n}\n")
+	environment := append(os.Environ(), "GIT_AUTHOR_NAME=ueli", "GIT_AUTHOR_EMAIL=ueli@example.com", "GIT_COMMITTER_NAME=ueli", "GIT_COMMITTER_EMAIL=ueli@example.com", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_SYSTEM="+os.DevNull)
+	for _, arguments := range [][]string{{"init", "-q"}, {"add", "-A"}, {"-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture"}} {
+		command := exec.Command("git", arguments...)
+		command.Dir = root
+		command.Env = environment
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git %v failed: %v\n%s", arguments, err, output)
+		}
+	}
+	return root
+}
+
+func exhaustiveCategory(t *testing.T, tree *TreeNode, id string) *TreeNode {
+	t.Helper()
+	for _, child := range tree.Children {
+		if child.ID == id {
+			return child
+		}
+	}
+	t.Fatalf("category %q not found in the tree", id)
+	return nil
+}
+
+func initExhaustiveGit(t *testing.T, root string) {
+	t.Helper()
+	environment := append(os.Environ(), "GIT_AUTHOR_NAME=Fixture Author", "GIT_AUTHOR_EMAIL=fixture@example.com", "GIT_COMMITTER_NAME=Fixture Author", "GIT_COMMITTER_EMAIL=fixture@example.com", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_SYSTEM="+os.DevNull)
+	for _, arguments := range [][]string{{"init", "-q"}, {"add", "-A"}, {"-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture"}} {
+		command := exec.Command("git", arguments...)
+		command.Dir = root
+		command.Env = environment
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git %v failed: %v\n%s", arguments, err, output)
+		}
+	}
+}
 
 func TestExhaustiveMonorepoTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveMonorepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
@@ -122,10 +222,9 @@ func TestExhaustiveGoalTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
-	goalsNode := tree.Children[2]
+	goalsNode := exhaustiveCategory(t, tree, "goals")
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
 			id := model.GetArtifactID("goal", c.Data)
@@ -157,8 +256,7 @@ func TestExhaustiveContributorTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
@@ -184,8 +282,7 @@ func TestExhaustiveCheckpointTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
@@ -211,8 +308,7 @@ func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveMonorepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
@@ -264,9 +360,7 @@ func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 		"compose/js":      model.EmojiText(model.EmojiTechnologyUser) + "compose" + model.EmojiText("📜️") + "js",
 		"compose/go":      model.EmojiText(model.EmojiTechnologyUser) + "compose" + model.EmojiText("🐹️") + "go",
 		"compose/engine":  model.EmojiText(model.EmojiTechnologyUser) + "compose" + model.EmojiText("⚙️") + "engine",
-		"asset":           model.EmojiText(model.EmojiTechnologyUser) + "semio" + model.EmojiText(model.EmojiBundleAssets) + "asset",
 		"compose/desktop": model.EmojiText(model.EmojiTechnologyUser) + "compose" + model.EmojiText("🖥️") + "desktop",
-		"compose/docs":    model.EmojiText(model.EmojiTechnologyUser) + "compose" + model.EmojiText(model.EmojiBundleSite) + "docs",
 		"repo/client":     model.EmojiText(model.EmojiTechnologyInfra) + "repo" + model.EmojiText("⌨️") + "client",
 		"repo/server":     model.EmojiText(model.EmojiTechnologyInfra) + "repo" + model.EmojiText("🌍️") + "server",
 		"repo/vscode":     model.EmojiText(model.EmojiTechnologyInfra) + "repo" + model.EmojiText("🧩️") + "vscode",
@@ -309,10 +403,9 @@ func TestExhaustiveGoalTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
-	goalsNode := tree.Children[2]
+	goalsNode := exhaustiveCategory(t, tree, "goals")
 	goalCount := 0
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
@@ -344,7 +437,7 @@ func TestExhaustiveGoalTreeIDs(t *testing.T) {
 		}
 	}
 	if goalCount == 0 {
-		t.Log("no goals found in tree (may be expected for fresh repos)")
+		t.Fatal("no goals found in the fixture tree")
 	}
 }
 
@@ -352,8 +445,7 @@ func TestExhaustiveContributorTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
@@ -394,8 +486,7 @@ func TestExhaustiveCheckpointTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	workspace.SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveHistory(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
@@ -435,11 +526,7 @@ func TestExhaustiveBuildMonorepoTree(t *testing.T) {
 		t.Skip("skipping slow tree build test in short mode")
 	}
 
-	cwd, _ := os.Getwd()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = findTestRepoRoot(cwd)
-	defer func() { workspace.RootDir = oldRoot }()
-	codebase.InvalidateTechnologyCache()
+	withExhaustiveMonorepo(t)
 
 	ctx := context.Background()
 	treeNoSections := BuildMonorepoTreeCached(ctx)
@@ -623,8 +710,7 @@ func TestExhaustiveMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("walks all bundles for LOC treemap; too slow for -short runs on large monorepos")
 	}
-	root := findTestRepoRoot(".")
-	workspace.SetRootDir(root)
+	withExhaustiveMonorepo(t)
 	result := MermaidLocByTechnologiesBundlesFoldersFiles()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
@@ -663,8 +749,7 @@ func TestExhaustiveMermaidLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	workspace.SetRootDir(root)
+	withExhaustiveMonorepo(t)
 	result := MermaidLocByLanguage()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])
@@ -692,8 +777,7 @@ func TestExhaustiveMermaidLocByContributors(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-contributors test in short mode")
 	}
-	root := findTestRepoRoot(".")
-	workspace.SetRootDir(root)
+	initExhaustiveGit(t, withExhaustiveMonorepo(t))
 	result := MermaidLocByContributors()
 	if !strings.HasPrefix(result, "treemap-beta\n") {
 		t.Fatalf("expected treemap-beta header, got: %s", result[:min(len(result), 100)])

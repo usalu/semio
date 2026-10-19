@@ -9,7 +9,7 @@
 //! than under `🗿️artifacts`). This file is a routing table: `handle` → `WriterCommand::dispatch`,
 //! `render` → body-key → node, and a `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::writer::base::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, writer_action, writer_chapter_payload, writer_io};
+use crate::editor::writer::editor_vocabulary::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, writer_action, writer_chapter_payload, writer_io};
 use crate::editor::writer::commands::set_camera;
 use crate::editor::writer::commands::set_editor_selection;
 use crate::editor::writer::commands::{commit_rename, format_document, open_document, set_active_example, load_document_json, set_text, text_edit, text_splice};

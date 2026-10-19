@@ -275,7 +275,7 @@ fn a_within_budget_checkpoint_request_is_admitted_on_the_inference_job() {
             maximum_release_bytes: semio_framework_job::InteractiveJob::next_close_release_byte_demand(&job).expect("a locally owned job quotes its release demand"),
             maximum_depth: semio_framework_job::InteractiveJob::next_close_depth_demand(&job).expect("a locally owned job quotes its depth demand").max(1),
         };
-        let _ = semio_framework_job::InteractiveJob::close_step(&mut job, grant);
+        let _ = semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_job::InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
     }
 }
 

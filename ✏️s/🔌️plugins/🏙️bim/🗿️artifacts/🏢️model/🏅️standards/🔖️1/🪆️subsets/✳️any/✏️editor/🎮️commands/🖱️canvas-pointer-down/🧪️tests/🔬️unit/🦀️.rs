@@ -1,24 +1,24 @@
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::editor::bim::utilities::DEFAULT_UTILITY;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{Emit, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
 #[allow(unused_imports)]
-use crate::editor::bim::gestures::session::ToolEvent;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolEvent;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 #[allow(unused_imports)]
-use crate::editor::bim::kit::select_effect;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::select_effect;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, NoConfig};
-use crate::editor::bim::commands::canvas_pointer_down::*;
-use crate::editor::bim::fixture::context::view;
-use crate::editor::bim::fixture::support::{demo, run};
-use crate::editor::bim::modes::edit::windows::section;
+use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_down::{CanvasPointerDown, handle, merge_mode};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::view;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{demo, run};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section;
 use semio_framework_ui_locale::Locale;
 
 /// 🖼️ A plan window 800 by 600 pixels framing the origin at 40 pixels per metre: the press at the pixel of model point (x, y) is `(400 + 40 x, 300 - 40 y)`.
@@ -47,12 +47,12 @@ async fn the_modifiers_map_to_the_framework_merge_modes() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_press_on_a_wall_selects_it_and_a_press_on_nothing_clears_the_selection() {
-    let hit = press(plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 0.0), false));
+    let hit = press(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 0.0), false));
     assert_eq!(hit.effects.len(), 1, "one select request");
     assert!(hit.artifact_mutations.is_empty(), "selection is never a mutation");
-    let miss = press(plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 3.0), false));
+    let miss = press(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 3.0), false));
     assert_eq!(miss.effects.len(), 1, "a replacing press on nothing clears the selection");
-    let shifted_miss = press(plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 3.0), true));
+    let shifted_miss = press(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, DEFAULT_UTILITY, &press_at((4.0, 3.0), true));
     assert!(shifted_miss.effects.is_empty(), "an additive press on nothing changes nothing");
 }
 

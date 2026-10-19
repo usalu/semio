@@ -3,6 +3,8 @@ import{createHash}from"node:crypto";
 import{resolve,isAbsolute,parse,relative,sep,join}from"node:path";
 import{fileURLToPath}from"node:url";
 const maximumSourceBytes=8388608,maximumTextBytes=65536,maximumChunkBytes=65536,maximumPathUnits=256,maximumAncestors=64;
+/** 🧊️ Remembers one settled revision under its file identity, so an unchanged Source is hashed once instead of on every self-check. */
+const settledRevisions=new Map(),settleMilliseconds=2000,maximumSettledRevisions=4096;
 const stamp=row=>[row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].join(":");
 function capture(path,maximumBytes,retainText){
  const base=parse(path).root,parts=relative(base,path).split(sep).filter(Boolean),parents=[];let current=base;
@@ -25,5 +27,9 @@ function current(){if(capture(ownPath,loaded.byteLength,false).sha256!==loaded.s
 /** 🔏️ Streams one finite ordinary Source revision; returned DATA grants no physical resource custody. */
 export function captureBoundedSourceRevisionV1(path,maximumBytes,retainText=false){
  if(typeof path!=="string"||!isAbsolute(path)||resolve(path)!==path||path.length>maximumPathUnits||path.includes("\0")||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>maximumSourceBytes||typeof retainText!=="boolean"||retainText&&maximumBytes>maximumTextBytes)throw Error("Reducing finite Source revision request required");
- current();const value=capture(path,maximumBytes,retainText);current();return value;
+ const cached=settledRevisions.get(path);
+ if(cached&&cached.maximumBytes===maximumBytes&&cached.retainText===retainText){try{const row=lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&stamp(row)===cached.identity)return cached.value;}catch{}}
+ current();const value=capture(path,maximumBytes,retainText),taken=Date.now();current();
+ try{const row=lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&Number(row.ctimeNs/1000000n)<taken-settleMilliseconds&&Number(row.mtimeNs/1000000n)<taken-settleMilliseconds){if(settledRevisions.size>=maximumSettledRevisions)settledRevisions.clear();settledRevisions.set(path,{maximumBytes,retainText,identity:stamp(row),value});}}catch{}
+ return value;
 }

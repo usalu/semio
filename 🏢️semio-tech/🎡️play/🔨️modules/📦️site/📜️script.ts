@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
-import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
+import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import {flowBrowserPackageRequestV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { buildModeEnvironment, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
+import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { prefetchPlayMapTiles } from "./🗺️map-tiles/🟦️.ts";
 import { PLAY_HOST, playRuntimeComponentIds } from "../🧩️runtime/🟦️.ts";
 import {playModuleCatalogFindingsV1} from "./📄pages/🟦️.ts";
@@ -32,8 +32,8 @@ class BuildScript extends BundleScript {
     if (args.length) throw new Error("The play build accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
     const root = resolve(this.root, "../.."), pipeline = JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")).targets.build.metadata.semio.release;
     const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([
-      import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"),
-      import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),
+      import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🏗️build/🧩️driver-stages/🟦️.ts"),
+      import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts"),
     ]);
     await cancellable(async () => {
       await buildReleasePipelineV1(this.repoRoot, pipeline, { facet:"browser",invocation:this.invocation,components: new Set(playRuntimeComponentIds()), network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });

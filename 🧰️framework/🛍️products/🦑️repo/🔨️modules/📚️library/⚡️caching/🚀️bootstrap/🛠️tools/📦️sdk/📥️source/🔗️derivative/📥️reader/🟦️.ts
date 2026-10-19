@@ -1,12 +1,12 @@
-import{withRequestedIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{withRequestedIssuedResourceControlV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{requireNxSdkSourceControlV1}from"../🔏️index/📂️tree/🟦️.ts";
 import{withNxSdkSourceTreeV1,withNxSdkSourceReadTreeV1}from"../🔏️index/📂️tree/🟦️.ts";
 import{forEachNxSdkSourceLayerV1}from"../📚️layers/🟦️.ts";
 import{lstat,opendir,readlink}from"node:fs/promises";
 import{basename,dirname,join}from"node:path";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{nxToolingInstallIdentityV1}from"../../../🪪️identity/🟦️.ts";
 import{nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1}from"../../../📥️snapshot/🟦️.ts";

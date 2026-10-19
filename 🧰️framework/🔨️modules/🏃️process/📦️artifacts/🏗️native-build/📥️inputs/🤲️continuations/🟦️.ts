@@ -1,7 +1,7 @@
 import type {CargoCompilerInputsViewV1} from "../🟦️.ts";
 import {requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} from "../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 const maximumInputs=schema.const.maximumInputs;
 
 /** 🤲️ Retains actual input-owner continuations until the whole driver's accepted work and consumer have settled. */

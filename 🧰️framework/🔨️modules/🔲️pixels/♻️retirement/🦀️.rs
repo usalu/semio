@@ -1,6 +1,6 @@
 //! ♻️ Raster and mask read leases retain original allocations through explicitly funded close.
 use crate::RasterImage;
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,arc_custody::SharedControlledRetirement};
 use std::{sync::Arc,ops::{Deref,DerefMut}};
 #[derive(Clone,Debug)]
 pub struct RasterLease(pub Arc<RasterImage>);

@@ -21,7 +21,7 @@ pub const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID: &str = "framework.settings.def
 
 pub const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID: &str = "framework.settings.conflicts";
 
-pub const CHROME_ICON_TINY: f32 = ui_wgpu::wgpu::chrome::ICON_TINY;
+pub const CHROME_ICON_TINY: f32 = semio_framework_ui_wgpu_layout::chrome::ICON_TINY;
 
 /// 🪟️ Binds one action to the window INSTANCE whose body declared it, through the `windowId`
 /// argument `dispatch_action` resolves `ActionAddress::window_instance_id` from.
@@ -153,8 +153,8 @@ pub fn ui_driver_axis<'a>(driver: &'a OsUiDriver, key: &str) -> Option<&'a str> 
     driver.config.get(key).and_then(DslValue::as_str)
 }
 
-pub fn ui_driver_document_chrome(driver: &OsUiDriver) -> ui_wgpu::wgpu::UiDriverChrome {
-    ui_wgpu::wgpu::UiDriverChrome::builtin(&driver.driver_id).with_axes(
+pub fn ui_driver_document_chrome(driver: &OsUiDriver) -> semio_framework_ui_wgpu_layout::chrome::UiDriverChrome {
+    semio_framework_ui_wgpu_layout::chrome::UiDriverChrome::builtin(&driver.driver_id).with_axes(
         ui_driver_axis(driver, "labels"),
         ui_driver_axis(driver, "labelTier"),
         ui_driver_axis(driver, "drag"),
@@ -167,7 +167,7 @@ pub fn ui_driver_document_chrome(driver: &OsUiDriver) -> ui_wgpu::wgpu::UiDriver
 
 /// 🚗️ React's `resolveUiDriver`: custom first, then builtin, then `DEFAULT_UI_DRIVER`, with
 /// all seven axes carried into the renderer-owned chrome snapshot.
-pub fn resolve_ui_driver_chrome(driver_id: &str, custom: &HashMap<String, OsUiDriver>) -> ui_wgpu::wgpu::UiDriverChrome {
+pub fn resolve_ui_driver_chrome(driver_id: &str, custom: &HashMap<String, OsUiDriver>) -> semio_framework_ui_wgpu_layout::chrome::UiDriverChrome {
     ui_driver_document_chrome(&resolve_ui_driver_document(driver_id, custom))
 }
 

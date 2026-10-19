@@ -67,7 +67,23 @@ fn the_leaf_labels_the_row_in_english_and_german() {
 //#endregion 🛠️Tool
 
 //#region 🧩️MountedApp
-type Wfc3dApp = VcsArtifactApp<EditorApp<Wfc3dEditor>>;
+struct Wfc3dApp {
+    app: VcsArtifactApp<EditorApp<Wfc3dEditor>>,
+    scope: semio_framework_plugin::artifact_app_laws::OriginalFixtureScope,
+}
+
+impl std::ops::Deref for Wfc3dApp {
+    type Target = VcsArtifactApp<EditorApp<Wfc3dEditor>>;
+    fn deref(&self) -> &Self::Target {
+        &self.app
+    }
+}
+
+impl std::ops::DerefMut for Wfc3dApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.app
+    }
+}
 
 fn block_on<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -85,9 +101,10 @@ fn manifest() -> App {
 }
 
 fn app() -> Wfc3dApp {
+    let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = block_on(semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<Wfc3dEditor>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
     block_on(app.bind_instance_id(1));
-    app
+    Wfc3dApp { app, scope }
 }
 
 fn graph_meta() -> ActionMeta {
@@ -96,7 +113,7 @@ fn graph_meta() -> ActionMeta {
     ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }
 }
 
-fn settle(app: &mut Wfc3dApp, result: Result<InvocationResult, semio_framework_plugin::Fault>) -> InvocationResult {
+fn settle<E: std::fmt::Debug>(app: &mut Wfc3dApp, result: Result<InvocationResult, E>) -> InvocationResult {
     let mut result = result.expect("the dispatch is admitted");
     for _ in 0..1_048_576 {
         while let Some(page) = app.take_typed_operation_result_page(1) {
@@ -116,8 +133,8 @@ fn settle(app: &mut Wfc3dApp, result: Result<InvocationResult, semio_framework_p
         if !app.has_pending_typed_operations() {
             return result;
         }
-        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
-        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("publication advances");
+        PluginApp::maintenance_step(&mut app.app, app.scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance");
+        block_on(app.app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx())).expect("publication advances");
     }
     panic!("the wfc3d dispatch did not settle");
 }
@@ -125,7 +142,7 @@ fn settle(app: &mut Wfc3dApp, result: Result<InvocationResult, semio_framework_p
 fn drag(app: &mut Wfc3dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
     let row = record(gesture, node_ids, dx * WFC_3D_GRAPH_UNIT, dy * WFC_3D_GRAPH_UNIT).to_row();
     let command = Wfc3dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
-    let result = block_on(app.dispatch_typed(command, &graph_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    let result = block_on(app.app.dispatch_typed(command, &graph_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 
@@ -134,17 +151,7 @@ fn edit_rows(result: &InvocationResult) -> Vec<semio_framework::kernel::HistoryE
 }
 
 fn close(app: &mut Wfc3dApp) {
-    for _ in 0..1_048_576 {
-        if app.close_terminal_is_empty() {
-            return;
-        }
-        let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("wfc3d app close quote");
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        if matches!(PluginApp::close_step(app, grant).expect("wfc3d app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-            break;
-        }
-    }
-    assert!(app.close_terminal_is_empty(), "the wfc3d app did not reach terminal-empty ownership");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.scope.cx()).expect("wfc3d app paid close");
 }
 
 #[test]

@@ -20,7 +20,7 @@ semio-hub-space-app = { workspace = true }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-s-artifact-space-home = { workspace = true }
 semio-s-artifact-space-space = { workspace = true }
-semio-s-space-core = { path = "../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os = { workspace = true }

@@ -1,19 +1,23 @@
-use crate::editor::bim::gestures::{GESTURE_KEYBINDINGS, GestureOwner, Raw, opening, overlay, plane, pointer_of, session};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::editor::bim::modes::edit::windows::world;
-use crate::editor::bim::BimModelApp;
-use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, Rgb, RoofType, SlabType, Swing, WindowType};
+use semio_s_artifact_bim_model_gestures::editor::bim::gestures::{GESTURE_KEYBINDINGS, GestureOwner, Raw, pointer_of};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world;
+use semio_s_artifact_bim_model_bim::editor::bim::BimModelApp;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ColumnType, DoorType, Material, RoofType, SlabType, WindowType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, Layer, LayerFunction, MaterialCategory, Profile, Rgb, Swing};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_test_fixtures::fixture_text;
 
-use crate::editor::bim::fixture::*;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::*;
 
-use crate::editor::bim::gestures::session::{Modifiers, Surface, ToolEvent};
-use crate::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Surface, ToolEvent};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
 
 #[semio_framework_async_macros::async_test]
 async fn every_utility_of_the_registry_arms_a_tool_that_owns_a_gesture() {
-    for row in crate::editor::bim::utilities::UTILITIES.iter().filter(|row| row.id != "select") {
+    for row in semio_s_artifact_bim_model_kit::editor::bim::utilities::UTILITIES.iter().filter(|row| row.id != "select") {
         let mut rig = Rig::plan(row.id, model());
         let before = rig.snapshot.clone();
         rig.mv(1.0, 1.0);
@@ -24,13 +28,13 @@ async fn every_utility_of_the_registry_arms_a_tool_that_owns_a_gesture() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command() {
-    let bindings = crate::editor::bim::utilities::keybindings();
+    let bindings = semio_s_artifact_bim_model_kit::editor::bim::utilities::keybindings();
     for (key, utility) in [("w", "wall"), ("c", "column"), ("b", "beam"), ("s", "slab"), ("r", "roof"), ("n", "window"), ("d", "door"), ("t", "stair"), ("l", "railing"), ("p", "space"), ("g", "grid"), ("m", "measure"), ("v", "select"), ("e", "move"), ("q", "rotate"), ("shift+s", "slab-walls"), ("shift+w", "split-wall"), ("k", "copy"), ("shift+k", "mirror"), ("y", "array"), ("shift+y", "array-radial"), ("f", "offset"), ("x", "trim"), ("shift+x", "extend"), ("z", "align"), ("shift+z", "split")] {
         let (_, action) = bindings.iter().find(|(keys, _)| *keys == key).unwrap_or_else(|| panic!("no hotkey {key}"));
-        let command = crate::editor::bim::BimModelApp::command_from_action(action, None, None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
-        let armed = crate::editor::bim::utilities::UTILITIES.iter().find(|row| row.arm == Some(*action)).map(|row| row.id);
+        let command = semio_s_artifact_bim_model_bim::editor::bim::BimModelApp::command_from_action(action, None, None).unwrap_or_else(|error| panic!("{action}: {}", error.message));
+        let armed = semio_s_artifact_bim_model_kit::editor::bim::utilities::UTILITIES.iter().find(|row| row.arm == Some(*action)).map(|row| row.id);
         assert_eq!(armed, Some(utility), "{key} arms {utility}");
-        assert!(crate::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));
+        assert!(semio_s_artifact_bim_model_bim::editor::bim::BIM_TOOL_IDS.contains(&command.command_id()));
     }
     let keys: Vec<&str> = bindings.iter().map(|(keys, _)| *keys).collect();
     let mut unique = keys.clone();
@@ -44,13 +48,13 @@ async fn the_hotkeys_cover_the_specified_tools_and_each_arms_an_existing_command
 async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
-    let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
-    let pointer = |x: f64| ToolEvent::Down(session::Pointer { at: [x, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL });
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
+    let mut context = semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
+    let pointer = |x: f64| ToolEvent::Down(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Pointer { at: [x, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL });
     owner.advance("w1", PLAN, "wall", &mut context, &pointer(0.0));
-    let (_, preview) = owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Move(session::Pointer { at: [3.0, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL }));
+    let (_, preview) = owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Move(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Pointer { at: [3.0, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL }));
     assert!(preview.marks.iter().any(|mark| mark.shape == Shape::Label), "the chain shows its rubber band");
-    let (step, preview) = owner.advance("w1", PLAN, "column", &mut context, &ToolEvent::Move(session::Pointer { at: [3.0, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL }));
+    let (step, preview) = owner.advance("w1", PLAN, "column", &mut context, &ToolEvent::Move(semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Pointer { at: [3.0, 0.0], modifiers: Modifiers::default(), tolerance: PIXEL }));
     assert!(step.mutations.is_empty() && !preview.marks.iter().any(|mark| mark.shape == Shape::Label), "the rubber band died with the utility");
     assert_eq!(owner.windows(), vec!["w1".to_string()]);
 }
@@ -59,8 +63,8 @@ async fn a_utility_switch_drops_the_gesture_in_progress_without_a_trace() {
 async fn the_owner_closes_empty() {
     let mut owner = GestureOwner::default();
     let snapshot = model();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
-    let mut context = session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.clone());
+    let mut context = semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
     owner.advance("w1", PLAN, "wall", &mut context, &ToolEvent::Escape);
     assert!(!semio_framework_plugin::ArtifactInstanceOperationOwner::terminal_is_empty(&owner));
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4 };
@@ -74,14 +78,14 @@ async fn the_preview_round_trips_through_the_transient_text_and_an_empty_one_is_
     rig.click(0.0, 0.0);
     rig.mv(3.0, 0.0);
     let text = rig.preview.to_text();
-    assert_eq!(crate::editor::bim::marks::Preview::from_text(&text), rig.preview);
-    assert_eq!(crate::editor::bim::marks::Preview::default().to_text(), "");
-    assert_eq!(crate::editor::bim::marks::Preview::from_text("not json"), crate::editor::bim::marks::Preview::default());
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::from_text(&text), rig.preview);
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::default().to_text(), "");
+    assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::from_text("not json"), semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::default());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn pointers_convert_from_pixels_in_every_surface() {
-    let mut ctx = crate::editor::bim::dispatch_context::BimDispatchCtx::default();
+    let mut ctx = semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx::default();
     ctx.plan.viewport = store::Viewport2d { x: 0.0, y: 0.0, zoom: 40.0 };
     ctx.section.viewport = store::Viewport2d { x: 5.0, y: -1.5, zoom: 40.0 };
     let raw = Raw { x: 440.0, y: 260.0, width: 800.0, height: 600.0, ..Raw::default() };
@@ -103,7 +107,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     let placed = windows.down(3.0, 0.0);
     assert_eq!(placed.mutations.len(), 1);
     let opening = windows.snapshot.openings.keys().next().expect("the window").clone();
-    let infer = |snapshot: &ModelSnapshot| crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inference| inference.clone());
+    let infer = |snapshot: &ModelSnapshot| semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, |inference| inference.clone());
     let before = infer(&windows.snapshot);
     assert!(before.wall_layout.values().all(|layout| (layout.height - 3.0).abs() < 1e-9), "every wall starts as high as its 3 m storey");
     assert!((before.opening_frames[&opening].host_height - 3.0).abs() < 1e-9 && before.opening_frames[&opening].valid);
@@ -111,7 +115,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     section.down(3.0, 3.0);
     section.mv(3.0, 3.5);
     let step = section.up(3.0, 3.5);
-    assert!(matches!(step.mutations.as_slice(), [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] if set.id == "st-ground" && (set.height - 3.5).abs() < 1e-9), "the handle writes exactly one set-storey-height, got {:?}", step.mutations);
+    assert!(matches!(step.mutations.as_slice(), [semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] if set.id == "st-ground" && (set.height - 3.5).abs() < 1e-9), "the handle writes exactly one set-storey-height, got {:?}", step.mutations);
     let after = infer(&section.snapshot);
     assert!(after.wall_layout.values().all(|layout| (layout.height - 3.5).abs() < 1e-9), "the four walls follow the storey");
     assert!((after.opening_frames[&opening].host_height - 3.5).abs() < 1e-9, "the window frame follows its host");
@@ -130,7 +134,7 @@ fn ring_of(value: &serde_json::Value) -> Vec<[f64; 2]> {
 }
 
 fn same_ring(left: &[[f64; 2]], right: &[[f64; 2]]) -> bool {
-    left.len() == right.len() && (0..left.len()).any(|shift| (0..left.len()).all(|index| plane::dist(left[(index + shift) % left.len()], right[index]) < 1e-9))
+    left.len() == right.len() && (0..left.len()).any(|shift| (0..left.len()).all(|index| semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::dist(left[(index + shift) % left.len()], right[index]) < 1e-9))
 }
 
 #[semio_framework_async_macros::async_test]
@@ -138,25 +142,25 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
     let cases: serde_json::Value = serde_json::from_str((*GESTURE_CASES)).expect("the committed cases");
     let each = |key: &str| cases[key].as_array().unwrap_or_else(|| panic!("cases {key}")).clone();
     for case in each("arcs") {
-        let bulge = plane::bulge_through(point_of(&case["start"]), point_of(&case["through"]), point_of(&case["end"])).expect("an arc");
+        let bulge = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::bulge_through(point_of(&case["start"]), point_of(&case["through"]), point_of(&case["end"])).expect("an arc");
         assert!((bulge - case["bulge"].as_f64().expect("bulge")).abs() < 1e-9, "arc {case}: {bulge}");
     }
     for case in each("projections") {
-        let axis = plane::axis_of(point_of(&case["axis"]["start"]), point_of(&case["axis"]["end"]), 0.0);
-        let found = plane::project(&axis, point_of(&case["point"]));
+        let axis = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_of(point_of(&case["axis"]["start"]), point_of(&case["axis"]["end"]), 0.0);
+        let found = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::project(&axis, point_of(&case["point"]));
         assert!((found.offset - case["offset"].as_f64().expect("offset")).abs() < 1e-9 && (found.distance - case["distance"].as_f64().expect("distance")).abs() < 1e-9, "projection {case}");
         assert_eq!(found.side.signum() as i64, case["side"].as_i64().expect("side"), "side of {case}");
     }
     for case in each("rectangles") {
-        let ring = plane::rectangle(point_of(&case["a"]), point_of(&case["b"]));
+        let ring = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::rectangle(point_of(&case["a"]), point_of(&case["b"]));
         assert!(same_ring(&ring, &ring_of(&case["ring"])) && (plane::signed_area(&ring) - case["area"].as_f64().expect("area")).abs() < 1e-9, "rectangle {case}");
     }
     for case in each("counter_clockwise") {
-        let ring = plane::counter_clockwise(ring_of(&case["ring"]));
+        let ring = semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::counter_clockwise(ring_of(&case["ring"]));
         assert!(same_ring(&ring, &ring_of(&case["expected"])) && (plane::signed_area(&ring) - case["area"].as_f64().expect("area")).abs() < 1e-9, "orientation {case}");
     }
     for case in each("windows") {
-        let offset = opening::fitted_offset(case["length"].as_f64().expect("length"), case["width"].as_f64().expect("width"), case["foot"].as_f64().expect("foot"));
+        let offset = semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::fitted_offset(case["length"].as_f64().expect("length"), case["width"].as_f64().expect("width"), case["foot"].as_f64().expect("foot"));
         assert_eq!(offset.map(|value| (value * 1e9).round()), case["offset"].as_f64().map(|value| (value * 1e9).round()), "window {case}");
     }
     for case in each("heights") {
@@ -166,7 +170,7 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
         let mut rig = Rig::on("select", room(), Surface::Section { start: [0.0, 0.0], end: [8.0, 0.0] });
         rig.down(4.0, top);
         let step = rig.up(4.0, case["pointer"].as_f64().expect("pointer"));
-        let [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] = step.mutations.as_slice() else { panic!("a set-storey-height for {case}, got {:?}", step.mutations) };
+        let [semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] = step.mutations.as_slice() else { panic!("a set-storey-height for {case}, got {:?}", step.mutations) };
         assert!((set.height - case["height"].as_f64().expect("height")).abs() < 1e-9 && set.id == storey, "height {case}: {}", set.height);
     }
     for case in each("rotations") {
@@ -176,14 +180,15 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
         rig.click(pivot[0], pivot[1]);
         rig.click(reference[0], reference[1]);
         let step = rig.click(target[0], target[1]);
-        let [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::RotateElements(turned)] = step.mutations.as_slice() else { panic!("a rotate-elements for {case}, got {:?}", step.mutations) };
+        let [semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation::RotateElements(turned)] = step.mutations.as_slice() else { panic!("a rotate-elements for {case}, got {:?}", step.mutations) };
         assert!((turned.angle - case["angle"].as_f64().expect("angle")).abs() < 1e-9, "rotation {case}: {}", turned.angle);
     }
 }
 
 //#region 🔖️ModifyPreviews
 fn modify_scene() -> ModelSnapshot {
-    use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Phase, Point2, Vertex};
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, Slab, Wall};
     let mut snapshot = room();
     let line = |start: (f64, f64), end: (f64, f64)| Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } };
     let wall = |axis: Axis, name: &str| Wall { axis, name: name.into(), ..snapshot.walls["w-south"].clone() };
@@ -241,9 +246,9 @@ async fn every_modify_gesture_previews_live_in_the_plan_the_3d_window_and_the_tr
         }
         assert_eq!(rig.snapshot, before, "{utility}: the document stays untouched while the gesture shows");
         assert!(shown.iter().all(|marks| *marks > 0), "{utility}: every step of the gesture shows something, {shown:?}");
-        assert_eq!(crate::editor::bim::marks::Preview::from_text(&rig.preview.to_text()), rig.preview, "{utility}: the preview survives the window transient");
+        assert_eq!(semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Preview::from_text(&rig.preview.to_text()), rig.preview, "{utility}: the preview survives the window transient");
         assert!(!overlay::plan_records(&rig.snapshot, &rig.selected, utility, &rig.preview, 1.0).is_empty(), "{utility}: the plan paints it");
-        let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
+        let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &rig.snapshot, Clone::clone);
         assert!(!world::preview_items(&rig.snapshot, &inference, &world::config::BimWorldWindowConfig::default(), &rig.preview).is_empty(), "{utility}: the 3D window paints it");
     }
 }

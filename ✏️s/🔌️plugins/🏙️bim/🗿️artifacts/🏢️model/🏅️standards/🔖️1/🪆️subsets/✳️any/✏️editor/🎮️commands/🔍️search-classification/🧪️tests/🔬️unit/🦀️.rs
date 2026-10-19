@@ -1,19 +1,21 @@
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
 #[allow(unused_imports)]
-use crate::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
 #[allow(unused_imports)]
-use crate::editor::bim::kit::select_effect;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::select_effect;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, mutations::ModelMutation};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::search_classification::*;
-use crate::editor::bim::fixture::support::{ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::search_classification::{matches, entry_id, handle, SearchClassification};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{ctx, demo, run};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
 
 fn system() -> ClassificationSystem {
     let entry = |code: &str, title: &str, parent: Option<&str>| ClassificationItem { code: code.into(), title: title.into(), parent: parent.map(str::to_string) };

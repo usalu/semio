@@ -1,15 +1,16 @@
 //! 🧪️ The BCF 2.1 exchange: guids, moments, the topics of a model, the container bytes, the round trip into the same model and the committed container of the frame.
 
-use crate::standards::v1::subsets::any::io::export::ifc::writer::global_id;
-use crate::standards::v1::subsets::any::schema::snapshot::{Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Point3, SectionBox, ViewCamera};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::global_id;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, IssueComment, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssuePriority, IssueStatus, Point3, SectionBox, ViewCamera};
 use semio_framework::io_schema::{Confidence, IoPayload};
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
 use std::collections::BTreeSet;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, document_text, element, leaf, number};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::{attr, document_text, element, leaf, number};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ClashRef;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClashRef;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
@@ -20,9 +21,9 @@ use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::bcf::{is_uuid, parse, status_of, priority_of};
-use crate::standards::v1::subsets::any::io::bcf::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{IssueViewpoint, Point2};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::bcf::{is_uuid, parse, status_of, priority_of};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::bcf::{guid_of, ifc_guid, date_time, document_of, FIELD_OF_VIEW, planes_of, box_of, export_bcf, read_document, import_bcf, resolver_of, ModelIntoBcf, BcfIntoModel};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IssueViewpoint, Point2};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -75,7 +76,7 @@ fn a_moment_becomes_an_xs_date_time() {
     assert_eq!(date_time("2026-10-09T08:30:00+02:00"), "2026-10-09T08:30:00+02:00");
     assert_eq!(date_time("2026-10-09T08:30:00"), "2026-10-09T08:30:00+00:00");
     for moment in ["2026-10-09", "2026-10-09T08:30:00", "2026-10-09T08:30:00-05:30"] {
-        assert!(crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&date_time(moment)), "{moment}");
+        assert!(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&date_time(moment)), "{moment}");
     }
 }
 
@@ -154,7 +155,7 @@ fn an_export_imports_into_the_issues_it_was_made_of() {
     assert!((viewpoint.camera.azimuth - expected.camera.azimuth).abs() < 1e-6 && (viewpoint.camera.pitch - expected.camera.pitch).abs() < 1e-6);
     let comments: Vec<&IssueComment> = imported.comments.values().filter(|comment| comment.issue == guid_of("is-1")).collect();
     assert_eq!(comments.len(), 2);
-    assert!(imported.issues.values().all(|issue| crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&issue.created)));
+    assert!(imported.issues.values().all(|issue| semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&issue.created)));
 }
 
 #[test]

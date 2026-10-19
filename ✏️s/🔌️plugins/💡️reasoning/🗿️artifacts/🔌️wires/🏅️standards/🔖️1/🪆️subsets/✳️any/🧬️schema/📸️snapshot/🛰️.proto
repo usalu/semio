@@ -1,10 +1,10 @@
 syntax = "proto3";
 package semio.s.reasoning.wires.snapshot;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message WiresSnapshot {
   semio.framework.value.DslValue wires_fixture = 1;
-  semio.os.store.ArtifactChild content = 2;
+  semio.framework.schema.artifact_child.ArtifactChild content = 2;
   semio.framework.value.DslValue meta = 3;
 }
 message WiresStringList { repeated string values = 1; }

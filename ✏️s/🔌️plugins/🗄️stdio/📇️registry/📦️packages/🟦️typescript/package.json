@@ -4,6 +4,6 @@
   "type": "module",
   "exports": {
     "./schema": "./🧬️schema/🟦️.ts",
-    "./contract/part21/testing/fixtures/sqlite-cohort": "./🧬️contract/📐️part21/🧪️testing/🧫️fixtures/🚦️sqlite-cohort/🟦️.ts"
+    "./contract/part21/testing/fixtures/sqlite-cohort": "./🧬️contract/📐️part21/🧪️tests/🧫️fixtures/🚦️sqlite-cohort/🟦️.ts"
   }
 }

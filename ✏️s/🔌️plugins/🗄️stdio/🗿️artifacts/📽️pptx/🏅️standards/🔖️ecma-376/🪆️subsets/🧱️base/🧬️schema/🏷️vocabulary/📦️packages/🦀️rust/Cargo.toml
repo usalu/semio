@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-pptx-base-vocabulary"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🏷️ The pptx ecma-376 base vocabulary: namespaces, part names, XML helpers, refusals and the signed64 transform scalar."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }

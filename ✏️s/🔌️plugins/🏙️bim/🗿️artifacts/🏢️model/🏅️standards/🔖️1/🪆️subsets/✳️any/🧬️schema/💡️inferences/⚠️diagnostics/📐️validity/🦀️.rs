@@ -2,17 +2,18 @@
 //! break the code (from `stair-runs`).
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
-use crate::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue;
-use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{BLONDEL_MAX, BLONDEL_MIN};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, CurtainGrid, CurtainPanel, ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::MAX_TILT;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningIssue;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{BLONDEL_MAX, BLONDEL_MIN};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, CurtainGrid, CurtainPanel, Point2, SpaceBoundary, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::loops;
 
 /// 📏️ Lengths below this (metres) are no length.
@@ -55,7 +56,7 @@ fn axis(found: &mut Vec<Diagnostic>, storey: &str, id: &str, axis: &Axis) -> boo
         found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
         return false;
     }
-    let length = seg(axis).length();
+    let length = segment_of(axis).length();
     if length <= LENGTH_EPS {
         found.push(Diagnostic::new(DiagnosticCode::DegenerateAxis, &[id]).on(storey).with("length", length));
         return false;
@@ -141,7 +142,7 @@ fn degenerate(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found
         outline(found, storey, id, &ceiling.boundary);
         ceiling.holes.iter().for_each(|hole| outline(found, storey, id, hole));
         if finite_loop(&ceiling.boundary) && snapshot.ceiling_types.contains_key(&ceiling.ceiling_type) {
-            let (bottom, top) = ceilings::span(snapshot, ceiling, own);
+            let (bottom, top) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::span(snapshot, ceiling, own);
             if top > own.top_elevation + LENGTH_EPS || bottom < own.elevation - LENGTH_EPS {
                 found.push(Diagnostic::new(DiagnosticCode::CeilingOutsideStorey, &[id]).on(storey).with("top", top - own.elevation).with("bottom", bottom - own.elevation).with("height", own.top_elevation - own.elevation));
             }
@@ -154,7 +155,7 @@ fn degenerate(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>, found
         if let Some(host) = railing.host.as_ref() {
             if !host.inset.is_finite() {
                 found.push(Diagnostic::new(DiagnosticCode::NonFinite, &[id]).on(storey));
-            } else if rail_hosts::unresolved(railing, snapshot.slabs.get(&host.element)) {
+            } else if semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::unresolved(railing, snapshot.slabs.get(&host.element)) {
                 found.push(Diagnostic::new(DiagnosticCode::RailingHostUnresolved, &[id, &host.element]).on(storey));
             }
         } else if !railing.path.iter().all(finite_point) {

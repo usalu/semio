@@ -10,7 +10,7 @@
 use crate::schema::mutations::SemioTableMutation;
 
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
-use {crate::schema::mutations::create_column::CreateColumn, crate::schema::mutations::delete_column::DeleteColumn, crate::schema::mutations::edit_cell::EditCell, crate::schema::mutations::insert_row::InsertRow, crate::schema::mutations::remove_row::RemoveRow, crate::schema::mutations::rename_column::RenameColumn, crate::schema::mutations::reorder_columns::ReorderColumns, crate::schema::mutations::reorder_rows::ReorderRows};
+use {semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::create_column::CreateColumn, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::delete_column::DeleteColumn, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::edit_cell::EditCell, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::insert_row::InsertRow, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::remove_row::RemoveRow, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::rename_column::RenameColumn, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_columns::ReorderColumns, semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_rows::ReorderRows};
 use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::dec_row;
 use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::enc_row;
 use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::dec_cell_kind;
@@ -150,14 +150,14 @@ use super::*;
 use crate::schema::mutations::*;
 use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
-use crate::schema::mutations::create_column;
-use crate::schema::mutations::delete_column;
-use crate::schema::mutations::edit_cell;
-use crate::schema::mutations::insert_row;
-use crate::schema::mutations::remove_row;
-use crate::schema::mutations::rename_column;
-use crate::schema::mutations::reorder_columns;
-use crate::schema::mutations::reorder_rows;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::create_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::delete_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::edit_cell;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::insert_row;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::remove_row;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::rename_column;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_columns;
+use semio_s_artifact_stdio_semio_table_mut_family::schema::mutations::reorder_rows;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTableSnapshot,
 /// SemioTableMutation>` payload struct declared in the corresponding triad leaf's
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate

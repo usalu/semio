@@ -1,7 +1,16 @@
 //! 🧵️ Element vocabulary shared by the multi-element and data leaves: which ids name an element, the placement fields of the
 //! placed kinds (the one record a move, a rotation and their exact inverse all speak), and the name slot of every element kind.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::{AreaSchemePatch, BeamPatch, BuildingPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, GridLinePatch, MepElementPatch, OpeningPatch, RailingPatch, RampPatch, RoofPatch, SitePatch, SlabPatch, SpacePatch, StairPatch, StoreyPatch, WallPatch, WallSweepPatch, ZonePatch}, Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{Axis, ModelSnapshot, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Vertex}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry, KeyedDelta, Patch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{AreaSchemePatch, BuildingPatch, GridLinePatch, SitePatch, SpacePatch, StoreyPatch, WallSweepPatch, ZonePatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::{BeamPatch, ColumnPatch, SlabPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::{CeilingPatch, OpeningPatch, RoofPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::{ComponentPatch, MepElementPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::{CurtainWallPatch, WallPatch};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::{RailingPatch, RampPatch, StairPatch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -635,7 +644,7 @@ pub fn restorey(base: &ModelSnapshot, id: &str, storey: &str) -> Option<ModelDif
 }
 
 /// 🔝️ The base offset and the top constraint that resolve the height of the element `id`, `None` for an element whose extent no top constraint drives (a stair starts at its storey).
-pub fn vertical_of<'a>(base: &'a ModelSnapshot, id: &str) -> Option<(f64, &'a crate::standards::v1::subsets::any::schema::snapshot::TopConstraint)> {
+pub fn vertical_of<'a>(base: &'a ModelSnapshot, id: &str) -> Option<(f64, &'a semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint)> {
     base.walls
         .get(id)
         .map(|row| (row.base_offset, &row.top))
@@ -662,12 +671,12 @@ macro_rules! rephased {
 }
 
 /// 🕰️ The construction phase of the element `id`, `None` for an id that carries none (an opening takes the phase of its host, a grid line, site, building or storey has none).
-pub fn phase_of(base: &ModelSnapshot, id: &str) -> Option<crate::standards::v1::subsets::any::schema::snapshot::Phase> {
+pub fn phase_of(base: &ModelSnapshot, id: &str) -> Option<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase> {
     phased!(base, id, walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces)
 }
 
 /// 🕰️ The one-field diff that puts the phasable element `id` into `phase`, `None` for an id that carries no phase.
-pub fn rephase(base: &ModelSnapshot, id: &str, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase) -> Option<ModelDiff> {
+pub fn rephase(base: &ModelSnapshot, id: &str, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase) -> Option<ModelDiff> {
     rephased!(
         base, id, phase,
         walls => WallPatch,

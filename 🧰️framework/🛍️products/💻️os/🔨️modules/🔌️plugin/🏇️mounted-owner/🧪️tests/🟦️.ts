@@ -9,7 +9,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import contextSchema from "../🧬️schema/🧾️context/🔣️.json";
 import contextFixture from "./🧫️fixtures/🧾️context/🔣️.json";
 import {pluginFamilyText, pluginSubtreeText} from "../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 type Observation = typeof fixture.vectors[number]["observation"];
 interface MountedOwnerOracleV1 { valid(value:unknown):boolean; policy(value:unknown):boolean; verdict(value:Observation):string }
 type NestedObservation = typeof fixture.nestedJobs[number]["observation"];
@@ -120,7 +120,7 @@ test("actual native verdicts preserve the original context recipient and reject 
 
 test("portable mounted ownership consumes the original context memory wallet once",()=>{
  const law=fixture.contextReceipt,oracle=new Ajv({strict:true});oracle.addSchema(schema);const valid=oracle.getSchema(schema.$id+"#/$defs/RetainedCloneGrantV1");if(!valid)throw Error("Canonical mounted grant schema missing");expect(valid(law.grant)).toBe(true);expect(Buffer.byteLength(law.source)).toBe(law.grant.maximumCopyBytes);expect(law.childFuel).toBeGreaterThan(law.grant.maximumItems);
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source.includes("self.context.consume_retained(receipt)?;")).toBe(true);expect(source.includes("let original=context.retained_grant();")).toBe(true);expect(source.includes("min(self.context.fuel_remaining())")).toBe(false);
+ const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));expect(source.includes("self.context.consume_retained(receipt)?;")).toBe(true);expect(source.includes("let original=context.retained_grant();")).toBe(true);expect(source.includes("min(self.context.fuel_remaining())")).toBe(false);
 });
 
 test("actual native verdicts preserve original mounted actor capture and full physical close",()=>{
@@ -138,12 +138,12 @@ test("actual native verdicts preserve original mounted actor capture and full ph
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const producer=Buffer.alloc(law.producerCapacity);const db=new Database(":memory:");
  try{const row=db.query("SELECT ? AS external,? AS turn,max(0,?-?) AS remaining,7-1 AS fuel").get(producer.byteLength,producer.byteLength,law.policyCapacity,producer.byteLength)as{external:number;turn:number;remaining:number;fuel:number};expect(row).toEqual({external:law.externalCapacity,turn:law.turnCapacity,remaining:law.remainingCapacity,fuel:law.fuel});}finally{db.close();}
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");const record=source.slice(source.indexOf("pub fn record("),source.indexOf("pub fn advance_job("));
+ const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const record=source.slice(source.indexOf("pub fn record("),source.indexOf("pub fn advance_job("));
  expect(record.indexOf("self.progress = progress;")).toBeLessThan(record.indexOf("self.context.consume_retained(receipt)?;"));expect(record.includes("with_retained_progress(receipt)")).toBe(true);expect(source.includes("maximum_capacity_bytes.saturating_sub(self.progress.retained_capacity_bytes)")).toBe(true);
 });
 
 test("runtime policy receives the original child failure before propagation",()=>{
- const owner=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),app=pluginSubtreeText("🧵️instance","🔌️plugin-app-impl");
+ const owner=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url)),app=pluginSubtreeText("🧵️instance","🔌️plugin-app-impl");
  const recorded=owner.indexOf("self.progress = self.progress.checked_add(actual)?;");expect(recorded).toBeGreaterThan(0);expect(recorded).toBeLessThan(owner.indexOf("let step = result?;"));
  for(const name of ["maintenance_step","close_step"]){expect(app.includes(`fn mounted_owner_${name}(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)`)).toBe(true);}
  expect((app.match(/turn\.advance_lifecycle\(\|cx,loan\|/g)??[]).length).toBe(2);
@@ -152,14 +152,14 @@ test("runtime policy receives the original child failure before propagation",()=
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/⚠️receipt/🔣️.json",import.meta.url),"utf8"));
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/⚠️receipt/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn progress("));
+ const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));const method=source.slice(source.indexOf("pub fn advance_job("),source.indexOf("pub fn progress("));
  expect(method.includes("let result = job(self.context, grant);")).toBe(true);expect(method.includes("self.progress = self.progress.checked_add(actual)")).toBe(true);expect(method.includes("let receipt = result?")).toBe(true);expect(method.indexOf("self.progress = self.progress.checked_add(actual)")).toBeLessThan(method.indexOf("let receipt = result?"));expect(method.includes("consume_retained(")).toBe(false);
  const db=new Database(":memory:");try{expect(db.query("SELECT 64-0 AS actual,64 AS external,64 AS turn,7-1 AS fuel").get()).toEqual({actual:64,external:64,turn:64,fuel:6});}finally{db.close();}
 });
 
 test("runtime policy alias custody keeps final Arc payload and shell distinct",()=>{
  const law=JSON.parse(readFileSync(new URL("🧫️fixtures/🔗️alias/🔣️.json",import.meta.url),"utf8"));const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔗️alias/🔣️.json",import.meta.url),"utf8"));expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);expect(validateJsonSchemaSubset(schema,law)).toEqual([]);
- const source=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source.includes("pub mod alias_retirement;")).toBe(true);const alias=readFileSync(new URL("../🔗️alias/🦀️.rs",import.meta.url),"utf8");expect(alias.includes("pub struct MountedOwnerCellV1")).toBe(true);expect(alias.includes("Mutex<Box<T>>")).toBe(false);
+ const source=readModuleTreeSource(new URL("../🦀️.rs",import.meta.url));expect(source.includes("pub mod alias_retirement;")).toBe(true);const alias=readFileSync(new URL("../🔗️alias/🦀️.rs",import.meta.url),"utf8");expect(alias.includes("pub struct MountedOwnerCellV1")).toBe(true);expect(alias.includes("Mutex<Box<T>>")).toBe(false);
  const db=new Database(":memory:");try{db.run("CREATE TABLE phase(phase TEXT,release INTEGER)");for(const[phase,release]of [["arc-backing",32],["payload",64],["box-shell",24]])db.query("INSERT INTO phase VALUES(?,?)").run(phase,release);expect(db.query("SELECT sum(release) AS release,count(*) AS phases FROM phase").get()).toEqual({release:120,phases:3});expect(db.query("SELECT phase FROM phase ORDER BY rowid").all()).toEqual(law.finalPhases.map((phase:string)=>({phase})));}finally{db.close();}
 });
 
@@ -184,7 +184,7 @@ test("runtime policy forwards original extension retirement currencies into the 
 /** 🩹️ Independent original phase grants bind one cumulative recipient across reconcile continuations. */
 test("runtime policy forwards one original cumulative reconcile recipient to all job contexts",()=>{
  mountedContextOracle();
- const plugin=resolve(import.meta.dir,"../.."),patches=readFileSync(resolve(plugin,"⚛️reactor/🩹️patches/🦀️.rs"),"utf8"),turn=readModuleTreeSource(resolve(plugin,"⚛️reactor/🔄️turn/🦀️.rs"));
+ const plugin=resolve(import.meta.dir,"../.."),patches=readModuleTreeSource(resolve(plugin,"⚛️reactor/🩹️patches/🦀️.rs")),turn=readModuleTreeSource(resolve(plugin,"⚛️reactor/🔄️turn/🦀️.rs"));
  expect(patches.includes("pub fn drive_one(&self, cx: &mut StepContext<'_>)")).toBe(true);
  expect(patches.includes("drive_job_one(&mut state, index, cx)?")).toBe(true);
  expect(patches.includes("fn drive_job_one(state: &mut PatchTrackerState, index: usize, cx: &mut StepContext<'_>)")).toBe(true);

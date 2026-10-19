@@ -4,7 +4,7 @@ import schema from"./🧬️schema/🔣️.json";
 import cacheSchema from"../🧬️schema/🔣️.json";
 import{rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorGraphV2,type RustUnitDescriptorNodeV2}from"../../🕸️nodes/🟦️.ts";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 declare const workingSetBrand:unique symbol;
 /** 🧺️ Owns a complete finite immutable artifact set as DATA, with no Native/storage/cleanup authority. */

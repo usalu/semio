@@ -4,7 +4,7 @@ import{withRustUnitDescriptorNamespaceV2,withRustUnitDescriptorMaintenanceV2,wit
 import{Database}from"bun:sqlite";
 import{mkdtemp,mkdir,writeFile,readFile,lstat,rm,open}from"node:fs/promises";
 import{join,sep}from"node:path";
-import{resourceLeasePathV1,withResourceLeases,acquireResourceLease}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{resourceLeasePathV1,withResourceLeases,acquireResourceLease}from"@semio-tech/process/leases";
 import{prepareRustUnitDescriptorGraphV2,rustUnitDescriptorNodesV2,rustUnitDescriptorNodeArtifactV2}from"../../../🕸️nodes/🟦️.ts";
 import{withRustUnitDescriptorPublicationV2,recoverRustUnitDescriptorCacheV2}from"../../📂️files/🟦️.ts";
 import fixture from"../../../../🧪️tests/🧫️fixtures/🔣️.json";

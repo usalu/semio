@@ -25,7 +25,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(here, "../🧫️fixtures/🫀️settle-pump/🔣️.json");

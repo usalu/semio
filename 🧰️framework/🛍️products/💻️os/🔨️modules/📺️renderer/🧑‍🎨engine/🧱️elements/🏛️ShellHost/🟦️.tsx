@@ -39,7 +39,7 @@ import { SpaceAdministrationPane } from "../🛂️SpaceAdministration/🟦️.t
 import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
 import { BoardSessionFactoryContext, registerWasmBindingsV1 } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { isEphemeralShellBrand } from "../🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { registerElementHostsV1 } from "../🪢️ElementHosts/🟦️.ts";
 import { pluginInstallBandTextV1, pluginInstallCancelTextV1 } from "../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { checkinAbortText, checkinStatusText } from "../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
@@ -90,7 +90,6 @@ import { useCanvasAndFooter, type ShellCoreAfterCanvasAndFooter } from "./🖼�
 
 export {
   scheduleShellTransientNoticeDismissV1,
-  type ServiceMountedViewV1,
   SetWindowIconContext,
   SetWindowTitleContext,
   SHELL_TRANSIENT_NOTICE_AUTO_DISMISS_MS,

@@ -70,7 +70,7 @@ pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J, label: &str) -> usize 
     let mut released = 0usize;
     for _ in 0..10_000_000 {
         let grant = job_grant(job);
-        match job.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { progress } => {
                 assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant");
                 released += progress.released_bytes;
@@ -82,7 +82,6 @@ pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J, label: &str) -> usize 
                 released += progress.released_bytes;
             }
             InteractiveJobCloseStep::Blocked => panic!("{label} close blocked under its exact quoted grant"),
-            InteractiveJobCloseStep::Refused { kind, .. } => panic!("{label} close was refused: {kind:?}"),
         }
     }
     panic!("{label} close never completed")
@@ -99,7 +98,7 @@ pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plu
             release_bytes: work.next_close_release_byte_demand().unwrap_or_else(|error| panic!("{label} release quote refused: {error}")),
             depth: work.next_close_depth_demand().unwrap_or_else(|error| panic!("{label} depth quote refused: {error}")),
         });
-        match work.close_step(grant) {
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { progress } => {
                 assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant");
                 assert!(work.terminal_is_empty(), "{label} completed without its terminal-empty witness");
@@ -107,7 +106,6 @@ pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plu
             }
             InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant"),
             InteractiveJobCloseStep::Blocked => panic!("{label} close blocked under its exact quoted grant"),
-            InteractiveJobCloseStep::Refused { kind, .. } => panic!("{label} close was refused: {kind:?}"),
         }
     }
     panic!("{label} close never completed")

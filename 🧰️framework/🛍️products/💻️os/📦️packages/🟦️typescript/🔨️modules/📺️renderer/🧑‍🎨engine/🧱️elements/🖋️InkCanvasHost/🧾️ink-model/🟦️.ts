@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/InkCanvasHost/ink-model` entry: explicit re-exports of the source module that owns each member. */
+export { parseSelectionIds } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts";
+export type { InkBounds, InkCamera, InkCanvasEvent, InkDocument, InkGroupItem, InkImageAsset, InkImageItem, InkItem, InkItemBase, InkItemKind, InkMathItem, InkResizeHandle, InkStrokeItem, InkTableCell, InkTableItem, InkTextItem, InkTextParagraph, InkTextRun, Vec2 } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖋️InkCanvasHost/🧾️ink-model/🟦️.ts";

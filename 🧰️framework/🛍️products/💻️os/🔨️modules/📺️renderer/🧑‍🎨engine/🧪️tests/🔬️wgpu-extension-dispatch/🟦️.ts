@@ -4,11 +4,13 @@ import laws from "../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json
 import documentBackbone from "../🧫️fixtures/📡️wgpu-document-backbone/🔣️.json";
 import { contextIntegerCarriersFixture as integerView, manifestViewContextSchema as viewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { extensionRequestActivationReason, serializeWgpuActorCall, wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { extensionRequestActivationReason, serializeWgpuActorCall, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WgpuActorCallQueueFullError } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/shard-and-actor-calls";
+import { wgpuBackboneMessageEffect, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_CONTRIBUTIONS_SLIM_VIEW } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/contributions-and-effects";
+import { wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes } from "@semio-tech/framework-renderer-wgpu/plugin-bridge/typed-operations-and-handle";
 import { activationEventEnvelope, createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
-import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
-import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "@semio-tech/framework-renderer-wgpu/boot-liveness";
+import { SHARD_COMMAND_MAXIMUM_PAGES } from "@semio-tech/framework-actor/shard-client";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 
 async function actualAppChannelCommand(sequenceOwnerBefore: number, commandBytes: Uint8Array, viewState: unknown): Promise<Uint8Array> {

@@ -1,6 +1,6 @@
-import{projectExactCargoPreparationV1}from"./📋️request/🟦️.ts";
+import{projectExactCargoPreparationV1,type ExactCargoLawPreparationV1}from"./📋️request/🟦️.ts";
 import {isAbsolute} from "node:path";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {runOwnedCommand} from "../../../../🎛️owned-execution/🟦️.ts";
 import {captureOwnedProcess} from "../../../../📥️capture/🟦️.ts";
@@ -10,7 +10,7 @@ import {advanceScriptInvocation} from "../../../../🧭️routing/📥️invocat
 import {exactExecutableFingerprint,originalNativeLibraryDirectory,type ExactCargoLawPort} from "../🟦️.ts";
 
 /** 📋️ Declares the caller-owned preparation executable and finite transport independently of Cargo discovery. */
-export type ExactCargoLawPreparationV1=Readonly<{version:1;command:string;args:readonly string[];cwd:string;environment:Readonly<Record<string,string>>;maximumOutputLines:number}>;
+export type {ExactCargoLawPreparationV1};
 /** 🔐️ Admits an explicit preparation descriptor before any compiler acquisition. */
 export function readExactCargoLawPreparationV1(value:unknown):ExactCargoLawPreparationV1{if(validateJsonSchemaSubset(schema,value).length)throw Error("Complete exact Cargo preparation descriptor required");const descriptor=value as ExactCargoLawPreparationV1;if(!isAbsolute(descriptor.cwd)||[descriptor.command,...descriptor.args].some(value=>value.includes("\0")))throw Error("Exact Cargo preparation paths or arguments refused");return descriptor;}
 /** 🔌️ Preserves the original build grant across caller preparation and compiler capture. */

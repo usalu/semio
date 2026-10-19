@@ -1,5 +1,5 @@
 /** 🧪️ Terrain facets preserve durable child handles independently of window preferences. */
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {test} from "bun:test";
 import {binary64,binary64Value} from "@semio-tech/framework/value/ieee754";
 import assert from "node:assert/strict";
@@ -7,7 +7,6 @@ import { applyPatch, type Operation } from "fast-json-patch";
 import { join } from "node:path";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };

@@ -1,8 +1,8 @@
 /** 🛠️ `dev` command family: storybook, storybook-static and the MCP launchers.
  * @see 📜️script.ts
  */
-import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { readBuildMode } from "@semio-tech/process/build-mode";
+import { ensureMcpBinary } from "@semio-tech/framework-os-mcp";
 import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

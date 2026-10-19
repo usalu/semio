@@ -1,9 +1,10 @@
 //! 🕹️ BIM interaction: two framework-owned domains. `elements` carries every placed entity (site to space) as one hierarchy, so the outliner tree, the plan, the section and
 //! the 3D window select and hover the same ids; `library` carries the materials and the seven type families as a flat list.
 
-use crate::editor::bim::entities::{ordered_storeys, ENTITIES};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::ENTITIES;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::GranularityDefinition;
 use semio_framework_plugin::HierarchyProvider;

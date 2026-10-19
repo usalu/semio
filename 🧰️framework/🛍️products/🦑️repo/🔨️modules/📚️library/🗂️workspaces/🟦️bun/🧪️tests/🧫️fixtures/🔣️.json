@@ -939,5 +939,6 @@
     {"name":"missing-appeared", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"state","path":"/a","value":["missing"]},{"operation":"state","path":"/a","value":["directory","1","2",16877]}],"accepted":false,"paths":1,"facts":1},
     {"name":"listing-requires-own-state", "pathCapacity":2,"factCapacity":4,"steps":[{"operation":"list","path":"/a","value":[]}],"accepted":false,"paths":0,"facts":0},
     {"name":"listing-repeat-no-recharge", "pathCapacity":1,"factCapacity":2,"steps":[{"operation":"state","path":"/a","value":["directory","1","2",16877]},{"operation":"list","path":"/a","value":[]},{"operation":"list","path":"/a","value":[]}],"accepted":true,"paths":1,"facts":2}
-  ]
+  ],
+  "listingCache": {"members": ["members/**"], "packages": [{"path": "members/a", "name": "cached-a"}, {"path": "members/b", "name": "cached-b"}], "added": {"path": "members/nested/c", "name": "cached-c"}, "settleMilliseconds": 2100}
 }

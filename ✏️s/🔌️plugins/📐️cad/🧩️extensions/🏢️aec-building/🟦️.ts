@@ -57,15 +57,3 @@ export function register(): void {
 }
 // #endregion 📦️Register
 
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts`. */
-export type AecBuildingTestDependencies = {
-  readonly AEC_BUILDING_MODEL_DEFINITION_ID: typeof AEC_BUILDING_MODEL_DEFINITION_ID;
-  readonly typologyFromStepLayer: typeof typologyFromStepLayer;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-module-aec-building/🟦️.ts");
-  await registerTests1(import.meta.vitest, { AEC_BUILDING_MODEL_DEFINITION_ID, typologyFromStepLayer }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

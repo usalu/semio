@@ -8,7 +8,7 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { SchemaCheck } from "../🎞️media-persistence-and-retirement/🟦️.ts";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
@@ -76,7 +76,7 @@ export class MemberOpenProtocolScript extends BundleScript {
     assert(storeTests.includes("member_open_partial_parse_and_initialization_owners_retire_exactly"));
     console.log(`[TRACE] member open request oracle: ${fixture.cases.length} admission cases, ${fixture.framing.length} framing cases, ${fixture.retention.length} declared retained-stage cases; rejected input bytes retained=${rejectedBytes}; typed parser/factory activation not claimed`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted"] }, { package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-store-member-open-tests", target: { kind: "lib" }, laws: ["member_open_request_rejection_retains_exact_pages_and_identity", "member_open_input_framing_is_canonical_scoped_and_budgeted"] }, { package: "semio-framework-os-store-tests-02", target: { kind: "lib" }, laws: ["member_open_partial_parse_and_initialization_owners_retire_exactly"] }] });
     assert.equal(receipts[0]!.assertions, 3);
   }
 }
@@ -164,7 +164,7 @@ export class PublicMemberOpenHandoffCheckScript extends PublicMemberOpenHandoffS
     if (segments.length) throw new Error("public-member-open-handoff-check accepts no arguments");
     this.proveSource();
     const laws = ["semio_member_factory_request_owned_open_admits_only_retained_flow"];
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-plugin-stdio", target: { kind: "test", name: "flow_retained_decode" }, laws }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-plugin-stdio", target: { kind: "test", name: "flow_retained_decode" }, laws }] });
     assert.equal(receipts.length, 1);
     assert.equal(receipts[0]!.assertions, 1);
   }

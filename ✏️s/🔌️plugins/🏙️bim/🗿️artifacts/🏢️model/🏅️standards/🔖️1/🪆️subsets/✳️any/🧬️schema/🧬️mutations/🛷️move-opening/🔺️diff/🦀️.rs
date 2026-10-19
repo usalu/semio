@@ -1,9 +1,12 @@
 //! 🔺️ Diff constructor for `MoveOpening`: a patch of the opening's centre offset and, when it is re-hosted, its host. The new host
 //! (a wall or curtain wall) must exist and the opening must still fit inside its axis and clear of its neighbours.
 
-use crate::standards::v1::subsets::any::schema::mutations::placement::{host_length, placement_issue, width_of};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{host_length, placement_issue, width_of};
 use crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::OpeningPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &MoveOpening, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

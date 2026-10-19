@@ -1,5 +1,5 @@
 import type {LocalProfile} from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
-import {findWorkspaceRoot,receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {findWorkspaceRoot,receiveScriptProcessInvocation,scriptInvocationEnvironment} from "@semio-tech/process/routing";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";

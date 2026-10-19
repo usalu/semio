@@ -2,21 +2,22 @@ import{nativeArtifactCargoConsumptionV1}from"../../../🏗️build/🎚️mode/�
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../📋️native-orchestration/📥️invocation/🟦️.ts";
 import {CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import {repositoryCargoCompilerInputsV1,type CargoDependencyNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {repositoryCargoCompilerInputsV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import type {CargoDependencyNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts";
 import { requestedCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
-import { cargoDirectories } from "../../🦀️cargo/🟦️.ts";
+import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 🏷️ The one version every crate in this workspace carries (`[workspace.package] version`). */
 export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {

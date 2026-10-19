@@ -2,9 +2,10 @@
 //! already carries exactly this code in the system is skipped. A code outside the table of the system is allowed (the diagnostics report it); the classification browser sends this command with the code of a row.
 
 use crate::editor::bim::commands::set_property::elements_of;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -32,7 +33,7 @@ pub fn handle(payload: &SetClassification, doc: &ArtifactView<'_, ModelSnapshot>
     let mutations: Vec<ModelMutation> = ids
         .into_iter()
         .filter(|id| snapshot.classifications.get(id.as_str()).and_then(|set| set.get(system)).map(String::as_str) != Some(code))
-        .map(|id| ModelMutation::SetElementClassification(crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification { id: id.clone(), system: system.to_string(), code: code.to_string() }))
+        .map(|id| ModelMutation::SetElementClassification(semio_s_artifact_bim_model_mut_any_88::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification { id: id.clone(), system: system.to_string(), code: code.to_string() }))
         .collect();
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }

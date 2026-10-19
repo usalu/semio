@@ -2,9 +2,11 @@
 //! bounded space needs a finite seed and an explicit outline at least three finite vertices that enclose area, its zone must exist and its
 //! finishes must name materials. Outline, area, volume and finish areas of a bounded space are inferred from the walls around the seed.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, SpaceBoundary, Vertex}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{SpaceBoundary, Vertex};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn shoelace(outline: &[Vertex]) -> f64 {
@@ -24,7 +26,7 @@ fn drawable(boundary: &SpaceBoundary) -> bool {
 
 pub fn diff(payload: &CreateSpace, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let space = &payload.space;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.storeys.contains_key(&space.storey) {

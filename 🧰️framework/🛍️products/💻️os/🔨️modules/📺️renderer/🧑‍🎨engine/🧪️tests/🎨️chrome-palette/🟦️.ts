@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { compile } from "@tailwindcss/node";
-import { interactiveActiveFillClass, interactiveOnClass, interactiveTabActiveClass } from "../../../../../../../🔨️modules/🖱️ui/🔨️modules/🖱️interaction-presentation/🟦️.ts";
+import { interactiveActiveFillClass, interactiveOnClass, interactiveTabActiveClass } from "@semio-tech/ui-react";
 import { chromium } from "playwright";
 import { applyUiThemeToRoot, clearUiThemeFromRoot, resolveThemeAppearancePalettes, semioTheme } from "@semio-tech/ui-styling";
 import { describe, expect, it } from "vitest";

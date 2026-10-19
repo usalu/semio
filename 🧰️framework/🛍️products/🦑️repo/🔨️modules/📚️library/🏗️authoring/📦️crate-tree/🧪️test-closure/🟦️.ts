@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { rustTokenPairs, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokenPairs, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { identifierSet, parseRustSourceTree, prunedUse, useLeafNames, type RustModuleNode, type RustSourceTree } from "../🌳️module-tree/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
 

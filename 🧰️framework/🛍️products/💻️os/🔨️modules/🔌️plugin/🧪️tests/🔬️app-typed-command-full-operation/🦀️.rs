@@ -12,10 +12,14 @@ use semio_framework_plugin_testing_fixtures_publication::publication_fixture::pr
         semio_framework_plugin_test_support::read_module_tree_source(&fixture_path!("../../../..").join(relative)).expect("the module tree reads")
     }
 
-    /// 🧵️ Source text of the mounted artifact instance: its module tree, the parent file followed by every impl band in declaration order.
+    /// 🧵️ Source text of the mounted artifact instance family: the composer and use-case crates of the instance, the maintenance ladder, the cancellation owners, the retained command shell and the lifted full-operation job, each crate family in path order, read at run time from the manifest folder of the hosting crate.
     #[doc(hidden)]
 pub fn instance_source() -> String {
-        module_source("🧵️instance/🦀️.rs")
+        ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job"]
+            .iter()
+            .map(|folder| semio_framework_plugin_test_support::read_source_family_source(&fixture_path!("../../../..").join(folder)).expect("the instance family reads"))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     #[doc(hidden)]

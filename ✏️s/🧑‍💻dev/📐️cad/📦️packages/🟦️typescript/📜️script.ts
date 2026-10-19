@@ -3,18 +3,17 @@ import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules
 /** 📐️ `@semio-tech/cad-js` task router: `bun ./📜️script.ts test|generate|fixture [args…]`. Folds the former cad-js-{core,renderer,kernel-brepjs,query,machine-stately,runtime} package scripts into one. */
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
-import type { BundleLinter } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import type { BundleLinter } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir, defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runVitest } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
-import { runRepoScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runRepoScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 
 /** 🔌️Dependency-boundary lint across the folded domain files (former per-package `policyFile` checks merged: renderer + stately each carried their own single-file variant). Scoped to the artifact-engine home of the compute modules; `📺️renderer` moved to the app's own `⚙️engine` as app-surface UI and is out of this compute-boundary lint's scope. */
 export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter) => {
-  const repoRoot = getWorkspaceRoot();
+  const repoRoot = findWorkspaceRoot();
   return dependencyBoundaryBreachesForBundleDir(repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/⚙️engine");
 });
 

@@ -28,7 +28,7 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod flow {
-        pub use semio_s_artifact_flow_flow_inferences::editor::flow::base;
+        pub use semio_s_artifact_flow_flow_inferences::editor::flow::editor_vocabulary;
         #[path = "."]
         pub mod modes {
             #[path = "."]

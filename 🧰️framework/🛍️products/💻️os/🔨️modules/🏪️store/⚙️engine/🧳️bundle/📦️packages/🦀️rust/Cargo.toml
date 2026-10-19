@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
-semio-framework-os-store-engine-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-core = { path = "../../../🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item = { path = "../../../../🎮️one-item/📦️packages/🦀️rust" }

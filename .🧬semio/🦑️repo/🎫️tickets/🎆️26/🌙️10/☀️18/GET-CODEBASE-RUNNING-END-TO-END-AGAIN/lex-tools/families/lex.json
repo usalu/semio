@@ -1,0 +1,9 @@
+{
+ "name": "lex",
+ "crates": [
+  "semio-s-artifact-layout-layout-engine-export",
+  "semio-s-artifact-layout-layout-engine-json",
+  "semio-s-artifact-layout-layout-engine-export-unit-tests"
+ ],
+ "note": "LEX: the export crate, its json sibling and the new companion"
+}

@@ -1,0 +1,4 @@
+[
+{"from":"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx","to":"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧯️fault-boundary/🟦️.tsx","names":["ShellFaultBoundary"]},
+{"from":"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx","to":"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📌️panel/🟦️.ts","names":["SpawnedAppEntry","SpacePanelState"]}
+]

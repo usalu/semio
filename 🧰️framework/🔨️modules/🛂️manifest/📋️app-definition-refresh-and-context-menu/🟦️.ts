@@ -2,7 +2,7 @@
 import type { TutorialDefinition } from "../../🎓️onboarding/🟦️.ts";
 import type { WindowLayout } from "../🗺️window-layout/🟦️.ts";
 import type { IconName } from "@semio-tech/assets";
-import type { ContextMenuItemSpec } from "../../🖱️ui/🎬️scene/📋️context-menu/🟦️.ts";
+import type { ContextMenuItemSpec, UiContextMenuHit, UiContextMenuPoint, UiContextMenuRequest, UiContextMenuSelectionGroup, UiContextMenuSurfaceTarget, UiContextMenuTextContext } from "../../🖱️ui/🎬️scene/📋️context-menu/🟦️.ts";
 import type { Effect } from "@semio-tech/framework-kernel/effect";
 import type { ActionDefinition as GeneratedActionDefinition, UtilityDefinition as GeneratedUtilityDefinition, ToolDefinition as GeneratedToolDefinition, CommandDefinition as GeneratedCommandDefinition, WindowMeasure as GeneratedWindowMeasure, WindowEngagementOption as GeneratedWindowEngagementOption, WindowEngagementInput as GeneratedWindowEngagementInput, WindowEngagementStatus as GeneratedWindowEngagementStatus, WindowEngagementPossible as GeneratedWindowEngagementPossible, WindowEngagementRingOption as GeneratedWindowEngagementRingOption, WindowEngagementToggleGroupOption as GeneratedWindowEngagementToggleGroupOption, WindowEngagementSelectItem as GeneratedWindowEngagementSelectItem, WindowEngagementControl as GeneratedWindowEngagementControl, WindowEngagement as GeneratedWindowEngagement, WindowEngagementSlot as GeneratedWindowEngagementSlot, WindowOptions as GeneratedWindowOptions, ActionRef as GeneratedActionRef, PanelGroup as GeneratedPanelGroup, PanelTabKind as GeneratedPanelTabKind, PanelTabDefinition as GeneratedPanelTabDefinition, ModeDefinition as GeneratedModeDefinition, WindowKindDefinition as GeneratedWindowKindDefinition, AppDefinition as GeneratedAppDefinition } from "../🤖️generated/🪪️manifest/🟦️.ts";
 import type { MenuRef, NamedLayout } from "../🏷️ui-contract-and-canvas-types/🟦️.ts";
@@ -156,46 +156,19 @@ export type PluginUiRefreshResponse = {
 
 //#endregion UiRefresh
 //#region 🖱️ContextMenu
-/** 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
- * surface's own picking (hover/selection), not cached across clicks. */
-export type ContextMenuHit = {
-  readonly domain: string;
-  readonly id: string;
-  readonly label?: string;
-};
+/** 🖱️ Scene-target info for an on-demand context-menu request — owned by the ui scene contract. */
+export type ContextMenuHit = UiContextMenuHit;
 
-export type ContextMenuSelectionGroup = {
-  readonly domain: string;
-  readonly ids: readonly string[];
-};
+export type ContextMenuSelectionGroup = UiContextMenuSelectionGroup;
 
-export type ContextMenuTextContext = {
-  readonly caret: number;
-  readonly hasSelection: boolean;
-  readonly word?: string;
-  readonly canRename: boolean;
-  readonly hasCompletions: boolean;
-};
+export type ContextMenuTextContext = UiContextMenuTextContext;
 
-export type PluginContextMenuSurfaceTarget = {
-  readonly surfaceId: string;
-  readonly kind: string;
-  readonly hits?: readonly ContextMenuHit[];
-  readonly selection?: readonly ContextMenuSelectionGroup[];
-  readonly text?: ContextMenuTextContext;
-};
+export type PluginContextMenuSurfaceTarget = UiContextMenuSurfaceTarget;
 
-export type PluginContextMenuPoint = { readonly x: number; readonly y: number };
+export type PluginContextMenuPoint = UiContextMenuPoint;
 
-/** 🖱️ On-demand context-menu request — never cached, never batched into {@link PluginUiRefreshRequest}.
- * `menu` is the {@link MenuRef} the host resolved from `data-menu-id`/a scene surface convention id
- * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
-export type PluginContextMenuRequest = {
-  readonly menu: MenuRef;
-  readonly surface?: PluginContextMenuSurfaceTarget;
-  readonly windowInstanceId?: string;
-  readonly point?: PluginContextMenuPoint;
-};
+/** 🖱️ On-demand context-menu request — owned by the ui scene contract; never cached, never batched into {@link PluginUiRefreshRequest}. */
+export type PluginContextMenuRequest = UiContextMenuRequest;
 
 export type PluginContextMenuResponse = {
   readonly items: readonly ContextMenuItemSpec[];

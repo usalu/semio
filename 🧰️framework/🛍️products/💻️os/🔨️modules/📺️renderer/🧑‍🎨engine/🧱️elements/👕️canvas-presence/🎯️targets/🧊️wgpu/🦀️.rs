@@ -6,7 +6,7 @@
 
 use replication::{canvas_peer_viewport_rect, canvas_point_to_screen, peer_overlay_path, peers_for_window, PeerOverlayKind, PresencePeer, PresenceViewKind, PresenceWindowView};
 use semio_framework_ui_locale::Locale;
-use ui_wgpu::wgpu::Rect;
+use semio_framework_ui_theme::geometry::Rect;
 
 /// 🪟️ The presence space every board window publishes and paints in — React's `space: "canvas"`.
 pub const CANVAS_PRESENCE_SPACE: &str = "canvas";

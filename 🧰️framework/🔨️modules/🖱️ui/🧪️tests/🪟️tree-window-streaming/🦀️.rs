@@ -3,12 +3,12 @@
 //! `tree_window_measures` reads the mounted rows against the scroll viewport, the one request rule asks the window the viewport
 //! needs, and a guest answering that window (capped by its own ledger) republishes; scrolled to the bottom, the LAST row is
 //! materialised and painted inside the viewport, and no request ever exceeds the body budget.
-use crate::wgpu::arena::NodeId;
-use crate::wgpu::mounted_layout::{layout_tree_now, tree_window_measures};
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
-use crate::wgpu::theme::Theme;
-use crate::wgpu::tree::{UiDocumentTree, UiTree};
-use crate::wgpu::tree_window::{served_requests, TreeWindowServedMemory};
+use semio_framework_ui_arena::NodeId;
+use crate::{layout_tree_now, tree_window_measures};
+use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_retained_tree::tree::{UiDocumentTree, UiTree};
+use semio_framework_ui_wgpu_light::tree_window::{served_requests, TreeWindowServedMemory};
 use ui_contract::{EdgeSpace, LayoutSpec, ScrollAxes, ScrollLayout, Sizing, SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision, TREE_WINDOW_BODY_NODE_BUDGET};
 
 const SURFACE: &str = "wg11.streaming";

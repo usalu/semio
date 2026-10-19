@@ -2,13 +2,14 @@
 //! an `IfcRailing` carries the faceted brep of its posts and rail. IFC 2x3 has no stringer, baluster or infill: the stringer boards of a stair are an `IfcMember` (tag `<id>:stringer`) aggregated by the `IfcStair` next to its flights, the balusters
 //! of a railing an `IfcMember` (`<id>:baluster`) and its infill an `IfcPlate` (`<id>:infill`) aggregated by the `IfcRailing`; the flights and the railing keep only their own parts.
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, int, real};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun};
-use crate::standards::v1::subsets::any::schema::snapshot::{Stair, StairFlight};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, int, real};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored stair record.
 pub const STAIR_ROW: &str = "Stair";
@@ -43,7 +44,7 @@ fn material_of(x: &Export<'_>, solid: &ElementSolid, part: &str) -> Option<u64> 
 }
 
 /// 🧩️ Writes the triangles of one part of a solid as a product of `class` aggregated by its parent; nothing when the solid has none.
-fn part_of(x: &mut Export<'_>, solid: &ElementSolid, storey: crate::standards::v1::subsets::any::io::export::ifc::context::StoreyRef, id: &str, name: &str, class: &str, part: &str) -> Option<u64> {
+fn part_of(x: &mut Export<'_>, solid: &ElementSolid, storey: semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::StoreyRef, id: &str, name: &str, class: &str, part: &str) -> Option<u64> {
     let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, _| group.part == part))?;
     let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
     let tail = x.by(Vec::new(), vec![en(match part { parts::STRINGER => "STRINGER", parts::BALUSTER => "POST", _ => "SHEET" })]);
@@ -69,7 +70,7 @@ pub fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
     x.links.authoring.push((entity, vec![(STAIR_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
     let mut flights = Vec::new();
     for (index, flight) in run.flights.iter().enumerate() {
-        let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, centroid| group.part != parts::STRINGER && nearest_flight(run, centroid) == index));
+        let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, centroid| group.part != semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::STRINGER && nearest_flight(run, centroid) == index));
         let axis = x.ifc.axis3([0.0, 0.0, 0.0], None, None);
         let flight_place = x.ifc.place(Some(storey.placement), axis);
         let mut tail = vec![int(i64::from(flight.risers)), int(i64::from(flight.treads)), real(run.riser_height), real(flight.tread)];
@@ -78,11 +79,11 @@ pub fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
         x.links.quantities.push((part, "Qto_StairFlightBaseQuantities", vec![Quantity::Length("Length", flight.length), Quantity::Length("Width", run.width)]));
         flights.push(part);
     }
-    flights.extend(part_of(x, solid, storey, id, &row.name, "IFCMEMBER", parts::STRINGER));
+    flights.extend(part_of(x, solid, storey, id, &row.name, "IFCMEMBER", semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::STRINGER));
     x.links.aggregated.insert(entity, flights);
 }
 
-pub fn railing(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Railing) {
+pub fn railing(x: &mut Export<'_>, id: &str, row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("railing", id, "its storey is missing");
         return;
@@ -91,12 +92,12 @@ pub fn railing(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets
         x.skip("railing", id, "its solid is not inferred");
         return;
     };
-    let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, _| group.part != parts::BALUSTER && group.part != parts::INFILL));
+    let shape = brep_definition(&mut x.ifc, &mesh_where(solid, storey.elevation, |group, _| group.part != semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BALUSTER && group.part != semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::INFILL));
     let placement = x.ifc.place(Some(storey.placement), x.ifc.origin);
     let entity = x.product("IFCRAILING", id, &row.name, placement, shape, vec![en("GUARDRAIL")]);
     x.contain(&row.storey, id, entity);
     x.links.authoring.push((entity, vec![(RAILING_ROW, label(&semio_framework_pack_json::to_json_string(row)))]));
-    let infill: Vec<u64> = [part_of(x, solid, storey, id, &row.name, "IFCMEMBER", parts::BALUSTER), part_of(x, solid, storey, id, &row.name, "IFCPLATE", parts::INFILL)].into_iter().flatten().collect();
+    let infill: Vec<u64> = [part_of(x, solid, storey, id, &row.name, "IFCMEMBER", semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BALUSTER), part_of(x, solid, storey, id, &row.name, "IFCPLATE", semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::INFILL)].into_iter().flatten().collect();
     if !infill.is_empty() {
         x.links.aggregated.insert(entity, infill);
     }

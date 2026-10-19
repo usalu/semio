@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
-import { actorColdPairFixtureUrl, actorColdPairSchemaUrl } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
-import { backboneBatchV1FixtureUrl } from "../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { actorColdPairFixtureUrl, actorColdPairSchemaUrl } from "@semio-tech/framework-actor/testing/fixtures";
+import { backboneBatchV1FixtureUrl } from "@semio-tech/framework-replication/testing/fixtures";
 
 /** 🪪️ One neutral admission row of the guest-lifecycle production corpus. */
 type GuestLifecycleCase = { readonly id: string; readonly exact: boolean; readonly live: boolean; readonly capacity: boolean; readonly accepted: boolean };

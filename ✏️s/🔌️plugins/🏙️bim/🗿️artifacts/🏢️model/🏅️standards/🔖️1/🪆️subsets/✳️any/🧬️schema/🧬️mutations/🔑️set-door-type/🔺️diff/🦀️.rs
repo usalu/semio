@@ -2,7 +2,9 @@
 //! must exist and every provided value must keep the dimensions valid; providing nothing new is a no-op.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_door_type::SetDoorType;
-use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{is_positive_length, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -50,7 +50,7 @@ async fn curated_columns_are_sortable_and_echo_the_active_sort() {
     }
     assert_eq!(columns[3]["id"], "actions");
     assert!(scene.sort_json.expect("the active sort reaches the renderer").contains("count"));
-    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::base::SOURCING_DRAG_MIME));
+    assert_eq!(scene.row_drag_mime.as_deref(), Some(crate::editor::sourcing::editor_vocabulary::SOURCING_DRAG_MIME));
     assert!(scene.drop_action_json.expect("drop action").contains("dropOnCurated"));
 }
 

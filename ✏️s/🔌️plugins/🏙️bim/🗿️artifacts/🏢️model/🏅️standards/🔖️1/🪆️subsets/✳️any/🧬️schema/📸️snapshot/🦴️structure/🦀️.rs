@@ -1,6 +1,6 @@
 //! 🦴️ Authored structural boundary conditions and SI loading; geometry and connectivity are inferred.
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::snapshot::values::Point3;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum StructuralLocation { Point { station: f64 }, Line { start: f64, end: f64 }, Area }

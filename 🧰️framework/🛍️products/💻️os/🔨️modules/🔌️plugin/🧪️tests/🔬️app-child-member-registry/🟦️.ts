@@ -3,8 +3,8 @@ import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pluginFamilyText } from "../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
-import { jobCloseDemandFixture as fixture } from "../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/🟦️.ts";
-import { groupHistoryCasesFixtureUrl } from "../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+import { jobCloseDemandFixture as fixture } from "@semio-tech/framework/job/testing/fixtures";
+import { groupHistoryCasesFixtureUrl } from "@semio-tech/framework-os/modules/store/testing/fixtures";
 
 test("prepared child identity release uses the neutral physical admission corpus", () => {
   

@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 import { createIssuedResourceControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { verifyProducedWasmPackageV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import {buildRepositoryWasmWebV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { buildAdmittedWasmWebV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
@@ -16,7 +16,7 @@ import { runScriptMain } from "../../../../../../../../../📦️packages/🟦�
 
 /** 🕸️ Builds and verifies the actual OS DAG session composition. */
 class WasmScript extends BundleScript{
- async run():Promise<void>{await buildRepositoryWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),rsDir:this.root,componentDir:resolve(this.root,"../../🧩️component/📦️packages/🦀️rust"),logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}});}
+ async run():Promise<void>{await buildAdmittedWasmWebV1({producer:"browser-canvas",invocation:this.invocation,consume:verifyProducedWasmPackageV1,control:scriptCompilerAdmissionControlV1(this.invocation,"wasm:build",buildBudgetMs()),rsDir:this.root,componentDir:resolve(this.root,"../../🧩️component/📦️packages/🦀️rust"),logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}});}
 }
 class SourceScript extends BundleScript{
  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}

@@ -5,7 +5,10 @@
 //! Whole-list ruling: the boundary is ONE closed plot polygon, so a provided boundary replaces the boundary as one field.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_site::SetSite;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn enclosed(points: &[Point2]) -> bool {

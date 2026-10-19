@@ -4,9 +4,12 @@
 //! Whole-list ruling: the boundary and the holes are ONE planar region that only validates together (every hole strictly inside
 //! the boundary); holes have no identity, so the region replaces as the boundary and holes it names.
 
-use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
 use crate::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary;
-use crate::standards::v1::subsets::any::schema::{diff::{patches::CeilingPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::CeilingPatch;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCeilingBoundary, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

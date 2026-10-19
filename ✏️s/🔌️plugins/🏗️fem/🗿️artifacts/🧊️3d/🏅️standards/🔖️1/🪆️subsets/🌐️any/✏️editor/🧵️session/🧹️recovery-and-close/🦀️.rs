@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 💼️MountedSession
-pub(super) fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, grant: RetainedCloneGrant) -> Option<PluginLifecycleStep> {
+pub(super) fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Option<PluginLifecycleStep> {
     let shell = registry.recovery_cursor;
     registry.recovery_cursor = (registry.recovery_cursor + 1) % SHELL_CAPACITY;
     let recovery = registry.recoveries[shell].clone();
@@ -40,7 +40,7 @@ pub(super) fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u3
         return Some(PluginLifecycleStep::Blocked { reason: "FEM3D abandoned state generation mismatch" });
     }
     state.cancel.cancel_now();
-    let step = state.close_step(grant);
+    let step = state.close_step(cx, grant);
     if !matches!(&step, PluginLifecycleStep::Complete(_)) {
         if let Err(state) = recovery.restore_owner(identity, state) {
             std::mem::forget(state);
@@ -73,7 +73,7 @@ pub(super) fn recover_abandoned_one(registry: &mut Registry, app_instance_id: u3
     Some(session_pending(1, 0))
 }
 
-fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+fn retire_one(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let shell = registry.maintenance_cursor;
@@ -89,7 +89,7 @@ fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycl
                 }
                 return PluginLifecycleStep::Blocked { reason: "FEM3D retiring shell empty" };
             };
-            state.close_step(grant)
+            state.close_step(cx, grant)
         };
         if matches!(step, PluginLifecycleStep::Complete(_)) {
             let terminal_identity = registry.shells[shell].borrow().as_ref().filter(|state| state.terminal_is_empty()).map(|state| state.identity);
@@ -111,12 +111,12 @@ fn retire_one(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycl
     })
 }
 
-pub fn maintenance_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+pub fn maintenance_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     let (maximum_items, maximum_bytes) = (grant.maximum_items, grant.maximum_release_bytes);
     if maximum_items == 0 {
         return session_pending(0, 0);
     }
-    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, grant)) {
+    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, cx, grant)) {
         return step;
     }
     if let Some((items, bytes)) = world3d_snapshot_recovery_close_step(maximum_bytes) {
@@ -125,7 +125,7 @@ pub fn maintenance_step(app_instance_id: u32, grant: RetainedCloneGrant) -> Plug
     if let Some((items, bytes)) = close_recovered_fem3d_backing(maximum_bytes) {
         return session_pending(items, bytes);
     }
-    retire_one(app_instance_id, grant)
+    retire_one(app_instance_id, cx, grant)
 }
 
 /// 📏️ Quotes the next close or maintenance turn: one owner release bounded by the largest session owner.
@@ -137,12 +137,12 @@ pub fn close_demands(app_instance_id: u32) -> RetirementDemand {
     }
 }
 
-pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+pub fn close_step(app_instance_id: u32, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
     let (maximum_items, maximum_bytes) = (grant.maximum_items, grant.maximum_release_bytes);
     if maximum_items == 0 {
         return session_pending(0, 0);
     }
-    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, grant)) {
+    if let Some(step) = MOUNTED.with(|registry| recover_abandoned_one(&mut registry.borrow_mut(), app_instance_id, cx, grant)) {
         return step;
     }
     if let Some((items, bytes)) = world3d_snapshot_recovery_close_step(maximum_bytes) {
@@ -174,7 +174,7 @@ pub fn close_step(app_instance_id: u32, grant: RetainedCloneGrant) -> PluginLife
             return session_pending(1, 0);
         }
         drop(registry);
-        retire_one(app_instance_id, grant)
+        retire_one(app_instance_id, cx, grant)
     })
 }
 

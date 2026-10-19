@@ -1,19 +1,22 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Stair, StairFlight, Turn};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, StairFlight, Turn};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use std::f64::consts::{FRAC_PI_2, PI};
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{flight};
-use crate::standards::v1::subsets::any::io::text::inferences::stair_runs::table_json;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::*;
-use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, set_storey_height::SetStoreyHeight};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::TopConstraint};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::flight;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::io::text::inferences::stair_runs::table_json;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairRun, MAX_RISERS};
+use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
+use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, ModelNode};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
 use semio_framework_test_fixtures::fixture_text;
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
@@ -23,7 +26,7 @@ fn close(left: f64, right: f64) -> bool {
 }
 
 fn stair(flight: StairFlight, top: TopConstraint) -> Stair {
-    Stair { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-ground".into(), start: Point2 { x: 1.0, y: 2.0 }, direction: 0.0, width: 1.0, flight, top, max_riser: 0.1875, min_tread: 0.25, stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() }
+    Stair { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st-ground".into(), start: Point2 { x: 1.0, y: 2.0 }, direction: 0.0, width: 1.0, flight, top, max_riser: 0.1875, min_tread: 0.25, stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: 1.0, name: "Stair".into() }
 }
 
 fn with(stair: Stair) -> ModelSnapshot {
@@ -168,7 +171,7 @@ static FLIGHTS_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::n
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
     let snapshot: ModelSnapshot = from_json_str((*FLIGHTS), JsonMemberPolicy::Reject).expect("the flights model decodes");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*FLIGHTS_TABLE), &table_json(&compute_stair_runs(&snapshot)));
+    let problems = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*FLIGHTS_TABLE), &table_json(&compute_stair_runs(&snapshot)));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 
@@ -176,9 +179,9 @@ async fn the_subject_reproduces_the_third_party_oracle_table() {
 async fn the_model_inference_carries_the_runs() {
     use protocol::Inference;
     let snapshot = with(stair(StairFlight::Straight, TopConstraint::StoreyTop { offset: 0.0 }));
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred.stair_runs, compute_stair_runs(&snapshot));
-    assert_eq!(inferred, crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers"), "determinism");
+    assert_eq!(inferred, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers"), "determinism");
     assert!(compute_stair_runs(&ModelSnapshot::default()).is_empty(), "default");
 }
 
@@ -186,7 +189,7 @@ async fn the_model_inference_carries_the_runs() {
 #[semio_framework_async_macros::async_test]
 async fn a_stair_depends_on_its_storey_and_the_storey_its_top_targets() {
     let snapshot = with(stair(StairFlight::Straight, TopConstraint::Storey { storey: "st-first".into(), offset: 0.0 }));
-    let steps = plan::build(&snapshot, kinds::closure(kinds::RUNS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::RUNS));
     let step = steps.iter().find(|step| step.key == ModelNode::StairRun("s-1".into())).expect("planned");
     assert_eq!(step.parents, vec![ModelNode::Storey("st-ground".into()), ModelNode::Storey("st-first".into())]);
     let position = |key: &ModelNode| steps.iter().position(|step| &step.key == key).expect("planned");
@@ -199,7 +202,10 @@ async fn a_stair_depends_on_its_storey_and_the_storey_its_top_targets() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_storey_diff_re_infers_the_stairs_on_it_and_a_material_diff_does_not() {
-    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     let snapshot = with(stair(StairFlight::Straight, TopConstraint::StoreyTop { offset: 0.0 }));
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).stair_runs.clone();

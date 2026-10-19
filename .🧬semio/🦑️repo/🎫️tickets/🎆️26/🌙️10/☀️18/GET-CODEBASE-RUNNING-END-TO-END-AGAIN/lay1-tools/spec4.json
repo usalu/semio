@@ -1,0 +1,4 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts","base":"..","leaf":"🗺️plan-model","names":["Matrix","Paint","DocumentSceneContent","DocumentSceneNode","DocumentScenePlan","validateSceneSourceAddress"],"doc":"🗺️ The prepared drawing scene plan every scene job reads: paint, node content, node and plan types and the source address validation."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🟦️.ts","base":".","leaf":"🖌️paint-model","names":["Color","Stop","Fill"],"doc":"🖌️ The drawing fill model sampled by the gradient ramp and edited by the fill editor: colors, gradient stops and fills."}
+]

@@ -7,20 +7,20 @@ use super::*;
 // #region 🔖️Schema
 pub const SCHEMA_KEY: &str = "$schema";
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path = "../../🧪️tests/🏷️type/🦀️.rs"]
 mod value_type_reference;
 
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct FieldSpec {
     pub key: String,
-    #[cfg_attr(test, serde(with = "value_type_reference"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(with = "value_type_reference"))]
     pub value: ValueType,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub default: Option<Value>,
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub label: Option<String>,
 }
 
@@ -68,8 +68,8 @@ impl FromValue for FieldSpec {
 
 /// 🔮️ `serde` is TEST-ONLY — see `Dictionary`'s docstring; `fields: Vec<FieldSpec>` fans in `Value` transitively.
 #[derive(Clone, Debug, Default, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct Schema {
     pub id: String,
     pub module: String,
@@ -108,8 +108,8 @@ impl FromValue for Schema {
 
 /// 🏷️ Schema id with display metadata for pickers.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 pub struct SchemaRef {
     pub id: String,
     pub name: String,

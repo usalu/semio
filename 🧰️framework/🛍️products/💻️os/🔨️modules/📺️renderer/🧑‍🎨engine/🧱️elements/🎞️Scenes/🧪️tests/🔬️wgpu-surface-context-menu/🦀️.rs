@@ -13,7 +13,9 @@ use semio_framework_os_renderer_wgpu_scene_tables::table_metrics;
 use semio_framework_os_renderer_wgpu_scene_text_vfs::vfs_metrics;
 use serde_json::json;
 use super::{context_menu_surface_kind_id, scene_context_menu_target};
-use ui_wgpu::wgpu::{Rect, SurfaceKind, Theme, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode, UiPresence};
+use semio_framework_ui_theme::Theme;
 use semio_framework_ui_scene_plane::{Canvas2dScene, InkCanvasScene};
 use semio_framework_ui_scene_views::{BlockListScene, DiffViewScene, EventFeedScene, GraphTimelineScene, TableScene, VirtualFileSystemScene};
 

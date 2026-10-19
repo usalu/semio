@@ -1,0 +1,8133 @@
+{
+ "generatedAt": "2026-10-18T22:05:51.585Z",
+ "counts": {
+  "a": 43,
+  "b": 478,
+  "c": 34
+ },
+ "rows": [
+  {
+   "target": "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+   "name": "buildRepositoryCargoArtifacts",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as buildAdmittedCargoArtifactsV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 16
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 8,
+    "source": 5
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+   "name": "runArtifactRustPackageMain",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test",
+   "importers": {
+    "repoProduct": 0,
+    "other": 8
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 8,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
+   "name": "runArtifactRustTests",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 5,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+   "name": "runArtifactTypeScriptPackageMain",
+   "class": "a",
+   "to": "@semio-tech/process/typescript-check",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+   "name": "cargoBuildDirectory",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+   "name": "cargoDirectories",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+   "name": "cargoTargetDirectory",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 12
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 9
+   }
+  },
+  {
+   "target": "⚡️caching/🟦️.ts",
+   "name": "repoCacheDirectory",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 12
+   },
+   "otherKinds": {
+    "test": 5,
+    "script": 3,
+    "source": 4
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+   "name": "repoTestArtifactEnvironment",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🟦️.ts",
+   "name": "devToolingEnv",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 8
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 7
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🟦️.ts",
+   "name": "repoToolCacheEnv",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🟦️.ts",
+   "name": "semioBuildParallel",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "runBun",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🎛️owned-execution/🟦️.ts",
+   "name": "runRepositoryCommand",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 19
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 11,
+    "source": 6
+   }
+  },
+  {
+   "target": "🏃️process/🔍️probe/🟦️.ts",
+   "name": "runProbe",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 10
+   },
+   "otherKinds": {
+    "test": 7,
+    "script": 2,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🕸️wasm/🔣️policy/🟦️.ts",
+   "name": "buildRepositoryWasmWebV1",
+   "class": "a",
+   "to": "@semio-tech/process/wasm-build as buildAdmittedWasmWebV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 6
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 6,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+   "name": "runRepositoryCargoCommandV1",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as runAdmittedCargoCommandV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 3,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+   "name": "runRepositoryCargoTests",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as runAdmittedCargoPackageTestsV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 72
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 62,
+    "source": 9
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+   "name": "runRepositoryCargoTestsV1",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as runAdmittedCargoTestsV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 8
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 5,
+    "source": 3
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "name": "configuredRepositoryCargoPreparationPolicyV1",
+   "class": "a",
+   "to": "dropped (provider supplies it)",
+   "importers": {
+    "repoProduct": 0,
+    "other": 49
+   },
+   "otherKinds": {
+    "test": 20,
+    "script": 13,
+    "source": 16
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "name": "runRepositoryExactCargoLaws",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as runAdmittedExactCargoLawsV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 50
+   },
+   "otherKinds": {
+    "test": 20,
+    "script": 14,
+    "source": 16
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "name": "runCargo",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 34
+   },
+   "otherKinds": {
+    "test": 5,
+    "script": 26,
+    "source": 3
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🏭️inventory/🟦️.ts",
+   "name": "runRepositoryMutationBridgeScriptV1",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "repositoryCargoNetworkV1",
+   "class": "a",
+   "to": "dropped (provider supplies it)",
+   "importers": {
+    "repoProduct": 0,
+    "other": 16
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 8,
+    "source": 5
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🔣️policy/🟦️.ts",
+   "name": "repositoryCargoTestPolicyV1",
+   "class": "a",
+   "to": "@semio-tech/process/cargo-test as admittedCargoTestPolicyV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🧭️routing/🧩️contributions/🟦️.ts",
+   "name": "dispatchOwnedScriptRoute",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "cargoProfileDir",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "daemonBudgetOpts",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "orchestratorBudgetOpts",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 12
+   },
+   "otherKinds": {
+    "test": 8,
+    "script": 2,
+    "source": 2
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "resolveWorkspaceBin",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 7
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 7
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmd",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 33
+   },
+   "otherKinds": {
+    "test": 14,
+    "script": 11,
+    "source": 8
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmdStatus",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runNodeBinStatus",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🟦️typescript/🟦️.ts",
+   "name": "typecheckRepositoryProjectV1",
+   "class": "a",
+   "to": "@semio-tech/process/typescript-check as typecheckAdmittedProjectV1",
+   "importers": {
+    "repoProduct": 0,
+    "other": 9
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 9,
+    "source": 0
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+   "name": "completeCargoPreparationObservationV1",
+   "class": "a",
+   "to": "@semio-tech/process/native-build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+   "name": "observeCargoPreparationInputV1",
+   "class": "a",
+   "to": "@semio-tech/process/native-build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+   "name": "observeCargoPreparationOutputV1",
+   "class": "a",
+   "to": "@semio-tech/process/native-build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts",
+   "name": "observeCargoPreparationSourceV1",
+   "class": "a",
+   "to": "@semio-tech/process/native-build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🟦️.ts",
+   "name": "cargoWorkspaceForManifest",
+   "class": "a",
+   "to": "@semio-tech/process/native-build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🧬️metadata/🟦️.ts",
+   "name": "getRepoMetaDir",
+   "class": "a",
+   "to": "@semio-tech/process/execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🟦️.ts",
+   "name": "getWorkspaceRoot",
+   "class": "a",
+   "to": "@semio-tech/process/routing as findWorkspaceRoot",
+   "importers": {
+    "repoProduct": 0,
+    "other": 62
+   },
+   "otherKinds": {
+    "test": 25,
+    "script": 6,
+    "source": 31
+   }
+  },
+  {
+   "target": "🧪️testing/🎛️repository-command/🟦️.ts",
+   "name": "runRepositoryTestCommand",
+   "class": "a",
+   "to": "@semio-tech/process/test-execution",
+   "importers": {
+    "repoProduct": 0,
+    "other": 16
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 11,
+    "source": 5
+   }
+  },
+  {
+   "target": "🧪️testing/🧪️vitest/🟦️.ts",
+   "name": "runVitest",
+   "class": "a",
+   "to": "@semio-tech/process/vitest",
+   "importers": {
+    "repoProduct": 0,
+    "other": 32
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 28,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏗️fem-visual/🟦️.ts",
+   "name": "toolJobFemLiveVisualPublicationExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🧪️tests/🔬️tool-job-microsecond-worker-binding/🟦️.ts",
+   "name": "toolJobMicrosecondWorkerBindingSelfTests",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts",
+   "name": "toolJobFrameworkReservedRoutesExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts",
+   "name": "toolJobOwnerSourceEvidence",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts",
+   "name": "toolJobOwnerSourceText",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts",
+   "name": "toolJobProofCatalogFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts",
+   "name": "toolJobReservedSpecs",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "TOOL_JOB_RESERVED_IDS",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobAppOwnedRows",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobDispositions",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobGlobalPayloadStoreInventory",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobGlobalPayloadStoreIsSharedFixedAuthority",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobProductionProtocolSource",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobProductionSource",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobProofs",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobPublicationAuthorityReady",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobPublicationContracts",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobRustBlock",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobScanThenMonolithRows",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts",
+   "name": "toolJobStaticRows",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobEphemeralOneItemPublicationBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobFullOperationBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobImportPreparationBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobMountedDispatchOneTurnExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobPluginInstanceSource",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobPublicationFreshnessBeforeEveryTurn",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobRetainedDispatchSetup",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobSourceMutation",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobStoreBatchPublicationBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobStoreSource",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobTypedPersistentFoundation",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts",
+   "name": "toolJobTypedRouteFailsClosedBeforePreparation",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧊️retained-ownership/🟦️.ts",
+   "name": "toolJobLayoutColdRelayRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧊️retained-ownership/🟦️.ts",
+   "name": "toolJobUniversalRetainedOwnershipExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts",
+   "name": "toolJobFemNumericalMicrocursorExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🪟️fem2d-mounted-session/🟦️.ts",
+   "name": "toolJobFem2dMountedSessionExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🟦️.ts",
+   "name": "toolJobActorProgressOverlayExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobCancellationScopesBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobDecodeAfterAdmission",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobDetachedOutputOwnershipExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobDropCancellationBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobErasedCloseTerminalExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobExternalCancellationOwned",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobHardBoundedCloseExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobLimitsMatch",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobLiveConstructionCleanupExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobLiveInstanceIsolated",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobMediaExportBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobOpaqueFutureProductionFailClosed",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobQualifiedProofBeforeDecode",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobReactorCloseBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobRuntimeCloseCallbackBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobRuntimeProofQualified",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobRuntimeRegistryFixedClose",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobSnapshotRetirementBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobTypedDispatchExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobVcsOwnedDisposalExplicit",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🟦️.ts",
+   "name": "toolJobWireDispatchExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts",
+   "name": "toolJobArtifactStoreStructuralOwnersExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts",
+   "name": "toolJobHistoryLedgerAdmissionExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts",
+   "name": "toolJobPagedIngressExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts",
+   "name": "toolJobPeerInteractionRootsExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts",
+   "name": "toolJobGisMapEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts",
+   "name": "toolJobJackEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts",
+   "name": "toolJobPresentationEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts",
+   "name": "toolJobTrinityRewriteEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts",
+   "name": "toolJobWriterEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🖼️caller-retained-media/🟦️.ts",
+   "name": "toolJobDrawingEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🖼️caller-retained-media/🟦️.ts",
+   "name": "toolJobRasterEnvelopeCallerRetainedExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts",
+   "name": "toolJobArtifactEditMessageLedgerExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts",
+   "name": "toolJobArtifactEnvelopeOwnedCodecExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts",
+   "name": "toolJobArtifactEventSourcedMergeExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts",
+   "name": "toolJobChildContentRootExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts",
+   "name": "toolJobImmutableOperationRootsExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts",
+   "name": "toolJobPuzzleReservedRoutesExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts",
+   "name": "toolJobSegmentedQueueHardBounded",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🎯️tool-job-coverage/🛣️routes/🟦️.ts",
+   "name": "toolJobSegmentedTerminalDrainExact",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🖥️mounted/🎞️frame-transaction/🟦️.ts",
+   "name": "interactivityMountedFrameTransactionFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🖥️mounted/🖼️mounted-surface/🟦️.ts",
+   "name": "interactivityMountedEngineSurfaceLifetimeFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🖥️mounted/🟦️.ts",
+   "name": "interactivityLiveReconcileFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_FIND_ITEMS_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_KERNEL_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_OS_SERVICES_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_REACTOR_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_RENDERER_HOST_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_RUN_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_SHARD_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_SHELL_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_BUILDER_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_COMPONENT_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_LAYOUT_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_LIMITS_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_PRESENT_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_SURFACE_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_UI_VALUE_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_WINIT_HOST_FILE",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🗂️files/🟦️.ts",
+   "name": "INTERACTIVITY_AUDIT_WORLD3D_FILES",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts",
+   "name": "interactivityPuzzleFillP4eFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts",
+   "name": "interactivityPuzzleFillRunJobFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts",
+   "name": "interactivityPuzzleFillTraceFailures",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyBaseCloneDiffBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyDiffDerivedInverseBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyDiffOnlyFileBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyInverseSumLawUntestedBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyInverseSumLawUntestedLeafBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyLeafBetweenBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyLeafCentralApplyBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyLeafMutableBaseBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyOutcomeApplyToBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyRestoreInverseBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🧪️diff-only-law/🟦️.ts",
+   "name": "policyWholeStateDiffBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts",
+   "name": "policyOutcomeCodeFileBreaches",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚖️laws/🧩️plugin-consistency/🎯️mutation-outcome/🟦️.ts",
+   "name": "policyOutcomeVocabulary",
+   "class": "b",
+   "to": "./laws",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "name": "runViteBunxDev",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 4,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🏗️build/🟦️.ts",
+   "name": "runViteBuild",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 3,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/💾️storage/🟦️.ts",
+   "name": "viteStorageLayoutV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/💾️storage/🟦️.ts",
+   "name": "withViteStorageV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📂️paths/🟦️.ts",
+   "name": "viteCacheDirectory",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts",
+   "name": "readViteRuntimeChannelsV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts",
+   "name": "VITE_RUNTIME_CHANNELS_ENV_V1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts",
+   "name": "ViteRuntimeChannelV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts",
+   "name": "viteRuntimeEnvironmentV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts",
+   "name": "withoutViteRuntimeEnvironmentV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️environment/🟦️.ts",
+   "name": "projectViteCommandEnvironmentV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/🌐️vite/📥️inputs/🟦️.ts",
+   "name": "withViteArtifactInputsV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🕸️wasm/🟦️.ts",
+   "name": "canonicalWasmBuildVitePlugin",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "name": "closeServiceSession",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "name": "openServiceSession",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "name": "publishServiceReady",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "name": "readServiceSession",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 4,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🧾️session/🟦️.ts",
+   "name": "waitForServiceReady",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🟦️.ts",
+   "name": "buildViteArtifact",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 3,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🟦️.ts",
+   "name": "serveVite",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 3,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🟦️.ts",
+   "name": "viteCacheDirectory",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+   "name": "requireCompilerWriterCustodyV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts",
+   "name": "withCompilerWorkspaceWriteV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/👓️reading/🟦️.ts",
+   "name": "withRepositoryObservedCargoConfigurationV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/⚙️configuration/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+   "name": "withRepositoryCompilerStoreV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 4
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts",
+   "name": "repositoryCachePartitionRootDataV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 16
+   },
+   "otherKinds": {
+    "test": 4,
+    "script": 1,
+    "source": 11
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "name": "RepositoryCacheStoreV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 3,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+   "name": "withRepositoryCacheStoreV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 9,
+    "other": 26
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 2,
+    "source": 23
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "name": "repositoryCachePartitionRootV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 5,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "name": "repositoryLeaseDirectoryV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+   "name": "default",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🟦️.ts",
+   "name": "withRepositoryBuildGraphArtifactV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/📚️cohorts/🟦️.ts",
+   "name": "playPagesArtifactCohortV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "name": "boundedNxNamespaceV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🔌️nx/🟦️.ts",
+   "name": "withRepositoryNxStorageV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts",
+   "name": "withRepositoryToolingStoreV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 3,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/🟦️.ts",
+   "name": "repositoryStrictStorageV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "name": "runRepositoryPublishedCargoExecutableV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts",
+   "name": "withRepositoryPublishedCargoExecutableV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 6
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 1,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+   "name": "buildRepositoryCargoArtifacts",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts",
+   "name": "workspaceCargoVersion",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts",
+   "name": "RepositoryArtifactRequestV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 5
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/📚️group/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/📚️group/🟦️.ts",
+   "name": "withRepositoryArtifactGroupTaskV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/📚️group/🟦️.ts",
+   "name": "withRepositoryArtifactGroupV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "name": "RepositoryArtifactReaderV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "name": "RepositoryArtifactRequestV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "name": "RepositoryArtifactV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "name": "withRepositoryArtifactTaskV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 13
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 13
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/👓️reading/🟦️.ts",
+   "name": "withRepositoryArtifactV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 13
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 13
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 20
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 19
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "ArtifactDestinationContextV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "ArtifactDestinationV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 7
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 5
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "typeScriptArtifactLayoutV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "withArtifactDestinationTaskV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 2,
+    "other": 28
+   },
+   "otherKinds": {
+    "test": 4,
+    "script": 2,
+    "source": 22
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "withArtifactScratchV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 2,
+    "other": 22
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 2,
+    "source": 19
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/💾️storage/🟦️.ts",
+   "name": "withArtifactStorageOperationV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+   "name": "repositoryCargoPreparationStorageV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "name": "nativeCallerPhaseV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+   "name": "readNativeCallerAuthorityV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 3,
+    "other": 45
+   },
+   "otherKinds": {
+    "test": 9,
+    "script": 7,
+    "source": 29
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts",
+   "name": "NativeScript",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/📌️executable/🟦️.ts",
+   "name": "withRepositoryExecutablePinV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🕸️wasm/📋️contract/🟦️.ts",
+   "name": "repositoryWasmPackageRequestV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️.ts",
+   "name": "stageRepositoryArtifacts",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 3,
+    "other": 19
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 2,
+    "source": 15
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️.ts",
+   "name": "withRepositoryArtifactDestinationV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 3,
+    "other": 19
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 2,
+    "source": 15
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+   "name": "buildArtifactTypeScriptPackageV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts",
+   "name": "checkArtifactTypeScriptSourceV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+   "name": "bindTypeScriptPackageArtifactV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+   "name": "withTypeScriptPackageArtifactTaskV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️artifacts/🟦️typescript/🔗️binding/🟦️.ts",
+   "name": "withTypeScriptPackageArtifactV1",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/📦️bundle/🟦️.ts",
+   "name": "bundleVirtualJavaScript",
+   "class": "b",
+   "to": "./artifacts",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🗂️directories/🟦️.ts",
+   "name": "cargoTargetDirectory",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🟦️.ts",
+   "name": "componentPassPlanV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🟦️.ts",
+   "name": "componentWorkspacesV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "⚡️caching/🦀️cargo/🟦️.ts",
+   "name": "nativeBuildPipelinePlanV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🧪️tests/📋️values/🟦️.ts",
+   "name": "testMethodV1",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🧪️tests/📋️values/🟦️.ts",
+   "name": "testRecordV1",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/📜️script.ts",
+   "name": "NX_OUTPUT_LOG_ENV",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/📜️script.ts",
+   "name": "runOwnedNxInvocationV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+   "name": "withJavascriptDependencyReadStorageV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+   "name": "preparedBinaryen",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "name": "RepositoryRustToolchainV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "name": "requireRepositoryRustToolchainV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🦀️rustup/📥️installation/🟦️.ts",
+   "name": "withRepositoryRustToolchainV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🧹️retention/📏️headroom/🟦️.ts",
+   "name": "requireToolingPublicationValueV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+   "name": "prepareBun",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🟦️.ts",
+   "name": "isGeneratedPath",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/🟦️.ts",
+   "name": "repoCacheDirectory",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 1,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 4,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "describeDevPortOccupant",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "devServerUrl",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "isDevPortInUse",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts",
+   "name": "countUnifiedLocForFile",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🎮️playground/🔒️preferences/🟦️.ts",
+   "name": "frameworkOsLockedPrefsEnv",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 2
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "admitPlaygroundNativeHostV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "nativeHostFilesystemViewV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "nativeHostTextSourceViewV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "parsePlaygroundNativeHostV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "playgroundNativeHostArtifactV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🎮️playground/🖥️native-host/🟦️.ts",
+   "name": "PlaygroundNativeHostV1",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🧊️wgpu-dev/🟦️.ts",
+   "name": "wgpuDevPlayUrl",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "loadFrameworkOsPlaygroundCatalog",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "OS_HUB_PORT",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "OS_HUB_PORT_ENV",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "playgroundDevPortString",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "playgroundPortEnv",
+   "class": "b",
+   "to": "./dev",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
+   "name": "repoTestArtifactEnvironment",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 3,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏃️process/🌿️environment/🟦️.ts",
+   "name": "devToolingEnv",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 4,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "runBunx",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "runBunxStatus",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "viteConfigLoader",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏃️process/🎛️owned-execution/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🎛️owned-execution/🟦️.ts",
+   "name": "runRepositoryCommand",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/👹️daemon/🟦️.ts",
+   "name": "spawnDaemon",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/👹️daemon/🟦️.ts",
+   "name": "SpawnDaemonHandle",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🏃️process/🔍️probe/🟦️.ts",
+   "name": "runProbe",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 5,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🔐️owner-only/🟦️.ts",
+   "name": "protectOwnerOnly",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎟️admission/🟦️.ts",
+   "name": "runRepositoryCargoTests",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 25,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "name": "configuredRepositoryCargoPreparationPolicyV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "name": "runRepositoryExactCargoLaws",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 5,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts",
+   "name": "CargoDependencyNetworkV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 2
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "repositoryCargoCompilerInputsV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "repositoryCargoConsumptionV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "repositoryCargoNetworkV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 2,
+    "other": 12
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 4,
+    "source": 7
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "withRepositoryCargoInputReaderV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "withRepositoryCargoInputsV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/📥️dependencies/🟦️.ts",
+   "name": "withRepositoryCargoPassInputsV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🔣️policy/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🔣️policy/🟦️.ts",
+   "name": "nextestArtifactLocation",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🧪️testing/📦️executable/🟦️.ts",
+   "name": "runRepositoryCargoTestExecutableV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "name": "launchRepositoryCargoV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "name": "readRepositoryCargoGeneratedCapturePolicyV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🚪️launcher/🟦️.ts",
+   "name": "readRepositoryCargoLaunchV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts",
+   "name": "runRepoScriptMain",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 4,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "orchestratorBudgetOpts",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmd",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 3,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmdStatus",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "semioBuildMode",
+   "class": "b",
+   "to": "./process",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️authoring/🚀️launch-catalog/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🎚️mode/🦀️profile/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🎚️mode/🟨️.mjs",
+   "name": "targetBuildModes",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🎯️host-platform/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🎯️host-platform/🟦️.ts",
+   "name": "requireHostPlatformBuildArgumentsV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/👁️observation/🟨️.mjs",
+   "name": "observeDependencies",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/👁️observation/🟨️.mjs",
+   "name": "observedFs",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 2,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/👁️observation/🟨️.mjs",
+   "name": "observeInference",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📤️arguments/🟨️.mjs",
+   "name": "*",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/📥️caller/📤️child/🟦️.ts",
+   "name": "runOwnedBuildChildInvocationV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📥️caller/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "name": "repositoryBuildGraphDataDirectoryV1",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "name": "repositoryBuildGraphWriterDirectoryV1",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📥️inputs/💾️storage/🟨️.mjs",
+   "name": "withRepositoryBuildGraphFactStoreV1",
+   "class": "b",
+   "to": "./build/tooling",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📥️inputs/📂️membership/🟦️.ts",
+   "name": "withBuildFileMembershipV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/📥️inputs/🧊️stable-file/🟦️.ts",
+   "name": "readStableBuildFile",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 7
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 1,
+    "source": 4
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts",
+   "name": "readInferenceGraphSourceV1",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts",
+   "name": "readInferenceSourceV1",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "*",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 4,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "BuildDependencyContextV1",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "BuildInferenceContextV1",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "BuildInferenceEdgeV1",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "BuildInferencePluginV1",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "cacheInternals",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "GeneratedNodesV1",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+   "name": "libraryBootstrap",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏗️build/🕸️graph/🦀️rust/📥️intent/🏃️routing/🟦️.ts",
+   "name": "runDeclaredRustBuildV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 23,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/🟦️.ts",
+   "name": "buildGraphPathV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 4,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/🟦️.ts",
+   "name": "BuildGraphV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 3,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/🟦️.ts",
+   "name": "BuildTargetV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/🟦️.ts",
+   "name": "readBuildGraphV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🕸️graph/🟦️.ts",
+   "name": "resolveBuildInputsV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🧬️schema/📥️pin.json",
+   "name": "default",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️build/🧭️selection/📥️closure/🟦️.ts",
+   "name": "selectedBuildPrerequisitesV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️build/🧭️selection/🟦️.ts",
+   "name": "selectBuildTasksV1",
+   "class": "b",
+   "to": "./build",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🏗️builder/🟦️.ts",
+   "name": "ArtifactScaffoldLeaf",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️builder/🟦️.ts",
+   "name": "ArtifactScaffoldOptions",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️builder/🟦️.ts",
+   "name": "ArtifactScaffoldResult",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏗️builder/🟦️.ts",
+   "name": "authorArtifactScaffold",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🧬️schema/🔣️event.json",
+   "name": "default",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "name": "GeneratorPreviewProgressControlV1",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "name": "parseGeneratorPreviewProgressPolicyV1",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🟦️.ts",
+   "name": "serializeGeneratorPreviewProgressV1",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️literal-command.json",
+   "name": "default",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🏭️generator/👁️preview/🔤️arguments/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "💾️development/🟦️.ts",
+   "name": "RepositoryDevelopmentStateV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "💾️development/🟦️.ts",
+   "name": "withRepositoryDevelopmentStateTaskV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "💾️development/🟦️.ts",
+   "name": "withRepositoryDevelopmentStateV1",
+   "class": "b",
+   "to": "./storage",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 5
+   }
+  },
+  {
+   "target": "📇️catalog/📣️publication/🟦️.ts",
+   "name": "publicationComponentAdmission",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "📇️catalog/📣️publication/🟦️.ts",
+   "name": "renderOwnerPublications",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "📇️catalog/🚚️deployment/🟦️.ts",
+   "name": "declaredComponentDeploymentDirectoryV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "📽️projection/🧩️package-adapter/📦️publication/🟦️.ts",
+   "name": "runNestedCargoPackageAdapter",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts",
+   "name": "schemaFacetFormatEntries",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/✅️owned-file-approvals/🟦️.ts",
+   "name": "semanticOwnedInputFileSnapshot",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🌐️rust-module-graph/🟦️.ts",
+   "name": "inspectRustCargoManifest",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🌐️rust-module-graph/🟦️.ts",
+   "name": "inspectRustModuleGraph",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🌐️rust-module-graph/🟦️.ts",
+   "name": "inspectRustModuleGraphFacts",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🎁️package-projection/🟦️.ts",
+   "name": "parseCanonicalWgpuPackageCatalog",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🎁️package-projection/🟦️.ts",
+   "name": "parseSemanticPackageBrowserProfile",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🏛️rust-structure/🟦️.ts",
+   "name": "inspectRustStructure",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🏷️package-source-classification/🟦️.ts",
+   "name": "classifyPackageSource",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/👥️mutation-owner-rules/🟦️.ts",
+   "name": "mutationDomainOwnersProblems",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "name": "parseGeneratorInputProjection",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "name": "parseRegistryCatalogProjection",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/📇️registry-catalog-inputs/🟦️.ts",
+   "name": "RegistryCatalogInputView",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 6
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 5
+   }
+  },
+  {
+   "target": "🔍️discovery/📑️taxonomy-document/🟦️.ts",
+   "name": "Taxonomy",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts",
+   "name": "policyReadRustPolicySource",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts",
+   "name": "policyReadUiReconcileSource",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/📖️source-access/🟦️.ts",
+   "name": "policyReadFileSafe",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/📖️source-access/🟦️.ts",
+   "name": "policyReadModuleTreeSource",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/📜️taxonomy-contracts/🟦️.ts",
+   "name": "AreaState",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/📜️taxonomy-contracts/🟦️.ts",
+   "name": "SemanticFacetPrimaryFileProjectionContract",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 4,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "canonicalPrimaryFilenameForKind",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "fileKindIdForSourcePath",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "loadCatalogTaxonomy",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 3,
+    "other": 7
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "loadTaxonomy",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "registryCatalogInputView",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 6
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 6
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "scopedFileKindIdForSourcePath",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "semanticDescendantNodeRelativePath",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "semanticDirectoryKindId",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 3,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "validateGeneratorContractsAgainstWorkspace",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+   "name": "validateTaxonomy",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🔍️discovery/🔭️repository-scan/🟦️.ts",
+   "name": "discoverPackageProblems",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🔭️repository-scan/🟦️.ts",
+   "name": "discoverPackages",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🔍️discovery/🔭️repository-scan/🟦️.ts",
+   "name": "fixedSourceDispositionDecision",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🔭️repository-scan/🟦️.ts",
+   "name": "readSemioMarkerSubTable",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "parseSelectedRuntimeActorEvidenceV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "SelectedRuntimeActorProducerV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "SelectedRuntimeActorPublicationPortV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "SelectedRuntimeActorsV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "SelectedRuntimeActorWitnessV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧬️schema/🟦️.ts",
+   "name": "SelectedRuntimeClosedActorV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts",
+   "name": "RuntimeActorCargoArgumentsRequestV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🎭️actor/🟦️.ts",
+   "name": "runtimeActorCargoArgumentsV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "name": "runtimeActorChildImportV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "name": "runtimeCargoObservationCurrentV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "name": "runtimeCargoProvenanceV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts",
+   "name": "RuntimeCargoObservationV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts",
+   "name": "RuntimeCargoUnitV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🟦️.ts",
+   "name": "inspectRuntimeGraphV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🟦️.ts",
+   "name": "runtimeFixturePathV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "🔍️discovery/🗂️file-kind-resolution/🟦️.ts",
+   "name": "implementationLeafBasenameFinding",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🗂️file-kind-resolution/🟦️.ts",
+   "name": "taxonomyFileKindIsImplementation",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts",
+   "name": "resolveWorkspaceTaxonomyAuthority",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🧲️registry-catalog-projection/🟦️.ts",
+   "name": "discoverCatalogPackages",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 4
+   }
+  },
+  {
+   "target": "🔍️discovery/🧲️registry-catalog-projection/🟦️.ts",
+   "name": "generatorProjectedInputView",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🧲️registry-catalog-projection/🟦️.ts",
+   "name": "registryCatalogProjectedInputView",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🧲️registry-catalog-projection/🟦️.ts",
+   "name": "registryExampleCatalog",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🧾️schema-scope-catalog/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🧾️schema-scope-catalog/🟦️.ts",
+   "name": "schemaScopeIdFromDocumentId",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🪧️owner-markers/🟦️.ts",
+   "name": "declaredComponentKind",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "🔍️discovery/🪧️owner-markers/🟦️.ts",
+   "name": "DiscoveredPackage",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 3
+   }
+  },
+  {
+   "target": "🔍️discovery/🪧️owner-markers/🟦️.ts",
+   "name": "isDiscoverySkipDirectory",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🔍️discovery/🪪️mutation-owner-identity/🟦️.ts",
+   "name": "mutationCatalogSourceOwner",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/🪪️mutation-owner-identity/🟦️.ts",
+   "name": "mutationOwnerIdentity",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🔍️discovery/🪪️mutation-owner-identity/🟦️.ts",
+   "name": "mutationOwnerRelativePath",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/🛠️generator-commands/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🕸️dependencies/📇️inventory/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/📇️inventory/🟦️.ts",
+   "name": "DEPENDENCY_INTERFACE_OWNERS",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/📇️inventory/🟦️.ts",
+   "name": "dependencyTestDomain",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/🧩️runtime/🟨️.mjs",
+   "name": "runtimeComponentClosure",
+   "class": "b",
+   "to": "./inventory/tooling",
+   "importers": {
+    "repoProduct": 0,
+    "other": 8
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 7
+   }
+  },
+  {
+   "target": "🕸️dependencies/🧭️direction/🦀️source/🔗️binding/🟦️.ts",
+   "name": "inspectRustBindingFacts",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🕸️dependencies/🧭️direction/🚀️bootstrap/🟨️.cjs",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory/commonjs",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+   "name": "configuredSourceInputsV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/🟦️typescript/⚙️configured/🟦️.ts",
+   "name": "ConfiguredSourceInputsV1",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/🟦️typescript/🟨️.mjs",
+   "name": "assertGeneratedSources",
+   "class": "b",
+   "to": "./inventory/tooling",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🕸️dependencies/🟦️typescript/🟨️.mjs",
+   "name": "readSourceInputContract",
+   "class": "b",
+   "to": "./inventory/tooling",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🗂️workspaces/📍️checkout-root/🟦️.ts",
+   "name": "WORKSPACE_ROOT",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 10
+   },
+   "otherKinds": {
+    "test": 10,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🎛️policy/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts",
+   "name": "CargoCommandEntryPolicyV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🟦️.ts",
+   "name": "parseCargoCommandEntryPolicyV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts",
+   "name": "CargoCliOperationOwner",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts",
+   "name": "CargoCommandFailure",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts",
+   "name": "parseCargoCliPolicy",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🟦️.ts",
+   "name": "runCargoCliCommand",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🎛️control/🟦️.ts",
+   "name": "CargoControl",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts",
+   "name": "cargoCommandPreparationV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts",
+   "name": "CargoTomlTable",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts",
+   "name": "CargoTomlValue",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts",
+   "name": "CargoTomlWorkspace",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/📖️toml/🟦️.ts",
+   "name": "parseCargoToml",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts",
+   "name": "selectedCargoArguments",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 2
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json",
+   "name": "default",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+   "name": "cargoPreparationStorageFromEnvironmentV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+   "name": "CargoPreparationStorageV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+   "name": "parseCargoPreparationStorageV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🟦️.ts",
+   "name": "cargoInvocationManifestV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🟦️.ts",
+   "name": "discoverCargoWorkspaces",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🟦️.ts",
+   "name": "prepareCargoWorkspaceInvocation",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🦀️cargo/🟦️.ts",
+   "name": "withCargoWorkspaceSelectionV1",
+   "class": "b",
+   "to": "./cargo",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🧬️metadata/🟦️.ts",
+   "name": "getRepoMetaDir",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 3,
+    "other": 0
+   }
+  },
+  {
+   "target": "🗂️workspaces/🧬️metadata/🟦️.ts",
+   "name": "getSemioRoot",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🗂️workspaces/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🗂️workspaces/🟦️.ts",
+   "name": "getWorkspaceRoot",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 3,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🤖️agent-clients/🟦️.ts",
+   "name": "agentClientLauncher",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🤖️agent-clients/🟦️.ts",
+   "name": "readDeclaredTools",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧪️testing/🎚️levels/🟦️.ts",
+   "name": "goLevelTestArgs",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 24,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🎚️levels/🟦️.ts",
+   "name": "playwrightTestTimeoutMs",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 3
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧪️testing/🎛️repository-command/🟦️.ts",
+   "name": "runRepositoryTestCommand",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🐹️go-plan/🟦️.ts",
+   "name": "runCanonicalGoBuild",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 5,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🐹️go-plan/🟦️.ts",
+   "name": "runCanonicalGoTests",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 24,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🐹️go-plan/🟦️.ts",
+   "name": "writeCanonicalGoWorkspaceOverlay",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/📊️coverage/🟦️.ts",
+   "name": "goCoverageArgs",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 22,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🗄️lcov/🟦️.ts",
+   "name": "goProfileToLcov",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧪️testing/🧪️vitest/📋️arguments/🟦️.ts",
+   "name": "vitestRunArguments",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧪️testing/🧪️vitest/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🧪️vitest/🟦️.ts",
+   "name": "runVitest",
+   "class": "b",
+   "to": "./testing",
+   "importers": {
+    "repoProduct": 3,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts",
+   "name": "policyExtractGraphqlSchemaFields",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts",
+   "name": "policyExtractJsonSchemaFields",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🦀️rust/🟦️.ts",
+   "name": "policyExtractRustSchemaFields",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+   "name": "PolicySchemaFieldShape",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts",
+   "name": "PolicySchemaLeafExtract",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts",
+   "name": "policyExtractProtobufSchemaFields",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧬️schema/🔣️json-document/🟦️.ts",
+   "name": "jsonDocumentDuplicateKeys",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧬️schema/🗺️surface/🧱️contract/🟦️.ts",
+   "name": "policyAppPresenceTypeName",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🧹️normalization/🔍️inventory-planning/🟦️.ts",
+   "name": "inventoryTaxonomy",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🧹️normalization/🧪️support/🏗️source-services/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧹️normalization/🧾️plan-parsing/🟦️.ts",
+   "name": "*",
+   "class": "b",
+   "to": "./inventory",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🧾️serialization/🔣️json/🟦️.ts",
+   "name": "canonicalJson",
+   "class": "b",
+   "to": "./authoring",
+   "importers": {
+    "repoProduct": 0,
+    "other": 6
+   },
+   "otherKinds": {
+    "test": 3,
+    "script": 1,
+    "source": 2
+   }
+  },
+  {
+   "target": "🚨️policy/🏃️runner/🟦️.ts",
+   "name": "formatBreachReport",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🏃️runner/🟦️.ts",
+   "name": "isBlockingBreach",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🔖️breach/🟦️.ts",
+   "name": "BreachRecord",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 8,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🖥️cli/🟦️.ts",
+   "name": "resolveCliBin",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🖥️cli/🟦️.ts",
+   "name": "resolveMcpBin",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🧩️linters/🟦️.ts",
+   "name": "BundleLinter",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 2,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🧩️linters/🟦️.ts",
+   "name": "defineLint",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 4,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🧩️linters/🟦️.ts",
+   "name": "FileLinter",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 2,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🧭️entrypoints/🟦️.ts",
+   "name": "runPolicyOnlyMain",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🛡️dependency-boundary/🟦️.ts",
+   "name": "dependencyBoundaryBreachesForBundleDir",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 1,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🚨️policy/🛡️dependency-boundary/🟦️.ts",
+   "name": "parseTsImportSpecs",
+   "class": "b",
+   "to": "./policy",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   },
+   "testOnlyOutsideRepo": true
+  },
+  {
+   "target": "🟨️.mjs",
+   "name": "*",
+   "class": "b",
+   "to": "./build/inference",
+   "importers": {
+    "repoProduct": 3,
+    "other": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🌐️vite/🌐️service/🟦️.ts",
+   "name": "runViteBunxDev",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+   "name": "repositoryLeaseDirectoryV1",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "⚡️caching/🟦️.ts",
+   "name": "repoCacheDirectory",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "describeDevPortOccupant",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "devServerUrl",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🌐️network/🔌️ports/🟦️.ts",
+   "name": "isDevPortInUse",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🔒️preferences/🟦️.ts",
+   "name": "frameworkOsLockedPrefsEnv",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🧊️wgpu-dev/🟦️.ts",
+   "name": "wgpuDevPlayUrl",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🎮️playground/🟦️.ts",
+   "name": "loadFrameworkOsPlaygroundCatalog",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "runBunx",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 1,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🍞️bun/🟦️.ts",
+   "name": "runBunxStatus",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/👹️daemon/🟦️.ts",
+   "name": "spawnDaemon",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/👹️daemon/🟦️.ts",
+   "name": "SpawnDaemonHandle",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🔍️probe/🟦️.ts",
+   "name": "runProbe",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🔐️owner-only/🟦️.ts",
+   "name": "protectOwnerOnly",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/⏱️budget/🟦️.ts",
+   "name": "packageTestBudgetMs",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🎯️exact/🟦️.ts",
+   "name": "runRepositoryExactCargoLaws",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🦀️cargo/🏃️run/🟦️.ts",
+   "name": "runCargo",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 2,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "cargoProfileDir",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "daemonBudgetOpts",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmd",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 4
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 3,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runCmdStatus",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "runNodeBinStatus",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "semioBuildMode",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏃️process/🟦️.ts",
+   "name": "semioReleaseEnv",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🏭️generator/👁️preview/📈️progress/🧪️tests/🧫️fixtures/🔣️.json",
+   "name": "*",
+   "class": "c",
+   "to": "delete: test fixture of another package (move the test to the owner or give it its own fixture)",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   }
+  },
+  {
+   "target": "🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json",
+   "name": "*",
+   "class": "c",
+   "to": "delete: test fixture of another package (move the test to the owner or give it its own fixture)",
+   "importers": {
+    "repoProduct": 0,
+    "other": 2
+   },
+   "otherKinds": {
+    "test": 2,
+    "script": 0,
+    "source": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🎭️selection/🧪️tests/🧫️fixtures/🔣️.json",
+   "name": "*",
+   "class": "c",
+   "to": "delete: test fixture of another package (move the test to the owner or give it its own fixture)",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 1,
+    "script": 0,
+    "source": 0
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+   "name": "runtimeCargoProvenanceV1",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🔍️discovery/🕸️runtime/🧬️schema/🟦️.ts",
+   "name": "RuntimeCompilerResourceEntryV1",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🧬️metadata/🟦️.ts",
+   "name": "getRepoMetaDir",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 0,
+    "source": 1
+   }
+  },
+  {
+   "target": "🗂️workspaces/🟦️.ts",
+   "name": "getWorkspaceRoot",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🎛️repository-command/🟦️.ts",
+   "name": "runRepositoryTestCommand",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 1
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 1,
+    "source": 0
+   }
+  },
+  {
+   "target": "🧪️testing/🧪️vitest/🟦️.ts",
+   "name": "runVitest",
+   "class": "c",
+   "to": "delete: unused import",
+   "importers": {
+    "repoProduct": 0,
+    "other": 5
+   },
+   "otherKinds": {
+    "test": 0,
+    "script": 4,
+    "source": 1
+   }
+  }
+ ]
+}

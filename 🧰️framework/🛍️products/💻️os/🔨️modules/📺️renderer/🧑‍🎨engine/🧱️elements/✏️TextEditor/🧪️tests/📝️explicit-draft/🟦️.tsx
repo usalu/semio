@@ -5,7 +5,7 @@ import { getByRole, queryByRole } from "@testing-library/dom";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type { ComponentSceneHostProps } from "@semio-tech/framework";
 import * as sessionLoader from "../../../🪪️WasmSessionLoader/🟦️.tsx";
-import * as nodeGraph from "../../../🕸️NodeGraph/🟦️.tsx";
+import * as nodeGraph from "@semio-tech/framework-os-node-graph-rs/index";
 import fixture from "../🧫️fixtures/📝️explicit-draft/🔣️.json";
 import law from "../🧫️fixtures/📝️explicit-draft/⚖️lifecycle.json";
 import retention from "../🧫️fixtures/📝️explicit-draft/🧭️retention.json";

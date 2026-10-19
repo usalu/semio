@@ -26,7 +26,6 @@ semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 # 🗣️ `LocalizedLabel` lives in the declarative-only `wgpu` feature (no `wgpu` crate).
-ui = { path = "../../../../🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 serde = { workspace = true }
 # 🔮️ Third-party oracle behind the test-only `testing` feature: consumer crates enable it from their dev-dependencies.
 fdg-sim = { version = "0.9.1", optional = true }

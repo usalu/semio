@@ -1,12 +1,12 @@
-import {repositoryCargoPreparationStorageV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { repositoryCargoPreparationStorageV1 } from "@semio-tech/repo-lib/artifacts";
 import { createHash,randomBytes } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { acquireCargoBuildLeaseV1,acquireCargoProfileMaintenanceLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
-import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
+import { readStableBuildFile } from "@semio-tech/repo-lib/build";
+import { semanticOwnedInputFileSnapshot } from "@semio-tech/repo-lib/inventory";
 import { FRESH_IO_CHUNK_BYTES, freshWasmArtifactSize } from "../../🏗️component-build/🟦️.ts";
 import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🏷️component-receipt/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
@@ -151,7 +151,7 @@ export function createFreshComponentTests(original:ScriptInvocation) {
   /** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
   async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
     const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
-    const { encodePackValue } = await import("../../../../../🟦️.ts");
+    const { encodePackValue } = await import("@semio-tech/framework-os");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧊️fresh-staging");
     const fixture: FreshStagingFixtureV1 = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const artifactRoot = testArtifactRoot(repoRoot);
@@ -368,7 +368,7 @@ export function createFreshComponentTests(original:ScriptInvocation) {
     const artifactRoot = testArtifactRoot(repoRoot);
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
     const evidence = mkdtempSync(join(artifactRoot, "f-"));
-    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json")).default,storageSchema=(await import("../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🧬️schema/🔣️.json")).default,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid:Record<string,unknown>={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
+    const {default:Ajv}=await import("ajv"),processFixture=(await import("../../🏭️fresh-component/🎛️control/🧪️tests/🧫️fixtures/🔣️.json")).default,processSchema=(await import("../../🏭️fresh-component/🎛️control/🧬️schema/🔣️.json")).default,entrySchema=(await import("@semio-tech/repo-lib/cargo")).cliEntrypointSchema,storageSchema=(await import("@semio-tech/repo-lib/cargo")).preparationStorageSchema,admit=new Ajv({strict:true}).addSchema(entrySchema).addSchema(storageSchema).compile(processSchema);assert.equal(admit(processFixture.policy),true);assert.deepEqual(parseFreshProcessPolicyV1(processFixture.policy),processFixture.policy);for(const field of processFixture.required){const invalid:Record<string,unknown>={...processFixture.policy};delete invalid[field];assert.equal(admit(invalid),false);assert.throws(()=>parseFreshProcessPolicyV1(invalid));}
     const requiredRoot=join(evidence,"missing-process-owner");mkdirSync(requiredRoot);const startedOwner=performance.now();await assert.rejects(freshRun(process.execPath,["-e","process.stdout.write('[DEBUG] unauthorized owner executed')"],repoRoot,{...process.env},{diagnosticsRoot:requiredRoot,cancelled:()=>false,remainingMs:()=>Math.floor(5000-(performance.now()-startedOwner)),checkpoint:()=>{}} as unknown as FreshProcessControlV1,"missing-process-owner",0,1),/Fresh process policy required/);assert.deepEqual(readdirSync(requiredRoot),[]);
     const processPolicy=parseFreshProcessPolicyV1({...processFixture.policy,storage:{version:1,directory:artifactRoot,program:repositoryCargoPreparationStorageV1(process.cwd()).program}});
     for (const row of fixture.cases) {

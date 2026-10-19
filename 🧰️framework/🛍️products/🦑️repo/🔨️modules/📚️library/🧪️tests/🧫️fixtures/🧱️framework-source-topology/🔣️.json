@@ -165,9 +165,9 @@
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧱️component.rs",
-      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/♻️retirement/🌳️typed/🧱️component/🦀️.rs",
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/♻️retirement/🌳️typed/🦀️.rs",
       "kind": "rust",
-      "anchor": "pub(crate)"
+      "anchor": "pub trait UiTypedRetire"
     },
     {
       "source": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌐️favicon.json",
@@ -180,7 +180,7 @@
     {
       "packageEntry": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts",
       "owner": "🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
-      "maximumPackageLines": 3,
+      "maximumPackageLines": 4,
       "anchor": "TurnScheduler"
     },
     {

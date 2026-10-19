@@ -3,7 +3,7 @@ import {readCompletedCargoPublicationReferenceV1} from "@semio-tech/process/arti
 import {readCompletedCargoRetainedIndexV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/reading";
 import {completedCargoOutputClaimsV1} from "@semio-tech/process/artifacts/native-build/receipt/retention/inventory";
 import {decodeCargoProvenanceV1} from "@semio-tech/process/native-receipt";
-import {runtimeCargoProvenanceV1} from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts";
+import { runtimeCargoProvenanceV1 } from "@semio-tech/repo-lib/inventory";
 /** 🧾️ Validates packet DATA without issuing physical custody or granting workspace reuse. */
 export function readTrustedCargoPacketDataV1(indexBytes:Uint8Array,receiptBytes:Uint8Array,workspace:string,value:unknown,inventory:readonly string[]){
  const reference=readCompletedCargoPublicationReferenceV1(value),digest=(bytes:Uint8Array)=>createHash("sha256").update(bytes).digest("hex");

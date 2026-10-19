@@ -10,7 +10,7 @@ use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
 use semio_framework_ui_tui_core::theme::{Surface, Theme};
 use crate::widget::{Align, LabelState};
 
-pub(crate) fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_label(l: &LabelState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = buf.get(rect.x, rect.y).map_or(theme.surface(Surface::Base), |c| c.bg);
     let fg = theme.role(l.role);
     let text = elide(&l.text, rect.width, Elision::End, theme.glyphs.ellipsis());

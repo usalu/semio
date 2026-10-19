@@ -1,9 +1,25 @@
-use crate::standards::v1::subsets::any::schema::mutations::component_rules::{component_fault, family_swap_fault, mep_fault, mounted_on, override_fault};
-use crate::standards::v1::subsets::any::schema::mutations::{elements, family_rules};
-use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
-use crate::standards::v1::subsets::any::schema::mutations::{align_elements::AlignElements, copy_elements::CopyElements, delete_elements::DeleteElements, delete_family::DeleteFamily, delete_storey::DeleteStorey, delete_wall::DeleteWall, mirror_elements::MirrorElements, move_elements::MoveElements, place_elements::PlaceElements, rename_element::RenameElement, rotate_elements::RotateElements, set_element_storey::SetElementStorey, set_family::SetFamily, split_wall::SplitWall};
-use crate::standards::v1::subsets::any::schema::mutations::elements::Placement;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ComponentOverride, Family, FamilyParameter, MepSystem, ParameterKind, Point2, Storey, Wall}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules::{component_fault, family_swap_fault, mep_fault, mounted_on, override_fault};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepShape, Point3};
+use semio_s_artifact_bim_model_mut_any_181::standards::v1::subsets::any::schema::mutations::align_elements::AlignElements;
+use semio_s_artifact_bim_model_mut_any_179::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements;
+use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
+use semio_s_artifact_bim_model_mut_any_149::standards::v1::subsets::any::schema::mutations::delete_family::DeleteFamily;
+use semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey;
+use semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall;
+use semio_s_artifact_bim_model_mut_any_189::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements;
+use semio_s_artifact_bim_model_mut_any_133::standards::v1::subsets::any::schema::mutations::move_elements::MoveElements;
+use semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
+use semio_s_artifact_bim_model_mut_any_86::standards::v1::subsets::any::schema::mutations::rename_element::RenameElement;
+use semio_s_artifact_bim_model_mut_any_134::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements;
+use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
+use semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::Placement;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ComponentOverride, Family, FamilyParameter, Storey, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepSystem, ParameterKind, Point2};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::{Mutation, OutcomeCode};
 use semio_framework_diagnostic::Severity;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -25,11 +41,11 @@ fn run(storey: &str, system: MepSystem, shape: MepShape, path: &[(f64, f64, f64)
 }
 
 fn parameter(base: &mut ModelSnapshot, owner: &str, name: &str, value: &str) {
-    base.family_parameters.insert(family_rules::parameter_key(owner, name), FamilyParameter { family: owner.into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
+    base.family_parameters.insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), FamilyParameter { family: owner.into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
 }
 
 fn over(base: &mut ModelSnapshot, owner: &str, name: &str, value: &str) {
-    base.component_overrides.insert(family_rules::parameter_key(owner, name), ComponentOverride { component: owner.into(), name: name.into(), value: value.into() });
+    base.component_overrides.insert(semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameter_key(owner, name), ComponentOverride { component: owner.into(), name: name.into(), value: value.into() });
 }
 
 fn base() -> ModelSnapshot {
@@ -60,13 +76,13 @@ fn base() -> ModelSnapshot {
     base
 }
 
-fn messages(mutation: &ModelMutation, base: &ModelSnapshot) -> (crate::standards::v1::subsets::any::schema::diff::ModelDiff, Vec<protocol::MutationMessage>) {
+fn messages(mutation: &ModelMutation, base: &ModelSnapshot) -> (semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff, Vec<protocol::MutationMessage>) {
     mutation.diff(base).into_parts()
 }
 
 fn refusal(mutation: &ModelMutation, base: &ModelSnapshot) -> (String, Vec<String>) {
     let (diff, messages) = messages(mutation, base);
-    assert_eq!(diff, crate::standards::v1::subsets::any::schema::diff::ModelDiff::default(), "a refusal writes nothing");
+    assert_eq!(diff, semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff::default(), "a refusal writes nothing");
     let hit = messages.iter().find(|message| matches!(message.level, Severity::Warning | Severity::Error | Severity::Fatal)).expect("a refusal");
     (hit.code.0.to_string(), hit.target.clone())
 }
@@ -302,7 +318,7 @@ fn the_mounting_flag_of_a_placement_is_read_from_the_record() {
 
 #[test]
 fn aligning_uses_the_origin_of_a_component_and_the_extent_of_a_path() {
-    use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge};
+    use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge};
     let base = base();
     let after = roundtrip(ModelMutation::AlignElements(AlignElements { ids: vec!["c-table".into(), "m-duct".into()], axis: AlignAxis::X, edge: AlignEdge::Min, target: 0.0 }), &base);
     assert_eq!(after.components["c-table"].position.x, 0.0);

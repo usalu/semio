@@ -35,6 +35,14 @@
     {
       "mutation": "missing-output-limit",
       "admitted": false
+    },
+    {
+      "mutation": "unbound-step",
+      "admitted": false
+    },
+    {
+      "mutation": "zero-budget",
+      "admitted": false
     }
   ]
 }

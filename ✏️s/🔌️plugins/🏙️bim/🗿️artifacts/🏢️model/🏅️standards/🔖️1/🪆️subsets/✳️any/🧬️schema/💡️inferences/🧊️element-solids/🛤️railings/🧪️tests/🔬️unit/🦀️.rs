@@ -1,17 +1,23 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::snapshot::Infill;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Infill;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::beams::section_of;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::beams::section_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{placed, point, rectangle};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{placed, rectangle};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, Railing};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -24,16 +30,18 @@ use semio_framework_geometry::vector::lerp;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::railings::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::railings::{RailingGeometry, railing_geometry, baluster_count, dependency};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 
@@ -171,7 +179,7 @@ async fn the_infill_is_a_slab_per_bay_inset_by_half_a_post_in_glass_or_in_the_ra
     let snapshot = case((*CASE)).snapshot;
     let table = case((*CASE)).expected;
     let solids = compute_element_solids(&snapshot);
-    let infill_material = |id: &str| solids[id].groups.iter().find(|group| group.part == parts::INFILL).map(|group| group.material.clone());
+    let infill_material = |id: &str| solids[id].groups.iter().find(|group| group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::INFILL).map(|group| group.material.clone());
     assert_eq!(infill_material("r-glass").as_deref(), Some("m-glass"), "glass takes the glass material of the library");
     assert_eq!(infill_material("r-panel").as_deref(), Some("m-steel"), "a panel takes the material of the railing");
     assert_eq!(infill_material("r-straight"), None);

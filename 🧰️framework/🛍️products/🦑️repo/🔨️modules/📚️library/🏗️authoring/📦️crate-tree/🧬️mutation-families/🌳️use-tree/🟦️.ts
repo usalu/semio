@@ -1,5 +1,5 @@
 /** 🌳️ Use tree: module exporting `pruneUseLeaves`, `flattenUse`. */
-import { rustTokens, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
 
 type UseTree = { prefix: string[]; glob: boolean; alias: string | null; children: UseTree[] | null };
 

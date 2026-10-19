@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript as GraphPreviewScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ trinity-jack Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -23,7 +23,7 @@ class OwnedVerifyScript extends BundleScript {
     if(segments.length===1&&segments[0]==="jack-native-composition"){
       await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🚪️io/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📥️ingress/🧪️tests/🟦️.ts"),resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔌️mutate-jack-1/🟦️.ts"),resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🫴️receiving/🧪️tests/🟦️.ts"),resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts")],this.repoRoot,"jack-native-composition-oracle",scriptInvocationBudget(this.invocation,120_000),{signal:this.invocation.control.signal});
       const cargo=readCargoTestPolicyV1(process.env);
-      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-s-dev-trinity-jack":resolve(this.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-s-dev-trinity-jack",target:{kind:"lib"},laws:[
+      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-s-dev-trinity-jack":resolve(this.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-s-dev-trinity-jack",target:{kind:"lib"},laws:[
 "tests::archive_laws::archive_carriers_preserve_original_octets_against_serde_json",
 "tests::archive_laws::archive_carriers_refuse_closed_schema_and_incomplete_octets",
 "tests::editor_laws::agent_lane_and_archive_laws::foreign_carriers_restore_the_edited_registered_rich_document",
@@ -101,13 +101,13 @@ class OwnedVerifyScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "jack-graph-query") {
       await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🪆️query/🟦️.ts"),resolve(this.repoRoot,"✏️s/🧑‍💻dev/🔱️trinity/🪆️graph/🧪️tests/🟦️.ts")],this.repoRoot,"jack-graph-query-oracle",scriptInvocationBudget(this.invocation,120_000),{signal:this.invocation.control.signal});
       const cargo=readCargoTestPolicyV1(process.env);
-      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-s-artifact-trinity-jack-graph-query":resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-s-artifact-trinity-jack-graph-query",target:{kind:"lib"},laws:["tests::graph_query_neutral_fixture_parity","tests::graph_query_checks_every_selected_coordinate_before_entity_read","tests::graph_query_refuses_duplicate_ids_endpoints_and_unretained_root","tests::rich_read_preserves_literal_components_and_presented_geometry"]}],progress:event=>{}});
+      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-s-artifact-trinity-jack-graph-query":resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-s-artifact-trinity-jack-graph-query",target:{kind:"lib"},laws:["tests::graph_query_neutral_fixture_parity","tests::graph_query_checks_every_selected_coordinate_before_entity_read","tests::graph_query_refuses_duplicate_ids_endpoints_and_unretained_root","tests::rich_read_preserves_literal_components_and_presented_geometry"]}],progress:event=>{}});
       return;
     }
     if (segments.length === 1 && segments[0] === "jack-child-selection") {
       await runOwnedCommand(process.execPath,["test",resolve(this.repoRoot,"🧰️framework/🔨️modules/🧬️schema/🧩️composition/🧪️tests/🪆️selection/🟦️.ts")],this.repoRoot,"jack-child-selection-oracle",scriptInvocationBudget(this.invocation,120_000),{signal:this.invocation.control.signal});
       const cargo=readCargoTestPolicyV1(process.env);
-      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-framework-schema-composition":resolve(this.repoRoot,"🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml"),"semio-framework-schema":resolve(this.repoRoot,"🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-framework-schema-composition",target:{kind:"test",name:"schema-composition-neutrality"},laws:["explicit_child_selection_vectors_defer_only_capability_admission","portable_child_projection_vectors_preserve_exact_admission_and_identity"]},{package:"semio-framework-schema",target:{kind:"lib"},laws:["capability_child_slot_declares_behavior_and_projects_the_original_identity","artifact_composition_fields_derive_emits_expected_slot_tables"]}]});
+      const receipts=await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,1_200_000)},manifestPaths:{"semio-framework-schema-composition":resolve(this.repoRoot,"🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust/Cargo.toml"),"semio-framework-schema":resolve(this.repoRoot,"🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/Cargo.toml")},env:{...process.env,CARGO_BUILD_BUILD_DIR:cargo.buildDirectory},cwd:this.repoRoot,groups:[{package:"semio-framework-schema-composition",target:{kind:"test",name:"schema-composition-neutrality"},laws:["explicit_child_selection_vectors_defer_only_capability_admission","portable_child_projection_vectors_preserve_exact_admission_and_identity"]},{package:"semio-framework-schema",target:{kind:"lib"},laws:["capability_child_slot_declares_behavior_and_projects_the_original_identity","artifact_composition_fields_derive_emits_expected_slot_tables"]}]});
       return;
     }
     if (segments.length === 1 && segments[0] === "physical-codecs") {
@@ -121,7 +121,7 @@ if (segments[0] === "jack-document-contract") {
       return;
     }
 if (segments[0] === "jack-query-ownership") {
-      const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+      const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
       const { testResumableQueryOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts");
       testResumableQueryOracle();
       if (segments[1] === "oracle") return;

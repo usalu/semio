@@ -68,7 +68,7 @@ fn focus_path_is_recorded_for_the_focused_node() {
 #[test]
 fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json")).expect("visibility fixture parses");
-    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
     for window_id in law["liveWindows"].as_array().expect("live windows") {
         engine.set_viewport(window_id.as_str().expect("window id"), 400.0, 300.0);
     }
@@ -210,7 +210,7 @@ fn walk_board2d_finds_nested_boards_at_their_absolute_rect_in_their_window() {
     let text_id = tree.insert_child(None, Node::new(NodeKey::Explicit("plain".into()), WidgetSpec(text_node("no board"))));
     walk_board2d(&tree, text_id, 0.0, 0.0, "plain", &mut none);
     assert!(none.is_empty());
-    assert_eq!(serde_json::to_value(build_board2d_dump(&ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En), None)).expect("serializes"), serde_json::json!({"surfaces": []}), "an engine with no window answers an empty board list");
+    assert_eq!(serde_json::to_value(build_board2d_dump(&semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En), None)).expect("serializes"), serde_json::json!({"surfaces": []}), "an engine with no window answers an empty board list");
 }
 
 #[test]
@@ -255,16 +255,16 @@ fn retiring_a_component_releases_its_exact_camera_diagnostic_owner() {
 /// so is cheaper than pulling the real one into an introspection law.
 struct NoSceneHost;
 
-impl ui_wgpu::wgpu::SceneHost for NoSceneHost {
+impl semio_framework_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
     fn paint_slot_step(
         &mut self,
-        _slot: &ui_wgpu::wgpu::SceneSlot<'_>,
-        _cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+        _slot: &semio_framework_ui_wgpu_hosting::scene_slots::SceneSlot<'_>,
+        _cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
         _draw: &mut semio_framework_ui_draw_contract::DrawList,
         _atlas: &mut semio_framework_ui_text::FontAtlas,
         _icons: Option<&semio_framework_ui_draw_contract::IconAtlas>,
-    ) -> ui_wgpu::wgpu::ScenePaintStep {
-        ui_wgpu::wgpu::ScenePaintStep::Fault
+    ) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
+        semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault
     }
 }
 
@@ -277,7 +277,7 @@ impl ui_wgpu::wgpu::SceneHost for NoSceneHost {
 /// window fails here instead of in a screenshot (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 #[test]
 fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
-    let mut engine = ui_wgpu::wgpu::Ui::new(semio_framework_ui_locale::Locale::En);
+    let mut engine = semio_framework_ui_wgpu_engine::Ui::new(semio_framework_ui_locale::Locale::En);
     let window_id = "chrome-law";
     engine.apply_tree(window_id, &stack_node(Some("root"), vec![text_node("Puzzle 3D"), text_node("Catalogue")]));
     engine.set_viewport(window_id, 640.0, 360.0);
@@ -291,7 +291,7 @@ fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
         for _ in 0..16_384 {
             let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
             let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), || Some(0), &mut preview_sequence, &mut cx_retained);
-            if matches!(engine.step_layouts(&pool, &mut atlas, &mut cx), ui_wgpu::wgpu::UiLayoutStep::Idle) {
+            if matches!(engine.step_layouts(&pool, &mut atlas, &mut cx), semio_framework_ui_wgpu_engine_surface::UiLayoutStep::Idle) {
                 break;
             }
         }
@@ -305,8 +305,8 @@ fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
     let mut painted = false;
     for _ in 0..131_072 {
         match engine.frame_step::<NoSceneHost>(window_id, 640.0, 360.0, &mut atlas, None, None) {
-            ui_wgpu::wgpu::UiFrameStep::Pending => {}
-            ui_wgpu::wgpu::UiFrameStep::Ready => {
+            semio_framework_ui_wgpu_engine_surface::UiFrameStep::Pending => {}
+            semio_framework_ui_wgpu_engine_surface::UiFrameStep::Ready => {
                 painted = true;
                 break;
             }
@@ -324,8 +324,8 @@ fn a_painted_chrome_window_reports_draw_calls_quads_and_glyphs() {
 }
 
 //#region 🎯️ChromeLedgerLaws
-fn chrome_hit(control_id: &str, kind: ui_wgpu::wgpu::HitKind, rect: Rect, event: Option<ActionDescriptor>) -> ui_wgpu::wgpu::HitTarget<ActionDescriptor> {
-    ui_wgpu::wgpu::HitTarget { rect, event, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None }
+fn chrome_hit(control_id: &str, kind: semio_framework_ui_wgpu_input::HitKind, rect: Rect, event: Option<ActionDescriptor>) -> semio_framework_ui_wgpu_input::HitTarget<ActionDescriptor> {
+    semio_framework_ui_wgpu_input::HitTarget { rect, event, control_id: Some(control_id.to_string()), kind, drag_axis: None, drag_data: None }
 }
 
 fn chrome_action(controller_id: &str, action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
@@ -338,8 +338,8 @@ fn chrome_action(controller_id: &str, action: &str, args: Option<serde_json::Val
 #[test]
 fn chrome_hit_rows_carry_absolute_rect_kind_and_only_body_rows_name_a_window() {
     let owners = [("puzzle3d-tree.row.0".to_string(), ("puzzle3d-tree".to_string(), Rect::new(0.0, 0.0, 300.0, 600.0)))].into_iter().collect::<std::collections::HashMap<_, _>>();
-    let chrome = chrome_hit("shell.panel.tab.artifact", ui_wgpu::wgpu::HitKind::PanelTab, Rect::new(12.0, 40.0, 96.0, 28.0), None);
-    let body = chrome_hit("puzzle3d-tree.row.0", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(8.0, 120.0, 280.0, 24.0), Some(chrome_action("puzzle3d", "selectNode", Some(serde_json::json!({"nodeId": "n1"})))));
+    let chrome = chrome_hit("shell.panel.tab.artifact", semio_framework_ui_wgpu_input::HitKind::PanelTab, Rect::new(12.0, 40.0, 96.0, 28.0), None);
+    let body = chrome_hit("puzzle3d-tree.row.0", semio_framework_ui_wgpu_input::HitKind::TreeItem, Rect::new(8.0, 120.0, 280.0, 24.0), Some(chrome_action("puzzle3d", "selectNode", Some(serde_json::json!({"nodeId": "n1"})))));
 
     let chrome_row = chrome_hit_row(&chrome, &owners);
     assert_eq!(chrome_row.control_id, "shell.panel.tab.artifact");
@@ -399,9 +399,9 @@ fn chrome_action_args_are_truncated_on_a_character_boundary() {
 fn chrome_dump_window_filter_keeps_chrome_and_reports_the_diagnostics_gate() {
     let owners = [("a.row".to_string(), ("window-a".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0))), ("b.row".to_string(), ("window-b".to_string(), Rect::new(0.0, 0.0, 10.0, 10.0)))].into_iter().collect::<std::collections::HashMap<_, _>>();
     let hits = vec![
-        chrome_hit("shell.navbar.artifact", ui_wgpu::wgpu::HitKind::NavbarItem, Rect::new(0.0, 0.0, 40.0, 40.0), None),
-        chrome_hit("a.row", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(0.0, 40.0, 40.0, 20.0), None),
-        chrome_hit("b.row", ui_wgpu::wgpu::HitKind::TreeItem, Rect::new(0.0, 60.0, 40.0, 20.0), None),
+        chrome_hit("shell.navbar.artifact", semio_framework_ui_wgpu_input::HitKind::NavbarItem, Rect::new(0.0, 0.0, 40.0, 40.0), None),
+        chrome_hit("a.row", semio_framework_ui_wgpu_input::HitKind::TreeItem, Rect::new(0.0, 40.0, 40.0, 20.0), None),
+        chrome_hit("b.row", semio_framework_ui_wgpu_input::HitKind::TreeItem, Rect::new(0.0, 60.0, 40.0, 20.0), None),
     ];
     let mut ledger = ChromeLedger::default();
     ledger_publish_hits(&mut ledger, &hits, &owners);

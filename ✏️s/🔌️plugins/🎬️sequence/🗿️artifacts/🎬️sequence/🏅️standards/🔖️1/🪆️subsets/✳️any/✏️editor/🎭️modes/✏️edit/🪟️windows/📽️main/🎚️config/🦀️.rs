@@ -216,10 +216,10 @@ pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnaps
 }
 
 pub fn addressed(view: &semio_framework_plugin::ViewModel, base: &SequenceMainWindowConfig, config: SequenceMainWindowConfig) -> Result<Vec<semio_framework_plugin::WindowConfigMutation>, semio_framework_plugin::Fault> {
-    let id = view.window_id.as_deref().ok_or_else(|| crate::editor::sequence::base::sequence_fault("sequence.window.unavailable", "sequence-main-window-required"))?;
-    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| crate::editor::sequence::base::sequence_fault("sequence.window.unavailable", "sequence-window-stale"))?;
+    let id = view.window_id.as_deref().ok_or_else(|| crate::editor::sequence::editor_vocabulary::sequence_fault("sequence.window.unavailable", "sequence-main-window-required"))?;
+    let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| crate::editor::sequence::editor_vocabulary::sequence_fault("sequence.window.unavailable", "sequence-window-stale"))?;
     if kind != super::SEQUENCE_PLAY_WINDOW_MAIN {
-        return Err(crate::editor::sequence::base::sequence_fault("sequence.window.unavailable", "sequence-main-window-kind-required"));
+        return Err(crate::editor::sequence::editor_vocabulary::sequence_fault("sequence.window.unavailable", "sequence-main-window-kind-required"));
     }
     Ok(SequenceMainWindowConfigMutation::setting(base, &config).into_iter().map(|mutation| semio_framework_plugin::WindowConfigMutation::of::<SequenceMainWindowConfigOwner>(id, mutation)).collect())
 }

@@ -25,7 +25,7 @@ impl<P: CountedPresence> SnapshotRetirementFactory<P> for Factory {
 
 impl<P: CountedPresence> Retirement<P> {
     fn demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
-        if self.root.is_some() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>(), depth: 1, ..Default::default() }); }
+        if self.root.is_some() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>(), depth: 1, ..Default::default() }); }
         if self.count.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.counter_close.as_ref().map_or(Ok(Default::default()), |owner| owner.demands(copy))
     }

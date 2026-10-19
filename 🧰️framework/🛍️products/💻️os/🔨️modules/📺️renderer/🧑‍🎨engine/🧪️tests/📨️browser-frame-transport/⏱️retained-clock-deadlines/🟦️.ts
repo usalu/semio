@@ -1,10 +1,10 @@
 /** ⏱️ Retained clock deadlines: the retained browser clock deadline laws for animation, control and input timers against the shared render deadline fixture. */
-import { fixtureOriginalWorkStock } from "../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { BrowserFrameTransport } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport";
 import { uiRenderDeadlineFixtureUrl } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { FakeWorker, TEST_HOST_APPEARANCE, TEST_HOST_PLATFORM, TEST_HOST_STORAGE, testBootDescriptor } from "../🧰️transport-test-support/🟦️.ts";
 
@@ -78,7 +78,7 @@ describe("retained browser clock deadlines", () => {
       context.reply(0);
       vi.advanceTimersByTime(0);
       expect(context.raf.size).toBe(1);
-      const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"), "utf8");
+      const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../🎯️targets/🧊️wgpu/🪟️winit-app/🎞️frame-generation-and-os-host/🦀️.rs"), "utf8");
       const snapshot = source.slice(source.indexOf("fn present_snapshot("), source.indexOf("fn semio_cursor_to_request("));
       expect(snapshot).toContain("sync_presented_deadlines(");
       expect(snapshot).toContain("self.presenter.awaiting_runtime()");

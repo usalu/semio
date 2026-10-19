@@ -61,7 +61,7 @@ impl WorldInteractionAuthority {
     /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` step 15).
     /// A stale aim retires like any other answered intent; a fault stays a fault for a point the
     /// surface DOES cover, which is a real refusal.
-    pub fn step(&mut self, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
+    pub fn step(&mut self, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
         if self.closing || context.should_yield() {
             return WorldInteractionAuthorityStep::Pending;
         }
@@ -466,7 +466,7 @@ impl WorldInteractionAuthority {
 
     /// 🧲️ A hover that hit NEITHER a mesh nor a sub-object pick target falls through to
     /// the reference-plane tier; one that hit a pick target has its answer already.
-    fn step_active(&mut self, active: WorldInteractionActive, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
+    fn step_active(&mut self, active: WorldInteractionActive, session_state: &mut WorldSessionState, camera_state: &mut WorldCameraState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, interaction_state: &mut WorldInteractionState, scene_state: &mut WorldSceneState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
         match active {
             WorldInteractionActive::Plan { mut plan, retirement } => {
                 if let Some(outcome) = retirement {
@@ -496,7 +496,7 @@ impl WorldInteractionAuthority {
                         self.faulted = true;
                         WorldInteractionAuthorityStep::Pending
                     }
-                    Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => {
+                    Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) => {
                         self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
                         WorldInteractionAuthorityStep::OutputBlocked
                     }
@@ -726,7 +726,7 @@ impl WorldInteractionAuthority {
                         self.faulted = true;
                         WorldInteractionAuthorityStep::Pending
                     }
-                    Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) if job.prepared.is_none() => {
+                    Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) if job.prepared.is_none() => {
                         self.active = Some(WorldInteractionActive::MarqueePublish { job, retirement: None });
                         WorldInteractionAuthorityStep::OutputBlocked
                     }
@@ -765,7 +765,7 @@ impl WorldInteractionAuthority {
                         self.faulted = true;
                         WorldInteractionAuthorityStep::Pending
                     }
-                    Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
+                    Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
                         self.active = Some(WorldInteractionActive::ComponentMarqueePublish { job, retirement: None });
                         WorldInteractionAuthorityStep::OutputBlocked
                     }
@@ -856,7 +856,7 @@ impl WorldInteractionAuthority {
                         self.faulted = true;
                         WorldInteractionAuthorityStep::Pending
                     }
-                    Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
+                    Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
                         self.active = Some(WorldInteractionActive::GumballCommit { job, retirement: None });
                         WorldInteractionAuthorityStep::OutputBlocked
                     }
@@ -895,7 +895,7 @@ impl WorldInteractionAuthority {
                         self.faulted = true;
                         WorldInteractionAuthorityStep::Pending
                     }
-                    Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
+                    Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) if job.claim.is_none() => {
                         self.active = Some(WorldInteractionActive::BrushCommit { job, retirement: None });
                         WorldInteractionAuthorityStep::OutputBlocked
                     }

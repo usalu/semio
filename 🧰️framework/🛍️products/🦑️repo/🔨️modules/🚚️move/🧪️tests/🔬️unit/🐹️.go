@@ -11,6 +11,7 @@ import (
 	codebase "github.com/usalu/semio/repo/codebase"
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 const sectionFixtureRelPath = "🗃️pkg/💻️index.ts"
@@ -39,9 +40,7 @@ func withSectionFixture(t *testing.T) string {
 	if err := os.WriteFile(abs, []byte(sectionFixtureContent), 0644); err != nil {
 		t.Fatalf("write fixture file: %v", err)
 	}
-	previous := workspace.RootDir
-	workspace.RootDir = root
-	t.Cleanup(func() { workspace.RootDir = previous })
+	sandbox.BindRoot(t, root)
 	codebase.InvalidateTechnologyCache()
 	return sectionFixtureRelPath
 }
@@ -180,9 +179,7 @@ func TestToolDefinitionList(t *testing.T) {
 
 func TestToolFileCRUD(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	result := ToolFileCreate("test.txt")
 	if result.Error != "" {
@@ -202,10 +199,7 @@ func TestToolFileCRUD(t *testing.T) {
 
 func TestToolRenameRewritesFilesAndFilenames(t *testing.T) {
 	tmpRoot := t.TempDir()
-	oldRoot := workspace.GetRootDir()
-	workspace.SetRootDir(tmpRoot)
-	defer workspace.SetRootDir(oldRoot)
-	workspace.RootDir = tmpRoot
+	sandbox.BindRoot(t, tmpRoot)
 
 	nestedDir := filepath.Join(tmpRoot, "pkg", "model")
 	if err := os.MkdirAll(nestedDir, 0755); err != nil {
@@ -277,10 +271,7 @@ func TestToolRenameRejectsEmptyAndIdenticalTokens(t *testing.T) {
 
 func TestToolRenameScopeLimitsWalk(t *testing.T) {
 	tmpRoot := t.TempDir()
-	oldRoot := workspace.GetRootDir()
-	workspace.SetRootDir(tmpRoot)
-	defer workspace.SetRootDir(oldRoot)
-	workspace.RootDir = tmpRoot
+	sandbox.BindRoot(t, tmpRoot)
 
 	inScope := filepath.Join(tmpRoot, "compose", "model.txt")
 	outOfScope := filepath.Join(tmpRoot, "elements", "model.txt")
@@ -345,9 +336,7 @@ func withSealedFixture(t *testing.T, sealed ...string) {
 			t.Fatalf("write fixture file: %v", err)
 		}
 	}
-	previous := workspace.RootDir
-	workspace.RootDir = root
-	t.Cleanup(func() { workspace.RootDir = previous })
+	sandbox.BindRoot(t, root)
 }
 
 func TestRenameKeepsSealedEvidenceBytes(t *testing.T) {
@@ -360,7 +349,7 @@ func TestRenameKeepsSealedEvidenceBytes(t *testing.T) {
 		t.Fatalf("unexpected counters %v", result.Data)
 	}
 	for path, want := range map[string]string{"history/sealed.json": "model\n", "history/retired.json": "shape\n"} {
-		got, err := os.ReadFile(filepath.Join(workspace.RootDir, filepath.FromSlash(path)))
+		got, err := os.ReadFile(filepath.Join(workspace.GetRootDir(), filepath.FromSlash(path)))
 		if err != nil || string(got) != want {
 			t.Fatalf("%s holds %q, want %q (%v)", path, got, want, err)
 		}
@@ -373,7 +362,7 @@ func TestRenameRefusesToRelocateSealedEvidence(t *testing.T) {
 	if result.Error != "Rename would relocate digest-sealed evidence: model/model.ts" {
 		t.Fatalf("unexpected refusal %q", result.Error)
 	}
-	if got, err := os.ReadFile(filepath.Join(workspace.RootDir, "history", "retired.json")); err != nil || string(got) != "model\n" {
+	if got, err := os.ReadFile(filepath.Join(workspace.GetRootDir(), "history", "retired.json")); err != nil || string(got) != "model\n" {
 		t.Fatalf("a refused rename still rewrote content: %q (%v)", got, err)
 	}
 }

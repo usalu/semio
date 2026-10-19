@@ -4,9 +4,9 @@
 
 use super::*;
 use crate::challenge::challenge_rules;
-use crate::lifecycle::tests::perfect;
+use semio_framework_quiz_tests_support::lifecycle::perfect;
 use crate::sheet::sheet_of;
-use crate::sheet::tests::{classification, matching, quantity, quiz, sorting, text};
+use semio_framework_quiz_tests_support::sheet::{classification, matching, quantity, quiz, sorting, text};
 use quiz_schema::{Challenge, MatchingAnswer, SheetDimension, SheetItem, SheetSortingTask, CHALLENGES};
 
 const POWER: [f64; 5] = [1.0, 60.0, 2000.0, 1.0e6, 1.0e9];

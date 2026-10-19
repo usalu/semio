@@ -1,25 +1,27 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 #[allow(unused_imports)]
-use crate::editor::bim::panels::outliner::{entity_item, item, leaf};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{entity_item, item, leaf};
 #[allow(unused_imports)]
-use crate::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::BuiltNode;
 #[allow(unused_imports)]
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
 use semio_framework_plugin::UiAssemblyResult;
-use crate::editor::bim::panels::outliner::views::{group_of, scale_text};
-use crate::editor::bim::panels::outliner::views::*;
-use crate::editor::bim::panels::outliner::{render, BODY_KEY};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::View};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::views::{group_of, scale_text};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::views::{groups, views_row};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{render, BODY_KEY};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::View;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 
 fn demo() -> (ModelSnapshot, String, Vec<String>) {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     snapshot.views.clear();
     let building = snapshot.buildings.keys().next().cloned().expect("a building");
     let mut storeys: Vec<(&String, i32)> = snapshot.storeys.iter().filter(|(_, storey)| storey.building == building).map(|(id, storey)| (id, storey.level)).collect();
@@ -34,7 +36,7 @@ fn plan(building: &str, name: &str, kind: ViewKind, storey: &str) -> View {
 
 fn text(snapshot: &ModelSnapshot, locale: Locale) -> String {
     let view = ViewModel::new(locale, Terminology::Native);
-    let node = render(snapshot, &ModelInference::default(), crate::editor::bim::terminology::bim_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
+    let node = render(snapshot, &ModelInference::default(), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view), &semio_framework_plugin::TreeWindows::for_body(&view, BODY_KEY)).expect("the outliner renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
@@ -58,7 +60,7 @@ async fn the_groups_of_a_building_follow_the_kind_then_the_level_of_the_storey_t
     assert_eq!(groups.iter().map(|group| group.0).collect::<Vec<_>>(), vec![0, 1, 4], "groups without a view are left out");
     assert_eq!(groups[0].1, vec!["v-low-b", "v-low-z", "v-high-a"], "ground plans by name, then the first floor");
     assert_eq!(groups[2].1, vec!["v-ortho", "v-camera"]);
-    assert_eq!(crate::editor::bim::panels::outliner::views::groups(&snapshot, &building), groups, "the order is deterministic");
+    assert_eq!(semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::views::groups(&snapshot, &building), groups, "the order is deterministic");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +68,7 @@ async fn only_the_views_of_the_building_count_and_no_view_means_no_row() {
     let (mut snapshot, building, _) = demo();
     let windows_view = ViewModel::new(Locale::En, Terminology::Native);
     let windows = semio_framework_plugin::TreeWindows::for_body(&windows_view, BODY_KEY);
-    let labels = crate::editor::bim::terminology::bim_labels(&windows_view);
+    let labels = semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&windows_view);
     assert!(groups(&snapshot, &building).is_empty());
     assert!(views_row(&windows, &snapshot, labels, &building).is_none());
     snapshot.views.insert("v-elsewhere".into(), View::standard("another-building", "Elsewhere", ViewKind::Perspective));

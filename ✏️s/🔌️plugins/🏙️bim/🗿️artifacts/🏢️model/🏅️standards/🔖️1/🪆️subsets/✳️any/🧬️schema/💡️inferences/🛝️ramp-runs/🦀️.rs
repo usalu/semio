@@ -8,10 +8,11 @@
 //!
 //! Related: accessibility ramps rise at most 1:12, <https://en.wikipedia.org/wiki/Wheelchair_ramp>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp;
+#[cfg(test)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::vector::cross;

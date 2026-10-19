@@ -26,7 +26,7 @@ native = ["dep:libc"]
 
 [dependencies]
 semio-framework-async = { path = "../../../../../⏳️async/📦️packages/🦀️rust" }
-semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
 libc = { version = "0.2.186", optional = true }

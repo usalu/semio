@@ -3,7 +3,7 @@ use crate::{DslValue,ToValue,PlaybookBlock,PlaybookSpec,PlaybookValues,default_v
 use crate::generation_forms::generation_action;
 use semio_framework_value::{NativeEncodeControl,ValueError};
 use semio_framework_ui_locale::Label;
-use ui_wgpu::wgpu::{ui_stack_vertical,ui_text,build_text_editor_scene,UiControlNode,UiFieldNode,UiInputNode,UiNode,UiPresence,UiSelectItem,UiSelectNode,UiSliderNode,UiToggleNode,TextEditorScene};
+use semio_framework_ui_declaration::ui::{ui_stack_vertical, ui_text, build_text_editor_scene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, TextEditorScene};
 #[path="🌱️value-text/🦀️.rs"]
 pub mod value_text;
 
@@ -160,7 +160,7 @@ pub mod value_text;
         Ok(Some(UiNode::Field(UiFieldNode {
             id: field_id,
             label: Label::data(question.label.clone()),
-            child: Box::new(ui_wgpu::wgpu::ui_control_to_node(child)),
+            child: Box::new(semio_framework_ui_declaration::ui::ui_control_to_node(child)),
             description: None,
             required: None,
             error: None,

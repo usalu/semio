@@ -1,4 +1,4 @@
-import { type RustAttributes, type RustMetadataAttributeFact, type RustStructuralVisibility, type RustToken, type RustVisibility, rustAttributes, rustFindTopLevel, rustMetadataAttributeHead, rustMetadataAttributes, rustMetadataDerives, rustMetadataPath, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens, rustVisibility } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { type RustAttributes, type RustMetadataAttributeFact, type RustStructuralVisibility, type RustToken, type RustVisibility, rustAttributes, rustFindTopLevel, rustMetadataAttributeHead, rustMetadataAttributes, rustMetadataDerives, rustMetadataPath, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokenText, rustTokens, rustVisibility } from "@semio-tech/compiler-syntax-rust-ts";
 import type { RustConstIdentityFact, RustEnumFact, RustEnumVariantFact, RustImplFact, RustIncludeFact, RustInlinePayloadFact, RustMatchArmFact, RustModuleFact, RustPayloadFieldFact, RustStructuralFacts } from "../🦀️rust-fact-contracts/🟦️.ts";
 import { rustCfgTest, rustPathAttribute } from "../🏃️rust-runnable-tests/🟦️.ts";
 

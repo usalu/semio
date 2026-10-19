@@ -1,7 +1,7 @@
 /** 🎨️ CAD renderer geometry targets: the pick target styles and hover keys and the typology pattern material. */
 import { type MeshStandardMaterial as ThreeMeshStandardMaterial } from "@semio-tech/framework/ui/targets/react";
 import { ephemeralMap } from "@semio-tech/framework";
-import { WORLD_LOCKED_OPACITY_SCALE } from "@semio-tech/infinite-world-r3f";
+import { WORLD_LOCKED_OPACITY_SCALE } from "../../../../../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts";
 import { type ModelEntityKind } from "@semio-tech/s-spatial-kernel-ts/geometry";
 import { typologyStyleCacheKey } from "@semio-tech/s-spatial-kernel-ts/geometry/typology";
 import { type ResolvedTypologyStyle } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";

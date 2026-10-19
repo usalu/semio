@@ -38,10 +38,22 @@ semio-framework-os-infinite-world-scene = { path = "../../../🧱️scene/📦�
 semio-framework-os-infinite-world-bridge = { path = "../../../🌉️bridge/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
-ui_wgpu = { path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-action = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-draw-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
+semio-framework-ui-raster-owner = { path = "../../../../../../../../🔨️modules/🖱️ui/🖼️raster/🧵️ownership/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-ui-wgpu-input = { path = "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

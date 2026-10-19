@@ -90,9 +90,11 @@ fn selection_json_ids(selection_json: &str) -> Vec<String> {
 fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
     session.begin_close();
     for _ in 0..1_000_000 {
-        match session.close_step(1, 65_536) {
+        let copy = session.next_close_copy_byte_demand().expect("the evaluation session quotes its next close copy").max(65_536);
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: session.next_close_capacity_byte_demand(copy).expect("the evaluation session quotes its next close capacity"), maximum_release_bytes: session.next_close_release_byte_demand().expect("the evaluation session quotes its next close release"), maximum_depth: session.next_close_depth_demand().expect("the evaluation session quotes its next close depth").max(1) };
+        match session.close_step(grant).expect("the evaluation session closes within its quoted grant") {
             semio_framework_job::InteractiveJobCloseStep::Pending { .. } => continue,
-            semio_framework_job::InteractiveJobCloseStep::Complete => return,
+            semio_framework_job::InteractiveJobCloseStep::Complete { .. } => return,
             semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("a positive close grant must never block the evaluation session"),
         }
     }
@@ -346,7 +348,7 @@ fn assert_delivery_bounds(fixture: &ExampleGeometryFixture, run: &DeliveryRun) {
 /// closer is not a framing: the defect this law convicts is a converged example clipped at the corner
 /// of the preview (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
 fn assert_delivered_bounds_frame_inside_the_viewport(fixture: &ExampleGeometryFixture) {
-    use semio_framework_ui::wgpu::{frame_orbit_to_bounds, OrbitController, WORLD_FRAME_BOUNDS_MARGIN};
+    use ui_scene::math::{frame_orbit_to_bounds, OrbitController, WORLD_FRAME_BOUNDS_MARGIN};
     let delivery = &fixture.delivery;
     let minimum = [delivery.bounding_box_min[0] as f32, delivery.bounding_box_min[1] as f32, delivery.bounding_box_min[2] as f32];
     let maximum = [delivery.bounding_box_max[0] as f32, delivery.bounding_box_max[1] as f32, delivery.bounding_box_max[2] as f32];

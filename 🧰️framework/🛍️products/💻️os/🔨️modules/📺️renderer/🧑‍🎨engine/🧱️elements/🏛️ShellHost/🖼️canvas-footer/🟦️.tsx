@@ -35,7 +35,7 @@ import {
   PresenceBar,
   uiDataLabel
 } from "@semio-tech/ui-react";
-import { ShellFaultBoundary } from "../../🐚️Shell/🟦️.tsx";
+import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { clearPendingWorldProjection } from "../../🌐️World3dHost/🪟️window-view-store/🟦️.tsx";
 import { wireLabel } from "../../🗣️Interpreter/🌉️scene-host-contract/🟦️.ts";
 import { mapContextMenuSpecs } from "../../🗣️Interpreter/🖱️surface-menu/🟦️.ts";

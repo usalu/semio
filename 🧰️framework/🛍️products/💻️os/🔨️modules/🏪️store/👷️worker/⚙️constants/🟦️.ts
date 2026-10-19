@@ -1,5 +1,4 @@
 import { retryWithJitteredBackoff } from "@semio-tech/framework";
-import type { ArtifactState } from "../🧾️document-state/🟦️.ts";
 
 export const workerScope = typeof self !== "undefined" && !Reflect.has(self, "document") ? self : null;
 
@@ -75,9 +74,3 @@ export const EXECUTION_TARGET_MANIFEST_MAX_BYTES = 8 * 1024;
 
 export const documentExecutionTargetLeaseMintToken = Symbol("semio.os.document-execution-target-lease.mint/v1");
 export const documentExecutionTargetLeaseBrand = Symbol("semio.os.document-execution-target-lease/v1");
-
-export function dropVerifiedColdDocumentPair(state: ArtifactState): void {
-  const owner = state.verifiedColdPair;
-  state.verifiedColdPair = null;
-  owner?.drop();
-}

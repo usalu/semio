@@ -1,7 +1,4 @@
 #!/usr/bin/env bun
-import {runRepositoryCargoCommandV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {runRepositoryCargoTestsV1 as runCargoTestsV1,runRepositoryCargoLintV1 as runCargoLintV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import {withRepositoryCompilerStoreV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
@@ -12,7 +9,7 @@ import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️proc
 import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { readCargoTestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoLintV1 as runCargoLintV1, withAdmittedCompilerStoreV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import {captureOwnedProcess} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -43,7 +40,7 @@ async function testCargo(original:ScriptInvocation,phaseControl:ResourceLeaseCon
 /** 📥️ Captures one owned compiler operation with bounded evidence, progress and cancellation. */
 async function captureCargo(original:ScriptInvocation,workspace:string,root:string,args:string[],environment:Readonly<Record<string,string|undefined>>=process.env,emit=true){
  const policy=readCargoTestPolicyV1(environment),control=scriptCompilerAdmissionControlV1(original,"framework:cargo",policy.buildBudgetMs);
- return withRepositoryCompilerStoreV1(workspace,policy.mode,control,environment,async (store,control)=>{
+ return withAdmittedCompilerStoreV1(workspace,policy.mode,control,environment,async (store,control)=>{
   const boundary=args.indexOf("--"),arguments_=boundary<0?[...args,"--manifest-path",policy.manifestPath]:[...args.slice(0,boundary),"--manifest-path",policy.manifestPath,...args.slice(boundary)],generated=environment.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen.ts"):undefined,env={...store.environment,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})};
   const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root,store.storage));await store.storage.recheck();
   const output=mkdtempSync(join(store.captureDirectory,"general-cargo-"));try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw Error("Finite original compiler capture deadline required");const result=await captureOwnedProcess("cargo",arguments_,{invocation:original,cwd:root,env,budgetMs:Math.floor(remaining),maxOutputBytes:16777216,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt")});if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);if(result.reason!=="exit"||result.signal)throw Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);if(result.status===0&&generated)copyFileSync(generated,environment.SEMIO_TYPEGEN_OUT!);return result.status??1;}finally{if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
@@ -180,7 +177,7 @@ class SnapshotSqliteTestScript extends BundleScript {
     const tests = join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests");
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🔬️unit/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
     await testCargo(this.invocation,phaseControl,this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",["semio-framework-io-sqlite-snapshot"],["--lib","--no-fail-fast"]);
-    await runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["build", "--manifest-path",cargoPolicy(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"],this.repoRoot,process.env,buildBudgetMs());
+    await runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["build", "--manifest-path",cargoPolicy(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"],this.repoRoot,process.env,buildBudgetMs());
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🤝️interoperability/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }

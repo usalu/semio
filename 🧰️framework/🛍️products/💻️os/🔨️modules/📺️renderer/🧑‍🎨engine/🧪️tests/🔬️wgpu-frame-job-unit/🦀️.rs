@@ -13,7 +13,11 @@ use semio_framework_ui_locale::{Locale, Terminology};
 use semio_framework_job::{root_cancel_token, OriginalJobFixtureCaller};
 use serde_json::Value;
 use std::sync::atomic::Ordering;
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, PointerModifiers, SemioCursor, Theme};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
+use semio_framework_ui_wgpu_hosting::cursor::SemioCursor;
+use semio_framework_ui_theme::Theme;
 
 fn fixture_frame_grant() -> RetainedCloneGrant {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪙️authority/🖼️frame/🔣️.json")).expect("independent frame root authority");
@@ -226,7 +230,7 @@ fn cancellation_retires_empty_preparation_to_terminal_empty() {
         input_candidate: None,
         engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation: Generation(1),
-        cursor: ui_wgpu::wgpu::SemioCursor::Default,
+        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,
@@ -245,7 +249,7 @@ fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu
     semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::begin_accessibility_visible_documents();
     let mut interaction = semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
         shell: semio_framework_os_renderer_wgpu_shell_state::ShellState::new(Vec::new(), "frame-candidate-retirement".to_string(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native),
-        input: ui_wgpu::wgpu::InputState::default(),
+        input: semio_framework_ui_wgpu_input::InputState::default(),
         theme: semio_framework_ui_theme::Theme::default(),
         theme_dark: false,
         last_pointer_x: 0.0,
@@ -253,7 +257,7 @@ fn runtime_with_presented_input_candidate() -> (semio_framework_os_renderer_wgpu
         pointer_down: false,
         pointer_button: 0,
         pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
-        modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
+        modifiers: semio_framework_ui_wgpu_input::PointerModifiers::default(),
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
         text_streams: std::array::from_fn(|_| None),
@@ -344,7 +348,7 @@ fn cancelled_frame_preparation_returns_its_exact_presented_input_candidate() {
         input_candidate: Some(witness),
         engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
-        cursor: ui_wgpu::wgpu::SemioCursor::Default,
+        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,
@@ -370,7 +374,7 @@ fn stale_completed_frame_returns_its_exact_presented_input_candidate() {
         input_candidate: Some(witness),
         engine_packets: semio_framework_os_renderer_wgpu_app_runtime::FrameEnginePackets::default(),
         generation,
-        cursor: ui_wgpu::wgpu::SemioCursor::Default,
+        cursor: semio_framework_ui_wgpu_hosting::cursor::SemioCursor::Default,
         theme_dark: false,
         fullscreen: None,
         cursor_wake: None,

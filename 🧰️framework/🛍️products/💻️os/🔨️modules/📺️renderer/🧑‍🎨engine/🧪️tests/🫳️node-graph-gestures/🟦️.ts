@@ -18,11 +18,11 @@
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, lane `wgpu-node-graph-gestures`.
  */
 import { readFileSync } from "node:fs";
-import { NODE_DRAG_OPERATION, NODE_DRAG_ROW_FIELDS } from "../../../../../../../🔨️modules/🛠️tool-machine/🟦️.ts";
+import { NODE_DRAG_OPERATION, NODE_DRAG_ROW_FIELDS } from "@semio-tech/framework-tool-machine-rs/index";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");

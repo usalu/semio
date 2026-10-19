@@ -1,20 +1,21 @@
-use crate::editor::bim::entities::frame::{CURTAIN_PANEL_OVERRIDE, CURTAIN_WALL_TYPE, CURTAIN_WALL_TYPE_FIELDS, create_curtain_panel_override, create_curtain_wall_type, grid_text, material_choices, override_name, override_text, panel_text, parse_grid, parse_override, parse_panel, type_choices, write_beam_axis, write_curtain_wall_type, write_end_offset, write_tilt, write_u_grid, write_v_grid};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::frame::{CURTAIN_PANEL_OVERRIDE, CURTAIN_WALL_TYPE, CURTAIN_WALL_TYPE_FIELDS, create_curtain_panel_override, create_curtain_wall_type, grid_text, material_choices, override_name, override_text, panel_text, parse_grid, parse_override, parse_panel, type_choices, write_beam_axis, write_curtain_wall_type, write_end_offset, write_tilt, write_u_grid, write_v_grid};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainGrid, CurtainPanel};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
 
 fn snapshot() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m-steel".into(), crate::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Metal, color: crate::standards::v1::subsets::any::schema::snapshot::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
-    snapshot.sites.insert("site".into(), crate::standards::v1::subsets::any::schema::snapshot::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), crate::standards::v1::subsets::any::schema::snapshot::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.materials.insert("m-steel".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory::Metal, color: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
+    snapshot.sites.insert("site".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.insert("bldg".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.insert("st".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     snapshot
 }
 
 fn applied(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("refused: {refusal:?}"))
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("refused: {refusal:?}"))
 }
 
 #[test]
@@ -62,9 +63,9 @@ fn a_new_curtain_wall_type_is_created_in_the_first_material_and_a_missing_materi
 fn with_wall() -> ModelSnapshot {
     let base = snapshot();
     let base = applied(&base, &create_curtain_wall_type(&base, "cwt", "", "Facade").expect("a type"));
-    applied(&base, &ModelMutation::CreateCurtainWall(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall {
+    applied(&base, &ModelMutation::CreateCurtainWall(semio_s_artifact_bim_model_mut_any_172::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall {
         id: "cw".into(),
-        curtain_wall: crate::standards::v1::subsets::any::schema::snapshot::CurtainWall { storey: "st".into(), curtain_wall_type: "cwt".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 6.0, y: 0.0 } }, base_offset: 0.0, top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: "Facade".into() },
+        curtain_wall: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall { storey: "st".into(), curtain_wall_type: "cwt".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 6.0, y: 0.0 } }, base_offset: 0.0, top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: "Facade".into() },
     }))
 }
 
@@ -108,7 +109,7 @@ fn the_rows_of_a_curtain_wall_write_their_own_mutations() {
 fn the_tilt_and_the_beam_rows_write_their_own_mutations() {
     let base = with_wall();
     let Some(ModelMutation::SetColumnTilt(payload)) = write_tilt(&base, "c", "1.5, 0.2") else { panic!("tilt") };
-    assert_eq!(payload.tilt, Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 1.5, angle: 0.2 }));
+    assert_eq!(payload.tilt, Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope { direction: 1.5, angle: 0.2 }));
     let Some(ModelMutation::SetColumnTilt(plumb)) = write_tilt(&base, "c", "") else { panic!("tilt") };
     assert_eq!(plumb.tilt, None, "empty text makes the column plumb");
     assert!(write_tilt(&base, "c", "lean").is_none());
@@ -137,5 +138,5 @@ fn the_entity_rows_name_and_parent_their_records() {
     assert_eq!((CURTAIN_WALL_TYPE.name)(&created, "cwt").as_deref(), Some("Facade"));
     assert!(CURTAIN_WALL_TYPE.library && !CURTAIN_PANEL_OVERRIDE.library);
     let used = CURTAIN_WALL_TYPE.inferred.iter().find(|row| row.key == "used_by").expect("used by");
-    assert_eq!((used.read)(&created, &crate::standards::v1::subsets::any::schema::inferences::ModelInference::default(), "cwt").as_deref(), Some("1"));
+    assert_eq!((used.read)(&created, &semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::default(), "cwt").as_deref(), Some("1"));
 }

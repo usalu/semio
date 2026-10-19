@@ -17,7 +17,7 @@ import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️.ts
 import { DiagramInner, type DiagramProps } from "./🧩️inner/🟦️.tsx";
 export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout/📜️wire/🟦️.ts";
 export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout/📜️wire/🟦️.ts";
-export type { DiagramLayoutPosition } from "./📐️layout/📊️job-types/🟦️.ts";
+export type { DiagramLayoutPosition } from "./📐️layout/📜️wire/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // Interactive node-edge diagram built on ReactFlow and owned layout ports.

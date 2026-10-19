@@ -111,20 +111,9 @@ func TestTicketGetEffort(t *testing.T) {
 
 // 🧪️TestTicketEffortLifecycle tests full lifecycle preservation of reasoning effort on tickets.
 func TestTicketEffortLifecycle(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := withTempRepo(t)
 	run := func(name string, args ...string) {
 		execCommandWithTimeout(t, 30*time.Second, tmpDir, nil, name, args...)
-	}
-	run("git", "init")
-	run("git", "config", "user.email", "test@test.com")
-	run("git", "config", "user.name", "Test")
-	run("git", "config", "commit.gpgsign", "false")
-	run("git", "commit", "--allow-empty", "-m", "initial")
-	oldRoot := rootDir
-	rootDir = tmpDir
-	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
-		t.Fatal(err)
 	}
 
 	result := ToolTicketOpen("🎫️", "Test Effort Ticket", "Prompt with high effort", "opus-4-7", "high", "copilot-chat", "", true, "TEST-GOAL", "", false, "", McpClientGeneric, "", "")
@@ -172,23 +161,7 @@ func TestTicketEffortLifecycle(t *testing.T) {
 
 // 🌐️TestGraphQLEffortMutationsAndQueries tests that GraphQL mutations and queries support reasoning effort.
 func TestGraphQLEffortMutationsAndQueries(t *testing.T) {
-	tmpDir := t.TempDir()
-	run := func(name string, args ...string) {
-		execCommandWithTimeout(t, 30*time.Second, tmpDir, nil, name, args...)
-	}
-	run("git", "init")
-	run("git", "config", "user.email", "test@test.com")
-	run("git", "config", "user.name", "Test")
-	run("git", "config", "commit.gpgsign", "false")
-	run("git", "commit", "--allow-empty", "-m", "initial")
-	oldRoot := rootDir
-	rootDir = tmpDir
-	defer func() { rootDir = oldRoot }()
-	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo", "🎫️tickets"), 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	executor := newExecutorFor(t, tmpDir)
+	executor := newExecutorFor(t, withTempRepo(t))
 
 	goalMutation := `
 		mutation {

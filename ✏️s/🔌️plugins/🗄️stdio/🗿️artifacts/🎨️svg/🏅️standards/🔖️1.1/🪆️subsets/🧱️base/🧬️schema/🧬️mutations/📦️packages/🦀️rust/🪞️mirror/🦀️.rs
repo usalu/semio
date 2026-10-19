@@ -29,7 +29,7 @@ pub mod standards {
                         #[path = "../../../../💡️inferences/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
                     }
-                    pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::diff;
+                    pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::schema::diff;
                     #[path = "."]
                     pub mod mutations {
                         #[path = "../../../🦀️.rs"]

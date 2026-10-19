@@ -21,6 +21,7 @@ func TestExhaustiveCodebaseCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow codebase test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolCodebase()
 	if result.Error != "" {
 		t.Errorf("ToolCodebase returned error: %s", result.Error)
@@ -34,6 +35,7 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy breach list test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolPolicyBreachList("code")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyBreachList returned error: %s", result.Error)
@@ -44,6 +46,7 @@ func TestExhaustiveBundleTreeCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle tree test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolTechnologyTree()
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
@@ -54,6 +57,7 @@ func TestExhaustiveGoalDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow goal document test in short mode")
 	}
+	withExhaustiveRepo(t)
 	os.RemoveAll(filepath.Join(workspace.GetRepoGoalsDir(), "TEST-PARENT-GOAL"))
 	os.RemoveAll(filepath.Join(workspace.GetRepoGoalsDir(), "RENAMED-PARENT"))
 	os.RemoveAll(filepath.Join(workspace.GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
@@ -172,6 +176,7 @@ func TestExhaustiveTicketListIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket list ids test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
 		t.Skipf("ToolTicketList returned error: %s", result.Error)
@@ -193,17 +198,22 @@ func TestExhaustiveTicketListIDs(t *testing.T) {
 	}
 }
 
+func withoutSelectors(value string) string {
+	return strings.NewReplacer("\uFE0E", "", "\uFE0F", "").Replace(value)
+}
+
 func TestExhaustiveTreeCommands(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
+	withExhaustiveRepo(t)
 
 	output, err := executeTreeCommand("search", "compose/go")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻️compose") {
+	if !strings.Contains(withoutSelectors(output), "💻compose") {
 		t.Errorf("repo tree compose/go missing compose.go, got:\n%s", output)
 	}
 	if strings.Contains(output, "├️─️─️ ") || strings.Contains(output, "└️─️─️ ") {
@@ -231,7 +241,7 @@ func TestExhaustiveTreeCommands(t *testing.T) {
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
-	if !strings.Contains(strings.ToLower(output), "compose.go") && !strings.Contains(output, "composego") && !strings.Contains(output, "💻️compose") {
+	if !strings.Contains(withoutSelectors(output), "💻compose") {
 		t.Errorf("file tree missing compose.go")
 	}
 	if !strings.Contains(output, "- [") {

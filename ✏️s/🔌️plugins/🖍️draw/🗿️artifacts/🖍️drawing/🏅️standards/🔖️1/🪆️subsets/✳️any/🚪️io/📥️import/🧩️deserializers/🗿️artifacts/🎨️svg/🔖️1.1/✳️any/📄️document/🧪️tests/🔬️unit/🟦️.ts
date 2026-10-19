@@ -17,7 +17,7 @@ test("SVG native import consumes decoded attribute owners directly",()=>withPars
     expect(new Ajv({strict:true}).compile(schema)({source:row.source,id:"import"})).toBe(true);
     const job=new SvgImportJob(row.source,"import");while(!job.step(1).done){}
     expect(job.take()).toEqual(drawingArtifactFixture(row.after!));
-    expect(new DOMParser().parseFromString(row.source,"image/svg+xml").documentElement.localName).toBe("svg");
+    expect(new DOMParser().parseFromString(row.source,"image/svg+xml").documentElement?.localName).toBe("svg");
   }
   const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
   expect(native.includes("SvgAttributeValue")).toBe(true);

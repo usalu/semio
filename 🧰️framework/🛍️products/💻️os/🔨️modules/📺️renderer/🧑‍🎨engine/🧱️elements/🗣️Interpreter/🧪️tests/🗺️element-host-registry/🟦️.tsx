@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { ComponentKind, ComponentSceneHostProps, Component, UiNodeRecord } from "@semio-tech/framework";
 import { UiDocumentStore } from "../../../📃️UiDocumentStore/🟦️.tsx";
 import { registerElementHostsV1 } from "../../../🪢️ElementHosts/🟦️.ts";
+import "../../../🏛️ShellHost/🟦️.tsx";
 import { Board2dHost } from "../../../🖥️Board2dHost/🟦️.tsx";
 import { BlockListHost } from "../../../🧩️BlockListHost/🟦️.tsx";
 import { Canvas2dHost } from "../../../📐️Canvas2dHost/🟦️.tsx";
@@ -17,7 +18,7 @@ import { GraphTimelineHost } from "../../../🌳️GraphTimelineHost/🟦️.tsx
 import { IconRenderHost } from "../../../🖼️IconRenderHost/🟦️.tsx";
 import { InkCanvasHost } from "../../../🖋️InkCanvasHost/🟦️.tsx";
 import { MEDIA_TRANSPORT_EXTENSION_ID, MediaTransportHost } from "../../../🎬️MediaTransportHost/🟦️.tsx";
-import { NodeGraphHost } from "../../../🕸️NodeGraph/🟦️.tsx";
+import { NodeGraphHost } from "@semio-tech/framework-os-node-graph-rs/index";
 import { Paint2dHost } from "../../../🖌️Paint2dHost/🟦️.tsx";
 import { TableHost } from "../../../📊️Table/🟦️.tsx";
 import { TextEditorHost } from "../../../✏️TextEditor/🟦️.tsx";

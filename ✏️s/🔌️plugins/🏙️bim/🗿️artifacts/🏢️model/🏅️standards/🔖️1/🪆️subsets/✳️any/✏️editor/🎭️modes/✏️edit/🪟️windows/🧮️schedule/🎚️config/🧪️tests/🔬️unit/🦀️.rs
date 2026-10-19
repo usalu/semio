@@ -15,7 +15,7 @@ fn snapshot(config: BimScheduleWindowConfig) -> BimScheduleWindowConfigMutation 
 
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_sums_to_the_negative_diff_and_the_diff_inverse_restores_the_base() {
-    crate::render::window_config::assert_window_config_laws(&BimScheduleWindowConfig::default(), &snapshot(pinned())).await;
+    semio_s_artifact_bim_model_tests::render::window_config::assert_window_config_laws(&BimScheduleWindowConfig::default(), &snapshot(pinned())).await;
     let base = BimScheduleWindowConfig::default();
     let outcome = snapshot(pinned()).diff(&base);
     assert_diff_algebra_inverse_law::<BimScheduleWindowConfig, BimScheduleWindowConfigDiff>(&base, outcome.diff()).await;

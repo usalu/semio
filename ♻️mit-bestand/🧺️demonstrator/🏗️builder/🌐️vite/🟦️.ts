@@ -1,14 +1,13 @@
 import {frameworkOsEngineDeliveriesV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts";
 import {managedWasmPackagesVitePluginV1} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts";
-import {repositoryCachePartitionRootDataV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
+import { repositoryCachePartitionRootDataV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import {flowBrowserDeliveryV1} from "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts";
 import {createAssetBuildPluginsV1} from "../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import {PLAYGROUND_ASSET_PROVIDERS_V1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import {defineOwnedBuildConfigFactory,uiReactBuildPlugin,uiTailwindBuildPlugins} from "../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🛠️build-tooling/🟦️.ts";
-import { canonicalWasmBuildVitePlugin } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
+import { canonicalWasmBuildVitePlugin, viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
-import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
@@ -16,12 +15,12 @@ import { demonstratorGisMapTileServeMode } from "../../🔨️modules/📦️sit
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
-import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
+import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { demonstratorRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 import { demonstratorActivationComponents, readDemonstratorActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { demonstratorUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { DEMONSTRATOR_ASSETS_DIR, DEMONSTRATOR_HOST, DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
-import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { repoCacheDirectory } from "../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const playDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -68,7 +67,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       { find: /^@semio-tech\/assets$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts") },
       { find: /^@semio-tech\/ui-styling$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
       { find: /^@semio-tech\/canvas-react-renderer$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx") },
-      { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
+      { find: /^@semio-tech\/infinite-world-r3f$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework-renderer-react$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },
       { find: /^@semio-tech\/framework$/u, replacement: path.resolve(repoRoot, "./🧰️framework/📦️packages/🟦️typescript/🟦️.ts") },
       { find: /^@semio-tech\/framework-os$/u, replacement: path.resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️.ts") },
@@ -120,6 +119,6 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
     }),
   },
-  build: semioViteBuild(undefined, readBuildMode(mode)),
+  build: semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))),
   };
 });

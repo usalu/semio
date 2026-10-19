@@ -1,0 +1,14 @@
+const L = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery";
+const loc = await import(L + "/🧭️workspace-taxonomy-locator/🟦️.ts");
+const tax = await import(L + "/🔐️taxonomy-authority/🟦️.ts");
+const scan = await import(L + "/🔭️repository-scan/🟦️.ts");
+const inp = await import(L + "/📇️registry-catalog-inputs/🟦️.ts");
+const root = process.cwd(), taxonomy = loc.readTaxonomyUnchecked();
+const view = tax.registryCatalogInputView(root, taxonomy);
+let dirs = 0, kinds = 0;
+const counting = { kind: (p: string) => { kinds++; return view.kind(p); }, entries: (p: string) => { dirs++; return view.entries(p); }, readText: view.readText, readBytes: view.readBytes };
+const ownerIndex = inp.registryCatalogOwnerIndex(root, taxonomy.packagesDirName);
+console.log("[DEBUG] index known", ownerIndex.known.size, "candidates", ownerIndex.candidates.size);
+const t = performance.now();
+const r = scan.scanRepo(root, taxonomy, { view: counting, inputs: new Set(), ownerIndex });
+console.log("[DEBUG] pruned: readdir calls", dirs, "kind calls", kinds, "packages", r.packages.length, (performance.now() - t).toFixed(0), "ms");

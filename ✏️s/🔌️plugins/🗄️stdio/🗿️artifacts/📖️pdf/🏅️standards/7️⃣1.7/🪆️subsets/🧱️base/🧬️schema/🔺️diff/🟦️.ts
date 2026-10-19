@@ -7,14 +7,16 @@ import type { PdfAction, PdfActionKind, PdfDestination, PdfDestinationFit, PdfFi
 import type { PdfAnnotation, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfMarkupAnnotation } from '../📸️snapshot/📌️annotation/🟦️.ts';
 import type { PdfAnnotationKind } from '../📸️snapshot/📌️annotation/🏷️kind/🟦️.ts';
 import type { PdfColorSpace, PdfFunction } from '../📸️snapshot/🌈️color/🟦️.ts';
-import type { PdfDate, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfMarkInfo, PdfOutputIntent, PdfPageLayout, PdfPageMode, PdfViewerPreferences } from '../📸️snapshot/📇️metadata/🟦️.ts';
-import type { PdfExtGState, PdfFormXObject, PdfLineCap, PdfLineJoin, PdfTransparencyGroup } from '../📸️snapshot/🖼️resource/🎚️state/🟦️.ts';
+import type { PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfMarkInfo, PdfOutputIntent, PdfPageLayout, PdfPageMode, PdfViewerPreferences } from "../📸️snapshot/📇️metadata/🟦️.ts";
+import type { PdfDate } from "../📸️snapshot/📆️date/🟦️.ts";
+import type { PdfExtGState, PdfFormXObject, PdfTransparencyGroup } from "../📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfLineCap, PdfLineJoin } from "../📸️snapshot/🖊️line-style/🟦️.ts";
 import type { PdfFont } from '../📸️snapshot/🔤️font/🟦️.ts';
 import type { PdfImage } from '../📸️snapshot/🖼️resource/🟦️.ts';
 import type { PdfInlineImage, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString } from '../📸️snapshot/🖋️content/🟦️.ts';
 import type { PdfNamedColorSpace, PdfNamedProperties, PdfPage } from '../📸️snapshot/📄️document/🟦️.ts';
 import type { PdfPattern, PdfShading } from '../📸️snapshot/🖼️resource/🌈️shading/🟦️.ts';
-import { registerSchemaDocument, validateAgainst, SchemaRefusal } from '../📸️snapshot/🟦️.ts';
+import { registerSchemaDocument, validateAgainst, SchemaRefusal } from "../📸️snapshot/🛂️validation/🟦️.ts";
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
 export interface PdfDiff {

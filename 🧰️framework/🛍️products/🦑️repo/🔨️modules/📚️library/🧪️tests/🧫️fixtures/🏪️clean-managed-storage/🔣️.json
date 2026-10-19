@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "dayRoot": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️18",
+  "tickets": [
+    {
+      "slug": "OPEN",
+      "manifest": "{\"status\":\"open\"}",
+      "generatedFile": "evidence.log"
+    },
+    {
+      "slug": "MISSING",
+      "manifest": null,
+      "generatedFile": "evidence.log"
+    },
+    {
+      "slug": "MALFORMED",
+      "manifest": "{\"status\":\"closed\"",
+      "generatedFile": "evidence.log"
+    },
+    {
+      "slug": "CLOSED",
+      "manifest": "{\"status\":\"closed\"}",
+      "generatedFile": "evidence.log"
+    }
+  ],
+  "nestedGenerated": {
+    "slug": "OPEN",
+    "path": "sub/🗑️generated/deep.log"
+  },
+  "images": [
+    {
+      "directory": ".cache/b/d",
+      "role": "managed partition"
+    },
+    {
+      "directory": ".cache/retired-partition",
+      "role": "orphan outside any budget partition"
+    }
+  ],
+  "imageBackingBytes": 209715200
+}

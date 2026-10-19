@@ -2,8 +2,8 @@
   "$schema": "./🧬️schema/🔣️.json",
   "version": 1,
   "entries": [
-    { "url": "/mesh/🧊️base.glb", "path": "🧱️bases/⬛️base/🧊️base.glb" },
-    { "url": "/mesh/🧊️base_collider.glb", "path": "🧱️bases/⬛️base/💥️base_collider.glb" },
+    { "url": "/mesh/🧊️base.glb", "path": "🧱️bases/⬛️plain-shape/🧊️base.glb" },
+    { "url": "/mesh/🧊️base_collider.glb", "path": "🧱️bases/⬛️plain-shape/💥️base_collider.glb" },
     { "url": "/mesh/🧊️base_blob.glb", "path": "🧱️bases/🫧️blob/🧊️base_blob.glb" },
     { "url": "/mesh/🧊️base_blob_collider.glb", "path": "🧱️bases/🫧️blob/💥️base_blob_collider.glb" },
     { "url": "/mesh/🧊️bridge.glb", "path": "🌉️bridge/🧊️bridge.glb" },

@@ -1,17 +1,18 @@
 import selectionSchema from"./🧬️schema/🎯️selection.json"with{type:"json"};
-import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl,requireMaterializedPathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import preparationProgressSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🧬️schema/🔣️.json" with {type:"json"};
 const preparationProgressPolicy=preparationProgressSchema.definitions.Policy.const;
-import {captureOwnedCommandResultV1,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {captureOwnedCommandResultV1,writeOwnedCommandOutputV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "./🛠️preparation/📦️storage/🟦️.ts";
+import type {CargoPreparationControlV1,CargoWorkspaceControlV1,CargoWorkspaceProgressV1} from "./🛠️preparation/🎛️control/🟦️.ts";
 import {createHash} from "node:crypto";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {admitCargoPreparationObservationV1,assertCargoPreparationObservationCurrentV1,cargoPreparationProgramSourcesV1,type CargoPreparationObservationV1} from "./🛠️preparation/🧾️custody/🟦️.ts";
-import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json";
-import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json";
+import custodySchema from "./🛠️preparation/🧾️custody/🧬️schema/🔣️.json" with { type: "json" };
+import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json" with { type: "json" };
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import {createRequire} from "node:module";
 const {workspaceTestingCollectionRoot: collectionRoot}:{workspaceTestingCollectionRoot:(root:string,directory:string)=>string|undefined}=createRequire(import.meta.url)("../🟨️.cjs");
@@ -32,9 +33,6 @@ export function parseCargoWorkspaceContribution(value: unknown): CargoWorkspaceC
   return { schemaVersion: 1, members: [...row.members], exclude: [...row.exclude] };
 }
 
-export type CargoWorkspaceProgressV1=Readonly<{operation:"state"|"presence"|"list"|"text"|"recipe";path:string;completedOperations:number}>;
-export interface CargoWorkspaceControlV1 {readonly signal:AbortSignal;advance(progress:CargoWorkspaceProgressV1):Promise<void>;}
-export interface CargoPreparationControlV1 extends CargoWorkspaceControlV1 {readonly leaseControl:ResourceLeaseControl;childBudget(requestedMilliseconds:number):number;childOptions(environment:Readonly<Record<string,string|undefined>>):OwnedCommandOptions&{readonly signal:AbortSignal;readonly output:NonNullable<OwnedCommandOptions["output"]>};}
 type CargoPhysicalOperationV1=Readonly<{operation:"program";path:string;root:string}>|Readonly<{operation:"current";path:string;root:string;observation:CargoPreparationObservationV1}>|Readonly<{operation:"state"|"presence"|"list"|"text";path:string;root:string}>|Readonly<{operation:"recipe";path:string;root:string;args:string[];cwd:string;sourceSha256:string;environment:Record<string,string|undefined>}>;
 type CargoPhysicalPlanV1<T>=Generator<CargoPhysicalOperationV1,T,any>;
 /** 🛡️ Rechecks current directory custody immediately before one physical operation. */

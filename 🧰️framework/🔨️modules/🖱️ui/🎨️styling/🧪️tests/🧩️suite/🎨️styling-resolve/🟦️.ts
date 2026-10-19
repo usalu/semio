@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { clearColorResolveCache, resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, SPATIAL_AXIS_COLOR_REFS, resolveColorRgba, serializeCanvasThemeJson, STYLING_BOARD_PALETTES, STYLING_TOKENS, syncSessionCanvasTheme } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { uiCss } from "../🧰️shared/🟦️.ts";
+import { uiCss } from "../🧰️suite-build-server/🟦️.ts";
 
 describe("styling resolve", () => {
   it("selection fill uses accent with emphasized text color so muted gray stays readable", () => {

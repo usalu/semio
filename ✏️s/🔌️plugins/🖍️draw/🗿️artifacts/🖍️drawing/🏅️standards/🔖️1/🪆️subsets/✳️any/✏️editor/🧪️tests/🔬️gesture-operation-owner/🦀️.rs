@@ -35,22 +35,22 @@ fn drawing_completion_rejection_retires_child_before_decoder_without_redispatch(
     };
     job.begin_close();
     // 🧾️ A zero-item grant releases nothing (`ChildEmit::close_one` short-circuits on `maximum_items == 0`).
-    assert_eq!(job.close_step(grant(0, 1)), released(0, 0));
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0, 1), |cx| job.close_step(cx)).expect("original fixture close turn"), released(0, 0));
     assert!(job.pending_completion_rejection.is_some());
     assert!(job.decoder.is_some());
     for _ in 0..128 {
         if job.pending_completion_rejection.is_none() {
             break;
         }
-        let step = job.close_step(grant(1, 4_096));
+        let step = semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn");
         if let InteractiveJobCloseStep::Pending { progress } = step {
             assert!(progress.copied_items <= 1 && progress.released_bytes <= 4_096);
         }
     }
     assert!(job.pending_completion_rejection.is_none());
     assert!(job.decoder.is_some(), "normal decoder owner stays retained until the rejected output is terminal");
-    assert_eq!(job.close_step(grant(1, 4_096)), released(1, 0));
-    assert_eq!(job.close_step(grant(1, 4_096)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn"), released(1, 0));
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, 4_096), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(job.terminal_is_empty());
 }
 
@@ -77,7 +77,7 @@ fn drain(registry: &mut semio_framework_job_registry::FixedOperationRegistry<Dra
         if registry.is_empty() {
             return;
         }
-        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
+        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
 }
@@ -117,7 +117,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
+        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
     assert!(registry.admit(key(7, 2), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok(), "the new generation owns the retired slot");
@@ -126,7 +126,7 @@ fn drawing_gesture_stale_generation_and_aba_are_exact() {
         if registry.is_empty() {
             break;
         }
-        let _ = registry.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES));
+        let _ = semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| registry.close_step(cx)).expect("original fixture close turn");
     }
     assert!(registry.is_empty());
 }
@@ -136,10 +136,10 @@ fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.cancel();
     owner.begin_close();
-    assert_eq!(owner.close_step(grant(0, DRAWING_GESTURE_RETAINED_BYTES)), InteractiveJobCloseStep::Blocked);
-    assert_eq!(owner.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..grant(1, DRAWING_GESTURE_RETAINED_BYTES) }), InteractiveJobCloseStep::Blocked);
-    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), released(1, DRAWING_GESTURE_RETAINED_BYTES));
-    assert_eq!(owner.close_step(grant(1, DRAWING_GESTURE_RETAINED_BYTES)), InteractiveJobCloseStep::Complete { progress: Default::default() });
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(0, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
+    assert_eq!(semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_release_bytes: 0, ..grant(1, DRAWING_GESTURE_RETAINED_BYTES) }, |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Blocked);
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, DRAWING_GESTURE_RETAINED_BYTES));
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, DRAWING_GESTURE_RETAINED_BYTES), |cx| owner.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { progress: Default::default() });
     assert!(owner.terminal_is_empty());
 }
 
@@ -151,12 +151,12 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.begin_close();
-    assert_eq!(owner.close_step(grant(1, page)), released(1, page));
+    assert_eq!(semio_framework_job::close_with_self_funded_context(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn"), released(1, page));
     assert!(owner.session.is_none(), "the session is dropped on the first granted page");
     let mut released = page;
     let mut steps = 1;
     loop {
-        match owner.close_step(grant(1, page)) {
+        match semio_framework_job::close_with_self_funded_context(grant(1, page), |cx| owner.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Pending { progress } => {
                 assert_eq!(progress.copied_items, 0);
                 assert!(progress.released_bytes > 0 && progress.released_bytes <= page);
@@ -216,6 +216,7 @@ fn mounted_vector_gesture_preview_requires_all_captured_full_width_source_lanes(
 #[test]
 fn drawing_instance_owner_close_reaches_every_slot_parity() {
     use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut owner = DrawingInstanceOperationOwner::new();
     for operation in 0..3u64 {
         assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -225,9 +226,9 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
         if owner.terminal_is_empty() {
             break;
         }
-        let step = owner.close_step(1, page).expect("instance owner close step");
-        if let semio_framework_plugin::PluginCloseStep::Pending { released_items, released_bytes } = step {
-            assert!(released_items <= 1 && released_bytes <= page, "one page per step: {step:?}");
+        let step = owner.close_step(scope.cx(), grant(1, page)).expect("instance owner close step");
+        if let semio_framework_plugin::PluginLifecycleStep::Progress(progress) = step {
+            assert!(progress.copied_items <= 1 && progress.released_bytes <= page, "one page per step: {step:?}");
         }
     }
     assert!(owner.terminal_is_empty(), "three owners across both cursor parities close under the page grant");
@@ -263,6 +264,7 @@ fn drawing_gesture_admission_retires_the_retiring_owner_in_its_residue_class() {
 #[test]
 fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     use semio_framework_plugin::ArtifactInstanceOperationOwner as _;
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut owner = DrawingInstanceOperationOwner::new();
     let live = key(448, 3);
     assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
@@ -270,7 +272,7 @@ fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut steps = 0;
     while !owner.operations.is_empty() {
-        owner.maintenance_step(1, page).expect("gesture maintenance step");
+        owner.maintenance_step(scope.cx(), grant(1, page)).expect("gesture maintenance step");
         steps += 1;
         assert!(steps <= DRAWING_GESTURE_RETAINED_BYTES / page + 2, "the owner retires page by page without idle laps: {steps} steps");
     }

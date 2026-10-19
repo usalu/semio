@@ -18,6 +18,7 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	search "github.com/usalu/semio/repo/search"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 	yaml "github.com/usalu/semio/repo/yaml"
 )
 
@@ -56,7 +57,7 @@ type g1Fixture struct {
 
 func loadG1Fixture(t *testing.T) g1Fixture {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "1️⃣g1-contract", "🔣️.json"))
+	data, err := os.ReadFile(sandbox.OriginPath("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "1️⃣g1-contract", "🔣️.json"))
 	if err != nil {
 		t.Fatal(err)
 	}

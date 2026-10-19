@@ -1,8 +1,8 @@
 //! 📮️ `BimDispatchCtx`: the per-dispatch state every command handler reads, built once per command by the editor. It sits below the command nodes so that no node reaches back into the editor root.
 
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
-use crate::editor::bim::presence::{BimPresence, BimPresenceMutation};
-use crate::editor::bim::terminology::{bim_labels, BimLabels};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
+use semio_s_artifact_bim_model_tests::editor::bim::presence::{BimPresence, BimPresenceMutation};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::{bim_labels, BimLabels};
 use semio_framework_plugin::ViewModel;
 
 //#region 🔖️Dispatch
@@ -16,11 +16,11 @@ pub struct BimDispatchCtx {
     pub view: Option<ViewModel>,
     pub window_kind: String,
     pub utility: String,
-    pub plan: plan::config::BimPlanWindowConfig,
-    pub world: world::config::BimWorldWindowConfig,
-    pub section: section::config::BimSectionWindowConfig,
-    pub schedule: schedule::config::BimScheduleWindowConfig,
-    pub sheet: sheet::config::BimSheetWindowConfig,
+    pub plan: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig,
+    pub world: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig,
+    pub section: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig,
+    pub schedule: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig,
+    pub sheet: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig,
     pub presence: BimPresence,
     pub presence_out: Vec<BimPresenceMutation>,
     pub gestures: Option<semio_framework_plugin::ArtifactInstanceOperationOwnerHandle>,
@@ -35,13 +35,13 @@ impl BimDispatchCtx {
             selected,
             library_selected,
             window_kind: view.and_then(crate::editor::bim::chrome::addressed_kind).unwrap_or_default().to_string(),
-            utility: view.map_or(crate::editor::bim::utilities::DEFAULT_UTILITY, crate::editor::bim::utilities::active).to_string(),
+            utility: view.map_or(semio_s_artifact_bim_model_kit::editor::bim::utilities::DEFAULT_UTILITY, semio_s_artifact_bim_model_kit::editor::bim::utilities::active).to_string(),
             view: view.cloned(),
-            plan: plan::config::from_snapshot(window_config),
-            world: world::config::from_snapshot(window_config),
-            section: section::config::from_snapshot(window_config),
-            schedule: schedule::config::from_snapshot(window_config),
-            sheet: sheet::config::from_snapshot(window_config),
+            plan: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::from_snapshot(window_config),
+            world: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::from_snapshot(window_config),
+            section: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::from_snapshot(window_config),
+            schedule: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::from_snapshot(window_config),
+            sheet: semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::from_snapshot(window_config),
             presence: presence.cloned().unwrap_or_default(),
             presence_out: Vec::new(),
             gestures: None,

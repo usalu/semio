@@ -1,4 +1,4 @@
-import type { ExactWireMutationEnvelope } from "../../../../🟦️.ts";
+import type { ExactWireMutationEnvelope } from "../../../../🔖️sync-protocol/🟦️.ts";
 
 const MUTATION_DAG_CAPACITY = 8_192;
 const MUTATION_DAG_IDENTIFIER_BYTES = 256;

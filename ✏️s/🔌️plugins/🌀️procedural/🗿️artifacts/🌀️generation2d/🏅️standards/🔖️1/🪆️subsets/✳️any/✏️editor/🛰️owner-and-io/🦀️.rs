@@ -13,8 +13,8 @@ pub fn close_flow_session(session: &mut FlowEvalSession) {
             maximum_release_bytes: session.next_close_release_byte_demand().expect("cold session release demand"),
             maximum_depth: session.next_close_depth_demand().expect("cold session depth demand").max(1),
         };
-        if let semio_framework_job::InteractiveJobCloseStep::Refused { kind, .. } = session.close_step(grant) {
-            panic!("cold session close refused: {kind:?}");
+        if let Err(error) = session.close_step(grant) {
+            panic!("cold session close refused: {:?}", error.kind);
         }
     }
 }

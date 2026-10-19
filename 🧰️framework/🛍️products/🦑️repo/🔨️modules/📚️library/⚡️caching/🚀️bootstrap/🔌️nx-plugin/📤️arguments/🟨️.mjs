@@ -10,6 +10,8 @@ const taskAuthorityPaths=[new URL(import.meta.url),...['🔣️executor.json','�
 const nativeSchema=JSON.parse(readFileSync(new URL("../../../📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
 
 import {encodeOwnerArgumentsV1,conformsOwnerContractV1 as conforms} from "../../../../🏗️build/📤️arguments/🟨️.mjs";
+import {readPrivateNxBuildGraphV1} from "../📌️graph-pin/🟨️.mjs";
+import {nxBuildDependencySourceIdentityV1} from "../🔏️implementation/🟨️.mjs";
 
 const taskAuthority=(captured=false)=>createHash('sha256').update(JSON.stringify([buildOrchestrationSourceIdentityV1(),...taskAuthorityPaths.map((path,index)=>createHash('sha256').update(captured?taskAuthorityBytes[index]:readFileSync(path)).digest('hex'))])).digest('hex'),loadedTaskAuthority=taskAuthority(true);
 /** 🔏️ Refuses executor code or delegation contracts changed after actual module evaluation. */
@@ -89,7 +91,7 @@ export async function issueNxBuildOrchestrationV1(options,context,environment,no
  nxTaskArgumentsSourceIdentityV1();
  const declaration=context.projectsConfigurations?.projects?.[context.projectName]?.targets?.[context.targetName]?.metadata?.semio?.execution;if(declaration?.kind!=="orchestration"||declaration.children===undefined)return;
  const {original,declared,task,expected}=await readNxTaskAuthorityV1(options,context,environment,now);if(options.nativeOwnerCommand!==undefined||expected.command!==options.command||JSON.stringify(expected.commands)!==JSON.stringify(options.commands)||JSON.stringify(expected.args??[])!==JSON.stringify(options.args??[])||JSON.stringify(expected.__unparsed__??[])!==JSON.stringify(options.__unparsed__??[]))throw Error("Original orchestration task command changed");
- const {readPrivateNxBuildGraphV1}=await import("../../../../🟨️.mjs"),portable=await readPrivateNxBuildGraphV1(context.root,environment),selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(portable.projects,selection);
+ const portable=await readPrivateNxBuildGraphV1(context.root,environment,()=>{nxTaskArgumentsSourceIdentityV1();nxBuildDependencySourceIdentityV1();}),selection={project:context.projectName,target:context.targetName,...(context.configurationName?{configuration:context.configurationName}:{})},bound=buildOrchestrationContextV1(portable.projects,selection);
  if(!bound||JSON.stringify(declaration)!==JSON.stringify(portable.projects[selection.project]?.targets?.[selection.target]?.metadata?.semio?.execution))throw Error("Immutable orchestration task declaration changed");
  const current=buildOrchestrationContextV1(context.projectsConfigurations.projects,{project:selection.project,target:selection.target});requireBuildOrchestrationContextV1(portable.projects,{...current,task:selection});
  if(original.deadlineEpochMilliseconds!==null&&original.deadlineEpochMilliseconds<=Date.now())throw Error("Original orchestration deadline exhausted");const capabilities=projectBuildOrchestrationCapabilitiesV1(original,context.root,"nx",bound,Date.now());return {...original,capabilities};

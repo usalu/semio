@@ -195,7 +195,8 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<RemodelingPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<RemodelingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("remodeling.retained.route"), "the bounded Remodeling work rejects an undeclared or completed route"));
         }
@@ -219,6 +220,9 @@ impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowComma
         }
         self.completed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

@@ -3,11 +3,13 @@
 //! refuse the placement (it leaves the host or overlaps a neighbour). One click writes the opening. The same host search places an existing opening that is dragged along or onto
 //! another wall.
 
-use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Opening, OpeningKind}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, OpeningKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 🪟️ The size of a void opening, in metres.
 pub const VOID_WIDTH: f64 = 1.0;
@@ -92,12 +94,12 @@ impl Placing {
 
     fn candidate(&self, ctx: &ToolContext<'_>, pointer: &Pointer) -> Option<Candidate> {
         let storey = ctx.storey()?;
-        let host = nearest_host(ctx.snapshot, storey, pointer.at, pointer.tolerance * crate::editor::bim::gestures::session::PICK_PIXELS)?;
+        let host = nearest_host(ctx.snapshot, storey, pointer.at, pointer.tolerance * semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::PICK_PIXELS)?;
         let Some((kind, width)) = self.opening_kind(ctx) else { return Some(Candidate { offset: host.offset, host, width: 0.0, opening: None, valid: false }) };
         let Some(offset) = fitted_offset(host.length, width, host.offset) else { return Some(Candidate { offset: host.offset, host, width, opening: None, valid: false }) };
         let name = ctx.name_of(|labels| labels.kind_opening, ctx.snapshot.openings.len());
         let opening = Opening { host: host.host.clone(), kind, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: host.side < 0.0, reveal_depth: None, reveal_material: None, name };
-        let valid = ctx.accepts(&ModelMutation::CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id: "probe".into(), opening: opening.clone() }));
+        let valid = ctx.accepts(&ModelMutation::CreateOpening(semio_s_artifact_bim_model_mut_any_175::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id: "probe".into(), opening: opening.clone() }));
         Some(Candidate { host, offset, width, opening: Some(opening), valid })
     }
 }
@@ -119,7 +121,7 @@ impl Tool for Placing {
                     Some(Candidate { valid: true, opening: Some(opening), .. }) => {
                         let opening = opening.clone();
                         let id = ctx.mint("opening");
-                        Step::write(ctx, ModelMutation::CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id, opening }))
+                        Step::write(ctx, ModelMutation::CreateOpening(semio_s_artifact_bim_model_mut_any_175::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id, opening }))
                     }
                     Some(_) => Step::refuse(REJECTED),
                 }

@@ -1,4 +1,4 @@
-import {writePdfDate,readPdfDate} from "../📇️metadata/📆️date/🟦️.ts";
+import { writePdfDate, readPdfDate } from "../🗓️date/🟦️.ts";
 /** 🧩️ Handwritten COS values, ordered dictionary members and ten intrinsic stream filters. */
 import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfPredictor } from "../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, pdfNullExcept, type ArtifactSqliteOptions, type SqliteDatabase, type SqliteRow, type SqliteValue } from "../🧩️entity/🟦️.ts";

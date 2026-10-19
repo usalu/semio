@@ -15,7 +15,7 @@ fn rich_snapshot(parent:&jack::standards::v1::subsets::any::schema::snapshot::Ja
 
 #[test]
 fn native_admission_refusal_returns_the_original_rich_owner(){
- let fixture:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🧫️fixtures/🪆️query/🔣️.json")).unwrap();
+ let fixture:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🪆️query/🔣️.json")).unwrap();
  let identity:jack::standards::v1::subsets::any::schema::content::JackContentChild=semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&fixture["identity"])).unwrap();
  let parent=SemioJackComposition::initial_snapshot();
  let original=rich_snapshot(&parent);
@@ -46,7 +46,7 @@ fn native_composition_retains_original_rich_genesis(){
  use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
  use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
  use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
- let fixture:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🧫️fixtures/👁️rich-read/🔣️.json")).unwrap();
+ let fixture:semio_framework_pack_json::Value=semio_framework_pack_json::from_str(include_str!("../../../../🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/👁️rich-read/🔣️.json")).unwrap();
  let node=&fixture["nodes"][0];
  let rich=SemioGraphSnapshot{nodes:vec![SemioGraphNode{id:GraphNodeId::new(node["id"].as_str().unwrap()),kind:"rich".into(),label:String::new(),ports:vec![SemioGraphPort{name:"both@port".into(),kind:SemioGraphPortKind::InOut,category:"rich".into(),properties:vec![]}],properties:vec![SemioValueEntry{key:"int".into(),value:SemioValue::Int{lexeme:"18446744073709551615".into()}},SemioValueEntry{key:"bytes".into(),value:SemioValue::Bytes{value:vec![0,255]}},SemioValueEntry{key:"reference".into(),value:SemioValue::Ref{id:ValueId::new("original")}}],..Default::default()}],..Default::default()};
  let original_pack=SemioGraphSnapshot::encode_pack(&rich);

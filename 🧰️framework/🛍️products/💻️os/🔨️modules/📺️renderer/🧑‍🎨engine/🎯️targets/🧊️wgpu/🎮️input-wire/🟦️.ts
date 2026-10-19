@@ -1,4 +1,4 @@
-import type { BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🟦️.ts";
+import type { BrowserFrameDomEvent } from "../🚚️browser-frame-transport/🖱️dom-events/🟦️.ts";
 import { accessibilityMirrorOwnsKey, WGPU_ACCESSIBILITY_MIRROR_ID } from "../♿️accessibility-mirror/🟦️.ts";
 
 export type BrowserKeyboardEvent = Extract<BrowserFrameDomEvent, { readonly type: "keydown" | "keyup" }>;

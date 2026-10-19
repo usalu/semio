@@ -1,5 +1,5 @@
 /** ✍️ The writer, jack, trinity rewrite and gis map caller retained document envelope checks. */
-import { toolJobWriterEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobGisMapEnvelopeCallerRetainedExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/📄️caller-retained-documents/🟦️.ts";
+import { toolJobWriterEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobGisMapEnvelopeCallerRetainedExact } from "@semio-tech/repo-lib/laws";
 
 /** 📝 Checks the writer envelope caller retained route and returns the writer sources the other documents derive from. */
 export function writerEnvelopeCallerRetainedChecks() {

@@ -4,8 +4,9 @@
 //! measure their offset from.
 
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::Inputs;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{mark, seg};
-use crate::standards::v1::subsets::any::schema::snapshot::{AnchorEnd, AnnotationAnchor, Axis, ModelSnapshot, Point2, Space, SpaceBoundary, WallSide};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::{mark, segment_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AnchorEnd, AnnotationAnchor, Axis, Point2, SpaceBoundary, WallSide};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Space};
 
 /// 📏️ Lengths at or below this many metres count as zero.
 pub const EPS: f64 = 1e-9;
@@ -68,7 +69,7 @@ fn host_axis<'a>(snapshot: &'a ModelSnapshot, host: &str) -> Option<&'a Axis> {
 fn opening_centre(snapshot: &ModelSnapshot, opening: &str) -> Result<Point2, Reason> {
     let row = snapshot.openings.get(opening).ok_or(Reason::Missing)?;
     let axis = host_axis(snapshot, &row.host).ok_or(Reason::Missing)?;
-    let line = seg(axis);
+    let line = segment_of(axis);
     if line.length() <= EPS {
         return Err(Reason::Degenerate);
     }
@@ -124,7 +125,7 @@ fn space_point(space: &Space) -> Option<Point2> {
 }
 
 fn middle(axis: &Axis) -> Point2 {
-    let line = seg(axis);
+    let line = segment_of(axis);
     mark(line.point_at_length(line.length() / 2.0))
 }
 

@@ -1,7 +1,9 @@
 //! 🧰️ Shared helpers of the IFC export tests: the committed house model and readers over the generated Part-21 document.
 
-use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
-use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Axis, Beam, Ceiling, CeilingType, Column, CurtainPanel, CurtainPanelOverride, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Ramp, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep, Zone};
+use crate::standards::v1::subsets::any::io::export::ifc::model_to_part21;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{AreaMeasure, Axis, CurtainPanel, Layer, LayerFunction, LocationLine, OpeningKind, Phase, Point2, Profile, Slope, TopConstraint, Vertex, WallSide};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, Beam, Ceiling, CeilingType, Column, CurtainPanelOverride, ModelSnapshot, Opening, Ramp, Slab, Wall, WallSweep, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
@@ -155,7 +157,7 @@ pub fn leaning() -> ModelSnapshot {
     model.columns.insert("c-lean".into(), Column { position: at(30.0, 30.0), rotation: 0.0, tilt: Some(Slope { direction: 0.5, angle: 0.2 }), ..template.clone() });
     model.columns.insert("c-west".into(), Column { position: at(40.0, 30.0), tilt: None, ..template.clone() });
     model.columns.insert("c-east".into(), Column { position: at(46.0, 30.0), tilt: None, ..template });
-    let beam = |axis: Axis, end_top_offset: Option<f64>| Beam { storey: storey.clone(), beam_type: beam_type.clone(), axis, top_offset: 0.0, end_top_offset, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() };
+    let beam = |axis: Axis, end_top_offset: Option<f64>| Beam { storey: storey.clone(), beam_type: beam_type.clone(), axis, top_offset: 0.0, end_top_offset, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name: String::new() };
     model.beams.insert("b-arc".into(), beam(Axis::Arc { start: at(30.0, 40.0), end: at(36.0, 40.0), bulge: 0.4 }, None));
     model.beams.insert("b-incline".into(), beam(Axis::Line { start: at(30.0, 50.0), end: at(36.0, 50.0) }, Some(-0.8)));
     model.beams.insert("b-joined".into(), beam(Axis::Line { start: at(40.0, 30.0), end: at(46.0, 30.0) }, None));

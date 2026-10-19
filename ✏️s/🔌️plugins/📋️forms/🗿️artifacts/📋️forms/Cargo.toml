@@ -7,6 +7,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🎚️config/🧪️tests/🔬️window/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❓️add-question/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↩️reset-try/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust",

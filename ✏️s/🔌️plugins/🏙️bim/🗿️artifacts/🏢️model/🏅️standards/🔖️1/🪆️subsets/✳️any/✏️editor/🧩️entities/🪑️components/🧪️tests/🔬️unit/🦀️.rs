@@ -1,12 +1,15 @@
-use crate::editor::bim::entities::components::{COMPONENT_INFERRED, COMPONENT_OVERRIDE_INFERRED, create_component, degrees_text, family_choices, host_choices, matching, placeable, system_choices, system_of, wall_mounted};
-use crate::editor::bim::entities::InferredRow;
-use crate::standards::v1::subsets::any::schema::diff::Assigned;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, MepSystem, ModelSnapshot, Point2};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::fixture::{furnished, placed};
-use crate::editor::bim::entities::{kind_holding, kind_of};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, Family, FamilyParameter, FamilySolid, ParameterKind, SolidShape}, inferences::ModelInference};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::{COMPONENT_INFERRED, COMPONENT_OVERRIDE_INFERRED, create_component, degrees_text, family_choices, host_choices, matching, placeable, system_choices, system_of, wall_mounted};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::InferredRow;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepSystem, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::{furnished, placed};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint3, ParameterKind, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Family, FamilyParameter, FamilySolid};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -53,7 +56,7 @@ fn the_pickers_name_families_walls_and_systems_by_their_localized_labels() {
 fn a_component_is_a_placed_entity_under_its_storey_and_its_override_hangs_under_the_component() {
     let mut snapshot = placed();
     let storey = snapshot.components["c-table"].storey.clone();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let (component, overridden) = (kind_of("component").expect("component"), kind_of("component-override").expect("override"));
     assert!(!component.library && !overridden.library);
     assert_eq!((component.name)(&snapshot, "c-table").as_deref(), Some("Table 1"));
@@ -119,7 +122,7 @@ fn text_that_names_no_value_is_no_write() {
 #[test]
 fn an_override_is_written_canonical_and_deleted_by_its_key() {
     let mut snapshot = placed();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let leaf = write("component-override", "value", &snapshot, "c-table.width", "depth*2");
     assert!(matches!(leaf, Some(ModelMutation::SetComponentOverride(leaf)) if leaf.component == "c-table" && leaf.name == "width" && leaf.value == "depth * 2"));
     assert!(write("component-override", "value", &snapshot, "c-table.width", "1 m +").is_none());
@@ -145,7 +148,7 @@ fn a_new_component_is_the_first_placeable_family_beside_the_ones_on_its_storey()
 #[test]
 fn what_a_component_shows_is_inferred_and_a_component_counts_its_overrides() {
     let mut snapshot = placed();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let inference = ModelInference::infer(&snapshot).expect("infers");
     let read = |rows: &[InferredRow], key: &str, id: &str| (rows.iter().find(|row| row.key == key).expect("row").read)(&snapshot, &inference, id);
     assert_eq!(read(COMPONENT_INFERRED, "category", "c-table").as_deref(), Some("Furniture"));

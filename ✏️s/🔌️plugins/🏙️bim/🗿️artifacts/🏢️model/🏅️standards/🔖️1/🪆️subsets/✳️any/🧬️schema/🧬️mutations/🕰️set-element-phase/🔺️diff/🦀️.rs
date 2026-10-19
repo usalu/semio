@@ -1,17 +1,17 @@
 //! 🔺️ Diff constructor for `SetElementPhase`: a one-field patch of the phase slot in whichever collection holds the element. An opening carries no phase of its own, it takes the phase of its host, so the host is the one to set.
 //! Nothing derived is written: which elements a view phase shows and the quantities per phase follow by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetElementPhase, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let id = &payload.id;
-    let Some(current) = elements::phase_of(base, id) else {
+    let Some(current) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::phase_of(base, id) else {
         return if base.openings.contains_key(id) {
             MutationOutcome::refuse(OutcomeCode::Invariant, format!("Opening \"{id}\" takes the phase of its host; set the host."), [id.clone()])
-        } else if elements::exists(base, id) {
+        } else if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::exists(base, id) {
             MutationOutcome::refuse(OutcomeCode::Invariant, format!("Element \"{id}\" carries no phase."), [id.clone()])
         } else {
             MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.clone()])
@@ -20,7 +20,7 @@ pub fn diff(payload: &SetElementPhase, base: &ModelSnapshot) -> MutationOutcome<
     if current == payload.phase {
         return MutationOutcome::refuse(OutcomeCode::NoOp, format!("Element \"{id}\" already is in phase {:?}.", current), [id.clone()]);
     }
-    let Some(diff) = elements::rephase(base, id, payload.phase) else {
+    let Some(diff) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::rephase(base, id, payload.phase) else {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.clone()]);
     };
     let outcome = MutationOutcome::new(diff);

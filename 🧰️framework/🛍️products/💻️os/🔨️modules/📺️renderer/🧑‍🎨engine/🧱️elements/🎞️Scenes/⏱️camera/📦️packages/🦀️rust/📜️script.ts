@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 import { createIssuedResourceControlV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { scriptInvocationBudget } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { readCargoTestPolicyV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
@@ -24,7 +23,7 @@ class TestScript extends BundleScript {
 class NodeKeyScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!["source","native"].includes(segments[0]!))throw Error("node-key requires source or native");
-  if(segments[0]==="native"){await runRepositoryCargoTests(["semio-framework-os-renderer-camera"],this.repoRoot,this.invocation,["--all-targets","--no-fail-fast"]);return;}
+  if(segments[0]==="native"){await runAdmittedCargoPackageTestsV1(["semio-framework-os-renderer-camera"],this.repoRoot,this.invocation,["--all-targets","--no-fail-fast"]);return;}
   const source=resolve(this.root,"../../../../../🧪️tests/♻️frame-close/🟦️.ts");
   await runOwnedCommand(process.execPath,["test",source],this.repoRoot,"camera:node-key-source",scriptInvocationBudget(this.invocation,120000),{env:process.env,signal:this.invocation.control.signal});
  }

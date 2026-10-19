@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🕸️ DAG public semantic parent package and strict owning Source consumers. */
-import{runArtifactTypeScriptPackageMain}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
-import{runRepositoryCommand}from"../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import{readdirSync}from"node:fs";
 import{join,resolve}from"node:path";
 if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){

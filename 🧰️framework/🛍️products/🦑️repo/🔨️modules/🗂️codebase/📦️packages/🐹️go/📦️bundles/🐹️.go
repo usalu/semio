@@ -59,7 +59,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []model.CodebaseBundle {
 		if folder != "." {
 			folderSets[bundleName][folder] = struct{}{}
 		}
-		absPath := filepath.Join(workspace.RootDir, file)
+		absPath := filepath.Join(workspace.GetRootDir(), file)
 		if content, err := workspace.ReadTextFile(absPath); err == nil {
 			lineCounts[bundleName] += strings.Count(content, "\n") + 1
 			sections := languages.ParseSections(content, file)

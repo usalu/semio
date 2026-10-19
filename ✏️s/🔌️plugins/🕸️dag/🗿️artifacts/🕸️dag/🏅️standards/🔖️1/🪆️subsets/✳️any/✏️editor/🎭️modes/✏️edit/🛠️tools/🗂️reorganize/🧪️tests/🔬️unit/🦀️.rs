@@ -200,7 +200,7 @@ fn reorganize_step_stays_below_the_interactive_ceiling_on_the_demo_example() {
 
 fn tool_run_action(app: &mut DagApp, action: &str, entries: &[(&str, DslValue)]) -> DslValue {
     let args = DslValue::Object(entries.iter().map(|(key, value)| ((*key).to_string(), value.clone())).collect());
-    ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
 }
 
 fn run_state(app: &DagApp) -> Option<&'static str> {
@@ -213,8 +213,8 @@ fn pump_until(app: &mut DagApp, what: &str, done: impl Fn(&DagApp) -> bool) {
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
-        ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
             app.acknowledge_typed_operation_result(page.token).expect("acknowledge result page");
@@ -264,9 +264,9 @@ fn reorganize_start_complete_finalize_is_one_undo_entry() {
     assert_eq!(after.keys().collect::<Vec<_>>(), before.keys().collect::<Vec<_>>());
     assert_ne!(after, before, "finalize published the layered positions");
     assert_eq!((history_len(&mut app) - history) as u64, law["historyEntriesAdded"].as_u64().expect("entries"));
-    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()));
+    ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
     assert_eq!(node_positions(&app), before, "one undo restores every committed position");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🛑️ Abort after provisional moves exist leaves the document pack byte-identical and the history untouched.
@@ -284,7 +284,7 @@ fn aborting_a_reorganize_run_leaves_the_document_byte_identical() {
     let after = ::semio_framework_async::poll::resolve_ready(app.document_pack()).expect("pack");
     assert_eq!((after.pack, after.spr), (pack.pack, pack.spr), "abort leaves the document byte-identical");
     assert_eq!(history_len(&mut app), history);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 fn runtime_fixture_text(relative: &str) -> &'static str {

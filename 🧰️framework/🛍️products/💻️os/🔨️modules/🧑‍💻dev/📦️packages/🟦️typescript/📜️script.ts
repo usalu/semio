@@ -17,7 +17,7 @@ class CanonicalArchitectureScript extends BundleScript {
 class DistributionOutputCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("distribution-output-check accepts no arguments");
-    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
     const { testDistributionOutputContract } = await import("../../🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts");
     await testDistributionOutputContract(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
   }
@@ -26,8 +26,8 @@ class DistributionOutputCheckScript extends BundleScript {
 class SourceWatchCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("source-watch-check accepts no arguments");
-    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts");
-    const { testNativeSourceWatchPlanV1 } = await import("../../../🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts");
+    const { testNativeSourceWatchPlanV1 } = await import("../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/👁️watch/🧪️testing/🔬️source-plan/🟦️.ts");
     await testNativeSourceWatchPlanV1(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
   }
 }
@@ -90,7 +90,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("closed-browser-component-factory-check", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments.length) throw new Error("closed-browser-component-factory-check accepts no arguments");
-      const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/🌐️browser-bundle/🏃️execution/🟦️.ts");
+      const { testClosedBrowserComponentFactory } = await import("../../../🔌️plugin/📦️packages/🦀️rust/🌐️browser-bundle/🏃️execution/🟦️.ts");
       await testClosedBrowserComponentFactory(this.repoRoot, this.invocation);
     }
   })
@@ -140,11 +140,11 @@ const router = new ScriptRouter(import.meta.dir)
   })
   .register("plugin", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
-      if (segments[0] === "watch") return new (await import("../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts")).PluginWatchScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
+      if (segments[0] === "watch") return new (await import("../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/👁️watch/🟦️.ts")).PluginWatchScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       if (segments[0] === "lint") return new (await import("../../🧪️tests/🧹️capability-policy/🟦️.ts")).PluginCapabilityLintScript(this.root, this.repoRoot, this.invocation).run();
       if (segments[0] === "registry") return (await import("../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts")).ensurePluginRegistry();
-      if (segments[0] === "size") return new (await import("../../../🔌️plugin/📊️size/🟦️.ts")).PluginSizeScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
-      return new (await import("../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts")).PluginBuildScript(this.root, this.repoRoot, this.invocation).run(segments);
+      if (segments[0] === "size") return new (await import("../../../🔌️plugin/📦️packages/🦀️rust/📊️size/🟦️.ts")).PluginSizeScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
+      return new (await import("../../../🔌️plugin/📦️packages/🦀️rust/🏗️build/🏃️execution/🟦️.ts")).PluginBuildScript(this.root, this.repoRoot, this.invocation).run(segments);
     }
   });
 

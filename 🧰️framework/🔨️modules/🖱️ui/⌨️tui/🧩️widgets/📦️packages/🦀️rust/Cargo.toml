@@ -22,5 +22,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../🧱️cell-model/📦️packages/🦀️rust" }
 semio-framework-ui-tui-vt = { path = "../../../📟️vt/📦️packages/🦀️rust" }

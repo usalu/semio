@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-tui-unit-laws-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -4,14 +4,12 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { lstat, readFile } from "node:fs/promises";
 import { join, resolve, relative } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { runAdmittedCargoPackageTestsV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { stageRepositoryArtifacts, withRepositoryArtifactDestinationV1, withArtifactScratchV1, withArtifactDestinationTaskV1, readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/🟦️.ts";
 
-import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import { withArtifactScratchV1, withArtifactDestinationTaskV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import { withRepositoryPublishedCargoExecutableV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withRepositoryPublishedCargoExecutableV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
@@ -54,7 +52,7 @@ class FontsScript extends BundleScript {
 class TestWgpuWorldTerrainScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([], this.root, this.invocation, ["--lib", ...rest, "world::", "terrain"]);
+    await runAdmittedCargoPackageTestsV1([], this.root, this.invocation, ["--lib", ...rest, "world::", "terrain"]);
   }
 }
 

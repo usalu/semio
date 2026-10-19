@@ -18,7 +18,12 @@
     "./schema/orchestration/mutation-caps": "./🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts",
     "./taxonomy": "./🗂️taxonomy/🟦️.ts",
     "./test-layout": "./🗺️test-layout/🟦️.ts",
-    "./dependencies": "./🕸️dependencies/🟦️.ts"
+    "./dependencies": "./🕸️dependencies/🟦️.ts",
+    "./acceptance/orchestration/docstring-and-debug-census": "./🎯️acceptance/📋️orchestration/📝️docstring-and-debug-census/🟦️.ts",
+    "./acceptance/orchestration/interface-import-census": "./🎯️acceptance/📋️orchestration/🔌️interface-import-census/🟦️.ts",
+    "./acceptance/orchestration/placeholder-and-job-census": "./🎯️acceptance/📋️orchestration/🧮️placeholder-and-job-census/🟦️.ts",
+    "./acceptance/orchestration/artifact-neutrality": "./🎯️acceptance/📋️orchestration/🪢️artifact-neutrality/🟦️.ts",
+    "./inventory/schema.json": "./🏭️inventory/🧬️schema/🔣️json/🟦️.ts"
   },
   "scripts": {
     "lint": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-test:lint",

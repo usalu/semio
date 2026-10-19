@@ -1,9 +1,9 @@
 /** 👁️ Complete scene records borrow geometry and preserve semantic text and images. */
-import type {DocumentScenePlan,DocumentSceneNode} from "../📋️prepare/🟦️.ts";
+import type { DocumentScenePlan, DocumentSceneNode } from "../🗺️plan-model/🟦️.ts";
 import {sceneSelectionRelation} from "../📋️prepare/🟦️.ts";
 import type {RasterSceneGroup} from "../📷️raster/🟦️.ts";
 import type {PathSegment} from "@semio-tech/framework/2d";
-import type {Fill} from "../../🎨️fill/🟦️.ts";
+import type { Fill } from "../../🎨️fill/🖌️paint-model/🟦️.ts";
 import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../🧮️geometry/🟦️.ts";
 export interface PreparedSceneNode{readonly id:string;readonly groups:readonly RasterSceneGroup[];readonly transform:Matrix;readonly segments:readonly PathSegment[];readonly opacity:number;readonly blendMode:DocumentSceneNode["blendMode"];readonly visible:boolean;readonly fillRule?:"nonzero"|"evenodd";readonly fill?:Fill;readonly stroke?:PathRasterStroke;readonly image?:{readonly assetId:string;readonly width:number;readonly height:number};}

@@ -6,9 +6,10 @@
 
 use semio_framework_test_fixtures::fixture_path;
 use semio_framework_ui_retained_tree::reconcile::*;
-use crate::wgpu::engine::{Ui, UiLayoutStep};
-use crate::wgpu::text::FontAtlas;
-use crate::wgpu::tree::{NodeFlags, UiDocumentTree};
+use semio_framework_ui_wgpu_engine::Ui;
+use semio_framework_ui_wgpu_engine_surface::UiLayoutStep;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_retained_tree::tree::{NodeFlags, UiDocumentTree};
 use semio_framework_ui_declaration::ui::UiNode;
 use ui_contract::{UiNodeId, SurfaceId, UiDocumentLeaseHeader, UiRevision};
 
@@ -57,8 +58,8 @@ fn test_clock() -> Option<u64> {
 /// 🎬️ Paints no scene — a corpus surface falls through to `paint`'s own placeholder chrome.
 struct NoSceneHost;
 
-impl crate::wgpu::scene_slots::SceneHost for NoSceneHost {
-    fn paint_slot_step(&mut self, _slot: &crate::wgpu::scene_slots::SceneSlot<'_>, cursor: &mut crate::wgpu::scene_slots::ScenePaintCursor, _draw: &mut crate::wgpu::draw_types::DrawList, _atlas: &mut FontAtlas, _icons: Option<&crate::wgpu::draw_types::IconAtlas>) -> crate::wgpu::scene_slots::ScenePaintStep {
+impl semio_framework_ui_wgpu_hosting::scene_slots::SceneHost for NoSceneHost {
+    fn paint_slot_step(&mut self, _slot: &semio_framework_ui_wgpu_hosting::scene_slots::SceneSlot<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor, _draw: &mut semio_framework_ui_draw_contract::DrawList, _atlas: &mut FontAtlas, _icons: Option<&semio_framework_ui_draw_contract::IconAtlas>) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
         cursor.finish()
     }
 }
@@ -146,14 +147,14 @@ fn slider_with_snaps_paints_one_tick_per_detent() {
     bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
     let (_, without_ticks) = mount("conformance.bare", &bare);
     assert_eq!(with_ticks - without_ticks, snaps.len(), "one tick instance per detent");
-    let rail = crate::wgpu::geometry::Rect::new(10.0, 0.0, 100.0, 4.0);
-    let ticks: Vec<f32> = crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).map(|tick| tick.x + tick.w * 0.5).collect();
+    let rail = semio_framework_ui_theme::geometry::Rect::new(10.0, 0.0, 100.0, 4.0);
+    let ticks: Vec<f32> = semio_framework_ui_wgpu_controls::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).map(|tick| tick.x + tick.w * 0.5).collect();
     assert_eq!(ticks, vec![35.0, 60.0, 85.0]);
     for flow in [ui_contract::FlowInline::Ltr, ui_contract::FlowInline::Rtl] {
-        let bounds = crate::wgpu::geometry::Rect::new(0.0, 0.0, 240.0, 24.0);
-        let rail = crate::wgpu::layout::slider_presentation(bounds, 0.0, 0.0, 10.0, flow).rail;
-        for (tick, snap) in crate::wgpu::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).zip(&snaps) {
-            let thumb = crate::wgpu::layout::slider_presentation(bounds, *snap, 0.0, 10.0, flow).thumb;
+        let bounds = semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, 240.0, 24.0);
+        let rail = semio_framework_ui_wgpu_layout::layout::slider_presentation(bounds, 0.0, 0.0, 10.0, flow).rail;
+        for (tick, snap) in semio_framework_ui_wgpu_controls::slider::slider_tick_rects(rail, 0.0, 10.0, ui_contract::UiNumberScale::Linear, &snaps, 2.0, 8.0).zip(&snaps) {
+            let thumb = semio_framework_ui_wgpu_layout::layout::slider_presentation(bounds, *snap, 0.0, 10.0, flow).thumb;
             assert!(((tick.x + tick.w * 0.5) - (thumb.x + thumb.w * 0.5)).abs() < 1e-3, "{flow:?}: the tick of detent {snap} sits under the thumb resting on it");
         }
     }
@@ -173,7 +174,7 @@ fn tree_rows_render_recipe_content_in_their_value_column() {
     let rect = |id: u64| tree.document_node(UiNodeId(id)).and_then(|node| tree.absolute_rect(node)).unwrap_or_else(|| panic!("record {id} is laid out"));
     for (row, leaves) in [(2, vec![4, 5, 6]), (7, vec![10, 12]), (13, vec![16, 17, 19, 20]), (21, vec![22, 23])] {
         let row_rect = rect(row);
-        let mut previous: Option<crate::wgpu::geometry::Rect> = None;
+        let mut previous: Option<semio_framework_ui_theme::geometry::Rect> = None;
         for leaf in leaves {
             let leaf_rect = rect(leaf);
             assert!(leaf_rect.w > 0.0 && leaf_rect.h > 0.0, "record {leaf} has a box");
@@ -191,13 +192,13 @@ fn tree_rows_render_recipe_content_in_their_value_column() {
     let root = tree.root.expect("a mounted root");
     for id in [4, 5, 6, 10, 12, 16, 17, 19, 20] {
         let leaf = rect(id);
-        let hit = crate::wgpu::events::hit_test(tree, root, leaf.x + leaf.w * 0.5, leaf.y + leaf.h * 0.5).and_then(|node| tree.document_id(node));
+        let hit = semio_framework_ui_wgpu_events::hit_test(tree, root, leaf.x + leaf.w * 0.5, leaf.y + leaf.h * 0.5).and_then(|node| tree.document_id(node));
         assert_eq!(hit, Some(UiNodeId(id)), "a pointer at record {id} finds it");
     }
     let mut ui = ui;
     let mut reached = Vec::new();
     for _ in 0..16 {
-        ui.dispatch_event("conformance.tree-row", crate::wgpu::events::UiEvent::KeyDown { key: "Tab".into(), modifiers: Default::default() });
+        ui.dispatch_event("conformance.tree-row", semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: Default::default() });
         let tree = ui.tree("conformance.tree-row").expect("window tree");
         if let Some((focused, _)) = tree.document_bindings().iter().find(|(_, node)| tree.node(*node).is_some_and(|node| node.flags.contains(NodeFlags::FOCUSED))) {
             reached.push(focused.0);
@@ -214,7 +215,7 @@ fn precision_reaches_the_stepper_and_every_vector_axis() {
     let stepper = read(&corpus_dir().join("🧩️component/🎯️stepper-precision/📸️snapshot.json"));
     let (ui, _) = mount("conformance.stepper", &stepper);
     let UiNode::NumberStepper(node) = node_of(&ui, "conformance.stepper", 0) else { panic!("a stepper node") };
-    assert_eq!((node.precision, crate::wgpu::stepper::stepper_value_text(node.value, node.precision, node.display_factor)), (Some(2), "2.50".to_string()));
+    assert_eq!((node.precision, semio_framework_ui_wgpu_controls::stepper::stepper_value_text(node.value, node.precision, node.display_factor)), (Some(2), "2.50".to_string()));
     let vector = read(&corpus_dir().join("🖥️composite/🧭️vector-input/📸️snapshot.json"));
     let (ui, _) = mount("conformance.vector", &vector);
     for id in [2, 4] {
@@ -233,11 +234,11 @@ fn color_input_mounts_a_swatch_hex_field_and_alpha_slider() {
     let UiNode::Slider(alpha) = node_of(&ui, "conformance.color", 3) else { panic!("an alpha slider") };
     assert_eq!((swatch.input_kind.as_str(), swatch.value.as_str(), hex.input_kind.as_str(), hex.value.as_str()), ("color", "#ff8000", "text", "#ff800080"));
     assert_eq!((alpha.min, alpha.max, alpha.step, alpha.value), (0.0, 1.0, 0.01, 0.5));
-    let bounds = crate::wgpu::geometry::Rect::new(0.0, 0.0, 120.0, 24.0);
-    let (square, color, text) = crate::wgpu::paint::color_input_swatch(bounds, &swatch.value).expect("a colour swatch");
-    assert_eq!(color, crate::wgpu::theme::Rgba::from_srgb8(255, 128, 0, 255));
+    let bounds = semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, 120.0, 24.0);
+    let (square, color, text) = semio_framework_ui_wgpu_paint::color_input_swatch(bounds, &swatch.value).expect("a colour swatch");
+    assert_eq!(color, semio_framework_ui_theme::Rgba::from_srgb8(255, 128, 0, 255));
     assert!(square.x >= bounds.x && square.x + square.w <= text.x && text.x + text.w <= bounds.x + bounds.w, "the swatch leads the hex text inside the field");
-    assert!(crate::wgpu::paint::color_input_swatch(bounds, "not a colour").is_none());
+    assert!(semio_framework_ui_wgpu_paint::color_input_swatch(bounds, "not a colour").is_none());
 }
 
 /// 🧷️🔀️ The recipes keep their keyed buttons: reference chips and a dialog's choices mount as buttons.
@@ -270,7 +271,7 @@ fn the_history_editor_controls_project_their_corpus_accessibility() {
         let folder = corpus_dir().join(case);
         let (ui, _) = mount(window, &read(&folder.join("📸️snapshot.json")));
         let expectation = read(&folder.join("🎯️expect.json"));
-        let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+        let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
         for expected in expectation["accessibility"].as_array().expect("accessibility expectations") {
             let id = expected["id"].as_u64().expect("record id");
             let node = projection.iter().find(|node| node.node_id == id).unwrap_or_else(|| panic!("{case}: record {id} is projected"));
@@ -295,7 +296,7 @@ fn the_history_editor_controls_project_their_corpus_accessibility() {
 fn peer_notes_are_announced_after_a_tree_rows_description() {
     let window = "a11y.tree-row";
     let (mut ui, _) = mount(window, &read(&corpus_dir().join("🖥️composite/🌲️tree-row-recipes/📸️snapshot.json")));
-    let described = |ui: &Ui, key: &str| crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree")).into_iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected")).description;
+    let described = |ui: &Ui, key: &str| semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window).expect("window tree")).into_iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected")).description;
     let before = [("offset.row", described(&ui, "offset.row")), ("tint.row", described(&ui, "tint.row"))];
     let notes = vec![("offset.row".to_string(), "Ada is editing this in time travel".to_string()), ("tint.row".to_string(), "Ada is editing this in time travel · Bo is editing this in time travel".to_string())];
     assert!(ui.set_presence_notes(&notes), "the notes reach the window");
@@ -329,17 +330,17 @@ fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     bare["nodes"][0]["component"].as_object_mut().expect("component").remove("snaps");
     let (_, without_ticks) = mount("conformance.dial.bare", &bare);
     assert!(with_ticks > without_ticks, "the dial paints its detent ticks");
-    let track = crate::wgpu::geometry::Rect::new(0.0, 0.0, 200.0, 40.0);
-    let face = crate::wgpu::slider::dial_face(track);
-    let ticks: Vec<[f32; 4]> = crate::wgpu::slider::dial_tick_lines(face, angle).collect();
+    let track = semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, 200.0, 40.0);
+    let face = semio_framework_ui_wgpu_controls::slider::dial_face(track);
+    let ticks: Vec<[f32; 4]> = semio_framework_ui_wgpu_controls::slider::dial_tick_lines(face, angle).collect();
     assert_eq!(ticks.len(), 5, "one radial tick per detent");
     assert!((ticks[3][0] - face.cx).abs() < 1e-3 && ticks[3][1] < face.cy && ticks[3][3] < ticks[3][1], "the 90° tick points up: {:?}", ticks[3]);
     assert!(ticks[2][0] > face.cx && (ticks[2][1] - face.cy).abs() < 1e-3, "the 0° tick points to three o'clock: {:?}", ticks[2]);
-    let towards = |degrees: f64| crate::wgpu::slider::dial_point(face, degrees.to_radians(), 0.9);
+    let towards = |degrees: f64| semio_framework_ui_wgpu_controls::slider::dial_point(face, degrees.to_radians(), 0.9);
     let (x, y) = towards(88.0);
-    assert_eq!(crate::wgpu::slider::slider_node_pointer_value(angle, track, x, y), std::f64::consts::FRAC_PI_2, "a pointer at 88° lands on the 90° detent");
+    assert_eq!(semio_framework_ui_wgpu_controls::slider::slider_node_pointer_value(angle, track, x, y), std::f64::consts::FRAC_PI_2, "a pointer at 88° lands on the 90° detent");
     let (x, y) = towards(-120.0);
-    let pointed = crate::wgpu::slider::slider_node_pointer_value(angle, track, x, y);
+    let pointed = semio_framework_ui_wgpu_controls::slider::slider_node_pointer_value(angle, track, x, y);
     assert!((pointed.to_degrees() + 120.0).abs() < 1e-6, "a pointer at -120° reads -120°: {}", pointed.to_degrees());
     let arrow = ui_contract::slider_key_value(0.0, angle.min, angle.max, angle.step, angle.precision, angle.display_factor, angle.snaps.iter().copied(), ui_contract::SliderKey::Increment, false);
     assert_eq!(ui_contract::ui_number_display_text(arrow, angle.display_factor, None), "1", "an arrow steps one degree");
@@ -350,34 +351,34 @@ fn the_g6_number_control_cases_carry_and_paint_every_facet() {
     let (ui, _) = mount("conformance.log", &log);
     let UiNode::Slider(factor) = node_of(&ui, "conformance.log", 0) else { panic!("a log slider node") };
     assert_eq!((factor.scale, factor.precision, factor.readout(factor.value)), (ui_contract::UiNumberScale::Log, Some(2), "1.00".to_string()));
-    let rail = crate::wgpu::geometry::Rect::new(0.0, 0.0, 100.0, 4.0);
-    let centres: Vec<f64> = crate::wgpu::slider::slider_tick_rects(rail, factor.min, factor.max, factor.scale, &factor.snaps, 2.0, 8.0).map(|tick| f64::from(tick.x + tick.w * 0.5)).collect();
+    let rail = semio_framework_ui_theme::geometry::Rect::new(0.0, 0.0, 100.0, 4.0);
+    let centres: Vec<f64> = semio_framework_ui_wgpu_controls::slider::slider_tick_rects(rail, factor.min, factor.max, factor.scale, &factor.snaps, 2.0, 8.0).map(|tick| f64::from(tick.x + tick.w * 0.5)).collect();
     for (centre, snap) in centres.iter().zip(&factor.snaps) {
         assert!((centre - (snap / 0.1).ln() / 100f64.ln() * 100.0).abs() < 1e-3, "the {snap} tick sits at its log position: {centre}");
     }
     assert!((centres[2] - 50.0).abs() < 1e-3, "the unit factor ticks the middle of the log axis");
-    assert_eq!(crate::wgpu::events::typed_number("-5", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Err("Must be greater than 0".to_string()));
-    assert_eq!(crate::wgpu::events::typed_number("20", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Ok(20.0), "a soft travel admits a typed value beyond it");
+    assert_eq!(semio_framework_ui_wgpu_events::typed_number("-5", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Err("Must be greater than 0".to_string()));
+    assert_eq!(semio_framework_ui_wgpu_events::typed_number("20", factor.display_factor, factor.precision, [factor.value], Some(factor.min), Some(factor.max), factor.limits.as_ref()), Ok(20.0), "a soft travel admits a typed value beyond it");
 
     let heading = read(&corpus_dir().join("🧩️component/🔁️display-factor/📸️snapshot.json"));
     let (ui, _) = mount("conformance.heading", &heading);
     let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.heading", 0) else { panic!("a stepper node") };
     assert_eq!((stepper.value_text(stepper.value), stepper.unit.as_deref()), ("45 °".to_string(), Some("°")));
-    assert_eq!(crate::wgpu::events::typed_number("90", stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()), Ok(std::f64::consts::FRAC_PI_2), "a typed 90 keeps the exact π/2 detent");
+    assert_eq!(semio_framework_ui_wgpu_events::typed_number("90", stepper.display_factor, stepper.precision, std::iter::once(stepper.value).chain(stepper.snaps.iter().copied()), stepper.min, stepper.max, stepper.limits.as_ref()), Ok(std::f64::consts::FRAC_PI_2), "a typed 90 keeps the exact π/2 detent");
 
     let gap = read(&corpus_dir().join("🧩️component/📍️stepper-detents/📸️snapshot.json"));
     let (ui, _) = mount("conformance.gap", &gap);
     let UiNode::NumberStepper(stepper) = node_of(&ui, "conformance.gap", 0) else { panic!("a stepper node") };
     assert_eq!((stepper.snaps.clone(), stepper.value_text(stepper.value)), (vec![0.0, 5.0, 10.0], "2.0 mm".to_string()));
     assert_eq!(ui_contract::ui_number_key_value(stepper.value, stepper.min, stepper.max, stepper.step, stepper.precision, stepper.display_factor, stepper.snaps.iter().copied(), ui_contract::SliderKey::PageUp, false), 5.0);
-    assert_eq!(crate::wgpu::events::typed_number("12", None, stepper.precision, [stepper.value], stepper.min, stepper.max, stepper.limits.as_ref()), Err("Must be at most 10 mm".to_string()));
+    assert_eq!(semio_framework_ui_wgpu_events::typed_number("12", None, stepper.precision, [stepper.value], stepper.min, stepper.max, stepper.limits.as_ref()), Err("Must be at most 10 mm".to_string()));
 
     let width = read(&corpus_dir().join("🧩️component/⛔️hard-bound-refusal/📸️snapshot.json"));
     let (ui, _) = mount("conformance.width", &width);
     let UiNode::Input(field) = node_of(&ui, "conformance.width", 0) else { panic!("a number field") };
     let limits = field.limits.as_ref().expect("the field carries its limits");
     for (typed, verdict) in [("-1", Err("Must be greater than 0".to_string())), ("0", Err("Must be greater than 0".to_string())), ("120", Err("Must be at most 100".to_string())), ("4.5", Ok(4.5)), ("x", Err(String::new()))] {
-        assert_eq!(crate::wgpu::events::typed_number(typed, field.display_factor, field.precision, [4.0], field.min, field.max, Some(limits)), verdict, "{typed}");
+        assert_eq!(semio_framework_ui_wgpu_events::typed_number(typed, field.display_factor, field.precision, [4.0], field.min, field.max, Some(limits)), verdict, "{typed}");
     }
 }
 
@@ -392,7 +393,7 @@ fn row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable
     let snapshot = read(&folder.join("📸️snapshot.json"));
     let (ui, _) = mount(window, &snapshot);
     let semantics = read(&folder.join("🎯️expect.json"))["rowSemantics"].clone();
-    let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+    let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
     let projected = |id: u64| projection.iter().find(|node| node.node_id == id).unwrap_or_else(|| panic!("record {id} is projected: {projection:?}"));
     for described in semantics["describedControls"].as_array().expect("described controls") {
         let control = projected(described["control"].as_u64().expect("control id"));
@@ -401,7 +402,7 @@ fn row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable
     }
     for disabled in semantics["disabledRowActions"].as_array().expect("disabled row actions") {
         let row = projected(disabled["row"].as_u64().expect("row id"));
-        let key = format!("{}{}{}", row.key, crate::wgpu::accessibility::ROW_ACTION_KEY_INFIX, disabled["index"].as_u64().expect("action index"));
+        let key = format!("{}{}{}", row.key, semio_framework_ui_wgpu_hosting::accessibility::ROW_ACTION_KEY_INFIX, disabled["index"].as_u64().expect("action index"));
         let action = projection.iter().find(|node| node.key == key).unwrap_or_else(|| panic!("{key} is projected"));
         assert_eq!((action.label.as_deref(), action.disabled, action.focusable, action.tabbable, action.actionable, action.description.as_deref()), (disabled["label"].as_str(), true, true, true, false, disabled["reason"].as_str()), "{key}");
         let record = snapshot["nodes"].as_array().expect("nodes").iter().find(|node| node["id"] == disabled["row"]).expect("row record");
@@ -417,7 +418,7 @@ fn row_descriptions_reach_their_controls_and_disabled_row_actions_stay_focusable
 /// the pointer leaving the icon, blur, Escape.
 #[test]
 fn a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press() {
-    use crate::wgpu::events::{AccessibilityUiEvent, UiEvent};
+    use semio_framework_ui_wgpu_events::{AccessibilityUiEvent, UiEvent};
     let folder = corpus_dir().join("🖥️composite/💬️row-semantics");
     let window = "a11y.row-reason";
     let (mut ui, _) = mount(window, &read(&folder.join("📸️snapshot.json")));
@@ -427,9 +428,9 @@ fn a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press() {
         let (row, index, reason) = (disabled["row"].as_u64().expect("row id"), disabled["index"].as_u64().expect("action index") as usize, disabled["reason"].as_str().expect("reason"));
         let triggers = |side: &str| disabled["revealReason"][side].as_array().expect("revealReason").iter().map(|trigger| trigger.as_str().expect("trigger").to_string()).collect::<Vec<_>>();
         assert_eq!((triggers("on"), triggers("off")), (vec!["hover".to_string(), "focus".into(), "press".into()], vec!["leave".to_string(), "blur".into(), "escape".into()]), "the corpus names the triggers this law drives");
-        let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+        let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
         let row_key = projection.iter().find(|node| node.node_id == row).expect("row projected").key.clone();
-        let key = format!("{row_key}{}{index}", crate::wgpu::accessibility::ROW_ACTION_KEY_INFIX);
+        let key = format!("{row_key}{}{index}", semio_framework_ui_wgpu_hosting::accessibility::ROW_ACTION_KEY_INFIX);
         let shown = |ui: &Ui| ui.revealed_row_reason(window);
         let expected = Some((ui_contract::UiNodeId(row), index, reason.to_string()));
         let icon = ui.row_action_icon_rect(window, ui_contract::UiNodeId(row), index).expect("the action paints an icon");
@@ -442,20 +443,20 @@ fn a_disabled_row_action_reveals_its_reason_on_hover_focus_and_press() {
         assert_eq!(shown(&ui), None, "leave: the pointer off the icon hides it");
 
         let focused = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Focus).expect("focus admitted");
-        assert!(!focused.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })) && shown(&ui) == expected, "focus: keyboard focus on the action shows it at once");
+        assert!(!focused.iter().any(|command| matches!(command, semio_framework_ui_wgpu_events::UiCommand::App { .. })) && shown(&ui) == expected, "focus: keyboard focus on the action shows it at once");
         let _ = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Blur).expect("blur admitted");
         assert_eq!(shown(&ui), None, "blur: focus leaving hides it");
 
         let pressed = ui.dispatch_accessibility_event(window, generation, row, &key, AccessibilityUiEvent::Activate).expect("activation admitted");
-        assert!(!pressed.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })), "press: a disabled action never dispatches");
+        assert!(!pressed.iter().any(|command| matches!(command, semio_framework_ui_wgpu_events::UiCommand::App { .. })), "press: a disabled action never dispatches");
         assert_eq!(shown(&ui), expected, "press: activating it shows the reason");
         let _ = ui.dispatch_event(window, UiEvent::KeyDown { key: "Escape".into(), modifiers: Default::default() });
         assert_eq!(shown(&ui), None, "escape: hides it");
 
-        let _ = ui.dispatch_pointer_event(window, 1, UiEvent::PointerDown { x, y, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
-        let released = ui.dispatch_pointer_event(window, 1, UiEvent::PointerUp { x, y, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
-        assert!(!released.iter().any(|command| matches!(command, crate::wgpu::events::UiCommand::App { .. })) && shown(&ui) == expected, "press: a click on the icon shows the reason and dispatches nothing");
-        let projection = crate::wgpu::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
+        let _ = ui.dispatch_pointer_event(window, 1, UiEvent::PointerDown { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
+        let released = ui.dispatch_pointer_event(window, 1, UiEvent::PointerUp { x, y, button: semio_framework_ui_wgpu_events::PointerButton::Primary, modifiers: Default::default() });
+        assert!(!released.iter().any(|command| matches!(command, semio_framework_ui_wgpu_events::UiCommand::App { .. })) && shown(&ui) == expected, "press: a click on the icon shows the reason and dispatches nothing");
+        let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(ui.tree(window).expect("window tree"));
         assert_eq!(projection.iter().find(|node| node.key == key).and_then(|node| node.description.clone()).as_deref(), Some(reason), "the reason stays the action's description throughout");
     }
 }
@@ -471,7 +472,7 @@ fn option_rows_announce_and_paint_their_selected_state() {
     let rows = read(&folder.join("🎯️expect.json"))["rowSemantics"]["selectedRows"].as_array().expect("selected rows").clone();
     assert!(rows.iter().any(|row| row["selected"] == true) && rows.iter().any(|row| row["selected"] == false), "the corpus names a chosen and an unchosen option");
     let tree = ui.tree(window).expect("window tree");
-    let projection = crate::wgpu::accessibility::accessibility_projection(tree);
+    let projection = semio_framework_ui_wgpu_hosting::accessibility::accessibility_projection(tree);
     for row in &rows {
         let (id, selected) = (row["row"].as_u64().expect("row id"), row["selected"].as_bool().expect("selected"));
         let node = projection.iter().find(|node| node.node_id == id).unwrap_or_else(|| panic!("option row {id} is projected"));

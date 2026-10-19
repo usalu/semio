@@ -1,6 +1,8 @@
 //! 🚚️ `move-elements` payload. Translates placed elements by a vector: walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and grid lines each get one sparse patch of exactly their placement fields; hosted openings follow their host by inference.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +15,7 @@ pub struct MoveElements {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for MoveElements
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<MoveElements> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<MoveElements> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "elements", kind: "move-elements", record: "MoveElements" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

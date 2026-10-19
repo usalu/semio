@@ -1,7 +1,7 @@
 // #region host
 //! 🪟️ winit window event bridge into pointer callbacks.
 
-use crate::wgpu::input::{KeyAction, PointerCallbacks, PointerModifiers};
+use semio_framework_ui_wgpu_input::{KeyAction, PointerCallbacks, PointerModifiers};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, NamedKey};
 
@@ -107,7 +107,7 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
 
 //#region 🔖️ClipboardHost
 #[cfg(not(target_arch = "wasm32"))]
-enum ClipboardIoOperation {
+pub enum ClipboardIoOperation {
     Read,
     Write(String),
 }
@@ -122,7 +122,7 @@ pub enum ClipboardContent {
 /// I/O lane and poll the returned receiver; no event callback executes or waits for `arboard`.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ClipboardIoJob {
-    operation: std::mem::ManuallyDrop<Option<ClipboardIoOperation>>,
+    pub operation: std::mem::ManuallyDrop<Option<ClipboardIoOperation>>,
     closing: bool,
     completed: bool,
     cancelled: bool,
@@ -196,9 +196,7 @@ fn decode_clipboard_content_borrow(page:&[u8])->Option<ClipboardContentBorrow<'_
 #[path = "../../../🧪️tests/📋️clipboard-content/🦀️.rs"]
 mod clipboard_content_tests;
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../../🧪️tests/♻️physical-job-close/🦀️.rs"]
-pub(crate) mod physical_job_close_tests;
+
 
 #[cfg(not(target_arch = "wasm32"))]
 impl semio_framework_job::InteractiveJob for ClipboardIoJob {

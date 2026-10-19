@@ -108,6 +108,37 @@ func theFirstMarkerUpwardsWins(ctx *host.Context) (host.Outcome, error) {
 	return host.Outcome{Projection: map[string]any{"roots": roots}}, nil
 }
 
+func theStartDirectoryAloneDecidesTheRoot(ctx *host.Context) (host.Outcome, error) {
+	file, err := loadDiscoveryFile(ctx)
+	if err != nil {
+		return host.Outcome{}, err
+	}
+	previous, err := os.Getwd()
+	if err != nil {
+		return host.Outcome{}, err
+	}
+	defer os.Chdir(previous)
+	decoy := filepath.Join(ctx.WorkDir, "🪤️decoy")
+	if err := os.MkdirAll(filepath.Join(decoy, ".git", "deep"), 0o755); err != nil {
+		return host.Outcome{}, err
+	}
+	roots := make([]string, 0, 3*len(file.Trees))
+	for _, tree := range file.Trees {
+		base := filepath.Join(ctx.WorkDir, "🌲️"+tree.Name)
+		if err := materialize(base, tree); err != nil {
+			return host.Outcome{}, err
+		}
+		for _, standing := range []struct{ name, dir string }{{"inside", base}, {"outside", ctx.WorkDir}, {"decoy", filepath.Join(decoy, ".git", "deep")}} {
+			if err := os.Chdir(standing.dir); err != nil {
+				return host.Outcome{}, err
+			}
+			found := workspace.FindRepoRoot(filepath.Join(base, filepath.FromSlash(tree.StartAt)))
+			roots = append(roots, fmt.Sprintf("%s@%s=%s", tree.Name, standing.name, relativeSlash(base, found)))
+		}
+	}
+	return host.Outcome{Projection: map[string]any{"roots": roots}}, nil
+}
+
 func theLayoutVocabularyIsFixed(ctx *host.Context) (host.Outcome, error) {
 	root := filepath.Join(ctx.WorkDir, "🏠️layout")
 	if err := os.MkdirAll(root, 0o755); err != nil {
@@ -158,6 +189,7 @@ func settingsFallBackToTheDefaults(ctx *host.Context) (host.Outcome, error) {
 func Adapter() *host.Adapter {
 	return host.NewAdapter("go").
 		Subject("the-first-marker-upwards-wins", theFirstMarkerUpwardsWins).
+		Subject("the-start-directory-alone-decides-the-root", theStartDirectoryAloneDecidesTheRoot).
 		Subject("the-layout-vocabulary-is-fixed", theLayoutVocabularyIsFixed).
 		Subject("settings-fall-back-to-the-defaults", settingsFallBackToTheDefaults)
 }

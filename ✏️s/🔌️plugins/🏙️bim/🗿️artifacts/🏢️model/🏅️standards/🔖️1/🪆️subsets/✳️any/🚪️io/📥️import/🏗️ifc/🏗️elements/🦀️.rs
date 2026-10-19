@@ -1,11 +1,12 @@
 //! 🏗️ Slabs, columns, beams, spaces and grids of an IFC file: the swept `Body` gives the outline or profile and the extent, the placement the position, rotation and level.
 
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, text, Doc, Loop, Section};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, text, Doc, Loop, Section};
 use crate::standards::v1::subsets::any::io::import::ifc::data::label;
 use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::io::import::ifc::Import;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Layer, LayerFunction, Point2, Profile, SpaceBoundary, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, BeamType, Column, ColumnType, GridLine, Slab, SlabType, Space};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn vertices(ring: &Loop, to_building: &impl Fn([f64; 2]) -> Point2) -> Vec<Vertex> {
@@ -206,7 +207,7 @@ fn grid(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let to_building = i.building_world.get(&building).map_or(world, |building| world.relative_to(building));
     let mut axes: Vec<u64> = Vec::new();
     for at in [7, 8] {
-        for axis in crate::standards::v1::subsets::any::io::import::ifc::reader::refs(args, at) {
+        for axis in semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::refs(args, at) {
             if !axes.contains(&axis) {
                 axes.push(axis);
             }

@@ -743,9 +743,9 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
     let finalized = durable(&mut app).await;
     let finalized_scene = app.snapshot().expect("finalized snapshot");
     assert!(finalized.1 != before.1 && finalized_scene != before_scene, "finalize publishes the reconstruction");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("undone snapshot"), before_scene, "one undo removes the whole finalized reconstruction");
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(app.snapshot().expect("redone snapshot"), finalized_scene, "one redo restores it");
     close(app);
 }

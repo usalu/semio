@@ -1,5 +1,5 @@
 /** 🔗️ The kernel return input page, content, builder binding and evidence tests. */
-import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "../../../../../../../🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadContentInputAuthorityFixture, loadContentInputBuilderDocument, loadContentInputBuilderFixture, loadContentInputReleaseDocument, loadContentInputReleaseFixture, loadContentInputPayloadDocument, loadContentInputPayloadFixture } from "@semio-tech/framework-kernel/testing/fixtures";
 import type { ShardClientSettlementTestKit } from "../🧰️settlement-test-kit/🟦️.ts";
 import type { CapturedReturnHelpers } from "../🛠️captured-return-helpers/🟦️.ts";
 
@@ -18,7 +18,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     client.disposeAll();
   });
   it("OwnedKernelReturnInput captures one content owner and exact grammar-selected private field", async () => {
-    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment } = await import("@semio-tech/framework-kernel/return/content/input");
     
     const { default: Ajv } = await import("ajv");
     const { client, instance, source, response, receipt, payload, vector } = await deliveredInput();
@@ -49,7 +49,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); client.disposeAll();
   });
   it("OwnedKernelReturnInput refuses foreign concrete hosts and patch lifetime fields before field mint", async () => {
-    const { OwnedKernelReturnContent } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent } = await import("@semio-tech/framework-kernel/return/content/input");
     for (const key of ["activationGeneration", "instanceId", "guestLifetime"] as const) {
       const { client, instance, source, response } = await deliveredInput(key);
       const host = fixtureHosts.get(instance)!;
@@ -63,7 +63,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     }
   });
   it("OwnedKernelReturnInput bounds a large field to the exact currently captured page range", async () => {
-    const { OwnedKernelReturnContent } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent } = await import("@semio-tech/framework-kernel/return/content/input");
     const vector = await loadContentInputAuthorityFixture();
     const { client, instance, source, bytes, payload, response } = await deliveredInput(undefined, vector.crossPage.payloadBytes, vector.crossPage.firstPageBytes);
     const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
@@ -119,7 +119,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     const binding = field.members.find(item => ts.isPropertyDeclaration(item) && item.name.getText(input) === "#builder"); expect(binding?.getText(input)).toContain("OwnedUiResidentBuilderRetirement");
   });
   it("OwnedKernelReturnBuilderBinding rejects premature and forged witnesses without releasing the original binding", async () => {
-    const { OwnedKernelReturnInputField } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts"); const { OwnedUiResidentBuilderRetirement } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
+    const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input"); const { OwnedUiResidentBuilderRetirement } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
     const { client, residentLedger, instance, source, response } = await deliveredInput(); const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
     for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!; const fragment = field.fragment;
     const detach = Reflect.get(field, "detachBuilder"); const settle = Reflect.get(field, "settleBuilder"); const detached = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderDetached"); const settled = Reflect.get(OwnedKernelReturnInputField, "matchesBuilderSettled");
@@ -180,7 +180,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     }
   });
   it("OwnedKernelReturnInputEvidence rejects unissued or foreign observations without consulting their getters", async () => {
-    const { OwnedKernelReturnInputRelease } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputRelease } = await import("@semio-tech/framework-kernel/return/content/input");
     const context = await deliveredInput(); const { client, instance, source, response } = context; const input = new OwnedKernelReturnContent(source, fixtureHosts.get(instance)!, instance.activation, instance.lifetime!);
     for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!; const fragment = field.fragment; let reads = 0;
     const detach = Reflect.get(field, "detachInputRelease"); const settle = Reflect.get(field, "settleInputRelease"); const detached = Reflect.get(OwnedKernelReturnInputRelease, "matchesSourceDetached"); const settled = Reflect.get(OwnedKernelReturnInputRelease, "matchesSettled");
@@ -227,7 +227,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     expect(contract.rules.closeOnlyUnboundAbandonment).toBe(true); expect(contract.rules.sourceQuotaAdmitted).toBe(false); expect(contract.rules.rawPageAcknowledged).toBe(false); expect(contract.rules.observationFieldBacklink).toBe(false);
   });
   it("OwnedKernelReturnInput refuses fabricated resident payload associations on its actual private field", async () => {
-    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnPayloadDetachment } = await import("@semio-tech/framework-kernel/return/content/input");
     const contract = await loadContentInputPayloadDocument(); const fixture = await loadContentInputPayloadFixture(); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
     const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!;
     const input = new OwnedKernelReturnContent(source, owner, instance.activation, instance.lifetime!); for (let turn = 0; turn < 256 && !input.field; turn++) input.advance({ maxItems: 1, maxBytes: 4096 }); const field = input.field!;
@@ -246,7 +246,7 @@ export function registerKernelReturnInputBindingTests(kit: ShardClientSettlement
     expect(field.residentPayloadDetachment).toBeNull(); expect(input.field).toBe(field); expect(capturedReturnState(source).outputs?.peek()?.responseEnvelope).toBe(response); input.beginClose(); client.disposeAll();
   });
   it("OwnedKernelReturnInput retains exact field construction roots and arbitrary finalizer failures", async () => {
-    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnPayloadDetachment } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnContent, OwnedKernelReturnInputField, OwnedKernelReturnInputFragment, OwnedKernelReturnPayloadDetachment } = await import("@semio-tech/framework-kernel/return/content/input");
     const fixture = await loadContentInputPayloadFixture(); const row = fixture.construction; const freeze = Object.freeze;
     for (const stage of row.stages) for (const position of row.positions) for (const kind of row.faults) {
       const { client, instance, source, response } = await deliveredInput(); const owner = fixtureHosts.get(instance)!; let reads = 0;

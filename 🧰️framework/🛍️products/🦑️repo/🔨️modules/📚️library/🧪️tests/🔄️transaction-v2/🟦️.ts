@@ -26,7 +26,8 @@ describe("transaction plan journal v2 aggregate", () => {
     const launcher = ts.createSourceFile(harness.launcherPath, readFileSync(join(getWorkspaceRoot(), harness.launcherPath), "utf8"), ts.ScriptTarget.Latest, true);
     const allocationSource = ts.createSourceFile(harness.allocationPath, readFileSync(join(getWorkspaceRoot(), harness.allocationPath), "utf8"), ts.ScriptTarget.Latest, true);
     const testSource = ts.createSourceFile(harness.testPath, readFileSync(join(getWorkspaceRoot(), harness.testPath), "utf8"), ts.ScriptTarget.Latest, true);
-    const runValidator = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.runRootValidator);
+    const builderSource = ts.createSourceFile(harness.builderPath, readFileSync(join(getWorkspaceRoot(), harness.builderPath), "utf8"), ts.ScriptTarget.Latest, true);
+    const runValidator = builderSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.runRootValidator);
     expect(runValidator).toBeDefined();
     const filterWaves: string[][][] = [], staticTitles: string[] = [];
     const visitLauncher = (node: import("typescript").Node): void => {
@@ -68,7 +69,7 @@ describe("transaction plan journal v2 aggregate", () => {
     const allocation = allocationSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.bundleRootFunction);
     expect(allocationConstant).toBeDefined();
     expect(allocation).toBeDefined();
-    const retention = testSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.retentionFunction);
+    const retention = builderSource.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === harness.retentionFunction);
     expect(retention).toBeDefined();
     const propagation: string[] = [];
     const inspectPropagation = (node: import("typescript").Node): void => {
@@ -77,7 +78,7 @@ describe("transaction plan journal v2 aggregate", () => {
     };
     inspectPropagation(launcher);
     expect(propagation).toEqual(["options.runRoot"]);
-    const functionSource = [allocationConstant!.getText(allocationSource).replace(/^export\s+/u, ""), allocation!.getText(allocationSource).replace(/^export\s+/u, ""), runValidator!.getText(testSource), retention!.getText(testSource)].join("\n");
+    const functionSource = [allocationConstant!.getText(allocationSource).replace(/^export\s+/u, ""), allocation!.getText(allocationSource).replace(/^export\s+/u, ""), runValidator!.getText(builderSource).replace(/^export\s+/u, ""), retention!.getText(builderSource).replace(/^export\s+/u, "")].join("\n");
     const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(functionSource), ts.transpileModule(functionSource, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
     const roots: string[] = [];
     const allocationRepo = mkdtempSync(join(fixtureRunRoot(), "🧪️allocation-"));

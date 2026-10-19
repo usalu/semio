@@ -110,6 +110,7 @@ fn persisted_hydration_release_funds_actual_whole_allocation_and_separate_termin
         assert!(pending);
         assert_eq!((allocated, released), (0, extent), "fund the retained physical allocation under its existing admission ceiling");
         assert_eq!(cx.fuel_remaining(), 0);
+        drop(cx);
         assert!(active.as_ref().unwrap().terminal_is_empty());
         let frame = std::mem::size_of_val(active.as_ref().unwrap().as_ref());
         let mut original_retained_progress_3 = semio_framework_value::RetainedCloneProgress::default();
@@ -325,7 +326,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
 #[test]
 fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_receipt() {
     use semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
-    use semio_framework_value::retirement::{shared::SharedControlledRetirement, controlled::ControlledRetirement};
+    use semio_framework_value::retirement::{arc_custody::SharedControlledRetirement, controlled::ControlledRetirement};
     fn close(mut snapshot: impl ErasedSnapshotRetirement, mut pack: impl ErasedSnapshotRetirement, policy: RetainedCloneGrant, expected: usize) {
         let mut freed = 0;
         let mut born = 0;

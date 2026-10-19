@@ -4,7 +4,7 @@ use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_S
 use semio_framework_plugin_decl_views::media_contract::{ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework::{ActionKind, AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, Media, MediaClass, MediaError, MediaFingerprint, MediaForm, MediaPayload, MediaType, MediaWireFormat, ViewModel};
 use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
-use semio_framework_plugin_document_media::{ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadState, MediaArtifact, copy_media_text_parts, whole_document_media};
+use semio_framework_plugin_document_media::{ActiveDocumentArchiveLoad, ActiveDocumentArchiveLoadState, MediaArtifact, copy_media_text_parts, document_archive_history_decoder, whole_document_media};
 use semio_framework::kernel::{AppEvent, Effect, FRAMEWORK_RESERVED_JOB_KIND, FixedCommandPage, HistoryPatch, InvocationResult, UiDirtyScope};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;

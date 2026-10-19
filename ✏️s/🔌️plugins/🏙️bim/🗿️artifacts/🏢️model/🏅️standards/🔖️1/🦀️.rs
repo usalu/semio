@@ -19,13 +19,13 @@ pub mod artifact_items {
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let codec_extension = format!("{}:{}:bim", crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
+    let codec_extension = format!("{}:{}:bim", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let rows: Vec<(&str, &str, &str, Vec<(&str, &str)>, Option<(&str, &str)>)> = vec![
         ("s.bim.model.standard.v1", "standard", "1", vec![], None),
         ("s.bim.model.standard.v1.profile.any", "profile", "any", vec![], None),
         ("s.bim.model.schema.artifact", "schema", "s.bim.model", vec![("schema", "s.bim.model")], None),
         ("s.bim.model.inference.artifact", "inference", "s.bim.model.inference", vec![("schema", "s.bim.model.inference")], None),
-        ("s.bim.model.codec.document-1", "codec", "bim.model:bim", vec![("codec", crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA), ("codec-extension", codec_extension.as_str())], None),
+        ("s.bim.model.codec.document-1", "codec", "bim.model:bim", vec![("codec", semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA), ("codec-extension", codec_extension.as_str())], None),
         ("s.bim.model.localization.en", "localization", "BIM Model", vec![], Some(("en", "BIM Model"))),
         ("s.bim.model.localization.de", "localization", "BIM-Modell", vec![], Some(("de", "BIM-Modell"))),
     ];
@@ -46,21 +46,21 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// 🌳️ This artifact's declaration tree root, consumed by the hub composition through `declare_artifact`: schema, io (native codec and the IFC, glTF and SVG hops), viewer, editor and examples of every subset.
 pub fn artifact<A: BimApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait BimApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::bim::BimModelApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::bim::BimModelViewer>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
 {
 }
 
 impl<A> BimApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::bim::BimModelApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::bim::BimModelViewer>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>>>
 {
 }
 //#endregion 🔖️Declaration

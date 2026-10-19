@@ -33,16 +33,8 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile;
-                    }
-                    #[path = "."]
-                    pub mod snapshot {
-                        pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::*;
-                        pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
-                    }
+                    
+                    
                     #[path = "."]
                     pub mod diff {
                         #[path = "../../🦀️.rs"]
@@ -56,7 +48,6 @@ pub mod standards {
                             #[path = "../../../💡️inferences/🖼️view-linework/📐️frame/🦀️.rs"]
                             pub mod frame;
                         }
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels;
                         #[path = "."]
                         pub mod element_solids {
                             #[path = "../../../💡️inferences/🧊️element-solids/🦀️.rs"]

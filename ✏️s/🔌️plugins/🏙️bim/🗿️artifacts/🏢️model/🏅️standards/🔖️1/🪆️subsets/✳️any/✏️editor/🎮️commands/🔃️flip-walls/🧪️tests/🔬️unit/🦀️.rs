@@ -1,15 +1,16 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::flip_walls::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::Axis;
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::flip_walls::{handle, FlipWalls};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
 
 fn flip(ids: &[&str], selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();
@@ -17,7 +18,7 @@ fn flip(ids: &[&str], selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigM
     run(&snapshot, |doc, cfg| handle(&FlipWalls { ids: ids.iter().map(|id| id.to_string()).collect() }, doc, cfg, &mut ctx))
 }
 
-fn ends(snapshot: &ModelSnapshot, wall: &str) -> (crate::standards::v1::subsets::any::schema::snapshot::Point2, crate::standards::v1::subsets::any::schema::snapshot::Point2) {
+fn ends(snapshot: &ModelSnapshot, wall: &str) -> (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2) {
     match &snapshot.walls[wall].axis {
         Axis::Line { start, end } | Axis::Arc { start, end, .. } => (*start, *end),
     }

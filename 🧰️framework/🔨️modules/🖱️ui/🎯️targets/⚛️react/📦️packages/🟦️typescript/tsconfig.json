@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM", "DOM.AsyncIterable", "DOM.Iterable", "ESNext"],
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
@@ -16,7 +16,7 @@
     "incremental": true,
     "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true,
-    "types": ["bun", "react", "react-dom", "vite/client"],
+    "types": ["bun", "node", "react", "react-dom", "vite/client"],
     "baseUrl": ".",
     "paths": {
       "@semio-tech/ui-react": ["./🟦️.tsx"],

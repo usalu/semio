@@ -64,7 +64,8 @@
         "serde",
         "serde_json",
         "parry3d",
-        "semio-framework-3d-testing-support"
+        "semio-framework-3d-testing-support",
+        "semio-framework-test-fixtures"
       ]
     },
     {
@@ -107,7 +108,8 @@
         "semio-framework-mesh-engine",
         "serde_json",
         "parry3d",
-        "semio-framework-trace"
+        "semio-framework-trace",
+        "semio-framework-test-fixtures"
       ]
     }
   ],

@@ -113,7 +113,7 @@ fn native_surface_capture_precedes_worker_device_preparation() {
     assert_factory(ui_gpu::platform::NativeSurfaceCapture::prepare);
     let _: fn(Arc<ui_gpu::platform::NativeWindow>) -> Result<ui_gpu::platform::NativeSurfaceCapture, String> = ui_gpu::platform::NativeSurfaceCapture::capture;
     let contract: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️wgpu/⌨️native-entrypoint/🪟️surface/🔣️.json")).expect("surface contract");
-    let source = semio_framework_os_renderer_wgpu_test_support::repo_text("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
+    let source = semio_framework_os_renderer_wgpu_test_support::repo_module_tree("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs");
     let resumed = &source[source.find("fn resumed(").expect("window callback")..];
     let mut phases = vec![(resumed.find("event_loop.create_window(").expect("create window"), "window"), (resumed.find("ui_gpu::platform::NativeSurfaceCapture::capture(").expect("capture surface"), "surface"), (resumed.find("crate::spawn_app_task(").expect("delegate device preparation"), "worker")];
     phases.sort_by_key(|row| row.0);

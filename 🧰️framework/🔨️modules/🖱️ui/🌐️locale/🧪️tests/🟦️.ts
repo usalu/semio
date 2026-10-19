@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import { parseTree, getNodeValue, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import * as TOML from "@iarna/toml";
 import axes from "../../🎚️axes/🔣️.json";
@@ -59,15 +59,19 @@ test("closed portable label and locale authority corpus agrees with canonical ax
   expect(new Set(fixture.locales.map(row => row.id)).size).toBe(fixture.locales.length);
 });
 
-test("UI native manifest has only canonical lower value and locale providers", () => {
-  const manifest = TOML.parse(source(fixture.ownership.uiManifest));
-  expect(Object.keys(manifest.dependencies ?? {})).not.toContain(fixture.ownership.forbidden);
-  expect(Object.keys(manifest.dependencies ?? {})).toContain(fixture.ownership.package);
+const walk = (directory: string, name: string): string[] => readdirSync(join(repoRoot, directory), { withFileTypes: true }).flatMap(entry => entry.name === "node_modules" || entry.name === "dist" ? [] : entry.isDirectory() ? walk(directory + "/" + entry.name, name) : entry.name === name ? [directory + "/" + entry.name] : []);
+const dependencyNames = (path: string): string[] => { const manifest = TOML.parse(source(path)) as Record<string, Record<string, unknown> | undefined>; return ["dependencies", "dev-dependencies", "build-dependencies"].flatMap(table => Object.keys(manifest[table] ?? {})); };
+test("UI native manifests have only canonical lower value and locale providers", () => {
+  const manifests = walk(fixture.ownership.uiTree, "Cargo.toml");
+  expect(manifests.length).toBeGreaterThan(fixture.ownership.localeOwners.length);
+  for (const path of manifests) expect(dependencyNames(path), path).not.toContain(fixture.ownership.forbidden);
+  for (const owner of fixture.ownership.localeOwners) expect(dependencyNames(owner + "/📦️packages/🦀️rust/Cargo.toml"), owner).toContain(fixture.ownership.package);
 });
 
 test("UI code has direct neutral value bindings without the product DSL alias", () => {
   expect(source(fixture.ownership.uiRoot)).not.toContain("semio_framework_os_kernel");
-  expect(source(fixture.ownership.wgpuRoot)).not.toMatch(/pub\s+use\s+dsl::/);
+  expect(existsSync(join(repoRoot, fixture.ownership.wgpuRoot))).toBe(false);
+  for (const path of walk(fixture.ownership.wgpuTree, "🦀️.rs")) expect(source(path), path).not.toMatch(/pub\s+use\s+dsl::/);
 });
 
 test("locale carriers and defining macro have one lower canonical physical owner", () => {

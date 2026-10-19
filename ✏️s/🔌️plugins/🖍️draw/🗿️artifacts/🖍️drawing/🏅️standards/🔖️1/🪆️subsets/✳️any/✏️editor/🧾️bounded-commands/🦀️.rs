@@ -155,7 +155,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<DrawingPlayApp>>,
     cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<DrawingPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id { return Err(Fault::from("drawing-window-work-terminal")); }
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
@@ -203,6 +204,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             },
             None => ArtifactCommandWorkStep::Complete(emit),
         })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

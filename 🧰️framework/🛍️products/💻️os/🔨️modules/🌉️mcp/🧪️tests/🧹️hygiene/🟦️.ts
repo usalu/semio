@@ -11,9 +11,9 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 
 describe("document descriptor schema oracle", () => {

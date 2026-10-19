@@ -7,41 +7,22 @@
 //! no owner history. The file is written in stages ([`STAGES`]) so a job can report progress and stop between two of them.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Phase}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Value};
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
-pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context;
-pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer;
-pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames;
-pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep;
-pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::frame;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::horizontal;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::circulation;
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ramps;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep;
-pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::spaces;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning;
 #[path = "🧭️options/🦀️.rs"]
 pub mod options;
-pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::curtain;
 #[path = "📏️grids/🦀️.rs"]
 pub mod grids;
-pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::annotations;
 #[path = "🔬️projection/🦀️.rs"]
 pub mod projection;
 #[path = "📚️ifc4/🦀️.rs"]
@@ -49,9 +30,9 @@ pub mod ifc4;
 #[path = "🔥️energy/🦀️.rs"]
 pub mod energy;
 
-pub use writer::Schema;
-use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
 
 /// 🪪️ The IFC 2x3 dialect this leaf writes.
 pub const IFC_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("*") };
@@ -79,28 +60,28 @@ pub type Stage = (&'static str, fn(&mut Export<'_>));
 /// 🪜️ The stages of an export in the order they run; each reads the inference and the records of the stages before it.
 pub const STAGES: &[Stage] = &[
     ("library", ifc4::emit_library),
-    ("types", data::emit_types),
-    ("spatial", spatial::emit),
-    ("walls", walls::emit),
-    ("wall-sweeps", wall_sweeps::emit),
-    ("curtain-walls", curtain::emit),
-    ("frames", frame::emit),
-    ("slabs-and-roofs", horizontal::emit),
-    ("ceilings", ceilings::emit),
-    ("stairs-and-railings", circulation::emit),
-    ("ramps", ramps::emit),
-    ("components", components::emit),
-    ("mep", mep::emit),
-    ("systems", mep::emit_systems),
-    ("spaces", spaces::emit),
-    ("zones", zoning::emit),
+    ("types", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::emit_types),
+    ("spatial", semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial::emit),
+    ("walls", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::emit),
+    ("wall-sweeps", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::emit),
+    ("curtain-walls", semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::curtain::emit),
+    ("frames", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::frame::emit),
+    ("slabs-and-roofs", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::horizontal::emit),
+    ("ceilings", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings::emit),
+    ("stairs-and-railings", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::circulation::emit),
+    ("ramps", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ramps::emit),
+    ("components", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components::emit),
+    ("mep", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep::emit),
+    ("systems", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep::emit_systems),
+    ("spaces", semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::spaces::emit),
+    ("zones", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning::emit),
     ("options", options::emit),
     ("grids", grids::emit),
-    ("annotations", annotations::emit),
+    ("annotations", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::annotations::emit),
     ("energy", energy::emit),
-    ("structure", structure::emit),
-    ("links", data::emit_links),
-    ("connections", walls::connect),
+    ("structure", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::structure::emit),
+    ("links", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::emit_links),
+    ("connections", semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::connect),
 ];
 
 /// 🏗️ The Part-21 document of `model` in `schema` from its inference, plus a note per item that could not be written.
@@ -121,7 +102,7 @@ pub fn finish(mut export: Export<'_>, model: &ModelSnapshot) -> (Part21Document,
 
 /// 🏗️ The Part-21 document of `model` in `schema` plus a note per item that could not be written: the inference comes from the shared session, so an export after an edit recomputes only what the edit touched.
 pub fn model_to_part21(schema: Schema, model: &ModelSnapshot) -> Result<(Part21Document, Vec<String>), String> {
-    inference::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| inferred_to_part21(schema, model, inferred)).map_err(|error| error.to_string())
 }
 
 /// 📤️ The IFC 2x3 file bytes of `model` plus a note per item that could not be written.
@@ -139,8 +120,8 @@ pub fn export_ifc4(model: &ModelSnapshot) -> Result<(Vec<u8>, Vec<String>), Stri
 /// 📤️ The file bytes of an already written document in `schema`.
 pub fn encode(schema: Schema, document: Part21Document) -> Result<Vec<u8>, String> {
     match schema {
-        Schema::Ifc2x3 => codec::encode_document(document),
-        Schema::Ifc4 => codec::encode_ifc4(&document),
+        Schema::Ifc2x3 => semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_document(document),
+        Schema::Ifc4 => semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::encode_ifc4(&document),
     }
 }
 
@@ -208,4 +189,3 @@ pub mod testkit;
 
 
 
-pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::structure;

@@ -1,11 +1,12 @@
 //! 🖼️ The view browser of the outliner: below each building one `Views` node whose children are the views of the building, grouped by kind (plans, ceiling plans, sections, elevations, 3D views) and ordered
 //! by the level of their storey and their name. A row is the id of its view, so a click selects the view in the same `elements` domain as every other element, and the properties panel edits it.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::editor::bim::panels::outliner::{entity_item, item, leaf};
-use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;

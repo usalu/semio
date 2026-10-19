@@ -3,29 +3,29 @@
 //! offset and flips of every changed opening (one diff, so no restored opening can collide with one that is still mirrored), and one
 //! `SetWallEndJoin` per wall end whose join preference the mirror traded. Empty when the mirror is refused or changes nothing.
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
-use crate::standards::v1::subsets::any::schema::mutations::modify::{self, WallEnd};
-use crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
-use crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin;
+use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
+use semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
+use semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin;
 use crate::standards::v1::subsets::any::schema::mutations::mirror_elements::diff::map_of;
 use crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &MirrorElements, base: &ModelSnapshot) -> Vec<Op>
 where
-    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements> + From<crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin>,
+    Op: From<semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements> + From<semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin>,
 {
     let map = map_of(payload);
     if !map.finite() || map.degenerate() {
         return Vec::new();
     }
     if let Some(prefix) = &payload.prefix {
-        return match modify::duplicate(base, &payload.ids, prefix, &[map]) {
+        return match semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::duplicate(base, &payload.ids, prefix, &[map]) {
             Ok(built) if !built.roots.is_empty() => vec![Op::from(DeleteElements { ids: built.roots })],
             _ => Vec::new(),
         };
     }
-    let Ok(placed) = modify::in_place(base, &payload.ids, &map) else {
+    let Ok(placed) = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::in_place(base, &payload.ids, &map) else {
         return Vec::new();
     };
     let places = (!placed.before.is_empty()).then(|| Op::from(PlaceElements { placements: placed.before.clone() }));

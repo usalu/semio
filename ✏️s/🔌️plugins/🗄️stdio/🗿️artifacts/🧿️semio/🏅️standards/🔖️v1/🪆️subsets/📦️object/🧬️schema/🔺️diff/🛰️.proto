@@ -1,8 +1,8 @@
 syntax = "proto3";
 package semio.s.stdio.semio.v1.object.diff;
 import "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧮️geometry/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-message ChildChange { oneof operation { semio.os.store.ArtifactChild value = 1; bool clear = 2; } }
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
+message ChildChange { oneof operation { semio.framework.schema.artifact_child.ArtifactChild value = 1; bool clear = 2; } }
 message SemioObjectDiff {
   semio.s.stdio.semio.v1.base.geometry.SemioTransform transform = 1;
   ChildChange brep = 2;

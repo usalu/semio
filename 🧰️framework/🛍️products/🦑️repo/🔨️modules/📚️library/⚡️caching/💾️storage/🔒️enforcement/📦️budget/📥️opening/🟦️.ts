@@ -10,10 +10,13 @@ import {repositoryCachePartitionRootDataV1} from "../📂️paths/🟦️.ts";
 import {dirname,join} from "node:path";
 import {lstatSync,mkdirSync} from "node:fs";
 import {repositoryCacheBudgetV1,type RepositoryCachePartitionIdV1} from "../🟦️.ts";
-import {openNativePlatformStorageV1,requireNativePlatformImageCloseV1,withNativePlatformChildStorageV1,withNativePlatformMaintenanceChildStorageV1,withNativePlatformDisposableChildStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1,type NativeDisposableImageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {openNativePlatformStorageV1,requireNativePlatformImageCloseV1,withNativePlatformChildStorageV1,withNativePlatformFundedChildStorageV1,retireNativePlatformFundedChildStorageV1,withNativePlatformMaintenanceChildStorageV1,withNativePlatformDisposableChildStorageV1,requireNativeStoragePathV1,type NativeImageStorageV1,type NativeDisposableImageV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,retireResourceLeasesV1,retireResourceQueueClaimsV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import parentSchema from"./📂️parents/🧬️schema/🔣️.json"with{type:"json"};
+import type{NativeStorageChildFundingV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌱️birth/🟦️.ts";
+import type{NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{ScriptInvocation as FundedScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 📦️ Names the closed authored generated-storage partitions. */
 export type {RepositoryCachePartitionIdV1} from "../🟦️.ts";
@@ -35,6 +38,7 @@ function prepareRepositoryCacheParentsV1(workspace:string,control:ResourceLeaseC
  requireIssuedResourceControlRefinementV1(control,control);
 }
 
+/** 🧽️ Opens the lease image and opportunistically retires idle leases only when no other invocation holds it, because skipped retirement loses nothing. */
 async function openRepositoryLeasePartitionV1(workspace:string,control:ResourceLeaseControl):Promise<NativeImageStorageV1>{
  prepareRepositoryCacheParentsV1(workspace,control);
  const budget=repositoryCacheBudgetV1(workspace),partition=budget.partitions.leases,open=()=>openNativePlatformStorageV1({directory:partition.directory,leaseDirectory:budget.controlDirectory,filesystemBytes:partition.filesystemBytes,maximumPhysicalBytes:partition.capacityBytes,control,maximumLeaseDatabaseBytes:16384});let image=await open();
@@ -63,6 +67,10 @@ export function withRepositoryCachePartitionArtifactCacheV1<T>(partition:NativeI
 
 /** 🪺️ Enrolls a child under the privately retained actual partition image. */
 export function withRepositoryCachePartitionChildStorageV1<T>(partition:NativeImageStorageV1,input:Parameters<typeof openNativePlatformStorageV1>[0],body:(child:NativeImageStorageV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>{const options=Object.freeze({...input});return withRepositoryPartitionOperationV1(partition,options.control,(image,control)=>withNativePlatformChildStorageV1(image,Object.freeze({...options,control}),body));}
+/** 🏦️ Enrolls a parent-funded child, whose charge persists in the retained partition journal, under the privately retained actual partition image. */
+export function withRepositoryCachePartitionFundedChildStorageV1<T>(partition:NativeImageStorageV1,input:Parameters<typeof openNativePlatformStorageV1>[0],funding:NativeStorageChildFundingV1,body:(child:NativeImageStorageV1,reservation:NativeStorageReservationV1,actualControl:ResourceLeaseControl)=>Promise<T>):Promise<T>{const options=Object.freeze({...input});return withRepositoryPartitionOperationV1(partition,options.control,(image,control)=>withNativePlatformFundedChildStorageV1(image,Object.freeze({...options,control}),funding,body));}
+/** ♻️ Retires one persisted parent-funded child and discharges its charge under the privately retained actual partition image. */
+export function retireRepositoryCachePartitionFundedChildStorageV1(partition:NativeImageStorageV1,reservation:NativeStorageReservationV1,reservationControl:ResourceLeaseControl,control:ResourceLeaseControl,invocation:FundedScriptInvocation):Promise<void>{return withRepositoryPartitionOperationV1(partition,control,(image,actual)=>retireNativePlatformFundedChildStorageV1(image,reservation,reservationControl,actual,invocation));}
 /** 🧺️ Retains the exact private partition through a pre-funded disposable child and terminal settlement. */
 export function withRepositoryCachePartitionDisposableChildStorageV1<T>(partition:NativeImageStorageV1,input:Parameters<typeof openNativePlatformStorageV1>[0],body:(child:NativeImageStorageV1,actualControl:ResourceLeaseControl,owner:NativeDisposableImageV1)=>Promise<T>):Promise<T>{const options=Object.freeze({...input});return withRepositoryPartitionOperationV1(partition,options.control,(image,control)=>withNativePlatformDisposableChildStorageV1(image,Object.freeze({...options,control}),body));}
 /** 🏛️ Carries the exact concrete maintenance custody through the private partition owner. */

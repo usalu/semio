@@ -1,10 +1,12 @@
 //! 🧱️ Walls, curtain walls and the openings they host in the plan: poché with opening gaps, layer lines, door and window symbols.
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, PlanRole as Stroke, PlanShape};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, ModelSnapshot, OpeningKind, Phase, Point2, Wall};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, PlanRole as Stroke, PlanShape};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, ModelSnapshot, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, Phase, Point2};
 use semio_framework_geometry::bulge::{band_loop, BulgeSeg};
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;
@@ -146,7 +148,7 @@ fn draw_wall(sheet: &mut Sheet, cx: &Context<'_>, id: &str, wall: &Wall) {
         return;
     }
     let (left, right) = (layout.offset_left, layout.offset_right);
-    let axis = seg(&wall.axis);
+    let axis = segment_of(&wall.axis);
     let cutting = classify(layout.base_z, layout.top_z, cx.cut);
     let openings = placed_openings(cx, id, layout.base_z);
     let demolished = wall.phase == Phase::Demolished;
@@ -170,7 +172,7 @@ fn draw_wall(sheet: &mut Sheet, cx: &Context<'_>, id: &str, wall: &Wall) {
 fn draw_curtain(sheet: &mut Sheet, cx: &Context<'_>, id: &str, curtain: &CurtainWall) {
     let Some(layout) = cx.inputs.curtains.get(id).copied() else { return };
     let cutting = classify(layout.base_z, layout.top_z, cx.cut);
-    let axis = seg(&curtain.axis);
+    let axis = segment_of(&curtain.axis);
     sheet.segment(id, PlanKind::CurtainAxis, outline_style(cutting), &axis);
     if cutting == Cutting::Cut {
         let Some(kind) = cx.snapshot.curtain_wall_types.get(&curtain.curtain_wall_type) else { return };

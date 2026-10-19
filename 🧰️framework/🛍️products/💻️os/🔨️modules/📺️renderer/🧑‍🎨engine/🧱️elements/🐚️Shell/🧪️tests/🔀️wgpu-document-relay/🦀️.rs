@@ -260,5 +260,5 @@ fn the_footer_speaks_its_live_sync_pill_and_names_its_status_chips() {
     let roster = nodes.iter().find(|node| node.key == "s-presence-peers").expect("the roster chip is a named node");
     assert_eq!(roster.role, "status");
     assert!(!roster.focusable && !roster.actionable, "a status is read, never a tab stop");
-    assert_eq!(roster.label.as_deref(), Some(ui_wgpu::wgpu::presence_empty_label(Locale::En).as_str()));
+    assert_eq!(roster.label.as_deref(), Some(semio_framework_ui_wgpu_light::presence_bar::presence_empty_label(Locale::En).as_str()));
 }

@@ -1,14 +1,12 @@
 /** 🏗️ The catalog root script of the hub stdio package with its fresh root and cargo environment helpers. */
-import { withRequestedIssuedResourceControlV1, BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withRequestedIssuedResourceControlV1, BundleScript } from "@semio-tech/process/routing";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { devToolingEnv } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
-import { resolveWorkspaceBin } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { builtPluginModulesRootIn } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/♻️activation/🟦️.ts";
-import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { devToolingEnv, resolveWorkspaceBin, cargoTargetDirectory, cargoBuildDirectory } from "@semio-tech/process/execution";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
+import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "@semio-tech/framework-plugin/describe/component-receipt";
 import { CATALOG_DEADLINE_MS, COMPONENT_MANIFEST, COMPONENT_PACKAGE, DESCRIPTOR_PACK, IO_CHUNK_BYTES, PLUGIN_ID, WASM_OUT } from "../🧮️component-constants/🟦️.ts";
 import { assertControlled, catalogControlV1, componentPackageId, copyCatalogArtifact, pathIsWithin, publishCatalogCommitMarker, runControlled, verifyIndependentOracles, webSha256 } from "../🧾️catalog-artifact-io/🟦️.ts";
 
@@ -38,10 +36,10 @@ export function catalogCargoEnvironment(target: string, inherited: NodeJS.Proces
  * committed semantic descriptor and the `ComponentReceiptV1` binding the two — the release pass's own bytes, never a rebuild. */
 export class CatalogRootScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { CATALOG_COMMIT_MARKER_FILENAME } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts");
-    const { auditPluginCatalogSources } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🔎️source-audit/🟦️.ts");
-    const { createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts");
-    const { componentStageTargetV1 } = await import("../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
+    const { CATALOG_COMMIT_MARKER_FILENAME } = await import("@semio-tech/plugin-registry/catalog-verification");
+    const { auditPluginCatalogSources } = await import("@semio-tech/plugin-registry/catalog-verification/source-audit");
+    const { createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } = await import("@semio-tech/plugin-registry/catalog-verification/fresh-build-verifier");
+    const { componentStageTargetV1 } = await import("@semio-tech/framework-plugin/describe/component-stage");
     const option = (name: string): string | undefined => {
       const index = segments.indexOf(name);
       return index < 0 ? undefined : segments[index + 1];

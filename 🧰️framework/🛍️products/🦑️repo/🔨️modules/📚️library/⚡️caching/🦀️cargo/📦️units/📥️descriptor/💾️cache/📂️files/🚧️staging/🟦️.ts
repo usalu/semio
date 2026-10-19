@@ -5,9 +5,9 @@ import schema from"./🧬️schema/🔣️.json";
 import{requireRustUnitDescriptorCatalogWriterV3,type RustUnitDescriptorCatalogContextV2}from"../🗄️catalog/🟦️.ts";
 import{rustUnitDescriptorNodeArtifactV2,type RustUnitDescriptorNodeV2}from"../../../🕸️nodes/🟦️.ts";
 import{requireRustUnitDescriptorExclusiveV2}from"../../../🔒️namespace/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{withExactSourceReadBatchV1,readExactSourceFileV1}from"../../../../../../../🏗️build/📥️inputs/🧮️digest/📥️read/🟨️.mjs";
 
 export const rustUnitDescriptorStageProtocolV1=Object.freeze({...schema.definitions.Protocol.const});

@@ -35,7 +35,10 @@ use semio_framework_value::{DslValue, ToValue};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use store_sync::sync::ArtifactEvent;
-use ui_wgpu::wgpu::{ActionDescriptor, DragAxis, HitKind, HitTarget, InputState, PointerModifiers, Rect, Theme, TreeDragState, TreeDropPosition};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, PointerModifiers, TreeDragState, TreeDropPosition};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖐️pointer/⌨️keyboard-and-palette/🦀️.rs"]
 mod staged_pointer__keyboard_and_palette;

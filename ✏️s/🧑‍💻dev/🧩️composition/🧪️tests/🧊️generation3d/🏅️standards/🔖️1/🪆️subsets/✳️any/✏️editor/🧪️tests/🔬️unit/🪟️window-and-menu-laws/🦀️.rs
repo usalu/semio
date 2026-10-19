@@ -110,7 +110,7 @@ async fn a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_a
     let effects = app.pending_effects(Some(&preview_view)).await;
     let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
     assert_eq!(receipt.state.as_deref(), Some("finalized"), "the last replacing run finalizes with every earlier run's snapshots retired: {receipt:?}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -118,19 +118,13 @@ async fn undo_redo_round_trips_flow_graph_edits() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
     let before = context::snapshot(&app).host_snapshot.widgets.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
-        Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputNote".into(), x: None, y: None }),
-        |app| context::snapshot(&app).host_snapshot.widgets.len(),
-        before,
-        before + 1,
-    )
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Generation3dCommand::AddWidget(add_widget::AddWidget { neuron_kind: None, format: None, action: None, kind: "inputNote".into(), x: None, y: None }), |app| context::snapshot(&app).host_snapshot.widgets.len(), before, before + 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
     // 🧹️ `undo`/`redo` run a framework-RESERVED spawn job, and a fixture that ran one has to be
     // drained through the registered close ladder rather than the plain `close_step` loop the
     // fixture's own `Drop` runs — the same reason every `select_graph` test ends this way
     // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -177,7 +171,7 @@ async fn generation3d_interaction_selection_owns_its_persisted_history() {
     let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_3d_model::widget_id).expect("default fixture node").to_string();
     context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🗂️ With nothing selected the selection-conditioned rows stay folded away and the disclosure
@@ -192,7 +186,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget() {
     let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     assert!(!menu.is_empty(), "grouped disclosure menu should not be empty");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🕹️ The runtime funnels every right-click through `context_menu_with_request_context`, so a node
@@ -220,7 +214,7 @@ async fn context_menu_reads_the_framework_owned_graph_selection() {
         assert!(selected.iter().any(|candidate| candidate == id), "a live graph selection must offer {id}: {selected:?}");
     }
     assert!(selected.iter().any(|id| id.contains("delete")), "a live graph selection must offer the destructive delete row: {selected:?}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🕸️ A preview instance id (`{widget}@{channel}#{index}`) and a synapse id land in the node and edge
@@ -266,11 +260,11 @@ async fn context_menu_groups_are_taxonomy_categories() {
     assert!(!categories.is_empty(), "the menu is built out of taxonomy groups; none was emitted");
     for category in &categories {
         assert!(
-            semio_framework_ui::wgpu::ribbon_parent_label(category, false).is_some() && semio_framework_ui::wgpu::ribbon_parent_label(category, true).is_some(),
+            semio_framework_ui_declaration::layout::ribbon_parent_label(category, false).is_some() && semio_framework_ui_declaration::layout::ribbon_parent_label(category, true).is_some(),
             "`menu.group.{category}` is outside the closed ribbon-parent taxonomy, so the shell renders its raw id to the user"
         );
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// 🌞️ Every window-chrome measure label this app paints is TRANSLATED, group headers and picker rows

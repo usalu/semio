@@ -10,14 +10,14 @@ fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
 /// and the same fraction sizes its fill.
 #[test]
 fn a_progress_bar_fills_the_fraction_the_shared_fixture_declares() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/📶️progress.json")).expect("📶️ the progress fixture parses");
     let theme = Theme::default();
     let bounds = Rect::new(10.0, 20.0, 300.0, 40.0);
     for case in fixture["cases"].as_array().expect("progress cases") {
         let component = &case["component"];
         let node = progress(component["completed"].as_f64().expect("completed"), component["total"].as_f64());
         let (track, fill) = progress_bar_rects(&node, bounds, &theme);
-        let height = crate::wgpu::chrome::SIZE_TINY;
+        let height = semio_framework_ui_wgpu_layout::chrome::SIZE_TINY;
         assert_eq!(track, [10.0, 20.0 + (40.0 - height) * 0.5, 300.0, height], "{}: the track spans the bounds, vertically centred", case["id"]);
         match case["fraction"].as_f64() {
             Some(fraction) => assert_eq!(fill, [track[0], track[1], 300.0 * fraction as f32, track[3]], "{}: determinate fill", case["id"]),
@@ -149,7 +149,7 @@ fn a_decoded_image_paints_a_raster_quad_instead_of_the_placeholder() {
 
 #[test]
 fn a_decoded_overlay_image_keeps_its_upload_identity_in_the_overlay_raster_lane() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
     let image = &fixture["image"];
     let width = u32::try_from(image["decodedWidth"].as_u64().expect("decoded width")).expect("decoded width fits");
     let height = u32::try_from(image["decodedHeight"].as_u64().expect("decoded height")).expect("decoded height fits");

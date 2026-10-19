@@ -4,7 +4,7 @@
 use semio_framework_plugin::app::EditorApp;
 use semio_framework_plugin::ArtifactEditor;
 #[allow(unused_imports)]
-use crate::editor::writer::base::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, writer_action, writer_chapter_payload, writer_io};
+use crate::editor::writer::editor_vocabulary::{WRITER_INTERACTION_AST, WRITER_INTERACTION_GRANULARITY, writer_action, writer_chapter_payload, writer_io};
 #[allow(unused_imports)]
 use crate::editor::writer::commands::set_camera;
 #[allow(unused_imports)]

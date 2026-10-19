@@ -31,9 +31,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 fn manifest() -> App {
                     App { definition: create_writer_app(), examples: Vec::new() }
                 }
-                async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel) -> Result<semio_framework_plugin::TextEditorScene, String> {
-                    let tree = app.render(WRITER_PLAY_BODY_MAIN, None, view).await.map_err(|error| format!("{error:?}"))?;
-                    let json = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+                async fn render(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::TextEditorScene, String> {
+                    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut *app, WRITER_PLAY_BODY_MAIN, view, cx).await.map_err(|error| format!("{error:?}"))?;
                     artifact_app_laws::decode_fixture_scene::<semio_framework_plugin::TextEditorScene>(&json).map_err(str::to_string)
                 }
                 fn scene_json(text: Option<&String>, field: &str) -> Result<serde_json::Value, String> {
@@ -50,8 +49,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 /// lane page therefore spun to the 30 s deadline ("Writer window operations did not
                 /// finish"). It also took ONE page per turn, where the helper drains every presented
                 /// page — so a turn publishing both a config and a transient reported only one of them.
-                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, receiver: u32) -> Result<(usize, usize), String> {
-                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|fault| format!("{fault:?}"))?;
+                async fn drain(app: &mut VcsArtifactApp<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, receiver: u32, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(usize, usize), String> {
+                    let receipt = artifact_app_laws::settle_registered_typed_operation(app, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|fault| format!("{fault:?}"))?;
                     let count = |wanted: semio_framework_plugin::app::TypedOperationResultLane| receipt.lanes.iter().filter(|lane| **lane == wanted).count();
                     Ok((count(semio_framework_plugin::app::TypedOperationResultLane::WindowConfig), count(semio_framework_plugin::app::TypedOperationResultLane::WindowTransient)))
                 }
@@ -62,8 +61,10 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: WriterMainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
+                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {
@@ -75,11 +76,11 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                         (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
                         (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                     }
-                    let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1).await?;
-                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                    let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1).await?;
+                    let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1, scope.cx()).await?;
+                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1, scope.cx()).await?;
                     config_receipts += next_config_receipts;
                     transient_receipts += next_transient_receipts;
                     if (config_receipts, transient_receipts) != (2, 3) {
@@ -108,8 +109,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     if right_transient.editor_selection != Some(crate::WriterEditorSelection { start: 3, end: 8, splice: 0 }) || right_transient.lint_generation != 0 || !right_transient.engagement_input.is_empty() {
                         return Err(format!("right Writer transient crossed partitions: {right_transient:?}"));
                     }
-                    let left_tree = render(&mut app, &left).await?;
-                    let right_tree = render(&mut app, &right).await?;
+                    let left_tree = render(&mut app, &left, scope.cx()).await?;
+                    let right_tree = render(&mut app, &right, scope.cx()).await?;
                     if scene_json(left_tree.camera_json.as_ref(), "cameraJson")? != serde_json::json!({ "x": 12.0, "y": -4.0, "zoom": 1.5 }) {
                         return Err("left Writer camera did not render".into());
                     }
@@ -130,8 +131,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
                     }
-                    let reopened_left = render(&mut reopened, &left).await?;
-                    let reopened_right = render(&mut reopened, &right).await?;
+                    let reopened_left = render(&mut reopened, &left, scope.cx()).await?;
+                    let reopened_right = render(&mut reopened, &right, scope.cx()).await?;
                     if scene_json(reopened_left.camera_json.as_ref(), "cameraJson")? != scene_json(left_tree.camera_json.as_ref(), "cameraJson")?
                         || scene_json(reopened_right.settings_json.as_ref(), "settingsJson")? != scene_json(right_tree.settings_json.as_ref(), "settingsJson")?
                     {
@@ -146,8 +147,8 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                 if let Err(error) = &outcome {
                     eprintln!("Writer exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(reopened.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-                artifact_app_laws::close_registered_fixture_app(app.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(reopened.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+                artifact_app_laws::close_registered_fixture_app(app.as_mut(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 outcome.expect("retained Writer exact-window ownership and persistence");
             })
         })

@@ -3,9 +3,9 @@ import{createHash}from"node:crypto";
 import{basename,dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{mkdtempSync,writeFileSync,rmSync,existsSync,readFileSync,lstatSync}from"node:fs";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,readIssuedScriptProcessEnvelopeV1,scriptInvocationEnvironment,checkScriptInvocation,withIssuedResourceOperationV1,type ScriptInvocation}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 import{repositoryCachePartitionRootV1}from"../../../../📦️budget/📥️opening/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../../../📦️budget/📥️opening/🏪️store/🟦️.ts";
 import{withRepositoryNxStorageV1,withOriginalNxFixedCacheV1}from"../../../🟦️.ts";
@@ -13,7 +13,7 @@ import*as leases from"../../../../../../../../../../../🔨️modules/🏃️pro
 import fixture from"../🔣️.json";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{requireNativeStoragePathV1}from"@semio-tech/process/artifacts/native-build/storage/platform/contract";
 export type OutputNegativeModeV1="actual"|"ledger-model";
 const ackPrefix="[DEBUG] Output negative receiver ",resultPrefix="[DEBUG] Output negative result ";
 function acknowledgement(original:ScriptInvocation,mode:OutputNegativeModeV1){const envelope=readIssuedScriptProcessEnvelopeV1(original),wire=scriptInvocationEnvironment(original,process.env).SEMIO_SCRIPT_PROCESS_INVOCATION!;return{version:1,purpose:corpus.purpose,mode,workspaceRoot:process.cwd(),toolingIdentity:process.env.SEMIO_NX_TOOLING_IDENTITY??null,implementationIdentity:process.env.SEMIO_NX_IMPLEMENTATION_IDENTITY??null,wireSha256:createHash("sha256").update(wire).digest("hex"),policy:envelope.policy,deadlineEpochMilliseconds:envelope.deadlineEpochMilliseconds,capabilities:envelope.capabilities};}

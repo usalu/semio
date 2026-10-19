@@ -1,6 +1,8 @@
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { core } from "@semio-tech/cad-js";
-import type { AecBuildingEnergyTestDependencies } from "../../🟦️.ts";
+import { core } from "@semio-tech/cad-js";
+import type { AecBuildingEnergyTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import * as vitestRuntime from "vitest";
+import { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID } from "../../🟦️.ts";
 
 type TestSource = { readonly url: string };
 
@@ -44,3 +46,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
 }
+
+const dependencies: AecBuildingEnergyTestDependencies = { AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, ENERGY_DEMAND_STAT_ID, core, solidRef: core.solidRef };
+await registerTests1(vitestRuntime, dependencies, { url: new URL("../../🟦️.ts", import.meta.url).href });

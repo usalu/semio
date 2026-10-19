@@ -589,8 +589,8 @@ fn admit_fixture<T:RetireOwned>(value:T)->Box<dyn ErasedSnapshotRetirement> {
     admit_owned_retirement(value,grant).unwrap_or_else(|(error,_)|panic!("fixture original owner admission: {error}")).0
 }
 fn admit_shared_fixture<T:RetireOwned+Sync>(value:Arc<T>,lease:bool)->Box<dyn ErasedSnapshotRetirement> {
-    let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:shared::shared_retirement_birth_bytes::<T>(),maximum_release_bytes:0,maximum_depth:1};
-    shared::admit_shared_retirement(value,grant,lease).unwrap_or_else(|(error,_)|panic!("fixture original lease admission: {error}")).0
+    let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:arc_custody::shared_retirement_birth_bytes::<T>(),maximum_release_bytes:0,maximum_depth:1};
+    arc_custody::admit_shared_retirement(value,grant,lease).unwrap_or_else(|(error,_)|panic!("fixture original lease admission: {error}")).0
 }
 fn drain(retirement:Box<dyn ErasedSnapshotRetirement>,items:usize,bytes:usize)->usize {
     let mut slot=Some(retirement);let(mut born,mut freed)=(0,0);
@@ -657,7 +657,7 @@ fn owned_retirement_rejects_false_terminal_and_preserves_shared_roots() {
     assert_eq!(shared.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
     assert_eq!(shared.close_step(grant).unwrap().progress(),Default::default());assert_eq!(Arc::strong_count(&root),2);drop(root);
-    assert_eq!(drain(shared,1,1),5+shared::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
+    assert_eq!(drain(shared,1,1),5+arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
     let mut value=admit_fixture("zero".to_string());for _ in 0..4{assert_eq!(value.close_step(grant).unwrap().progress(),Default::default());}
     assert!(!value.terminal_is_empty());assert_eq!(drain(value,1,2),4+owned_retirement_birth_bytes::<String>());
     struct Hostile {mode:Option<Arc<std::sync::atomic::AtomicU8>>}
@@ -697,9 +697,9 @@ fn shared_source_leases_release_all_orders_with_one_bounded_owner() {
             assert_eq!(retirement.close_step(RetainedCloneGrant::default()).unwrap().progress(),Default::default());assert!(!retirement.terminal_is_empty());
             assert_eq!(retirement.close_step(RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1}).unwrap().progress(),Default::default());
             let bytes=drain(retirement,law["items"].as_u64().unwrap()as usize,law["bytes"].as_u64().unwrap()as usize);
-            assert_eq!(bytes,shared::shared_retirement_birth_bytes::<String>()+if position==2{text.len()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size()}else{0},"cancel={canceled} order={order}");released+=bytes;
+            assert_eq!(bytes,arc_custody::shared_retirement_birth_bytes::<String>()+if position==2{text.len()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size()}else{0},"cancel={canceled} order={order}");released+=bytes;
         }
-        assert_eq!(released,text.len()+3*shared::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());assert!(leases.iter().all(Option::is_none));
+        assert_eq!(released,text.len()+3*arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());assert!(leases.iter().all(Option::is_none));
     }}
 }
 
@@ -722,7 +722,7 @@ fn native_encoding_capacity_admission_consumes_the_same_counter_owner(){
     let (mut control,error)=match control.admit_capacity(law["refusedBytes"].as_u64().unwrap()as usize,1,0){Err(rejection)=>rejection,Ok(_)=>panic!("existing ownership cannot fit refused capacity")};assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);assert_eq!(control.maximum_bytes(),prior["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
     let mut control=match control.admit_capacity(law["sourceBytes"].as_u64().unwrap()as usize,law["sourceMultiples"].as_u64().unwrap()as usize,law["scaffoldBytes"].as_u64().unwrap()as usize){Ok(control)=>control,Err(_)=>panic!("source policy capacity admitted")};assert_eq!(control.maximum_bytes(),law["maximumBytes"].as_u64().unwrap()as usize);control.checkpoint().unwrap();assert_eq!(event.get().unwrap(),before);
     let maximum=control.maximum_bytes();control.charge(maximum-control.owned_bytes()).unwrap();control.advance(prior["finalUnits"].as_u64().unwrap()as usize).unwrap();assert_eq!(control.charge(law["overrunBytes"].as_u64().unwrap()as usize).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);control.checkpoint().unwrap();let complete=event.get().unwrap();assert_eq!(complete.completed,prior["total"].as_u64().unwrap()as usize);assert_eq!(complete.owned_bytes,maximum);let receipt=control.pause().unwrap();
-    let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(admit_shared_fixture(source,true),1,3),law["sourceBytes"].as_u64().unwrap()as usize+shared::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
+    let canceled_event=std::cell::Cell::new(None);let mut canceled=|value|{assert_eq!(source.as_ptr(),pointer);canceled_event.set(Some(value));false};let mut control=NativeEncodeControl::resume(receipt,&mut canceled).unwrap();assert_eq!(control.step().unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(canceled_event.get().unwrap(),complete);drop(control);assert_eq!(source.as_ptr(),pointer);assert_eq!(drain(admit_shared_fixture(source,true),1,3),law["sourceBytes"].as_u64().unwrap()as usize+arc_custody::shared_retirement_birth_bytes::<String>()+std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<String>()).unwrap().0.pad_to_align().size());
 }
 
 #[test]

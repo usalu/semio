@@ -13,8 +13,9 @@ use dashboard_registry::{split_arguments, Entry, Parameter, ParameterKind, Regis
 use std::collections::HashMap;
 use std::sync::Arc;
 use ui_locale::Locale;
-use ui_tui::tui::event::{mods, Key, KeyEvent};
-use ui_tui::tui::widget::{TreeItem, TreeState, WidgetSignal, WidgetState};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent};
+use semio_framework_ui_tui_widgets::widget::{TreeItem, TreeState, WidgetState};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 
 // #region 🔖️Model
 /// 🪜️ How far the developer has come with one command.

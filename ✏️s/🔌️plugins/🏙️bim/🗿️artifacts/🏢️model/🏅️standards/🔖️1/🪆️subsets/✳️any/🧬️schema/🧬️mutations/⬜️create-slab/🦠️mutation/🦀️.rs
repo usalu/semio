@@ -1,6 +1,7 @@
 //! ⬜️ `create-slab` payload. Brings a new slab onto a storey; its boundary and holes are closed counter-clockwise loops, area and solid are inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Slab}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Slab};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateSlab {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateSlab
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSlab> + From<crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSlab> + From<semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slab", kind: "create-slab", record: "CreateSlab" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

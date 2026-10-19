@@ -2,7 +2,7 @@
  * 🧰️ Support of the battle tests: the real `semio` binary, an isolated fixture workspace with its own daemon,
  * bounded process pools and plain-socket HTTP, shared by the coverage, journey, load and smoke suites.
  *
- * @see ../../../🧫️fixtures/🧭️journeys/🏗️workspace/📋️project.json
+ * @see ../../🧫️fixtures/🧭️journeys/🏗️workspace/📋️project.json
  */
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
@@ -76,7 +76,7 @@ export class Workspace {
     const root = join(base, "workspace");
     mkdirSync(join(root, ".git"), { recursive: true });
     const [portA, portB] = [await freePort(), await freePort()];
-    const source = join(dashboard, "🧫️fixtures/🧭️journeys/🏗️workspace");
+    const source = join(dashboard, "🧪️tests/🧫️fixtures/🧭️journeys/🏗️workspace");
     for (const entry of readdirSync(source)) {
       const text = readFileSync(join(source, entry), "utf8").replaceAll(PORT_A, String(portA)).replaceAll(PORT_B, String(portB));
       writeFileSync(join(root, entry), text);

@@ -147,7 +147,7 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
 /// declares `mod+z` wins. A reserved chord would win here instead and the app's binding would die.
 #[test]
 fn the_undo_redo_chords_match_reacts_gate_and_stay_shadowable() {
-    let key = |character: char| ui_wgpu::wgpu::KeyAction::Char(character.to_string());
+    let key = |character: char| semio_framework_ui_wgpu_input::KeyAction::Char(character.to_string());
     let modifiers = |ctrl: bool, meta: bool, shift: bool, alt: bool| PointerModifiers { ctrl, meta, shift, alt };
 
     for (meta, ctrl) in [(true, false), (false, true)] {

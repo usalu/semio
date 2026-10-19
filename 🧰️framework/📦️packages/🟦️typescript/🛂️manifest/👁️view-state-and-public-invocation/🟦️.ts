@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework/modules/manifest/view-state-and-public-invocation` entry: explicit re-exports of the source module that owns each member. */
+export { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, publicInvocationStringPages, windowViewContext } from "../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";

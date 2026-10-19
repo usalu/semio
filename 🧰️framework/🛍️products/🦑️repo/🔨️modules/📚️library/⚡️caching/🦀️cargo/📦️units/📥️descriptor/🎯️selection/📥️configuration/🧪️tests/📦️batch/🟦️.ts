@@ -9,10 +9,10 @@ import*as owner from"../../🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment,type ScriptInvocation}from"../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import type{ResourceLeaseControl}from"@semio-tech/process/leases";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 const routing=fileURLToPath(new URL("../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url)),source=fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),policy=fileURLToPath(new URL("../../🧬️schema/🔣️.json",import.meta.url));
 async function child(program:string,original:ScriptInvocation,control:ResourceLeaseControl){const result=await captureOwnedCommandResultV1(process.execPath,["-e",program],process.cwd(),{control,env:{...scriptInvocationEnvironment(original,process.env),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0",NODE_DISABLE_COMPILE_CACHE:"1"},output:{maximumBytes:65536,maximumLines:128}});expect(result.signal).toBeNull();if(!result.stdout.trim())throw Error("Actual scoped child emitted no terminal DATA: "+result.stderr);return{status:result.status,stderr:result.stderr,data:JSON.parse(result.stdout.trim().split("\n").at(-1)??"")};}
 function setup(root:string):string{return`const root=${JSON.stringify(root)},corpus=${JSON.stringify(corpus)},{join,dirname,relative,sep}=await import('node:path'),fs=await import('node:fs/promises'),routing=await import(${JSON.stringify(routing)});await fs.rm(join(root,'rust-toolchain.toml'),{force:true});for(const row of[...corpus.files,...corpus.manifests]){await fs.mkdir(dirname(join(root,row.path)),{recursive:true});await fs.writeFile(join(root,row.path),row.source);}const scope={workspace:root,cargoWorkspace:root,cwd:root,definingInputs:['sealed/code.mjs','sealed/receipt.json']};`;}

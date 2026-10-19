@@ -1,6 +1,6 @@
 //! 🔗️ Original Store read guards retain exact generation and registry custody through funded closure.
 use super::{SnapshotRead,SnapshotReadLeaseRegistry,SnapshotReadLeaseRefusal,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,artifact_retirement_box_demands,artifact_retirement_box_close_step};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,shared::{SharedControlledRetirement,admit_shared_retirement}}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{SharedControlledRetirement,admit_shared_retirement}}};
 use std::{mem::ManuallyDrop,sync::Arc};
 
 struct SnapshotReadRetirement<T:RetireOwned+Sync> {

@@ -74,7 +74,7 @@ impl PaletteState {
 }
 
 /// 📐️ The overlay's size for `viewport`: capped width, up to ten result rows under the query row.
-pub(crate) fn palette_size(p: &PaletteState, viewport: Size) -> Size {
+pub fn palette_size(p: &PaletteState, viewport: Size) -> Size {
     let width = PALETTE_MAX_WIDTH.min(viewport.width.saturating_sub(4)).max(20.min(viewport.width));
     let rows = (p.visible.len() as u16).clamp(1, PALETTE_MAX_ROWS);
     let height = (rows + FRAME_ROWS).min(viewport.height.saturating_sub(2).max(4));
@@ -97,7 +97,7 @@ fn view_offset(p: &PaletteState, rows: usize) -> usize {
     offset
 }
 
-pub(crate) fn palette_on_key(p: &mut PaletteState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn palette_on_key(p: &mut PaletteState, ev: &KeyEvent) -> Option<WidgetSignal> {
     match ev.key {
         Key::Up => p.move_by(-1),
         Key::Down | Key::Tab => p.move_by(1),
@@ -135,7 +135,7 @@ fn row_at(p: &PaletteState, rect: Rect, pos: Pos) -> Option<usize> {
     (slot < p.visible.len()).then_some(slot)
 }
 
-pub(crate) fn palette_on_mouse(p: &mut PaletteState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn palette_on_mouse(p: &mut PaletteState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     match event.kind {
         MouseKind::Down(MouseButton::Left) => {
             let slot = row_at(p, rect, event.pos)?;
@@ -147,7 +147,7 @@ pub(crate) fn palette_on_mouse(p: &mut PaletteState, rect: Rect, event: &MouseEv
     }
 }
 
-pub(crate) fn palette_set_hover(p: &mut PaletteState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn palette_set_hover(p: &mut PaletteState, rect: Rect, pos: Option<Pos>) -> bool {
     let Some(slot) = pos.and_then(|pos| row_at(p, rect, pos)) else { return false };
     if p.selected != slot {
         p.selected = slot;
@@ -157,7 +157,7 @@ pub(crate) fn palette_set_hover(p: &mut PaletteState, rect: Rect, pos: Option<Po
 }
 
 /// ✏️ The caret sits after the query on the first content row.
-pub(crate) fn palette_cursor(p: &PaletteState, rect: Rect) -> Option<CursorSpec> {
+pub fn palette_cursor(p: &PaletteState, rect: Rect) -> Option<CursorSpec> {
     if rect.width < 6 || rect.height < 3 {
         return None;
     }
@@ -165,7 +165,7 @@ pub(crate) fn palette_cursor(p: &PaletteState, rect: Rect) -> Option<CursorSpec>
     Some(CursorSpec { pos: Pos { x, y: rect.y + 1 }, shape: CursorShape::Bar, blink: true })
 }
 
-pub(crate) fn paint_palette(p: &PaletteState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_palette(p: &PaletteState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     paint_frame(buf, rect, theme, Surface::Dialog, &p.title);
     if rect.width < 6 || rect.height < FRAME_ROWS {
         return;

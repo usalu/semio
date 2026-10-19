@@ -1,5 +1,5 @@
 import {test} from "bun:test";
-import{withBuildTestInvocationV1}from"../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {testNativeDependencies} from "../🟦️.ts";
 
@@ -17,8 +17,8 @@ import{resolve,join}from"node:path";
 import{createRequire}from"node:module";
 import{realpathSync}from"node:fs";
 import{relative,sep}from"node:path";
-import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️workspace/🟦️.ts";
-import{readNxAuthorizerSourceV1}from"../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import{nxAuthorizerWorkspaceCandidateV1,nxAuthorizerWorkspaceIndexV1,resolveNxAuthorizerWorkspaceV1}from"@semio-tech/nx-bootstrap-tools/authorizers/workspace";
+import{readNxAuthorizerSourceV1}from"@semio-tech/nx-bootstrap-tools/authorizers";
 import{pathToFileURL}from"node:url";
 import{nativeCallerPhaseV1}from"../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,readIssuedScriptProcessEnvelopeV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

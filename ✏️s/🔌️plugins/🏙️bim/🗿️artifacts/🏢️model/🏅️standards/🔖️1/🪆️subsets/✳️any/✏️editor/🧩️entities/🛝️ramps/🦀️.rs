@@ -1,12 +1,20 @@
 //! 🛝️ The ramp rows of the entity table: how a ramp reads off the snapshot and its inferred run, how an edited value becomes a `set-ramp` mutation, what a new ramp is, and the host rows of a railing
 //! (the picker of the stair, ramp or slab it follows, its side, its slab edge and its inset) that become a `set-railing` mutation.
 
-use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
-use crate::editor::bim::entities::{container, first, loop_text, number, parse_flag, parse_number, parse_point, parse_text, parse_top, partial, rename_element, zoning, Created, FieldRow, InferredRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::RailingPatch}, snapshot::{HostSide, ModelSnapshot, Point2, RailingHost, Vertex}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{container, Created};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{first, loop_text, number, parse_flag, parse_number, parse_point, parse_text, parse_top, partial};
+use crate::editor::bim::entities::{rename_element, zoning};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, InferredRow};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_63::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::RailingPatch;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{HostSide, Point2, RailingHost, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_91::standards::v1::subsets::any::schema::mutations::set_ramp;
 
 /// 📏️ How far a new ramp stands from the previous ones of its storey, in metres.
 const ROW_PITCH: f64 = 2.0;
@@ -69,7 +77,7 @@ pub fn write_host(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<Mod
 
 /// 🧭️ The side of the host a railing stands on; refused for a railing without host.
 pub fn write_host_side(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    let side = crate::editor::bim::entities::variant(value, &[HostSide::Left, HostSide::Right])?;
+    let side = semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::variant(value, &[HostSide::Left, HostSide::Right])?;
     hosting(id, None, Some(RailingHost { side, ..host_of(snapshot, id)?.clone() }))
 }
 
@@ -100,7 +108,7 @@ pub static RAMP_FIELDS: &[FieldRow] = &[
     field!("thickness", field_thickness, Number, |s, id| s.ramps.get(id).map(|row| number(row.thickness)), parse_number => set_ramp::SetRamp),
     field!("material", field_material, Text, |s, id| s.ramps.get(id).map(|row| row.material.clone()), choices: zoning::material_choices, parse_text => set_ramp::SetRamp),
     field!("base_offset", field_base_offset, Number, |s, id| s.ramps.get(id).map(|row| number(row.base_offset)), parse_number => set_ramp::SetRamp),
-    field!("top", field_top, Text, |s, id| s.ramps.get(id).map(|row| crate::editor::bim::entities::top_text(&row.top)), parse_top => set_ramp::SetRamp),
+    field!("top", field_top, Text, |s, id| s.ramps.get(id).map(|row| semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::top_text(&row.top)), parse_top => set_ramp::SetRamp),
     field!("railing_left", field_rail_left, Text, |s, id| s.ramps.get(id).map(|row| row.railing_left.to_string()), parse_flag => set_ramp::SetRamp),
     field!("railing_right", field_rail_right, Text, |s, id| s.ramps.get(id).map(|row| row.railing_right.to_string()), parse_flag => set_ramp::SetRamp),
 ];
@@ -125,20 +133,20 @@ pub fn create_ramp(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str)
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     let row = snapshot.ramps.values().filter(|ramp| ramp.storey == storey).count() as f64 * ROW_PITCH;
     let vertex = |x: f64| Vertex { point: Point2 { x, y: row }, bulge: 0.0 };
-    Ok(ModelMutation::CreateRamp(crate::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp {
+    Ok(ModelMutation::CreateRamp(semio_s_artifact_bim_model_mut_any_136::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp {
         id: id.into(),
-        ramp: crate::standards::v1::subsets::any::schema::snapshot::Ramp {
+        ramp: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp {
             storey,
             path: vec![vertex(0.0), vertex(LENGTH)],
-            width: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_WIDTH,
-            landing_start: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
-            landing_end: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
-            landing_turn: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
-            max_slope: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_MAX_SLOPE,
-            thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_THICKNESS,
+            width: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_WIDTH,
+            landing_start: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_end: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_turn: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            max_slope: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_MAX_SLOPE,
+            thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_THICKNESS,
             material,
             base_offset: 0.0,
-            top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Unconnected { height: RISE },
+            top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Unconnected { height: RISE },
             railing_left: false,
             railing_right: false,
             name: name.into(),

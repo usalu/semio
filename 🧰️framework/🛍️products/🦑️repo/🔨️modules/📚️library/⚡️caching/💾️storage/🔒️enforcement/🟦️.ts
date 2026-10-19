@@ -1,5 +1,5 @@
 import {join,resolve} from "node:path";
-import {requireMaterializedPathV1} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {requireMaterializedPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import policy from "../../🔣️policy.json" with {type:"json"};
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};

@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/ShellHost` entry: explicit re-exports of the source module that owns each member. */
+export { DIRECTORY_COMMAND_RESULT_SLOTS, FrameworkOsShell, SetWindowIconContext, SetWindowTitleContext, TutorialRecorder, canonicalSurfaceId, directoryCommandFromAction, mintDirectoryCommandRequestId, reloadRetainsActiveApp, retainDirectoryCommandResult, shellActorId } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";
+export type { DirectoryCommandReceiptV1, DirectoryCommandResultSlotV1, FrameworkOsShellProps } from "../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx";

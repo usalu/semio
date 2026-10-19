@@ -71,3 +71,67 @@ Ticket created by hand: `ticket_open` over repo MCP returned a malformed result 
 - cc: framework batches 1–2 and root batch 1 green; semio-framework-ui all-features refused by the gate, blocking 257/549 root crates → uicarve (TOP).
 - Build CLI: ensureBuildEnvironmentV1 read-only inspect now uses a SHARED dependencies store (graph commands no longer refuse while cargo holds the image); removed my [DEBUG] in store/🟦️.ts.
 - Launched: uicarve, c6inf, c6fin, cg3 (bim unmirror), cls (ShardClient/Reservation), lex (layout-export), tst1 (course + library TS suites), tst2 (plugin/os/ui TS suites); bzl resumed (runtime phase).
+
+### 13:00
+- MANIFEST FREEZE: only deps may edit package.json and bun.lock until one green sync (any manifest change forces a ~20 min reinstall in every bun repo command).
+- DONE: gocanon (332 Go files → member dirs, canonical overlay for script.ts/test host), lex (layout export tests ported, gate 0.996 → 0.676), c6fin (11 → 62), c6inf (13 → 151), cls (ShardClient/Reservation redesigned; actor-transport 179/179), vtax (validateTaxonomy → 20 validators; 5,803-variant differential), bzl partial (tools setup bazel OK, readiness 18/18, closure cap 512 → 2048, 3 graph-load import fixes; dry-runs blocked by reinstall).
+- Graph load >1.6 h → gperf (critical).
+
+### 14:05
+- uicarve DONE: semio-framework-ui → 2 files + 32 tui/wgpu crates (≤ 0.892); cc resumed. cc so far: framework 34–35, root 63–67/69/71/73/75, teaching 147–148 green (~60 fixes); tco on test-companion privacy (batches 68/76).
+- tst1 DONE: quiz 254/254 vitest, quiz tsc 0; repo-lib tsc 180 → 5; checkQuizCatalog via the launcher. tst2 DONE: bun suites 1,064 → 1,261/1,465 green; 151 stale source-text laws → law1/law2.
+- `bun repo run` still blocked by nonwaiting maintenance (nx cache pool) → lq; graph load perf → gperf; deps: single manifest batch + one green sync.
+
+### 15:00
+- lq DONE: nonwaiting maintenance on ordinary commands → queued (30 min bound, cancel, progress). own DONE: attach `-owners on` (nested attach works); Nx pool still failed as an unfunded nested child → DECISION: Nx cache becomes a top-level partition (nxpart).
+- gperf DONE: inference records brotli plus shared observations; cold 4h+ (extrapolated) → 7–9 min; warm 70 s / 1–9 s; tail blocked by concurrent source edits (stale Store implementation) plus storage errors.
+- cg3 DONE (bim unmirror applied; generator 18 GB blowup fixed). lfix/lfix2 DONE (fixture API port for 35 plugins plus dev; puzzle BrowserCaller). law1 DONE (34 suites green; framework→repo exemptions reverted per ruling → inv executor).
+- NEW compile blocker: close_step API (213 plugin files grant-based, 75 Refused) → cstep.
+- Running: deps, cc, tco, law2, nxpart, inv, cstep.
+
+### 15:30
+- law2 DONE (40/63 green; repo scope 408/664 → repot executor). cstep DONE (159 files; 73 crates queued for cc; the wfc headless driver still uses the removed worker-session API = open design). inv DONE (framework→product imports 196 → 0 via a provider loader and ports; 2 laws need manifest edits → deps batch).
+- FOLLOW-UP: build-graph inputs of the 15 cache:true framework targets no longer include product provider code (stale-cache risk) → declare provider modules as inputs.
+- Weekly usage 54%: fleet held at ~7.
+
+### 16:45 (user: saturate)
+- nxpart DONE: Nx cache is the top-level partition `.cache/b/n`; namespaces are funded children; failed births detach and clean up.
+- My sync probe was terminated by deps starting `dependencies lock --all` (manifest batch in progress).
+- Launched 12: layering audit, census-7 audit, hdr4 (remaining near-gate designs), wfcj (wfc headless + job retained work), law3, law4, vit (vitest configs), pin (provider inputs in the build graph), tsc + tscp (typecheck sweeps), gofin (Go leftovers + exhaustive), sweep (external cache deletion root cause).
+
+### 18:30
+- DEPS GREEN at 18:21 (generation 4151d2262cb4a4e7a25a; 309 links; 124 undeclared deps added; warm sync ~16 min). Stale again at 19:01 (law4 exports edits) → STRICT FREEZE sent to all executors (package.json/bun.lock plus storage/revision modules). Coordinator runs lock → sync → show projects → tools setup nx (scratchpad seq.sh).
+- sweep DONE: clean protects native images and open-ticket 🗑️generated; the 02:08 image deletion cause is unproven (needs root fs_usage).
+- CLOSE-OUT TODO: delete `orig/` source snapshots and other copied sources from ticket tool folders (494 paths > Windows limit; AGENTS forbids source copies in tickets) after compile verification; delete all 🗑️generated folders; remove scratch node_modules copies.
+
+### 19:30
+- wfcj DONE (HeadlessCaller, max_step_micros budget restored, retained-work gate; default work_demands is now minimal). tscp DONE (11 fixes; batch-2 packages → deps). launch audit: 462 routes name projects not in manifests (likely graph-inferred -rs), 49 undeclared targets, seed and launch drifted → QUEUED: reconcile against the real graph after show projects.
+- deps resumed: batch 2 manifests → lock (lease-wait fix) → sync → show projects → tools setup nx.
+
+### 20:30
+- c7w DONE (census 7: 37 Rust + 4 TS split; jcoprobe bundles marked @generated) → FILE-LEVEL UNTANGLING COMPLETE (all hand-authored files < 1,000 lines except generated).
+- hdr4 DONE (7/8 crates ≤ 0.90; instance-app 0.950 accepted as ceiling pending a redesign); hdr4b removed its compat re-exports. tsc DONE (core configs 8 → 13/23 at zero errors). repot DONE (repo tests 2,284 → 2,488 pass; child-envelope defect fixed). wfcj2 DONE. lay0 DONE (violations 11,025 → 9,696).
+- deps: batch 2 synced, final sync running. cc: framework/root/teaching/ui-carve/cstep-framework green; batch 331 running.
+- Running: deps, cc, tco, law3, vit, gofin, repot2, tjcov, lay1, lay6, lay12.
+
+### 21:30
+- vit DONE (3 → 7/27 plain green, 11 with harness; Play maxRows 128 → 512 fixed). gofin DONE (+ real fix mutation, bundle node parity; Go short suites all green). lay6 DONE (OS cycles 129 → 2; 85 exports spec → deps batch 3). tco DONE (companions; 2 crates to confirm → cc). law3 DONE (21/25; Locale Default ruling → loc).
+- RULING: no Default for Locale/Terminology (no default language). Playwright chromium 1248 vs 1234 → deps checks whether tools setup owns the install.
+- NOTE for user: a peer staged deletions of the publication-owner and receipt-conflict laws (unknown origin); `zz-gocomp-stage` files are staged in the index.
+- Weekly 71%: stop launching at ~92%.
+
+### 22:00 (user: fully saturate, may hit the limit)
+- repot2 DONE (17 more suites green; router classifier fix; isolated-process laws). NOTE for user: 37 generated files and ~370 stale ticket copies are tracked in git (need `git rm --cached`, forbidden for agents).
+- Launched 12: lw1, lw2, lw4, lw5, lw7, lw8, lw10a, lw10b (layering WPs; exports specs → deps batch), spr, pfx, law5, osplay. Fleet ≈ 20.
+- 22:45 Relativized 13 bare imports that re-entered the CLI closure (leases retirement, graph inference, build-input ledger) after the lw10a/inference work.
+- 23:10 Root 📜️script.ts had 21 static imports of self-test modules moved by lay7 (breaks the repo MCP server, clean, etc.); re-pointed and verified with bun build (0 unresolved). LESSON: movers must grep the root 📜️script.ts too.
+- seed DONE: seed authored, launch.json generated plus a drift check; 1,122 dead entries removed (fold-log). Rule added to brief-executor.md.
+
+### 23:30
+- LAYERING TOTAL 11,025 → 5,469 (lay1: plugin cycles 92 → 0, no-core-path 0; lw1: plugins→framework 1,140 → 32; lw10b: repo 2,428 → 1,101; lay9: renderer cycles 203 → 0; lay6: os cycles 129 → 2; lw4 hub 713 → 563; lw5; lw7; lw8). The remainder is mostly exports → repoapi consolidated spec → deps batch 3.
+- osplay DONE (os dev 29 → 5 failing; Play green except http-cache-semantics; catalog audit ~4× faster).
+- Running: deps, cc, tjcov, lay12, lw2, repoapi, tsc2, gofin5, lw1b, scc.
+
+### 00:30 (10/19)
+- DONE: docs, memory notes refreshed, tclean (6.2 GB freed; long paths 416 → 0), tsc2, gofin4/5 (Go fully hermetic, all modules green), seed (launch.json generated), lw2 (333 → 61), scc (repo cycles 6 → 0), lay1.
+- Running: deps, cc, tjcov, lay12, repoapi, lw1b, qe2e, lw3, census-bun, gen, rmod, vcfg, wpath, gofin6, lw2b.

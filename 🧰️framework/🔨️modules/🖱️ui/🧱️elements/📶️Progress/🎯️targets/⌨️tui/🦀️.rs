@@ -42,7 +42,7 @@ impl ProgressState {
 }
 
 /// ⏱️ Advances the marker of an indeterminate bar; true when the frame changed and the widget must repaint.
-pub(crate) fn progress_tick(p: &mut ProgressState, now_ms: u64) -> bool {
+pub fn progress_tick(p: &mut ProgressState, now_ms: u64) -> bool {
     if p.value.is_some() {
         return false;
     }
@@ -54,7 +54,7 @@ fn percent(fraction: f32) -> u16 {
     (fraction * 100.0).round() as u16
 }
 
-pub(crate) fn paint_progress(p: &ProgressState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_progress(p: &ProgressState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

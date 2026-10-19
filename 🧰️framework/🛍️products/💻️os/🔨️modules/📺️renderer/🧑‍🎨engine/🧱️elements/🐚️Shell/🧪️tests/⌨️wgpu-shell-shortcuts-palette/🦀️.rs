@@ -16,7 +16,7 @@ use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefiniti
 //#region ⌨️ChordTable
 
 /// ⌨️ Parses one chord of the shared table into the key event this target would receive.
-fn chord_event(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
+fn chord_event(chord: &str) -> (semio_framework_ui_wgpu_input::KeyAction, PointerModifiers) {
     let mut modifiers = PointerModifiers::default();
     let mut key = "";
     for token in chord.split('+') {
@@ -29,15 +29,15 @@ fn chord_event(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
         }
     }
     let action = match key {
-        "enter" => ui_wgpu::wgpu::KeyAction::Enter,
-        "backspace" => ui_wgpu::wgpu::KeyAction::Backspace,
-        "escape" => ui_wgpu::wgpu::KeyAction::Escape,
-        "tab" => ui_wgpu::wgpu::KeyAction::Tab,
-        "up" | "arrowup" => ui_wgpu::wgpu::KeyAction::ArrowUp,
-        "down" | "arrowdown" => ui_wgpu::wgpu::KeyAction::ArrowDown,
-        "left" | "arrowleft" => ui_wgpu::wgpu::KeyAction::ArrowLeft,
-        "right" | "arrowright" => ui_wgpu::wgpu::KeyAction::ArrowRight,
-        other => ui_wgpu::wgpu::KeyAction::Char(other.to_string()),
+        "enter" => semio_framework_ui_wgpu_input::KeyAction::Enter,
+        "backspace" => semio_framework_ui_wgpu_input::KeyAction::Backspace,
+        "escape" => semio_framework_ui_wgpu_input::KeyAction::Escape,
+        "tab" => semio_framework_ui_wgpu_input::KeyAction::Tab,
+        "up" | "arrowup" => semio_framework_ui_wgpu_input::KeyAction::ArrowUp,
+        "down" | "arrowdown" => semio_framework_ui_wgpu_input::KeyAction::ArrowDown,
+        "left" | "arrowleft" => semio_framework_ui_wgpu_input::KeyAction::ArrowLeft,
+        "right" | "arrowright" => semio_framework_ui_wgpu_input::KeyAction::ArrowRight,
+        other => semio_framework_ui_wgpu_input::KeyAction::Char(other.to_string()),
     };
     (action, modifiers)
 }
@@ -132,7 +132,7 @@ fn a_focused_content_field_swallows_every_shell_chord() {
     let (action, modifiers) = chord_event("meta+b");
     PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
     assert!(!shell.dock.anchor_open(PanelAnchor::TopLeft), "a chord never fires while a content field has focus");
-    assert_eq!(shell_shortcut_for(&ui_wgpu::wgpu::KeyAction::Char("b".into()), &PointerModifiers::default()), None, "a bare `b` is ordinary text");
+    assert_eq!(shell_shortcut_for(&semio_framework_ui_wgpu_input::KeyAction::Char("b".into()), &PointerModifiers::default()), None, "a bare `b` is ordinary text");
 }
 
 //#endregion ⌨️ChordTable
@@ -504,7 +504,7 @@ fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
     assert_eq!(rows.len(), 1, "the query is reflected by the published row set: {rows:?}");
     assert_eq!(rows[0].key, fixture_staged_palette_id());
     assert_eq!(rows[0].label.as_deref(), Some("Set Theme…"), "the deterministic result is the staged command");
-    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("palette activation");
+    semio_framework_async::block_on(PointerCtx::of(&mut shell).handle_keyboard_async(semio_framework_ui_wgpu_input::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("palette activation");
     assert_eq!(shell.input.overlay_state, OverlayState::None);
     assert_eq!(input.focused_id, None, "closing the dialog retires textbox focus");
     assert!(shell.dock.anchor_open(PanelAnchor::BottomMiddle), "activation reaches the existing Command panel funnel");

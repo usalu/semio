@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[allow(unused_imports)]
 use crate::editor::sequence::terminology::SequenceLabels;
 #[allow(unused_imports)]
-use crate::editor::sequence::base::ui_label;
+use crate::editor::sequence::editor_vocabulary::ui_label;
 #[allow(unused_imports)]
 use crate::{SequenceHostSnapshot, SequenceStep};
 #[allow(unused_imports)]

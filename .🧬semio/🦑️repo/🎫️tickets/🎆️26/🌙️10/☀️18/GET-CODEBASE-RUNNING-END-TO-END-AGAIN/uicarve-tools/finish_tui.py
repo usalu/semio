@@ -4,7 +4,7 @@ import carve, rs, reg, crategen
 from carve import R, UI, FW, PKG, rd, wr, remove
 spec = carve.Spec('specs/tui.json')
 k = reg.next_route_index()
-FEATURES = {'terminal': ['native = ["dep:libc"]'], 'host': ['bindgen = ["dep:wasm-bindgen"]']}
+FEATURES = {'terminal': ['native = ["dep:libc"]'], 'host': ['bindgen = ["dep:wasm-bindgen"]'], 'unit-laws': ['native = ["semio-framework-ui-tui-terminal/native"]']}
 SPECIAL_BLOCKS = {
  'terminal': ['[target.\'cfg(all(unix, not(target_arch = "wasm32")))\'.dependencies]\nlibc = { version = "0.2.186", optional = true }'],
  'host': ['[target.\'cfg(all(target_arch = "wasm32", not(target_env = "p2")))\'.dependencies]\nwasm-bindgen = { version = "0.2.106", optional = true }'],

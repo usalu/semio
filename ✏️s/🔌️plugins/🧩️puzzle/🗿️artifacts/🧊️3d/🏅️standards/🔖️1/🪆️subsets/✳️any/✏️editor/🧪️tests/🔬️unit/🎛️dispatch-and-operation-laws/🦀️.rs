@@ -35,7 +35,8 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("dispatch setActiveExample through the migrated tool-job path");
     let mut ticks = 0usize;
     while ticks < 5_000 && (object_count(&app) == 0 || first_object_id(&app) == before_first_id) {
-        semio_s_plugin_puzzle_jobs::testing::maintain_items(&mut *app, 1_048_576, 1_048_576).expect("maintenance step drives the pending typed operation forward");
+        let (raw, cx) = app.parts();
+        semio_s_plugin_puzzle_jobs::testing::maintain_items(raw, 1_048_576, 1_048_576, cx).expect("maintenance step drives the pending typed operation forward");
         ticks += 1;
     }
     assert!(object_count(&app) > 0, "nakagin document did not land after {ticks} maintenance turns");

@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "checkout": {
     "root": "C:\\Users\\username\\source\\repos\\semio",
     "maxPathUnits": 259,
@@ -18,21 +18,122 @@
     }
   ],
   "components": [
-    { "name": "", "illegal": true },
-    { "name": ".", "illegal": false },
-    { "name": "..", "illegal": false },
-    { "name": " ", "illegal": true },
-    { "name": " leading", "illegal": true },
-    { "name": "trailing ", "illegal": true },
-    { "name": "trailing.", "illegal": true },
-    { "name": "name:part", "illegal": true },
-    { "name": "name\u0000part", "illegal": true },
-    { "name": "CON", "illegal": true },
-    { "name": "nul.txt", "illegal": true },
-    { "name": "COM1", "illegal": true },
-    { "name": "LPT9.log", "illegal": true },
-    { "name": "COM¹", "illegal": true },
-    { "name": "COM0", "illegal": false },
-    { "name": "ticket.md", "illegal": false }
-  ]
+    {
+      "name": "",
+      "illegal": true
+    },
+    {
+      "name": ".",
+      "illegal": false
+    },
+    {
+      "name": "..",
+      "illegal": false
+    },
+    {
+      "name": " ",
+      "illegal": true
+    },
+    {
+      "name": " leading",
+      "illegal": true
+    },
+    {
+      "name": "trailing ",
+      "illegal": true
+    },
+    {
+      "name": "trailing.",
+      "illegal": true
+    },
+    {
+      "name": "name:part",
+      "illegal": true
+    },
+    {
+      "name": "name\u0000part",
+      "illegal": true
+    },
+    {
+      "name": "CON",
+      "illegal": true
+    },
+    {
+      "name": "nul.txt",
+      "illegal": true
+    },
+    {
+      "name": "COM1",
+      "illegal": true
+    },
+    {
+      "name": "LPT9.log",
+      "illegal": true
+    },
+    {
+      "name": "COM¹",
+      "illegal": true
+    },
+    {
+      "name": "COM0",
+      "illegal": false
+    },
+    {
+      "name": "ticket.md",
+      "illegal": false
+    }
+  ],
+  "inventory": {
+    "gitignore": [
+      "ignored/",
+      "*.log"
+    ],
+    "tracked": [
+      "root.txt",
+      "deep/a/b/c/d/e/tracked-file-long-name.txt",
+      "deep/a/b/other.txt",
+      "wide/one.txt",
+      "wide/two.txt",
+      "wide/three.txt",
+      "gone/tracked-but-deleted-long-name-here.txt",
+      "tickets/T1/note.md",
+      "tickets/T1/tracked-ticket-file-long-name.md"
+    ],
+    "missing": [
+      "gone/tracked-but-deleted-long-name-here.txt"
+    ],
+    "untracked": [
+      "deep/a/b/c/d/e/untracked-long-name-x.txt",
+      "wide/four.txt",
+      "fresh/dir/new.txt",
+      "loose.txt",
+      "tickets/T1/untracked-ticket-file-long.md",
+      "tickets/T2/new/a.txt"
+    ],
+    "ignored": [
+      "ignored/x/y/very-long-ignored-file-name-zzzz.txt",
+      "debug.log",
+      "deep/a/debug.log"
+    ],
+    "nestedRepos": [
+      "vendor/nested"
+    ],
+    "checkout": {
+      "root": "C:\\c",
+      "maxPathUnits": 40,
+      "ticketRoot": "tickets"
+    },
+    "oversize": {
+      "all": [
+        "deep/a/b/c/d/e/tracked-file-long-name.txt",
+        "deep/a/b/c/d/e/untracked-long-name-x.txt",
+        "tickets/T1/tracked-ticket-file-long-name.md",
+        "tickets/T1/untracked-ticket-file-long.md"
+      ],
+      "ticket": [
+        "tickets/T1/tracked-ticket-file-long-name.md",
+        "tickets/T1/untracked-ticket-file-long.md"
+      ]
+    }
+  }
 }

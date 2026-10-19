@@ -24,35 +24,20 @@ pub mod standards {
                 }
                 #[path = "."]
                 pub mod schema {
-                    #[path = "."]
-                    pub mod authored {
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
-                        pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile;
-                    }
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
+                    
                     #[path = "."]
                     pub mod inferences {
                         #[path = "."]
                         pub mod view_linework {
-                            pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip;
-                            pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::cut;
-                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame;
                             #[path = "../../../🖼️view-linework/👁️hidden-lines/🦀️.rs"]
                             pub mod hidden_lines;
                         }
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels;
-                        pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout;
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout;
-                        pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames;
-                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs;
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs;
                         #[path = "."]
                         pub mod spaces {
                             #[path = "../../🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }
-                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families;
                         #[path = "."]
                         pub mod bodies {
                             #[path = "../../../📦️bodies/🦀️.rs"]
@@ -73,7 +58,6 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod element_solids {
-                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::*;
                             #[path = "."]
                             pub mod walls {
                                 #[path = "../../../🧊️element-solids/🧱️walls/🦀️.rs"]
@@ -86,16 +70,12 @@ pub mod standards {
                                 mod component;
                                 pub use component::*;
                             }
-                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit;
-                            pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns;
                             #[path = "."]
                             pub mod beams {
                                 #[path = "../../../🧊️element-solids/➖️beams/🦀️.rs"]
                                 mod component;
                                 pub use component::*;
                             }
-                            pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs;
-                            pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
                             #[path = "."]
                             pub mod railings {
                                 #[path = "../../../🧊️element-solids/🛤️railings/🦀️.rs"]
@@ -104,8 +84,6 @@ pub mod standards {
                             }
                             #[path = "."]
                             pub mod ramps {
-                                pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::*;
-                                pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps::*;
                                 #[cfg(test)]
                                 #[path = "../../../🧊️element-solids/🛝️ramps/🧪️tests/🔬️unit/🦀️.rs"]
                                 pub mod tests;

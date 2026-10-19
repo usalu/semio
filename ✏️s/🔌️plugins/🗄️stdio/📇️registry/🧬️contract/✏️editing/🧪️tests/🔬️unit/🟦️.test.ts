@@ -5,7 +5,7 @@ import Ajv2020 from "ajv/dist/2020";
 import { createHash } from "node:crypto";
 import { snapshotEditSource, snapshotFromEditSource, applySnapshotEdit, SnapshotEditError, type SnapshotEditCodec, type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 const retainedNativeFixture = await Bun.file(new URL("../🧫️fixtures/🧵️retained-native/🔣️.json", import.meta.url)).json() as {
   routeCases: { id: string; mutation: number; recognized: boolean; primaryAccepts: boolean; expected: "primary" | "fallback" | "refused" }[];
@@ -185,7 +185,7 @@ test("original editor preparation preserves canonical refusal receipts and origi
   const {Database}=await import("bun:sqlite");const db=new Database(":memory:");const valid=new Ajv2020({strict:true}).compile(schema);
   try{for(const wire of law.wireCases){expect(valid(wire)).toBe(true);const error=new ValueError(wire.kind,wire.message).withRetainedProgress(wire.retainedProgress);expect(error.under("preparation").retainedProgress).toBe(error.retainedProgress);const oracle=db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(error.kind,error.message,JSON.stringify(error.retainedProgress)) as {wire:string};expect(JSON.parse(oracle.wire)).toEqual(wire);expect(valid({...wire,retainedProgress:{...wire.retainedProgress,copiedBytes:-1}})).toBe(false);}}
   finally{db.close();}
-  for(const path of law.producerPaths){const source=await Bun.file(new URL(path,root)).text();const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toMatch(/\*?self\.(?:owners\.)?mutation = Some\(mutation\)|self\.owners\.mutation\.as_ref\(\)/u);}
+  for(const path of law.producerPaths){const source=readModuleTreeSource(new URL(path,root));const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toMatch(/\*?self\.(?:owners\.)?mutation = Some\(mutation\)|self\.owners\.mutation\.as_ref\(\)/u);}
 });
 
 test("original editor preparation closes retained refusal owners under independent policy",async()=>{
@@ -197,7 +197,7 @@ test("original editor preparation closes retained refusal owners under independe
   for(const axis of Object.keys(law.closeGrant))expect(valid({...law.closeGrant,[axis]:-1})).toBe(false);
   const owners=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/🦀️.rs")).text();
   for(const path of law.producerPaths){
-    const source=await Bun.file(new URL(path,root)).text();
+    const source=readModuleTreeSource(new URL(path,root));
     const start=source.indexOf("fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant)");
     const end=source.indexOf("fn terminal_is_empty",start);const actual=source.slice(start,end);
     expect(actual).toContain("Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>");

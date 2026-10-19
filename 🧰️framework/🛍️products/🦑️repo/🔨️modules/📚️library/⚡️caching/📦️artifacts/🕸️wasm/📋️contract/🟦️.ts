@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import {isAbsolute,join,resolve,relative} from "node:path";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {type RepositoryArtifactRequestV1} from "../../👓️reading/📋️contract/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../../💾️storage/🧬️schema/🔣️.json" with {type:"json"};

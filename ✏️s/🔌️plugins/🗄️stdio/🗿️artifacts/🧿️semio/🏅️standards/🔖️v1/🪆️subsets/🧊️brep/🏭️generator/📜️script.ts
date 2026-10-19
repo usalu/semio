@@ -33,52 +33,14 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { Validator } from "jsonschema";
+import { unwrap, call } from "./📇️recipe-contract/🟦️.ts";
+import type { Recipe, Kernel } from "./📇️recipe-contract/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
-/** 👪️ The fixture families the corpus is sharded and reported by. */
-export type Family = "topology-build" | "topology-remove" | "geometry-replace" | "move-vertex" | "booleans";
-
-/** 🧬️ The 13-verb vocabulary this subset's `🧬️schema/🧬️mutations/🦀️.rs` dispatches — one kind per recipe. */
-export type MutationKind =
-  | "create-vertex"
-  | "delete-vertex"
-  | "create-edge"
-  | "delete-edge"
-  | "create-face"
-  | "delete-face"
-  | "create-shell"
-  | "delete-shell"
-  | "create-solid"
-  | "delete-solid"
-  | "replace-curve"
-  | "replace-surface"
-  | "move-vertex";
-
-/**
- * 🧪️ One corpus entry. `outcome` is the DECLARED semantic class: a fixture that accepts any non-crash
- * result measures nothing, and a kernel that merely fails to throw is not the same as a kernel that
- * accepted the edit, so every entry says which answer it expects rather than discovering it.
- *
- * `build` returns the BEFORE operand(s) and, where the edit is legal, the AFTER shape. A `result` of
- * `null` is itself a DECLARED, MEASURED fact for `outcome: "rejected"` — see `📓️` note on
- * `generateOne` for how a rejection is proven rather than asserted.
- */
-export type Recipe = Readonly<{
-  id: string;
-  family: Family;
-  kind: MutationKind;
-  outcome: "applied" | "rejected" | "disjoint" | "no-op" | "empty";
-  tolerance: string;
-  notes: string;
-  build: (b: Kernel) => { operands: { role: string; shape: unknown }[]; result: unknown | null; rejectionReason?: string };
-}>;
-
-export type Kernel = Record<string, (...args: never[]) => unknown>;
-
 const ENGINE_FAMILY = "opencascade";
 const ENGINE_VERSION = "8.0";
 const ORACLE = "brepjs-occt";
@@ -195,21 +157,6 @@ async function brep(): Promise<Kernel> {
   kernel = loaded;
   return loaded;
 }
-
-function unwrap(value: unknown, what: string): unknown {
-  if (value !== null && typeof value === "object" && "ok" in (value as Record<string, unknown>)) {
-    const result = value as { ok: boolean; value?: unknown; error?: unknown };
-    if (!result.ok) throw new Error(`${what}: ${JSON.stringify(result.error)}`);
-    return result.value;
-  }
-  return value;
-}
-
-/** 📐️ `box(dx,dy,dz)` sits CORNER-at-origin; `cylinder(r,h)` sits AXIS-at-origin extending +z;
- * `sphere(r)`/`cone` centre-or-base-at `at`; `rotate(shape, angleDegrees, {at, axis})` takes ONE
- * options object. Every one of these was MEASURED against the installed `brepjs@18.119.8`, not
- * assumed from documentation. */
-export const call = (b: Kernel, name: string, ...args: unknown[]): unknown => unwrap((b[name] as unknown as (...a: unknown[]) => unknown)(...args), name);
 
 /** 🧯️Calls `fn`, swallowing a kernel throw or a `Result` error into `null` — used for measurements
  * that are legitimately inapplicable to a given shape kind (e.g. `measureVolume` on an open shell)
@@ -785,7 +732,7 @@ function validateToleranceContract(): number {
 function carrier(): number {
   const build = spawnSync("cargo", ["build", "--release", "--offline", "--manifest-path", join(import.meta.dir, "🧩️json", "📦️packages", "🦀️rust", "Cargo.toml")], { stdio: "inherit" });
   if (build.status !== 0) return build.status ?? 1;
-  return spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
+  return spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(import.meta.dir, "..", "🧪️tests/🧫️fixtures")], { stdio: "inherit" }).status ?? 1;
 }
 //#endregion 🧩️Carrier
 

@@ -69,6 +69,11 @@
     "./vite-plugins": "./🔌️vite-plugins/🟦️.ts",
     "./boot-query": "./🔗️boot-query/🟦️.ts",
     "./distribution/components/testing/production-browser-artifacts": "./🚚️distribution/🔌️components/🧪️testing/🌐️production-browser-artifacts/🟦️.ts",
-    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts",
+    "./host-ports": "./🪝️host-ports/🟦️.ts",
+    "./vite-plugins/agent-bridge-rendezvous": "./🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts",
+    "./vite-plugins/backbone-vite-plugin": "./🔌️vite-plugins/🧱️backbone-vite-plugin/🟦️.ts",
+    "./vite-plugins/source-freshness": "./🔌️vite-plugins/🔖️source-freshness/🟦️.ts",
+    "./vite-plugins/stream-mux-server": "./🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts"
   }
 }

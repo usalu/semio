@@ -1,5 +1,5 @@
 /** 🔌️ The static serve guards among the dev server's own Vite plugins: the descriptor route guard, the service worker scope and the local hub session endpoint. The backbone, blob, activation, source freshness, agent bridge and credential plugins live in the sibling folders, kept apart from `📜️script.ts`'s task router so `⚙️vite.config.ts` can mount them without pulling the repository library's discovery walk into Vite's config bundle. */
-import {VITE_RUNTIME_CHANNELS_ENV_V1,readViteRuntimeChannelsV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📥️environment/🏃️runtime/🟦️.ts";
+import { VITE_RUNTIME_CHANNELS_ENV_V1, readViteRuntimeChannelsV1 } from "@semio-tech/repo-lib/dev";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {readDevLocalHubProxyV1,requestDevLocalHubProxyV1,devLocalHubSessionPolicyV1} from "../🚀️local-hub/🎫️session/📋️data/🟦️.ts";

@@ -1,6 +1,6 @@
 //! 🧪️ Original boxed payloads and refusing issuers preserve actual allocator custody.
 use super::*;
-use crate::{observe_retirement_allocations,retirement::{controlled::ControlledRetirement,admit_owned_retirement,owned_retirement_birth_bytes,shared::arc_bytes},FactoryPayloadRetirement,retained_clone::RetainedCloneStep};
+use crate::{observe_retirement_allocations,retirement::{controlled::ControlledRetirement,admit_owned_retirement,owned_retirement_birth_bytes,arc_custody::arc_bytes},FactoryPayloadRetirement,retained_clone::RetainedCloneStep};
 use std::sync::atomic::{AtomicBool,Ordering};
 struct Issuer{refuse:AtomicBool}
 impl FactoryPayloadRetirement for Issuer{

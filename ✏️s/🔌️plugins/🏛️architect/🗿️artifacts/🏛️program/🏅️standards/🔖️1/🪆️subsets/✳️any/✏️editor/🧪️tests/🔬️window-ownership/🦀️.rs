@@ -293,10 +293,10 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
 
                 type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
 
-                async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>) -> Result<TypedOperationFixtureReceipt, String> {
+                async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 93, view_state: view.cloned(), ..artifact_app_laws::meta("architect-window-ownership") };
-                    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
-                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))
+                    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                    artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
                 }
 
                 async fn register_config(app: &mut ArchitectApp, view: &ViewModel) -> Result<ArchitectRegisterWindowConfig, String> {
@@ -327,9 +327,8 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                         .ok_or_else(|| "missing Architect Report window config".into())
                 }
 
-                async fn render(app: &mut ArchitectApp, body_key: &str, view: &ViewModel) -> Result<String, String> {
-                    let tree = app.render(body_key, None, view).await.map_err(|error| format!("{error:?}"))?;
-                    artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)
+                async fn render(app: &mut ArchitectApp, body_key: &str, view: &ViewModel, cx: &mut semio_framework_job::StepContext<'_>) -> Result<String, String> {
+                    artifact_app_laws::render_registered_fixture_app(app, body_key, view, cx).await.map_err(|error| format!("{error:?}"))
                 }
 
                 let manifest = || App { definition: create_architect_app(), examples: Vec::new() };
@@ -357,23 +356,22 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 let graph_right = all.for_window_instance("architect-graph-right").expect("right Graph");
                 let report_left = all.for_window_instance("architect-report-left").expect("left Report");
                 let report_right = all.for_window_instance("architect-report-right").expect("right Report");
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                let mut scope = artifact_app_laws::OriginalFixtureScope::admit();
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 app.bind_instance_id(93).await;
                 let outcome: Result<(), String> = async {
                     let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                     let app_config_before = app.config_pack().await.map_err(|error| format!("{error:?}"))?;
-                    let register_receipt = dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "requirements".into() }), Some(&register_left)).await?;
+                    let register_receipt = dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "requirements".into() }), Some(&register_left), scope.cx()).await?;
                     let adjacency_receipt = dispatch(
                         &mut app,
                         ArchitectCommand::SetAdjacencyFilter(set_adjacency_filter::SetAdjacencyFilter { kind: Some("preferred".into()) }),
-                        Some(&adjacency_left),
-                    )
+                        Some(&adjacency_left), scope.cx())
                     .await?;
                     let graph_receipt = dispatch(
                         &mut app,
                         ArchitectCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 } }),
-                        Some(&graph_left),
-                    )
+                        Some(&graph_left), scope.cx())
                     .await?;
                     for receipt in [&register_receipt, &adjacency_receipt, &graph_receipt] {
                         if receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count() != 1 {
@@ -394,10 +392,10 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                         return Err("Architect exact window commands changed document bytes".into());
                     }
 
-                    let rendered_register = render(&mut app, crate::editor::architect::modes::edit::windows::register::ARCHITECT_BODY_REGISTER, &register_left).await?;
-                    let rendered_adjacency = render(&mut app, adjacency::ARCHITECT_BODY_ADJACENCY, &adjacency_left).await?;
-                    let rendered_graph = render(&mut app, graph::ARCHITECT_BODY_GRAPH, &graph_left).await?;
-                    let rendered_report = render(&mut app, report::ARCHITECT_BODY_REPORT, &report_left).await?;
+                    let rendered_register = render(&mut app, crate::editor::architect::modes::edit::windows::register::ARCHITECT_BODY_REGISTER, &register_left, scope.cx()).await?;
+                    let rendered_adjacency = render(&mut app, adjacency::ARCHITECT_BODY_ADJACENCY, &adjacency_left, scope.cx()).await?;
+                    let rendered_graph = render(&mut app, graph::ARCHITECT_BODY_GRAPH, &graph_left, scope.cx()).await?;
+                    let rendered_report = render(&mut app, report::ARCHITECT_BODY_REPORT, &report_left, scope.cx()).await?;
                     if rendered_register.is_empty() || rendered_adjacency.is_empty() || rendered_graph.is_empty() || !rendered_report.contains("Generate a report in this window") {
                         return Err("Architect exact windows did not render their owned state".into());
                     }
@@ -407,7 +405,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     }
 
                     let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
-                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await);
+                    let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(94).await;
                     for pack in packs {
                         reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?;
@@ -420,7 +418,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     let restored_right_graph = graph_config(&mut reopened, &graph_right).await?;
                     let restored_left_report = report_config(&mut reopened, &report_left).await?;
                     let restored_right_report = report_config(&mut reopened, &report_right).await?;
-                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                    artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).map_err(|error| format!("{error:?}"))?;
                     if restored_left_register.active_register != "requirements"
                         || restored_right_register != ArchitectRegisterWindowConfig::default()
                         || restored_left_adjacency.adjacency_kind_filter != Some(crate::standards::v1::subsets::any::schema::registers::AdjacencyKind::Preferred)
@@ -445,7 +443,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                 if let Err(error) = &outcome {
                     eprintln!("Architect exact-window runtime failure before close: {error}");
                 }
-                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 outcome.expect("Architect exact-window ownership runtime law");
             }))
         })

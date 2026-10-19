@@ -1,5 +1,5 @@
 # import ArtifactRef from "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️.graphql"
-# import LinkPin from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
+# import LinkPin from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔗️.graphql"
 # import SemioKitPiece, SemioKitConnection from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🔗️.graphql"
 # import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"
 type CreateObject { child_id: String! target: ArtifactRef! at: Int }

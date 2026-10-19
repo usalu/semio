@@ -2,7 +2,7 @@
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::host::{with_host_from_snapshot, with_live_host_snapshot};
-use crate::editor::flow::base::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
+use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::FlowSnapshot;
@@ -18,7 +18,7 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 use semio_framework_os_kernel::Viewport2d;
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene};
 
 //#region 🔖️Constants
 pub const FLOW_PLAY_BODY_MAIN: &str = "flow.play.main";

@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 import{createIssuedResourceControlV1}from"../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import {completeCargoPreparationObservationV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
+import { completeCargoPreparationObservationV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 /** 📦️ semio Rust artifact package router. */
-import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { retainedExtrusionOracle } from "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { prepareSemioConversionDefinitionV1 } from "../../🧩️composition/🔗️conversions/🟦️.ts";
-import { runCargoCapabilityContributionChecks } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧪️tests/🟦️.ts";
+import { runCargoCapabilityContributionChecks } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { runSemioConversionDefinitionChecks } from "../../🧩️composition/🔗️conversions/🧪️tests/🟦️.ts";
 import {scriptInvocationBudget} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎛️execution/🟦️.ts";
@@ -41,7 +41,6 @@ const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/�
 runCmd(process.execPath,["test",path],{cwd:this.repoRoot});
 runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",path],{cwd:this.repoRoot});return;
 }if(segments[0]==="value-path"&&segments[1]==="source"){
-if(!existsSync(join(this.repoRoot,"node_modules/protobufjs/minimal.js"))){const{prepareJavascriptDependencies}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts"),{withJavascriptDependencyStorageV1}=await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts");await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cache:entry",0),(store,control)=>prepareJavascriptDependencies("sync",this.repoRoot,store,control));}
 const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path");
 runCmd(process.execPath,["test",join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});
 runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",join(path,"🟦️.ts"),join(path,"🧪️tests/🟦️.ts")],{cwd:this.repoRoot});return;
@@ -58,7 +57,7 @@ testSemioGeometryContract();
 const stdioSchemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
 runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.repoRoot });
 if (segments[1] === "native") {
-const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
+const { runCargo } = await import("../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts");
 for (const [crate, filter] of [["semio-s-artifact-stdio-semio-base", "stdio_document_contract"], ["semio-s-artifact-stdio-semio-object", ""], ["semio-s-artifact-stdio-semio-kit", ""]] as const) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", crate, "--lib", ...(filter ? [filter] : []), "--", "--nocapture"], this.repoRoot);
 }
 return;

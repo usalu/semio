@@ -1,5 +1,5 @@
 /** 🔤️ Controlled Unicode scalar key ordering matches native UTF-8 BTree ordering. */
-import {artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../🟦️.ts";
+import {artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../🚦️checkpoint/🟦️.ts";
 type Phase="projectSnapshot"|"reconstructSnapshot";
 /** 🧭️ Compare borrowed literal keys with known UTF-16 scanning progress. */
 export async function artifactSqliteCompareKeys(a:string,b:string,options:ArtifactSqliteOptions={},phase:Phase="projectSnapshot"):Promise<number>{

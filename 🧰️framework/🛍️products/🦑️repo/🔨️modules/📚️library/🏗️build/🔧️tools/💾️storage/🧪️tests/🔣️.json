@@ -2,31 +2,21 @@
   "version": 1,
   "cases": [
     {
-      "allocatedBytes": 939524096,
       "snapshotBytes": 0,
-      "expected": 1073741824,
-      "allocationUnitBytes": 4096
+      "allocationUnitBytes": 4096,
+      "expected": 1073741824
     },
     {
-      "allocatedBytes": 0,
-      "snapshotBytes": 0,
-      "expected": 2013265920,
-      "allocationUnitBytes": 4096
-    },
-    {
-      "allocatedBytes": 939524096,
       "snapshotBytes": 4097,
-      "expected": 1090527232,
-      "allocationUnitBytes": 4096
+      "allocationUnitBytes": 4096,
+      "expected": 1090527232
     },
     {
-      "allocatedBytes": 4096,
       "snapshotBytes": 8192,
-      "expected": 2030047232,
-      "allocationUnitBytes": 4096
+      "allocationUnitBytes": 4096,
+      "expected": 1090527232
     },
     {
-      "allocatedBytes": 939524096,
       "snapshotBytes": 1,
       "allocationUnitBytes": 65536,
       "expected": 1090584576
@@ -34,33 +24,28 @@
   ],
   "invalid": [
     {
-      "allocatedBytes": -1,
+      "allocatedBytes": 0,
       "snapshotBytes": 0,
       "allocationUnitBytes": 4096
     },
     {
-      "allocatedBytes": 0,
       "snapshotBytes": -1,
       "allocationUnitBytes": 4096
     },
     {
-      "allocatedBytes": 0,
       "snapshotBytes": 0.5,
       "allocationUnitBytes": 4096
     },
     {
-      "allocatedBytes": 0,
       "snapshotBytes": 536870913,
       "allocationUnitBytes": 4096
     },
     {
-      "allocatedBytes": 0,
       "snapshotBytes": 0,
       "foreign": true,
       "allocationUnitBytes": 4096
     },
     {
-      "allocatedBytes": 0,
       "snapshotBytes": 0,
       "allocationUnitBytes": 3
     }

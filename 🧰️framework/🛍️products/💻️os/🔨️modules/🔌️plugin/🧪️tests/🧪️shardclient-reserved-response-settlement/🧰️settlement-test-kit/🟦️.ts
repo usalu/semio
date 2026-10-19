@@ -1,6 +1,6 @@
 /** 🧰️ The shared shard client test kit: the destructured dependencies, the fake shard worker, the client harness and the resident, lifecycle and output fixtures of the settlement tests. */
 import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
-import { loadActorCompositionFixture } from "../../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { loadActorCompositionFixture } from "@semio-tech/framework-actor/testing/fixtures";
 import { loadRetainedResidentSlotFixture, loadRetainedResidentSlotSchema, loadRetainedResidentPayloadFixture, loadRetainedResidentPayloadSchema, loadRetainedResidentBuilderFixture, loadRetainedResidentBuilderSchema } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 /** 🕵️ A getter spy for bun, whose `spyOn` refuses accessor properties: counts reads, optionally replaces the read, restores the original descriptor. */
@@ -14,7 +14,7 @@ export const spyGetter = (prototype: object, name: string) => {
 /** ⏳️ Runs a rejection assertion once its promise has settled: vitest's `rejects` returns at once while bun's blocks the test until the promise settles, so a promise that only settles after a later statement (terminate, revoke, release) must be asserted after that statement under both runners. */
 export const afterSettle = (promise: Promise<unknown>, assertion: () => Promise<void>): Promise<void> => promise.then(() => undefined, () => undefined).then(assertion);
 export type TestSource = { readonly directory: string; readonly url: string };
-export type ShardClientInternals = { readonly state: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts").ShardClientState; readonly hub: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧩️wiring/🟦️.ts").ShardClientHub };
+export type ShardClientInternals = { readonly state: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🗃️state/🟦️.ts").ShardClientState; readonly hub: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientHub };
 /** 🔬 Reads the private hub and the single private state object of a shard client, which the settlement tests observe instead of the former private fields. */
 export const shardClientInternals = (client: unknown): ShardClientInternals => { const hub = Reflect.get(client as object, "hub") as ShardClientInternals["hub"]; return { hub, state: hub.state }; };
 
@@ -27,28 +27,28 @@ export type OwnedResidentAdmission = import("@semio-tech/value-ts/resident").Own
 export type OwnedResidentRecord = import("@semio-tech/value-ts/resident").OwnedResidentRecord;
 export type OwnedUiResidentInstance = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentInstance;
 export type OwnedUiResidentPayload = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayload;
-export type PendingEntry = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").PendingEntry;
+export type PendingEntry = import("@semio-tech/framework-actor/shard-client/activation").PendingEntry;
 export type ResidentStep = import("@semio-tech/value-ts/resident").ResidentStep;
-export type ShardBudget = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts").ShardBudget;
+export type ShardBudget = import("@semio-tech/framework-actor/shard-client/wire").ShardBudget;
 export type ShardClientOptions = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/⚙️options/🟦️.ts").ShardClientOptions;
-export type ShardEnvelope = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts").ShardEnvelope;
-export type ShardEventEnvelope = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts").ShardEventEnvelope;
-export type ShardFrame = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts").ShardFrame;
-export type ShardInstanceLifecycleLease = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").ShardInstanceLifecycleLease;
-export type ShardInstanceOwner = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").ShardInstanceOwner;
-export type ShardJspiScope = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts").ShardJspiScope;
-export type ShardReturnAdmission = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").ShardReturnAdmission;
-export type ShardSlot = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").ShardSlot;
-export type ShardWorkerLike = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts").ShardWorkerLike;
+export type ShardEnvelope = import("@semio-tech/framework-actor/shard-client/wire").ShardEnvelope;
+export type ShardEventEnvelope = import("@semio-tech/framework-actor/shard-client/wire").ShardEventEnvelope;
+export type ShardFrame = import("@semio-tech/framework-actor/shard-client/wire").ShardFrame;
+export type ShardInstanceLifecycleLease = import("@semio-tech/framework-actor/shard-client/activation").ShardInstanceLifecycleLease;
+export type ShardInstanceOwner = import("@semio-tech/framework-actor/shard-client/activation").ShardInstanceOwner;
+export type ShardJspiScope = import("@semio-tech/framework-actor/shard-client/heartbeat").ShardJspiScope;
+export type ShardReturnAdmission = import("@semio-tech/framework-actor/shard-client/activation").ShardReturnAdmission;
+export type ShardSlot = import("@semio-tech/framework-actor/shard-client/activation").ShardSlot;
+export type ShardWorkerLike = import("@semio-tech/framework-actor/shard-client/quota").ShardWorkerLike;
 export type UiResidentSourceProof = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts").OwnedUiResidentPayloadSourceRelease;
-export type ShardClient = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClient;
-export type OwnedNativeUiPatchAuthority = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts").OwnedNativeUiPatchAuthority;
-export type OwnedNativeUiPatchSubmissionReceipt = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts").OwnedNativeUiPatchSubmissionReceipt;
-export type OwnedShardReturn = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").OwnedShardReturn;
-export type OwnedShardReturnPage = import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").OwnedShardReturnPage;
-export type OwnedActorTurnOutput = import("../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutput;
-export type OwnedActorTurnOutputs = import("../../../../../../../🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts").OwnedActorTurnOutputs;
-export type OwnedKernelReturnContent = import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts").OwnedKernelReturnContent;
+export type ShardClient = import("@semio-tech/framework-actor/shard-client").ShardClient;
+export type OwnedNativeUiPatchAuthority = import("@semio-tech/framework-actor/shard-client/ui-patch").OwnedNativeUiPatchAuthority;
+export type OwnedNativeUiPatchSubmissionReceipt = import("@semio-tech/framework-actor/shard-client/ui-patch").OwnedNativeUiPatchSubmissionReceipt;
+export type OwnedShardReturn = import("@semio-tech/framework-actor/shard-client/activation").OwnedShardReturn;
+export type OwnedShardReturnPage = import("@semio-tech/framework-actor/shard-client/activation").OwnedShardReturnPage;
+export type OwnedActorTurnOutput = import("@semio-tech/framework-actor/activation/instance/output").OwnedActorTurnOutput;
+export type OwnedActorTurnOutputs = import("@semio-tech/framework-actor/activation/instance/output").OwnedActorTurnOutputs;
+export type OwnedKernelReturnContent = import("@semio-tech/framework-kernel/return/content/input").OwnedKernelReturnContent;
 export type OwnedResidentLedger = import("@semio-tech/value-ts/resident").OwnedResidentLedger;
 export type OwnedResidentRetirement = import("@semio-tech/value-ts/resident").OwnedResidentRetirement;
 export type OwnedUiInstance = import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts").OwnedUiInstance;
@@ -99,7 +99,7 @@ export function flushMicrotasks(): Promise<void> {
 }
 
 /** 🏭 Creates the shared shard client test kit of one registration from the injected dependencies. */
-export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1, testSource: TestSource) {
+export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("@semio-tech/framework-actor/shard-client").ShardClientTestDependenciesV1, testSource: TestSource) {
   const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, NO_RESIDENT_FAULT, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL, admitSegmentedDownloadChunk, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardMessageError, describeShardSilence, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, evaluateShardLiveness, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, settleFailedInstanceOpen, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
   const { describe, expect, it, vi } = vitest;
   function prepareResidentFixture(client: ShardClient, ledger: OwnedResidentLedger, bytes: readonly number[]): void {
@@ -158,7 +158,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
   }
   async function fixtureResidentPayload(scope: OwnedUiResidentInstance, ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>): Promise<OwnedUiResidentPayload> {
     const { OwnedUiResidentPayload } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts");
-    const { OwnedKernelReturnInputField } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input");
     const fixture = await loadRetainedResidentPayloadFixture(); const schema = await loadRetainedResidentPayloadSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 
     const before = ledger.usage.data; let payload: OwnedUiResidentPayload | null = null;
@@ -176,7 +176,7 @@ export function createShardClientSettlementTestKit(vitest: NonNullable<ImportMet
   }
   async function fixtureResidentBuilder(ledger: OwnedResidentLedger, field: NonNullable<OwnedKernelReturnContent["field"]>, resident: OwnedUiResidentPayload) {
     const { OwnedUiOperationPayloadBuilder } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts");
-    const { OwnedKernelReturnInputField } = await import("../../../../../../../🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts");
+    const { OwnedKernelReturnInputField } = await import("@semio-tech/framework-kernel/return/content/input");
     const fixture = await loadRetainedResidentBuilderFixture(); const schema = await loadRetainedResidentBuilderSchema();
     const { default: Ajv } = await import("ajv"); const { produce } = await import("immer"); 
     const before = ledger.usage.data;

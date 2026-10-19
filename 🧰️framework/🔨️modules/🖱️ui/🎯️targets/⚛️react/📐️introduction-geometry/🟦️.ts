@@ -1,7 +1,7 @@
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";
 import { useShellScopeOptional } from "../../../🧱️elements/🐚️ShellScope/🟦️.tsx";
 import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
-import type { IntroductionPlacement } from "@semio-tech/framework";
+import type { IntroductionPlacement } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { ephemeralMap } from "@semio-tech/framework/transient";
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };

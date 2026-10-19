@@ -17,10 +17,8 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use ui_wgpu::wgpu::{
-    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec2,
-    mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode,
-};
+use ui_scene::math::{mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken};
+use semio_framework_ui_raster_owner::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterProfile, SceneRasterWriteMode};
 
 #[path = "../🧊️renderer/🦴️glb-decode/🦀️.rs"]
 mod glb_decode;

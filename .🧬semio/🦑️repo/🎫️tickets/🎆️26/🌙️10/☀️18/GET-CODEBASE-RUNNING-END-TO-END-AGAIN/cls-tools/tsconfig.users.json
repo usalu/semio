@@ -1,0 +1,18 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "types": ["node"], "typeRoots": ["/Users/ueli/Documents/semio/node_modules/@types"] },
+  "include": [],
+  "exclude": [],
+  "files": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🌉️plugin-backbone-routing/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🧵️turn-scheduler/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎭️actor-transport/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🧬️codec/🧪️tests/🟦️.ts"
+  ]
+}

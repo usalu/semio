@@ -2,7 +2,7 @@ import {withRepositoryToolingStoreV1} from "../../📚️library/⚡️caching/�
 import {withRepositoryPublishedCargoExecutableV1} from "../../📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import {withResourceLeases,checkResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type CargoDependencyNetworkV1} from "./../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {type CargoDependencyNetworkV1} from "./../../📚️library/🏃️process/🦀️cargo/📥️dependencies/📋️contract/🟦️.ts";
 import {readBuildMode,type BuildMode} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {compilerAdmissionBudgetV1,type CompilerAdmissionControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {runOwnedCommand} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";

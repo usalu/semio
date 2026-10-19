@@ -18,7 +18,8 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { type Recipe, baseDoc, style, withBlocks, withStyles } from "../📜️script.ts";
+import { baseDoc, style, withBlocks, withStyles } from "../📇️document-model/🟦️.ts";
+import type { Recipe } from "../📇️document-model/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧪️Recipes

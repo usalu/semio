@@ -22,7 +22,7 @@ func TestCheckpointInAllAgentEvents(t *testing.T) {
 		t.Skip("skipping slow real-git-subprocess checkpoint test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
 	headCmd.Dir = tmpDir
@@ -88,7 +88,7 @@ func TestCheckpointInAllVersionEvents(t *testing.T) {
 		t.Skip("skipping slow real-git-subprocess checkpoint test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
 	headCmd.Dir = tmpDir
 	headOut, err := headCmd.Output()
@@ -137,7 +137,7 @@ func TestVersionHooksDoNotWriteSessionLogs(t *testing.T) {
 		t.Skip("skipping slow real-git-subprocess version hook test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
 	headCmd.Dir = tmpDir
@@ -182,7 +182,7 @@ func TestCheckpointInLoggedEventJSON(t *testing.T) {
 	}
 	tmpDir := initTestGitRepo(t, "main")
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 	headCmd := exec.Command("git", "rev-parse", "HEAD")
 	headCmd.Dir = tmpDir
 	headOut, err := headCmd.Output()
@@ -254,7 +254,7 @@ func TestEventIDsUseComposeRepoFormat(t *testing.T) {
 		t.Skip("skipping slow real-git-subprocess event id test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
-	SetRootDir(tmpDir)
+	bindRootForTest(t, tmpDir)
 
 	os.MkdirAll(filepath.Join(tmpDir, "src"), 0755)
 	os.WriteFile(filepath.Join(tmpDir, "src", "main.go"), []byte("package main"), 0644)

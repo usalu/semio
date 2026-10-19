@@ -1,18 +1,23 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::snapshot::{RiserKind, Stair, StringerKind};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{RiserKind, StringerKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
 use semio_framework_geometry::mesh::TriMesh;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{direction, point};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::direction;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairLanding, StairRun, StairWinder};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairLanding, StairRun, StairWinder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::StairFlight;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairFlight;
 #[allow(unused_imports)]
 use semio_framework_geometry::loops::Vertex;
 #[allow(unused_imports)]
@@ -25,16 +30,21 @@ use semio_framework_geometry::vector::cross;
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::{area_of, landing};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelInferenceSession, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StairPatch}, inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::stairs::{area_of, landing};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::stairs::{StairGeometry, stair_geometry, Flight, stringer_footprints, stringer_ignored, parts_of, dependency};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, ModelNode};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::StairPatch;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
@@ -45,7 +55,7 @@ fn geometry(snapshot: &ModelSnapshot, id: &str) -> StairGeometry {
     let levels = compute_storey_levels(snapshot);
     let stair = &snapshot.stairs[id];
     let target = match &stair.top {
-        crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Storey { storey, .. } => levels.get(storey),
+        semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Storey { storey, .. } => levels.get(storey),
         _ => None,
     };
     stair_geometry(stair, &levels[&stair.storey], target)
@@ -252,7 +262,7 @@ fn editing_the_construction_or_the_landing_of_a_stair_recomputes_it_and_equals_a
     session.update(&snapshot, &ModelDiff::default());
     let edits = [
         ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { nosing: Some(0.02), ..Default::default() })),
-        ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { stringer: Some(crate::standards::v1::subsets::any::schema::snapshot::StairStringer { kind: StringerKind::Mono, width: 0.1, depth: 0.2 }), ..Default::default() })),
+        ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { stringer: Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairStringer { kind: StringerKind::Mono, width: 0.1, depth: 0.2 }), ..Default::default() })),
         ModelDiff::stairs("st-l-left", Entry::Patched(StairPatch { landing_depth: Some(1.7), ..Default::default() })),
     ];
     let mut current = snapshot;

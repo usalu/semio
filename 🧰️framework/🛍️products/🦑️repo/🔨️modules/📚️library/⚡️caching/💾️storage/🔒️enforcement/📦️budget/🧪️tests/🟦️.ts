@@ -11,8 +11,8 @@ import {cleanRemovePath} from "../../../../../🧼️workspace-cleanup/🗑️re
 import {resolve,join} from "node:path";
 import {withRepositoryCacheStoreV1} from "../📥️opening/🏪️store/🟦️.ts";
 import {runProbe} from "../../../../../🏃️process/🔍️probe/🟦️.ts";
-import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {lstatSync,readdirSync} from "node:fs";
+import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
+import {lstatSync,readdirSync,readFileSync} from "node:fs";
 
 /** 🎚️ Keeps authored logical observation limits independent of every physical capacity charge. */
 test("closed repository publication logical observation policy leaves the physical ledger unchanged",()=>{
@@ -32,9 +32,30 @@ test("closed repository cache partitions agree with independent SQLite byte and 
 });
 
 test("owned process probe captures exact bytes inside actual fixed diagnostics storage",async()=>{
- await receiveScriptProcessInvocation(process.env,async original=>withRepositoryCacheStoreV1(process.cwd(),"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
+ await withBuildTestInvocationV1(async original=>withRepositoryCacheStoreV1(process.cwd(),"diagnostics",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
   const names=["SEMIO_DIAGNOSTIC_DIRECTORY"] as const,previous=Object.fromEntries(names.map(name=>[name,process.env[name]])),directory=store.environment.SEMIO_DIAGNOSTIC_DIRECTORY!;for(const name of names)process.env[name]=directory;
   const database=new Database(":memory:");try{const before=readdirSync(directory).sort(),script='process.stdout.write(Buffer.from(process.argv[1],"base64"));process.stderr.write(Buffer.from(process.argv[2],"base64"));',result=runProbe("node",["-e",script,Buffer.from(fixture.probe.stdout).toString("base64"),Buffer.from(fixture.probe.stderr).toString("base64")],{cwd:process.cwd(),env:store.environment,budgetMs:5000}),oracle=database.query("SELECT length(cast(? AS blob)) AS bytes").get(fixture.probe.stdout) as {bytes:number};expect(result.stdout).toBe(fixture.probe.stdout);expect(result.stderr).toBe(fixture.probe.stderr);expect(result.status).toBe(fixture.probe.status);expect(Buffer.byteLength(result.stdout)).toBe(oracle.bytes);expect(readdirSync(directory).sort()).toEqual(before);expect(lstatSync(store.image.image).blocks*512).toBeLessThanOrEqual(store.image.maximumPhysicalBytes);await store.recheck();}finally{database.close();for(const name of names)if(previous[name]===undefined)delete process.env[name];else process.env[name]=previous[name];}
+ }));
+},120000);
+
+/** 🧊️ Keeps the Nx graph pool a top-level image whose charge leaves room for funded namespace children. */
+test("the nx cache is a declared top-level partition with a funded namespace envelope",()=>{
+ const database=new Database(":memory:");
+ try{const row=fixture.nxPartition,declared=policy.partitions.nx as Record<string,unknown>,actual=readRepositoryCacheBudgetV1(policy).partitions;expect(declared).toEqual(row.declaration);
+  const oracle=database.query("SELECT json_extract(?1,'$.nx.directory') directory,(SELECT count(*) FROM json_each(?1) p WHERE p.key<>'nx' AND (instr(json_extract(p.value,'$.directory')||'/',json_extract(?1,'$.nx.directory')||'/')=1 OR instr(json_extract(?1,'$.nx.directory')||'/',json_extract(p.value,'$.directory')||'/')=1)) overlaps,(json_extract(?1,'$.nx.capacityBytes')-1048576-json_extract(?1,'$.nx.maximumArtifactBytes'))/(?2+?3) children").get(JSON.stringify(policy.partitions),row.childPhysicalBytes,row.childMetadataBytes)as{directory:string;overlaps:number;children:number};
+  expect(oracle.directory).toBe(".cache/b/n");expect(oracle.overlaps).toBe(0);expect(oracle.children).toBeGreaterThanOrEqual(row.minimumChildren);expect(actual.nx.maximumArtifactBytes).toBe(row.declaration.maximumArtifactBytes);
+  for(const[id,partition]of Object.entries(actual))if(id!=="nx")expect(partition.maximumArtifactBytes,id).toBe(partition.filesystemBytes);
+ }finally{database.close();}
+});
+
+/** 🏗️ Provisions the real nx image end to end and proves its separate mount and exact artifact charge. */
+test("the nx partition provisions its own mounted image and charges the artifact envelope",async()=>{
+ await withBuildTestInvocationV1(async original=>withRepositoryCacheStoreV1(process.cwd(),"nx",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
+  const declared=policy.partitions.nx,directory=resolve(process.cwd(),declared.directory);
+  expect(store.image.image).toBe(join(directory,"fixed.dmg"));expect(store.root).toBe(join(directory,"m"));
+  const backing=lstatSync(store.image.image);expect(backing.blocks*512).toBeGreaterThanOrEqual(backing.size);expect(backing.size).toBeLessThanOrEqual(declared.capacityBytes);expect(lstatSync(store.root).dev).not.toBe(lstatSync(directory).dev);
+  const receipt=JSON.parse(readFileSync(join(store.root,"nx.json"),"utf8"));expect(receipt.owner).toBe("repository:nx-store");expect(receipt.bytes).toBe(declared.maximumArtifactBytes);expect(store.storage.allocation.bytes).toBe(declared.maximumArtifactBytes);
+  await store.recheck();
  }));
 },120000);
 

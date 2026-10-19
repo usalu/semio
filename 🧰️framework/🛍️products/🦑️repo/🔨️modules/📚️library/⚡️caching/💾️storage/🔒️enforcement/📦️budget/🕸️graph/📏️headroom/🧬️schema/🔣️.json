@@ -3,13 +3,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "minimumAvailableBytes"
+    "minimumAvailableBytes",
+    "wait"
   ],
   "properties": {
     "minimumAvailableBytes": {
       "type": "integer",
       "minimum": 0,
       "maximum": 2684354560
+    },
+    "wait": {
+      "type": "boolean"
     }
   },
   "definitions": {

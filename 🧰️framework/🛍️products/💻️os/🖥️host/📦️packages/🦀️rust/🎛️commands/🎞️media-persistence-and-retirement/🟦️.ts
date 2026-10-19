@@ -8,7 +8,7 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv, { type ValidateFunction } from "ajv";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
@@ -46,7 +46,7 @@ export class MediaProjectionScript extends BundleScript {
     assert(projectionLaw.includes("fn workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"), "an exact native projection law is registered");
     console.log(`media contract presentation oracle: ${fixture.cases.length} document/binary/conversion vectors, ${denied} strict hostile denials; no native claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-host-workflow", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }, { package: "semio-framework-os-host-registry", target: { kind: "lib" }, laws: ["owned_artifact_kind_formats_survive_host_registry_projection"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-host-workflow", target: { kind: "lib" }, laws: ["workflow_media_contract_projection_matches_neutral_document_binary_and_conversion_cases"] }, { package: "semio-framework-os-host-registry", target: { kind: "lib" }, laws: ["owned_artifact_kind_formats_survive_host_registry_projection"] }] });
     console.log(`media contract presentation native assertions=${receipts.reduce((total, receipt) => total + receipt.assertions, 0)}; executables=${receipts.map((receipt) => receipt.sha256).join(",")}`);
   }
 }
@@ -134,7 +134,7 @@ export class PersistenceContractScript extends BundleScript {
     assert(!source.includes("resolve_kernel_future") && !source.includes("resolve_ready") && !source.includes("ReplayShellCommand"));
     console.log(`persistence contract oracle: requests=${requests.size}, hostileRequests=${fixture.requestNegatives.length}, hostileEvents=${eventDenials}, traces=${fixture.traces.length}, accepted=${accepted}, rejected=${rejected}, durablePublications=${published}; no IO/runtime activation claim`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["persistence_contract_matches_neutral_scope_progress_and_terminal_traces", "persistence_contract_rejects_closed_fields_and_cross_scope_receipts"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os", target: { kind: "lib" }, laws: ["persistence_contract_matches_neutral_scope_progress_and_terminal_traces", "persistence_contract_rejects_closed_fields_and_cross_scope_receipts"] }] });
     assert.equal(receipts[0]!.assertions, 2);
     console.log(`persistence contract native assertions=${receipts[0]!.assertions}; executable=${receipts[0]!.sha256}`);
   }
@@ -172,7 +172,7 @@ export class DocumentRetirementScript extends BundleScript {
     assert(!stdio.includes("trait RetireOwned:") && !stdio.includes("struct Bytes(Vec<u8>)"), "Stdio must consume the shared owner primitive");
     console.log(`owned retirement oracle: cases=${fixture.cases.length}, budgets=${fixture.budgets.length}, exactByteGrants=${grants}, declaredHostile=${fixture.hostile.length}; native pending`);
     if (segments.includes("--oracle-only")) return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["owned_retirement_matches_neutral_exact_byte_grants", "owned_retirement_rejects_false_terminal_and_preserves_shared_roots"] }] });
+    const receipts = await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["owned_retirement_matches_neutral_exact_byte_grants", "owned_retirement_rejects_false_terminal_and_preserves_shared_roots"] }] });
     assert.equal(receipts[0]!.assertions, 2);
   }
 }

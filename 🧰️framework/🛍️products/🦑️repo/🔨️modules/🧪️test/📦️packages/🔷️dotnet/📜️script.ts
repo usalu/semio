@@ -5,11 +5,9 @@ import{readBuildMode}from"../../../../../../🔨️modules/🏃️process/📦�
 import{runOwnedCommand}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import{withResourceLeases}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireNativeStoragePathV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{withRepositoryCacheStoreV1}from"../../../📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import{withArtifactScratchV1,withArtifactDestinationTaskV1}from"../../../📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import{stageRepositoryArtifacts,withRepositoryArtifactDestinationV1}from"../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "../../../📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
+import { withArtifactScratchV1, withArtifactDestinationTaskV1, stageRepositoryArtifacts, withRepositoryArtifactDestinationV1, readNativeCallerAuthorityV1 } from "../../../📚️library/📦️packages/🟦️typescript/📦️artifacts/🟦️.ts";
 import{collectArtifactFiles}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";
-import{readNativeCallerAuthorityV1}from"../../../📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import{mkdir}from"node:fs/promises";
 import{join}from"node:path";
 

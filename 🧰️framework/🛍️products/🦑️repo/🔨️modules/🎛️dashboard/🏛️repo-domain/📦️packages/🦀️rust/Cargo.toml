@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-repo-codebase = { path = "../../../../🗂️codebase/📦️packages/🦀️rust" }
@@ -35,4 +35,4 @@ semio-framework-repo-tickets = { path = "../../../../🎫️tickets/📦️packa
 semio-framework-repo-tree = { path = "../../../../🌳️tree/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }

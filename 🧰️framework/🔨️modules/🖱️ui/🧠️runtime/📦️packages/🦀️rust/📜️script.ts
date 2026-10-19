@@ -2,15 +2,12 @@
 import {scriptCompilerAdmissionControlV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import{createIssuedResourceControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
-import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedCargoCommandV1, runAdmittedCargoTestsV1 as runCargoTestsV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
@@ -38,7 +35,7 @@ class TreeRetirementScript extends BundleScript {
     testRuntimeTreeRetirement();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
     const manifest = (node: string) => resolve(this.root, `../../${node}/📦️packages/🦀️rust/Cargo.toml`);
-    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-runtime-reconcile-primitives": manifest("🧱️primitives"), "semio-framework-ui-runtime-reconcile": manifest("♻️reconcile") },cwd: this.repoRoot,cargoArgs: segments,groups: [
+    const receipts = await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-runtime-reconcile-primitives": manifest("🧱️primitives"), "semio-framework-ui-runtime-reconcile": manifest("♻️reconcile") },cwd: this.repoRoot,cargoArgs: segments,groups: [
       { package: "semio-framework-ui-runtime-reconcile-primitives", target: { kind: "lib" }, laws: ["runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads"] },
       { package: "semio-framework-ui-runtime-reconcile", target: { kind: "lib" }, laws: [
         "runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmission",
@@ -58,7 +55,7 @@ class NativeResourceScript extends BundleScript {
     if (segments.length) throw Error("Native resource custody requires its exact original selection");
     const left = this.invocation.control.remainingMilliseconds();
     if (left === null || left <= 0) throw Error("Native resource custody requires finite original caller authority");
-    await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-ui-runtime-presentation": resolve(this.root, "../../🖼️presentation/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-ui-runtime-presentation", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close","native_mesh_receiver_same_canonical_pages_all_labels_and_paid_destination_close","native_mesh_receiver_cancelled_ready_destination_cannot_escape_its_paid_close","native_mesh_message_fixed_windows_bind_patch_resource_and_original_donor_before_lifting","native_mesh_message_receiver_preserves_whole_donor_and_returns_source_with_live_destination"] }]});
+    await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-ui-runtime-presentation": resolve(this.root, "../../🖼️presentation/📦️packages/🦀️rust/Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-ui-runtime-presentation", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close","native_mesh_receiver_same_canonical_pages_all_labels_and_paid_destination_close","native_mesh_receiver_cancelled_ready_destination_cannot_escape_its_paid_close","native_mesh_message_fixed_windows_bind_patch_resource_and_original_donor_before_lifting","native_mesh_message_receiver_preserves_whole_donor_and_returns_source_with_live_destination"] }]});
   }
 }
 
@@ -76,7 +73,7 @@ class TestScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args],packageRoot,process.env,buildBudgetMs());
+    const check = (args: string[]) => runAdmittedCargoCommandV1(this.invocation,scriptCompilerAdmissionControlV1(this.invocation,"cargo:caller",0),this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
   }

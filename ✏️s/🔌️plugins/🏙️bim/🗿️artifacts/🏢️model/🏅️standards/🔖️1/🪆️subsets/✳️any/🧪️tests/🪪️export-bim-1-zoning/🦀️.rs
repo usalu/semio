@@ -9,8 +9,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::zoning::report_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning::report_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 
     /// 🏘️ `{zones, schemes, coverings}` of the committed zoned house.
     pub fn export_zoning_zoned(ctx: &Context) -> Result<Outcome, String> {

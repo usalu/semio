@@ -3,7 +3,7 @@ import { afterAll, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { inspectRustModuleChildren, listModuleTree, readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { inspectRustModuleChildren, listModuleTree, listSourceFamily, readModuleTreeSource, readSourceFamilySource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
 const scratch = mkdtempSync(join(tmpdir(), "semio-test-support-"));
@@ -37,4 +37,12 @@ test("trees list the same files and read the same text", () => {
 
 test("missing mounts are refused by the TypeScript helper too", () => {
   for (const row of fixture.treeRefusals) expect(() => listModuleTree(join(materialize(row.id, row.files), row.root)), row.id).toThrow(row.error);
+});
+
+test("families list the same files and read the same text", () => {
+  for (const row of fixture.families) {
+    const base = materialize(row.id, row.files), directory = join(base, row.directory);
+    expect(listSourceFamily(directory).map(path => path.slice(base.length + 1)), row.id).toEqual(row.expected);
+    expect(readSourceFamilySource(directory), row.id).toBe(row.expected.map((path: string) => readFileSync(join(base, path), "utf8")).map((text: string) => text.endsWith("\n") ? text : text + "\n").join(""));
+  }
 });

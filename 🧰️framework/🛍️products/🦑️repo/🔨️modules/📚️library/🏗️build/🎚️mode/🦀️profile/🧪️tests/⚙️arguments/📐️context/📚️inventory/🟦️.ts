@@ -3,8 +3,8 @@ import{join,relative,resolve}from"node:path";
 import{settleCargoContextObservationV1}from"../🟦️.ts";
 import corpus from"../🔣️.json"with{type:"json"};
 import schema from"../🧬️schema/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 export interface CargoContextInventoryLimitsV1{readonly maximumEntries:number;readonly maximumFiles:number;readonly maximumBytes:number}
 /** 📚️ Streams a complete observer tree while charging every entry before retaining its name. */
 export async function captureCargoContextInventoryV1(directory:string,control:ResourceLeaseControl,requested:CargoContextInventoryLimitsV1={maximumEntries:corpus.limits.maximumEntries,maximumFiles:corpus.limits.maximumFiles,maximumBytes:corpus.limits.maximumArtifactBytes}):Promise<Readonly<{inventory:readonly Readonly<{path:string;kind:"directory"|"file";bytes:number}>[];entries:number;files:number;bytes:number}>>{

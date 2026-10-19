@@ -1,7 +1,7 @@
 /** 🪝️ Rules-of-hooks regression suite for the CAD renderer: every component renders across prop changes that used to flip an early return, React must never report a changed hook count, and every render must call the same number of hooks (React itself only notices some of the violations). Registered by the in-source block of {@link ../../🟦️.tsx | the renderer}. */
 import { render } from "@testing-library/react";
 import { Component, type ReactNode } from "react";
-import type { RendererTestDependencies } from "../../🟦️.tsx";
+import type { RendererTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 
 type TestSource = { readonly url: string };
 type Vitest = NonNullable<ImportMeta["vitest"]>;

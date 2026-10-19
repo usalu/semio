@@ -61,6 +61,17 @@ fn canonical(path: &Path) -> PathBuf {
     }
 }
 
+/// 📍️ Restores the working directory when a scenario that moves the process leaves, even through an error.
+#[cfg(feature = "sut")]
+struct Standing(PathBuf);
+
+#[cfg(feature = "sut")]
+impl Drop for Standing {
+    fn drop(&mut self) {
+        let _ = std::env::set_current_dir(&self.0);
+    }
+}
+
 /// 📋️ Renders the settings the way every implementation of this case reports them.
 #[cfg(feature = "sut")]
 fn render_config(config: &semio_framework_repo_workspace::RepoConfig) -> String {
@@ -85,6 +96,27 @@ fn the_first_marker_upwards_wins(ctx: &Context) -> Result<Outcome, String> {
         let start = base.join(tree.str("startAt").replace('/', std::path::MAIN_SEPARATOR_STR));
         let found = semio_framework_repo_workspace::find_repo_root(&start);
         roots.push(Json::String(format!("{name}={}", relative_slash(&base, &found))));
+    }
+    Ok(Outcome::projection(Json::Object(vec![("roots".to_string(), Json::Array(roots))])))
+}
+
+#[cfg(feature = "sut")]
+fn the_start_directory_alone_decides_the_root(ctx: &Context) -> Result<Outcome, String> {
+    let file = ctx.input_json("shared://📡️root-discovery-trees.json")?;
+    let _standing = Standing(std::env::current_dir().map_err(|error| error.to_string())?);
+    let decoy = ctx.work_dir.join("🪤️decoy").join(".git").join("deep");
+    std::fs::create_dir_all(&decoy).map_err(|error| error.to_string())?;
+    let mut roots = Vec::new();
+    for tree in file.array("trees") {
+        let name = tree.str("name");
+        let base = ctx.work_dir.join(format!("🌲️{name}"));
+        materialize(&base, &tree)?;
+        let start = base.join(tree.str("startAt").replace('/', std::path::MAIN_SEPARATOR_STR));
+        for (standing, directory) in [("inside", base.clone()), ("outside", ctx.work_dir.clone()), ("decoy", decoy.clone())] {
+            std::env::set_current_dir(&directory).map_err(|error| error.to_string())?;
+            let found = semio_framework_repo_workspace::find_repo_root(&start);
+            roots.push(Json::String(format!("{name}@{standing}={}", relative_slash(&base, &found))));
+        }
     }
     Ok(Outcome::projection(Json::Object(vec![("roots".to_string(), Json::Array(roots))])))
 }
@@ -134,6 +166,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     let adapter = adapter
         .subject("the-first-marker-upwards-wins", the_first_marker_upwards_wins)
+        .subject("the-start-directory-alone-decides-the-root", the_start_directory_alone_decides_the_root)
         .subject("the-layout-vocabulary-is-fixed", the_layout_vocabulary_is_fixed)
         .subject("settings-fall-back-to-the-defaults", settings_fall_back_to_the_defaults);
     adapter

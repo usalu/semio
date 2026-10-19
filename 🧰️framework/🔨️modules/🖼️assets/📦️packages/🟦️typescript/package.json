@@ -39,6 +39,7 @@
     "./fonts/anta/latin-ext/regular/outline": "./🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline/🟦️.ts",
     "./fonts/anta/math/regular/outline": "./🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline/🟦️.ts",
     "./fonts/anta/symbols/regular/outline": "./🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline/🟦️.ts",
-    "./cursor/default/light": "./👆️cursor/🖱️default/☀️light/🟦️.ts"
+    "./cursor/default/light": "./👆️cursor/🖱️default/☀️light/🟦️.ts",
+    "./abbau-aufbau/hexagonal-cut-concrete-forest-left": "./🏚️abbau-aufbau/🧊️hexagonal-cut-concrete-forest-left/🟦️.ts"
   }
 }

@@ -1,9 +1,9 @@
 use super::*;
-use crate::editor_domain::editor_laws::context::{app, dispatch, snapshot, Generation3dApp};
+use crate::editor_domain::editor_laws::context::{app, dispatch, snapshot, Generation3dAppFixture};
 use semio_framework_test_fixtures::repo_text;
 use semio_s_artifact_procedural_3d_editor::Generation3dCommand;
 
-async fn edit(app: &mut Generation3dApp, operations: serde_json::Value) {
+async fn edit(app: &mut Generation3dAppFixture, operations: serde_json::Value) {
     dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: operations.to_string() })).await;
 }
 

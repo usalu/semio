@@ -164,11 +164,13 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
 
     fn begin_close(&mut self) { self.closing = true; }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if !self.closing { return InteractiveJobCloseStep::Blocked; }
-        self.rows = 0;
-        self.cursor = 0;
-        semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant)
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+            self.rows = 0;
+            self.cursor = 0;
+            Ok(semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant))
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }

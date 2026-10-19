@@ -4,8 +4,10 @@ import { orderedRetirementSchema as orderedRetirement } from "@semio-tech/value-
 import { retirementContractSchema as retirementContract } from "@semio-tech/value-ts/retirement/contract/schema";
 import { Buffer } from "node:buffer";
 import { applyPatch } from "fast-json-patch";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
-import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
+import { listModuleTree, readModuleTreeSource, readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { frameworkSourcePath, readStoreSourceText } from "@semio-tech/framework/test/source-text";
+const blockEnd = (text: string, from: number) => { const at = text.indexOf("\n}\n", from); return at < 0 ? text.length : at + 3; };
+const storeModule = (path: string) => readModuleTreeSource(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/" + path));
 import { spawnSync } from "node:child_process";
 import fixture from "../../../../📏️retirement/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { controlSnapshotReceivingFixtureUrl } from "@semio-tech/framework/io/testing/fixtures";
@@ -62,8 +64,8 @@ test("genesis admission preserves original payload and envelope metadata under s
   expect(genesis).toContain("demand.admit(grant)");
   expect(genesis).toContain("Err((error, snapshot, pack))");
   expect(genesis.indexOf("demand.admit(grant)")).toBeLessThan(genesis.indexOf("Self::from_verified_pack(snapshot, pack, digest)"));
-  const root = readStoreSourceText();
-  const owner = root.slice(root.indexOf("pub fn create_document_envelope_from_genesis_owners"), root.indexOf("pub async fn edit_ids_for_changes"));
+  const root = storeModule("🧾️document/🦀️.rs");
+  const owner = root.slice(root.indexOf("pub fn create_document_envelope_from_genesis_owners"), blockEnd(root, root.indexOf("pub fn create_document_envelope_from_genesis_owners")));
   expect(owner).toContain("schema: String"); expect(owner).toContain("id: String"); expect(owner).toContain("        schema,"); expect(owner).toContain("        id,");
   expect(owner).not.toContain(".into()"); expect(owner).not.toContain(".clone()");
   const h = readModuleTreeSource(new URL("../../../../../../🧾️document/📜️history/💧️hydration/🦀️.rs", import.meta.url));
@@ -75,7 +77,7 @@ test("genesis admission preserves original payload and envelope metadata under s
 });
 
 test("original inference retained wallet transports every unequal and zero axis", async () => {
-  const root = new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire", import.meta.url);
+  const root = new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/", import.meta.url);
   const fixture = await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json", root)).json();
   const schema = await Bun.file(new URL("🧬️schema/🔣️.json", root)).json();
   const validate = new Ajv().compile(schema);
@@ -91,7 +93,7 @@ test("original inference retained wallet transports every unequal and zero axis"
   }
   const maximum = Buffer.alloc(8); maximum.writeBigUInt64LE(BigInt(fixture.maximum64));
   expect(maximum.readBigUInt64LE().toString()).toBe(fixture.maximum64);
-  const source = await Bun.file(new URL("../🦀️.rs", root)).text();
+  const source = await Bun.file(new URL("🦀️.rs", root)).text();
   expect(source).toContain("impl crate::ToValue for RetainedCloneGrant");
   expect(source).toContain("impl crate::FromValue for RetainedCloneGrant");
 });
@@ -118,7 +120,7 @@ test("message ledger page birth preserves fixed tickets and partial original bac
     expect(state.freed).toBe(state.born);
     expect(state.slots).toBeLessThanOrEqual(row.capacitySlots);
   }
-  const root = readStoreSourceText();
+  const root = storeModule("📒️ledger/📨️messages/🦀️.rs");
   const slots = root.slice(root.indexOf("struct ArtifactEditMessageSlots"), root.indexOf("pub struct ArtifactEditMessageLedger"));
   expect(slots).toContain("fn empty()");
   expect(slots).toContain("fn admit_next(");
@@ -151,8 +153,9 @@ test("envelope birth retains original phased catalogs before hydration advanceme
   const vcs = readModuleTreeSource(new URL("../../../../../../../🌿️vcs/🦀️.rs", import.meta.url));
   expect(vcs.includes("pub fn initial_page_birth_demand(")).toBe(true);
   expect(vcs.includes("pub fn admit_initial_page(")).toBe(true);
-  const root = readStoreSourceText();
-  const empty = root.slice(root.indexOf("pub fn empty_document_envelope_from_genesis_owners"), root.indexOf("pub async fn edit_ids_for_changes"));
+  const root = storeModule("🧾️document/🦀️.rs") + "\n" + storeModule("✉️envelope/🦀️.rs");
+  const emptyStart = root.indexOf("pub fn empty_document_envelope_from_genesis_owners");
+  const empty = root.slice(emptyStart, blockEnd(root, emptyStart));
   expect(empty).toContain("ArtifactHistoryLedger::empty()");
   expect(empty).toContain("HistoryPageStack::empty()");
   expect(empty).toContain("ArtifactEditMessageLedger::empty()");
@@ -170,7 +173,7 @@ test("envelope birth retains original phased catalogs before hydration advanceme
 });
 
 test("original inference reports the actual independent physical receipt", async () => {
-  const root = new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire", import.meta.url);
+  const root = new URL("../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/", import.meta.url);
   const fixture = await Bun.file(new URL("🧪️tests/🧫️fixtures/🔣️.json", root)).json();
   const validate = new Ajv().compile(await Bun.file(new URL("🧬️schema/🧾️progress.json", root)).json());
   for (const row of fixture.receipts) {
@@ -182,10 +185,10 @@ test("original inference reports the actual independent physical receipt", async
     expect(validate(missing)).toBe(false);
     expect(validate({ ...row, bytes: 1 })).toBe(false);
   }
-  const source = await Bun.file(new URL("../🦀️.rs", root)).text();
+  const source = await Bun.file(new URL("🦀️.rs", root)).text();
   expect(source).toContain("impl crate::ToValue for RetainedCloneProgress");
   expect(source).toContain("impl crate::FromValue for RetainedCloneProgress");
-  const plugin = await Bun.file(new URL("../../../../../../../🔌️plugin/🦀️.rs", import.meta.url)).text();
+  const plugin = readSourceFamilySource(new URL("../../../../../../../🔌️plugin/",import.meta.url));
   expect(plugin.match(/pub retirement_progress: RetainedCloneProgress/g)?.length).toBe(2);
   expect(plugin).toContain("retirement_progress: execution.retirement_progress");
 });
@@ -204,15 +207,16 @@ test("original interactive cancellation retains the same deep owner until physic
   const router = await Bun.file(new URL("🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs", modules)).text();
   const inference = await Bun.file(new URL("🔌️plugin/⚛️reactor/💼️jobs/💡️infer/🦀️.rs", modules)).text();
   const cancel = router.slice(router.indexOf("pub async fn cancel_job"),router.indexOf("pub async fn step_job"));
-  expect(cancel).toContain("owner.terminal_drop_is_shallow()");
-  expect(cancel).toContain("if shallow");
+  expect(cancel).toContain("slot.cancelled=true");
+  expect(cancel).toContain("cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})");
+  expect(cancel).toContain("grant.maximum_items==0||grant.maximum_depth==0");
   expect(cancel).not.toContain("assert!");
   expect(inference).not.toContain("self.retire()");
-  expect(inference).toContain("outcome: JobOutcomeSlot");
-  expect(inference).toContain("session.close_step(self.request.retained)");
-  expect(inference).toContain("close_step_outcome_slot(&mut self.outcome,self.request.retained)");
+  expect(inference).toContain("fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)");
+  expect(inference).toContain("let grant=cx.retained_grant();");
+  expect(inference).toContain("cx.consume_retained(progress)");
   expect(inference).not.toContain("JobPayloadCloseStep");
-  expect(inference).toContain("self.retirement_progress.checked_add(progress)");
+  expect(inference).toContain("retirement_progress");
 });
 
 test("actual snapshot input step funds original birth and both physical copies", async () => {
@@ -231,8 +235,9 @@ test("actual snapshot input step funds original birth and both physical copies",
     expect(progress.copiedBytes).toBeLessThanOrEqual(grant.maximumCopyBytes);
     expect(applyPatch({ copiedBytes:0 },[{op:"replace",path:"/copiedBytes",value:copied * 2}],true).newDocument.copiedBytes).toBe(progress.copiedBytes);
   }
-  const source = await Bun.file(new URL("../../../../🏭️operation/🦀️.rs", import.meta.url)).text();
-  const trait = source.slice(source.indexOf("pub trait MemberSnapshotOpenOperation"),source.indexOf("pub struct UnsupportedMemberSnapshotOpen"));
+  const source = readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
+  const traitFile = storeModule("🏗️initialization/🏠️owners/📥️lifted/🏭️operation/🦀️.rs");
+  const trait = traitFile.slice(traitFile.indexOf("pub trait MemberSnapshotOpenOperation"),blockEnd(traitFile,traitFile.indexOf("pub trait MemberSnapshotOpenOperation")));
   expect(trait.includes("grant: RetainedCloneGrant")).toBe(true);
   const actual = source.slice(source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>"),source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen"));
   expect(actual.includes("admit_member_input_buffer")).toBe(true);
@@ -330,14 +335,15 @@ test("member and hydration paid turns preserve the original physical wallet",asy
  let remaining={...plain.grant};
  for(const receipt of plain.receipts){const next={...remaining};for(const [grant,progress]of axes){expect(receipt[progress]).toBeLessThanOrEqual(remaining[grant]);next[grant]-=receipt[progress];}const oracle=applyPatch(remaining,axes.map(([grant])=>({op:"replace",path:"/"+grant,value:next[grant]})),true,false).newDocument;expect(oracle).toEqual(next);remaining=oracle;expect(remaining.maximumDepth).toBe(plain.grant.maximumDepth);}
  expect(Object.values(remaining)).toEqual([0,0,0,0,4]);
- const source=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🦀️.rs"),"utf8"),operation=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🏭️operation/🦀️.rs"),"utf8"),hydration=readModuleTreeSource(path.join(base,"🧾️document/📜️history/💧️hydration/🦀️.rs"));
- expect(source.includes("pub(crate) fn member_step_grant")).toBe(true);expect(source.includes("pub(crate) fn record_member_step")).toBe(true);
+ const source=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🦀️.rs"),"utf8"),operation=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🏭️operation/🦀️.rs"),"utf8"),hydrationRoot=path.join(base,"🧾️document/📜️history/💧️hydration/🦀️.rs"),hydration=readModuleTreeSource(hydrationRoot);
+ expect(source.includes("pub fn member_step_grant")).toBe(true);expect(source.includes("pub fn record_member_step")).toBe(true);
  expect(source.includes("cx.consume_retained(progress)")).toBe(true);
  for(const axis of ["items","copy_bytes","capacity_bytes","release_bytes","depth"])expect(source.includes("grant.maximum_"+axis+".min(caller.maximum_"+axis+")")).toBe(true);
- expect(operation.includes("let grant = super::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("super::record_member_step(cx, progress)")).toBe(true);
+ expect(operation.includes("let grant = semio_framework_os_store_member_open::member_step_grant(cx, grant);")).toBe(true);expect(operation.includes("semio_framework_os_store_member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("member_open::member_step_grant(cx, grant)")).toBe(true);expect(hydration.includes("member_open::record_member_step(cx, progress)")).toBe(true);
  expect(hydration.includes("match progress_fuel(progress) { Ok(fuel) => cx.consume_fuel(fuel)")).toBe(false);
- for(const [name,input]of [["open",source],["operation",operation],["hydration",hydration]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
+ for(const [name,input]of [["open",source],["operation",operation]]){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
+ for(const file of listModuleTree(hydrationRoot)){const grammar=spawnSync("rustfmt",["--edition","2021","--config","skip_children=true","--emit","stdout",file],{encoding:"utf8",timeout:4000});expect(grammar.error,file).toBeUndefined();expect(grammar.status,file).toBe(0);}
 });
 
 test("snapshot native consumers retain the genuine caller controls and progress domains",async()=>{
@@ -361,7 +367,7 @@ test("native snapshot encoder keeps one original paid receipt wallet",async()=>{
  expect(Object.values(remaining)).toEqual([0,0,0,0,4]);expect(used.retainedCapacityBytes).toBe(Buffer.allocUnsafeSlow(64).byteLength);expect(used.releasedBytes).toBe(64);
  const source=fs.readFileSync(path.join(root,"🧰️framework/🔨️modules/🚪️io/⏱️control/🛫️snapshot/🦀️.rs"),"utf8");
  expect(source.includes("pub fn remaining_grant")).toBe(true);expect(source.includes("pub fn record_progress")).toBe(true);expect(source.includes("pub fn progress(&self)")).toBe(true);expect(source.includes("self.progress.checked_add(progress)")).toBe(true);expect(source.includes("progress.fits(self.remaining_grant())")).toBe(true);
- for(const [grant,progress]of [["items","copied_items"],["copy_bytes","copied_bytes"],["capacity_bytes","retained_capacity_bytes"],["release_bytes","released_bytes"]])expect(source.includes("self.grant.maximum_"+grant+"-self.progress."+progress)).toBe(true);
+ for(const [grant,progress]of [["items","copied_items"],["copy_bytes","copied_bytes"],["capacity_bytes","retained_capacity_bytes"],["release_bytes","released_bytes"]])expect(source.includes("self.grant.maximum_"+grant+".saturating_sub(self.progress."+progress+")")).toBe(true);
  expect(source.includes("progress.copied_items")).toBe(true);expect(source.includes("record_progress(")).toBe(true);
  const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input:source,encoding:"utf8",timeout:2000});expect(grammar.error).toBeUndefined();expect(grammar.status).toBe(0);
 });
@@ -405,7 +411,7 @@ test("named native ownership laws use independent positive grants",async()=>{
  const source=readModuleTreeSource(path.join(root,base,"🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"));
  for(const name of ["current_box_retirement_preserves_denied_owner_and_exact_physical_shell","current_typed_option_birth_retains_exact_original_and_paid_shell"]){
   const start=source.indexOf("fn "+name);expect(start).toBeGreaterThanOrEqual(0);const end=source.indexOf("\n#[test]",start);const body=source.slice(start,end<0?undefined:end);
-  expect(body.includes("let grant = physical_test_close_grant();")).toBe(true);expect(body.includes("maximum_copy_bytes: demand.copy_bytes")).toBe(false);expect(body.includes("maximum_release_bytes: demand.release_bytes")).toBe(false);
+  const variable=name.startsWith("current_box")?"policy":"grant";expect(body.includes("let "+variable+" = physical_test_close_grant();")).toBe(true);expect(body.includes("maximum_copy_bytes: demand.copy_bytes")).toBe(false);expect(body.includes("maximum_release_bytes: demand.release_bytes")).toBe(false);
  }
 });
 
@@ -413,7 +419,7 @@ test("member history hydration and durable native closes preserve independent au
  const fs=await import("node:fs"),path=await import("node:path");const base=path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");
  const history=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📜️history/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),hydration=fs.readFileSync(path.join(base,"🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),durable=readModuleTreeSource(path.join(base,"🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs"));
  expect(history.includes("maximum_capacity_bytes: owner.next_capacity_byte_demand")).toBe(false);expect(hydration.includes("fn grant_of(")).toBe(false);expect(durable.includes("fn demanded_grant(")).toBe(false);
- expect(history.includes("super::super::tests::request_close_policy()")).toBe(true);expect(hydration.includes("crate::os_store::component::tests::physical_test_close_grant()")).toBe(true);expect(durable.includes("crate::os_store::component::tests::physical_test_close_grant()")).toBe(true);
+ expect(history.includes("super::member_open_tests::request_close_policy()")).toBe(true);expect(hydration.includes("semio_framework_value::testing::physical_test_close_grant()")).toBe(true);expect(durable.includes("semio_framework_value::testing::physical_test_close_grant()")).toBe(true);
  for(const [name,source] of [["history",history],["hydration",hydration],["durable",durable]] as const){const grammar=spawnSync("rustfmt",["--edition","2021","--emit","stdout"],{input:source,encoding:"utf8",timeout:2000});expect(grammar.error,name).toBeUndefined();expect(grammar.status,name).toBe(0);}
  const policy=fixture.physicalCloseGrant;const ajv=new Ajv({strict:false});ajv.addSchema(orderedRetirement);ajv.addSchema(retirementContract);expect(ajv.compile({$ref:retirementContract.$id+"#/$defs/Grant"})(policy)).toBe(true);expect(Buffer.allocUnsafeSlow(policy.maximumReleaseBytes).byteLength).toBe(policy.maximumReleaseBytes);
 });
@@ -436,7 +442,7 @@ test("current shared actor native callers retain genuine lease and original buff
  const request=fs.readFileSync(path.join(base,"🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),hydration=fs.readFileSync(path.join(base,"🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs"),"utf8"),history=fs.readFileSync(path.join(base,"📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"),"utf8");
  expect(request.includes("request.actor.0.capacity()")).toBe(false);expect(hydration.includes("owner.actor.0.capacity()")).toBe(false);
  expect(request.includes("request.closing_actor.as_ref().unwrap().as_ptr()")).toBe(true);expect(request.includes("SharedUtf8::admit(actor")).toBe(true);
- expect(history.includes("|value,output,native,body|")).toBe(true);expect(history.includes("body.admit_frontier(")).toBe(true);expect(history.includes("body.record_progress(")).toBe(true);expect(history.includes("*output=Some(())")).toBe(true);expect(history.includes("store::NativeSnapshotDecodeOwner::new(&mut original_native,caller_grant())")).toBe(true);
+ expect(history.includes("|value,output,native,body|")).toBe(true);expect(history.includes("body.admit_frontier(")).toBe(true);expect(history.includes("body.record_progress(")).toBe(true);expect(history.includes("*output=Some(())")).toBe(true);expect(history.includes("semio_framework_os_io::control::NativeSnapshotDecodeOwner::new(&mut original_native,caller_grant())")).toBe(true);
  const law=JSON.parse(fs.readFileSync(path.join(base,"🧩️composition/🚪️open/📏️retirement/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(law.physicalCloseGrant.maximumCopyBytes).toBe(4096);
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text),original=Buffer.allocUnsafeSlow(row.capacityBytes);original.set(bytes);expect(bytes.byteLength).toBe(Buffer.byteLength(row.text,"utf8"));expect(original.byteLength).toBe(row.capacityBytes);expect(original.subarray(0,bytes.length).toString("utf8")).toBe(row.text);}
@@ -478,7 +484,7 @@ test("original VCS checkpoint measurement stays borrowed and cannot become consu
 test("native SQLite binding transfers each original octet backing under unchanged caller policy",async()=>{
  const fs=await import("node:fs"),path=await import("node:path");
  const base=path.join(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability");
- const plain=JSON.parse(fs.readFileSync(path.join(base,"🪶️native-decoding/🧫️fixtures/🔣️.json"),"utf8"));
+ const plain=JSON.parse(fs.readFileSync(path.join(base,"🪶️native-decoding/🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
  expect(plain.callerGrant.maximumCopyBytes).toBe(65536);
  const row=plain.cases.find((row: any)=>row.id==="admitted-buffers");
  const original=row.bufferBytes.map((n: number)=>Buffer.allocUnsafeSlow(n).fill(0));
@@ -520,7 +526,7 @@ test("selected member snapshot codec owns typed decode without replacing origina
  const law=await Bun.file(new URL("../../../../🏭️operation/🧪️tests/🧫️fixtures/📦️decoder/🔣️.json",import.meta.url)).json();
  const validate=new Ajv({strict:true,allErrors:true}).compile(schema);expect(validate(law)).toBe(true);
  const rejected=applyPatch(law,[{op:"replace",path:"/source",value:"replacement-pack"}],true,false).newDocument;expect(validate(rejected)).toBe(false);
- const source=await Bun.file(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url)).text();
+ const source=readModuleTreeSource(new URL("../../../../🏭️operation/🦀️.rs",import.meta.url));
  const start=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D:MemberSnapshotDecoder<P>>");
  const end=source.indexOf("impl<P: semio_framework_value::retirement::RetireOwned,D> ProducedMemberSnapshotOpen");const selected=source.slice(start,end);
  expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(selected.includes("D::decode_snapshot(&self.input)")).toBe(true);expect(selected.includes("P::decode_pack")).toBe(false);
@@ -531,8 +537,8 @@ test("original Store snapshot ports are independent from selected representation
  const schema=await Bun.file(new URL("../../../../../../🧬️schema/📥️snapshot-capabilities/🔣️.json",import.meta.url)).json();
  const law=await Bun.file(new URL("../../../../../../🧪️tests/🧫️fixtures/📥️snapshot-capabilities/🔣️.json",import.meta.url)).json();
  const admit=new Ajv({strict:true,allErrors:true}).compile(schema);expect(admit(law)).toBe(true);expect(admit({...law,snapshotOwner:"copied-projection"})).toBe(false);
- const source=await Bun.file(new URL("../../../../../../🦀️.rs",import.meta.url)).text();
- const initial=source.indexOf("async fn checkpoint_identity");const start=source.indexOf("impl<P, Mutation> ArtifactStore<P, Mutation>",initial);const end=source.indexOf("fn preflight_runtime_seed",start);const owner=source.slice(start,end);
- expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);expect(owner.includes("ArtifactPack")).toBe(false);expect(owner.includes("ArtifactStoreSnapshot")).toBe(false);
+ const source=readModuleTreeSource(new URL("../../../../../../⚙️engine/📥️lifted/🏪️store/🪞️delegating-accessors-and-reads/🦀️.rs",import.meta.url));
+ const start=source.indexOf("impl<P, Mutation> ArtifactStore<P, Mutation>");const owner=source.slice(start);
+ expect(start).toBeGreaterThanOrEqual(0);expect(owner.includes("ArtifactPack")).toBe(false);expect(owner.includes("ArtifactStoreSnapshot")).toBe(false);
  expect(source.includes("pub fn snapshot_owner")).toBe(true);expect(source.includes("pub fn owned_snapshot_retirement_factory")).toBe(true);
 });

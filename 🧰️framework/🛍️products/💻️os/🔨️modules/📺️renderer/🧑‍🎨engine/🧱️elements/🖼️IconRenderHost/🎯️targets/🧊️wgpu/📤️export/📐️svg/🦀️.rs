@@ -2,7 +2,7 @@
 use std::{cmp::Ordering, collections::BTreeMap};
 
 use infinite_world::world::{World3dMeshAsset, World3dPrimitiveMaterial};
-use ui_wgpu::wgpu::{Mat4, Mesh3dField, Mesh3dLease, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneViewportMask3d, Vec3, Vec3Math};
+use ui_scene::math::{Mat4, Mesh3dField, Mesh3dLease, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneViewportMask3d, Vec3, Vec3Math};
 
 use super::scene::{validate_request, IconExportFormat};
 use super::super::{IconRenderCameraFields, IconRenderMaterialFields, IconRenderProjection, IconRenderRequestFields};

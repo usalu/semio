@@ -110,7 +110,7 @@ fn world_gumball_commit_host_snapshot() -> (World3dState, WorldGumballGesture) {
 fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
     let (state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture, WorldGumballPhase::Once);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(0, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     let mut turns = 0;
     loop {
@@ -136,12 +136,12 @@ fn world_gumball_commit_builds_one_flat_node_per_grant_then_retires_tokens() {
 fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_authority() {
     let (mut state, gesture) = world_gumball_commit_host_snapshot();
     let mut job = WorldGumballCommitJob::new(8, gesture, WorldGumballPhase::Once);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut blockers = Vec::new();
     while let Ok(claim) = input.claim_action(1) {
         blockers.push(claim);
     }
-    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)));
+    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)), Err(semio_framework_ui_action::BoundedActionFault::ItemCredits)));
     assert!(job.claim.is_none());
     input.release_action_claim(blockers.pop().expect("retry credit")).expect("release retry credit");
     assert_eq!(with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
@@ -154,7 +154,7 @@ fn world_gumball_commit_saturation_aba_and_interrupted_close_retain_claim_author
     for _ in 0..5 {
         let _ = with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context));
     }
-    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
+    assert!(matches!(with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)), Err(semio_framework_ui_action::BoundedActionFault::Structure)));
     let mut close_turns = 0;
     while !job.close_step(&mut input) {
         close_turns += 1;
@@ -183,7 +183,7 @@ fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
 /// 📨️ Drives one gumball publication job to completion and answers what it published (nothing for a `Skip`).
 fn world_gumball_publish(state: &World3dState, gesture: WorldGumballGesture, phase: WorldGumballPhase) -> Option<ActionDescriptor> {
     let mut job = WorldGumballCommitJob::new(8, gesture, phase);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for _ in 0..4096 {
         if with_world_step_context(1, |context| job.step(&state.session, &state.gumball, &state.interaction, &state.scene, 8, &mut input, context)).expect("bounded gumball publication") == WorldInteractionStep::Complete {
             break;
@@ -348,7 +348,7 @@ fn world_brush_commit_host_snapshot(target: String) -> World3dState {
 fn world_brush_commit_copies_and_revalidates_fixed_chunks_before_claimed_publication() {
     let state = world_brush_commit_host_snapshot("v".repeat(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
     let mut job = WorldBrushCommitJob::new(&state.session, &state.gumball, 9).unwrap().expect("brush job");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     loop {
         turns += 1;
@@ -370,14 +370,14 @@ fn world_brush_validation_detects_same_length_replacement_and_close_releases_dra
     let mut state = world_brush_commit_host_snapshot("first".into());
     let mut stale = WorldBrushCommitJob::new(&state.session, &state.gumball, 9).unwrap().expect("brush job");
     while !stale.validating {
-        assert_eq!(with_world_step_context(1, |context| stale.step(&state.session, &state.gumball, 9, &mut ui_wgpu::wgpu::InputState::default(), context)).unwrap(), WorldInteractionStep::Pending);
+        assert_eq!(with_world_step_context(1, |context| stale.step(&state.session, &state.gumball, 9, &mut semio_framework_ui_wgpu_input::InputState::default(), context)).unwrap(), WorldInteractionStep::Pending);
     }
     state.gumball.brush_preview.as_mut().unwrap().target_vortex_full_id = Some("other".into());
-    assert!(matches!(with_world_step_context(1, |context| stale.step(&state.session, &state.gumball, 9, &mut ui_wgpu::wgpu::InputState::default(), context)), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
+    assert!(matches!(with_world_step_context(1, |context| stale.step(&state.session, &state.gumball, 9, &mut semio_framework_ui_wgpu_input::InputState::default(), context)), Err(semio_framework_ui_action::BoundedActionFault::Structure)));
 
     let state = world_brush_commit_host_snapshot("target".into());
     let mut interrupted = WorldBrushCommitJob::new(&state.session, &state.gumball, 10).unwrap().expect("brush job");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     while !interrupted.complete {
         let _ = with_world_step_context(1, |context| interrupted.step(&state.session, &state.gumball, 10, &mut input, context));
     }
@@ -403,7 +403,7 @@ fn world_wheel_plan_revalidates_before_mutation_and_publishes_flat_action() {
     let original_distance = state.camera.orbit.distance;
     let mut stale = plan_world3d_wheel(&state.session, &state.camera, 7, 20.0).expect("bounded wheel plan");
     state.session.interaction_revision = state.session.interaction_revision.wrapping_add(1);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let stale_step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut stale, 7, &mut input, context)).unwrap();
     assert_eq!(stale_step, WorldInteractionStep::Stale);
     assert_eq!(state.camera.orbit.distance, original_distance);
@@ -435,7 +435,7 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
     let original_target = state.camera.orbit.target;
     let modifiers = PointerModifiers { shift: false, ctrl: false, alt: false, meta: false };
     let mut drag = plan_world3d_drag(&state.session, &state.camera, 3, 8.0, -4.0, 1, &modifiers).expect("middle drag plan");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut drag, 3, &mut input, context)).unwrap();
     assert_eq!(step, WorldInteractionStep::Pending);
     assert_ne!(state.camera.orbit.target, original_target);
@@ -471,7 +471,7 @@ fn world_paint_cancel_aborts_the_open_stroke_with_its_reason() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.selection.interaction_mode = "paint".into();
     assert!(plan_world3d_paint_abort(&state.session, &state.selection, 4, WorldCancelReason::Blur).is_none(), "no open stroke, nothing to abort");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     for (generation, reason) in [(4, WorldCancelReason::Blur), (5, WorldCancelReason::CaptureLost)] {
         state.selection.paint_stroke_active = true;
         let mut abort = plan_world3d_paint_abort(&state.session, &state.selection, generation, reason).expect("paint abort plan");
@@ -536,7 +536,7 @@ fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
         local_x: 0.0,
         local_y: 0.0,
         viewport: render_pick_viewport(&state.session),
-        view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
+        view_projection: ui_scene::math::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
         projection_spec: state.camera.projection_spec,
         draw: 0,
         instance: 0,
@@ -567,7 +567,7 @@ fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
     assert_eq!(with_world_step_context(1, |context| cursor.step(&state.session, &state.selection, &state.interaction, &state.scene, 9, context)), WorldInteractionStep::Complete);
     let mut plan = cursor.finish_plan(&state.session, &state.selection, &state.interaction, &state.scene, 9).expect("live cursor").expect("paint hit");
     let mut state = state;
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state.session, &mut state.camera, &mut state.selection, &mut state.scene, &mut plan, 9, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
     assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintAt"]);
 }
@@ -584,7 +584,7 @@ fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
         local_x: 0.0,
         local_y: 0.0,
         viewport: render_pick_viewport(&state.session),
-        view_projection: ui_wgpu::wgpu::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
+        view_projection: ui_scene::math::projection_spec_view_proj(&state.camera.orbit.to_camera(), state.camera.projection_spec, render_pick_viewport(&state.session).w, render_pick_viewport(&state.session).h),
         projection_spec: state.camera.projection_spec,
         draw: 0,
         instance: 0,
@@ -618,7 +618,7 @@ fn world_authority_retains_front_plan_across_output_saturation_and_retries_in_or
     state.interaction.interaction_objects.revision = state.session.interaction_revision;
     let original_distance = state.camera.orbit.distance;
     enqueue_world3d_intent(&mut state.authority, world_intent(1, 200.0)).expect("wheel intent");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)) != WorldInteractionAuthorityStep::Complete {
         turns += 1;
@@ -655,10 +655,10 @@ fn world_authority_close_drains_active_and_queued_fixed_owners_to_terminal() {
     let mut state = World3dState::new("surface".into(), "controller".into());
     enqueue_world3d_intent(&mut state.authority, world_intent(1, 10.0)).expect("active intent");
     enqueue_world3d_intent(&mut state.authority, world_intent(2, 20.0)).expect("queued intent");
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let _ = with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context));
     begin_world3d_interaction_close(&mut state.authority);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(!with_world_step_context(0, |context| close_world3d_interaction_step(&mut state.authority, &mut input, context)));
     assert!(!world3d_interaction_terminal_is_empty(&state.authority));
     let mut turns = 0;
@@ -682,7 +682,7 @@ fn world_saturation_owner_blocks_new_ingress_until_exact_fifo_transfer() {
     }
     let rejected_generation = WORLD_INTERACTION_INTENT_CAPACITY as u64 + 2;
     assert_eq!(enqueue_world3d_intent(&mut state.authority, world_intent(rejected_generation, rejected_generation as f32)).expect_err("blocked owner seals ingress").generation, rejected_generation);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let mut turns = 0;
     while state.authority.interaction_authority.as_ref().and_then(|authority| authority.queue.front()).map(|intent| intent.generation) == Some(1) {
         let _ = with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context));

@@ -2,10 +2,11 @@
 //! answers to "is this drawn in this view?"; the view's authored fields only parameterise them, nothing here is stored.
 
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanText, PlanVertex};
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
-use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, Phase, View, ViewCategory};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, ViewCategory};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
 
 /// 🧮️ The category a plan primitive of `kind` belongs to, none for the primitives of a vertical view that take the category of their element.
 pub fn category_of_kind(kind: PlanKind) -> Option<ViewCategory> {
@@ -47,12 +48,12 @@ pub fn category_of_family(family: SolidFamily) -> Option<ViewCategory> {
 
 /// 🕰️ The phase an element has, none for an id that is no element: the one rule of the `phase-visibility` inference (an element's own phase, its host's for an opening, new construction for a kind without a phase).
 pub fn phase_of(snapshot: &ModelSnapshot, element: &str) -> Option<Phase> {
-    crate::standards::v1::subsets::any::schema::inferences::phase_visibility::phase_of(snapshot, element)
+    semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::phase_of(snapshot, element)
 }
 
 /// 🕰️ The phases of every element on the storeys of a building, the one authored input the phase filter reads besides the view.
 pub fn phases_of(snapshot: &ModelSnapshot, building: &str) -> std::collections::BTreeMap<String, Phase> {
-    crate::standards::v1::subsets::any::schema::inferences::phase_visibility::phases_in(snapshot, building)
+    semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::phases_in(snapshot, building)
 }
 
 /// 🔎️ Whether a plan primitive of an element survives the view's category, phase and detail filters.

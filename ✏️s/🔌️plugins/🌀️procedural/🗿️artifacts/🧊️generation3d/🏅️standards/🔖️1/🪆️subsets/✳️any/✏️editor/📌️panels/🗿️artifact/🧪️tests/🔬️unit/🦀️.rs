@@ -3,7 +3,7 @@ use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_NODES;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_OUTLINE_WIRES;
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
-use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
 /// 🧾️ The law fixture's document tree, projected through the same retiring projection the flow
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.

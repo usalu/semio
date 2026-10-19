@@ -16,7 +16,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   await registerJcoRewriteTests(vitest, dependencies, source);
   await registerVendorTransportTests(vitest, dependencies, source);
   await registerProfileAndCatalogBuildTests(vitest, dependencies, source);
-  await registerHandleAndOutputTests(vitest, dependencies);
+  await registerHandleAndOutputTests(vitest, dependencies, source);
   await registerPollAndSmokeTests(vitest, dependencies, source);
 }
 

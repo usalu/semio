@@ -1,7 +1,9 @@
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot};
-use crate::standards::v1::subsets::any::io::export::holders::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{LayerFunction, Phase, Point2, Roof, RoofShape, RoofType, Slab, SlabType, Vertex};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Layer;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::holders::{holder_of, Holder, layers_of};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{LayerFunction, Phase, Point2, RoofShape, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Roof, RoofType, Slab, SlabType};
 
 fn corner(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }

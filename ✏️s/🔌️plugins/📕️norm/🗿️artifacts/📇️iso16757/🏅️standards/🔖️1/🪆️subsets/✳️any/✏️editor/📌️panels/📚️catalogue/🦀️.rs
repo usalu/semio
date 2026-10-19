@@ -1,7 +1,7 @@
 //! 📚️ ISO 16757 play app panel — examples plus Part 1/2/5 normative reference tables.
 
 use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_artifact_norm_iso16757_checks_common::helpers::{part_1, part_2, part_5};
+use semio_s_artifact_norm_iso16757_checks_common::part_libraries::{part_1, part_2, part_5};
 use semio_s_plugin_norm_compliance::ClauseId;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;

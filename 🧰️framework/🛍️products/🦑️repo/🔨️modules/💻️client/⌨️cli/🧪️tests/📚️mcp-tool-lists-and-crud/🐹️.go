@@ -37,7 +37,7 @@ func TestExhaustiveToolTechnologyTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool technology tree test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolTechnologyTree()
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
@@ -70,7 +70,7 @@ func TestExhaustiveToolTicketList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool ticket list test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolTicketList(nil, nil, nil)
 	if result.Error != "" {
 		t.Errorf("ToolTicketList returned error: %s", result.Error)
@@ -233,7 +233,7 @@ func TestExhaustiveToolTicketLifecycle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket lifecycle test in short mode")
 	}
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
 	result := ToolTicketOpen("🎫️", title, "Test prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", McpClientGeneric, "", "")

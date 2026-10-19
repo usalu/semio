@@ -28,7 +28,7 @@ import {
 } from "../../🧱️elements/🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 
-import inboundRequestFixture from "../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/📥️inbound-request/🔣️.json";
+import inboundRequestFixture from "@semio-tech/framework-plugin/reactor/testing/fixtures/inbound-request.json";
 import { extensionInvocationWireFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 
 type SubmittedEvent = { readonly kind: string; readonly payload: unknown };

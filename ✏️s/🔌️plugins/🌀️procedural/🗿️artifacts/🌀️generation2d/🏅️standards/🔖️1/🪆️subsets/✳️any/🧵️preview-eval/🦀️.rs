@@ -20,7 +20,7 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBor
 use semio_s_artifact_procedural_2d_model::host_with_session;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
-use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
+use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::ExtensionInvocation;

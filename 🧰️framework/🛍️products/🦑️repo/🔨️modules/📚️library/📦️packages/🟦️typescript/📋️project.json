@@ -14,8 +14,8 @@
     ],
     "workspacePublicationSources": [
       "workspaceMembershipSources",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
@@ -491,6 +491,56 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test crate-tree"
+      },
+      "outputs": []
+    },
+    "test-norm-definition-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️norm-definition-ownership/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️norm-definition-ownership/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧾️definition/🦀️.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/📋️project.json"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test norm-definition-ownership"
+      },
+      "outputs": []
+    },
+    "test-cad-presence-retirement": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️cad-presence-retirement/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/**/*.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/♻️retirement/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧪️tests/🧫️fixtures/*.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/**/*.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cad-presence-retirement"
+      },
+      "outputs": []
+    },
+    "test-launch-catalog": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test launch-catalog"
       },
       "outputs": []
     },

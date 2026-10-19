@@ -69,7 +69,7 @@ pub mod node_graph_edit {
                 _ => return Err(Fault::from("nodeGraphEdit operation is not supported by the program graph")),
             }
         }
-        Ok(Emit::tool_once(crate::editor::architect::base::ARCHITECT_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), emitted))
+        Ok(Emit::tool_once(crate::editor::architect::editor_vocabulary::ARCHITECT_APP_ID, "nodeGraphEdit", doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), emitted))
     }
 
 }

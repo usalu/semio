@@ -1,6 +1,6 @@
 /** 🧪️ Raw Unicode Socket snapshot in its authored single text entity. */
-import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteValueByteLengthControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
-import {ValueError,sqliteOperation,type SqliteDatabase} from "../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import {ArtifactSqliteProjection,artifactSqliteTables,artifactSqliteDocument,artifactSqliteText,artifactSqliteValueByteLengthControlled,artifactSqliteCheckpoint,type ArtifactSqliteOptions} from "@semio-tech/framework-sqlite-snapshot-rs/artifact";
+import {ValueError,sqliteOperation,type SqliteDatabase} from "@semio-tech/framework-sqlite-snapshot-rs/index";
 export const SOCKET_PROBE_SQLITE_SCHEMA="CREATE TABLE socket_probe (id INTEGER PRIMARY KEY CHECK (id = 1), text TEXT NOT NULL);\n";
 export const SOCKET_PROBE_NATIVE_DIALECT="native.socket-grant.probe@1/*";
 /** 📤️ Admits raw UTF-8 and the actual identity cell before projecting its owned row. */

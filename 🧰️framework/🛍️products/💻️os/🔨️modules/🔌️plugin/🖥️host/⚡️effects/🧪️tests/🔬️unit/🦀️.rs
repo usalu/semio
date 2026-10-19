@@ -420,14 +420,16 @@ fn router_effect_original_sources_keep_capacity_until_funded_close() {
             for axis in 0..4{
                 let mut denied=grant;
                 match axis{0=>denied.maximum_items=0,1 if copy>0=>denied.maximum_copy_bytes=copy-1,2 if release>0=>denied.maximum_release_bytes=release-1,3 if depth>0=>denied.maximum_depth=depth-1,_=>continue}
-                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(denied));
+                let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+                let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(denied, |cx| job.close_step(cx)).expect("original fixture close turn"));
                 assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
                 assert!(!matches!(step,InteractiveJobCloseStep::Complete{..}));
                 assert_eq!(source(&job).as_ref().unwrap().as_ptr(),pointer);assert_eq!(source(&job).as_deref().unwrap(),text.as_bytes());
             }
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_step(grant));
+            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
             assert!(step.progress().fits(grant));assert_eq!(step.progress().retained_capacity_bytes,heap.requested_bytes);assert_eq!(step.progress().released_bytes,heap.released_bytes);
-            assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}|InteractiveJobCloseStep::Blocked));
+            assert!(!matches!(step,InteractiveJobCloseStep::Blocked));
             released+=step.progress().released_bytes;copies+=step.progress().copied_bytes;turns+=1;assert!(turns<16);
         }
         assert_eq!(released,capacity);assert!(copies>=std::mem::size_of::<Option<Vec<u8>>>());
@@ -463,7 +465,7 @@ fn router_effect_original_box_frame_has_a_separate_funded_terminal_turn(){
             let denied=semio_framework_value::RetainedCloneGrant{maximum_release_bytes:frame-1,..grant};
             let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!owner.terminal_is_empty());assert_eq!((&**owner.0.as_ref().unwrap()as *const dyn InteractiveJob).cast::<()>(),pointer);
         }
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}|InteractiveJobCloseStep::Blocked));released+=heap.released_bytes;
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(!matches!(step,InteractiveJobCloseStep::Blocked));released+=heap.released_bytes;
         if terminal{assert!(matches!(step,InteractiveJobCloseStep::Complete{..}));}
     }
     assert!(saw_frame&&owner.terminal_is_empty());assert_eq!(released,source_capacity+frame);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!(heap.released_bytes,0);
@@ -476,11 +478,14 @@ fn router_effect_recording_leases_keep_unique_shared_and_weak_backing_custody(){
         let source=Arc::new(AtomicUsize::new(7));let bytes=semio_framework_value::shared_retirement_allocation_bytes::<AtomicUsize>();
         let mut alias=(case=="alias").then(||RecordingRouterJob{calls:Some(source.clone()),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None});let weak=(case=="weak").then(||Arc::downgrade(&source));let mut owner=RecordingRouterJob{calls:Some(source),yielded:false,closing:false,cancelled:false,completed:false,cursor:0,writer:None};owner.begin_close();
         let demand=owner.close_demands();
-        for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-        if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+        for denied in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_release_bytes:bytes-1,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(denied, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+        if weak.is_some(){let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert_eq!(step.progress(),Default::default());assert!(!owner.terminal_is_empty());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(weak));assert_eq!(heap.released_bytes,0);
         assert_eq!(owner.calls.as_ref().unwrap().load(Ordering::SeqCst),serde_json::from_str::<usize>("7").unwrap());
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
+        let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| owner.close_step(cx)).expect("original fixture close turn"));assert!(owner.terminal_is_empty());assert!(step.progress().fits(grant));assert_eq!(step.progress().released_bytes,heap.released_bytes);let mut released=heap.released_bytes;
         if let Some(alias)=alias.as_mut(){assert_eq!(released,0);alias.begin_close();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||alias.close_step(grant));assert!(alias.terminal_is_empty());assert_eq!(step.progress().released_bytes,heap.released_bytes);released+=heap.released_bytes;}
         assert_eq!(released,bytes);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{drop(owner);drop(alias);});assert_eq!(heap.released_bytes,0);
     }

@@ -20,7 +20,6 @@ export function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline
 export const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";
 const detailPanelPropertyLabelColumnWidthPx = domSizePx("propertyLabelColumnUiSpacing");
 const detailPanelPropertyStackedRowGapPx = domSizePx("propertyStackedGapUiSpacing");
-export const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
 export const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-[var(--tree-row-min-height,var(--tree-row-height))]";
 export const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 export const treeItemControlClassName =

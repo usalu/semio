@@ -18,7 +18,7 @@ Compose stack for the devcontainer: one service, **`semio`**. It sets no project
 
 ## Dockerfile
 
-Ubuntu 24.04 devcontainer base with the build toolchain, fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap.
+Ubuntu 24.04 devcontainer base with the build toolchain, fonts (`fonts-noto-color-emoji`, CJK, mono), headless-browser libraries, `xvfb`, `ripgrep` and `sqlite3`, plus Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. The pinned build tools (Nx by default, Bazel on request) are provisioned by `bun repo tools setup all`, which `bun repo run workspace:setup` runs.
 
 ## Lifecycle
 

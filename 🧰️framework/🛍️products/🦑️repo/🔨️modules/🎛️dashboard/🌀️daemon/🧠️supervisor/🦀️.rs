@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, mpsc};
 use std::time::{Duration, Instant};
-use ui_tui::tui::pty::{Pty, PtyRead, PtySize, StopStage};
+use semio_framework_ui_tui_terminal::pty::{Pty, PtyRead, PtySize, StopStage};
 
 const MAX_CONNECTIONS: usize = 64;
 const MAX_VIEWS: usize = 16;

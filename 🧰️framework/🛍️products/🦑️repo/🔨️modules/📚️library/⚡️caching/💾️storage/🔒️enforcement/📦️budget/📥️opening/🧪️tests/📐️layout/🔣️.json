@@ -22,7 +22,7 @@
   {
     "fault": "busy",
     "committed": false,
-    "reason": "Products reconciliation requires quiescent whole image custody"
+    "reason": "Queued products reconciliation must acquire whole image custody"
   },
   {
     "fault": "orphan",

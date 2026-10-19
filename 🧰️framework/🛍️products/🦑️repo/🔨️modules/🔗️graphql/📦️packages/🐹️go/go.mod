@@ -15,6 +15,7 @@ require (
 	github.com/usalu/semio/repo/tickets v0.0.0
 	github.com/usalu/semio/repo/todos v0.0.0
 	github.com/usalu/semio/repo/workspace v0.0.0
+	github.com/usalu/semio/repo/workspace/sandbox v0.0.0
 )
 
 replace github.com/usalu/semio/repo/codebase => ../../../🗂️codebase/📦️packages/🐹️go
@@ -40,3 +41,5 @@ replace github.com/usalu/semio/repo/tickets => ../../../🎫️tickets/📦️pa
 replace github.com/usalu/semio/repo/todos => ../../../📝️todos/📦️packages/🐹️go
 
 replace github.com/usalu/semio/repo/workspace => ../../../🏠️workspace/📦️packages/🐹️go
+
+replace github.com/usalu/semio/repo/workspace/sandbox => ../../../🏠️workspace/📦️packages/🐹️go/🏖️sandbox

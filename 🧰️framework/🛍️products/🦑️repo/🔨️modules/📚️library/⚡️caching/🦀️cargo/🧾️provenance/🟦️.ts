@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, posix, win32 } from "node:path";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { cargoDirectories } from "../🟦️.ts";
+import { cargoDirectories } from "../🗂️directories/🟦️.ts";
 
 /**
  * 🧾️ One file a unit's encoded dep-info tracks for freshness. `base` says what a relative `path` is joined onto

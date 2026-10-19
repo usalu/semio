@@ -10,7 +10,6 @@
       "projectPath": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📋️project.json",
       "producerTarget": "wasm",
       "producerCommand": "bun ./📜️script.ts wasm",
-      "producerOutput": "{projectRoot}/pkg",
       "module": "framework_actor.js",
       "types": "framework_actor.d.ts",
       "wasm": "framework_actor_bg.wasm",
@@ -29,8 +28,7 @@
           "./framework_actor.js": { "types": "./pkg/framework_actor.d.ts", "import": "./pkg/framework_actor.js" },
           "./framework_actor_bg.wasm": { "types": "./pkg/framework_actor_bg.wasm.d.ts", "default": "./pkg/framework_actor_bg.wasm" }
         },
-        "bundleKind": "library",
-        "nx": { "includedScripts": [] }
+        "bundleKind": "library"
       }
     },
     {
@@ -42,7 +40,6 @@
       "projectPath": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/📋️project.json",
       "producerTarget": "wasm",
       "producerCommand": "bun ./📜️script.ts wasm",
-      "producerOutput": "{projectRoot}/pkg",
       "module": "semio_puzzle.js",
       "types": "semio_puzzle.d.ts",
       "wasm": "semio_puzzle_bg.wasm",
@@ -61,8 +58,7 @@
           "./semio_puzzle.js": { "types": "./pkg/semio_puzzle.d.ts", "import": "./pkg/semio_puzzle.js" },
           "./semio_puzzle_bg.wasm": { "types": "./pkg/semio_puzzle_bg.wasm.d.ts", "default": "./pkg/semio_puzzle_bg.wasm" }
         },
-        "bundleKind": "library",
-        "nx": { "includedScripts": [] }
+        "bundleKind": "library"
       }
     }
   ],
@@ -91,9 +87,10 @@
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️wasm-package-wrappers/🔣️.json",
-    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
     "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
   ]

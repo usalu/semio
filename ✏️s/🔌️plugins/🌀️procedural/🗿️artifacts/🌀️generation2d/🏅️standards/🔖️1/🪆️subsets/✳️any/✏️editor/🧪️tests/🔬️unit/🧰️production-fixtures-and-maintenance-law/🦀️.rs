@@ -117,7 +117,7 @@ impl Drop for ProductionLease {
     }
 }
 
-fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
     semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_CONTROL_CREDITS })
@@ -128,16 +128,16 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
         let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded P2 production envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P2 production envelope page admission failed: {fault:?}"));
     }
-    assert!(app.seal_artifact_envelope_ingress(handle).expect("P2 production envelope seal"));
+    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("P2 production envelope seal"));
     handle
 }
 
-fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation2dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
         semio_s_artifact_procedural_2d_host::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P2 authority refresh immediately before production maintenance");
-        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P2 production maintenance turn");
-        let poll = app.advance_artifact_envelope_load(handle).expect("P2 production load advancement");
+        PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P2 production maintenance turn");
+        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("P2 production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }

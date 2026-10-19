@@ -2,13 +2,11 @@ import { hostContinuations } from "@semio-tech/framework-async/continuation";
 import {NativeDecodeControl} from "@semio-tech/value-ts/decode";
 /** 🧩️ Owned helpers for handcrafted semantic artifact projections. */
 import {ArtifactSqliteTableIndex} from "./🗂️table/🟦️.ts";
+import {artifactSqliteCheckpoint,cancellation,type ArtifactSqliteOptions,type ArtifactSqliteProgress} from "./🚦️checkpoint/🟦️.ts";
+export {artifactSqliteCheckpoint,type ArtifactSqliteOptions,type ArtifactSqliteProgress} from "./🚦️checkpoint/🟦️.ts";
 export {ArtifactSqliteRowIndex} from "./🗂️row/🟦️.ts";
 import { ValueError, sqliteOperation, parseSqliteDatabaseSchemaControlled, validateSqliteDatabaseSchemaControlled, sqliteValueByteLength, type SqliteOperation, type SqliteDatabase, type SqliteDatabaseOptions, type SqliteDatabaseProgress, type SqliteRow, type SqliteValue } from "../🟦️.ts";
 
-/** 🚦️ Semantic entity progress plus physical page progress. */
-export interface ArtifactSqliteProgress { readonly phase: SqliteDatabaseProgress["phase"] | "projectSnapshot" | "reconstructSnapshot"; readonly completed: number; readonly total: number }
-/** 🛑️ Shared cancellation, bounds and progress for typed snapshot projections. */
-export interface ArtifactSqliteOptions extends Omit<SqliteDatabaseOptions, "onProgress"> { readonly onProgress?: (progress: ArtifactSqliteProgress) => void }
 
 /** 🧭️ Binds neutral semantic work to the caller's relational projection progress. */
 export function artifactSqliteValueControl(options:ArtifactSqliteOptions,phase:"projectSnapshot"|"reconstructSnapshot",completed:number,total:number):NativeDecodeControl{
@@ -163,18 +161,6 @@ export function artifactSqliteValueBudget(bytes: number, options: ArtifactSqlite
   if (!Number.isSafeInteger(limit) || limit < 0 || !Number.isSafeInteger(bytes) || bytes > limit) throw new ValueError("ownershipLimit", "Artifact SQLite value limit");
 }
 
-/** ⏱️ Publish semantic entity progress and yield to cancellation at bounded intervals. */
-export async function artifactSqliteCheckpoint(options: ArtifactSqliteOptions, phase: "projectSnapshot" | "reconstructSnapshot" | "indexTables", completed: number, total: number, yieldToEventLoop = true): Promise<void> {
-  cancellation(options);
-  options.onProgress?.({ phase, completed, total });
-  cancellation(options);
-  if (yieldToEventLoop && completed % 256 === 0) await hostContinuations.yieldContinuation();
-  cancellation(options);
-}
-
-function cancellation(options: ArtifactSqliteOptions): void {
-  if (options.signal?.aborted) throw new ValueError("canceled", "Artifact SQLite projection cancelled");
-}
 async function primitiveCheckpoint(options: ArtifactSqliteOptions, phase: "projectSnapshot" | "reconstructSnapshot", completed: number, total: number): Promise<void> {
   await artifactSqliteCheckpoint(options, phase, completed, total, false);
   await hostContinuations.yieldContinuation();

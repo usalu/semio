@@ -18,15 +18,15 @@ import { createServer } from "node:net";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
 import { randomBytes } from "node:crypto";
-import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
 import { decodeServerFrame, encodeClientFrame } from "@semio-tech/framework-replication";
 import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { isDiscoverySkipDirectory } from "@semio-tech/repo-lib/inventory";
 
-export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+export { getWorkspaceRoot } from "@semio-tech/repo-lib/inventory";
 
 //#region 🧬️Scope-owned schema resolution
 

@@ -1,7 +1,10 @@
 //! 🤝️ Sparse patches of the coordination records: clash sets, rules, issues and issue comments.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
 use crate::standards::v1::subsets::any::schema::diff::algebra::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementSelector, RuleKind, RuleSeverity, RuleScope, IssueStatus, IssuePriority, ClashRef, IssueViewpoint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Rule, Issue, IssueComment};
 
 /// 🩹 Sparse patch of [`ClashSet`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

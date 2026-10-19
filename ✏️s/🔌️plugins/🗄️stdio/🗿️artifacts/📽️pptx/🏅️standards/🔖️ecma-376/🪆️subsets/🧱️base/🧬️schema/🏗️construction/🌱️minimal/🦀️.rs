@@ -1,5 +1,6 @@
 //! 🏗️ Pure PresentationML construction and package relationships.
-use crate::standards::v_ecma_376::subsets::base::schema::{snapshot::*,vocabulary::*};
+use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
+use semio_s_artifact_stdio_pptx_base_vocabulary::vocabulary::{attr, A_NS, P_NS, R_NS, PRESENTATION_PART, PRESENTATION_CONTENT_TYPE, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, REL_TYPE_THEME, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE, SLIDE_MASTER_PART, THEME_CONTENT_TYPE, THEME_PART};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument,XmlNode};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage,OpcRelationship,OpcTargetMode,REL_TYPE_OFFICE_DOCUMENT};

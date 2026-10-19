@@ -5,16 +5,18 @@
 //! dragging slides it along its host or onto another wall (`move-opening`, with the new host when it lands on another wall). In the section window the top line of every storey is a handle: dragging it sets the
 //! storey height (`set-storey-height`) and every wall, opening and stair that follows the storey follows by inference.
 
-use crate::editor::bim::gestures::session::{Modifiers, Surface};
-use crate::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
-use crate::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
-use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::editor::bim::entities::kind_holding;
-use crate::editor::bim::modes::edit::windows::plan;
-use crate::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Vertex}, inferences::ModelInference, mutations::ModelMutation};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{Modifiers, Surface};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_holding;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::collections::BTreeMap;
 
 /// 📏️ The flattening tolerance of a dragged arc, in metres.
@@ -84,9 +86,9 @@ fn dragged_route(snapshot: &ModelSnapshot, id: &str, index: usize, to: P) -> Opt
     let element = snapshot.mep_elements.get(id)?;
     let vertex = element.path.get(index)?;
     let mut path = element.path.clone();
-    path[index] = crate::standards::v1::subsets::any::schema::snapshot::Point3 { x: to[0], y: to[1], z: vertex.z };
-    let apart = |a: &crate::standards::v1::subsets::any::schema::snapshot::Point3, b: &crate::standards::v1::subsets::any::schema::snapshot::Point3| (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z) > 1e-6;
-    (path != element.path && path.windows(2).all(|pair| apart(&pair[0], &pair[1]))).then(|| ModelMutation::SetMepElement(crate::standards::v1::subsets::any::schema::mutations::set_mep_element::SetMepElement { id: id.into(), storey: None, system: None, shape: None, path: Some(path), name: None }))
+    path[index] = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3 { x: to[0], y: to[1], z: vertex.z };
+    let apart = |a: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3, b: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3| (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z) > 1e-6;
+    (path != element.path && path.windows(2).all(|pair| apart(&pair[0], &pair[1]))).then(|| ModelMutation::SetMepElement(semio_s_artifact_bim_model_mut_any_158::standards::v1::subsets::any::schema::mutations::set_mep_element::SetMepElement { id: id.into(), storey: None, system: None, shape: None, path: Some(path), name: None }))
 }
 
 /// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall, on every corner of the one selected slab or roof and on every vertex of the one selected MEP element.
@@ -121,11 +123,11 @@ fn dragged_outline(snapshot: &ModelSnapshot, id: &str, roof: bool, index: usize,
     if roof {
         let footprint = &snapshot.roofs.get(id)?.footprint;
         let moved = moved_corner(footprint, index, to).filter(|moved| moved != footprint)?;
-        Some(ModelMutation::SetRoofFootprint(crate::standards::v1::subsets::any::schema::mutations::set_roof_footprint::SetRoofFootprint { id: id.into(), footprint: moved }))
+        Some(ModelMutation::SetRoofFootprint(semio_s_artifact_bim_model_mut_any_7::standards::v1::subsets::any::schema::mutations::set_roof_footprint::SetRoofFootprint { id: id.into(), footprint: moved }))
     } else {
         let slab = snapshot.slabs.get(id)?;
         let moved = moved_corner(&slab.boundary, index, to).filter(|moved| moved != &slab.boundary)?;
-        Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: moved, holes: slab.holes.clone() }))
+        Some(ModelMutation::SetSlabBoundary(semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: moved, holes: slab.holes.clone() }))
     }
 }
 
@@ -133,8 +135,8 @@ fn dragged_axis(snapshot: &ModelSnapshot, wall: &str, kind: HandleKind, to: P) -
     let axis = &snapshot.walls.get(wall)?.axis;
     let (start, end) = axis_ends(axis);
     match kind {
-        HandleKind::Start => (!same(to, end)).then(|| axis_of(to, end, crate::editor::bim::gestures::plane::axis_bulge(axis))),
-        HandleKind::End => (!same(to, start)).then(|| axis_of(start, to, crate::editor::bim::gestures::plane::axis_bulge(axis))),
+        HandleKind::Start => (!same(to, end)).then(|| axis_of(to, end, semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_bulge(axis))),
+        HandleKind::End => (!same(to, start)).then(|| axis_of(start, to, semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_bulge(axis))),
         HandleKind::Curve => Some(axis_of(start, end, bulge_through(start, to, end).unwrap_or(0.0))),
     }
 }
@@ -179,7 +181,7 @@ fn marquee_targets(ctx: &ToolContext<'_>, start: P, end: P) -> Vec<(String, Stri
 impl Select {
     fn down(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
         let reach = pointer.tolerance * PICK_PIXELS;
-        if let crate::editor::bim::gestures::session::Surface::Section { start, end } = &ctx.surface {
+        if let semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface::Section { start, end } = &ctx.surface {
             let length = dist(*start, *end);
             let [u, v] = pointer.at;
             let hit = ctx.inference.storey_levels.iter().find(|(_, level)| (v - level.top_elevation).abs() <= reach && u >= -SECTION_REACH - reach && u <= length + SECTION_REACH + reach).map(|(storey, level)| (storey.clone(), level.top_elevation));
@@ -211,7 +213,7 @@ impl Select {
                 return Step::default();
             }
         }
-        let hit = linework(ctx).and_then(|linework| plan::pick(linework, (pointer.at[0], pointer.at[1]), reach));
+        let hit = linework(ctx).and_then(|linework| semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::pick(linework, (pointer.at[0], pointer.at[1]), reach));
         let merge = pointer.modifiers.merge();
         match hit.and_then(|id| target_of(ctx, &id)) {
             Some((kind, id)) => {
@@ -232,7 +234,7 @@ impl Select {
         let host = nearest_host(ctx.snapshot, ctx.storey()?, at, reach)?;
         let width = width_of(ctx.snapshot, opening)?;
         let offset = fitted_offset(host.length, width, host.offset)?;
-        let mutation = ModelMutation::MoveOpening(crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.to_string(), offset, host: (host.host != opening.host).then(|| host.host.clone()) });
+        let mutation = ModelMutation::MoveOpening(semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.to_string(), offset, host: (host.host != opening.host).then(|| host.host.clone()) });
         let moved = host.host != from.0 || (offset - from.1).abs() > 1e-9;
         let fits = placement_issue(ctx.snapshot, Some(id), &host.host, host.length, offset, width).is_none();
         Some((host, offset, mutation, moved && fits))
@@ -253,7 +255,7 @@ impl Select {
                 let anchor = ctx.snapshot.walls.get(&wall).map(|row| axis_ends(&row.axis)).map(|(start, end)| if kind == HandleKind::Start { end } else { start });
                 let to = if kind == HandleKind::Curve { pointer.at } else { ctx.snapped(pointer, anchor, std::slice::from_ref(&wall), &[]).point };
                 match dragged_axis(ctx.snapshot, &wall, kind, to) {
-                    Some(axis) if ctx.snapshot.walls.get(&wall).is_some_and(|row| row.axis != axis) => Step::write(ctx, ModelMutation::SetWallAxis(crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis { id: wall, axis })),
+                    Some(axis) if ctx.snapshot.walls.get(&wall).is_some_and(|row| row.axis != axis) => Step::write(ctx, ModelMutation::SetWallAxis(semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis { id: wall, axis })),
                     _ => Step::default(),
                 }
             }
@@ -275,7 +277,7 @@ impl Select {
                 if (height - row.height).abs() < 1e-9 {
                     return Step::default();
                 }
-                Step::write(ctx, ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: storey, height }))
+                Step::write(ctx, ModelMutation::SetStoreyHeight(semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: storey, height }))
             }
         }
     }
@@ -322,7 +324,7 @@ impl Tool for Select {
             Mode::Handle { wall, kind, current } => {
                 if let Some(axis) = dragged_axis(ctx.snapshot, wall, *kind, *current) {
                     let (start, end) = axis_ends(&axis);
-                    marks.push(Mark::path(&flatten(start, end, crate::editor::bim::gestures::plane::axis_bulge(&axis), FLATTEN_TOLERANCE), false, Style::Ghost));
+                    marks.push(Mark::path(&flatten(start, end, semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::axis_bulge(&axis), FLATTEN_TOLERANCE), false, Style::Ghost));
                     marks.push(Mark::dot(*current, Style::Handle));
                 }
             }
@@ -363,7 +365,7 @@ impl Tool for Select {
 
 fn section_length(ctx: &ToolContext<'_>) -> Option<f64> {
     match &ctx.surface {
-        crate::editor::bim::gestures::session::Surface::Section { start, end } => Some(dist(*start, *end)),
+        semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface::Section { start, end } => Some(dist(*start, *end)),
         _ => None,
     }
 }

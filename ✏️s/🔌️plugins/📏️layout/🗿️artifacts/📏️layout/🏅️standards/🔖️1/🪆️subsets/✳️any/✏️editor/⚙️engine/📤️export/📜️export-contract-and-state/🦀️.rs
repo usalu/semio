@@ -54,9 +54,9 @@ pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 634;
 
 /// 📤️ Derived, never a literal: the exact per-chunk cap [`ArtifactOutputChunks::push`] enforces. A
 /// literal that drifts from it turns a correct producer into a runtime fault on the wire.
-pub(super) const OUTPUT_CHUNK_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
+pub const OUTPUT_CHUNK_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
 
-pub(super) const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
+pub const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTES.div_ceil(OUTPUT_CHUNK_BYTES);
 
 pub(super) const BASE64_INPUT_BYTES_PER_UNIT: usize = 3_072;
 
@@ -162,7 +162,7 @@ impl LayoutExportCommit {
         Self { filename: format!("{}.{}", sanitize_filename(name), kind.extension()), mime_type: kind.mime_type().into(), encoding: kind.binary().then(|| "base64".into()), data }
     }
 
-    pub(super) fn from_chunks(kind: LayoutExportKind, name: &str, chunks: &ArtifactOutputChunks) -> Result<Self, String> {
+    pub fn from_chunks(kind: LayoutExportKind, name: &str, chunks: &ArtifactOutputChunks) -> Result<Self, String> {
         let mut bytes = Vec::with_capacity(chunks.bytes());
         while let Some(chunk) = chunks.take_chunk().map_err(|error| error.message)? {
             bytes.extend_from_slice(&chunk);
@@ -174,15 +174,15 @@ impl LayoutExportCommit {
 
 //#region 🧱️Storage
 #[derive(Debug)]
-pub(super) struct ChunkRope {
-    pub(super) chunks: std::collections::VecDeque<Vec<u8>>,
-    pub(super) len: usize,
-    pub(super) digest: u64,
-    pub(super) front_byte_cursor: usize,
+pub struct ChunkRope {
+    pub chunks: std::collections::VecDeque<Vec<u8>>,
+    pub len: usize,
+    pub digest: u64,
+    pub front_byte_cursor: usize,
 }
 
 impl ChunkRope {
-    pub(super) fn close_take_chunk(&mut self, maximum_bytes: usize) -> Option<Result<usize, ()>> {
+    pub fn close_take_chunk(&mut self, maximum_bytes: usize) -> Option<Result<usize, ()>> {
         let bytes = self.chunks.front().map_or(0, Vec::len);
         if bytes == 0 {
             return None;
@@ -196,11 +196,11 @@ impl ChunkRope {
 }
 
 impl ChunkRope {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { chunks: std::collections::VecDeque::with_capacity(MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS), len: 0, digest: 0xcbf29ce484222325, front_byte_cursor: 0 }
     }
 
-    pub(super) fn append(&mut self, mut bytes: &[u8]) -> Result<(), String> {
+    pub fn append(&mut self, mut bytes: &[u8]) -> Result<(), String> {
         if self.len.checked_add(bytes.len()).is_none_or(|len| len > MAX_LAYOUT_EXPORT_OUTPUT_BYTES) {
             return Err("layout-export-output-limit".into());
         }
@@ -223,14 +223,14 @@ impl ChunkRope {
         Ok(())
     }
 
-    pub(super) fn take_chunk(&mut self) -> Option<Vec<u8>> {
+    pub fn take_chunk(&mut self) -> Option<Vec<u8>> {
         if self.front_byte_cursor != 0 {
             return None;
         }
         self.chunks.pop_front()
     }
 
-    pub(super) fn take_prefix(&mut self, maximum: usize) -> Vec<u8> {
+    pub fn take_prefix(&mut self, maximum: usize) -> Vec<u8> {
         let mut output = Vec::with_capacity(maximum);
         while output.len() < maximum {
             let Some(chunk) = self.chunks.front() else { break };
@@ -247,29 +247,29 @@ impl ChunkRope {
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct ExportRect {
-    pub(super) x: u32,
-    pub(super) y: u32,
-    pub(super) width: u32,
-    pub(super) height: u32,
-    pub(super) rgba: [u8; 4],
+pub struct ExportRect {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub rgba: [u8; 4],
 }
 
 #[derive(Clone, Debug)]
-pub(super) struct ZipEntry {
-    pub(super) name: String,
-    pub(super) crc: u32,
-    pub(super) size: u32,
-    pub(super) offset: u32,
+pub struct ZipEntry {
+    pub name: String,
+    pub crc: u32,
+    pub size: u32,
+    pub offset: u32,
 }
 
 #[derive(Clone, Debug, Default)]
-pub(super) struct ZipState {
-    pub(super) entries: Vec<ZipEntry>,
-    pub(super) current_name: Option<String>,
-    pub(super) current_crc: u32,
-    pub(super) current_size: u32,
-    pub(super) current_offset: u32,
+pub struct ZipState {
+    pub entries: Vec<ZipEntry>,
+    pub current_name: Option<String>,
+    pub current_crc: u32,
+    pub current_size: u32,
+    pub current_offset: u32,
 }
 
 integer_json_scalar!(u8, u32, u64, usize);
@@ -358,7 +358,7 @@ pub(super) enum PackageSection {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum LayoutExportCloseStage {
+pub enum LayoutExportCloseStage {
     Publication,
     JsonValidation,
     TypedValidation,
@@ -433,7 +433,7 @@ impl LayoutExportPublication {
         Ok(Self { kind, bytes: storage, length: bytes.len(), publication: RetainedJobPublication::new() })
     }
 
-    pub(super) fn advance<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
+    pub fn advance<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
         let kind = match self.kind {
             LayoutExportPublicationKind::Preview => JobPublicationKind::Preview,
             LayoutExportPublicationKind::Checkpoint { applied_progress } => JobPublicationKind::Checkpoint { applied_progress },
@@ -443,19 +443,19 @@ impl LayoutExportPublication {
         self.publication.advance_from_source(kind, &self.bytes[..self.length], context).map_err(Into::into)
     }
 
-    pub(super) fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
+    pub fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.publication.borrow_outcome(descriptor)
     }
 
-    pub(super) fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.publication.close_step(grant)
     }
 
-    pub(super) fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         self.publication.retirement_demands()
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.publication.terminal_is_empty()
     }
 }

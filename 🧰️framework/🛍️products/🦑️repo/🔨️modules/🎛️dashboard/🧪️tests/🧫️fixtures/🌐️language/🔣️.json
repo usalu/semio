@@ -1,0 +1,40 @@
+{
+  "negotiate": [
+    { "value": "de", "language": "de" },
+    { "value": "de_DE.UTF-8", "language": "de" },
+    { "value": "de-AT", "language": "de" },
+    { "value": "de@euro", "language": "de" },
+    { "value": "DE_ch", "language": "de" },
+    { "value": "en", "language": "en" },
+    { "value": "en_US.UTF-8", "language": "en" },
+    { "value": "C", "language": null },
+    { "value": "POSIX", "language": null },
+    { "value": "", "language": null },
+    { "value": "fr_FR.UTF-8", "language": null },
+    { "value": "deutsch", "language": null }
+  ],
+  "resolve": [
+    { "environment": {}, "expected": "en" },
+    { "environment": { "LANG": "de_DE.UTF-8" }, "expected": "de" },
+    { "environment": { "LC_ALL": "C", "LANG": "de_DE.UTF-8" }, "expected": "de" },
+    { "environment": { "LC_ALL": "en_US.UTF-8", "LANG": "de_DE.UTF-8" }, "expected": "en" },
+    { "environment": { "LC_MESSAGES": "de", "LANG": "en" }, "expected": "de" },
+    { "environment": { "LANG": "fr_FR.UTF-8" }, "expected": "en" },
+    { "environment": { "LANGUAGE": "de" }, "expected": "en" }
+  ],
+  "invalidDeclarations": [
+    { "systemVariables": [], "fallback": [] },
+    { "systemVariables": [], "fallback": ["fr"] },
+    { "systemVariables": ["LANG"], "fallback": ["en", "fr"] },
+    { "systemVariables": ["LANG"] },
+    { "fallback": ["en"] },
+    { "systemVariables": ["lang"], "fallback": ["en"] },
+    { "systemVariables": [], "fallback": ["en"], "default": "en" },
+    { "systemVariables": ["LANG", "LANG"], "fallback": ["en"] },
+    { "systemVariables": [], "fallback": ["en", "en"] }
+  ],
+  "fallbackOrders": [
+    { "declaration": { "systemVariables": [], "fallback": ["en", "de"] }, "expected": "en" },
+    { "declaration": { "systemVariables": [], "fallback": ["de", "en"] }, "expected": "de" }
+  ]
+}

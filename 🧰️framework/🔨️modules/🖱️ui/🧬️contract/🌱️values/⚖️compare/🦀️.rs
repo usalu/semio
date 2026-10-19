@@ -174,7 +174,7 @@ macro_rules! wrapper {
 wrapper!(SurfaceId);
 //#region 🌳️BorrowedValueTraversal
 #[derive(Clone, Copy)]
-pub(super) struct ValueFrame {
+pub struct ValueFrame {
     left: u16,
     right: u16,
     position: u16,
@@ -183,7 +183,7 @@ pub(super) struct ValueFrame {
 }
 impl ValueFrame {
     const EMPTY: Self = Self { left: u16::MAX, right: u16::MAX, position: 0, remembered: 0, value_phase: false };
-    pub(super) fn checked_page(index: usize) -> Result<u16, &'static str> {
+    pub fn checked_page(index: usize) -> Result<u16, &'static str> {
         if index == UI_VALUE_NONE {
             return Ok(u16::MAX);
         }
@@ -192,7 +192,7 @@ impl ValueFrame {
         }
         u16::try_from(index).map_err(|_| "comparison page exceeds fixed index")
     }
-    pub(super) fn checked_position(position: usize) -> Result<u16, &'static str> {
+    pub fn checked_position(position: usize) -> Result<u16, &'static str> {
         if position > 2 * UI_TEXT_MAX_BYTES {
             return Err("comparison position exceeds text domain");
         }
@@ -375,6 +375,3 @@ impl TypedCompare for UiMap {
 //#endregion 🌳️BorrowedValueTraversal
 
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

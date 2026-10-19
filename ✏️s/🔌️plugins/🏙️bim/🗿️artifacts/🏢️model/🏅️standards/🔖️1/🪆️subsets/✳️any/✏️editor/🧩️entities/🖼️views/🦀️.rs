@@ -1,9 +1,15 @@
 //! 🖼️ The view rows of the entity table: how an authored view reads off the snapshot, how an edited value becomes a `set-view` mutation, and what a new view is. A view is created as the plan of
 //! a storey here; the other kinds are created by the `createView` command, which knows how to place a section, an elevation or a camera.
 
-use crate::editor::bim::entities::{container, number, parse_count, parse_number, parse_optional_number, parse_point, parse_text, partial, point, variant, Created, FieldRow};
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{DetailLevel, ModelSnapshot, Phase, Point2, View, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{container, Created};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{number, parse_count, parse_number, parse_optional_number, parse_point, parse_text, partial, point, variant};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, View};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_28::standards::v1::subsets::any::schema::mutations::set_view;
 
 const CATEGORIES: [ViewCategory; 11] = [
     ViewCategory::Walls,
@@ -100,5 +106,5 @@ pub fn create_view(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str)
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let building = snapshot.storeys[&storey].building.clone();
     let view = View::of_storey(&building, &unique_name(snapshot, &building, name), ViewKind::Plan, &storey);
-    Ok(ModelMutation::CreateView(crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id: id.into(), view }))
+    Ok(ModelMutation::CreateView(semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id: id.into(), view }))
 }

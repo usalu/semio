@@ -26,7 +26,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 	events.Emit(events.EventIntegrateStarting, "repo-cli", events.IntegratePayload{Source: sourcePath, TargetFile: targetFilePath, TargetSection: targetSectionName})
 	output := workspace.NewOutput()
 
-	absSourcePath := filepath.Join(workspace.RootDir, sourcePath)
+	absSourcePath := filepath.Join(workspace.GetRootDir(), sourcePath)
 	if !workspace.FileExists(absSourcePath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Source file not found: %s", sourcePath))
 	}
@@ -35,7 +35,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		return workspace.ToolErrorResult(err)
 	}
 
-	absTargetFilePath := filepath.Join(workspace.RootDir, targetFilePath)
+	absTargetFilePath := filepath.Join(workspace.GetRootDir(), targetFilePath)
 	if !workspace.FileExists(absTargetFilePath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Target file not found: %s", targetFilePath))
 	}
@@ -136,7 +136,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) works
 	events.Emit(events.EventExtractStarting, "repo-cli", events.ExtractPayload{SourceFile: sourceFilePath, SourceSection: sourceSectionName, TargetFile: targetFilePath})
 	output := workspace.NewOutput()
 
-	absSourcePath := filepath.Join(workspace.RootDir, sourceFilePath)
+	absSourcePath := filepath.Join(workspace.GetRootDir(), sourceFilePath)
 	if !workspace.FileExists(absSourcePath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Source file not found: %s", sourceFilePath))
 	}
@@ -195,7 +195,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) works
 		targetContent += "\n"
 	}
 
-	absTargetFilePath := filepath.Join(workspace.RootDir, targetFilePath)
+	absTargetFilePath := filepath.Join(workspace.GetRootDir(), targetFilePath)
 	if err := os.MkdirAll(filepath.Dir(absTargetFilePath), 0755); err != nil {
 		return workspace.ToolErrorResult(err)
 	}
@@ -225,7 +225,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) works
 // 🎛️UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
 // ✏️UpdateAgentsDocsPath modifies an existing agents docs path entry.
 func UpdateAgentsDocsPath(oldPath, newPath string) {
-	agentsPath := filepath.Join(workspace.RootDir, "AGENTS.md")
+	agentsPath := filepath.Join(workspace.GetRootDir(), "AGENTS.md")
 	if !workspace.FileExists(agentsPath) {
 		return
 	}

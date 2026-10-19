@@ -11,8 +11,8 @@
 //! exact analytic/NURBS sweeps (no sampling, no triangle soup) in ticket
 //! 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave W2-C.
 
-#[path = "🧮️core/🦀️.rs"]
-mod core;
+#[path = "🧮️sweep-machinery/🦀️.rs"]
+mod sweep_machinery;
 #[path = "🐍️frame/🦀️.rs"]
 mod frame;
 #[path = "🥞️loft/🦀️.rs"]
@@ -41,17 +41,17 @@ pub use revolve::{revolve_face, RevolveJob};
 pub struct ExtrudeJob {
     face: FaceId,
     offset: Vec3,
-    prism: Option<core::PrismBuilder>,
+    prism: Option<sweep_machinery::PrismBuilder>,
     plan: Plan,
 }
 
 impl ExtrudeJob {
     /// ➡️ Plans an extrusion of `face` along `direction` by `distance`.
     pub fn new(body: &Body, face: FaceId, direction: Vec3, distance: f64) -> Result<Self, KernelError> {
-        core::require_positive("extrude distance", distance.abs())?;
+        sweep_machinery::require_positive("extrude distance", distance.abs())?;
         let dir = direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
-        core::planar_outward_normal(body, face)?;
-        let plan = Plan::new(&[("setup", 1), ("laterals", core::PrismBuilder::lateral_count(body, face)), ("close", 1)]);
+        sweep_machinery::planar_outward_normal(body, face)?;
+        let plan = Plan::new(&[("setup", 1), ("laterals", sweep_machinery::PrismBuilder::lateral_count(body, face)), ("close", 1)]);
         Ok(Self { face, offset: dir * distance, prism: None, plan })
     }
 }
@@ -65,13 +65,13 @@ impl StagedOperation for ExtrudeJob {
     fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
         let unit = self.plan.take().ok_or_else(|| KernelError::Operation("extrude job already finished".into()))?;
         match unit.phase {
-            0 => self.prism = Some(core::PrismBuilder::begin(body, self.face, core::Placement::Translate { offset: self.offset }, rec)?),
+            0 => self.prism = Some(sweep_machinery::PrismBuilder::begin(body, self.face, sweep_machinery::Placement::Translate { offset: self.offset }, rec)?),
             1 => self.prism.as_mut().expect("prism begun before laterals").lateral(body, rec, unit.index)?,
             _ => {
                 let prism = self.prism.take().expect("prism begun before closing").finish();
                 let mut faces = vec![self.face, prism.top];
                 faces.extend(prism.laterals);
-                return Ok(StageStep::Done(StageOutput::Solid(core::finish_solid(body, faces, rec))));
+                return Ok(StageStep::Done(StageOutput::Solid(sweep_machinery::finish_solid(body, faces, rec))));
             }
         }
         Ok(StageStep::Working)
@@ -80,7 +80,7 @@ impl StagedOperation for ExtrudeJob {
 
 /// ➡️ Extrudes `face` along `direction` by `distance`. Every profile edge yields an exact side
 /// face (`Plane` for a line, `Cylinder` for a circle whose axis is parallel to `direction`, a
-/// degree-1-in-v NURBS extrusion surface for a free-form edge — see `🧮️core::translate_lateral`);
+/// degree-1-in-v NURBS extrusion surface for a free-form edge — see `🧮️sweep-machinery::translate_lateral`);
 /// holes get their own tube faces (every loop, not just the outer one). The profile face itself
 /// becomes one cap (flipped in place, recorded modified); a `transform_face` translate becomes the
 /// other (recorded generated), matching the ticket's "profile as modified" history convention.
@@ -126,7 +126,7 @@ impl ExtrudeWireJob {
         }
         let pts: Vec<Pnt3> = wire.vertices.iter().map(|&v| body.vertices.get(v).unwrap().position).collect();
         let normal = newell_normal(&pts).ok_or_else(|| KernelError::InvalidInput("extrude_wire: wire is degenerate".into()))?;
-        core::require_positive("extrude distance", distance.abs())?;
+        sweep_machinery::require_positive("extrude distance", distance.abs())?;
         direction.normalized().ok_or_else(|| KernelError::InvalidInput("extrude direction is zero-length".into()))?;
         let plan = Plan::new(&[("face", 1), ("setup", 1), ("laterals", wire.members.len()), ("close", 1)]);
         Ok(Self { wire: wire.clone(), origin: pts[0], normal, direction, distance, child: None, plan })
@@ -178,7 +178,7 @@ const ALIGN: usize = 3;
 const SEGMENTS: usize = 4;
 
 /// ➡️ Resumable general sweep: the profile is carried along a chain of rotation-minimizing
-/// stations, one prism segment per station pair (`🧮️core::PrismBuilder` under
+/// stations, one prism segment per station pair (`🧮️sweep-machinery::PrismBuilder` under
 /// `Placement::General`). Units are one path edge sampled, the frame propagation, one guide
 /// re-pointing per frame, the profile alignment, then per segment one setup unit and one unit per
 /// profile coedge, and a closing unit. The number of stations is only known once the path is
@@ -193,7 +193,7 @@ pub struct StationSweepJob {
     frames: Vec<semio_framework_3d_brep_vector::matrix::Frame3>,
     aligned: Option<FaceId>,
     bottom: Option<FaceId>,
-    prism: Option<core::PrismBuilder>,
+    prism: Option<sweep_machinery::PrismBuilder>,
     laterals: Vec<FaceId>,
     plan: Plan,
 }
@@ -211,7 +211,7 @@ impl StationSweepJob {
     /// ➡️ Plans a sweep of `profile` along `path` (honouring `guide`) over sampled stations.
     fn along_path(body: &Body, profile: FaceId, path: &Wire, guide: Option<&Wire>) -> Result<Self, KernelError> {
         Self::planar_profile_frame(body, profile, "sweep")?;
-        let lateral_count = core::PrismBuilder::lateral_count(body, profile);
+        let lateral_count = sweep_machinery::PrismBuilder::lateral_count(body, profile);
         let plan = Plan::new(&[("path", path.members.len()), ("frames", 1), ("guide", 0), ("align", 1), ("segments", 0), ("close", 1)]);
         Ok(Self { profile, source: StationSource::Path { wire: path.clone(), guide: guide.cloned() }, lateral_count, stations: Vec::new(), previous: None, rmf: Vec::new(), frames: Vec::new(), aligned: None, bottom: None, prism: None, laterals: Vec::new(), plan })
     }
@@ -220,14 +220,14 @@ impl StationSweepJob {
     /// parametrized directly (point/tangent closed-form, no `Curve3` needed), sampled at `24`
     /// stations per turn.
     fn helical(body: &Body, profile: FaceId, (axis_origin, axis_dir): (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64) -> Result<Self, KernelError> {
-        core::require_positive("helical radius", radius)?;
+        sweep_machinery::require_positive("helical radius", radius)?;
         if !turns.is_finite() || turns.abs() <= 1e-12 {
             return Err(KernelError::InvalidInput("helical turns must be non-zero".into()));
         }
         let axis = axis_dir.normalized().ok_or_else(|| KernelError::InvalidInput("helical axis is zero-length".into()))?;
         Self::planar_profile_frame(body, profile, "helical_sweep")?;
         let steps = ((turns.abs() * 24.0).ceil() as usize).max(2);
-        let lateral_count = core::PrismBuilder::lateral_count(body, profile);
+        let lateral_count = sweep_machinery::PrismBuilder::lateral_count(body, profile);
         let plan = Plan::new(&[("path", 0), ("frames", 1), ("guide", 0), ("align", 1), ("segments", steps * (1 + lateral_count)), ("close", 1)]);
         Ok(Self { profile, source: StationSource::Helix { axis_origin, axis, radius, pitch, turns, steps }, lateral_count, stations: Vec::new(), previous: None, rmf: Vec::new(), frames: Vec::new(), aligned: None, bottom: None, prism: None, laterals: Vec::new(), plan })
     }
@@ -297,7 +297,7 @@ impl StagedOperation for StationSweepJob {
                     StationSource::Path { .. } => "sweep",
                     StationSource::Helix { .. } => "helical_sweep",
                 };
-                let align = core::frame_to_affine(&self.frames[0]).compose(&core::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation(format!("{label}: singular profile placement")))?);
+                let align = sweep_machinery::frame_to_affine(&self.frames[0]).compose(&sweep_machinery::frame_to_affine(&profile_frame).inverse().ok_or_else(|| KernelError::Operation(format!("{label}: singular profile placement")))?);
                 let profile_label = body.faces.get(self.profile).unwrap().label;
                 let aligned = transform_face(body, self.profile, &align, rec)?;
                 rec.record_deleted(profile_label);
@@ -311,8 +311,8 @@ impl StagedOperation for StationSweepJob {
                         StationSource::Path { .. } => "sweep",
                         StationSource::Helix { .. } => "helical_sweep",
                     };
-                    let map = core::frame_to_affine(&self.frames[segment + 1]).compose(&core::frame_to_affine(&self.frames[segment]).inverse().ok_or_else(|| KernelError::Operation(format!("{label}: singular station placement")))?);
-                    self.prism = Some(core::PrismBuilder::begin(body, self.bottom.expect("profile aligned before segments"), core::Placement::General { map }, rec)?);
+                    let map = sweep_machinery::frame_to_affine(&self.frames[segment + 1]).compose(&sweep_machinery::frame_to_affine(&self.frames[segment]).inverse().ok_or_else(|| KernelError::Operation(format!("{label}: singular station placement")))?);
+                    self.prism = Some(sweep_machinery::PrismBuilder::begin(body, self.bottom.expect("profile aligned before segments"), sweep_machinery::Placement::General { map }, rec)?);
                 } else {
                     self.prism.as_mut().expect("segment begun before laterals").lateral(body, rec, within - 1)?;
                 }
@@ -329,7 +329,7 @@ impl StagedOperation for StationSweepJob {
             _ => {
                 let mut faces = vec![self.aligned.expect("profile aligned"), self.bottom.expect("segments built")];
                 faces.extend(std::mem::take(&mut self.laterals));
-                return Ok(StageStep::Done(StageOutput::Solid(core::finish_solid(body, faces, rec))));
+                return Ok(StageStep::Done(StageOutput::Solid(sweep_machinery::finish_solid(body, faces, rec))));
             }
         }
         Ok(StageStep::Working)

@@ -3,10 +3,13 @@
 //! patch with its offset re-based onto the new wall, and every sweep of the wall is repeated on the new wall (as `<sweep id>-<new wall id>`), because a sweep runs along the whole face of its host. Both parts of an arc keep the sweep share of their arc length
 //! (`bulge = tan(sweep / 4)`); an opening belongs to the part that contains its offset.
 
-use crate::standards::v1::subsets::any::schema::mutations::{component_rules, elements};
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
 use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::{ModelSnapshot, Opening, Wall, WallSweep}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, KeyedDelta};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, Wall, WallSweep};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -22,20 +25,20 @@ pub fn diff(payload: &SplitWall, base: &ModelSnapshot) -> MutationOutcome<ModelD
     let Some(wall) = base.walls.get(&payload.id) else {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Wall \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if let Some(noun) = elements::taken(base, &payload.new_id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.new_id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.new_id), [payload.new_id.clone()]);
     }
     let Some(parts) = plan(payload, base) else {
         return MutationOutcome::refuse(OutcomeCode::Invariant, "A wall splits strictly between its ends into two parts that both have length.", ["t"]);
     };
-    if let Some(component) = component_rules::mounted_on(base, &payload.id).next() {
+    if let Some(component) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules::mounted_on(base, &payload.id).next() {
         return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Wall \"{}\" still carries component \"{component}\"; unmount it before the wall is split.", payload.id), [payload.id.clone()]);
     }
     let moved: BTreeMap<String, Entry<Opening, OpeningPatch>> = carried(base, &payload.id, parts.at)
         .map(|(id, opening)| (id.clone(), Entry::Patched(OpeningPatch { host: Some(payload.new_id.clone()), offset: Some(snap(opening.offset - parts.at)), ..Default::default() })))
         .collect();
-    let swept: BTreeMap<String, Entry<WallSweep, crate::standards::v1::subsets::any::schema::diff::patches::WallSweepPatch>> = base.wall_sweeps.iter().filter(|(_, sweep)| sweep.host == payload.id).map(|(id, sweep)| (format!("{id}-{}", payload.new_id), Entry::Created(WallSweep { host: payload.new_id.clone(), ..sweep.clone() }))).collect();
-    if let Some((noun, id)) = swept.keys().find_map(|id| elements::taken(base, id).map(|noun| (noun, id))) {
+    let swept: BTreeMap<String, Entry<WallSweep, semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::WallSweepPatch>> = base.wall_sweeps.iter().filter(|(_, sweep)| sweep.host == payload.id).map(|(id, sweep)| (format!("{id}-{}", payload.new_id), Entry::Created(WallSweep { host: payload.new_id.clone(), ..sweep.clone() }))).collect();
+    if let Some((noun, id)) = swept.keys().find_map(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, id).map(|noun| (noun, id))) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{id}\" already exists."), [id.clone()]);
     }
     let count = moved.len() + swept.len();

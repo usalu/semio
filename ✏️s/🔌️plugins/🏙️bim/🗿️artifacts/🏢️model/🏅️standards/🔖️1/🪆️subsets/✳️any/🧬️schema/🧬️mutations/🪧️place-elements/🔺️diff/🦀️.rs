@@ -2,9 +2,10 @@
 //! exactly its placement fields. Placements equal to the current one are left out. Refused: an empty map, an id that is no element or
 //! has no placement, a placement of another element kind, a non-finite number; nothing to change is `mutation.no-op`.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::{Change, Refusal};
 use crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changes(payload: &PlaceElements, base: &ModelSnapshot) -> Result<Change, Refusal> {
@@ -13,8 +14,8 @@ fn changes(payload: &PlaceElements, base: &ModelSnapshot) -> Result<Change, Refu
     }
     let mut change = Change { before: Default::default(), after: Default::default() };
     for (id, target) in &payload.placements {
-        let Some(current) = elements::state(base, id) else {
-            let code = if elements::exists(base, id) { OutcomeCode::Invariant } else { OutcomeCode::TargetMissing };
+        let Some(current) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::state(base, id) else {
+            let code = if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::exists(base, id) { OutcomeCode::Invariant } else { OutcomeCode::TargetMissing };
             return Err(Refusal::new(code, format!("Element \"{id}\" has no placement to set."), [id.clone()]));
         };
         if !current.same_kind(target) {
@@ -33,5 +34,5 @@ fn changes(payload: &PlaceElements, base: &ModelSnapshot) -> Result<Change, Refu
 }
 
 pub fn diff(payload: &PlaceElements, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    elements::placed(changes(payload, base), "placements")
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placed(changes(payload, base), "placements")
 }

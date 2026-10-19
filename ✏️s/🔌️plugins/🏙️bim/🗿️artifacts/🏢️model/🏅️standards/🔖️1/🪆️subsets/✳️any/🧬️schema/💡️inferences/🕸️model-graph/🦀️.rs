@@ -7,35 +7,35 @@
 //! node dispatch and the dependency of each node (the honesty contract of `dep_input`), [`projection`] copies node values into [`ModelInference`] (whole or incrementally) and
 //! [`session`] is the stepped, cancellable entry point of every consumer and [`instance`] reaches the one session per mounted instance that the framework owns, for the editor, the viewer, the exports and the imports. See `r7-design-model-graph.md` and `r7-api-model-session.md` in the BIM-PLUGIN ticket.
 
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
-use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
-use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
-use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -401,8 +401,8 @@ impl ModelNode {
 #[derive(Clone, Debug, PartialEq)]
 #[derive(semio_framework_value::RetireOwned)]
 pub enum Data {
-    Structure(Arc<crate::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis>),
-    OptionScope(Arc<crate::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope>),
+    Structure(Arc<semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis>),
+    OptionScope(Arc<semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope>),
     Level(StoreyLevel),
     Band(Option<Band>),
     Cut(CutRect),
@@ -494,11 +494,11 @@ impl ModelValue {
         let base = size_of::<ModelValue>();
         base + match &self.data {
             Data::Structure(value) => value.members.values().map(|m| 256+(m.path.len()+m.boundary.len())*24).sum::<usize>()+(value.loads.len()+value.supports.len()+value.rigid_links.len())*256,
-            Data::Layout(layout) => layout.layer_offsets.len() * 8 + layout.footprint.len() * size_of::<crate::standards::v1::subsets::any::schema::snapshot::Vertex>() + layout.joins.iter().map(|join| size_of_val(join) + join.other.len()).sum::<usize>(),
+            Data::Layout(layout) => layout.layer_offsets.len() * 8 + layout.footprint.len() * size_of::<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex>() + layout.joins.iter().map(|join| size_of_val(join) + join.other.len()).sum::<usize>(),
             Data::Curtain(layout) => (layout.u_edges.len() + layout.v_edges.len() + layout.ignored_u.len() + layout.ignored_v.len()) * 8 + layout.overrides.len() * 96 + (layout.stray.len() + layout.repeated.len()) * 32,
             Data::Solid(entry) => entry.solid.byte_size(),
             Data::Frame(frame) => size_of_val(&**frame) + frame.plan.len() * 64,
-            Data::Rooms(rooms) => rooms.values().map(|room| 128 + (room.outline.len() + room.holes.iter().map(Vec::len).sum::<usize>()) * size_of::<crate::standards::v1::subsets::any::schema::snapshot::Vertex>()).sum(),
+            Data::Rooms(rooms) => rooms.values().map(|room| 128 + (room.outline.len() + room.holes.iter().map(Vec::len).sum::<usize>()) * size_of::<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex>()).sum(),
             Data::Plan(plan) => plan.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + plan.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + plan.texts.len() * 128,
             Data::View(view) => view.lines.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + view.lines.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + view.lines.texts.len() * 128,
             Data::Sheet(layout) => 512 + (layout.viewports.len() * 192) + layout.title_block.cells.iter().map(|cell| 96 + cell.value.len()).sum::<usize>() + layout.revisions.rows.iter().map(|row| 128 + row.description.len()).sum::<usize>() + layout.findings.len() * 96,

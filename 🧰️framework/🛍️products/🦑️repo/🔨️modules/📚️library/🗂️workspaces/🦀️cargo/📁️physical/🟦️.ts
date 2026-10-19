@@ -3,7 +3,7 @@ import type {Dir} from "node:fs";
 import {isAbsolute,join,relative,resolve} from "node:path";
 import {CargoController,type CargoControl,type CargoAccounting,type CargoRetirementOperation} from "../🎛️control/🟦️.ts";
 import {CargoTomlWorkspace,parseCargoTomlChunks,type CargoTomlTable} from "../📖️toml/🟦️.ts";
-import {readPhysicalFileV1,observePhysicalFileV1,type PhysicalFileClaimV1} from "../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
+import {readPhysicalFileV1,observePhysicalFileV1,type PhysicalFileClaimV1} from "@semio-tech/framework/filesystem/observation";
 export type CargoPhysicalEntry=Readonly<{name:string;kind:"file"|"directory"|"symlink"|"other"}>;
 export interface CargoDiscoveryOperation extends CargoControl {readonly workspace:CargoDiscoveryWorkspace;}
 export type CargoPhysicalIdentity=Readonly<{dev:string;ino:string;size:number;mtimeNs:string;ctimeNs:string;kind:"file"|"directory"|"other"}>;

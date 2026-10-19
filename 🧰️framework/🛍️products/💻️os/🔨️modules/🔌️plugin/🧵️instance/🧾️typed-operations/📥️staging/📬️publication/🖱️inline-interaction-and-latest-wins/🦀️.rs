@@ -102,7 +102,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 transient_generation: 0,
                 window_config_authority: None,
                 window_transient_authority: None,
-                publication_lanes: &[],
+                publication_lanes: &[], contract: Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),
                 session: None,
                 session_rejected: None,
                 reserved_producer: None,

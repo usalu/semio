@@ -2,7 +2,7 @@ import {createHash} from "node:crypto";
 import {lstat,readFile} from "node:fs/promises";
 import {join} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
-import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {compileJsonSchemaSubset,type CompiledJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🎯️ Exact selected task ownership, without a workspace-wide orchestration root. */
 export interface SelectedGraphScopeV1 {readonly version:1;readonly tasks:readonly string[];readonly roots:readonly string[];readonly files:readonly string[];}

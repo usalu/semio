@@ -1,15 +1,15 @@
 /** 🧭️ Collaboration e2e scope and dev servers: the external hub handle, the per-run scope with its output directory, the dev script, the shell runtime activation, the serve lane and the per-user dev server scope. */
 import { LocalHubHostLedgerV1, localHubHostPolicyV1 } from "../../../🚀️local-bootstrap/🎛️host/🟦️.ts";
-import { scriptResourceProcessEnvironmentV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { scriptResourceProcessEnvironmentV1 } from "@semio-tech/process/routing";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import {AsyncLocalStorage} from "node:async_hooks";
 import { mkdirSync, readFileSync } from "node:fs";
 import {spawn,type ChildProcess} from "node:child_process";
 import {openSync,fstatSync,writeSync,closeSync} from "node:fs";
 import {checkResourceLeaseControl} from "@semio-tech/process/leases";
-import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { terminateOwnedChildTree } from "@semio-tech/process/execution";
 import { join } from "node:path";
-import { daemonBudgetOpts, runCmd } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { daemonBudgetOpts, runCmd } from "@semio-tech/process/execution";
 import { awaitTcpReady } from "@semio-tech/framework-os-dev/activation/readiness";
 import { withLocalHubHostTaskV1, type LocalHubHostV1, type LocalHubHostContextV1 } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, repoRoot } from "../⚙️constants-relay-and-recorder/🟦️.ts";

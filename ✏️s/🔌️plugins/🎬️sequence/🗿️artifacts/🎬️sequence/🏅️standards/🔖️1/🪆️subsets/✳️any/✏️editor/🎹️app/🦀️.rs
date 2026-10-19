@@ -30,7 +30,7 @@ use crate::editor::sequence::panels::inspection::SEQUENCE_PLAY_BODY_INSPECTOR;
 use crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN;
 use crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT;
 use crate::editor::sequence::import::{SEQUENCE_IMPORT_TOOL_ID, SequenceImportJob};
-use crate::editor::sequence::base::{SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_fault_notices, sequence_host_snapshot_from_children, sequence_io, sequence_working_scene_from_children};
+use crate::editor::sequence::editor_vocabulary::{SEQUENCE_INTERACTION_GRANULARITY, SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_fault_notices, sequence_host_snapshot_from_children, sequence_io, sequence_working_scene_from_children};
 use crate::editor::sequence::persistent::{SEQUENCE_PERSISTENT_MAXIMUM_UNITS, SEQUENCE_PERSISTENT_TOOL_IDS, SequencePersistentJobFactory, SequencePersistentWork};
 use crate::editor::sequence::retained::{SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS, SEQUENCE_RETAINED_CONFIG_TOOL_IDS, SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS, SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS, SEQUENCE_RETAINED_MAXIMUM_UNITS, SEQUENCE_RETAINED_RAW_BYTES, SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS, SequenceCommand, SequenceRetainedArtifactJobFactory, SequenceRetainedArtifactWork, SequenceRetainedConfigJobFactory, SequenceRetainedConfigWork, SequenceRetainedExampleJobFactory, SequenceRetainedExampleWork, sequence_retained_artifact_command_admitted, sequence_retained_config_command_admitted, sequence_retained_example_command_admitted};
 use crate::editor::sequence::host::max_serial_in_snapshot;
@@ -45,7 +45,7 @@ struct SequenceArtifactProofs;
 impl SequenceArtifactProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
-        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
         factory: "SequenceRetainedArtifactJobFactory",
@@ -69,7 +69,7 @@ struct SequencePersistentProofs;
 impl SequencePersistentProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
-        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
         factory: "SequencePersistentJobFactory",
@@ -86,7 +86,7 @@ struct SequenceConfigProofs;
 impl SequenceConfigProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
-        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
         factory: "SequenceRetainedConfigJobFactory",
@@ -103,7 +103,7 @@ struct SequenceExampleProofs;
 impl SequenceExampleProofs {
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
-        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
         controller: "s.sequence.sequence@1/*#editor",
         artifact_schema: "sequence.sequence",
         factory: "SequenceRetainedExampleJobFactory",

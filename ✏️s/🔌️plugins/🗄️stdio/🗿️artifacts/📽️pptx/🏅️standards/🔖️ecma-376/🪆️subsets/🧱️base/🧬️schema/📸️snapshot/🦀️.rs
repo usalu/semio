@@ -51,8 +51,7 @@ impl PptxParagraph {
 
 /// 📐️ A shape's `a:xfrm` position/size, in EMUs (`a:off@x/y`, `a:ext@cx/cy`) -- a weak (value)
 /// entity per the recipe: whole-value replaced in diffs, never sub-diffed.
-#[path = "🧭️transform/🦀️.rs"]
-mod transform;
+use semio_s_artifact_stdio_pptx_base_vocabulary::transform;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

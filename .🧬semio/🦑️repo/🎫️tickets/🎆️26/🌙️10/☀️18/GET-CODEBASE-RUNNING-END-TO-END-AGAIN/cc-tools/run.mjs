@@ -16,16 +16,18 @@ const readRefused=()=>existsSync(refusedFile)?new Set(readFileSync(refusedFile,"
 const graphFile=manifest==="🧰️framework/Cargo.toml"?dir+"/cc-tools/meta-framework.json":manifest==="Cargo.toml"?dir+"/cc-tools/meta-root.json":null;
 const graph=graphFile&&existsSync(graphFile)?loadGraph(graphFile):null;
 const withDev=args.includes("--tests")||args.includes("--all-targets");
-const env={...process.env,SEMIO_SCRIPT_POLICY:'{"version":1,"owner":"repository:cargo:caller","maximumElapsedMilliseconds":3600000}'};
-const launch=a=>spawnSync("bun",["repo","cargo","--store=shared","--configuration=prototype","--parallelism=4","--",...a],{cwd:process.cwd(),env,encoding:"utf8",maxBuffer:1<<30});
+const env={...process.env,SEMIO_SCRIPT_POLICY:'{"version":1,"owner":"repository:cargo:caller","maximumElapsedMilliseconds":14400000}'};
+const waitForeign=()=>{for(let i=0;i<360;i++){const r=spawnSync("pgrep",["-f","bun repo cargo|script.ts repo cargo"],{encoding:"utf8"});if(!r.stdout.trim())return;spawnSync("sleep",["10"]);}};
+const launch=a=>{waitForeign();return spawnSync("bun",["repo","cargo","--store=shared","--configuration=prototype","--parallelism=4","--",...a],{cwd:process.cwd(),env,encoding:"utf8",maxBuffer:1<<30});};
 let skipped=[],text="",r;
 for(let attempt=0;attempt<14;attempt++){
  const refused=readRefused();
  const cur=[];skipped=[];
  for(let i=0;i<args.length;i++){if(args[i]==="-p"){const n=args[i+1];const bad=graph?[...closure(graph,n,withDev)].filter(x=>refused.has(x)):[];if(bad.length){skipped.push(n+" <- "+bad.join(","));i++;continue;}}cur.push(args[i]);}
- if(!cur.includes("-p")){text+="[cc] every requested crate is behind a refused crate\n";r={status:"skipped"};break;}
+ if(!cur.includes("-p")&&!cur.includes("--package")&&["check","build","test","clippy"].includes(cur[0])){text+="[cc] every requested crate is behind a refused crate\n";r={status:"skipped"};break;}
  r=launch([...cur,...extra]);
  const t=(r.stdout??"")+(r.stderr??"");text=t;
+ if(/System image plist required|Bounded unique parent kernel roster required|Stale loaded repository|topology changed/u.test(t)&&attempt<10){spawnSync("sleep",["25"]);continue;}
  const ref=t.match(/Source refused before compiler: (\S+) \((Rust crate Source extent or boundary exceeded[^)]*|[^)]*boundary exceeded[^)]*)\)/u);
  if(ref&&!refused.has(ref[1])){appendFileSync(refusedFile,`${ref[1]}\t${ref[2]}\tbatch ${idx}\n`);continue;}
  if(/cannot update the lock file/u.test(t)){launch(["update","--workspace","--manifest-path",manifest]);continue;}

@@ -1,20 +1,23 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, ModelSnapshot};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Space, Zone};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Space, Zone};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::zones::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{AreaSchemePatch, SpacePatch, ZonePatch}, Entry, ModelDiff};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::{table_json, SchemeTotals};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{AreaSchemePatch, SpacePatch, ZonePatch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;

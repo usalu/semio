@@ -299,7 +299,7 @@ func traversalRoot(pattern string) string {
 // 🟩️SimpleGlob MUST complete the operation and return consistent results.
 func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	if cwd == "" {
-		cwd = RootDir
+		cwd = GetRootDir()
 	}
 	var gitignorePatterns []string
 	if respectGitignore {

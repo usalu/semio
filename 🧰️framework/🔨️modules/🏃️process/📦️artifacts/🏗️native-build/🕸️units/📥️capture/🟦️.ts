@@ -8,7 +8,7 @@ import {readdir,open} from "node:fs/promises";
 import {captureOwnedCommandV1} from "../../../../🎛️owned-execution/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../🔒️leases/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import {rustCfgMatchesV1} from "../../📥️source/🟦️.ts";
 import {readCargoCompilationGraphV1,type CargoCompilationGraphV1} from "../🟦️.ts";
 /** 📏️ Bounds one complete Cargo planning capture: the resolved metadata of the whole root workspace exceeds 16 MiB. */

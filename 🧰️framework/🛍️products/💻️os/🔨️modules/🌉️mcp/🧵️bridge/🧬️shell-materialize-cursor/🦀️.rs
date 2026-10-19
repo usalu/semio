@@ -5,7 +5,7 @@ use super::shell_decode_cursor::{BRIDGE_INBOUND_MAX_PAGES, BRIDGE_INBOUND_PAGE_B
 use super::shell_to_gateway::ShellToGateway;
 
 //#region 🔖️BoundedShellDecode
-pub(crate) struct ValidatedShellFrame {
+pub struct ValidatedShellFrame {
     pub kind: ShellFrameKind,
     pub len: usize,
     pub pages: [Option<Box<[u8; BRIDGE_INBOUND_PAGE_BYTES]>>; BRIDGE_INBOUND_MAX_PAGES],

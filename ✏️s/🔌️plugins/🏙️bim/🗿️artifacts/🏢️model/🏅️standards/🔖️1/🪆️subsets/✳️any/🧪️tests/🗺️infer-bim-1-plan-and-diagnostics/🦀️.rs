@@ -11,9 +11,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::{csv, json};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     fn infer(ctx: &Context, slug: &str) -> Result<Outcome, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
@@ -34,30 +33,30 @@ mod subject {
         infer(ctx, "diagnostics")
     }
 
-    fn snapshot_of(ctx: &Context) -> Result<semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, String> {
+    fn snapshot_of(ctx: &Context) -> Result<semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
         decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)
     }
 
     /// 🧾️ The adjudicated findings read back from the JSON export of the model.
     pub fn export_json(ctx: &Context) -> Result<Outcome, String> {
-        let text = json::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
-        let table = json::adjudicated_json(&text)?;
+        let text = semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::json::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let table = semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::json::adjudicated_json(&text)?;
         let parsed = parse_json(&table)?;
         Ok(Outcome::with_raw(table.into_bytes(), parsed))
     }
 
     /// 🚨️ The groups of the diagnostics panel of the model: per severity, the storeys by level and the kinds of finding with their counts.
     pub fn panel_groups(ctx: &Context) -> Result<Outcome, String> {
-        let table = semio_s_artifact_bim_model::editor::bim::panels::diagnostics::groups_json_of(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let table = semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::groups_json_of(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
         let parsed = parse_json(&table)?;
         Ok(Outcome::with_raw(table.into_bytes(), parsed))
     }
 
     /// 📊️ Every finding read back from the CSV export of the model.
     pub fn export_csv(ctx: &Context) -> Result<Outcome, String> {
-        let text = csv::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
-        let table = csv::findings_json(&text);
+        let text = semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::export_diagnostics(&snapshot_of(ctx)?).map_err(|error| error.to_string())?;
+        let table = semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::findings_json(&text);
         let parsed = parse_json(&table)?;
         Ok(Outcome::with_raw(table.into_bytes(), parsed))
     }

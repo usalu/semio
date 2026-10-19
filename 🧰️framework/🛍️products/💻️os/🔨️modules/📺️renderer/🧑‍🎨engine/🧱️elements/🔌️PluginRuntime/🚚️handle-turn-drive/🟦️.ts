@@ -6,7 +6,7 @@
 import { decodeAppFrame, encodeAppFrame } from "@semio-tech/framework/app-channel";
 import { FRAMEWORK_RESERVED_JOB_KIND } from "@semio-tech/framework";
 import { type PluginDispatchHintV1 } from "@semio-tech/framework";
-import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { createShardCommandIngressPages, type ShardEventEnvelope, type ShardJobStep } from "@semio-tech/framework-actor/shard-client/wire";
 import { hostContinuations } from "@semio-tech/framework/async/continuation";
 import { wireTurnStatusTag } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
 import { type ActorDocumentMessagePortV1 } from "@semio-tech/framework/backbone/binding";

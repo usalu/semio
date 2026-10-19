@@ -8,7 +8,7 @@ use crate::editor_domain::editor_laws::context;
 /// one and the same canvas position, which is exactly the state `reorganize` exists to repair.
 const OVERLAPPED: (f64, f64) = (-900.0, -900.0);
 
-async fn overlap_every_widget(app: &mut crate::editor_domain::editor_laws::context::Generation3dApp) -> Vec<String> {
+async fn overlap_every_widget(app: &mut crate::editor_domain::editor_laws::context::Generation3dAppFixture) -> Vec<String> {
     let widget_ids: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert!(widget_ids.len() >= 2, "the reorganize fixture needs at least two widgets to be meaningfully overlapped");
     for id in &widget_ids {

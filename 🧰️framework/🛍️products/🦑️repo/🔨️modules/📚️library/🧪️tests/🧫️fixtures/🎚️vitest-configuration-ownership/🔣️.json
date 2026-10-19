@@ -219,11 +219,11 @@
       "projectionSha256": "3f8c224984f690ed4a0119214f45f39145934b2a0395f9a8fbca825d8f9fa915"
     },
     {
-      "configurationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/vitest.config.ts",
-      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🎚️config/🟦️.ts",
+      "configurationRoot": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript",
+      "previousPath": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/vitest.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/infinite-world-r3f",
-      "projectionSha256": "4619c6d51a0dcedba7258b1873b55d67e34fecf2cad1ddc7c82a7a626bbb4abb"
+      "projectionSha256": "3e73e22c24c30da7482100b61e22f176cccb67f753ce3ebb10a878186732fa81"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",

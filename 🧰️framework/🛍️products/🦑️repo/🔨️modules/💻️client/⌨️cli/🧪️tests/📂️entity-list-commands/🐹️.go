@@ -49,6 +49,7 @@ func TestExhaustiveBundleTreeCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle tree test in short mode")
 	}
+	withExhaustiveRepo(t)
 	result := ToolTechnologyTree()
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)

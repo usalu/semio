@@ -4,8 +4,8 @@ import Ajv from "ajv";
 import { parse as parseJsonc, type ParseError } from "jsonc-parser";
 import { readFileSync } from "node:fs";
 import { readSRebuildPlanV1 } from "../🟦️.ts";
-import { printRebuildPlanV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🟦️.ts";
-import schema from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🧬️schema/🔣️.json";
+import { printRebuildPlanV1 } from "@semio-tech/plugin-registry/rebuild";
+import schema from "@semio-tech/plugin-registry/rebuild/schema.json";
 import fixtures from "./🧫️fixtures/🔣️.json";
 
 test("S and Hub own their complete rebuild contributions", () => {

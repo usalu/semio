@@ -6,7 +6,9 @@
 extern crate infinite_canvas as infinite_world;
 use std::sync::MutexGuard;
 use ui_contract::SurfaceId;
-use ui_wgpu::wgpu::{ActionDescriptor, Theme, WidgetContext, WidgetInteractionMaps};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_wgpu_widget_kit::{WidgetContext, WidgetInteractionMaps};
 
 #[path = "../🧬️element-contracts/🦀️.rs"]
 mod element_contracts;

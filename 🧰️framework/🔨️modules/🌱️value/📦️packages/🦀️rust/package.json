@@ -2,6 +2,10 @@
   "name": "@semio-tech/value-rs",
   "private": true,
   "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./testing/fixtures": "./🧪️testing/🧫️fixtures/🟦️.ts"
+  },
   "scripts": {
     "test-native-literal-refusal-source": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-source",
     "test-native-literal-refusal-native": "bun --cwd \"../../../../..\" repo run @semio-tech/value-rs:test-native-literal-refusal-native",

@@ -10,7 +10,7 @@ export function registerCapturedReturnRoutingTests(kit: ShardClientSettlementTes
   it("mints a page only from the original captured response and keeps controls on its old worker", async () => {
     const { default: Ajv } = await import("ajv");
     
-    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("@semio-tech/framework-actor/return");
     const { row, client, workers, worker, instance } = await captured();
     const oracle = new Ajv({ strict: true }); 
     const source = await fixtureCapturedReturn(instance, row.responseSlots);
@@ -54,7 +54,7 @@ export function registerCapturedReturnRoutingTests(kit: ShardClientSettlementTes
     client.disposeAll();
   });
   it("retains foreign replies and refuses replaced workers without redirecting cancellation", async () => {
-    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("@semio-tech/framework-actor/return");
     const { row, client, workers, worker, instance } = await captured();
     const source = await fixtureCapturedReturn(instance, row.responseSlots);
     await fixtureResponse(source); const running = source.execute([], BUDGET); const observed = afterSettle(running, () => expect(running).rejects.toThrow("actor-return.foreign-origin"));
@@ -71,7 +71,7 @@ export function registerCapturedReturnRoutingTests(kit: ShardClientSettlementTes
     client.disposeAll();
   });
   it("retries a refused execute with its frozen original origin and retains the refused owner", async () => {
-    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult, decodeActorReturnDrive } = await import("@semio-tech/framework-actor/return");
     const { row, client, worker, instance } = await captured();
     const source = await fixtureCapturedReturn(instance, row.responseSlots); const post = worker.postMessage.bind(worker);
     await fixtureResponse(source); worker.postMessage = () => { throw new Error("fixture return post refusal"); };
@@ -94,7 +94,7 @@ export function registerCapturedReturnRoutingTests(kit: ShardClientSettlementTes
     client.disposeAll();
   });
   it("observes original worker loss even after the routing roster moved away", async () => {
-    const { encodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult } = await import("@semio-tech/framework-actor/return");
     const { row, client, worker, instance } = await captured();
     const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const running = source.execute([], BUDGET);
     const request = worker.sent.at(-1) as { requestId: string };
@@ -113,7 +113,7 @@ export function registerCapturedReturnRoutingTests(kit: ShardClientSettlementTes
     expect(instance.pendingReturn).toBe(source); client.disposeAll();
   });
   it("retains cancellation authority after a malformed response with a previously captured identity", async () => {
-    const { encodeActorReturnResult } = await import("../../../../../../../🔨️modules/🎭️actor/📤️return/🟦️.ts");
+    const { encodeActorReturnResult } = await import("@semio-tech/framework-actor/return");
     const { row, client, worker, instance } = await captured();
     const source = await fixtureCapturedReturn(instance, row.responseSlots); await fixtureResponse(source); const running = source.execute([], BUDGET);
     let request = worker.sent.at(-1) as { requestId: string };

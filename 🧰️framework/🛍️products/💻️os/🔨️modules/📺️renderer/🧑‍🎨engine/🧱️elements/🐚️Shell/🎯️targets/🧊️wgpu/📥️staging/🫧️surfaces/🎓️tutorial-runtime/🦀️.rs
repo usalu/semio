@@ -80,7 +80,7 @@ pub fn tutorial_bar_height(theme: &Theme) -> f32 {
 /// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
 /// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
 /// `OrbitController.fov_y`'s radians.
-pub fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -> semio_framework::onboarding::TutorialCameraState {
+pub fn orbit_to_tutorial_camera(orbit: &ui_scene::math::OrbitController) -> semio_framework::onboarding::TutorialCameraState {
     let camera = orbit.to_camera();
     semio_framework::onboarding::TutorialCameraState::Orbit {
         position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
@@ -92,16 +92,16 @@ pub fn orbit_to_tutorial_camera(orbit: &ui_wgpu::wgpu::OrbitController) -> semio
 
 /// 🎥️ `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
 /// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
-pub fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::TutorialCameraState) -> Option<ui_wgpu::wgpu::OrbitController> {
+pub fn tutorial_camera_to_orbit(state: &semio_framework::onboarding::TutorialCameraState) -> Option<ui_scene::math::OrbitController> {
     match state {
-        semio_framework::onboarding::TutorialCameraState::Orbit { position, target, up, fov } => Some(ui_wgpu::wgpu::OrbitController::from_camera(&ui_wgpu::wgpu::Camera3d {
-            position: ui_wgpu::wgpu::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
-            target: ui_wgpu::wgpu::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
-            up: ui_wgpu::wgpu::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
+        semio_framework::onboarding::TutorialCameraState::Orbit { position, target, up, fov } => Some(ui_scene::math::OrbitController::from_camera(&ui_scene::math::Camera3d {
+            position: ui_scene::math::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
+            target: ui_scene::math::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
+            up: ui_scene::math::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
             fov_y: (fov.unwrap_or(45.0) as f32).to_radians(),
-            near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
-            far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
-            projection: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+            near: ui_scene::math::WORLD_ORBIT_CAMERA_NEAR,
+            far: ui_scene::math::WORLD_ORBIT_CAMERA_MIN_FAR,
+            projection: ui_scene::math::CameraProjection3d::Perspective,
             zoom: 1.0,
         })),
         semio_framework::onboarding::TutorialCameraState::Canvas { .. } => None,

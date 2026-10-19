@@ -8,7 +8,7 @@ import fixture from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/⚠�
 import schema from "../🧬️schema/🔣️.json";
 import request from "../../../../🧪️tests/🧫️fixtures/🪶️sqlite/🔣️.json";
 import requestSchema from "../../🧬️schema/🔣️.json";
-import { identityControlInputFixtureUrl } from "../../../../../🌿️vcs/🧪️tests/🧫️fixtures/🟦️.ts";
+import { identityControlInputFixtureUrl } from "@semio-tech/framework-os/modules/vcs/testing/fixtures";
 
 test("guest SQLite rejection carries all eight intrinsic causes independently of prose and VM cancellation", () => {
   const ajv = new Ajv({ strict: true });

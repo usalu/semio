@@ -60,6 +60,7 @@ pub struct DocumentCatalogOwner<T>(pub(crate) Option<T>);
 impl<T> DocumentCatalogOwner<T> {
     pub fn take(&mut self) -> Option<T> { self.0.take() }
     pub fn is_some(&self) -> bool { self.0.is_some() }
+    pub fn as_ref(&self) -> Option<&T> { self.0.as_ref() }
 }
 
 impl<T> std::ops::Deref for DocumentCatalogOwner<T> {
@@ -568,9 +569,9 @@ impl<T: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValueRetire
 }
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> SnapshotRetirementFactory<T> for BoundedArtifactRetirementFactory<T> {
-    fn retirement_birth_bytes(&self, _: &Arc<T>) -> usize { semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<T>() }
+    fn retirement_birth_bytes(&self, _: &Arc<T>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>() }
     fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
-        semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
+        semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
     }
 }
 

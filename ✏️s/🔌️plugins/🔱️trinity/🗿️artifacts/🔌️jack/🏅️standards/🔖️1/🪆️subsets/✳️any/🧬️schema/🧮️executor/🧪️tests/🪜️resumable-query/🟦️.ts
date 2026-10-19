@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import fixture from "../../../../🧪️tests/🧫️fixtures/🧮️executor/🪜️resumable-query/🔣️.json";
 
 /** 🔗️ The node half of an `<node>@<port>` endpoint — the whole value when it names no port. */

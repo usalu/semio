@@ -17,7 +17,7 @@ async fn an_input_that_references_a_shared_framework_schema_resolves_on_any_inst
     let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
-    for id in ["framework/value/schema.json", "framework/io/schema.json", "os/store/child/schema.json", "os/store/child/owner/schema.json", "os/store/link/schema.json", "os/store/blob/schema.json"] {
+    for id in ["framework/value/schema.json", "framework/io/schema.json", "framework/schema/artifact-reference/child/schema.json", "os/store/child/owner/schema.json", "framework/schema/artifact-reference/link/schema.json", "framework/schema/artifact-reference/blob/schema.json"] {
         let id = format!("https://json.schemas.assets.semio-tech.com/{id}");
         assert!(semio_framework::registered_input_schema_document(&id).is_some(), "{id} is always in the runtime resolver");
     }

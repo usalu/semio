@@ -1,13 +1,13 @@
 /** 💡️ Board2dHost suggestions and events: the suggestion menu and its rows, the hover paint and dispatch and the buffered board event drain, flush, snapshot and selection application with the peer gesture end and camera interaction settle. */
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { type Board2dScene } from "@semio-tech/framework";
-import { type Board2dWasmSession } from "../../🪪️WasmSessionLoader/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { suggestionPopupOwnsWindow, suggestionRowsWithFocus, useSuggestionSubmenuSearch } from "../../🎣️suggestion-submenu/🟦️.ts";
 import { board2dGranularityById, board2dHoverActionArgs, board2dKindDomainById, board2dKindHoverFromElementId, board2dSuggestionMenuItems, board2dSuggestionMenuOwnsWindow, type BoardEventRow, latestBoard2dHoverId, parseBoard2dSuggestionMenu } from "../🔬️board-parsing/🟦️.ts";
 import { coalesceBoard2dEvents, collectBoardLiveMirrorMutations } from "../📡️board-events/🟦️.ts";
 import { applySnapshotToSession, applyToSession, boardPeerOwnsGesture, pushBoardLiveMirrorMutations } from "../🔄️session-sync/🟦️.ts";
 import type { BoardCore1 } from "../🧰️board-session-state/🟦️.ts";
+import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 
 // #region Board2dHost
 /** 💡️ Wires the suggestion menu, hover and the buffered board event flush. */

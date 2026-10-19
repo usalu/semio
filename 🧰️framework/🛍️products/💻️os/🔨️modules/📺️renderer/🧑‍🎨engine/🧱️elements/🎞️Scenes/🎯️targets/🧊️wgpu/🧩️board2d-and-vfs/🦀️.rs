@@ -11,12 +11,12 @@ pub struct Board2dSurface {
     pub window_id: String,
 }
 
-pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_pointer_down_into(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_down_into(surface_id, inner, x, y, button, shift, ctrl_or_meta, input)
 }
 
 /// 🤏️ Transfers a board's first-touch lane to pinch ownership when contact two lands.
-pub fn board2d_touch_pointer_down_into(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_touch_pointer_down_into(surface_id: &str, inner: Rect, pointer_id: ui_render::PointerId, x: f32, y: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let (sx, sy) = semio_framework_os_renderer_wgpu_engine_board::tiled_map::map_local_pointer(inner, x, y);
     match touch_pointer_down(surface_id, pointer_id, sx, sy) {
         GestureVerdict::Single => Ok(false),
@@ -54,8 +54,8 @@ pub fn board2d_touch_pointer_up_into(
     surface_id: &str,
     controller_id: &str,
     pointer_id: ui_render::PointerId,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     match touch_pointer_up(surface_id, pointer_id) {
         GestureVerdict::Single => Ok(false),
         GestureVerdict::PinchEnd => semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_publish_camera_into(surface_id, controller_id, input).map(|_| true),
@@ -72,8 +72,8 @@ pub fn board2d_pointer_move_into(
     shift: bool,
     ctrl_or_meta: bool,
     alt: bool,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
 }
 
@@ -86,12 +86,12 @@ pub fn board2d_pointer_up_into(
     shift: bool,
     ctrl_or_meta: bool,
     alt: bool,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
 }
 
-pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_pointer_leave_into(surface_id, controller_id, alt, input)
 }
 
@@ -99,7 +99,7 @@ pub fn board2d_drag_active(surface_id: &str) -> bool {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board_drag_active(surface_id)
 }
 
-pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn board2d_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_wheel_into(surface_id, controller_id, inner, x, y, delta, input)
 }
 
@@ -493,7 +493,7 @@ pub fn vfs_accessibility_focus_target(scene: &UiComponentSceneNode, x: f32, y: f
         .map(|control| VfsAccessibilityFocusTarget { row_id: control.row_id.clone(), kind: control.kind })
 }
 
-pub fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAccessibilityFocusTarget, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAccessibilityFocusTarget, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<Result<(), semio_framework_ui_action::BoundedActionFault>> {
     let _control = accepted_vfs_control(&scene.host_id, target)?;
     match target.kind {
         VfsAccessibilityControlKind::Chevron => {
@@ -517,11 +517,11 @@ pub fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAcce
 pub fn vfs_accessibility_apply_key(
     scene: &UiComponentSceneNode,
     target: &VfsAccessibilityFocusTarget,
-    key: &ui_wgpu::wgpu::KeyAction,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Option<Result<VfsAccessibilityKeyOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    key: &semio_framework_ui_wgpu_input::KeyAction,
+    input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
+) -> Option<Result<VfsAccessibilityKeyOutcome, semio_framework_ui_action::BoundedActionFault>> {
     accepted_vfs_control(&scene.host_id, target)?;
-    if target.kind != VfsAccessibilityControlKind::Chevron || !matches!(key, ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Space(true)) {
+    if target.kind != VfsAccessibilityControlKind::Chevron || !matches!(key, semio_framework_ui_wgpu_input::KeyAction::Enter | semio_framework_ui_wgpu_input::KeyAction::Space(true)) {
         return Some(Ok(VfsAccessibilityKeyOutcome::Unhandled));
     }
     vfs_accessibility_activate(scene, target, input).map(|outcome| outcome.map(|()| VfsAccessibilityKeyOutcome::Consumed))

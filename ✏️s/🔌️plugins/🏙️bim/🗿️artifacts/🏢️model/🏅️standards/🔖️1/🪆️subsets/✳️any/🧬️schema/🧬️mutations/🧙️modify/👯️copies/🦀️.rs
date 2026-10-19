@@ -4,15 +4,20 @@
 //! order, so no clock and no counter is involved. An in-place image is the sparse patch of what a map changes of its sources and the
 //! absolute base states an exact inverse restores.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements::{self, placement_diff, Placement, Refusal};
-use crate::standards::v1::subsets::any::schema::mutations::placement::host_length;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::{placement_diff, Placement, Refusal};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::host_length;
 use crate::standards::v1::subsets::any::schema::mutations::modify::map::{self, Image, Map};
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, KeyedDelta, ModelDiff, Patch, patches::WallPatch}, snapshot::{ComponentOverride, CurtainPanelOverride, EndJoin, ModelSnapshot, Opening, WallSweep}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry, KeyedDelta, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ComponentOverride, CurtainPanelOverride, ModelSnapshot, Opening, WallSweep};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::EndJoin;
 use protocol::OutcomeCode;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🔢️ The most records and data rows one mutation may create: what one delete restores (the inverse of every copy), so that undoing a copy never meets the bound of a removal.
-pub const MAX_CREATED: usize = crate::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
+pub const MAX_CREATED: usize = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
 
 //#region 🔖️Sources
 /// 🧲️ What a modify mutation acts on: the placed elements it names, in id order, the openings hosted by them and the curtain panel overrides of the curtain walls among them and the wall sweeps of the walls among them, all in id order.
@@ -34,11 +39,11 @@ pub fn sources(base: &ModelSnapshot, ids: &[String]) -> Result<Sources, Refusal>
     let wanted: BTreeSet<&String> = ids.iter().collect();
     let (mut elements, mut loose) = (Vec::new(), Vec::new());
     for id in wanted {
-        if elements::placement(base, id).is_some() {
+        if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(base, id).is_some() {
             elements.push(id.clone());
         } else if base.openings.contains_key(id) {
             loose.push(id.clone());
-        } else if elements::exists(base, id) {
+        } else if semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::exists(base, id) {
             return Err(Refusal::new(OutcomeCode::Invariant, format!("Element \"{id}\" has no placement of its own."), [id.clone()]));
         } else {
             return Err(Refusal::new(OutcomeCode::TargetMissing, format!("Element \"{id}\" does not exist."), [id.clone()]));
@@ -115,7 +120,7 @@ fn data(base: &ModelSnapshot, diff: &mut ModelDiff, from: &str, to: &str) -> usi
 }
 
 fn free(base: &ModelSnapshot, id: &str) -> Result<(), Refusal> {
-    match elements::taken(base, id) {
+    match semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, id) {
         Some(noun) => Err(Refusal::new(OutcomeCode::DuplicateId, format!("{noun} \"{id}\" already exists."), ["prefix".to_string()])),
         None => Ok(()),
     }
@@ -242,7 +247,7 @@ pub fn in_place(base: &ModelSnapshot, ids: &[String], map: &Map) -> Result<Place
     let mut next_joins: BTreeMap<String, (Option<EndJoin>, Option<EndJoin>)> = BTreeMap::new();
     for id in &found.elements {
         let image = map::image(base, id, map)?;
-        let (was, now) = (elements::placement(base, id).unwrap_or_else(|| image.placement()), image.placement());
+        let (was, now) = (semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::placement(base, id).unwrap_or_else(|| image.placement()), image.placement());
         if was != now {
             before.insert(id.clone(), was);
             after.insert(id.clone(), now);

@@ -7,12 +7,15 @@
 //! base and the top: the horizontal section is the profile stretched by `1 / cos(angle)` along the lean, the top section is the base section moved by `rise * tan(angle)` along it, and
 //! the solid is the sheared prism between them (volume `area * rise / cos(angle)`).
 
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, placed, point, rectangle};
-use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot, Profile, Slope};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, placed, rectangle};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::point;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Profile, Slope};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::{extrude_loops, prism_between, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
@@ -119,7 +122,7 @@ pub fn column_solid(snapshot: &ModelSnapshot, column: &Column, own: &StoreyLevel
 pub fn column_solid_in(snapshot: &ModelSnapshot, column: &Column, own: &StoreyLevel, target: Option<&StoreyLevel>, profiles: &FamilyProfiles<'_>) -> ElementSolid {
     let mut builder = SolidBuilder::new(SolidFamily::Column);
     if let Some(kind) = snapshot.column_types.get(&column.column_type) {
-        builder.add(parts::BODY, &kind.material, 0, &column_geometry(column, &profiles.resolve(&kind.profile), own, target).mesh);
+        builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::BODY, &kind.material, 0, &column_geometry(column, &profiles.resolve(&kind.profile), own, target).mesh);
     }
     builder.build()
 }

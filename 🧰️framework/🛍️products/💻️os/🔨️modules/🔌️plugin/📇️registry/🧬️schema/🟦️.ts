@@ -1,7 +1,7 @@
 import type {PluginCatalogRowsV1,PluginCatalogRowV1} from "@semio-tech/framework/plugin-catalog";
-import contract from "../🛂️descriptor-verification/🧬️schema/🔣️.json";
+import contract from "../🛂️descriptor-verification/🧬️schema/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import { jsonDocumentDuplicateKeys } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️json-document/🟦️.ts";
+import { jsonDocumentDuplicateKeys } from "@semio-tech/repo-lib/inventory";
 
 export const REGISTRY_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 
@@ -10,8 +10,12 @@ export const REGISTRY_HOST_APP_CHANNEL_VERSION: number = contract.$defs.PackageD
 
 /** 🕰️ A descriptor compiled against another app channel: release gates refuse it, dev generation withholds its plugin. */
 export class StaleChannelDescriptorError extends Error {
-  constructor(readonly descriptorChannel: unknown, readonly hostChannel: number = REGISTRY_HOST_APP_CHANNEL_VERSION) {
+  readonly descriptorChannel: unknown;
+  readonly hostChannel: number;
+  constructor(descriptorChannel: unknown, hostChannel: number = REGISTRY_HOST_APP_CHANNEL_VERSION) {
     super(`Stale registry descriptor: app channel ${JSON.stringify(descriptorChannel)} differs from the host app channel ${hostChannel}`);
+    this.descriptorChannel = descriptorChannel;
+    this.hostChannel = hostChannel;
     this.name = "StaleChannelDescriptorError";
   }
 }

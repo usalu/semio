@@ -2,12 +2,12 @@ use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_d
 
 #[semio_framework_async_macros::async_test]
 async fn bim_viewer_never_mutates() {
-    assert_viewer_never_mutates::<crate::viewer::bim::BimModelViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bim_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<crate::editor::bim::BimModelApp, crate::viewer::bim::BimModelViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_bim_model_bim::editor::bim::BimModelApp, semio_s_artifact_bim_model_viewer::viewer::bim::BimModelViewer>().await;
 }
 
 #[test]
@@ -20,8 +20,8 @@ fn bim_plugin_assembles_a_real_manifest_not_the_assembly_failed_stub() {
 
 #[test]
 fn bim_editor_and_viewer_declare_the_same_dialect() {
-    let editor = crate::editor::bim::create_bim_app();
-    let viewer = crate::viewer::bim::create_bim_viewer();
+    let editor = semio_s_artifact_bim_model_bim::editor::bim::create_bim_app();
+    let viewer = semio_s_artifact_bim_model_viewer::viewer::bim::create_bim_viewer();
     assert_eq!(editor.dialect, viewer.dialect);
 }
 
@@ -30,7 +30,7 @@ fn bim_declares_its_native_codec_and_the_ifc_gltf_and_svg_hops_through_the_decla
     let tree = crate::artifacts::model::artifact::<super::BimApps>();
     assert_eq!(tree.kind.as_str(), "s.bim.model");
     let subset = &tree.standards[0].subsets[0];
-    assert_eq!(subset.io.native.codec.schema, crate::artifacts::model::BIM_MODEL_DOCUMENT_SCHEMA);
+    assert_eq!(subset.io.native.codec.schema, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let hops: Vec<_> = subset.io.entries.iter().map(|entry| (entry.from.artifact_kind, entry.into.artifact_kind)).collect();
     assert_eq!(hops, [("s.bim.model", "s.stdio.ifc"), ("s.bim.model", "s.stdio.gltf"), ("s.bim.model", "s.stdio.svg"), ("s.stdio.ifc", "s.bim.model")]);
 }

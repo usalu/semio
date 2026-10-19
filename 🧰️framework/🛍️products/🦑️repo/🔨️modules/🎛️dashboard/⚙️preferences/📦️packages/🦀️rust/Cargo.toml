@@ -22,11 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 dashboard_registry = { path = "../../../🎮️registry/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-registry" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ui_locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust", package = "semio-framework-ui-locale" }
 
 [dev-dependencies]
-dashboard_core = { path = "../../../🧱️core/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }
+dashboard_core = { path = "../../../🧱️invocation-catalog/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-repo-dashboard-core" }

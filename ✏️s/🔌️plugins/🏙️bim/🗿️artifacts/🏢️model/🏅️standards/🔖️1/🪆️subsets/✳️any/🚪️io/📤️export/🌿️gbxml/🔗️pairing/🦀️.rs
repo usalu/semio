@@ -4,7 +4,7 @@
 //! a partner stays a surface of its own with one `AdjacentSpaceId`. Windows and doors follow their host, merged by element.
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🧱️ One surface of the file: the side that gives its geometry, the side behind it when the partition is shared, and the windows and doors in it.

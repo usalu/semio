@@ -5,7 +5,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // #endregion 🧲️Header
 
-import type { TreeWindowRowExtent } from "@semio-tech/framework";
+import type { TreeWindowRowExtent } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { retainTreeFocus } from "./🎯️focus/🟦️.ts";
 
 /** 📏️ Re-exported from the UI contract because this element's whole window API is stated in it — a consumer of `TreeDataWindow`/`TreeWindowContainerMeasure` must be able to name the token without reaching past this module. */
@@ -28,7 +28,8 @@ import { DocumentIcon, FolderIcon } from "../🔣️Icons/🟦️.tsx";
 // this same import for why not via `@semio-tech/framework`'s barrel).
 
 import { TreeContext, detailPanelIndentPx } from "./📏️row-alignment/🟦️.tsx";
-import { EMPTY_TREE_SECTIONS, TreeDataRenderingContext, type TreeDataRenderingContextValue, type TreeItemProps, type TreeRootProps, getTreeItemLoadingId, getTreeSectionItems, getTreeSectionLoadingId, mergeTreeSectionOrder, treeDefaultDragMimeKind } from "./🧩️props/🟦️.ts";
+import { EMPTY_TREE_SECTIONS, TreeDataRenderingContext, type TreeDataRenderingContextValue, type TreeItemProps, type TreeRootProps, getTreeItemLoadingId, getTreeSectionItems, getTreeSectionLoadingId, mergeTreeSectionOrder, treeDefaultDragMimeKind, type FileTreeNode, type TreeFilesProps } from "./🧩️props/🟦️.ts";
+export type { FileTreeNode, TreeFilesProps } from "./🧩️props/🟦️.ts";
 import { TreeStateProvider, hasNonEmptyChildren, useTreeOpenState } from "./🌿️state/🟦️.tsx";
 import type { TreeDataItem, TreeDataSection } from "./📋️data/🟦️.ts";
 import { TreeHighlightContext, TreeSelectionContext, collectTreeItemMap, createTreeHighlightStore, createTreeSelectionStore, getTreeNextSelectionState, normalizeTreeSelectedIds } from "./🎚️selection/🟦️.ts";
@@ -38,17 +39,6 @@ import { getTreeDropData } from "./📄️row/🟦️.tsx";
 import { useTreeHoverPathRootHandlers, useTreeSelectionPathSync } from "./🧷️path-marking/🟦️.ts";
 import { TreeHoverPathRefreshContext } from "./🌲️branch/🟦️.tsx";
 import { type TreeComponent, TreeDataSectionView } from "./🪢️views/🟦️.tsx";
-
-/**
- * Data interface for a node in a file tree.
- **/
-export interface FileTreeNode {
-  title: string;
-  path: string;
-  icon?: string;
-  isFolder: boolean;
-  children?: FileTreeNode[];
-}
 
 export const Tree = (({
   className = "",
@@ -629,18 +619,6 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
 
   return itemElement;
 };
-
-/**
- * TreeFilesProps holds the data fields for a TreeFilesProps record.
- **/
-export interface TreeFilesProps {
-  title?: UiLabel;
-  nodes: FileTreeNode[];
-  currentPath?: string;
-  onNavigate?: (path: string) => void;
-  as?: "a" | "div";
-  className?: string;
-}
 
 const TreeFiles: React.FC<TreeFilesProps> = ({ title, nodes, currentPath, onNavigate, as = "a", className = "" }) => {
   return (

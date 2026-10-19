@@ -1,6 +1,10 @@
 /** 🧩️ The contract a plugin scenario fulfils to run on the time-travel harness: its route, its steps and the hooks the harness calls around them. */
-import { context } from "../🧠️state/🟦️.ts";
-import type { Renderer, Locale } from "../🧠️state/🟦️.ts";
+
+/** 🌐️ The locales a scenario journey runs in. */
+export type Locale = "en" | "de";
+
+/** 🖥️ The renderers a scenario journey drives. */
+export type Renderer = "react" | "wgpu";
 
 /** 🚧️ A prerequisite the scenario cannot meet: every step but the `exempt` ones fails with the verdict `name` naming the `prerequisite`. */
 export type TimeTravelBlockV1 = Readonly<{ name: string; prerequisite: string; exempt: readonly number[] }>;

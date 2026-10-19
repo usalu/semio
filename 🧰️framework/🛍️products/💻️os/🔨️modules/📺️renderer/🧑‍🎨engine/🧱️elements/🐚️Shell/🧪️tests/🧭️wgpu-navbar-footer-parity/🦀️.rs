@@ -9,7 +9,7 @@
 
 use semio_framework_os_renderer_wgpu_fixtures::shell::{split_pane_shell, test_app};
 use super::*;
-use ui_wgpu::wgpu::InputState;
+use semio_framework_ui_wgpu_input::InputState;
 
 /// 🌳️ `…/🧑‍🎨engine` — the same derivation `🌓️appearance-tour-and-footer-pills/🦀️.rs` uses.
 fn engine_root() -> std::path::PathBuf {

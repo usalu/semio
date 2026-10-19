@@ -1,16 +1,10 @@
-import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import {requireNativeStoragePathV1} from "@semio-tech/process/artifacts/native-build/storage/platform/contract";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,writeFileSync,existsSync,readFileSync,rmSync} from "node:fs";
 import {join,dirname} from "node:path";
 import {tmpdir} from "node:os";
-import {defaultBudgetMs,budgetTimeoutHint,type RunCmdOpts} from "../🟦️.ts";
-
-export interface RunProbeResult {
-  status: number | null;
-  stdout: string;
-  stderr: string;
-  signal: NodeJS.Signals | null;
-}
+import {defaultBudgetMs,budgetTimeoutHint} from "../🟦️.ts";
+import type {RunCmdOpts,RunProbeResult} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 type CapturedSpawnOptions = Readonly<{
   cwd?: string;

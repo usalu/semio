@@ -1,8 +1,8 @@
-import {readFilesystemJournalScopeV1,type FilesystemJournalScopeV1} from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
+import {readFilesystemJournalScopeV1,type FilesystemJournalScopeV1} from "../../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📥️journal/🟦️.ts";
 import {createRequire} from "node:module";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireNxGraphNativeControlV1,withNxGraphNativeTaskV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 const sdkReadPolicy=Object.freeze({...schema.$defs.SdkReadPolicyV1.const});

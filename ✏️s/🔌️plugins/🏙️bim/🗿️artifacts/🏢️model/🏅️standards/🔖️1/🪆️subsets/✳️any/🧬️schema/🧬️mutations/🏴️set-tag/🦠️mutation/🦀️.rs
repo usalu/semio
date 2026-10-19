@@ -1,6 +1,9 @@
 //! 🏴️ `set-tag` payload. Sets exactly the provided fields of a tag: element, category, offset from the element and style; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::TagPatch}, snapshot::{ModelSnapshot, Point2, TagCategory}};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::TagPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, TagCategory};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

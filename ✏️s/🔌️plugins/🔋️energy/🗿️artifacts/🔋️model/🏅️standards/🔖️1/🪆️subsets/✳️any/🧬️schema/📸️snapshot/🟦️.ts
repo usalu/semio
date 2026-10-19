@@ -1,7 +1,6 @@
 /** 🧬️ EnergyModel snapshot schema — artifact-lane fields only. */
 import type {EnergyModel} from "./⚡️model/🟦️.ts";
-import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
-import type {ArtifactLink} from "@semio-tech/framework-os/modules/store/link/schema";
+import type { ArtifactRef, ArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 export * from "./⚡️model/🟦️.ts";
 
 export interface EnergyModelSnapshot {

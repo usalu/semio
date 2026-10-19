@@ -3,7 +3,7 @@
  */
 import { policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { interactivityCheckedRustBlockScope } from "../../🔬️interactivity-audit/🖥️mounted/🎞️frame-transaction/🟦️.ts";
-import { toolJobReservedSpecs } from "../🏭️factory/🟦️.ts";
+import { toolJobReservedSpecs, type ToolJobReservedSpec } from "../🏭️factory/🟦️.ts";
 import { TOOL_JOB_FRAMEWORK_RESERVED_IDS } from "../📋️inventory/🟦️.ts";
 
 export function toolJobFixedOperationRegistryExact(source: string): boolean {
@@ -240,6 +240,25 @@ type SharedFrameworkActionRouteFixture = {
   }>;
 };
 
+/** 🧮️ Evaluates an integer constant expression of Rust literals, `+`, `*` and constant names (module paths reduced to their last segment) against the `const NAME: usize = ...;` items of one source; unresolved names yield `NaN`. */
+export function toolJobRustConstantValue(expression: string, source: string): number {
+  const items = new Map<string, string>([...source.matchAll(/\bconst\s+([A-Z][A-Z0-9_]*)\s*:\s*usize\s*=\s*([^;]+);/gu)].map((match) => [match[1]!, match[2]!]));
+  const evaluate = (text: string, seen: readonly string[]): number => {
+    const sum = text.split("+").map((term) => term.split("*").map((factor) => {
+      const atom = factor.trim().split("::").at(-1)!;
+      if (/^[\d_]+$/u.test(atom)) return Number(atom.replaceAll("_", ""));
+      const next = items.get(atom);
+      return next === undefined || seen.includes(atom) ? Number.NaN : evaluate(next, [...seen, atom]);
+    }).reduce((product, factor) => product * factor, 1));
+    return sum.reduce((total, term) => total + term, 0);
+  };
+  return evaluate(expression, []);
+}
+
+export function toolJobReservedSpecValues(spec: ToolJobReservedSpec, constants: string): readonly number[] {
+  return spec.expressions.map((expression, index) => (Number.isNaN(spec.values[index]) ? toolJobRustConstantValue(expression, constants) : spec.values[index]!));
+}
+
 export function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: string; routes: string[]; descriptor: string[]; hostile: string[] } {
   const fixture = JSON.parse(policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🧪️tests/🧫️fixtures/⚖️shared-framework-action-routes-law.json")) as SharedFrameworkActionRouteFixture;
   if (fixture.schema !== "semio.framework.plugin.shared-framework-action-routes.v1" || fixture.routes.length !== 12)
@@ -248,11 +267,13 @@ export function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: 
   const actualIds = fixture.routes.map((route) => route.id).sort();
   if (actualIds.join("\0") !== expectedIds.join("\0") || new Set(fixture.routes.map((route) => route.factory)).size !== 12 || new Set(fixture.routes.map((route) => route.routeIndex)).size !== 12)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] route identities are not an exact bijection.");
-  const source = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+  const source = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🏛️reserved/🦀️.rs");
+  const clipboard = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/📋️clipboard/🦀️.rs");
+  const builder = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🔌️program/🦀️.rs");
   const production = new Map(toolJobReservedSpecs(source).map((route) => [route.id, route]));
   for (const route of fixture.routes) {
     const row = production.get(route.id);
-    if (!row || row.factory !== route.factory || row.values.join("\0") !== [route.maximumRawBytes, route.maximumItems, route.workUnits, route.maximumOutputBytes].join("\0"))
+    if (!row || row.factory !== route.factory || toolJobReservedSpecValues(row, clipboard).join("\0") !== [route.maximumRawBytes, route.maximumItems, route.workUnits, route.maximumOutputBytes].join("\0"))
       throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} differs from its production factory contract.`);
     if (route.schemaId !== `framework.reserved.${route.id}.v1` || route.descriptorDisposition !== "migrated" || !source.includes(`registry.register(${route.factory}::<A>::new(&controller_id))`))
       throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} lacks exact schema or live registration identity.`);
@@ -260,9 +281,9 @@ export function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: 
       throw new Error(`[verify interactivity tool-jobs shared-action-fixture] ${route.id} lacks its schema-driven descriptor disposition route.`);
   }
   const sourceFailures: string[] = [];
-  const dispositionJoin = interactivityCheckedRustBlockScope(source, "fn join_framework_shared_action_dispositions(definition: &mut AppDefinition)", "shared-action descriptor join", sourceFailures)?.replace(/\s+/g, "");
-  const registration = interactivityCheckedRustBlockScope(source, "pub fn register_app_factory(mut self, mut app: App, factory: declarations::AppFactory<PA>) -> Self", "shared-action app registration", sourceFailures)?.replace(/\s+/g, "");
-  const exactJoin = "fnjoin_framework_shared_action_dispositions(definition:&mutAppDefinition){foractionindefinition.actions.iter_mut().chain(definition.window_kinds.iter_mut().flat_map(|window|window.actions.iter_mut())){ifframework_shared_action_descriptor_schema_id(&action.id).is_some(){action.semantics.execution.interactive_job=semio_framework::InteractiveJobClassification::Migrated;}}}";
+  const dispositionJoin = interactivityCheckedRustBlockScope(source, "pub fn join_framework_shared_action_dispositions(definition: &mut AppDefinition)", "shared-action descriptor join", sourceFailures)?.replace(/\s+/g, "");
+  const registration = interactivityCheckedRustBlockScope(builder, "pub fn register_app_factory(mut self, mut app: App, factory: AppFactory<PA>) -> Self", "shared-action app registration", sourceFailures)?.replace(/\s+/g, "");
+  const exactJoin = "pubfnjoin_framework_shared_action_dispositions(definition:&mutAppDefinition){foractionindefinition.actions.iter_mut().chain(definition.window_kinds.iter_mut().flat_map(|window|window.actions.iter_mut())){ifframework_shared_action_descriptor_schema_id(&action.id).is_some(){action.semantics.execution.interactive_job=semio_framework::InteractiveJobClassification::Migrated;}}}";
   if (sourceFailures.length || dispositionJoin !== exactJoin || !registration || !/^pubfnregister_app_factory\([^]*?\{letmutfactory=factory;join_framework_shared_action_dispositions\(&mutapp\.definition\);join_framework_shared_action_dispositions\(&mutfactory\.definition\);/.test(registration) || (registration.match(/join_framework_shared_action_dispositions\(/g) ?? []).length !== 2 || !/self\.manifest\.apps\.push\(app\.definition\);[^]*?self\.apps\.insert\(self\.manifest\.apps\.last\(\)\.unwrap\(\)\.id\.clone\(\),factory\);self\}$/.test(registration))
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] descriptor disposition join is not exact across manifest and runtime factory definitions.");
   const dispositionById = new Map(fixture.routes.map((route) => [route.id, route.descriptorDisposition]));
@@ -293,12 +314,12 @@ export function toolJobSharedFrameworkActionFixtureRun(root: string): { schema: 
     if (result !== law.expected) throw new Error(`[verify interactivity tool-jobs shared-action-fixture] hostile law ${law.id} differs from its expected result.`);
     return `${law.id}:${result}`;
   });
-  const shell = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
+  const shell = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🔀️actions/🎬️shell-actions/🎯️dispatch-action/🦀️.rs");
   const dispatch = interactivityCheckedRustBlockScope(shell, "pub fn dispatch_action<'a>(&'a mut self, mut action: ActionDescriptor) -> ShellTurn<'a, Result<(), String>>", "shared-action accepted tutorial dispatch", sourceFailures)?.replace(/\s+/g, "") ?? "";
-  const arming = dispatch.indexOf("letrecord_tutorial_after_acceptance=action.action==semio_framework::RECORD_TUTORIAL_ACTION_ID;");
-  const accepted = dispatch.indexOf("letanswer=program.handle_action(session.instance_id,&action_json,&live_view_state).await;letmutresult=answer.map_err(|refusal|self.refused_guest_call(refusal,&session.app))?;", arming);
-  const armed = dispatch.indexOf("ifrecord_tutorial_after_acceptance{self.tutorial_start_recording();}", accepted);
-  if (sourceFailures.length || arming < 0 || accepted < arming || armed < accepted || (dispatch.match(/self\.tutorial_start_recording\(\);/g) ?? []).length !== 1)
+  const arming = dispatch.indexOf("letrecord_tutorial_after_acceptance=action.action==semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;");
+  const accepted = dispatch.indexOf("letanswer=program.handle_action(session.instance_id,&action_json,&live_view_state).await;letmutresult=answer.map_err(|refusal|self.prefs.refused_guest_call(refusal,&session.app,&mutself.chrome))?;", arming);
+  const armed = dispatch.indexOf("ifrecord_tutorial_after_acceptance{self.as_window_actions().tutorial_start_recording();}", accepted);
+  if (sourceFailures.length || arming < 0 || accepted < arming || armed < accepted || (dispatch.match(/tutorial_start_recording\(\);/g) ?? []).length !== 1)
     throw new Error("[verify interactivity tool-jobs shared-action-fixture] recordTutorial arms before the accepted retained route.");
   return { schema: fixture.schema, routes: fixture.routes.map((route) => `${route.id}:${route.factory}:${route.schemaId}:${route.descriptorDisposition}`), descriptor, hostile };
 }

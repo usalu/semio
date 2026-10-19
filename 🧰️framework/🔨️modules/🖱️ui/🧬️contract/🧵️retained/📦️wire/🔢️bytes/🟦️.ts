@@ -1,9 +1,9 @@
 //#region 📦️SurfaceByteContract
-import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
+import type { UiIndexGrant } from "../../🔌️host/🟦️.ts";
 
 const PAGE_BYTES = 256;
 const MAXIMUM_BYTES = 32768;
-const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
+const admitted = (grant: UiIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 type Root = { readonly length: number; pages: (Uint8Array | null)[]; references: number };
 export type UiSurfaceByteStep = { readonly kind: "blocked" | "pending" | "ready" | "rejected" | "complete"; readonly accepted: boolean; readonly items: number; readonly bytes: number };
 const step = (kind: UiSurfaceByteStep["kind"], bytes = 0, accepted = false): UiSurfaceByteStep => ({ kind, accepted, items: bytes ? 1 : 0, bytes });
@@ -55,7 +55,7 @@ export class UiSurfaceByteBuilder {
     this.#length = length;
   }
 
-  advance(grant: NumericIndexGrant, value?: number): UiSurfaceByteStep {
+  advance(grant: UiIndexGrant, value?: number): UiSurfaceByteStep {
     if (!admitted(grant)) return step("blocked");
     if (this.#closing || this.#taken || this.#failed) return step("rejected");
     if (value !== undefined && (!Number.isInteger(value) || value < 0 || value > 255)) { this.#failed = true; return step("rejected", 16); }
@@ -101,7 +101,7 @@ export class UiSurfaceByteRetirement {
   private constructor(root: Root | null) { this.#root = root; }
   static { retire = (root) => new UiSurfaceByteRetirement(root); }
 
-  advance(grant: NumericIndexGrant): UiSurfaceByteStep {
+  advance(grant: UiIndexGrant): UiSurfaceByteStep {
     if (!admitted(grant)) return step("blocked");
     if (!this.#root) return step("complete");
     if (!this.#released) {

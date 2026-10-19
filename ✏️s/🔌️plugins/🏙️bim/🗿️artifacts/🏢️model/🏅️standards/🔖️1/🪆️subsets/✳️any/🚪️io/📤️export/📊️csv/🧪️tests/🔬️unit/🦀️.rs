@@ -1,25 +1,25 @@
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleTable};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleTable};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Schedule;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Schedule;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
-use crate::standards::v1::subsets::any::io::export::csv::codec::read_records;
-use crate::standards::v1::subsets::any::io::export::csv::*;
-use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec::read_records;
+use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::csv::{number_text, schedule_csv, diagnostics_records, diagnostics_csv, report_csv};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
 use semio_framework_test_fixtures::fixture_text;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let mut snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     snapshot.schedules.insert("sch-walls".into(), preset("wall", "Walls").expect("the wall preset"));
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     (snapshot, inferred)

@@ -2,12 +2,25 @@
 //! pickers (rule check, severity, status, priority) the properties panel offers. A selector or a scope is edited as text of `key=value,value` parts separated by semicolons (`classes=beam,column;
 //! storeys=st-0`); an empty text selects everything. The clash counts and the rule findings are inferred rows of the `clash-sets` and `rule-results` inferences.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::snapshot::Point2;
-use crate::editor::bim::entities::{number, parse_number, parse_text, partial, variant, Created, EntityKind, FieldRow, InferredRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ClashSet, ElementClass, ElementSelector, Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Phase, Rule, RuleKind, RuleScope, RuleSeverity, DEFAULT_TOLERANCE, RULE_KINDS}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{number, parse_number, parse_text, partial, variant};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow, InferredRow};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClashSet, Issue, IssueComment, ModelSnapshot, Rule, DEFAULT_TOLERANCE};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, ElementSelector, IssuePriority, IssueStatus, Phase, RuleKind, RuleScope, RuleSeverity};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::coordination_values::RULE_KINDS;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_118::standards::v1::subsets::any::schema::mutations::delete_clash_set;
+use semio_s_artifact_bim_model_mut_any_120::standards::v1::subsets::any::schema::mutations::delete_issue;
+use semio_s_artifact_bim_model_mut_any_121::standards::v1::subsets::any::schema::mutations::delete_issue_comment;
+use semio_s_artifact_bim_model_mut_any_119::standards::v1::subsets::any::schema::mutations::delete_rule;
+use semio_s_artifact_bim_model_mut_any_52::standards::v1::subsets::any::schema::mutations::set_clash_set;
+use semio_s_artifact_bim_model_mut_any_54::standards::v1::subsets::any::schema::mutations::set_issue;
+use semio_s_artifact_bim_model_mut_any_55::standards::v1::subsets::any::schema::mutations::set_issue_comment;
+use semio_s_artifact_bim_model_mut_any_53::standards::v1::subsets::any::schema::mutations::set_rule;
 
 //#region 🔖️Text
 const PHASES: [Phase; 4] = [Phase::Existing, Phase::New, Phase::Demolished, Phase::Temporary];
@@ -247,13 +260,13 @@ pub fn author(snapshot: &ModelSnapshot) -> String {
 /// 💥️ A new clash set: everything against everything with the default tolerance, named by the caller.
 pub fn create_clash_set(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let clash_set = ClashSet { tolerance: DEFAULT_TOLERANCE, ..ClashSet::standard(name, ElementSelector::all(), ElementSelector::all()) };
-    Ok(ModelMutation::CreateClashSet(crate::standards::v1::subsets::any::schema::mutations::create_clash_set::CreateClashSet { id: id.into(), clash_set }))
+    Ok(ModelMutation::CreateClashSet(semio_s_artifact_bim_model_mut_any_150::standards::v1::subsets::any::schema::mutations::create_clash_set::CreateClashSet { id: id.into(), clash_set }))
 }
 
 /// ⚖️ A new rule: the riser limit of DIN 18065 as an error everywhere, named by the caller.
 pub fn create_rule(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let rule = Rule { name: name.into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: RuleSeverity::Error, scope: RuleScope::all() };
-    Ok(ModelMutation::CreateRule(crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule { id: id.into(), rule }))
+    Ok(ModelMutation::CreateRule(semio_s_artifact_bim_model_mut_any_151::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule { id: id.into(), rule }))
 }
 
 /// 🚩️ A new open issue titled by the caller, raised by the author of the project at the latest moment the model knows.
@@ -271,7 +284,7 @@ pub fn create_issue(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &st
         clash: None,
         viewpoint: None,
     };
-    Ok(ModelMutation::CreateIssue(crate::standards::v1::subsets::any::schema::mutations::create_issue::CreateIssue { id: id.into(), issue }))
+    Ok(ModelMutation::CreateIssue(semio_s_artifact_bim_model_mut_any_152::standards::v1::subsets::any::schema::mutations::create_issue::CreateIssue { id: id.into(), issue }))
 }
 
 /// 💬️ A new comment on the issue `parent`, worded by the caller.
@@ -280,7 +293,7 @@ pub fn create_comment(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &s
         return Err("bim.create.issue-missing");
     }
     let issue_comment = IssueComment { issue: parent.into(), author: author(snapshot), date: latest_moment(snapshot), text: name.into() };
-    Ok(ModelMutation::CreateIssueComment(crate::standards::v1::subsets::any::schema::mutations::create_issue_comment::CreateIssueComment { id: id.into(), issue_comment }))
+    Ok(ModelMutation::CreateIssueComment(semio_s_artifact_bim_model_mut_any_153::standards::v1::subsets::any::schema::mutations::create_issue_comment::CreateIssueComment { id: id.into(), issue_comment }))
 }
 //#endregion 🔖️Create
 

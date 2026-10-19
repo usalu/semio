@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Browser, Page } from "playwright";
-import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { PLAYWRIGHT_MODULE_SPECIFIER } from "@semio-tech/framework-plugin/build/plan";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "@semio-tech/repo-test/acceptance/orchestration";
 import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";

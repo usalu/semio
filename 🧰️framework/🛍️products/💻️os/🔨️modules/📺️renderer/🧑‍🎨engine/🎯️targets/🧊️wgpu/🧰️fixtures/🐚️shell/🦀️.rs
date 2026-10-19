@@ -29,7 +29,13 @@ use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
 use serde_json::Value;
 use std::collections::HashMap;
 use ui_contract::{UiDocumentLease, UiText};
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Theme, UtilityNode, WindowEngagement};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, WindowEngagement};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::utilities::UtilityNode;
 
 pub fn host_test_apps() -> (AppDefinition, AppDefinition) {
     let mut home = test_app(Vec::new(), Vec::new());
@@ -410,7 +416,7 @@ pub fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, 
                 world_resources: &mut world_resources,
                 window_id: surface,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             done
         });
@@ -450,7 +456,7 @@ pub fn paint_component_pointer_documents(shell: &mut ShellState, documents: &[(&
                 world_resources: &mut world_resources,
                 window_id,
             };
-            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts, cx));
+            let done = caller.turn(|cx| render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle, &mut hosts, cx));
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
         });

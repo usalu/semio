@@ -1,12 +1,16 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, Slope};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainGrid, CurtainPanel, Slope};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType};
 #[allow(unused_imports)]
 use protocol::MutationOutcome;
 #[allow(unused_imports)]
 use std::f64::consts::TAU;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::close;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::*;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Point2, Profile, TopConstraint, Vertex}, diff::ModelDiff};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2, Profile, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::OutcomeCode;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;

@@ -1,10 +1,11 @@
 import Ajv from "ajv";
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve, sep, win32 } from "node:path";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { contractRoot } from "../🏗️shared-fixtures/🟦️.ts";
+import { checkoutPathInventory, contractRoot, normalizationGit, type CheckoutPathInventory } from "../🏗️shared-fixtures/🟦️.ts";
 
 describe("active ticket clean protection", () => {
   test("projects synthetic candidates with strict manifest and third-party oracle parity", async () => {
@@ -65,43 +66,88 @@ describe("active ticket clean protection", () => {
   });
 });
 
+type CheckoutRoot = { root: string; maxPathUnits: number; scope?: "ticket" | "all" };
+
+type CheckoutFixture = {
+  version: number;
+  checkout: { root: string; maxPathUnits: number; ticketRoot: string };
+  checkoutRoots?: (CheckoutRoot & { scope: "ticket" | "all" })[];
+  components: { name: string; illegal: boolean }[];
+  inventory: {
+    gitignore: string[];
+    tracked: string[];
+    missing: string[];
+    untracked: string[];
+    ignored: string[];
+    nestedRepos: string[];
+    checkout: { root: string; maxPathUnits: number; ticketRoot: string };
+    oversize: { all: string[]; ticket: string[] };
+  };
+};
+
+/** 🪟️ `win32.join` never lengthens `root + "\\" + path`, so the plain length bound screens candidates exactly before the normalized join decides. */
+const oversizeCheckoutPaths = (inventory: CheckoutPathInventory, checkout: CheckoutRoot, ticketRoot: string, exists: (path: string) => boolean): string[] =>
+  [...new Set([...inventory.tracked, ...inventory.untracked].filter((path) => checkout.root.length + 1 + path.length > checkout.maxPathUnits))].filter((path) =>
+    (checkout.scope === "all" || path.startsWith(`${ticketRoot}/`))
+    && win32.join(checkout.root, path).length > checkout.maxPathUnits
+    && (inventory.untracked.has(path) || exists(path)),
+  ).sort();
+
+const oldCheckoutInventory = (root: string, scope?: string): CheckoutPathInventory => {
+  const paths = (args: string[]): string[] => {
+    const result = spawnSync("git", args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
+    expect(result.status).toBe(0);
+    return result.stdout.toString("utf8").split("\0").filter(Boolean);
+  };
+  const within = scope === undefined ? [] : ["--", scope];
+  return { tracked: paths(["ls-files", "-z", ...within]), untracked: new Set(paths(["ls-files", "-z", "--others", "--exclude-standard", ...within])) };
+};
+
 describe("Windows checkout ticket paths", () => {
   test("rejects Windows-illegal components and keeps checkout paths below the legacy path limit", async () => {
     const { cleanIsWindowsIllegalName } = await import("../../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
     const root = findWorkspaceRoot(contractRoot);
-    const fixturePath = join(contractRoot, "../🧫️fixtures/🪟️windows-checkout-paths");
-    const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8")) as {
-      version: number;
-      checkout: { root: string; maxPathUnits: number; ticketRoot: string };
-      checkoutRoots?: { root: string; maxPathUnits: number; scope: "ticket" | "all" }[];
-      components: { name: string; illegal: boolean }[];
-    };
+    const fixture = JSON.parse(readFileSync(join(contractRoot, "../🧫️fixtures/🪟️windows-checkout-paths/🔣️.json"), "utf8")) as CheckoutFixture;
     const checkoutRoots = fixture.checkoutRoots ?? [{ ...fixture.checkout, scope: "ticket" as const }];
-    
-    
-    expect(fixture["version"]).toEqual(2);
-    
+
+    expect(fixture["version"]).toEqual(3);
+
     for (const component of fixture.components) expect(cleanIsWindowsIllegalName(component.name), JSON.stringify(component.name)).toBe(component.illegal);
-    const gitPaths = (args: string[], prefix?: string): string[] => {
-      const result = spawnSync("git", args, { cwd: root, maxBuffer: 64 * 1024 * 1024 });
-      expect(result.status).toBe(0);
-      return result.stdout.toString("utf8").split("\0").filter((path) => !prefix || path.startsWith(`${prefix}/`));
-    };
-    const trackedAll = gitPaths(["ls-files", "-z"]);
-    const untrackedAll = gitPaths(["ls-files", "-z", "--others", "--exclude-standard"]);
-    const untrackedPaths = new Set(untrackedAll);
-    const oversizeByRoot: Record<string, string[]> = {};
-    for (const checkout of checkoutRoots) {
-      const tracked = checkout.scope === "ticket" ? gitPaths(["ls-files", "-z", "--", fixture.checkout.ticketRoot]) : trackedAll;
-      const untracked = checkout.scope === "ticket" ? gitPaths(["ls-files", "-z", "--others", "--exclude-standard", "--", fixture.checkout.ticketRoot]) : untrackedAll;
-      const paths = [...new Set([...tracked, ...untracked])];
-      if (checkout.scope === "ticket") expect(paths.length).toBeGreaterThan(0);
-      const scopeUntracked = new Set(untracked);
-      oversizeByRoot[checkout.root] = paths.filter((path) =>
-        win32.join(checkout.root, path).length > checkout.maxPathUnits
-        && (scopeUntracked.has(path) || untrackedPaths.has(path) || existsSync(join(root, path))),
-      );
-    }
+    const { ticketRoot } = fixture.checkout;
+    const inventory = await checkoutPathInventory(root, checkoutRoots.some((checkout) => checkout.scope === "all") ? ["."] : [ticketRoot]);
+    expect(inventory.tracked.filter((path) => path.startsWith(`${ticketRoot}/`)).length + [...inventory.untracked].filter((path) => path.startsWith(`${ticketRoot}/`)).length).toBeGreaterThan(0);
+    const oversizeByRoot = Object.fromEntries(checkoutRoots.map((checkout) => [checkout.root, oversizeCheckoutPaths(inventory, checkout, ticketRoot, (path) => existsSync(join(root, path)))]));
     expect(oversizeByRoot).toEqual(Object.fromEntries(checkoutRoots.map((checkout) => [checkout.root, []])));
   }, { timeout: 15_000 });
+
+  test("partitioned parallel inventory equals the single-process Git enumeration on a fixture repository", async () => {
+    const { inventory } = JSON.parse(readFileSync(join(contractRoot, "../🧫️fixtures/🪟️windows-checkout-paths/🔣️.json"), "utf8")) as CheckoutFixture;
+    const repository = mkdtempSync(join(tmpdir(), "semio-checkout-inventory-"));
+    try {
+      normalizationGit(repository, ["init", "--quiet"]);
+      const write = (path: string): void => { mkdirSync(dirname(join(repository, path)), { recursive: true }); writeFileSync(join(repository, path), path); };
+      writeFileSync(join(repository, ".gitignore"), `${inventory.gitignore.join("\n")}\n`);
+      for (const path of [...inventory.tracked, ...inventory.untracked, ...inventory.ignored]) write(path);
+      for (const nested of inventory.nestedRepos) { write(`${nested}/file.txt`); normalizationGit(join(repository, nested), ["init", "--quiet"]); }
+      normalizationGit(repository, ["add", "--", ".gitignore", ...inventory.tracked]);
+      for (const path of inventory.missing) rmSync(join(repository, path));
+      const exists = (path: string): boolean => existsSync(join(repository, path));
+      const { ticketRoot } = inventory.checkout;
+      const oracle = { all: oldCheckoutInventory(repository), ticket: oldCheckoutInventory(repository, ticketRoot) };
+      expect([...oracle.all.untracked].sort()).toEqual([...inventory.untracked, ...inventory.nestedRepos.map((nested) => `${nested}/`)].sort());
+      for (const [scope, scopes] of [["all", ["."]], ["ticket", [ticketRoot]]] as const) {
+        for (const options of [{ parallelism: 1, budget: 1_000 }, { parallelism: 1, budget: 1 }, { parallelism: 3, budget: 2 }, { parallelism: 8, budget: 1 }, {}]) {
+          const partitioned = await checkoutPathInventory(repository, scopes, options);
+          expect([...partitioned.untracked].sort(), `${scope} ${JSON.stringify(options)}`).toEqual([...oracle[scope].untracked].sort());
+          expect([...partitioned.tracked].sort()).toEqual([...oracle.all.tracked].sort());
+          const checkout: CheckoutRoot = { ...inventory.checkout, scope: scope === "all" ? "all" : "ticket" };
+          const expected = [...inventory.oversize[scope]].sort();
+          expect(oversizeCheckoutPaths(partitioned, checkout, ticketRoot, exists), `${scope} ${JSON.stringify(options)}`).toEqual(expected);
+          expect(oversizeCheckoutPaths(oracle[scope], checkout, ticketRoot, exists)).toEqual(expected);
+        }
+      }
+    } finally {
+      rmSync(repository, { recursive: true, force: true });
+    }
+  }, { timeout: 60_000 });
 });

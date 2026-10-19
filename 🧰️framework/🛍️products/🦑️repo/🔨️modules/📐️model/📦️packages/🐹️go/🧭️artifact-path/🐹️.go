@@ -240,7 +240,7 @@ func IdToPath(id string) string {
 		if !strings.HasPrefix(fileId, bundleId) {
 			continue
 		}
-		bundleRoot := filepath.Join(workspace.RootDir, workspace.NormalizePath(b.Root))
+		bundleRoot := filepath.Join(workspace.GetRootDir(), workspace.NormalizePath(b.Root))
 		// Walk files in this bundle
 		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
@@ -270,7 +270,7 @@ func IdToPath(id string) string {
 			if workspace.IsRepoExcludedPath(path) || workspace.IsGitIgnored(path) {
 				return nil
 			}
-			relPath, _ := filepath.Rel(workspace.RootDir, path)
+			relPath, _ := filepath.Rel(workspace.GetRootDir(), path)
 			relPath = workspace.NormalizePath(relPath)
 			computedId := norm(BuildFileID(relPath, nil))
 			if computedId == fileId {
@@ -289,7 +289,7 @@ func IdToPath(id string) string {
 		if !strings.HasPrefix(fileId, bundleId) {
 			continue
 		}
-		bundleRoot := filepath.Join(workspace.RootDir, workspace.NormalizePath(b.Root))
+		bundleRoot := filepath.Join(workspace.GetRootDir(), workspace.NormalizePath(b.Root))
 		var matchedPath string
 		filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -301,7 +301,7 @@ func IdToPath(id string) string {
 			if workspace.IsRepoExcludedPath(path) {
 				return filepath.SkipDir
 			}
-			relPath, _ := filepath.Rel(workspace.RootDir, path)
+			relPath, _ := filepath.Rel(workspace.GetRootDir(), path)
 			relPath = workspace.NormalizePath(relPath)
 			computedId := norm(BuildFolderID(relPath, nil))
 			if computedId == fileId {

@@ -1,4 +1,4 @@
-import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childRejectionReason, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadStageV1, type BrowserActorChildRejectionV1 } from "../../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { BROWSER_ACTOR_CHILD_LIMITS, BROWSER_ACTOR_CHILD_LOAD_STAGES, BROWSER_ACTOR_CHILD_SCHEMA, childBindingMatches, childRecord, childRejectionReason, childSha256, measureChildValue, type BrowserActorChildBinding, type BrowserActorChildLoadStageV1, type BrowserActorChildRejectionV1 } from "@semio-tech/framework/browser-bundle/child/schema";
 
 type Actor = { invoke(path: string[], args: unknown[]): Promise<unknown>; close(): Promise<void> };
 /** 🧵️ The members of the dedicated worker scope this child reads and assigns (the program is not compiled with the `webworker` library). */

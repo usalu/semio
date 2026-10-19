@@ -1,6 +1,6 @@
 /** 🧬️ Shooting snapshot schema — artifact-lane fields only. */
 
-import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface ShootingSnapshot {
   /** @state artifact */

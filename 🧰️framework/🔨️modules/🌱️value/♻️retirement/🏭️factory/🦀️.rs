@@ -227,13 +227,13 @@ impl<T:RetireOwned> ArtifactOwnedValueRetirementFactory<T> for OwnedValueRetirem
 pub struct SharedValueRetirementFactory<T>(PhantomData<fn() -> T>);
 impl<T> Default for SharedValueRetirementFactory<T> { fn default()->Self {Self(PhantomData)} }
 impl<T:RetireOwned+Sync> SnapshotRetirementFactory<T> for SharedValueRetirementFactory<T> {
-    fn retirement_birth_bytes(&self,_:&Arc<T>)->usize {retirement::shared::shared_retirement_birth_bytes::<T>()}
-    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {retirement::shared::admit_shared_retirement(value,grant,true)}
+    fn retirement_birth_bytes(&self,_:&Arc<T>)->usize {retirement::arc_custody::shared_retirement_birth_bytes::<T>()}
+    fn retire(&self,value:Arc<T>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,Arc<T>)> {retirement::arc_custody::admit_shared_retirement(value,grant,true)}
 }
 
 
 
-#[path="../🔗️shared/🏭️factory/🦀️.rs"]
+#[path="../🔗️arc-custody/🏭️factory/🦀️.rs"]
 pub mod shared;
 pub use shared::FactorySharedRetirement;
 

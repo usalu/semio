@@ -15,7 +15,7 @@ import { staticDirVitePlugin, staticDirMountVitePlugins } from "../../../🏗️
 import { PassThrough } from "node:stream";
 import { serveFileWithValidatorsV1 } from "../../../🏗️builder/🌐️vite/📤️file-serving/🟦️.ts";
 import { parseFontCatalog, fontCatalogSources, resolveFontSource, parseGoogleFontWoff2Map, resolveFontFaceUrl } from "../../../🔤️fonts/🟦️.ts";
-import { ownedServer, paletteCss, repoRoot, uiCss } from "../🧰️shared/🟦️.ts";
+import { ownedServer, paletteCss, repoRoot, uiCss } from "../🧰️suite-build-server/🟦️.ts";
 
 describe("scrollbar selector", () => {
   it("uses the hovered owner for the WebKit thumb", () => {

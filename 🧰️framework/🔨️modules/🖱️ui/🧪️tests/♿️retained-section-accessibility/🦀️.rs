@@ -1,8 +1,8 @@
 //! ♿️ LAW: closed retained disclosures remove descendants from the projected accessibility tree.
 
 use super::*;
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
-use crate::wgpu::tree::UiDocumentTree;
+use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use semio_framework_ui_retained_tree::tree::UiDocumentTree;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiRevision};
 
 fn fixture() -> serde_json::Value {

@@ -5,7 +5,8 @@ use crate::standards::v1::subsets::any::schema::inferences::effective_properties
 use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishQuantity;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, LayerQuantity};
 use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleCell;
-use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, ModelSnapshot, OpeningKind, Phase, PropertyValue, Schedule, ScheduleCategory, ScheduleField, ScheduleKey, Swing};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, OpeningKind, Phase, PropertyValue, ScheduleCategory, ScheduleField, ScheduleKey, Swing};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
 use std::collections::BTreeMap;
 
 //#region 🔖️Scope

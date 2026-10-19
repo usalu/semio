@@ -9,11 +9,11 @@ fn an_up_flow_tree_section_registers_its_header_at_the_painted_bottom_edge() {
 
 #[test]
 fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom_row() {
-    use crate::wgpu::chrome::UiDriverDrag;
-    use crate::wgpu::component::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-    use crate::wgpu::layout::TreeRowMetrics;
-    use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
-    use crate::wgpu::Label;
+    use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
+    use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+    use semio_framework_ui_wgpu_layout::layout::TreeRowMetrics;
+    use semio_framework_ui_retained_tree::tree::{Node, NodeKey, UiTree, WidgetSpec};
+    use semio_framework_ui_locale::Label;
 
     let child = UiTreeItemNode::base("child", Label::data("Child"));
     let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
@@ -29,7 +29,7 @@ fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom
     let section_row = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit("section".into()), WidgetSpec(row("section"))));
     let branch_row = tree.insert_child(Some(section_row), Node::new(NodeKey::Explicit("branch".into()), WidgetSpec(row("branch"))));
     let _child_row = tree.insert_child(Some(branch_row), Node::new(NodeKey::Explicit("child".into()), WidgetSpec(row("child"))));
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let subtree = Rect::new(100.0, 200.0, 300.0, metrics.row_height * 2.0);
 
     let label = retained_hit_registration(&tree, branch_row, subtree, &metrics, UiDriverDrag::Handle, true).expect("branch label");
@@ -44,15 +44,15 @@ fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom
 
 #[test]
 fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
-    use crate::wgpu::chrome::UiDriverDrag;
-    use crate::wgpu::component::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
-    use crate::wgpu::layout::TreeRowMetrics;
-    use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
-    use crate::wgpu::Label;
+    use semio_framework_ui_wgpu_layout::chrome::UiDriverDrag;
+    use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+    use semio_framework_ui_wgpu_layout::layout::TreeRowMetrics;
+    use semio_framework_ui_retained_tree::tree::{Node, NodeKey, UiTree, WidgetSpec};
+    use semio_framework_ui_locale::Label;
     use std::collections::HashMap;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌳️tree-drag-handles/🔣️.json")).expect("tree drag fixture");
-    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let metrics = TreeRowMetrics::from_theme(&semio_framework_ui_theme::Theme::default());
     let row_width = fixture["rowWidth"].as_f64().expect("row width") as f32;
     for row in fixture["rows"].as_array().expect("rows") {
         let id = row["id"].as_str().expect("row id");
@@ -91,7 +91,7 @@ fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
 
 #[test]
 fn number_constraints_clamp_and_snap_exactly_once_each() {
-    use crate::wgpu::events::constrain_number_input;
+    use semio_framework_ui_wgpu_widget_kit::constrain_number_input;
     assert_eq!(constrain_number_input(999.0, Some(0.0), Some(10.0), None), 10.0);
     assert_eq!(constrain_number_input(-4.0, Some(2.0), Some(10.0), None), 2.0);
     assert_eq!(constrain_number_input(3.3, None, None, Some(0.5)), 3.5, "snapping is to the nearest step, not a floor");
@@ -103,14 +103,14 @@ fn number_constraints_clamp_and_snap_exactly_once_each() {
 
 #[test]
 fn an_input_metas_commit_value_carries_its_own_constraints() {
-    let text = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "text".into(), min: None, max: None, step: None, accept: None };
+    let text = semio_framework_ui_wgpu_widget_kit::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "text".into(), min: None, max: None, step: None, accept: None };
     assert_eq!(text.commit_value("12abc"), Some(semio_framework_value::DslValue::String("12abc".into())), "a text field commits its text verbatim");
 
-    let number = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "number".into(), min: Some(0.0), max: Some(10.0), step: Some(0.5), accept: None };
+    let number = semio_framework_ui_wgpu_widget_kit::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "number".into(), min: Some(0.0), max: Some(10.0), step: Some(0.5), accept: None };
     assert_eq!(number.commit_value("99"), Some(semio_framework_value::DslValue::float(10.0)));
     assert_eq!(number.commit_value("3.3"), Some(semio_framework_value::DslValue::float(3.5)));
     assert_eq!(number.commit_value(""), None, "an empty number buffer commits nothing at all");
 
-    let file = crate::wgpu::widgets::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "file".into(), min: None, max: None, step: None, accept: Some("image/*".into()) };
+    let file = semio_framework_ui_wgpu_widget_kit::InputMeta { on_change: (), commit: None, value: String::new(), input_kind: "file".into(), min: None, max: None, step: None, accept: Some("image/*".into()) };
     assert_eq!(file.accept.as_deref(), Some("image/*"), "a file field's `accept` reaches the host picker instead of being dropped at the render call site");
 }

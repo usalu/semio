@@ -32,6 +32,9 @@
           "root": {
             "type": "string"
           },
+          "companion": {
+            "const": true
+          },
           "declarations": {
             "type": "array",
             "items": {

@@ -2,7 +2,7 @@
 import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {verifyProducedWasmPackageV1} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedExactCargoLawsV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 import { readCargoTestPolicyV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
@@ -12,9 +12,8 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../🧰️
 import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🌐️ Owned native and browser geometry-session build and law routes. */
-import { runCargo } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
-import { runRepositoryExactCargoLaws } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
-import { buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
+import { runCargo } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { buildRepositoryWasmWebV1 } from "../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { sessionLaws } from "../../🧪️tests/🏷️ownership/🟦️.ts";
@@ -27,12 +26,12 @@ class TestScript extends BundleScript {
     if(args[0]==="original-construction-source"||args[0]==="original-construction-native"){
       if(args.length!==1)throw Error("Original Session constructor requires exact one cohort");const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Original Session constructor requires finite original deadline");
       await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../🏗️construction/🧪️tests/🟦️.ts")],this.repoRoot,"session:original-construction-source",remaining,{env:process.env});
-      if(args[0]==="original-construction-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original Session constructor deadline expired");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-s-spatial-kernel-semio-session":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-s-spatial-kernel-semio-session",target:{kind:"test",name:"session_construction"},laws:["original_session_constructor_pays_each_exact_birth_and_preserves_original_caller","original_session_constructor_cancellation_closes_only_born_originals"]}]});}return;
+      if(args[0]==="original-construction-native"){const left=this.invocation.control.remainingMilliseconds();if(left===null||left<=0)throw Error("Original Session constructor deadline expired");await runExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-s-spatial-kernel-semio-session":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-s-spatial-kernel-semio-session",target:{kind:"test",name:"session_construction"},laws:["original_session_constructor_pays_each_exact_birth_and_preserves_original_caller","original_session_constructor_cancellation_closes_only_born_originals"]}]});}return;
     }
     const selected=args[0]==="tessellation-validation-frontier" ? "original_session_validation_frontier_funds_actual_body_and_full_cancel_custody" : args[0]==="tessellation-failure" ? "original_session_failed_admitted_event_retains_native_primary_and_actual_cpu" : args[0]==="tessellation-authority" ? "original_session_tessellation_requires_original_capacity_before_any_normal_effect" : args[0]==="retained-work" ? "original_session_retention_transfers_incoming_keys_and_closes_removed_rows" : args[0]==="component-retirement" ? "retired_analytic_mesh_metadata_obeys_exact_byte_grants" : args[0]==="physical-custody" ? "original_session_capture_keeps_same_allocation_until_full_typed_grants" : undefined;
     const names=selected==="original_session_tessellation_requires_original_capacity_before_any_normal_effect"?[selected,"original_session_admission_and_specific_cancel_preserve_source_and_full_custody","original_session_query_requires_original_capacity_after_source_admission","original_session_failed_admitted_event_retains_native_primary_and_actual_cpu"]:selected?[selected]:undefined;
     const groups=sessionLaws().flatMap((group:any)=>names?group.laws.some((law:string)=>names.includes(law))?[{...group,laws:group.laws.filter((law:string)=>names.includes(law))}]:[]:[group]);
-    await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:selected?args.slice(1):args, groups });
+    await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:selected?args.slice(1):args, groups });
   }
 }
 async function buildSessionWasm(rsDir:string,invocation:ScriptInvocation,control:CompilerAdmissionControl): Promise<void> {
@@ -42,7 +41,7 @@ class WasmScript extends BundleScript { async run(): Promise<void> { await build
 class CanonicalScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length !== 0) throw new Error("canonical-architecture takes no arguments");
-    await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:["--locked"], groups:sessionLaws() });
+    await runAdmittedExactCargoLawsV1({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation,buildBudgetMs()), lawMilliseconds: 600_000 }, cwd:this.repoRoot, cargoArgs:["--locked"], groups:sessionLaws() });
     await buildSessionWasm(import.meta.dir,this.invocation,scriptCompilerAdmissionControlV1(this.invocation, "wasm:build", 0));
     await browserSessionLaws();
   }

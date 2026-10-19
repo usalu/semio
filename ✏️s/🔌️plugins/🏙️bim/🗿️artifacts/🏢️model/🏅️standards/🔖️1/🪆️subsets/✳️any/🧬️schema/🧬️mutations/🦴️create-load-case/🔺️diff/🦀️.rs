@@ -1,9 +1,11 @@
 //! 🔺️ Sparse declarative create-load-case diff; no derived state is evaluated.
 use crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &CreateLoadCase, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-if let Some(noun) = crate::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) { return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} already exists."), [payload.id.clone()]); }
-if let Some(problem) = crate::standards::v1::subsets::any::schema::snapshot::load_case_problem(base, &payload.load_case) { return MutationOutcome::refuse(OutcomeCode::Invariant, problem, [payload.id.clone()]); }
+if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) { return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} already exists."), [payload.id.clone()]); }
+if let Some(problem) = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::load_case_problem(base, &payload.load_case) { return MutationOutcome::refuse(OutcomeCode::Invariant, problem, [payload.id.clone()]); }
 MutationOutcome::new(ModelDiff::load_cases(payload.id.clone(), Entry::Created(payload.load_case.clone())))
 }

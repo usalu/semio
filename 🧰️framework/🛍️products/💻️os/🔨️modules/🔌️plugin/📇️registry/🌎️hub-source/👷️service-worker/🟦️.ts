@@ -5,7 +5,7 @@
  * the network: through a static route where the platform has them, so the page's own traffic never wakes this worker.
  * @see ../🗄️store/🟦️.ts
  */
-import { PLUGIN_MODULE_STORE_V1 } from "../../../../../../../🔨️modules/🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts";
+import { PLUGIN_MODULE_STORE_V1 } from "@semio-tech/framework/plugin-module/hub-source/schema";
 import { serveStoredPluginModuleFileV1 } from "../🗄️store/🟦️.ts";
 
 type ExtendableEventLike = Event & { waitUntil(promise: Promise<unknown>): void };

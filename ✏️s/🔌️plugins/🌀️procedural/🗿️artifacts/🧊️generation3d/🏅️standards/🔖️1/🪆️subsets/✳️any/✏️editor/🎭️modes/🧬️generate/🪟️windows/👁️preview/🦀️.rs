@@ -121,7 +121,7 @@ pub fn render(
     semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &semio_framework_ui::wgpu::World3dScene {
+        &semio_framework_ui_declaration::ui::World3dScene {
             status_json,
             fit_json: Some(fit_json),
             domain_id: Some(GENERATION_3D_INTERACTION_DOMAIN.into()),

@@ -66,7 +66,7 @@ pub struct World3dBuildContext {
     raster_request_len: usize,
     pub rejected: Option<World3dBuildRejected>,
     pub cursor_wake: std::mem::ManuallyDrop<Option<WorldCursorWakeAuthority>>,
-    cursor_wake_retirement: Option<semio_framework_value::retirement::shared::SharedControlledRetirement<Mutex<WorldCursorWakeState>>>,
+    cursor_wake_retirement: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<Mutex<WorldCursorWakeState>>>,
     cursor_wake_token: Option<WorldCursorWakeToken>,
     cursor_wake_fault: Option<WorldCursorWakeFault>,
 }
@@ -300,7 +300,7 @@ impl World3dBuildContext {
     /// silently in preparation (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
     /// `📓️w7b-presenter-one-frame-per-boot.md` §1).
     #[cfg_attr(target_pointer_width = "64", expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path."))]
-    pub fn append_step(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
+    pub fn append_step(&mut self, input: &mut semio_framework_ui_prepared::PreparedRenderInput) -> Result<bool, World3dBuildRejected> {
         if let Some(rejected) = self.rejected.take() {
             return Err(rejected);
         }
@@ -411,7 +411,7 @@ impl World3dBuildContext {
             if !self.raster_requests.empty(){let bytes=self.raster_requests.release_bytes();if grant.maximum_release_bytes<bytes{return Ok(Close::Pending{progress:Default::default()})}let step=self.raster_requests.release(grant)?;return Ok(Close::Pending{progress:step.progress()})}
 
         }
-        if let Some(authority)=self.cursor_wake.take(){self.cursor_wake_retirement=Some(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(authority.0));return Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if let Some(authority)=self.cursor_wake.take(){self.cursor_wake_retirement=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(authority.0));return Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(owner)=self.cursor_wake_retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.cursor_wake_retirement=None}return Ok(Close::Pending{progress:step.progress()})}
         Ok(Close::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}})
     }

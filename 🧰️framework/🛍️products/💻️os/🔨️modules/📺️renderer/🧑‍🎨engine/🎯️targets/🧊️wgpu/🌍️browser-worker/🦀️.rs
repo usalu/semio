@@ -29,7 +29,11 @@ use semio_framework_os_renderer_wgpu_program_bridge::filter_plugins;
 #[cfg(target_arch = "wasm32")]
 use semio_framework_os_renderer_wgpu_program_bridge::parse_plugin_entries;
 use ui_gpu::GpuContext;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, IconAtlas, InputState, PointerModifiers, Theme};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
+use semio_framework_ui_theme::Theme;
 
 #[path = "../🌐️browser-worker/🦀️.rs"]
 pub mod browser_worker;

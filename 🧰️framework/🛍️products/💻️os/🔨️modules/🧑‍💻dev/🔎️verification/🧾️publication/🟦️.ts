@@ -149,7 +149,7 @@ export async function executeProtectedActorChildV1(page:ProtectedActorBrowserPor
   },{childUrl,actorBase64:Buffer.from(joined.actor).toString("base64"),actorSha256:claim(joined.actor).sha256,actorByteLength:joined.actor.byteLength});
   const guest=new Uint8Array(result.guest);
   try{
-    const {verifyBrowserActorDescribeV1}=await import("../../../🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");const {decodePackValue,encodePackValue}=await import("@semio-tech/framework-os");
+    const {verifyBrowserActorDescribeV1}=await import("@semio-tech/framework-plugin/browser-bundle/describe");const {decodePackValue,encodePackValue}=await import("@semio-tech/framework-os");
     verifyBrowserActorDescribeV1(guest,joined.descriptor,{decode:decodePackValue,encode:encodePackValue});
     return{sourceDetached:true,describe:claim(guest),transferCount:result.transferCount,cancelled:true,capacityRestored:true,stages:result.stages};
   }finally{guest.fill(0);result.guest.fill(0);}

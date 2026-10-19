@@ -1,6 +1,8 @@
 //! 🏩️ `set-curtain-panel-override` payload. Changes the panel of an existing override; the cell it addresses stays the same (to address another cell, delete the override and create it again).
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

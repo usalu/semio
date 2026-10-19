@@ -6,15 +6,17 @@
 //! @see ../../../🚪️io/📤️export/📄️sheets — the writers this command speaks.
 
 use crate::editor::bim::commands::export_model::{stem, Output, INFER_PREVIEW, NODES_PER_STEP};
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::modes::edit::windows::sheet::title_labels;
-use crate::editor::bim::terminology::BimLabels;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::title_labels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::editor::bim::{BimCommand, BimModelApp};
-use crate::standards::v1::subsets::any::io::export::sheets::{self, pdf::SheetsPdf, TitleLabels};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::pdf::SheetsPdf;
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::TitleLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
@@ -84,7 +86,7 @@ pub struct SheetsJob {
 
 impl SheetsJob {
     /// 🏗️ A job writing `format` of the sheet `only` (else the first for an SVG, all for a PDF) of the document that instance `instance` shows, headed in `locale`.
-    pub fn new(original:ExportSheets,instance:crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>)->Self{
+    pub fn new(original:ExportSheets,instance:semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>)->Self{
         Self{format:original.format,only:original.sheet,locale:original.locale,instance:None,labels:None,analysis:Analysis::new(instance),writer:None,written:0}
     }
 
@@ -101,7 +103,7 @@ impl SheetsJob {
     }
 
     fn targets(&self, snapshot: &ModelSnapshot) -> Vec<String> {
-        let all = sheets::ordered(snapshot);
+        let all = semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::ordered(snapshot);
         match (&self.only, self.format.as_str()) {
             (Some(only), _) => all.into_iter().filter(|id| id == only).collect(),
             (None, "svg") => all.into_iter().take(1).collect(),
@@ -134,7 +136,7 @@ impl SheetsJob {
         if self.format == "svg" {
             let id = &targets[0];
             let labels=self.labels.as_ref().unwrap();
-            let document = inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| sheets::sheet_svg(snapshot, inferred, id, labels)).map_err(ended)?.ok_or_else(|| fault("bim.export.sheet-missing", format!("the sheet '{id}' has no layout")))?.map_err(|message| failed("svg", message))?;
+            let document = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(self.instance.as_ref(), snapshot, |inferred| semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::sheet_svg(snapshot, inferred, id, labels)).map_err(ended)?.ok_or_else(|| fault("bim.export.sheet-missing", format!("the sheet '{id}' has no layout")))?.map_err(|message| failed("svg", message))?;
             let number = snapshot.sheets.get(id).map_or("sheet", |row| row.number.as_str());
             return Ok(Advance::Done(Output { filename: format!("{name}-{}.svg", sheets::file_stem(number)), mime_type: "image/svg+xml", data: document, encoding: None }));
         }
@@ -145,8 +147,8 @@ impl SheetsJob {
         if self.written < targets.len() {
             let id = &targets[self.written];
             let (labels, writer) = (self.labels.as_ref().unwrap(), self.writer.as_mut().expect("the writer was started"));
-            inference::try_with_inference(self.instance.as_ref(), snapshot, |inferred| match inferred.sheet_layouts.get(id) {
-                Some(layout) => writer.page(layout, &sheets::drawings(inferred), labels),
+            semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(self.instance.as_ref(), snapshot, |inferred| match inferred.sheet_layouts.get(id) {
+                Some(layout) => writer.page(layout, &semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::drawings(inferred), labels),
                 None => Err(format!("the sheet '{id}' has no layout")),
             })
             .map_err(ended)?

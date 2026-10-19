@@ -1,5 +1,5 @@
 /** 🎯️ Bound selected-group contribution separately from locked leaf picking. */
-import {validateSceneSourceAddress} from "../🟦️.ts";
+import { validateSceneSourceAddress } from "../../🗺️plan-model/🟦️.ts";
 export interface SceneSelectionRelation{pickable:boolean;boundsSelection:number|null;}
 /** 🧭️ Preserve the outermost unlocked selected prefix through ordinary groups. */
 export function sceneSelectionRelation(sourcePath:readonly number[],lockedAncestors:number,selectedPaths:readonly(readonly number[])[]):SceneSelectionRelation{

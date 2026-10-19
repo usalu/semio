@@ -1,29 +1,30 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
+use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::conditions::*;
-use crate::editor::bim::entities::kind_of;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::conditions::{handle, ApplyConditions, ClearConditions};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 
 fn with_space(snapshot: ModelSnapshot, id: &str) -> ModelSnapshot {
     let create = kind_of("space").and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, "st-ground", "Sample").expect("creates");
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn stated(snapshot: &ModelSnapshot, id: &str, record: &SpaceConditions) -> ModelSnapshot {
     let mutation = ModelMutation::SetSpaceConditions(SetSpaceConditions::stating(id, record));
-    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).expect("applies")
+    semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).expect("applies")
 }
 
 fn office() -> SpaceConditions {

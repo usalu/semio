@@ -1,6 +1,10 @@
-use super::encode::{encode_focus, encode_key, encode_keypad, encode_mouse, encode_paste, encode_wheel_as_arrows, InputModes, KeypadKey, MouseEncoding, MouseReporting};
-use super::pane::{SelectionMode, TerminalState};
-use super::{CellPoint, Palette, VtScreen};
+//! 🏛️ Virtual terminal laws: screen sequences, history reflow, pane input and pointer, encoders and the shared corpus.
+
+#![cfg(test)]
+
+use semio_framework_ui_tui_vt::encode::{encode_focus, encode_key, encode_keypad, encode_mouse, encode_paste, encode_wheel_as_arrows, InputModes, KeypadKey, MouseEncoding, MouseReporting};
+use semio_framework_ui_tui_vt::pane::{SelectionMode, TerminalState};
+use semio_framework_ui_tui_vt::{CellPoint, Palette, VtScreen};
 use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
 use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
 use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};

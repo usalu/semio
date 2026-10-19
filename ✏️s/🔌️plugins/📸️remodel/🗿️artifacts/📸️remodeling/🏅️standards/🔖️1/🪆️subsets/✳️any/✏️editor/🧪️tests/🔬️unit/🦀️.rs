@@ -11,7 +11,8 @@ pub(crate) mod context {
     /// registry-backed app owns Stores that must retire through the bounded close protocol before drop
     /// (`store drop witness`), so `Drop` runs `close_registered_fixture_app` for every test that returns
     /// early — a test that panics leaves the witness alone so the first failure stays the one reported.
-    pub struct RemodelingApp(VcsArtifactApp<EditorApp<RemodelingPlayApp>>);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct RemodelingApp(pub VcsArtifactApp<EditorApp<RemodelingPlayApp>>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl std::ops::Deref for RemodelingApp {
         type Target = VcsArtifactApp<EditorApp<RemodelingPlayApp>>;
@@ -29,7 +30,7 @@ pub(crate) mod context {
     impl Drop for RemodelingApp {
         fn drop(&mut self) {
             if !std::thread::panicking() {
-                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
         }
     }
@@ -59,9 +60,10 @@ pub(crate) mod context {
     /// The RUNTIME side stays async (`ArtifactApp`/`VcsArtifactApp` are async traits, unlike the
     /// AUTHORING `ArtifactEditor` this crate implements), so every harness entry point awaits.
     pub async fn app() -> RemodelingApp {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<RemodelingPlayApp>>(remodeling_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        RemodelingApp(app)
+        RemodelingApp(app, scope)
     }
 
     /// 🧪️ Same as [`app`] — kept as the name the older tests spell.
@@ -120,13 +122,13 @@ pub(crate) mod context {
         };
         let view_state = window_kind.map(test_window);
         let command_id = command.command_id();
-        let mut result = app.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
-        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
+        let mut result = app.0.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
+        let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
                 let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
-                semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("test host applies load-document effect");
             }
         }
         Dispatched { result, lanes: settled.lanes }
@@ -142,14 +144,12 @@ pub(crate) mod context {
     /// 🪟️ [`render`] addressed at the test window instance of `window_kind_id` — the render that sees the
     /// window config a view verb dispatched through [`dispatch`] wrote.
     pub async fn render_in_window(app: &mut RemodelingApp, body_key: &str, window_kind_id: &str) -> String {
-        let tree = app.render(body_key, None, &test_window(window_kind_id)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &test_window(window_kind_id), app.1.cx()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"))
     }
 
     /// 🪧️ The rendered tree as its JSON projection, with the projected tree retired.
     pub async fn render_json(app: &mut RemodelingApp, body_key: &str) -> serde_json::Value {
-        let tree = app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"));
-        serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap_or_else(|error| panic!("project {body_key}: {error}"))).expect("projection parses")
+        serde_json::from_str(&semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.unwrap_or_else(|fault| panic!("render {body_key}: {fault:?}"))).expect("projection parses")
     }
 
     /// 👥️ The reconstruction run as the framework ledger summarizes it.
@@ -159,7 +159,7 @@ pub(crate) mod context {
 
     /// ⏯️ Dispatches one framework tool-run action and answers its output.
     pub async fn run_action(app: &mut RemodelingApp, action: &str, arguments: Vec<(String, semio_framework_plugin::DslValue)>) -> semio_framework_plugin::DslValue {
-        app.handle_action(action, Some(&semio_framework_plugin::DslValue::Object(arguments)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
+        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_plugin::DslValue::Object(arguments)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}")).output
     }
 
     /// ▶️ Starts the reconstruction tool run.
@@ -191,8 +191,8 @@ pub(crate) mod context {
     /// run hands the shell is dispatched back, the way the shell answers its own port.
     pub async fn host_turn(app: &mut RemodelingApp) {
         let meta = meta("local");
-        app.maintenance_step(1, semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
+        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance grant");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
             assert!(page.lane != TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
             assert!(app.acknowledge_typed_operation_result(page.token).expect("result ACK"), "the exact result ACK is admitted");
@@ -208,7 +208,7 @@ pub(crate) mod context {
         for effect in effects {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 if semio_framework_plugin::is_tool_run_action_id(&action) {
-                    Box::pin(app.handle_action(&action, args.as_ref(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
+                    Box::pin(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, &action, args.clone(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
                 }
             }
         }
@@ -671,8 +671,8 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
-    app.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("view dispatch");
-    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("view publication settles");
+    app.0.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view dispatch");
+    let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view publication settles");
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) && !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row publishes its window-config lane and never the document lane: {:?}", receipt.lanes);
 }
 //#endregion 🔖️ManifestSanity

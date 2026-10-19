@@ -5,7 +5,7 @@ import {resolve,basename} from "node:path";
 import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import Ajv from "ajv";
 import {Database} from "bun:sqlite";
-import { valueOrderedRetirementSchemaUrl } from "../../../../../../../🔨️modules/🌱️value/🧪️tests/🧫️fixtures/🟦️.ts";
+import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 /** 🧩️ Text of a cut test family: the module at `path` and every sibling part, support and extension module that carries its name as prefix. */
 const familyText=(root:string,path:string)=>{const dir=resolve(root,path,".."),parent=resolve(dir,".."),base=basename(dir);return readdirSync(parent).filter(n=>n===base||n.startsWith(base+"-")).sort().map(n=>readModuleTreeSource(resolve(parent,n,"🦀️.rs"))).join("\n");};
 /** 🎟️ Closed caller input authorizes finite work before the fixture body; SQLite independently witnesses identity and expiry. */

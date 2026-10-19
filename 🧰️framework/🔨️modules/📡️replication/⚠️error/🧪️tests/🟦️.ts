@@ -25,7 +25,7 @@ test("error retirement and crypto contracts have real independent bounded Cargo 
  const path=join(replication,"📦️packages/🦀️rust/Cargo.toml"),manifest=TOML.parse(readFileSync(path,"utf8"))as any;
  for(const [name,directory]of[[fixture.errorOwner,owner],[fixture.cryptoOwner,join(replication,"🔐️crypto")]])expect(resolve(dirname(path),manifest.dependencies[name!].path)).toBe(join(directory!,"📦️packages/🦀️rust"));
  const wire=readFileSync(join(replication,"🧾️wire/🦀️.rs"),"utf8");expect(wire).not.toContain("pub enum ProtocolError");expect(wire).not.toContain('mod cause_retirement;');
- const glue=readFileSync(join(replication,"📦️packages/🦀️rust/🦀️.rs"),"utf8");expect(glue).toContain("pub use semio_framework_replication_error::{");expect(glue).toContain("pub use semio_framework_replication_crypto as crypto;");expect(glue).not.toContain('"../../🔐️crypto/🦀️.rs"');
+ const glue=readFileSync(join(replication,"📦️packages/🦀️rust/🦀️.rs"),"utf8");for(const item of["ProtocolError","close_protocol_cause_one","close_protocol_error_one","protocol_cause_retirement_demand","protocol_error_retirement_demand"])expect(glue).toContain("pub use semio_framework_replication_error::"+item+";");expect(glue).toContain("pub use semio_framework_replication_crypto as crypto;");expect(glue).not.toContain('"../../🔐️crypto/🦀️.rs"');
 });
 test("both lower owners have actual workspace membership, registry and editor commands",()=>{
  const repo=resolve(import.meta.dir,"../../../../.."),framework=TOML.parse(readFileSync(join(repo,"🧰️framework/Cargo.toml"),"utf8"))as any,registry=JSON.parse(readFileSync(join(repo,"📋️build-owners.json"),"utf8"));

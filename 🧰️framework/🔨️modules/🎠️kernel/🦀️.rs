@@ -11,7 +11,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use ui_wgpu::wgpu::UiNode;
+use semio_framework_ui_declaration::ui::UiNode;
 use semio_framework_kernel_history::HistoryPatch;
 use semio_framework_kernel_identity::{ActionInvocation, ActivationEvent, AppEvent, AppInstanceId, ArtifactHandle, BrokerCapabilityGrant, CapabilityChange, CapabilityGrant, CapabilityId, CapabilityRequest, CommandInvocation, FailureAction, KernelMutation, PluginInstanceId, QuotaBreach, QuotaSchema, RequestId, RequestOutcome, TurnStatus, UndoGroup, Usage, WindowHandle, WindowKindId};
 use semio_framework_kernel_media_jobs::{IconRenderExportItem, SpawnedJobCompletion, VideoRenderProgram};

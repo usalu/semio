@@ -1,16 +1,16 @@
-import * as ModuleUnderTest from "../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts";
+import * as ModuleUnderTest from "@semio-tech/framework-plugin/effect-backbone";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts"), "AllowAllCapabilities" | "EffectBackbone" | "MESSAGE_ENDPOINT_VARIANT_FIELDS" | "RecordingBackboneOverflowReporter" | "backboneMessageEndpoint" | "bridgeBackboneWorkerInbound" | "createBackboneWorkerTransport" | "decodeBackboneGuestMessage" | "encodeBackboneGuestMessage">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework-plugin/effect-backbone"), "AllowAllCapabilities" | "EffectBackbone" | "MESSAGE_ENDPOINT_VARIANT_FIELDS" | "RecordingBackboneOverflowReporter" | "backboneMessageEndpoint" | "bridgeBackboneWorkerInbound" | "createBackboneWorkerTransport" | "decodeBackboneGuestMessage" | "encodeBackboneGuestMessage">, source: TestSource): Promise<void> {
   const { AllowAllCapabilities, EffectBackbone, MESSAGE_ENDPOINT_VARIANT_FIELDS, RecordingBackboneOverflowReporter, backboneMessageEndpoint, bridgeBackboneWorkerInbound, createBackboneWorkerTransport, decodeBackboneGuestMessage, encodeBackboneGuestMessage } = dependencies;
-  type BackboneTransport = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").BackboneTransport;
-  type BackboneWorkerLike = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").BackboneWorkerLike;
+  type BackboneTransport = import("@semio-tech/framework-plugin/effect-backbone").BackboneTransport;
+  type BackboneWorkerLike = import("@semio-tech/framework-plugin/effect-backbone").BackboneWorkerLike;
   type BackboneWorkerWireMessage = import("../../🟦️.ts").BackboneWorkerWireMessage;
-  type CapabilityChecker = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").CapabilityChecker;
-  type EventMessage = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").EventMessage;
+  type CapabilityChecker = import("@semio-tech/framework-plugin/effect-backbone").CapabilityChecker;
+  type EventMessage = import("@semio-tech/framework-plugin/effect-backbone").EventMessage;
 
   const { describe, expect, it } = vitest;
 

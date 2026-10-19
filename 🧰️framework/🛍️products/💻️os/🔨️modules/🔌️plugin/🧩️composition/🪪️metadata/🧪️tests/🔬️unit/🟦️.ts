@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { applyPatch } from "fast-json-patch";
 import publicationFixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import { compositionOpenGenesisFixture as fixture } from "../../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
+import { compositionOpenGenesisFixture as fixture } from "@semio-tech/framework-os/modules/store/testing/fixtures";
 test("private child metadata admits the independent complete identity corpus", () => {
   
   for (const row of fixture.cases) {

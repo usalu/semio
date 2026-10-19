@@ -1,0 +1,500 @@
+{
+ "summary": [
+  {
+   "package": "@semio-tech/assets",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/framework",
+   "newExportEntries": 12,
+   "importerEdges": 23
+  },
+  {
+   "package": "@semio-tech/framework-actor",
+   "newExportEntries": 7,
+   "importerEdges": 21
+  },
+  {
+   "package": "@semio-tech/framework-async",
+   "newExportEntries": 1,
+   "importerEdges": 1
+  },
+  {
+   "package": "@semio-tech/framework-canvas-ts",
+   "newExportEntries": 2,
+   "importerEdges": 2
+  },
+  {
+   "package": "@semio-tech/framework-compiler-ts",
+   "newExportEntries": 1,
+   "importerEdges": 3
+  },
+  {
+   "package": "@semio-tech/framework-kernel",
+   "newExportEntries": 2,
+   "importerEdges": 5
+  },
+  {
+   "package": "@semio-tech/framework-tool-run-ts",
+   "newExportEntries": 2,
+   "importerEdges": 3
+  },
+  {
+   "package": "@semio-tech/process",
+   "newExportEntries": 6,
+   "importerEdges": 9
+  }
+ ],
+ "byPackage": {
+  "@semio-tech/assets": {
+   "🧰️framework/🔨️modules/🖼️assets/🧪️tests/🧫️fixtures/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️assets/🧪️tests/🧫️fixtures/🟦️.ts",
+    "proposedSubpath": "./testing/fixtures",
+    "symbols": [
+     "assetsTileProxyFixture",
+     "assetsTileProxySchema"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧪️tests/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts",
+    "proposedSubpath": "./resolver/dispatch",
+    "symbols": [],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework": {
+   "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts",
+    "proposedSubpath": "./ui/testing/fixtures",
+    "symbols": [
+     "loadPresentResourcesTransportFixture",
+     "loadPresentResourcesTransportSchema",
+     "loadResidentEvidenceCopiedFixture",
+     "loadResidentEvidenceCopiedSchema",
+     "loadResidentPageBindingFixture",
+     "loadResidentPageBindingSchema",
+     "loadRetainedResidentBuilderFixture",
+     "loadRetainedResidentEvidenceFixture",
+     "loadRetainedResidentPageFixture",
+     "loadRetainedResidentPayloadFixture",
+     "loadRetainedResidentReaderFixture",
+     "loadRetainedResidentSlotFixture",
+     "loadSceneMathResourceFixture",
+     "loadSceneMathResourceSchema",
+     "mediaTransportReservationFixture"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧵️kernel-return-input-settlement/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🧪️tests/🎬️transport-reservation/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/action-handoff/requests",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🌐️browser-bundle/🎯️action-handoff/🟦️.ts",
+    "proposedSubpath": "./browser-bundle/action-handoff",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧪️tests/🧪️browser-actor-action-handoff-validates-the-neutral-schema-and-exact-owne/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts",
+    "proposedSubpath": "./identity/testing/fixtures",
+    "symbols": [
+     "identityInstallationSchema",
+     "identityInstallationSchemaUrl"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧪️tests/📇️inventory/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧪️tests/✅️catalog-complete/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏷️component-receipt/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏷️component-receipt/🟦️.ts",
+    "proposedSubpath": "./component-receipt",
+    "symbols": [
+     "ComponentReceiptV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts",
+    "proposedSubpath": "./test/adapter",
+    "symbols": [
+     "AdapterContext",
+     "AdapterOutcome",
+     "defineTestAdapter"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/♻️relay-lifecycle/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎚️mutate-os-config-identity/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🎨️mutate-os-config-ui-preferences/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📇️mutate-os-config-local-catalog/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/📎️mutate-os-config-local-folders/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️tool-job-telemetry-contention/🟦️.ts",
+    "proposedSubpath": "./trace/clock/testing/tool-job-telemetry-contention",
+    "symbols": [
+     "toolJobTelemetryContentionSelfTests"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🧪️tests/🔬️tool-job-microsecond-budget/🟦️.ts",
+    "proposedSubpath": "./job/budget/testing/tool-job-microsecond-budget",
+    "symbols": [
+     "toolJobMicrosecondBudgetSelfTests"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts",
+    "proposedSubpath": "./ui/contract/retained/resident",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧵️kernel-return-input-settlement/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🩹️operations/📥️wire/📃️pages/🟦️.ts",
+    "proposedSubpath": "./ui/contract/retained/operations/wire/pages",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧵️kernel-return-input-settlement/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🐚️shell/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🐚️shell/🟦️.ts",
+    "proposedSubpath": "./shell",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🐚️shell/🤖️generated/🟦️.ts",
+    "proposedSubpath": "./shell/generated",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🧬️schema/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-actor": {
+   "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts",
+    "proposedSubpath": "./testing/fixtures",
+    "symbols": [
+     "actorLifetimeFixtureUrl",
+     "loadActivationInstanceOutputFixture",
+     "loadActivationReturnAdmissionContract",
+     "loadActivationReturnAdmissionFixture",
+     "loadActivationReturnRetirementFixture",
+     "loadActorActivationFixture",
+     "loadActorActivationReturnFixture",
+     "loadActorCompositionBootstrapFixture",
+     "loadActorCompositionFixture",
+     "loadActorReturnFixture",
+     "loadActorReturnSchema",
+     "loadActorShardClientFixture",
+     "loadClientSegmentedDownloadFixture",
+     "loadClientSegmentedDownloadSchema",
+     "loadInstanceOutputAdmissionContract",
+     "loadInstanceOutputAdmissionFixture",
+     "loadInstanceOutputFaultFixture",
+     "retainedTurnBatchFixtureUrl",
+     "retainedTurnBootstrapSchema",
+     "retainedTurnContextFixtureUrl",
+     "retainedTurnContextSchemaUrl",
+     "retainedTurnSupplierFixture",
+     "retainedTurnSupplierSchema",
+     "turnAdmissionReadyFixtureUrl",
+     "turnAdmissionReadySchemaUrl",
+     "turnBootstrapCompositionFixture",
+     "turnJobArgumentsFixtureUrl"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧪️tests/🚪️lifetime/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📤️return/🧪️tests/🧪️pluginreturnwit-maps-every-canonical-drive-to-the-exact-wit-nesting-and/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🎟️supplier/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🎟️grant/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🎟️activation-lease/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💓️heartbeat-and-liveness-watchdogs/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💾️resident-composition/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔓️captured-return-admission/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧾️reserved-response-settlement/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🚀️worker-bootstrap/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
+    "proposedSubpath": "./mailbox",
+    "symbols": [
+     "Backpressure",
+     "BoundedMailbox",
+     "CoalesceKey",
+     "Lane",
+     "createBoundedMailbox"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/📤️return/🟦️.ts",
+    "proposedSubpath": "./return",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📤️return/🧪️tests/🧪️pluginreturnwit-maps-every-canonical-drive-to-the-exact-wit-nesting-and/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔀️captured-return-routing/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔓️captured-return-admission/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts",
+    "proposedSubpath": "./return/response",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎭️actor-transport/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+    "proposedSubpath": "./shard-client",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎭️actor-transport/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts",
+    "proposedSubpath": "./shard-runtime",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💓️heartbeat-and-liveness-watchdogs/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎭️actor/🪪️activation/🚪️instance/📥️output/🟦️.ts",
+    "proposedSubpath": "./activation/instance/output",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔓️captured-return-admission/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-async": {
+   "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/⏳️async/🤝️cooperative/🧪️tests/🔬️tool-job-cooperative-maintenance/🟦️.ts",
+    "proposedSubpath": "./cooperative/testing/tool-job-cooperative-maintenance",
+    "symbols": [
+     "toolJobCooperativeMaintenanceSelfTests"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-canvas-ts": {
+   "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🚚️staging/🟦️.ts",
+    "proposedSubpath": "./runtime-assets/staging",
+    "symbols": [
+     "PACKAGE_ASSET_DESTINATION",
+     "PACKAGE_ASSET_STAGE_OWNER",
+     "RUNTIME_ASSET_STAGE_OWNER",
+     "canvasRuntimeAssetSources",
+     "runtimeAssetStageTrees"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🧪️tests/🖼️canvas-runtime-assets/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts",
+    "proposedSubpath": "./runtime-assets",
+    "symbols": [
+     "GUEST_RUNTIME_ASSET_FILES",
+     "RUNTIME_ASSET_CHANNELS",
+     "RUNTIME_ASSET_FILES"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🧪️tests/🖼️canvas-runtime-assets/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-compiler-ts": {
+   "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts",
+    "proposedSubpath": "./syntax/module-tree",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/⏱️retryable-lifecycle-deadline/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/💓️heartbeat-and-liveness-watchdogs/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🧯️test-support/🧪️tests/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-kernel": {
+   "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🟦️.ts",
+    "proposedSubpath": "./testing/fixtures",
+    "symbols": [
+     "loadContentInputAuthorityFixture",
+     "loadContentInputBuilderDocument",
+     "loadContentInputBuilderFixture",
+     "loadContentInputPayloadDocument",
+     "loadContentInputPayloadFixture",
+     "loadContentInputReleaseDocument",
+     "loadContentInputReleaseFixture",
+     "loadKernelPollCompositionDocument",
+     "loadKernelPollCompositionFixture",
+     "loadKernelPollCompositionSchema"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📥️poll/🏘️composition/🧪️tests/🧪️pluginpollcompositionwit-preserves-the-canonical-six-scalars-and-exact-n/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧵️kernel-return-input-settlement/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts",
+    "proposedSubpath": "./return/content/input",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🔗️kernel-return-input-binding/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🧵️kernel-return-input-settlement/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/framework-tool-run-ts": {
+   "🧰️framework/🔨️modules/⏯️tool-run/🚦️lifecycle/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/⏯️tool-run/🚦️lifecycle/🟦️.ts",
+    "proposedSubpath": "./lifecycle",
+    "symbols": [
+     "TOOL_RUN_EVENT_KEYS",
+     "TOOL_RUN_STATES",
+     "ToolRunEffect",
+     "ToolRunEvent",
+     "ToolRunEventKey",
+     "ToolRunMachine",
+     "ToolRunState",
+     "isToolRunTerminal"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📖️read-only-run/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🛑️terminal-quiet/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/⏯️tool-run/🏷️actions-labels/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/⏯️tool-run/🏷️actions-labels/🟦️.ts",
+    "proposedSubpath": "./actions-labels",
+    "symbols": [
+     "TOOL_RUN_ACTION_IDS",
+     "TOOL_RUN_DISMISS_ACTION_ID",
+     "TOOL_RUN_START_ACTION_ID",
+     "isToolRunActionLegal"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🛑️terminal-quiet/🟦️.ts"
+    ]
+   }
+  },
+  "@semio-tech/process": {
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🟦️.ts",
+    "proposedSubpath": "./artifacts/publication/sources",
+    "symbols": [
+     "withArtifactDescriptorSlotV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/📤️publication/📥️sources/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/publication/sources/schema",
+    "symbols": "*",
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🧪️tests/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/storage",
+    "symbols": [
+     "NativeStorageReservationV1",
+     "requireNativeStorageReservationV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json",
+    "proposedSubpath": "./artifacts/native-build/component-pass/schema",
+    "symbols": [
+     "default"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/component-pass",
+    "symbols": [
+     "ComponentProvenanceV1",
+     "LinkedComponentV1",
+     "NativeBuildStageContextV1",
+     "withNativeBuildCompilationTaskV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️model/🟦️.ts",
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+    ]
+   },
+   "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️snapshot/🟦️.ts": {
+    "targetFile": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️snapshot/🟦️.ts",
+    "proposedSubpath": "./artifacts/native-build/receipt/retention/snapshot",
+    "symbols": [
+     "CompletedCargoCompilationViewV1"
+    ],
+    "importers": [
+     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"
+    ]
+   }
+  }
+ }
+}

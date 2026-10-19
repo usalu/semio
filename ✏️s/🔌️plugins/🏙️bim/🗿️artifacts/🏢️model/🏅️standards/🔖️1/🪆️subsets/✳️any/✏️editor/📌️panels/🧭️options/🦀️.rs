@@ -1,6 +1,8 @@
 //! 🧭️ Accessible workset management and per-window option switcher; authored changes reuse entity commands.
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, inferences::ModelInference};
-use crate::editor::bim::{kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text, ui_capacity_error}, terminology::BimLabels};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text, ui_capacity_error};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_framework_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
 use semio_framework_ui_locale::Label;
 use std::collections::BTreeMap;
@@ -13,7 +15,7 @@ fn create(kind: &str, parent: &str, name: &str) -> UiAssemblyResult<BuiltNode> {
     tree_item_with_icon(format!("bim.options.create.{kind}.{parent}"), Label::data(name), "plus", bim_action("createEntity", Some(ui_value_map([("kind", ui_value_text(kind)?), ("parent", ui_value_text(parent)?), ("name", ui_value_text(name)?)])?)))
 }
 fn entity(snapshot: &ModelSnapshot, kind: &str, id: &str, description: &str) -> UiAssemblyResult<BuiltNode> {
-    let name = crate::editor::bim::entities::kind_of(kind).and_then(|row| (row.name)(snapshot, id)).unwrap_or_else(|| id.to_owned());
+    let name = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(kind).and_then(|row| (row.name)(snapshot, id)).unwrap_or_else(|| id.to_owned());
     crate::editor::bim::panels::outliner::leaf(crate::editor::bim::panels::outliner::item(id, &name, "layers", Some(kind), Some(description))?)
 }
 /// 🧭️ Groups, options and worksets are selectable authored records; properties edits their parameters.

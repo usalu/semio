@@ -1,14 +1,15 @@
 //! 🔺️ Diff constructor for `RemoveElementClassification`: the classification of a holder in one system leaves; when it was the holder's last the whole entry is deleted so that no empty classification set remains.
 //! Refused: an unknown holder or a holder without a classification in that system.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification;
-use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{ClassificationSetPatch, Entry};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
 pub fn diff(payload: &RemoveElementClassification, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if !elements::holds_data(base, &payload.id) {
+    if !semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::holds_data(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     let Some(set) = base.classifications.get(&payload.id).filter(|set| set.contains_key(&payload.system)) else {

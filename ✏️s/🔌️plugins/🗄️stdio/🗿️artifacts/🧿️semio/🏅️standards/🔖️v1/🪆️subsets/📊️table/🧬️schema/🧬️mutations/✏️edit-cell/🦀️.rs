@@ -2,7 +2,8 @@
 //! the column's `column_name` (`📓️taxonomy.md`'s `edit` row literally lists "cell" as an example:
 //! "Replace an authored content body (text, cell, code)").
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
@@ -16,13 +17,13 @@ pub struct EditCell {
     pub new_value: SemioValue,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for EditCell {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for EditCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "cell", kind: "edit-cell", record: "EditedCell" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { ToolRunMachine } from "../../../../../../🔨️modules/⏯️tool-run/🚦️lifecycle/🟦️.ts";
+import { ToolRunMachine } from "@semio-tech/framework-tool-run-ts/lifecycle";
 
 /** 📖️ Third-party twin of the READ-ONLY RUN LAW (`🧫️fixtures/⏯️tool-run/🔣️.json`, `readOnlyRun`) — an
  * independent TypeScript reading of what a run that publishes nothing owes, driven from the SAME fixture

@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-table",
+ "crates": ["semio-s-artifact-stdio-semio-table-model", "semio-s-artifact-stdio-semio-base", "semio-s-artifact-stdio-semio-value-model", "semio-s-artifact-stdio-semio-table-mutations", "semio-s-artifact-stdio-semio-table-mut-family"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-s-artifact-stdio-semio-table-model", "semio-s-artifact-stdio-semio-base", "semio-s-artifact-stdio-semio-value-model", "semio-s-artifact-stdio-semio-table-mutations"]},
+ "note": "HDR-4: table mutation leaves to a generic leaf crate"
+}

@@ -35,7 +35,7 @@ fn raster_envelope_wire() -> Vec<u8> {
 
 /// 🎟️ Reserves page/byte credits first, then feeds the wire as fixed-size pages and seals — the
 /// caller never holds a growable buffer and never sees the store the decode will publish into.
-fn admit_raster_envelope(app: &mut RasterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+fn admit_raster_envelope(app: &mut RasterAppFixture, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Raster live envelope ingress credits");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
@@ -44,16 +44,16 @@ fn admit_raster_envelope(app: &mut RasterApp, wire: &[u8]) -> semio_framework_pl
         let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Raster live envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Raster live envelope page admission failed: {}: {}", fault.code.0, fault.message));
     }
-    assert!(app.seal_artifact_envelope_ingress(handle).expect("Raster live envelope seal/submit"));
+    assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("Raster live envelope seal/submit"));
     handle
 }
 
 /// 🔄️ Pumps the load one bounded maintenance turn at a time and polls after each — never inline,
 /// never unbounded.
-fn drive_raster_live_load(app: &mut RasterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+fn drive_raster_live_load(app: &mut RasterAppFixture, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Raster live maintenance turn");
-        let poll = app.advance_artifact_envelope_load(handle).expect("Raster live load advancement");
+        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Raster live maintenance turn");
+        let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Raster live load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
         }

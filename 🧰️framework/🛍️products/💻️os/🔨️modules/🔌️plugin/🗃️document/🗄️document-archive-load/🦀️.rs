@@ -16,7 +16,6 @@ pub enum ActiveDocumentArchiveLoadState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ActiveDocumentArchiveLoadPhase {
     DecodeParent,
-    RetireParentHistoryAuxiliary,
     MergeParent,
     HydrateParent,
     AwaitingMembers,
@@ -27,6 +26,28 @@ pub enum ActiveDocumentArchiveLoadPhase {
     SealMembers,
     AwaitReplacement,
     Terminal,
+}
+
+/// 📜️ The History read policy of a whole-document archive: one parent SPR within the archive ceiling, one member envelope page directory per record.
+const DOCUMENT_ARCHIVE_HISTORY_LIMITS: store::os_store::HistoryReadLimits = store::os_store::HistoryReadLimits {
+    file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u32,
+    frame_body_bytes: (store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES * 256) as u32,
+    records: (protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS * 8) as u32,
+    maximum_fields: 128,
+    maximum_text_bytes: 1_048_576,
+    maximum_binary_bytes: 1_048_576,
+    maximum_json_bytes: 1_048_576,
+    maximum_json_allocation_bytes: 8_388_608,
+    maximum_json_items: 65_536,
+    maximum_json_depth: 64,
+};
+
+/// 🧮️ The cumulative native allocation ceiling of one archive parent History decode.
+const DOCUMENT_ARCHIVE_HISTORY_ALLOCATION_BYTES: usize = 8_388_608;
+
+/// 📥️ Admits the retained parent History decoder over the whole of an archive's parent SPR bytes.
+pub fn document_archive_history_decoder(parent_spr_bytes: usize) -> Result<protocol::RetainedHistoryDecode, ValueError> {
+    protocol::RetainedHistoryDecode::new((0, parent_spr_bytes), DOCUMENT_ARCHIVE_HISTORY_LIMITS, true, DOCUMENT_ARCHIVE_HISTORY_ALLOCATION_BYTES)
 }
 
 #[doc(hidden)]
@@ -203,12 +224,11 @@ where
     pub archive: Option<Box<protocol::DocumentArchivePack>>,
     archive_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub history: Option<protocol::RetainedHistoryDecode>,
-    history_custody: Option<(Option<protocol::HistoryLog>, Option<protocol::HistoryLog>, Option<(Vec<String>, Vec<String>)>)>,
+    history_custody: Option<protocol::HistoryLog>,
     pub decoded_history: Option<protocol::HistoryLog>,
     pub member: Option<PendingDocumentArchiveMember>,
     pub rejected_ingress: Option<OwnedDocumentMemberIngress>,
     pub retained: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    pub retained_pending: Option<(Option<protocol::HistoryLog>, Option<(Vec<String>, Vec<String>)>)>,
     pub hydration: Option<store::RetainedPersistedDocumentHydration<P, Mutation>>,
     pub(crate) hydration_sequence: u64,
     pub replacement: Option<ArtifactEnvelopeDecodeOperationHandle>,
@@ -243,7 +263,6 @@ where
             member: None,
             rejected_ingress: None,
             retained: None,
-            retained_pending: None,
             hydration: None,
             hydration_sequence: 0,
             replacement: None,
@@ -322,7 +341,8 @@ where
         }
         if let Some(ingress)=self.rejected_ingress.as_ref(){return if ingress.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{parent(ingress.retirement_demands(body)?)};}
         if let Some(member)=self.member.as_ref(){return if member.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{parent(member.retirement_demands(body)?)};}
-        if self.history_custody.is_some()||self.history.is_some()||self.decoded_history.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<(Option<protocol::HistoryLog>,Option<protocol::HistoryLog>,Option<(Vec<String>,Vec<String>)>)>(),depth:2,..Default::default()});}
+        if let Some(history)=self.history.as_ref(){return parent(history.demands(body)?);}
+        if self.history_custody.is_some()||self.decoded_history.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<protocol::HistoryLog>(),depth:2,..Default::default()});}
         if self.archive.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<Box<protocol::DocumentArchivePack>>(),depth:2,..Default::default()});}
         Ok(Default::default())
     }
@@ -352,13 +372,14 @@ where
             let step=member.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.terminal_is_empty(),"original archive pending member")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.history_custody.is_none()&&(self.history.is_some()||self.decoded_history.is_some()){
-            let partial=self.history.as_mut().and_then(protocol::RetainedHistoryDecode::take_partial);
-            let auxiliary=self.history.as_mut().map(protocol::RetainedHistoryDecode::take_auxiliary_owners);
-            self.history_custody=Some((self.decoded_history.take(),partial,auxiliary));
-            if self.history.as_ref().is_some_and(|decoder|!decoder.terminal_is_empty()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive decoder retained an untransferred original owner"));}
-            drop(self.history.take());
+        if let Some(history)=self.history.as_mut(){
+            if history.terminal_is_empty(){drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let source=&self.archive.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive history decoder lost its original source"))?.parent_spr;
+            let step=history.close_step(source,&protocol::RetainedHistoryUninterrupted,child)?;
+            semio_framework_value::retained_clone::admit_retained_clone_close(child,step,history.terminal_is_empty(),"original archive history decoder")?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
+        if self.history_custody.is_none(){self.history_custody=self.decoded_history.take();}
         if let Some(original)=self.history_custody.take(){
             match semio_framework_value::retirement::admit_owned_retirement(original,child){
                 Ok((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;return Ok(RetainedCloneStep::Progress(progress));}
@@ -391,7 +412,6 @@ where
                     && self.member.is_none()
                     && self.rejected_ingress.is_none()
                     && self.retained.is_none()
-                    && self.retained_pending.is_none()
                     && self.hydration.is_none()
                     && self.replacement.is_none()
                     && self.fault.capacity() == 0),

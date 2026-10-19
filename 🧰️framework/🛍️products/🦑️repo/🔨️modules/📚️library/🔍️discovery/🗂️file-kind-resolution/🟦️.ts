@@ -58,6 +58,12 @@ function implementationContractResolver(taxonomy: Taxonomy): ReturnType<typeof c
   return created;
 }
 
+/** 🧫️ Reports whether a normalized path lies inside a fixtures directory: fixtures are data a test reads, never implementation, so the leaf gate does not apply. */
+function pathIsFixtureData(normalizedPath: string, taxonomy: Taxonomy): boolean {
+  const fixtures = taxonomy.testFixturesDirName.normalize(taxonomy.unicodeNormalization.form);
+  return normalizedPath.split("/").slice(0, -1).includes(fixtures);
+}
+
 function implementationLeafBasenameFindingResolved(
   path: string,
   taxonomy: Taxonomy,
@@ -68,6 +74,7 @@ function implementationLeafBasenameFindingResolved(
   authorizedCargoBuildScriptPaths: ReadonlySet<string> = new Set(),
 ): TaxonomyImplementationFinding | null {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
+  if (pathIsFixtureData(normalized, taxonomy)) return null;
   const scopedKindId = scopedFileKindIdForSourcePath(normalized, taxonomy, { parentDirectoryKindId });
   const fileKindId = scopedKindId ? `scoped:${scopedKindId}` : fileKindIdForSourcePath(normalized, taxonomy);
   if (!taxonomyFileKindIsImplementation(fileKindId, taxonomy)) return null;

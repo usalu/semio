@@ -67,7 +67,7 @@ pub(super) fn stack_metrics(layout: &ui_contract::LayoutSpec) -> (String, Option
 /// container owns a scrollable, clipping viewport (`nearest_scrollable_ancestor` walks `SCROLLABLE`,
 /// `hit_test` refuses a point outside a `CLIPS_CHILDREN` box), and an `Overlay` is hit-tested ahead
 /// of its in-flow siblings — the same priority `EventRouter::open_overlay` grants a Select popup.
-struct LayoutRoutingFlags {
+pub(super) struct LayoutRoutingFlags {
     pub(super) scrollable: bool,
     pub(super) clips: bool,
     pub(super) overlay: bool,

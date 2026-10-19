@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-wgpu-widget-kit-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

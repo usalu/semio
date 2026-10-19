@@ -73,29 +73,28 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-            async fn dispatch(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, command: RemodelingCommand, view: &ViewModel) -> Result<usize, String> {
+            async fn dispatch(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, command: RemodelingCommand, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<usize, String> {
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 88, view_state: Some(view.clone()), ..artifact_app_laws::meta("remodel-window-ownership") };
-                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
-                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
             }
 
-            async fn render(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, body: &str, view: &ViewModel) -> Result<String, String> {
-                let tree = app.render(body, None, view).await.map_err(|error| format!("{error:?}"))?;
-                artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(str::to_string)
+            async fn render(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, body: &str, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<String, String> {
+                artifact_app_laws::render_registered_fixture_app(app, body, view, cx).await.map_err(|error| format!("{error:?}"))
             }
 
-            async fn model_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::World3dScene, String> {
-                artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, model::windows::model::REMODELING_PLAY_BODY_MAIN, view).await?).map_err(str::to_string)
+            async fn model_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::World3dScene, String> {
+                artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, model::windows::model::REMODELING_PLAY_BODY_MAIN, view, cx).await?).map_err(str::to_string)
             }
 
-            async fn frames_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene, String> {
-                artifact_app_laws::decode_fixture_scene(&render(app, capture::windows::frames::REMODELING_PLAY_BODY_FRAMES, view).await?).map_err(str::to_string)
+            async fn frames_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::Canvas2dScene, String> {
+                artifact_app_laws::decode_fixture_scene(&render(app, capture::windows::frames::REMODELING_PLAY_BODY_FRAMES, view, cx).await?).map_err(str::to_string)
             }
 
-            async fn report_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel) -> Result<semio_framework_plugin::TableScene, String> {
-                artifact_app_laws::decode_fixture_scene(&render(app, analyze::windows::report::REMODELING_PLAY_BODY_REPORT, view).await?).map_err(str::to_string)
+            async fn report_scene(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::TableScene, String> {
+                artifact_app_laws::decode_fixture_scene(&render(app, analyze::windows::report::REMODELING_PLAY_BODY_REPORT, view, cx).await?).map_err(str::to_string)
             }
 
             let manifest = || App { definition: create_remodeling_app(), examples: Vec::new() };
@@ -115,20 +114,21 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             let frames_right = view.for_window_instance("remodel-frames-right").unwrap();
             let report_left = view.for_window_instance("remodel-report-left").unwrap();
             let report_right = view.for_window_instance("remodel-report-right").unwrap();
+            let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
             let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(88).await;
             let outcome: Result<(), String> = async {
                 let payload = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(8, 8, 2).await;
-                dispatch(&mut app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: "left.png".into(), index: 0, total: 1 }), &frames_left).await?;
+                dispatch(&mut app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: "left.png".into(), index: 0, total: 1 }), &frames_left, scope.cx()).await?;
                 let stream_id = app.snapshot().map_err(|error| format!("{error:?}"))?.streams.first().ok_or("Remodel fixture stream was not admitted")?.id.clone();
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 let publications =
-                    dispatch(&mut app, RemodelingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport3dOrbit { position: [12.0, -8.0, 4.0], target: [1.0, 2.0, 3.0], zoom: 1.25, up: None } }), &model_left).await?
-                    + dispatch(&mut app, RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "mesh".into(), visible: false }), &model_right).await?
-                    + dispatch(&mut app, RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some(stream_id), frame_index: 0 }), &frames_left).await?
-                    + dispatch(&mut app, RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("missing-stream".into()), frame_index: 9 }), &frames_right).await?
-                    + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "cameras".into() }), &report_left).await?
-                    + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "gcps".into() }), &report_right).await?;
+                    dispatch(&mut app, RemodelingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport3dOrbit { position: [12.0, -8.0, 4.0], target: [1.0, 2.0, 3.0], zoom: 1.25, up: None } }), &model_left, scope.cx()).await?
+                    + dispatch(&mut app, RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "mesh".into(), visible: false }), &model_right, scope.cx()).await?
+                    + dispatch(&mut app, RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some(stream_id), frame_index: 0 }), &frames_left, scope.cx()).await?
+                    + dispatch(&mut app, RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("missing-stream".into()), frame_index: 9 }), &frames_right, scope.cx()).await?
+                    + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "cameras".into() }), &report_left, scope.cx()).await?
+                    + dispatch(&mut app, RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "gcps".into() }), &report_right, scope.cx()).await?;
                 if publications != 6 { return Err(format!("Remodel exact-window lane count changed: {publications}")); }
                 let document_after = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
                 if document_before.pack != document_after.pack || document_before.spr != document_after.spr { return Err("Remodel window commands changed document bytes".into()); }
@@ -147,12 +147,12 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if stored_model_right.camera != RemodelingModelWindowConfig::default().camera || stored_model_right.layers.mesh {
                     return Err(format!("Remodel right Model store did not retain its isolated camera/layers: {stored_model_right:?}"));
                 }
-                let left_model = model_scene(&mut app, &model_left).await?;
-                let right_model = model_scene(&mut app, &model_right).await?;
-                let left_frames = frames_scene(&mut app, &frames_left).await?;
-                let right_frames = frames_scene(&mut app, &frames_right).await?;
-                let left_report = report_scene(&mut app, &report_left).await?;
-                let right_report = report_scene(&mut app, &report_right).await?;
+                let left_model = model_scene(&mut app, &model_left, scope.cx()).await?;
+                let right_model = model_scene(&mut app, &model_right, scope.cx()).await?;
+                let left_frames = frames_scene(&mut app, &frames_left, scope.cx()).await?;
+                let right_frames = frames_scene(&mut app, &frames_right, scope.cx()).await?;
+                let left_report = report_scene(&mut app, &report_left, scope.cx()).await?;
+                let right_report = report_scene(&mut app, &report_right, scope.cx()).await?;
                 let left_camera: store::Viewport3dOrbit = semio_framework_pack_json::from_json_str(&left_model.camera_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
                 if left_model == right_model { return Err("Remodel Model rendered identical scenes for two isolated window configs".into()); }
                 if left_camera != expected_left_camera {
@@ -163,17 +163,18 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 if !left_report.columns_json.contains("RMS (px)") || !right_report.columns_json.contains("Observations") { return Err("Remodel Report render did not consume isolated table selection".into()); }
                 let packs = app.window_config_packs().await.map_err(|error| format!("{error:?}"))?;
                 if packs.len() != 6 { return Err(format!("Remodel persisted {} exact window packs instead of six", packs.len())); }
+                let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
                 let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                 reopened.bind_instance_id(89).await;
-                semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &document_before, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                 for pack in packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
-                let reopened_model_left = model_scene(&mut reopened, &model_left).await?;
-                let reopened_model_right = model_scene(&mut reopened, &model_right).await?;
-                let reopened_frames_left = frames_scene(&mut reopened, &frames_left).await?;
-                let reopened_frames_right = frames_scene(&mut reopened, &frames_right).await?;
-                let reopened_report_left = report_scene(&mut reopened, &report_left).await?;
-                let reopened_report_right = report_scene(&mut reopened, &report_right).await?;
-                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+                let reopened_model_left = model_scene(&mut reopened, &model_left, scope.cx()).await?;
+                let reopened_model_right = model_scene(&mut reopened, &model_right, scope.cx()).await?;
+                let reopened_frames_left = frames_scene(&mut reopened, &frames_left, scope.cx()).await?;
+                let reopened_frames_right = frames_scene(&mut reopened, &frames_right, scope.cx()).await?;
+                let reopened_report_left = report_scene(&mut reopened, &report_left, scope.cx()).await?;
+                let reopened_report_right = report_scene(&mut reopened, &report_right, scope.cx()).await?;
+                artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
                 if reopened_model_left != left_model || reopened_model_right != right_model || reopened_frames_left != left_frames || reopened_frames_right != right_frames || reopened_report_left != left_report || reopened_report_right != right_report {
                     return Err("Remodel exact window configuration changed during reopen".into());
                 }
@@ -184,7 +185,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
                 Ok(())
             }.await;
             if let Err(error) = &outcome { eprintln!("[TRACE] Remodel exact-window runtime failure before close: {error}"); }
-            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+            artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
             outcome.expect("Remodel exact-window runtime law");
         }))
         .expect("spawn Remodel window ownership law")

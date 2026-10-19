@@ -187,7 +187,7 @@ test("cold shared retirement keeps logical work separate from exact physical bac
  
  for(const row of law.cases){const bytes=new TextEncoder().encode(row.text);expect(Buffer.byteLength(row.text,"utf8")).toBe(bytes.byteLength);expect(bytes.byteLength<=row.capacity).toBe(true);for(const work of law.workBytes){let remaining=bytes.byteLength,turns=0;while(remaining){remaining-=Math.min(remaining,work);turns++;}expect(turns<=law.maximumTurns).toBe(true);const owner={capacity:row.capacity,text:row.text};expect(patched(owner,[{op:"remove",path:"/text"}])).toEqual({capacity:row.capacity});}}
  expect(Math.ceil(law.buffer.bytes/law.buffer.workBytes)+4).toBe(law.buffer.maximumTurns);
- const shared=between(readFileSync(join(owner,"♻️retirement/🔗️shared/🦀️.rs"),"utf8"),"RetirementCursor for SharedControlledRetirement<T>","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");
+ const shared=between(readFileSync(join(owner,"♻️retirement/🔗️arc-custody/🦀️.rs"),"utf8"),"RetirementCursor for SharedControlledRetirement<T>","RetireOwned for Arc<T>");expect(shared).toContain("fn next_close_byte_demand(");
 });
 
 test("original controlled reservation failure saves actual retained allocation before error",()=>{

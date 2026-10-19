@@ -13,7 +13,7 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::WindowOptions;
-use ui_wgpu::wgpu::SurfaceKind;
+use semio_framework_ui_declaration::ui::SurfaceKind;
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;

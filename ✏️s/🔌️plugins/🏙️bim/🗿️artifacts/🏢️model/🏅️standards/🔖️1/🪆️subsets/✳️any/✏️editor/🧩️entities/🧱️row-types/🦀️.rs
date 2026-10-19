@@ -1,7 +1,9 @@
 //! 🧱️ The row types of the BIM entity table: one authored parameter, one inferred value and one entity kind. See [`super`].
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_ui_locale::LabelText;
 

@@ -1,7 +1,9 @@
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
 import type { AnchorRef, EdgeRef, FaceRef, ShellRef, SolidRef, VertexRef, WireRef } from "@semio-tech/s-spatial-kernel-ts/geometry";
-import type { InteractionReplEngagementInputs, RendererTestDependencies, SpatialInteractionSelectionByState, SpatialPickTarget, SpatialRendererSelectionByModel } from "../../🟦️.tsx";
-import type { DisplayModel } from "../../../🎬️actions/🟦️.ts";
+import type { SpatialPickTarget } from "../../🧲️geometry-targets/🎯️pick-model/🟦️.ts";
+import type { InteractionReplEngagementInputs, SpatialInteractionSelectionByState, SpatialRendererSelectionByModel } from "../../🧾️repl-model/🟦️.tsx";
+import type { RendererTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
+import type { DisplayModel } from "../../../🎬️actions/🖼️display-model/🟦️.ts";
 import type { InteractionSnapshot } from "../../../🗿️artifact/📨️interaction-model/🟦️.ts";
 import type { MeshTransfer, Vec3 } from "@semio-tech/cad-engine-ts/registry";
 import type { ModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";

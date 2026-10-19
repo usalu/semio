@@ -189,7 +189,7 @@ fn focused_view() -> ViewModel {
 /// ⏪️ One reserved `historyEdit*` verb from the focused overview; a refusal fails the law with its reason.
 fn history_edit(app: &mut Puzzle2dApp, verb: &str, args: Value) {
     let meta = ActionMeta { view_state: Some(focused_view()), ..meta("local") };
-    let result = block_on(app.handle_action(verb, Some(&semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(semio_framework_value::ToValue::to_value(&(&args))), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -204,7 +204,7 @@ fn pump(app: &mut Puzzle2dApp, what: &str, done: impl Fn(Option<HistoryTimeTrave
         if done(session(app).map(|status| status.stage)) {
             return;
         }
-        block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
+        block_on(app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).unwrap_or_else(|fault| panic!("{what}: {fault:?}"));
         while app.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("{what} never settled: {:?}", session(app));
@@ -340,7 +340,7 @@ fn run(app: &mut Puzzle2dApp, seed: usize, step: &Value, what: &str) {
             let result = dispatch(app, verb, Some(spec), None).unwrap_or_else(|fault| panic!("{what}: {verb}: {fault:?}"));
             assert_eq!(committed_edits(&result), 1, "{what}: {verb} is one edit");
         }
-        "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)))).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
+        "ingest" => block_on(app.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(spec)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).unwrap_or_else(|fault| panic!("{what}: ingest: {fault:?}")),
         "gridFactor" => {
             dispatch(app, "setGridFactor", Some(&json!({ "value": spec })), Some(crate::editor::puzzle2d::config::PUZZLE2D_OVERVIEW_WINDOW_KIND_ID)).expect("grid factor");
         }
@@ -517,7 +517,7 @@ fn every_corpus_scenario_edits_its_leaves_in_history_and_overwrites_to_a_fresh_f
         }
         let mut fresh = seeded_app(&corpus["board"]);
         for leaf_value in edited_log(scenario) {
-            block_on(fresh.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(&leaf_value)))).expect("the edited log folds");
+            block_on(fresh.ingest_operations_text(&<Puzzle2dMutation as OpText>::print_op(&leaf(&leaf_value)), &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the edited log folds");
         }
         assert_eq!(board_snapshot_nodes(&head), board_snapshot_nodes(&fixture_of(&fresh)), "{id}: the overwrite equals a fresh fold of the edited log");
         close_app(&mut app);

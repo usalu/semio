@@ -1,5 +1,5 @@
 from specs.lib import *
-FE = '✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs'
+F_ = FE = '✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs'
 CH = [
     ch('📄', 'document-io-algorithm-and-geometry-json', 'document_io_algorithm_and_geometry_json', [(70, 82), (88, 109), (113, 237)],
        'Document IO, algorithm and geometry JSON: the math app id and equation document reset, the equation IO surface, the algorithm overlay, the workflow JSON and the geometry layers JSON.'),
@@ -12,4 +12,4 @@ CH = [
     ch('🎛', 'play-app-editor-and-constructor', 'play_app_editor_and_constructor', [(1088, 1335), (1339, 1422)],
        'Play app editor and constructor: the equation play app with its artifact editor implementation and the equation app constructor with its manifest stitch.'),
 ]
-SPEC = dict(orig='fme.rs', file=FE, children=CH, wiring='block', external=mounted(FE, orig='fme.rs'), external_prod=[], keep_empty=('TaxonomyMounts', 'Interaction'))
+SPEC = dict(orig='fme.rs', file=FE, children=CH, wiring='block', external=mounted(FE, orig='fme.rs'), external_prod=family_prod(F_, up=5, exclude=[c['folder'] for c in CH]), keep_empty=('TaxonomyMounts', 'Interaction'))

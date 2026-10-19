@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { renderWgpuPackageArtifacts } from "../📽️projection/🟦️.ts";
 import { join, resolve } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 
 /** 🥖️ Rejects browser code generation unless it uses the repository's exact Bun toolchain. */
 export function assertPinnedBunVersion(actualVersion: string = Bun.version): string {

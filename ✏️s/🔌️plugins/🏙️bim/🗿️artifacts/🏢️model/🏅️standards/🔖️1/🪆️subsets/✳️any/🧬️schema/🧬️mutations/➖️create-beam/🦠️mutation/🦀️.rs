@@ -1,6 +1,7 @@
 //! ➖️ `create-beam` payload. Brings a new beam onto a storey; its top lies `top_offset` metres from the storey top (positive above, negative below, zero flush), no elevation is stored.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Beam, ModelSnapshot}, diff::ModelDiff};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Beam, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,7 +14,7 @@ pub struct CreateBeam {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for CreateBeam
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateBeam> + From<crate::standards::v1::subsets::any::schema::mutations::delete_beam::DeleteBeam>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateBeam> + From<semio_s_artifact_bim_model_mut_any_67::standards::v1::subsets::any::schema::mutations::delete_beam::DeleteBeam>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "beam", kind: "create-beam", record: "CreateBeam" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

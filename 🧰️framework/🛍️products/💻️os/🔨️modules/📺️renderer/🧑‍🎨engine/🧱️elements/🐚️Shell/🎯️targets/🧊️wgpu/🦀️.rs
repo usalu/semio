@@ -15,31 +15,31 @@ use semio_framework_os_config::io::text::mutations::{decode_ui_preferences_confi
 #[path = "../../../🏛️ShellHost/🔀️surface-switch/📄️document/🦀️.rs"]
 mod document_surface_preparation;
 
-use ui_wgpu::wgpu::push_chrome_group_border;
+use semio_framework_ui_wgpu_layout::chrome::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
 use semio_framework_ui_locale::Label;
-use ui_wgpu::wgpu::UiButtonNode;
-use ui_wgpu::wgpu::UiControlNode;
-use ui_wgpu::wgpu::UiFieldNode;
-use ui_wgpu::wgpu::UiInputNode;
-use ui_wgpu::wgpu::UiNode;
-use ui_wgpu::wgpu::UiNumberStepperNode;
-use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::UiRingNode;
-use ui_wgpu::wgpu::UiSectionNode;
-use ui_wgpu::wgpu::UiSelectItem;
-use ui_wgpu::wgpu::UiSelectNode;
-use ui_wgpu::wgpu::UiSliderNode;
-use ui_wgpu::wgpu::UiStackNode;
-use ui_wgpu::wgpu::UiTextNode;
-use ui_wgpu::wgpu::UiToggleNode;
-use ui_wgpu::wgpu::UiTreeItemNode;
-use ui_wgpu::wgpu::UiTreeNode;
-use ui_wgpu::wgpu::UiTreeSectionNode;
-use ui_wgpu::wgpu::UiTreeWindow;
-use ui_wgpu::wgpu::UiTreeWindowRowExtent;
+use semio_framework_ui_declaration::ui::UiButtonNode;
+use semio_framework_ui_declaration::ui::UiControlNode;
+use semio_framework_ui_declaration::ui::UiFieldNode;
+use semio_framework_ui_declaration::ui::UiInputNode;
+use semio_framework_ui_declaration::ui::UiNode;
+use semio_framework_ui_declaration::ui::UiNumberStepperNode;
+use semio_framework_ui_declaration::ui::UiPresence;
+use semio_framework_ui_declaration::ui::UiRingNode;
+use semio_framework_ui_declaration::ui::UiSectionNode;
+use semio_framework_ui_declaration::ui::UiSelectItem;
+use semio_framework_ui_declaration::ui::UiSelectNode;
+use semio_framework_ui_declaration::ui::UiSliderNode;
+use semio_framework_ui_declaration::ui::UiStackNode;
+use semio_framework_ui_declaration::ui::UiTextNode;
+use semio_framework_ui_declaration::ui::UiToggleNode;
+use semio_framework_ui_declaration::ui::UiTreeItemNode;
+use semio_framework_ui_declaration::ui::UiTreeNode;
+use semio_framework_ui_declaration::ui::UiTreeSectionNode;
+use semio_framework_ui_declaration::ui::UiTreeWindow;
+use semio_framework_ui_declaration::ui::UiTreeWindowRowExtent;
 
 use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
 use crate::hub_connection::{
@@ -76,7 +76,7 @@ use store_sync::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKe
 use store_sync::{PresencePeer, PresenceWindowView};
 use ui_contract::UiFixedList;
 use ui_contract::{SurfaceId, UiDocumentLease, UiText, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS};
-use ui_wgpu::wgpu::draw_text;
+use semio_framework_ui_wgpu_widget_kit::draw_text;
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 (lane 2-D) —
 // lane 1-D's Rust directory client, consumed as-is (never re-declared:
 // `semio_framework_os_kernel::os_directory` is the single source of truth both this shell and the
@@ -119,22 +119,27 @@ use semio_framework_async::{CancelToken, OperationContext, TraceId};
 use semio_framework_async::{Lane, ScopeOwner, WorkerPool};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
-use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, paint_retained_glyph_step_flowed, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, Rgba, Theme,
-    TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowLayout, WindowStackCorner,
-};
-use ui_wgpu::wgpu::ActionDescriptor;
+use semio_framework_ui_wgpu_layout::chrome::{chrome_item_bg, chrome_item_text};
+use semio_framework_ui_wgpu_paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
+use semio_framework_ui_wgpu_input::{DragAxis, HitKind, HitTarget, InputState, PointerModifiers, TreeDragState, TreeDropPosition};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::{Level, Rgba, Theme};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_widget_kit::WidgetInteractionMaps;
+use semio_framework_ui_declaration::layout::{WindowLayout, WindowStackCorner};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_ui_locale::Terminology;
-use ui_wgpu::wgpu::UtilityNode;
-use ui_wgpu::wgpu::WindowEngagement;
-use ui_wgpu::wgpu::WindowMeasure;
-use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
-use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID;
-use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
-use ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID;
+use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_framework_ui_declaration::layout::WindowEngagement;
+use semio_framework_ui_declaration::layout::WindowMeasure;
+use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
+use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID;
+use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_INSPECTION_ID;
+use semio_framework_ui_declaration::layout::FRAMEWORK_PANEL_TAB_TOOL_RUN_ID;
 
 use semio_framework_value::{DslValue, FromValue, ToValue};
 #[cfg(not(target_arch = "wasm32"))]

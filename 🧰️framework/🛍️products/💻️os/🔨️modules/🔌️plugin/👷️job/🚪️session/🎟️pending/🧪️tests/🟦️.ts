@@ -4,7 +4,7 @@ import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
 import law from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readPluginRuntimeSource } from "../../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
 import { familyText } from "../../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 test("original reserved worker defers admission and preserves source through denied original turns",()=>{

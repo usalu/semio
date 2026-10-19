@@ -109,10 +109,10 @@
     "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🔨️modules/🎒️pack/📐️format/🗂️catalog/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🔨️modules/🎒️pack/🔌️io/📦️packages/🦀️rust/Cargo.toml",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust/Cargo.toml",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/⚙️codec/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/⚙️codec/📦️packages/🦀️rust/Cargo.toml", "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust/Cargo.toml",
     "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
   ]
 }

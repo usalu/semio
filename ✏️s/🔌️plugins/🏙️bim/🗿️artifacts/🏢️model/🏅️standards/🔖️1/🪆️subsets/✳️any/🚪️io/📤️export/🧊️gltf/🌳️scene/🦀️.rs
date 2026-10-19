@@ -5,11 +5,12 @@
 //! elevation above the building datum; element vertices are expressed relative to their storey, so the chain of node transforms reproduces the world placement of the solid.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units
 
-use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
-use crate::standards::v1::subsets::any::io::export::gltf::materials::Palette;
-use crate::render::element_name;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::gltf::materials::Palette;
+use semio_s_artifact_bim_model_tests_5::render::element_name;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

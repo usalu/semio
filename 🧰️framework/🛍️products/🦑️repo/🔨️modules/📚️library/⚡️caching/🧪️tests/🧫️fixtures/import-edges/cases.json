@@ -3,7 +3,7 @@
     {
       "source": "fixture-a",
       "target": "fixture-b",
-      "sourceFile": "a/deep/util.js",
+      "sourceFile": "a/deep/consumer.js",
       "type": "static"
     }
   ]

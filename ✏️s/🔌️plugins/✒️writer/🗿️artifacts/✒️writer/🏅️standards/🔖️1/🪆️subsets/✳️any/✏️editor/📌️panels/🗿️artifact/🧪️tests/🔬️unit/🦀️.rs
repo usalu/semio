@@ -8,8 +8,7 @@ use crate::editor_unit_tests::context::{app_with_jack, new_app, render as render
 async fn renders_document_tree_for_jack() {
     use semio_framework_plugin::PluginApp;
     let mut app = new_app().await;
-    let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(node).expect("render JSON");
+    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app_over(&mut app.0, WRITER_PLAY_BODY_ARTIFACT, Some(&crate::standards::v1::subsets::any::io::text::snapshot::jack_example_json()), &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render JSON");
     assert!(json.contains("\"type\":\"tree\""));
     assert!(json.contains("Query"));
 }

@@ -2,18 +2,28 @@
 //! project patch. The central applier is the only caller of [`MutationDiff::apply`]; `between` exists for
 //! sync and import only and is never called from a mutation leaf.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
 use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra;
 #[path = "🩹️patches/🦀️.rs"]
 pub mod patches;
 
-pub use algebra::*;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{PropertySetPatch, ClassificationSetPatch, KeyedDelta, combine_patch, combine, Patch, non_empty, Entry};
 pub use patches::*;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::hand_written::{OptionGroupPatch, DesignOptionPatch, WorksetPatch, ElementMembershipPatch, StructuralSupportPatch, LoadCasePatch, StructuralLoadPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::{MaterialPatch, WallTypePatch, SlabTypePatch, RoofTypePatch, ColumnTypePatch, BeamTypePatch, WindowTypePatch, DoorTypePatch, CurtainWallTypePatch, CeilingTypePatch, SpaceConditionsPatch, FamilyPatch, FamilyParameterPatch, FamilySolidPatch, ComponentPatch, ComponentOverridePatch, MepElementPatch, PropertyTemplatePatch, ClassificationSystemPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{SitePatch, BuildingPatch, StoreyPatch, GridLinePatch, SpacePatch, ZonePatch, AreaSchemePatch, WallSweepPatch, ProjectPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::{WallPatch, CurtainWallPatch, CurtainPanelOverridePatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::{ColumnPatch, BeamPatch, SlabPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::{RoofPatch, OpeningPatch, CeilingPatch};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::diff::patches::building_elements::stairs_railings_ramps::{StairPatch, RailingPatch, RampPatch};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::{ViewPatch, SheetPatch, ViewportPatch, SheetRevisionPatch, DimensionPatch, TagPatch, TextNotePatch, LeaderPatch, AnnotationStylePatch, SchedulePatch};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::{ClashSetPatch, RulePatch, IssuePatch, IssueCommentPatch};
 
 //#region 🔖️ModelDiff
 macro_rules! collections {

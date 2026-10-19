@@ -2,7 +2,7 @@ Feature: Opinionated Optional Dashboard Preferences
   Scenario: Starting without preferences
     Given no workspace, local, environment or argument overrides
     When the native dashboard starts
-    Then it immediately shows task controls in the language the preference default names, English, with dark appearance
+    Then it immediately shows task controls in the language the system names, or in the first language of the declared fallback chain, English, with dark appearance
     And native terminology, React, tabbed output and the Ctrl B prefix key are selected without questions
   Scenario: Resolving layered preferences
     Given the shared preference vectors
@@ -20,6 +20,12 @@ Feature: Opinionated Optional Dashboard Preferences
     When the preferences are replayed workspace first and local second
     Then the later layer wins per binding and the other bindings stay
     And a prefix that only types, a binding without keys or an unknown binding is rejected before it is published
+  Scenario: The language falls back from the stored choice to the system and then to the declared chain
+    Given the language chain declared as data and no hard-coded default language
+    When a stored choice, an environment override, a system locale and no locale at all are resolved in turn
+    Then a stored choice beats the system and the override beats the stored choice
+    And the system locale beats the first language of the declared fallback chain
+    And a compacted journal never freezes a language the journal did not choose
   Scenario: The language follows the preference everywhere
     Given the preference language de
     When the native dashboard shows its windows, rows, hints, status line, forms and keyboard help

@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.cad.cad.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message CadDiff {
   optional string schema = 1;
@@ -14,7 +14,7 @@ message CadDiff {
   map<string, CadReferencesDelta> references_by_model_definition_id = 9;
   optional CadNodesDelta nodes = 10;
 }
-message CadModelSlot { optional semio.os.store.ArtifactChild child = 1; }
+message CadModelSlot { optional semio.framework.schema.artifact_child.ArtifactChild child = 1; }
 message CadNodeRemoval { string id = 1; uint64 index = 2; }
 message CadNodeRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
 message CadReferenceRemoval { string id = 1; uint64 index = 2; }
@@ -23,8 +23,8 @@ message CadDrawingRemoval { string id = 1; uint64 index = 2; }
 message CadDrawingRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
 message CadBrepRemoval { string id = 1; uint64 index = 2; }
 message CadBrepRelocation { string id = 1; uint64 from = 2; uint64 to = 3; }
-message CadDrawingInsertion { uint64 index = 1; semio.os.store.ArtifactChild row = 2; }
-message CadBrepInsertion { uint64 index = 1; semio.os.store.ArtifactChild row = 2; }
+message CadDrawingInsertion { uint64 index = 1; semio.framework.schema.artifact_child.ArtifactChild row = 2; }
+message CadBrepInsertion { uint64 index = 1; semio.framework.schema.artifact_child.ArtifactChild row = 2; }
 message CadReferenceInsertion { uint64 index = 1; semio.s.cad.cad.artifact.CadReference row = 2; }
 message CadNodeInsertion { uint64 index = 1; semio.s.cad.cad.artifact.CadNode row = 2; }
 message CadDrawingsDelta { repeated CadDrawingRemoval removed = 1; repeated CadDrawingInsertion inserted = 2; repeated CadDrawingRelocation moved = 3; }

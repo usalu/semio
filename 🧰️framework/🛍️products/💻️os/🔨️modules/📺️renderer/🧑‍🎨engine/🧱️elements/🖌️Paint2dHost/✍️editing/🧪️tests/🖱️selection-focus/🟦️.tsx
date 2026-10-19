@@ -16,7 +16,7 @@ function jobStepGate(){
   vi.spyOn(globalThis,"setTimeout").mockImplementation(((handler:TimerHandler,delay?:number,...args:unknown[])=>{
     if(armed&&!delay){armed=false;held=()=>{real(handler as never,0,...args);};return 0 as unknown as ReturnType<typeof setTimeout>;}
     return real(handler as never,delay,...args);
-  }) as typeof setTimeout);
+  }) as unknown as typeof setTimeout);
   return {hold:()=>{armed=true;},release:()=>{const resume=held;held=null;resume?.();}};
 }
 

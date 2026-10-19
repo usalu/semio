@@ -1,5 +1,5 @@
 /** ✅️ Answer validation shared by preview, navigation and submission. */
-import type { DslValue, FormQuestion, FormStep } from "../🧬️mutations/🟦️.ts";
+import type { DslValue, FormQuestion, FormStep } from "../🧱️form-model/🟦️.ts";
 import{formsValueNumber}from"../🌱️value/🟦️.ts";
 export type AnswerErrorCode = "required" | "type" | "range" | "step" | "option" | "date" | "color" | "vector";
 export interface FormsAnswerError { questionId: string; code: AnswerErrorCode }

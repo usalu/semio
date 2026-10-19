@@ -1,13 +1,15 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile;
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyIssueCode, FamilyValue};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::FamilyIssueCode;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::families::findings::{named};
-use crate::standards::v1::subsets::any::schema::inferences::families::findings::*;
-use crate::standards::v1::subsets::any::schema::inferences::families::tests::kit;
-use crate::standards::v1::subsets::any::schema::inferences::families::family_of;
-use crate::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType, FamilyCategory, ParameterKind};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::findings::named;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::findings::{issue_findings, FindingCode, reference_findings, profile_holders, reference_dependency};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind};
 
 fn values(snapshot: &ModelSnapshot) -> BTreeMap<String, FamilyValue> {
     snapshot.families.keys().map(|id| (id.clone(), family_of(snapshot, id, &BTreeMap::new()))).collect()
@@ -19,11 +21,11 @@ fn view(table: &BTreeMap<String, FamilyValue>) -> BTreeMap<&str, &FamilyValue> {
 
 #[test]
 fn every_issue_is_one_finding_naming_the_family_and_the_part() {
-    let mut snapshot = kit::model();
-    kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
-    kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Length, "ghost + 1 m");
-    kit::parameter(&mut snapshot, "fam-table", "broken", ParameterKind::Length, "2 *");
-    kit::family(&mut snapshot, "fam-flat", FamilyCategory::Profile);
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "top", ParameterKind::Length, "ghost + 1 m");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::parameter(&mut snapshot, "fam-table", "broken", ParameterKind::Length, "2 *");
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-flat", FamilyCategory::Profile);
     let table = values(&snapshot);
     let found = issue_findings(&view(&table));
     let codes: Vec<(FindingCode, Vec<String>)> = found.iter().map(|finding| (finding.code, finding.elements.clone())).collect();
@@ -36,9 +38,9 @@ fn every_issue_is_one_finding_naming_the_family_and_the_part() {
 
 #[test]
 fn a_profile_that_names_a_missing_or_non_profile_family_is_a_dangling_reference() {
-    let mut snapshot = kit::model();
-    kit::hea(&mut snapshot);
-    kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::hea(&mut snapshot);
+    semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
     let family = |id: &str| Profile::Family { family: id.to_string() };
     snapshot.column_types.insert("ct-ok".into(), ColumnType { name: "ok".into(), profile: family("fam-hea"), material: "m-steel".into() });
     snapshot.column_types.insert("ct-ghost".into(), ColumnType { name: "ghost".into(), profile: family("fam-ghost"), material: "m-steel".into() });
@@ -53,7 +55,7 @@ fn a_profile_that_names_a_missing_or_non_profile_family_is_a_dangling_reference(
 
 #[test]
 fn the_holders_are_the_types_and_railings_that_name_a_family() {
-    let mut snapshot = kit::model();
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
     assert!(profile_holders(&snapshot).is_empty());
     let named = Profile::Family { family: "fam-hea".into() };
     snapshot.column_types.insert("ct".into(), ColumnType { name: "c".into(), profile: named.clone(), material: "m-steel".into() });
@@ -65,7 +67,7 @@ fn the_holders_are_the_types_and_railings_that_name_a_family() {
 
 #[test]
 fn the_reference_dependency_changes_exactly_with_the_references() {
-    let mut snapshot = kit::model();
+    let mut snapshot = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::tests::kit::model();
     let named = |id: &str| Profile::Family { family: id.to_string() };
     snapshot.column_types.insert("ct".into(), ColumnType { name: "c".into(), profile: named("fam-a"), material: "m-steel".into() });
     let before = reference_dependency(&snapshot);

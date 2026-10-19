@@ -3,8 +3,9 @@
 //! Inserting `SemioValue::Null` at the same index into every row keeps the CRITICAL row/column
 //! alignment invariant (see `📸️snapshot/🦀️.rs`'s own doc comment).
 
-use crate::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableOp;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
@@ -17,13 +18,13 @@ pub struct CreateColumn {
     pub index: Option<usize>,
 }
 
-impl protocol::MutationKind<SemioTableSnapshot, SemioTableMutation> for CreateColumn {
+impl<Op: SemioTableOp> protocol::MutationKind<SemioTableSnapshot, Op> for CreateColumn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "column", kind: "create-column", record: "CreatedColumn" };
 
-    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<<SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::Diff> {
+    fn diff(&self, base: &SemioTableSnapshot) -> protocol::MutationOutcome<SemioTableDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<SemioTableMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &SemioTableSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

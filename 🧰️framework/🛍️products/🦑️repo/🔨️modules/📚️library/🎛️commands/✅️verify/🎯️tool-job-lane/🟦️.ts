@@ -45,7 +45,7 @@ export abstract class VerifyToolJobLane extends VerifyInteractivityLanes {
       const actionBus = policyReadFileSafe(this.root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
       const pluginApp = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
       const pluginHost = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
-      const programBridge = policyReadFileSafe(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
+      const programBridge = policyReadModuleTreeSource(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs");
       const mutations = args.includes("--self-test") ? this.lanes.toolJobLiveFixedReplaySelfTests(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge) : 0;
       if (!toolJobLiveFixedReplayExact(actor, shard, executor, wgpu, actionBus, pluginApp, pluginHost, programBridge)) throw new Error("[verify interactivity tool-jobs p2c] live fixed replay contract failed.");
       console.log(`[verify interactivity tool-jobs p2c] live-source clean; hostile-mutations=${mutations}.`);

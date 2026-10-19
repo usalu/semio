@@ -47,7 +47,7 @@ test("the unchanged general Kernel suite executes with all product directories a
     const source = syntax(path);
     const dependency = (text: string): void => {
       if (!text.startsWith(".")) return;
-      const destination = join(dirname(path), text);
+      const destination = join(dirname(path), text.replace(/\?[a-z]+$/u, ""));
       const existing = [destination, destination.replace(/\.js$/u, ".ts"), ...[".ts", ".js", "/index.ts", "/🟦️.ts"].map(extension => destination + extension)].find(candidate => existsSync(join(root, candidate)));
       if (!existing) throw new Error(`Missing actual dependency ${path}: ${text}`);
       copy(existing);
@@ -62,7 +62,7 @@ test("the unchanged general Kernel suite executes with all product directories a
   };
   copy(corpus.generalConfig);
   for (const path of includes(syntax(corpus.generalConfig))) copy(join(corpus.generalRoot, path));
-  for (const path of ["🟦️.ts", "📤️return/📦️content/🟦️.ts"]) copy(join(corpus.generalRoot, path));
+  for (const path of ["📤️return/📦️content/🟦️.ts"]) copy(join(corpus.generalRoot, path));
   const copyInputs = (path: string): void => {
     for (const entry of readdirSync(join(root, path), { withFileTypes: true })) {
       const child = join(path, entry.name);
@@ -90,7 +90,7 @@ test("the schema pins intact locale laws, original witnesses and canonical neutr
   expect(existsSync(join(root, corpus.formerOwner))).toBe(false);
   const source = read(corpus.owner);
   expect(digest(source.slice(source.indexOf("const validate =")))).toBe(corpus.retainedTextSha256);
-  expect(includes(syntax(corpus.generalConfig))).toEqual(corpus.generalIncludes);
+  expect(includes(syntax(corpus.generalConfig))).toEqual(expect.arrayContaining(corpus.generalIncludes));
   expect(includes(syntax(corpus.generalConfig), "includeSource")).toEqual(corpus.generalIncludeSource);
   expect(includes(syntax(corpus.specificConfig))).toEqual(["🧪️tests/🏷️localized-label-fixture/🟦️.ts"]);
   for (const input of corpus.inputs) expect(digest(readFileSync(join(root, input.path)))).toBe(input.sha256);

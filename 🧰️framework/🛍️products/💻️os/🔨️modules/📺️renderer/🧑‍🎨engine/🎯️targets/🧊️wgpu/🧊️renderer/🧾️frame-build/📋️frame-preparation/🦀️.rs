@@ -13,10 +13,10 @@ pub struct AppFramePreparation {
     pub outcome_pending: Option<FramePreparationStep>,
     pub outcome_acknowledged: bool,
     pub refused_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
-    pub job: Option<ui_wgpu::wgpu::PreparedRenderJob>,
-    pub job_rejected: Option<ui_wgpu::wgpu::PreparedRenderJobRejected>,
+    pub job: Option<semio_framework_ui_prepared::PreparedRenderJob>,
+    pub job_rejected: Option<semio_framework_ui_prepared::PreparedRenderJobRejected>,
     pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
-    pub session: Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>,
+    pub session: Option<semio_framework_job_worker::BatchJobSession<semio_framework_ui_prepared::PreparedRenderJob>>,
     pub engine_packets: Option<FrameEnginePackets>,
     pub generation: semio_framework_trace::Generation,
     pub cursor: SemioCursor,
@@ -162,7 +162,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
             if !job.terminal_is_empty() {
                 return frame_received_child(job.close_step(cx), grant, job.terminal_is_empty());
             }
-            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderJob>>();
+            let bytes = std::mem::size_of::<Option<semio_framework_ui_prepared::PreparedRenderJob>>();
             if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
             self.job = None;
             return frame_receive_close(frame_inline_progress(bytes),cx);
@@ -185,7 +185,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
                 }
             }
             if !session.terminal_is_empty() { let step=session.close_step(cx)?;return frame_worker_child_step(step, grant, session.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from); }
-            let bytes = std::mem::size_of::<Option<semio_framework_job_worker::BatchJobSession<ui_wgpu::wgpu::PreparedRenderJob>>>();
+            let bytes = std::mem::size_of::<Option<semio_framework_job_worker::BatchJobSession<semio_framework_ui_prepared::PreparedRenderJob>>>();
             if let Some(step) = frame_inline_gate(grant, bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))? { return Ok(step); }
             self.session = None;
             return frame_receive_close(frame_inline_progress(bytes),cx);
@@ -239,7 +239,7 @@ impl AppFramePresentation {
         if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
         if let Some(packet) = self.packet.as_mut() {
             if !packet.retirement_is_empty() { return frame_child_step(packet.close_step(grant), grant, packet.retirement_is_empty()); }
-            let bytes = std::mem::size_of::<Option<ui_wgpu::wgpu::PreparedRenderPacket>>();
+            let bytes = std::mem::size_of::<Option<semio_framework_ui_prepared::PreparedRenderPacket>>();
             if let Some(step) = frame_inline_gate(grant, bytes)? { return Ok(step); }
             self.packet = None;
             return frame_inline_progress(bytes);

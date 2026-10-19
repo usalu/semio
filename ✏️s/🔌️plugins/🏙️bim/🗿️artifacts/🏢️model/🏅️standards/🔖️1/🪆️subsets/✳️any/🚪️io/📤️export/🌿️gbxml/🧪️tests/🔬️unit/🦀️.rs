@@ -1,15 +1,17 @@
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, SurfaceKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::OpeningKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 #[allow(unused_imports)]
@@ -20,8 +22,9 @@ use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::io::export::gbxml::*;
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
+use semio_s_artifact_bim_model_gbxml::standards::v1::subsets::any::io::export::gbxml::{Plan, plan_of, Names, surface_type, exposed_to_sun, export_gbxml, OpeningRow, SurfaceRow, StagedGbxml, export_table};
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
@@ -35,7 +38,7 @@ fn load(text: &str) -> ModelSnapshot {
 }
 
 fn plan_for(model: &ModelSnapshot) -> Plan {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred)).expect("infers").expect("a plan")
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, |inferred| plan_of(model, inferred)).expect("infers").expect("a plan")
 }
 
 fn count(text: &str, needle: &str) -> usize {
@@ -118,7 +121,7 @@ fn the_polygons_of_a_space_are_closed_and_enclose_its_volume() {
     let plan = plan_for(&model);
     let (mut sum, mut volume) = ([0.0; 3], 0.0);
     for row in &plan.surfaces {
-        let vector = geometry::area_vector(&row.polygon);
+        let vector = semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry::area_vector(&row.polygon);
         let centre = [0, 1, 2].map(|axis| row.polygon.iter().map(|point| point[axis]).sum::<f64>() / row.polygon.len() as f64);
         for axis in 0..3 {
             sum[axis] += vector[axis] / 2.0;
@@ -177,7 +180,7 @@ fn the_export_is_deterministic() {
 fn the_staged_export_ends_with_the_same_document_and_reports_its_progress() {
     let model = load((*ZONING));
     let one_shot = export_gbxml(&model).expect("an export").0;
-    let staged = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| {
+    let staged = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| {
         let mut job = StagedGbxml::new();
         let mut seen = vec![job.stage()];
         let mut last = job.fraction();

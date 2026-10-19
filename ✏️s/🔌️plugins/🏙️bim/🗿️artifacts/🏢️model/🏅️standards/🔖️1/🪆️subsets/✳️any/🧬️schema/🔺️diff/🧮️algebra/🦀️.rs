@@ -1,7 +1,9 @@
 //! 🧮️ The patch algebra of the model diff: the sparse field patch trait, the assigned-null wrapper, the keyed delta of a collection and the later-slot-wins merge, shared by the root diff and every patch family.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::entities::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
 use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;

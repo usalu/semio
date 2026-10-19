@@ -551,13 +551,13 @@ impl<'ctx> OverlaysViewCtx<'ctx> {
         let (text_w, text_h) = atlas.measure_text(&text, theme.font_size_small);
         let content_w = text_w + padding * 2.0;
         let content_h = text_h + padding * 2.0;
-        let scratch_tree = ui_wgpu::wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::wgpu::resolve_overlay_placement(
+        let scratch_tree = semio_framework_ui_retained_tree::tree::UiTree::new();
+        let (x, y) = semio_framework_ui_wgpu_events::resolve_overlay_placement(
             &scratch_tree,
-            ui_wgpu::wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
+            semio_framework_ui_wgpu_events::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
             (content_w, content_h),
             (width, height),
-            ui_wgpu::wgpu::OverlayKind::Tooltip.default_placement(),
+            semio_framework_ui_wgpu_events::OverlayKind::Tooltip.default_placement(),
             ui_contract::FlowInline::Ltr,
         );
         let region = overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));

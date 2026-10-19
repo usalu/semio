@@ -89,7 +89,7 @@ async fn every_run_hop_names_a_preview_window_that_is_actually_attached() {
         eprintln!("run hops {}: attached={:?} hops={:?}", case.id, view.window_instances.iter().map(|window| window.id.as_str()).collect::<Vec<_>>(), receipt.hop_windows);
         assert_eq!(hop_windows(&receipt), expected, "arming case {}", case.id);
         assert!(context::owed_run_actions(&mut app, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.is_empty(), "no roster at all starts nothing");
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -107,7 +107,7 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
         let args = flow_eval_tick::window_args(&case.payload_window_id, &kind);
         let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
         let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
-            Ok(()) => match semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await {
+            Ok(()) => match semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
                 Ok(receipt) => receipt.lanes.contains(&TypedOperationResultLane::Fault).then(|| format!("retained publication faulted: {:?}", receipt.lanes)),
                 Err(fault) => Some(format!("{fault:?}")),
             },
@@ -117,7 +117,7 @@ async fn only_a_preview_addressed_tick_passes_the_retained_preflight() {
         if let Some(detail) = outcome {
             assert!(!detail.contains("exceeds semantic work capacity"), "dispatch case {}: an addressing refusal must not be reported as a work-capacity fault: {detail}", case.id);
         }
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -137,7 +137,7 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views("procedural-main", "procedural-preview");
     let action_meta = ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample dispatches from the flow window");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample dispatches from the flow window");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
 
@@ -155,11 +155,11 @@ async fn set_active_example_drives_the_self_dispatched_tick_chain_to_a_rendered_
     }
 
     let preview = context::render_with_view(&mut app, edit_preview::GENERATION_3D_PLAY_BODY_PREVIEW, &preview_view).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("projected preview body must decode as an assembled world-3d scene");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     assert!(mesh_count >= 1, "the extruded volume must reach the preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: generate-mode preview evaluation is the SAME `previewEval` run as edit preview, never a dead
@@ -171,19 +171,19 @@ async fn generate_preview_eval_is_the_run_addressed_at_the_generate_preview() {
     let mut app = app_with_registry().await;
     let (generations_view, _preview_view) = context::generate_shell_views("generation3d-generations", "generation3d-generate-form", "generation3d-generate-preview");
     let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
     let settled = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
     assert_eq!(settled.state.as_deref(), Some("finalized"), "the switch's run settles: {settled:?}");
-    app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", None, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("addGeneration");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", receipt.lanes);
     assert_eq!(context::run_actions(&receipt.effects), vec![semio_framework_tool_run::TOOL_RUN_START_ACTION_ID.to_string()], "addGeneration carries exactly one run start on its own emit");
     let run = context::drive_preview_run(&mut app, &generations_view, &receipt.effects).await;
     assert!(run.hop_windows.iter().any(|window| window == "generation3d-generate-preview"), "the run must evaluate the generate preview window: {run:?}");
     assert!(run.answered > 0, "generate preview eval must cross the extension boundary, not settle as a dead sync tick: {run:?}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: generate mode's ENTRY state and the `addGeneration` affordance that leaves it, end to end.
@@ -203,7 +203,7 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     let action_meta = ActionMeta { view_state: Some(generations_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
 
     let entry = context::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
-    let entry_scene: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");
+    let entry_scene: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&entry).expect("the generate-mode entry preview is a world-3d status host");
     let entry_status = entry_scene.status_json.clone().expect("the generate preview publishes a status host before anything is generated");
     let entry_json: serde_json::Value = serde_json::from_str(&entry_status).expect("entry status json");
     // 🪪️ With the geometry extension actually contributed the entry phase is IDLE — nothing is
@@ -213,23 +213,23 @@ async fn add_generation_from_the_generations_window_drives_the_generate_preview_
     assert!(entry_json.get("hint").and_then(serde_json::Value::as_str).unwrap_or_default().contains("evaluate a generation"), "entry status must carry the hint: {entry_status}");
     assert_eq!(entry_scene.instances_json, "[]", "entry state draws no instances: {}", entry_scene.instances_json);
 
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta).await.expect("setActiveExample");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "setActiveExample", Some(serde_json::json!({ "exampleId": PROCEDURAL_EXAMPLE_RECT_EXTRUDE }).into()), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample");
     let receipt = context::settle(&mut app).await;
     assert!(!receipt.lanes.contains(&TypedOperationResultLane::Fault), "setActiveExample faulted: {:?}", receipt.lanes);
     context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &receipt.effects).await;
 
-    app.handle_action("addGeneration", None, &action_meta).await.expect("addGeneration dispatches from the generations window");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "addGeneration", None, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("addGeneration dispatches from the generations window");
     let added = context::settle(&mut app).await;
     assert!(!added.lanes.contains(&TypedOperationResultLane::Fault), "addGeneration faulted: {:?}", added.lanes);
     let ticks = context::drain_armed_flow_eval_ticks_from(&mut app, &generations_view, &added.effects).await;
     assert!(ticks > 0, "addGeneration must arm at least one addressed flowEvalTick");
 
     let preview = context::render_with_view(&mut app, generate_preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW, &preview_view).await;
-    let world: semio_framework_ui::wgpu::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("the generate preview stays a world-3d surface once a generation exists");
+    let world: semio_framework_ui_declaration::ui::World3dScene = semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&preview).expect("the generate preview stays a world-3d surface once a generation exists");
     let meshes: serde_json::Value = serde_json::from_str(&world.meshes_json).expect("generate preview meshes json");
     let mesh_count = meshes.as_array().map_or(0, Vec::len);
     let status = world.status_json.clone().unwrap_or_default();
     assert!(mesh_count >= 1, "the generation the UI added must reach the generate preview as at least one mesh, got {mesh_count}: {}", world.meshes_json);
     assert!(!status.contains("\"hint\""), "a preview with evaluated geometry must drop the entry hint: {status}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

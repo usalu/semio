@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import type { PixelOracleFixture } from "../🧾️pixel-oracle-fixture/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 declare const THREE: any;
 declare const worldSurfaceMaterial: (name: string, material: any, vertexColors: boolean) => any;
@@ -228,7 +229,7 @@ export async function runGridVisualOracle(repoRoot: string, outputDirectory: str
     let input: any = fixture;
     let shaderSha256: string | undefined;
     if (webgpu) {
-      const source = await readFile(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"), "utf8");
+      const source = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs"));
       const shader = source.match(/pub const WORLD3D_GRID_SHADER: &str = r#"([\s\S]*?)"#;/)?.[1];
       if (!shader) throw new Error("Production WORLD3D_GRID_SHADER constant not found");
       shaderSha256 = createHash("sha256").update(shader).digest("hex");

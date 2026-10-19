@@ -1,4 +1,4 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {AsyncLocalStorage} from "node:async_hooks";
 import {createHash,randomUUID,randomBytes} from "node:crypto";
@@ -8,10 +8,10 @@ import {join,resolve,dirname} from "node:path";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {checkScriptInvocation,receiveScriptProcessInvocation,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {acquireQueuedResourceLease,acquireResourceLease,type ResourceLease} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {acquireQueuedResourceLease,acquireResourceLease,type ResourceLease} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🧬️ Names the complete finite physical input inventory without Native or platform handles. */
 export interface SelectedNativeSnapshotRequestV1 {readonly version:1;readonly inputs:readonly {readonly path:string;readonly digest:string;readonly bytes:number}[]}
 /** 🧷️ Borrows an immutable Source root only within its Original charged callback lifetime. */

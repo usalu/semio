@@ -1,0 +1,6 @@
+{
+ "name": "hdr4-uivalues",
+ "crates": ["semio-framework-ui-contract-values", "semio-framework-ui-contract-values-laws"],
+ "base": {"rev": "4dab415ed90", "crates": ["semio-framework-ui-contract-values"]},
+ "note": "HDR-4: ui-contract-values tests to a companion"
+}

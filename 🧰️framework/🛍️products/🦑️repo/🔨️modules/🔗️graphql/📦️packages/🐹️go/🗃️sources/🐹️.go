@@ -325,4 +325,19 @@ func analyzeResultSource(result *model.AnalyzeResult, statutes []*model.StatuteM
 	return tagged(map[string]interface{}{"breachs": breachs, "metrics": tagged(metricFields, "AnalyzeMetrics")}, "AnalyzeResult")
 }
 
+/** 🩹️ The fix-result source object. */
+func fixResultSource(result *model.FixResult, statutes []*model.StatuteMeta) interface{} {
+	breachs := make([]interface{}, 0)
+	fixed, remaining := 0, 0
+	if result != nil {
+		fixed, remaining = result.Fixed, result.Remaining
+		for _, breach := range result.Breachs {
+			if breach != nil {
+				breachs = append(breachs, breachSource(breach, statutes))
+			}
+		}
+	}
+	return tagged(map[string]interface{}{"fixed": fixed, "remaining": remaining, "breachs": breachs}, "FixResult")
+}
+
 // #endregion 🗃️Sources

@@ -1,9 +1,10 @@
 //! 🧬️ The non-geometric data of the IFC file (IFC 2x3 and IFC4): materials with their physical properties, layered and profiled types (with their authored property sets in `HasPropertySets`), property sets, classification systems with their
 //! tables, base quantities and the relationship entities (aggregation, containment, typing, material association, classification association) the families recorded.
 
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, flag, int, label, opt_text, real, refs, rf, text, typed, unset, Schema, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, Layer, Profile, PropertyValue};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, flag, int, label, opt_text, real, refs, rf, text, typed, unset, Schema, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, Profile, PropertyValue};
 use std::collections::BTreeMap;
 
 /// 🏷️ The property set of the project that records the parent column of the classification tables.
@@ -117,11 +118,11 @@ fn profiled_type(x: &mut Export<'_>, kind: &'static str, entity: &str, id: &str,
 }
 
 /// 🚪️ The `IfcDoorTypeOperationEnum` literal of a door type: leaves and swing.
-pub fn door_operation(kind: &crate::standards::v1::subsets::any::schema::snapshot::DoorType) -> &'static str {
+pub fn door_operation(kind: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::DoorType) -> &'static str {
     match (kind.leaves, kind.swing) {
-        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Single, crate::standards::v1::subsets::any::schema::snapshot::Swing::Left) => "SINGLE_SWING_LEFT",
-        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Single, crate::standards::v1::subsets::any::schema::snapshot::Swing::Right) => "SINGLE_SWING_RIGHT",
-        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Double, _) => "DOUBLE_DOOR_SINGLE_SWING",
+        (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::DoorLeaves::Single, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Swing::Left) => "SINGLE_SWING_LEFT",
+        (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::DoorLeaves::Single, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Swing::Right) => "SINGLE_SWING_RIGHT",
+        (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::DoorLeaves::Double, _) => "DOUBLE_DOOR_SINGLE_SWING",
     }
 }
 

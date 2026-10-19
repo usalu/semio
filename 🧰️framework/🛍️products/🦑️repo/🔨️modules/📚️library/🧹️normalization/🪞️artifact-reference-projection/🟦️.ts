@@ -1,4 +1,4 @@
-import { requireRecord, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireRecord, type UnknownRecord } from "@semio-tech/schema-validator-ts";
 import { report } from "../🏃️operation/🟦️.ts";
 import { type LoadedTaxonomy } from "../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type SemanticDistributedJsonManifestCatalogContract, type SemanticExactOwnerVectorsCatalogContract } from "../🔣️taxonomy/🧭️path-projection/🟦️.ts";

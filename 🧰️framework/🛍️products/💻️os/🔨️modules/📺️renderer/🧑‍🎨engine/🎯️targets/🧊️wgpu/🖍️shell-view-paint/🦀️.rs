@@ -11,7 +11,15 @@ use semio_framework_os_renderer_wgpu_scene_canvas2d::ui_image_loading::framework
 use semio_framework_os_renderer_wgpu_scene_state::{BlockListChromeLabels, SceneChromeLabels, VirtualFileSystemChromeLabels};
 use semio_framework_os_renderer_wgpu_shell_vocab::shell_chrome_string;
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, IconAtlas, InputState, Level, Rect, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, Rgba, Theme, UtilityNode, draw_text, paint_retained_glyph_step_flowed};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::InputState;
+use semio_framework_ui_theme::{Level, Rgba, Theme};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_wgpu_paint::{RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, paint_retained_glyph_step_flowed};
+use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_framework_ui_wgpu_widget_kit::draw_text;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🖍️view-paint/⚓️dock-model-and-measures/🦀️.rs"]
 mod staged_view_paint__dock_model_and_measures;

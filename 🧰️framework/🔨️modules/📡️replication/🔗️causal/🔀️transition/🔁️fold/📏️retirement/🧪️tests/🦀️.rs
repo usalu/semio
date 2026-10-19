@@ -161,7 +161,7 @@ fn bounded_history_shared_actor_admission_retains_preborn_shell_and_actual_recei
     let Poll::Ready(original)=original else{panic!("funded original actor frame must be ready")};assert_eq!((heap.requested_bytes,heap.released_bytes),(frame,0));
     let frame_pointer=original.owner.as_ref().unwrap().as_ref() as *const _ as usize;
     let mut admission=job.control.adopt_actor(original);
-    let capacity=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>();
+    let capacity=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>();
     let copied=size_of::<String>()+size_of::<semio_framework_value::SharedUtf8>();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:1};
     for axis in law["deniedAxes"].as_array().unwrap(){

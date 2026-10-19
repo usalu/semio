@@ -5,7 +5,7 @@
 
 //#region 🔌️Adapters
 import { parseFeature, type ParsedFeature } from "@semio-tech/framework/test/gherkin";
-import { type TestCasePlan, type ComparisonProfile, type SubjectRawInputs, type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
+import { type TestCasePlan, type ComparisonProfile, type SubjectRawInputs, type Implementation, type TestRole, currentPlatform } from "@semio-tech/framework/test/adapter";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { TEST_LEVELS, type TestLevel } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -14,7 +14,6 @@ import { digest, setDigest } from "../🔢️digests/🟦️.ts";
 import { compareProjections, type ComparisonVerdict, coreProfileTable } from "../🟰️comparison/🟦️.ts";
 import { type DiscoveredCase } from "../🧭️case-discovery/🟦️.ts";
 import { markOutputDir, testCacheDir } from "../⚡️output-cache/🟦️.ts";
-import { currentPlatform } from "../🪆️subset-policy/🟦️.ts";
 import { mutationManifestDigest } from "../📑️mutation-manifest/🟦️.ts";
 import { type TestResult } from "../📤️results/🟦️.ts";
 import { loadOracleRegistry, type OracleRegistry, pipelineTable, profileTable } from "../🤝️contributions/🟦️.ts";

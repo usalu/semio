@@ -5,11 +5,11 @@
 
 import { rendererOriginalWorkStock } from "@semio-tech/framework/canvas/renderer-work";
 import { ActivationRegistry } from "@semio-tech/framework";
-import { assertShardJspiAvailable } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
-import { ShardClient } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { type ShardBudget } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { type ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
-import { shardWorkerUrl,DEFAULT_SHARD_BUDGET } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
+import { assertShardJspiAvailable } from "@semio-tech/framework-actor/shard-client/heartbeat";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { type ShardBudget } from "@semio-tech/framework-actor/shard-client/wire";
+import { type ShardWorkerLike } from "@semio-tech/framework-actor/shard-client/quota";
+import { shardWorkerUrl,DEFAULT_SHARD_BUDGET } from "@semio-tech/framework-actor/shard-runtime";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";
 import { rendererResidentLedger } from "@semio-tech/framework/canvas/renderer-resident";
 import { notePluginLoadProgressForInFlightV1 } from "../🫀️load-progress/🟦️.ts";

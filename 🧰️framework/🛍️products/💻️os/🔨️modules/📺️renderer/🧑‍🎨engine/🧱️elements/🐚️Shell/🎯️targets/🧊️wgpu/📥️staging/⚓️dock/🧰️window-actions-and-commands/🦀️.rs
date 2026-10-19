@@ -55,9 +55,9 @@ impl ShellDockState {
         if resolved.is_empty() {
             return Vec::new();
         }
-        let specs: Vec<ui_wgpu::wgpu::component::utilities::DerivedUtilitySpec> = resolved
+        let specs: Vec<semio_framework_ui_declaration::utilities::DerivedUtilitySpec> = resolved
             .iter()
-            .map(|utility| ui_wgpu::wgpu::component::utilities::DerivedUtilitySpec {
+            .map(|utility| semio_framework_ui_declaration::utilities::DerivedUtilitySpec {
                 id: utility.id.clone(),
                 label: utility.label.resolve(prefs.active_terminology(), prefs.active_locale()).to_string(),
                 icon_id: utility.icon_id.clone(),
@@ -66,7 +66,7 @@ impl ShellDockState {
             })
             .collect();
         let active = windows.active_utility_by_window.get(window_id).map(String::as_str);
-        ui_wgpu::wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
+        semio_framework_ui_declaration::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
 }
 

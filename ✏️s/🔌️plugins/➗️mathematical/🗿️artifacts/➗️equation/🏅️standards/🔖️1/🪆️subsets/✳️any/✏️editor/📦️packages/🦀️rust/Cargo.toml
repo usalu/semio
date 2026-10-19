@@ -56,7 +56,7 @@ semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-table-model = { workspace = true }
 semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
-ui_wgpu = {path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde.workspace = true

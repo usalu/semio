@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import { applyPatch, compare } from "fast-json-patch";
 import { applyDagDiff } from "../../🔺️diff/🟦️.ts";
 /** 🧪️ DAG document facets use the native shared graph-child identity. */
@@ -6,7 +6,6 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { assertDocumentContractOracle, declaredChildDialectSchema } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
 import artifactSchema from "../../🔣️.json" with { type: "json" };
 import snapshotSchema from "../../📸️snapshot/🔣️.json" with { type: "json" };
 import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };

@@ -36,7 +36,7 @@ impl<T:?Sized+Send> MountedOwnerAliasRetirementV1<T> {
  pub fn unique_mut(&mut self)->Option<&mut T> {self.unique.as_deref_mut()}
  /// 📏️ Quotes only the next original shared backing or final concrete box shell.
  pub fn demands(&self)->RetirementDemand {
-  let release_bytes=if self.source.is_some(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<MountedOwnerCellV1<T>>()}else{self.unique.as_deref().map_or(0,std::mem::size_of_val)};
+  let release_bytes=if self.source.is_some(){semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<MountedOwnerCellV1<T>>()}else{self.unique.as_deref().map_or(0,std::mem::size_of_val)};
   RetirementDemand{release_bytes,depth:usize::from(!self.terminal_is_empty()),..Default::default()}
  }
  /// 🧾️ Advances one actual backing or terminal shell; nonfinal aliases never close shared payloads.

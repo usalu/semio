@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Default)]
 pub struct UiMap {
-    pub(super) handle: Option<UiCollectionHandle>,
+    pub handle: Option<UiCollectionHandle>,
     pub(super) len: usize,
 }
 

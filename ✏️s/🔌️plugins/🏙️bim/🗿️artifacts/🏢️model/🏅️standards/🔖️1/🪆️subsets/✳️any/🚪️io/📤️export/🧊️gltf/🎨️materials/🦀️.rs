@@ -2,10 +2,11 @@
 //! The colour of a face group is the one the 3D viewer paints (`group_color`), so the exported scene looks like the editor.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#reference-material
 
-use crate::standards::v1::subsets::any::io::export::gltf::document::GltfMaterial;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document::GltfMaterial;
 use crate::render::world::{family_color, group_color};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
-use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidGroup};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::MaterialCategory;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🔑️ What a face group is made of: a model material, glazing without a material, or nothing (the colour of its element family).
@@ -21,9 +22,9 @@ pub enum MaterialKey {
 pub fn key_of(snapshot: &ModelSnapshot, family: SolidFamily, group: &SolidGroup) -> MaterialKey {
     if snapshot.materials.contains_key(&group.material) {
         MaterialKey::Model(group.material.clone())
-    } else if group.part == parts::GLASS {
+    } else if group.part == semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::GLASS {
         MaterialKey::Glass
-    } else if family == SolidFamily::Mep && crate::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).is_some() {
+    } else if family == SolidFamily::Mep && semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::part_colour(&group.part).is_some() {
         MaterialKey::System(group.part.clone())
     } else {
         MaterialKey::Family(family)

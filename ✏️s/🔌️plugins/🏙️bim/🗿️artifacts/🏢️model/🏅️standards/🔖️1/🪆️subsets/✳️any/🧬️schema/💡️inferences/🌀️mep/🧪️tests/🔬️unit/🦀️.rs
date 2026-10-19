@@ -1,12 +1,14 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem, ModelSnapshot};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 use crate::standards::v1::subsets::any::schema::inferences::mep::clash::{centre_distance, clashes_of, segment_distance};
 use crate::standards::v1::subsets::any::schema::inferences::mep::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, Point3};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::MepElement;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 
 fn point(x: f64, y: f64, z: f64) -> Point3 {
     Point3 { x, y, z }

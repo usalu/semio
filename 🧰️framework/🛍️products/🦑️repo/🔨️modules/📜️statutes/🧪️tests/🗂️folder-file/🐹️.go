@@ -10,15 +10,14 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 🗂️Folder And File Policy Tests
 
 func TestFolderPolicyEmptyFolder(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	emptyDir := filepath.Join(tmpDir, "some", "empty")
 	os.MkdirAll(emptyDir, 0755)
 	nonEmptyDir := filepath.Join(tmpDir, "some", "nonempty")
@@ -48,7 +47,7 @@ func TestFolderPolicyEmptyFolder(t *testing.T) {
 }
 
 func TestPathEmojiStatutesLanguageNeutralFixture(t *testing.T) {
-	fixturePath := filepath.Join("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "🔏️path-emoji-statutes", "🔣️.json")
+	fixturePath := sandbox.OriginPath("..", "..", "..", "📚️library", "🧪️tests", "🧫️fixtures", "🔏️path-emoji-statutes", "🔣️.json")
 	data, err := os.ReadFile(fixturePath)
 	if err != nil {
 		t.Fatalf("read shared path emoji fixture: %v", err)
@@ -76,9 +75,7 @@ func TestPathEmojiStatutesLanguageNeutralFixture(t *testing.T) {
 
 func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	for _, dir := range []string{".git/objects", ".🦑️repo/cache", "node_modules/.cache"} {
 		os.MkdirAll(filepath.Join(tmpDir, dir), 0755)
 	}
@@ -97,9 +94,7 @@ func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 
 func TestFilePolicyGodfile(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	godfileContent := `["allowed.txt", "src/main.ts"]`
@@ -131,9 +126,7 @@ func TestFilePolicyGodfile(t *testing.T) {
 
 func TestFilePolicyGodfileSupportsGlobPatterns(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	godfileContent := `["allowed.txt", "src/**/*.ts", "docs/*.md"]`
@@ -168,9 +161,7 @@ func TestFilePolicyGodfileSupportsGlobPatterns(t *testing.T) {
 
 func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
 	os.WriteFile(filepath.Join(metaDir, "📁️files.json"), []byte(`[]`), 0644)
@@ -188,9 +179,7 @@ func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 
 func TestFilePolicyGodfileSkipsNestedNodeModules(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.SetRootDir(tmpDir)
-	defer func() { workspace.SetRootDir(oldRoot) }()
+	sandbox.BindRoot(t, tmpDir)
 	os.WriteFile(filepath.Join(tmpDir, ".gitignore"), []byte("node_modules/\n"), 0644)
 	metaDir := filepath.Join(tmpDir, ".🧬semio", "🦑️repo")
 	os.MkdirAll(metaDir, 0755)
@@ -211,9 +200,7 @@ func TestFilePolicyGodfileSkipsNestedNodeModules(t *testing.T) {
 
 func TestFilePolicyNoGodfile(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	os.WriteFile(filepath.Join(tmpDir, "file.txt"), []byte("content"), 0644)
 	bundles := []model.Bundle{}
 	scope := workspace.Scope{Kind: workspace.ScopeRepo}

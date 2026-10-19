@@ -36,7 +36,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
 use ui_contract::{SurfaceId, UI_DOCUMENT_LEASE_ALIASES, UI_DOCUMENT_LEASE_SLOTS, UiDocumentLease};
-use ui_wgpu::wgpu::{ActionDescriptor, PointerModifiers, Theme, UiButtonNode, UiControlNode, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_wgpu_input::PointerModifiers;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/📄️docs/🧬️component/🦀️.rs"]
 mod staged_docs__component;

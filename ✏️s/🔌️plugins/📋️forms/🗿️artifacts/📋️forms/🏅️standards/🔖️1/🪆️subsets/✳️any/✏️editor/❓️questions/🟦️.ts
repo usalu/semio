@@ -1,4 +1,4 @@
-import type { DslValue, FormExpr, FormQuestion } from "../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { DslValue, FormExpr, FormQuestion } from "../../🧬️schema/🧱️form-model/🟦️.ts";
 import{parseFormsValue,formsValueNumber}from"../../🧬️schema/🌱️value/🟦️.ts";
 import{parseFormsDefinition}from"../../🧬️schema/📝️definition/🟦️.ts";
 

@@ -18,26 +18,14 @@ async fn labels_resolve_native_by_default_and_in_german() {
 async fn undo_after_add_step_restores_the_steps_handle() {
     let mut app = app();
     let before = app.snapshot().expect("snapshot").steps.clone();
-    artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
-        Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }),
-        |app| app.snapshot().expect("snapshot").steps == before,
-        true,
-        false,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    )
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }), |app| app.snapshot().expect("snapshot").steps == before, true, false, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn undo_after_add_workshop_machine_restores_previous_machine_count() {
     let mut app = app();
-    artifact_app_laws::assert_undo_redo_round_trip(
-        &mut app,
-        Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }),
-        |app| app.snapshot().expect("snapshot").workshop.machines.len(),
-        11,
-        12,semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    )
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "metal".into(), machine_id: "chopSaw".into() }), |app| app.snapshot().expect("snapshot").workshop.machines.len(), 11, 12, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
     .await;
 }
 

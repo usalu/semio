@@ -26,7 +26,10 @@ use semio_framework_os_renderer_wgpu_program_bridge::load_wasm_plugins;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
-use ui_wgpu::wgpu::{CursorDragState, DrawList, FontAtlas, IconAtlas, SemioCursor, Theme, resolve_semio_cursor};
+use semio_framework_ui_wgpu_hosting::cursor::{CursorDragState, SemioCursor, resolve_semio_cursor};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_theme::Theme;
 #[cfg(not(target_arch = "wasm32"))]
 use winit::window::Fullscreen;
 #[cfg(not(target_arch = "wasm32"))]

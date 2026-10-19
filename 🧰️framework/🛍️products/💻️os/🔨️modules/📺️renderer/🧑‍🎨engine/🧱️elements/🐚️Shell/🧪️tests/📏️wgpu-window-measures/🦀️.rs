@@ -146,10 +146,10 @@ fn paint_overlay(shell: &mut ShellState, window_id: &str, rect: Rect) -> Painted
     PaintedOverlay { input, instances }
 }
 
-fn key_event(event: &Value) -> ui_wgpu::wgpu::UiEvent {
+fn key_event(event: &Value) -> semio_framework_ui_wgpu_events::UiEvent {
     match (event.get("key").and_then(Value::as_str), event.get("text").and_then(Value::as_str)) {
-        (Some(key), _) => ui_wgpu::wgpu::UiEvent::KeyDown { key: key.to_string(), modifiers: ui_wgpu::wgpu::EventModifiers::default() },
-        (None, Some(text)) => ui_wgpu::wgpu::UiEvent::TextInput { text: text.to_string() },
+        (Some(key), _) => semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: key.to_string(), modifiers: semio_framework_ui_wgpu_events::EventModifiers::default() },
+        (None, Some(text)) => semio_framework_ui_wgpu_events::UiEvent::TextInput { text: text.to_string() },
         _ => panic!("a gesture event is a key or a text input: {event}"),
     }
 }

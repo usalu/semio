@@ -13,8 +13,9 @@ import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framewo
 import { Board2dHost } from "../../🧱️elements/🖥️Board2dHost/🟦️.tsx";
 import { Paint2dHost } from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx";
 import * as sessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession, type RasterWasmSession } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { BoardSessionFactoryContext, createBoardPeerScope, type RasterWasmSession } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import fixture from "../🧫️fixtures/🪶️surface-idle-frames/🔣️.json";
+import { type Board2dWasmSession } from "@semio-tech/framework/canvas/react-renderer";
 // #endregion 🔌️Adapters
 
 vi.mock("@semio-tech/ui-react",async original=>({...await original<typeof import("@semio-tech/ui-react")>(),useTranslation:()=>({i18n:{resolvedLanguage:"en"}})}));

@@ -30,7 +30,7 @@ async fn set_active_example_demo_requests_one_load_of_the_published_demo_graph()
     let mut app = flow_app().await;
     let expected = demo::snapshot_from_text(demo::PRIMARY_TEXT).expect("demo parses");
     let result = dispatch(&mut app, FlowCommand::SetActiveExample(SetActiveExample { example_id: demo::ID.into() })).await;
-    let receipt = settle_registered_typed_operation(&mut app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("retained Flow command publication");
+    let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained Flow command publication");
     let documents = loaded(result.requested_effects.iter().chain(receipt.effects.iter()));
     assert_eq!(documents.len(), 1, "exactly one load-document effect");
     assert_eq!(documents[0].to_host_snapshot().widgets, expected.to_host_snapshot().widgets);

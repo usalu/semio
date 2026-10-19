@@ -1,7 +1,7 @@
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::FromValue;
 use crate::{editor::forms::modes::blueprint::windows::try_wizard::config::FormsTryWindowConfig, editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransient};
-use crate::editor::forms::commands::submit::*;
+use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::submit::*;
 use protocol::Mutation;
 
 #[test]
@@ -38,7 +38,8 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
 #[semio_framework_async_macros::async_test]
 async fn mounted_submission_persists_reopens_exports_and_discards() {
     use crate::editor::forms::{FormsCommand, modes::responses::results};
-    use crate::editor::forms::commands::{set_spec_json, set_try_values, set_try_value, export_responses, discard_response};
+    use crate::editor::forms::commands::{set_spec_json, export_responses, discard_response};
+    use semio_s_artifact_forms_forms_commands_try::editor::forms::commands::{set_try_values, set_try_value};
     use crate::editor::forms::unit_tests::context::{forms_app, settle};
     use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
     use semio_framework::kernel::Effect;
@@ -47,44 +48,43 @@ async fn mounted_submission_persists_reopens_exports_and_discards() {
         let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/📨️response/🔣️submission.json")).map_err(|error| error.to_string())?;
         let definition: crate::schema::definition::FormsDefinition = semio_framework_pack_json::from_json_str(&fixture["definition"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.into_message())?;
         let specification = crate::forms_snapshot_with_state(crate::FORMS_DOCUMENT_SCHEMA.into(), "submission-test".into(), "1".into(), Some("Response Test".into()), &definition.steps);
-        app.dispatch_typed(FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: semio_framework_pack_json::to_json_string(&specification) }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(FormsCommand::SetSpecJson(set_spec_json::SetSpecJson { json: semio_framework_pack_json::to_json_string(&specification) }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         let view = ViewModel { active_mode_id: Some(crate::editor::forms::modes::fill::MODE.into()), window_id: Some("responses-try".into()), window_instances: vec![ViewWindowInstance { id: "responses-try".into(), window_kind_id: crate::editor::forms::support::FORMS_PLAY_WINDOW_TRY.into() }], tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
         let kind = view.window_instances[0].window_kind_id.clone();
         let meta = ActionMeta { view_state: Some(view.clone()), ..artifact_app_laws::meta("local") };
-        app.dispatch_typed(FormsCommand::SetTryValues(set_try_values::SetTryValues {
+        app.0.dispatch_typed(FormsCommand::SetTryValues(set_try_values::SetTryValues {
             values_json: fixture["cases"][0]["values"].to_string().into(), window_id: "responses-try".into(), window_kind_id: kind.clone(), ..Default::default()
-        }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         let mut receipt = settle(&mut app).await;
         loop {
             let next = receipt.effects.iter().find_map(|effect| match effect { Effect::DispatchAction { action, args: Some(args), .. } if action == set_try_value::SET_TRY_VALUE_STEP_ACTION_ID => Some(args.clone()), _ => None });
             let Some(args) = next else { break; };
             let command = semio_framework_value::FromValue::from_value(args).map_err(|error| format!("{error:?}"))?;
-            app.dispatch_typed(FormsCommand::SetTryValueStep(command), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            app.0.dispatch_typed(FormsCommand::SetTryValueStep(command), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
             receipt = settle(&mut app).await;
         }
         let submit = || FormsCommand::Submit(Submit { window_id: "responses-try".into(), window_kind_id: kind.clone() });
-        app.dispatch_typed(submit(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(submit(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?;
         if snapshot.responses.len() != 1 { return Err(format!("expected one persisted response, got {}", snapshot.responses.len())); }
         let answers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot.responses[0].answers)).map_err(|error| error.to_string())?;
         if answers != fixture["cases"][0]["expected"]["response"]["answers"] { return Err("persisted answers differ from shared submission fixture".into()); }
-        app.dispatch_typed(submit(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(submit(), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         if app.snapshot().map_err(|error| format!("{error:?}"))?.responses.len() != 1 { return Err("repeat submit duplicated a response".into()); }
         let files = app.document_pack().await.map_err(|error| format!("{error:?}"))?;
         let mut reopened = forms_app().await;
-        let reopened_result = semio_framework_plugin::artifact_app_laws::load_document(&mut reopened, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"));
+        let reopened_result = semio_framework_plugin::artifact_app_laws::load_document(&mut reopened.0, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), reopened.1.cx()).await.map_err(|error| format!("{error:?}"));
         if let Err(error) = reopened_result { reopened.close(); return Err(error); }
         let restored = reopened.snapshot().map_err(|error| format!("{error:?}"))?;
         reopened.close();
         if restored.responses != snapshot.responses { return Err("reopening lost a submitted response".into()); }
-        let tree = app.render(results::BODY, None, &ViewModel { tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }).await.map_err(|error| format!("{error:?}"))?;
-        let rendered = artifact_app_laws::project_and_retire_fixture_tree(tree).map_err(|error| format!("{error:?}"))?;
+        let rendered = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, results::BODY, &ViewModel { tree_viewport_rows: Some(32), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }, app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         if !rendered.contains("Ada") || !rendered.contains("exportResponses") { return Err("responses window did not display saved answers and export".into()); }
         for format in ["json", "csv"] {
-            app.dispatch_typed(FormsCommand::ExportResponses(export_responses::ExportResponses { format: format.into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+            app.0.dispatch_typed(FormsCommand::ExportResponses(export_responses::ExportResponses { format: format.into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
             let receipt = settle(&mut app).await;
             let data = receipt.effects.iter().find_map(|effect| match effect { Effect::DownloadMediaExport { data, .. } => Some(data), _ => None }).ok_or("missing response download")?;
             if format == "json" {
@@ -95,7 +95,7 @@ async fn mounted_submission_persists_reopens_exports_and_discards() {
                 if rows.len() != snapshot.responses[0].answers.len() { return Err("CSV download lost answer rows".into()); }
             }
         }
-        app.dispatch_typed(FormsCommand::DiscardResponse(discard_response::DiscardResponse { id: snapshot.responses[0].id.clone() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.map_err(|error| format!("{error:?}"))?;
+        app.0.dispatch_typed(FormsCommand::DiscardResponse(discard_response::DiscardResponse { id: snapshot.responses[0].id.clone() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         if !app.snapshot().map_err(|error| format!("{error:?}"))?.responses.is_empty() { return Err("discard response did not persist".into()); }
         Ok(())

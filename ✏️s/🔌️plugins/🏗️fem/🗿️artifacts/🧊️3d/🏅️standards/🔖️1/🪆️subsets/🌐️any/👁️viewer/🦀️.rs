@@ -75,11 +75,11 @@ impl ArtifactViewer for Fem3dViewer {
     }
 
     fn mounted_job_maintenance_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::maintenance_step(instance_id, cx, grant))
     }
 
     fn mounted_job_close_step(instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep,semio_framework_plugin::PluginLifecycleFailure> {
-        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, grant))
+        Ok(semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::close_step(instance_id, cx, grant))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {

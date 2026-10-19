@@ -1,10 +1,13 @@
 //! 📚️ `editClassification`: one edit of the entry table of a classification system, from the properties panel: add an entry (code, title and optional parent), retitle one, move one under another parent (or to the root) or remove
 //! one that has no children. The edit is a pure function of the table ([`apply`]) and becomes one `set-classification-system` mutation that decides whether the result stands.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ModelSnapshot}, diff::patches::ClassificationSystemPatch, mutations::ModelMutation};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::ClassificationSystemPatch;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

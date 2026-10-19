@@ -2,8 +2,7 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../🔣️.json";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
-import { artifactReferenceSchema as referenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as referenceSchema, artifactChildSchema as childSchema } from "@semio-tech/framework/schema/artifact-reference";
 import { declaredChildDialectSchema } from "@semio-tech/framework/schema/oracles/document";
 import { parseSemioChild } from "../🟦️.ts";
 

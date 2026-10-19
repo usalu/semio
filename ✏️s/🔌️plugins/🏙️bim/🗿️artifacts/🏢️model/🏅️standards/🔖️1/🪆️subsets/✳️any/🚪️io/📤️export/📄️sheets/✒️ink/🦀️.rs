@@ -2,8 +2,8 @@
 //! draw the same marks, so the two files show the same sheet. The headings of the cells and of the revision columns come from the caller in the language it prints in.
 //! 📎 https://www.iso.org/standard/72482.html
 
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::column_edges;
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout, TitleField};
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::column_edges;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout, TitleField};
 
 /// ↔️ Where a text stands on its x: it starts at, is centred on or ends at its position.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

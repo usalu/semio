@@ -66,7 +66,7 @@ function unit(row: Pick<UnitRow, "operation" | "origin" | "group">): UnitRow["un
 //#endregion 🧮️Twin
 
 //#region 🧪️Corpus
-const corpus = read("../../🧫️fixtures/🧫️supersede-law/🔣️.json") as { inputs: InputRow[]; units: UnitRow[] };
+const corpus = read("../🧫️fixtures/🧫️supersede-law/🔣️.json") as { inputs: InputRow[]; units: UnitRow[] };
 
 
 test("🛂️ the twin reproduces every input row: what is admitted and what every fold site folds", () => {

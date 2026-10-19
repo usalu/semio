@@ -1,9 +1,9 @@
 syntax = "proto3";
 package semio.s.flow.flow.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 🔺️ Sparse Flow document delta.
 message FlowDiff {
   optional string schema = 1;
-  optional semio.os.store.ArtifactChild content = 2; // child s.stdio.semio@v1/flow
+  optional semio.framework.schema.artifact_child.ArtifactChild content = 2; // child s.stdio.semio@v1/flow
 }

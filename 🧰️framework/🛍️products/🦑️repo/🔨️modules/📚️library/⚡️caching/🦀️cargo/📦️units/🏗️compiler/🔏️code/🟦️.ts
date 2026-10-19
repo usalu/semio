@@ -8,9 +8,9 @@ import {join,relative,resolve} from "node:path";
 import {captureNxAuthorizerSourcesV1} from "../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
 import {snapshotNxAuthorizerSourcesV1,compileNxAuthorizerSnapshotV1} from "../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts";
 import {withRepositoryCacheStoreV1} from "../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {acquireCompilerCapacityLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {acquireResourceLease,acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireCompilerCapacityLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import policy from "./🔣️policy.json";
 

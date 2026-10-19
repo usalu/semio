@@ -1,4 +1,4 @@
-import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlRefinementV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{lstat,mkdir,opendir,readlink,realpath,statfs,writeFile}from"node:fs/promises";
 import type{BigIntStats}from"node:fs";
@@ -6,16 +6,16 @@ import{basename,dirname,isAbsolute,join,relative,resolve,sep}from"node:path";
 import{nxSdkCloneHeadroomBytesV1,nxSdkDerivativeHeadroomBytesV1}from"../🧮️formula/🟦️.ts";
 import{cloneNxSdkSnapshotV1,nxSdkSnapshotIdentityV1,nxSdkSnapshotReceiptHoldsV1,type NxSdkSnapshotCloneV1}from"../../📥️snapshot/🟦️.ts";
 import{verifyNxSdkBinaryLinksV1}from"../../🧊️binary/🔎️verification/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"../🧬️schema.json"with{type:"json"};
 import policy from"../📋️policy.json"with{type:"json"};
 import{withResourceLeases,checkResourceLeaseControl,requireMaterializedPathV1,requireResourceLeaseCustodyV1,type ResourceLease,type ResourceLeaseControl}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{requireNativeStorageReservationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStoragePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{readPhysicalCargoSourceV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import type{RepositoryToolingStoreV1}from"../../../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{repositoryLeaseDirectoryV1,repositoryCachePartitionRootV1}from"../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import type{NxSdkDerivativeProjectionV1}from"../../📥️source/🔗️derivative/🟦️.ts";
+import type{NxSdkDerivativeProjectionV1}from"../../📥️source/🔗️derivative/📋️projection/🟦️.ts";
 import{verifyNxSdkSharedSourcesV1}from"../../📥️source/🔗️derivative/🔏️index/🟦️.ts";
 /** 📸️ Owns immutable identity images while exposing only detached byte copies. */
 export interface NxSdkPublicationInputsV1 extends ReadonlyMap<string,Uint8Array>{}
@@ -44,8 +44,10 @@ async function withPublicationQuoteV1<T>(workspace:string,store:RepositoryToolin
 }
 /** 🛡️ Requires the exact accepted derivative copy beneath real publication exclusion. */
 export function requireNxSdkDerivativeCopyCustodyV1(store:RepositoryToolingStoreV1,projection:NxSdkDerivativeProjectionV1):NxSdkPublicationInputsV1{const accepted=derivativeCopies.getStore(),state=accepted?issued.get(accepted.operation.quote):undefined;if(!accepted?.live||accepted.store!==store||accepted.projection!==projection||!state?.live||state.store!==store||state.projection!==projection)throw Error("Original SDK derivative copy admission required");requireResourceLeaseCustodyV1(accepted.operation.registry,repositoryLeaseDirectoryV1(state.workspace),"nx-tooling-provision",accepted.operation.control);requireInputs(accepted.inputs);return accepted.inputs;}
+/** 🧩️ The derivative owner's admission and copy, handed in by the composition so capacity never imports the projection owner. */
+export type NxSdkDerivativePortV1=Readonly<{requireNxSdkDerivativeProjectionV1:(workspace:string,store:RepositoryToolingStoreV1,value:unknown)=>Promise<Readonly<{entries:number;copyAllocatedBytes:number;authenticate():Promise<void>;recheck():Promise<void>}>>;copyNxSdkDerivativeV1:(projection:NxSdkDerivativeProjectionV1,destination:string,control:ResourceLeaseControl)=>Promise<NxSdkSnapshotCloneV1>}>;
 /** 🔗️ Issues capacity only from an exact privately held shared-pristine material projection. */
-export async function withNxSdkDerivativePublicationV1<T>(workspace:string,store:RepositoryToolingStoreV1,projection:NxSdkDerivativeProjectionV1,inputs:NxSdkPublicationInputsV1,control:ResourceLeaseControl,body:(quote:NxSdkClonePublicationV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlRefinementV1(store.control,control);checkResourceLeaseControl(control);const captured=requireInputs(inputs);requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw Error("Original tools8 derivative store required");const{requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}=await import("../../📥️source/🔗️derivative/🟦️.ts"),facts=await requireNxSdkDerivativeProjectionV1(workspace,store,projection);return withPublicationQuoteV1(workspace,store,control,"sdk-derivative",{version:1,entries:facts.entries,copyAllocatedBytes:facts.copyAllocatedBytes,inputBytes:captured.bytes},facts.recheck,(destination,control)=>copyNxSdkDerivativeV1(projection,destination,control),body,projection,inputs,facts.authenticate);}
+export async function withNxSdkDerivativePublicationV1<T>(workspace:string,store:RepositoryToolingStoreV1,projection:NxSdkDerivativeProjectionV1,inputs:NxSdkPublicationInputsV1,control:ResourceLeaseControl,body:(quote:NxSdkClonePublicationV1)=>Promise<T>,derivative:NxSdkDerivativePortV1):Promise<T>{requireIssuedResourceControlRefinementV1(store.control,control);checkResourceLeaseControl(control);const captured=requireInputs(inputs);requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw Error("Original tools8 derivative store required");const{requireNxSdkDerivativeProjectionV1,copyNxSdkDerivativeV1}=derivative,facts=await requireNxSdkDerivativeProjectionV1(workspace,store,projection);return withPublicationQuoteV1(workspace,store,control,"sdk-derivative",{version:1,entries:facts.entries,copyAllocatedBytes:facts.copyAllocatedBytes,inputBytes:captured.bytes},facts.recheck,(destination,control)=>copyNxSdkDerivativeV1(projection,destination,control),body,projection,inputs,facts.authenticate);}
 /** 🔐️ Refuses serialized, copied, foreign-store and escaped publication claims. */
 export async function requireNxSdkClonePublicationV1(store:RepositoryToolingStoreV1,value:unknown):Promise<number>{
  const state=value!==null&&typeof value==="object"?issued.get(value as NxSdkClonePublicationV1):undefined;if(!state||state.store!==store)throw Error("Original SDK clone publication quote required");if(!state.live)throw Error("Original SDK clone publication scope released");await state.authenticate();return state.bytes;

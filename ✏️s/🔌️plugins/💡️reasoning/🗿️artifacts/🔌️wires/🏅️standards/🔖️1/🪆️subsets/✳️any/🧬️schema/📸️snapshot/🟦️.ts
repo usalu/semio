@@ -1,6 +1,6 @@
 /** 🧬️ WiresSnapshot carries only the canonical document fields. */
 import {parseWiresValue,type WiresValue}from"../🌱️value/🟦️.ts";
-import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import { parseArtifactChild, type ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 
 export interface WiresSnapshot {
   /** @state artifact */

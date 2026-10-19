@@ -1,6 +1,6 @@
 //! 📚️ Sequence play app commands — load one of this subset's committed examples.
 
-use crate::editor::sequence::base::reset_sequence_document_effect;
+use crate::editor::sequence::editor_vocabulary::reset_sequence_document_effect;
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -31,7 +31,7 @@ pub mod set_active_example {
             return Ok(Emit::default());
         }
         let document = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT)
-            .map_err(|error| crate::editor::sequence::base::sequence_fault("sequence.example.unparsable", format!("sequence example {} is not parsable: {error:?}", crate::examples::demo::ID)))?;
+            .map_err(|error| crate::editor::sequence::editor_vocabulary::sequence_fault("sequence.example.unparsable", format!("sequence example {} is not parsable: {error:?}", crate::examples::demo::ID)))?;
         Ok(Emit { effects: vec![reset_sequence_document_effect(&document)], ..Default::default() })
     }
 

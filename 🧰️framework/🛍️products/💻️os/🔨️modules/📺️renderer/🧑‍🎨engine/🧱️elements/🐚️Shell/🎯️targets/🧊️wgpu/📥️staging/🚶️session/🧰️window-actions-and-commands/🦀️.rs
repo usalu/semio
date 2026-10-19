@@ -193,7 +193,7 @@ impl<'ctx> SessionCtx<'ctx> {
                         label: Label::data(shell_chrome_string("common.execute", is_de)),
                         action: ActionDescriptor { controller_id: "framework".into(), action: "executeStagedCommand".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "value": key.clone() }) },
                         style: None,
-                        presence: UiPresence { state: if missing { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                        presence: UiPresence { state: if missing { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                         menu: None,
                     }),
                     UiNode::Button(UiButtonNode {

@@ -4,7 +4,7 @@ import {build} from "esbuild";
 import {fileURLToPath} from "node:url";
 import {parse,Kind} from "graphql";
 import {MultiDirectedGraph} from "graphology";
-import fixtureJson from "../🧫️fixtures/🪆️query/🔣️.json";
+import fixtureJson from "../../../../🧪️tests/🧫️fixtures/💡️inferences/🪆️query/🔣️.json";
 import * as api from "./../../../../../../../../🟦️.ts";
 interface GraphCase {name:string;nodes:string[];edges:(api.JackGraphEndpoint&api.JackFlatPositionUv)[];topology:api.JackTopology;positions:Record<string,api.JackFlatPositionUv>}
 const fixture=fixtureJson as unknown as {identity:api.ArtifactChild;cases:GraphCase[]};
@@ -46,7 +46,7 @@ test("Jack public source builds with the removable Stdio implementation forbidde
 
 test("rich read presentation agrees with independent SQLite case semantics", async () => {
   const { Database } = await import("bun:sqlite");
-  const fixture = await Bun.file(new URL("../🧫️fixtures/👁️rich-read/🔣️.json", import.meta.url)).json();
+  const fixture = await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/💡️inferences/👁️rich-read/🔣️.json", import.meta.url)).json();
   const db = new Database(":memory:");
   try {
     for (const node of fixture.nodes) {

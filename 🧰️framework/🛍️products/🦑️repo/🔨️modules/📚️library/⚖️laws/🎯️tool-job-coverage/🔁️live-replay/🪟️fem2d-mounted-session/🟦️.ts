@@ -1,18 +1,18 @@
 import { toolJobRustBlock } from "../../📋️inventory/🟦️.ts";
 
-/** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. */
+/** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. `session`, `editor`, `model`, `mesh` and `analyses` are the source families of the carved crates with their canonical test files, `glue` is the hub composition manifest, `reactor` the reactor family, `store` the os Store with the value snapshot-read crate and `frameworkPlugin` the plugin family. */
 export function toolJobFem2dMountedSessionExact(session: string, editor: string, model: string, mesh: string, pluginRoot: string, glue: string, jobs: string, analyses: string, reactor: string, store: string, frameworkPlugin: string): boolean {
   const reconcileStart = session.indexOf("pub fn reconcile(");
   const reconcileOpen = reconcileStart < 0 ? -1 : session.indexOf("{", reconcileStart);
   const reconcile = reconcileOpen < 0 ? undefined : toolJobRustBlock(session, reconcileOpen);
-  const stepStart = session.indexOf("fn step(&mut self, budget: JobBudget)");
+  const stepStart = session.indexOf("pub(super) fn step(&mut self, budget: JobBudget, cx: &mut StepContext<'_>) -> JobStep");
   const stepOpen = stepStart < 0 ? -1 : session.indexOf("{", stepStart);
   const step = stepOpen < 0 ? undefined : toolJobRustBlock(session, stepOpen);
   const pluginStart = pluginRoot.indexOf("pub fn plugin()");
   const pluginOpen = pluginStart < 0 ? -1 : pluginRoot.indexOf("{", pluginStart);
   const plugin = pluginOpen < 0 ? undefined : toolJobRustBlock(pluginRoot, pluginOpen);
   const snapshotAdmission = frameworkPlugin.indexOf("let snapshot_is_admitted = {");
-  const snapshotIssue = frameworkPlugin.indexOf("self.store.snapshot_read()", snapshotAdmission);
+  const snapshotIssue = frameworkPlugin.indexOf("self.stores.store.snapshot_read()", snapshotAdmission);
   const renderStart = model.indexOf("pub fn render_with_progress(");
   const renderOpen = renderStart < 0 ? -1 : model.indexOf("{", renderStart);
   const render = renderOpen < 0 ? undefined : toolJobRustBlock(model, renderOpen);
@@ -48,7 +48,7 @@ export function toolJobFem2dMountedSessionExact(session: string, editor: string,
     !session.includes("case.loads.iter().map") &&
     !session.includes("combination.terms.iter().map") &&
     session.includes("register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND") &&
-    session.includes("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep") &&
+    session.includes("fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, ValueError>") &&
     session.includes("fn terminal_is_empty(&self) -> bool") &&
     session.includes("pub fn maintenance_step(") &&
     session.includes("pub fn close_step(") &&
@@ -61,7 +61,7 @@ export function toolJobFem2dMountedSessionExact(session: string, editor: string,
     session.includes("return_to_registry_witness()") &&
     session.includes("witness.terminal_is_empty()") &&
     !!step &&
-    (step.body.match(/\.step\(&mut cx\)/g) ?? []).length === 4 &&
+    (step.body.match(/\.step\(cx\)/g) ?? []).length === 4 &&
     !step.body.includes("while ") &&
     step.body.includes("current_identity(self.identity.app_instance_id)") &&
     step.body.includes("commit_authority_matches(") &&
@@ -76,16 +76,16 @@ export function toolJobFem2dMountedSessionExact(session: string, editor: string,
     !reconcile.body.includes("run_to_completion") &&
     !reconcile.body.includes("block_on") &&
     editor.includes("fn pending_effects(") &&
-    editor.includes("crate::editor::fem2d::session::reconcile(doc)") &&
+    editor.includes("semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::reconcile(doc)") &&
     editor.includes("session::with_live_visual(doc.render_operation()") &&
-    editor.includes("model_window::render_with_progress(doc.snapshot, camera, visual)") &&
+    editor.includes("model_window::render_with_progress(canvas, &window.camera, visual, &interaction, window_id.as_deref(), active_utility)") &&
     editor.includes("fn mounted_job_maintenance_step(") &&
     editor.includes("fn mounted_job_close_step(") &&
     editor.includes("fn mounted_jobs_terminal_is_empty(") &&
     editor.includes("fn mounted_job_prepare_snapshot_read(") &&
     !!render &&
     render.body.includes("progress.map(Fem2dMountedVisualLease::snapshot)") &&
-    render.body.includes("fem2d_structure_layers(doc") &&
+    render.body.includes("fem2d_structure_layers_with(doc") &&
     !render.body.includes("fem2d_live_visual_layers") &&
     !render.body.includes("fem2d_region_triangles") &&
     !render.body.includes("serde_json") &&
@@ -114,10 +114,10 @@ export function toolJobFem2dMountedSessionExact(session: string, editor: string,
     mesh.includes("triangulation.triangles.get(self.face_cursor)") &&
     mesh.includes("MeshJobStage::ReservePreparation") &&
     mesh.includes("MeshJobStage::ReserveEdgeAuthorities") &&
-    mesh.includes("mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly") &&
+    mesh.includes("mesh_edge_authority_uses_completed_faces_and_closes_exact_backing") &&
     !!plugin &&
-    plugin.body.indexOf("crate::editor::fem2d::session::initialize()") < plugin.body.indexOf('Plugin::<FemApps>::builder("fem")') &&
-    glue.includes("✏️editor/🧵️session/🦀️.rs") &&
+    plugin.body.indexOf("semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::initialize()") < plugin.body.indexOf('PluginBuilder::<_, FemApps>::new("fem")') &&
+    glue.includes("semio-s-artifact-fem-2d-editor-session = { workspace = true }") &&
     jobs.includes("pub trait BoundedJob") &&
     jobs.includes("JobBody::Bounded(owner)") &&
     !jobs.includes("#[cfg(not(test))]") &&
@@ -148,7 +148,8 @@ export function toolJobFem2dMountedSessionExact(session: string, editor: string,
     !step.body.includes("PcgJob::new(") &&
     reactor.includes("Event::JobProgress { job, .. }") &&
     reactor.includes("JOB_RENDER_BINDINGS.with") &&
-    reactor.includes(".try_surface(binding.instance, surface)") &&
+    reactor.includes("dirty_background_surfaces(runtime, binding.instance, &mut *dirty).await?") &&
+    reactor.includes("dirty.try_surface(instance, surface)") &&
     store.includes("pub fn commit_authority_matches") &&
     store.includes("fn publish_authority") &&
     store.includes("pub struct SnapshotReadReturn") &&

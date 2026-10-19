@@ -12,15 +12,15 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 use crate::editor::flow::commands::node_graph_viewport::*;
-use crate::editor::flow::unit_tests::context::{dispatch, flow_app, render, settle, FlowApp};
+use crate::editor::flow::unit_tests::context::{dispatch, flow_app, render, settle, FlowAppFixture};
 use crate::editor::flow::{FlowCommand, FLOW_PLAY_BODY_MAIN};
 use serde_json::{json, Value};
 
-async fn node_graph_scene(app: &mut FlowApp) -> ui_wgpu::wgpu::NodeGraphScene {
+async fn node_graph_scene(app: &mut FlowAppFixture) -> semio_framework_ui_declaration::ui::NodeGraphScene {
     semio_framework_plugin::artifact_app_laws::decode_fixture_scene_with_lanes(&render(app, FLOW_PLAY_BODY_MAIN).await).expect("rendered nodeGraph scene")
 }
 
-async fn preview_off_ids(app: &mut FlowApp) -> Value {
+async fn preview_off_ids(app: &mut FlowAppFixture) -> Value {
     node_graph_scene(app).await.preview_off_json.as_deref().and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
 }
 

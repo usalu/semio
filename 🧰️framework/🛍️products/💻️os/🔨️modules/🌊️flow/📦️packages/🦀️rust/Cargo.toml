@@ -29,7 +29,7 @@ semio-framework-os-flow-drawing = { path = "../../🖍️drawing/📦️packages
 semio-framework-os-flow-operators = { path = "../../🗃️operators/📦️packages/🦀️rust" }
 semio-framework-os-flow-vcs = { path = "../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-os-flow-extensions = { path = "../../🧩️extensions/🕸️wasm/📦️packages/🦀️rust" }
-semio-framework-os-flow-host-core = { path = "../../🖥️host/🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-core = { path = "../../🖥️host/🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-framework-os-flow-host-read = { path = "../../🖥️host/📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
 semio-framework-os-flow-host-session = { path = "../../🖥️host/🎞️session/📦️packages/🦀️rust" }
 semio-framework-os-flow-host = { path = "../../🖥️host/📦️packages/🦀️rust" }

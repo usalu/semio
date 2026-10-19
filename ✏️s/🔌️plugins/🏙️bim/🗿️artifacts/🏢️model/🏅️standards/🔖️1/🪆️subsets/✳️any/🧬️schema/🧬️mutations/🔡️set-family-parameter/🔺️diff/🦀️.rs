@@ -2,27 +2,26 @@
 //! that differ (providing nothing new is a no-op); an absent one is created and needs both. A formula must parse, use only existing parameters of the family and never close a circle; whether it also
 //! computes the declared kind is the business of the inference (a diagnostic), not of the diff. The key is free in every other collection.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::family_rules;
 use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{FamilyParameter, ModelSnapshot}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, Patch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{FamilyParameter, ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetFamilyParameter, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if !base.families.contains_key(&payload.family) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Family \"{}\" does not exist.", payload.family), ["family"]);
     }
-    if let Some(fault) = family_rules::name_fault(&payload.name) {
+    if let Some(fault) = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::name_fault(&payload.name) {
         return MutationOutcome::refuse(fault.code, fault.message.clone(), fault.path(None));
     }
     if let Some(text) = &payload.value {
-        let fault = family_rules::formula_fault(text, "value").or_else(|| family_rules::reference_fault(base, &payload.family, text, "value")).or_else(|| family_rules::cycle_fault(base, &payload.family, &payload.name, text));
+        let fault = semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::formula_fault(text, "value").or_else(|| semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::reference_fault(base, &payload.family, text, "value")).or_else(|| semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::cycle_fault(base, &payload.family, &payload.name, text));
         if let Some(fault) = fault {
             return MutationOutcome::refuse(fault.code, fault.message.clone(), fault.path(None));
         }
     }
-    let key = formula::parameter_id(&payload.family, &payload.name);
+    let key = semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id(&payload.family, &payload.name);
     if let Some(record) = base.family_parameters.get(&key) {
         let change = payload.patch().minimal(record);
         if change.is_empty() {
@@ -30,7 +29,7 @@ pub fn diff(payload: &SetFamilyParameter, base: &ModelSnapshot) -> MutationOutco
         }
         return MutationOutcome::new(ModelDiff::family_parameters(key, Entry::Patched(change)));
     }
-    if let Some(noun) = elements::taken(base, &key) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &key) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{key}\" already exists."), [key]);
     }
     let Some(kind) = payload.kind else {

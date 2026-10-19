@@ -84,19 +84,17 @@ async fn every_panel_publishes_its_body_in_generate_mode_as_well_as_edit() {
         assert_eq!(view.window_id, None, "case {} is a panel projection, not a window one", case.id);
         assert_eq!(view.focused_window_id.is_some(), case.focused_window_in_roster, "case {} kept the wrong focused pane: {:?}", case.id, view.focused_window_id);
         for panel in &fixture.panels {
-            let rendered = app.render(&panel.body_key, None, &view).await;
-            let tree = match rendered {
-                Ok(tree) => tree,
+            let json = match semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await {
+                Ok(json) => json,
                 Err(fault) => panic!("case {} published no body for {} ({}): {fault:?}", case.id, panel.tab, panel.body_key),
             };
-            let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("panel body json");
             assert!(json.contains(&panel.root), "case {} published {} without its own root {}", case.id, panel.tab, panel.root);
             for marker in &panel.contains {
                 assert!(json.contains(marker), "case {} published {} without {marker}", case.id, panel.tab);
             }
         }
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: ONE shared panel projection — the body a panel publishes is byte-identical across modes.
@@ -111,15 +109,14 @@ async fn a_panel_publishes_the_same_body_in_every_mode() {
         let mut baseline: Option<(&str, String)> = None;
         for case in &fixture.cases {
             let view = panel_view(case);
-            let tree = app.render(&panel.body_key, None, &view).await.unwrap_or_else(|fault| panic!("case {} published no body for {}: {fault:?}", case.id, panel.tab));
-            let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("panel body json");
+            let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, &panel.body_key, &view, app.1.cx()).await.expect("panel body json");
             match &baseline {
                 None => baseline = Some((case.id.as_str(), json)),
                 Some((first, expected)) => assert_eq!(&json, expected, "{} published a different body in case {} than in case {first}", panel.tab, case.id),
             }
         }
     }
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the three panels are declared ONCE on the app, with the framework tab ids and the body keys

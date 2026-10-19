@@ -1,5 +1,5 @@
-import { inspectRustCompileReferences, type RustGeneratedTokenOutput } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import { inspectRustPathLiterals } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📁️paths/🟦️.ts";
+import { inspectRustCompileReferences, type RustGeneratedTokenOutput } from "@semio-tech/compiler-syntax-rust-ts";
+import { inspectRustPathLiterals } from "@semio-tech/compiler-syntax-rust-ts/paths";
 import { rustRuntimePathDirectionEdges, type RustRuntimePathDirectionEdge } from "../📁️runtime/🟦️.ts";
 import { dirname, join, posix, resolve } from "node:path";
 import { lstatSync, readFileSync, readdirSync } from "node:fs";
@@ -8,7 +8,7 @@ import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, t
 import { dependencyDirectionLayerRules } from "../../🟦️.ts";
 import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { projectCargoProviderManifest } from "../../../../🔍️discovery/🚚️cargo-provider/🟦️.ts";
-import { type RustCompileExpansion } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { type RustCompileExpansion } from "@semio-tech/compiler-syntax-rust-ts";
 import { loadDependencyDirectionPolicy } from "../../🚀️bootstrap/🟦️.ts";
 import { rustCompilerAttributeOriginsClosed } from "../🔗️binding/🟦️.ts";
 import { COMPUTE_OWNERSHIP_CONTRACT_PATH, rustFamilyOwnershipActive, inspectRustFamilyOwnership, readRustFamilyOwnershipContract, type RustFamilyOwnershipProblem } from "../📍️ownership/🟦️.ts";

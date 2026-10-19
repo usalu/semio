@@ -1,9 +1,9 @@
 import type {CompletedCargoPublicationReferenceV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts";
-import cargoReferenceSchema from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🔣️.json";
+import cargoReferenceSchema from "@semio-tech/process/artifacts/native-build/receipt/retention/reference/schema.json";
 import {requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type {ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type { FileObservationControlV1, PhysicalFileClaimV1 } from "../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import type { FileObservationControlV1, PhysicalFileClaimV1 } from "@semio-tech/framework/filesystem";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import type { RuntimeCargoObservationV1 } from "../../🧬️schema/🟦️.ts";
 import type { RuntimeDynamicImportOwnerV1, RuntimeGraphEvidenceV1 } from "../../🟦️.ts";
 import schemaDocument from "./🔣️.json";

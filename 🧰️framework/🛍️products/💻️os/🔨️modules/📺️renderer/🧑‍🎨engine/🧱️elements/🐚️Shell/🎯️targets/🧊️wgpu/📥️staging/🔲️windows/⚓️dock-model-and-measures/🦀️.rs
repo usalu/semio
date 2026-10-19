@@ -12,8 +12,8 @@ use super::*;
 /// and their optional inline header slider. Utility-scoped groups belong to the utility rail.
 /// See `🧑‍🎨engine/🧫️fixtures/📏️window-measures/🔣️.json`.
 pub fn window_measures_overlay_records(window_id: &str, measures: &[WindowMeasure], active_utility_id: Option<&str>) -> Result<Option<Vec<ui_contract::UiNodeRecord>>, String> {
-    let partition = ui_wgpu::wgpu::partition_window_measures(measures, active_utility_id)
-        .map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", ui_wgpu::wgpu::component::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
+    let partition = semio_framework_ui_declaration::layout::partition_window_measures(measures, active_utility_id)
+        .map_err(|measure| format!("window '{window_id}' authored more than {} measures, refused at {measure:?}", semio_framework_ui_declaration::layout::WINDOW_MEASURE_PARTITION_CAPACITY))?;
     if partition.general.is_empty() {
         return Ok(None);
     }
@@ -278,7 +278,7 @@ impl WindowState {
             serde_json::to_string(&records).map_err(|error| error.to_string())?.hash(&mut hasher);
             hasher.finish()
         };
-        let generation = ui_wgpu::wgpu::engine::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
+        let generation = semio_framework_ui_wgpu_engine_surface::ui_document_ingress_generation(self.window_measures_minted.get(surface).copied(), revision);
         self.window_measures_minted.insert(surface.to_string(), (revision, generation));
         let identity = ui_contract::UiDocumentAssemblyIdentity { generation, revision: ui_contract::UiRevision(revision), root: Some(ui_contract::UiNodeId(1)), layout_epoch: 0 };
         let surface_id = SurfaceId::try_from(surface).map_err(|_| format!("shell surface '{surface}' exceeds the retained contract"))?;

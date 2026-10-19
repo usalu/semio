@@ -1,6 +1,11 @@
-use crate::standards::v1::subsets::any::schema::diff::{Assigned, Entry, KeyedDelta, ModelDiff, PropertySetPatch, patches::{OpeningPatch, SlabPatch, StoreyPatch}};
-use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind, PropertySet, PropertyValue, Slab, Slope, Storey};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry, KeyedDelta, PropertySetPatch};
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::SlabPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Opening, Slab, Storey};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{OpeningKind, PropertySet, PropertyValue, Slope};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 
@@ -186,7 +191,7 @@ async fn a_minimal_patch_drops_exactly_the_fields_that_restate_the_base() {
     assert_eq!(both.minimal(&base), heightened(3.4));
     assert!(StoreyPatch { name: Some("Ground".into()), level: Some(0), height: Some(3.0), ..Default::default() }.minimal(&base).is_empty());
     assert!(StoreyPatch::default().minimal(&base).is_empty());
-    let slab = Slab { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
+    let slab = Slab { phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
     assert!(SlabPatch { slope: Some(Assigned::new(None)), ..Default::default() }.minimal(&slab).is_empty());
     let sloped = SlabPatch { slope: Some(Assigned::new(Some(Slope { direction: 0.0, angle: 0.1 }))), ..Default::default() };
     assert_eq!(sloped.minimal(&slab), sloped);

@@ -3,7 +3,7 @@
 //! centre lines compared. Each pair is reported once, ordered by id. The scan is the one expensive step of the MEP diagnostics, which is why it is a node of its own per storey in the model graph: an edit that moves no MEP
 //! element never repeats it.
 
-use crate::standards::v1::subsets::any::schema::snapshot::Point3;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3;
 use crate::standards::v1::subsets::any::schema::inferences::mep::{distance};
 use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
 use semio_framework_geometry::vector::{add3, dot3, scale3, sub3, Xyz};
@@ -59,7 +59,7 @@ pub fn segment_distance(p1: Xyz, p2: Xyz, q1: Xyz, q2: Xyz) -> f64 {
     dot3(gap, gap).sqrt()
 }
 
-fn at(point: &crate::standards::v1::subsets::any::schema::snapshot::Point3) -> Xyz {
+fn at(point: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3) -> Xyz {
     [point.x, point.y, point.z]
 }
 

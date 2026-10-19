@@ -121,19 +121,20 @@
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/**/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts"
     ],
     "source": [
       "workspaceMembershipSources",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📋️project.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📋️project.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️workspace-publication-source/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️workspace-publication-source/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️workspace-publication-source/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️workspace-publication-source/🟦️.ts",
       "{workspaceRoot}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/FEM-PLUGIN-MIGRATION-TO-CRATE-AND-TAXONOMY-CONSOLIDATION/{🔧️write-handoff.mjs,🔧️update-handoff-tests.mjs,📋️registrar-handoff.json,📋️registrar-handoff.md,📌️important.md}"
     ]
@@ -555,7 +556,7 @@
           "directory": "owner",
           "document": {
             "name": "@fixture/owner",
-            "exports": "./payload/🟨️.js"
+            "exports": "./owned/../payload/🟨️.js"
           }
         },
         {

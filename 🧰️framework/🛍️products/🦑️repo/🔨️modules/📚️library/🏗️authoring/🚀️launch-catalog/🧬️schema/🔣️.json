@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/repo/launch-catalog",
+  "description": "The editor launch catalog. `.vscode/🧩️launch.seed.jsonc` is the one authored source; `.vscode/launch.json` is its deterministic expansion and is never edited. The seed holds the literal routes, compounds and inputs, the per-variant dev launcher table (ports come from the playground registry of the component crates), the crate route subjects and the placeholders that say where the generated routes go.",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "seed": ".vscode/🧩️launch.seed.jsonc",
+        "catalog": ".vscode/launch.json",
+        "documentVersion": "0.2.0",
+        "crateRoutesPlaceholder": "@generated:crate-routes",
+        "dev": {
+          "type": "node-terminal",
+          "request": "launch",
+          "cwd": "${workspaceFolder}",
+          "group": "3_dev",
+          "namePrefix": "🛠️dev",
+          "command": "bun repo run @semio-tech/framework-os-dev:dev-{variant}-{renderer}-prototype --skip-cache --configuration=prototype",
+          "readyPattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{port})",
+          "readyUriFormat": "%s",
+          "readyAction": "openExternally",
+          "userIcon": "👤️",
+          "userOrderStep": 0.01,
+          "renderers": [
+            {
+              "id": "react",
+              "icon": "⚛️react",
+              "orderKey": "order",
+              "portKey": "react"
+            },
+            {
+              "id": "wgpu",
+              "icon": "🧊️wgpu🌐️wasm",
+              "orderKey": "wgpuOrder",
+              "portKey": "wgpu"
+            }
+          ],
+          "environment": {
+            "port": "S_OS_PORT",
+            "plugin": "SEMIO_PLUGIN",
+            "renderer": "SEMIO_RENDERER",
+            "app": "SEMIO_APP"
+          }
+        },
+        "registry": {
+          "manifest": "Cargo.toml",
+          "marker": "semio.playground",
+          "table": [
+            "package",
+            "metadata",
+            "semio",
+            "playground"
+          ],
+          "excludedPrefix": ".🧬semio/"
+        }
+      }
+    },
+    "Placeholder": {
+      "type": "string",
+      "pattern": "^@generated:([a-z0-9]+(?:-[a-z0-9]+)*:(react|wgpu|users)|crate-routes)$",
+      "description": "Where the expansion puts generated routes: `@generated:<variant>:react|wgpu` one dev launcher of a playground variant, `@generated:<variant>:users` its per-user launchers, `@generated:crate-routes` the routes of every crate subject."
+    },
+    "Environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "DevLauncher": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namePrefix",
+        "order"
+      ],
+      "properties": {
+        "namePrefix": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The taxonomy segment between the `🛠️dev` marker and the renderer marker of every launcher name of the variant."
+        },
+        "order": {
+          "type": "number",
+          "description": "Presentation order of the react launcher."
+        },
+        "wgpuOrder": {
+          "type": "number",
+          "description": "Presentation order of the wgpu launcher; a variant without it has no wgpu launcher."
+        },
+        "env": {
+          "$ref": "#/definitions/Environment"
+        },
+        "users": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "namePrefixPattern",
+            "env"
+          ],
+          "properties": {
+            "namePrefixPattern": {
+              "type": "string",
+              "pattern": "\\{N\\}"
+            },
+            "env": {
+              "$ref": "#/definitions/Environment"
+            }
+          },
+          "description": "One launcher per `user_ports` slot of the registry, `{N}` being the 1-based slot."
+        }
+      }
+    },
+    "Configuration": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "request",
+        "command",
+        "cwd",
+        "env"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "const": "node-terminal"
+        },
+        "request": {
+          "const": "launch"
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1
+        },
+        "env": {
+          "type": "object"
+        },
+        "presentation": {
+          "type": "object",
+          "required": [
+            "group",
+            "order"
+          ],
+          "properties": {
+            "group": {
+              "type": "string",
+              "minLength": 1
+            },
+            "order": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "Compound": {
+      "type": "object",
+      "required": [
+        "name",
+        "configurations"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "Seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "configurations",
+        "compounds",
+        "inputs",
+        "devLaunchers",
+        "crateRoutes"
+      ],
+      "properties": {
+        "version": {
+          "const": "0.2.0"
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/Configuration"
+              },
+              {
+                "$ref": "#/definitions/Placeholder"
+              }
+            ]
+          }
+        },
+        "compounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Compound"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "type"
+            ]
+          }
+        },
+        "devLaunchers": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/DevLauncher"
+          }
+        },
+        "crateRoutes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "subjects"
+          ],
+          "properties": {
+            "subjects": {
+              "type": "array",
+              "items": {
+                "$ref": "https://semio.tech/schemas/repo/crate-launch-routes#/definitions/Subject"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

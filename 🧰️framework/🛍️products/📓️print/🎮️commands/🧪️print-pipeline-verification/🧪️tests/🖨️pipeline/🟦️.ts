@@ -4,7 +4,7 @@ import{mkdir,writeFile}from"node:fs/promises";
 import{printPipelineEvidenceV1,printPipelineEvidencePolicyV1}from"../../📋️evidence/🟦️.ts";
 import{printArtifactLayoutV1}from"../../../../📦️artifacts/🟦️.ts";
 import{withPrintStorageTaskV1}from"../../../../📦️artifacts/🎛️operation/🟦️.ts";
-import{withRepositoryArtifactDestinationV1,stageRepositoryArtifacts}from"../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
+import { withRepositoryArtifactDestinationV1, stageRepositoryArtifacts } from "@semio-tech/repo-lib/artifacts";
 import{requireIssuedResourceControlRefinementV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 

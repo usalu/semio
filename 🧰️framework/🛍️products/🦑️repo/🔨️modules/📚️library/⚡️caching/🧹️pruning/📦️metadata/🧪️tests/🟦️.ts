@@ -25,8 +25,8 @@ import{mkdtemp,mkdir,writeFile,utimes,symlink,rm}from"node:fs/promises";
 import{dirname,join,isAbsolute}from"node:path";
 import{scanCargoBuildUnits,scanCargoIncrementalUnits}from"../../🟦️.ts";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import type{CacheScanTimingV1}from"../../⏱️measurement/🟦️.ts";
 
 test("actual metadata batches preserve full opposite-kind coverage, ties, symlinks and missing roots",async()=>{

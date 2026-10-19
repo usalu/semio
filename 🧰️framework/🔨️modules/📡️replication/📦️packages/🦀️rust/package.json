@@ -7,6 +7,7 @@
   },
   "devDependencies": {
     "@semio-tech/process": "workspace:*",
+    "ajv": "8.20.0",
     "crc-32": "^1.2.2"
   }
 }

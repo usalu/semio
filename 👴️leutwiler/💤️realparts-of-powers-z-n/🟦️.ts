@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { runCmd } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCmd } from "@semio-tech/process/execution";
 import{publishPrintArtifact}from"../../🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
 import type{PrintExecutionV1}from"../../🧰️framework/🛍️products/📓️print/📦️artifacts/🎛️operation/🟦️.ts";
 

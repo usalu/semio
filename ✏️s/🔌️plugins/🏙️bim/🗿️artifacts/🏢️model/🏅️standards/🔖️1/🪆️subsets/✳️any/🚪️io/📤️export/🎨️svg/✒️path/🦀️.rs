@@ -3,7 +3,7 @@
 //! (positive) bulge is the counter-clockwise arc of the sheet, which SVG calls sweep-flag 0 because its positive angle direction runs clockwise on a y-down canvas.
 //! 📎 https://www.w3.org/TR/SVG11/paths.html#PathDataEllipticalArcCommands
 
-use crate::standards::v1::subsets::any::io::export::svg::codec::PathCommand;
+use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::schema::snapshot::PathCommand;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;
 
 /// 📏️ Paper millimetres per model metre at the drawing scale `1:scale`.

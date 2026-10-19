@@ -35,7 +35,7 @@ pub fn shell_shortcut_for_control_id(control_id: &str) -> Option<ShellShortcut> 
 
 /// ⌨️ The shell verb a key event asks for against a RESOLVED table, or `None` when the event belongs
 /// to the app/content. First matching row wins, in table order, exactly like React's own scan.
-pub fn shell_shortcut_for_in(table: &[(String, String)], action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+pub fn shell_shortcut_for_in(table: &[(String, String)], action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
     table.iter().find(|(_, keys)| keys.split(',').any(|chord| key_event_matches_chord(action, modifiers, chord.trim()))).and_then(|(control_id, _)| shell_shortcut_for_control_id(control_id))
 }
 
@@ -59,7 +59,7 @@ impl ShellEditVerb {
 }
 
 /// ⏪️ The undo/redo verb a key event asks for.
-pub fn shell_edit_verb_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
+pub fn shell_edit_verb_for(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<ShellEditVerb> {
     if key_event_matches_chord(action, modifiers, "mod+z") {
         return Some(ShellEditVerb::Undo);
     }
@@ -98,7 +98,7 @@ impl<'ctx> PointerCtx<'ctx> {
 /// shortcut LAWS assert against (production always resolves through `ShellState::shortcut_table`, so an
 /// override is never bypassed).
 #[cfg(any(test, feature = "testkit"))]
-pub fn shell_shortcut_for(action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
+pub fn shell_shortcut_for(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<ShellShortcut> {
     shell_shortcut_for_in(&shell_shortcut_table(&HashMap::new()), action, modifiers)
 }
 //#endregion ⌨️ShellShortcutTable

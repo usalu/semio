@@ -138,7 +138,8 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Gis2dPlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Gis2dPlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<Gis2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         if self.completed || input.command.command_id() != self.tool_id {
             return Err(Fault::from("gis-map-window-work-terminal"));
         }
@@ -153,6 +154,9 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
         }
         self.completed = true;
         Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 

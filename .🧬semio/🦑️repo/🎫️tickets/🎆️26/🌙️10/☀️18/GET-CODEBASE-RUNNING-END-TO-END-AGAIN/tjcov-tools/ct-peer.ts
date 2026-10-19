@@ -1,0 +1,13 @@
+import { clauses, lawFile } from "./ct.ts";
+import { readSourceFamilySource, readModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readFileSync } from "node:fs";
+const F = "/Users/ueli/Documents/semio/🧰️framework";
+const P = `${F}/🛍️products/💻️os/🔨️modules/🔌️plugin`;
+const S = `${F}/🛍️products/💻️os/🔨️modules/🏪️store`;
+const plugin = readSourceFamilySource(P);
+const store = readSourceFamilySource(S);
+const channel = readModuleTreeSource(`${F}/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs`);
+const retirement = readFileSync(`${S}/👥️presence/♻️retirement/🦀️.rs`, "utf8");
+console.log("plugin", plugin.length, "store", store.length, "channel", channel.length);
+clauses(lawFile("🗄️artifact-store/🏛️structural-owners"), "toolJobPeerInteractionRootsExact", [plugin, store, channel, retirement]);
+import("./commit-clauses.ts");

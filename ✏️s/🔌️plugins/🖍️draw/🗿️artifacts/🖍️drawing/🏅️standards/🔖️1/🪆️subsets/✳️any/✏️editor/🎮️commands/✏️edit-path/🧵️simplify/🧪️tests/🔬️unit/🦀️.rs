@@ -13,12 +13,12 @@ const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_fram
 fn close(work:&mut Work) {
     use semio_framework_job::InteractiveJobCloseStep;
     work.begin_close();
-    let zero=work.close_step(RetainedCloneGrant::default());
+    let zero=semio_framework_job::close_with_self_funded_context(RetainedCloneGrant::default(), |cx| work.close_step(cx)).expect("original fixture close turn");
     assert!(matches!(zero,InteractiveJobCloseStep::Pending {progress} if progress==Default::default()));
     for _ in 0..20000 {
         let copy=work.next_close_copy_byte_demand().unwrap();
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:work.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:work.next_close_release_byte_demand().unwrap(),maximum_depth:work.next_close_depth_demand().unwrap()};
-        match work.close_step(grant) {InteractiveJobCloseStep::Pending {progress}=>assert!(progress.fits(grant)),InteractiveJobCloseStep::Complete {progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());return;},other=>panic!("Unexpected path close: {other:?}")}
+        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {InteractiveJobCloseStep::Pending {progress}=>assert!(progress.fits(grant)),InteractiveJobCloseStep::Complete {progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());return;},other=>panic!("Unexpected path close: {other:?}")}
     }
     panic!("Path close did not finish");
 }

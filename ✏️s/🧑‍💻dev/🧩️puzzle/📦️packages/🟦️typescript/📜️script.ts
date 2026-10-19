@@ -5,6 +5,7 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 import { interactivityPuzzleFillP4eSelfTests } from "../../../../🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🔬️interactivity-puzzle-fill-p4e/🟦️.ts";
 import { interactivityPuzzleFillRunJobSelfTests } from "../../../../🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
 import { interactivityPuzzleFillTraceSelfTests } from "../../../../🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/🧪️testing/🔬️interactivity-puzzle-fill-trace/🟦️.ts";
+import { interactivityPuzzleFillP4eFailures, interactivityPuzzleFillRunJobFailures, interactivityPuzzleFillTraceFailures } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚖️laws/🟦️.ts";
 class VerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "browser-contribution") {
@@ -14,7 +15,7 @@ class VerifyScript extends BundleScript {
       return;
     }
     if (segments[0] !== "puzzle-fill-policy-self-tests") throw new Error("Unknown Puzzle composition command");
-    const checks = interactivityPuzzleFillP4eSelfTests() + interactivityPuzzleFillRunJobSelfTests() + interactivityPuzzleFillTraceSelfTests();
+    const checks = interactivityPuzzleFillP4eSelfTests(interactivityPuzzleFillP4eFailures) + interactivityPuzzleFillRunJobSelfTests(interactivityPuzzleFillRunJobFailures) + interactivityPuzzleFillTraceSelfTests(interactivityPuzzleFillTraceFailures);
     console.log(`[owner-policy] Puzzle fill checks=${checks}`);
   }
 }

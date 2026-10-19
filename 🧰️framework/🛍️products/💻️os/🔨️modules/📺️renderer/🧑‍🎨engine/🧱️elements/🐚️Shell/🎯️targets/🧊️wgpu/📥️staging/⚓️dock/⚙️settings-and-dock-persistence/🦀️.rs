@@ -48,7 +48,7 @@ impl ShellDockState {
     /// React's `framework.display.delete.<id>` action.
     pub fn build_display_layout_ui(&self, prefs: &PrefsState, docs: &DocumentState) -> UiNode {
         let is_de = prefs.locale_id == "de";
-        let builtin: Vec<ui_wgpu::wgpu::NamedLayout> = docs.session.as_ref().map(|session| session.app.named_layouts.iter().filter(|entry| entry.origin == "builtin").cloned().collect()).unwrap_or_default();
+        let builtin: Vec<semio_framework_ui_declaration::layout::NamedLayout> = docs.session.as_ref().map(|session| session.app.named_layouts.iter().filter(|entry| entry.origin == "builtin").cloned().collect()).unwrap_or_default();
         let save_section = UiTreeSectionNode {
             header_toolbar: None,
             id: "framework.display.layout.save".into(),
@@ -59,7 +59,7 @@ impl ShellDockState {
                 UiTreeItemNode {
                     id: "framework.display.layout.save.label".into(),
                     label: Label::data(shell_chrome_string("common.name", is_de)),
-                    control: Some(ui_wgpu::wgpu::component::ui::UiControlNode::Input(UiInputNode {
+                    control: Some(semio_framework_ui_declaration::ui::UiControlNode::Input(UiInputNode {
                         id: "framework.display.saveLabel".into(),
                         input_kind: "text".into(),
                         value: self.layout_save_label.clone(),
@@ -85,13 +85,13 @@ impl ShellDockState {
                 UiTreeItemNode {
                     id: "framework.display.layout.save.action".into(),
                     label: Label::data(shell_chrome_string("common.save", is_de)),
-                    control: Some(ui_wgpu::wgpu::component::ui::UiControlNode::Button(UiButtonNode {
+                    control: Some(semio_framework_ui_declaration::ui::UiControlNode::Button(UiButtonNode {
                         id: Some("framework.display.save".into()),
                         icon_id: IconName::Save,
                         label: Label::data(shell_chrome_string("display.saveCurrentLayout", is_de)),
                         action: ActionDescriptor { controller_id: "framework".into(), action: "saveCurrentLayout".into(), args: None },
                         style: None,
-                        presence: UiPresence { state: if self.layout_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                        presence: UiPresence { state: if self.layout_save_label.trim().is_empty() { semio_framework_ui_declaration::ui::UiState::Disabled } else { semio_framework_ui_declaration::ui::UiState::Normal }, ..UiPresence::default() },
                         menu: None,
                     })),
                     ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
@@ -280,10 +280,10 @@ impl ShellDockState {
     /// (`📌️ChromePanels/🟦️.tsx`'s `saveCurrentLayout`), with the same `user-<millis>` id grammar so a
     /// layout saved on either renderer reads as a user layout on the other. `None` with no session,
     /// which is React's own `if (!options.currentLayout) return` gate.
-    pub fn current_named_layout(&self, label: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::NamedLayout> {
+    pub fn current_named_layout(&self, label: &str, docs: &DocumentState) -> Option<semio_framework_ui_declaration::layout::NamedLayout> {
         docs.session.as_ref()?;
         let stamp = instant_now_ms().max(0.0) as u64;
-        Some(ui_wgpu::wgpu::NamedLayout { id: format!("user-{stamp}"), label: label.to_string(), icon_id: None, layout: self.dock.to_window_layout(), origin: "user".into(), group_path: None })
+        Some(semio_framework_ui_declaration::layout::NamedLayout { id: format!("user-{stamp}"), label: label.to_string(), icon_id: None, layout: self.dock.to_window_layout(), origin: "user".into(), group_path: None })
     }
 
     /// 🖥️ Opens one more instance of `window_kind_id`, split right of the active stack — the same
@@ -337,7 +337,7 @@ impl ShellDockState {
 
     /// 🖥️ The layout `layout_id` names, searching the app's declared layouts and then this app's saved
     /// ones — React's `[...builtinLayouts, ...userLayouts].find(…)`.
-    pub fn named_layout_by_id(&self, layout_id: &str, docs: &DocumentState) -> Option<ui_wgpu::wgpu::WindowLayout> {
+    pub fn named_layout_by_id(&self, layout_id: &str, docs: &DocumentState) -> Option<semio_framework_ui_declaration::layout::WindowLayout> {
         if let Some(named) = docs.session.as_ref().and_then(|session| session.app.named_layouts.iter().find(|entry| entry.id == layout_id)) {
             return Some(named.layout.clone());
         }

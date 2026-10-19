@@ -298,15 +298,15 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers::default();
     for _ in draft.chars() {
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
     }
     for _ in 0..3 {
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
     }
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
     assert!(shell.chrome.chrome_build.dialog_open() && shell.settle.deferred_actions.is_empty(), "the gated submit takes no Enter");
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Enter, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &PointerModifiers { shift: true, ..PointerModifiers::default() }, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Enter, &modifiers, &mut input);
     assert!(!shell.chrome.chrome_build.dialog_open());
     let taken = shell.settle.deferred_actions.pop().expect("the choice dispatched");
     let cleared = fixture["cases"].as_array().expect("cases").iter().find(|case| case["case"] == "cleared").expect("cleared case");
@@ -314,7 +314,7 @@ fn dialog_choices_keyboard_clears_the_name_takes_the_ungated_choice_and_escape_c
     assert_eq!(serde_json::to_value(taken.args.expect("args")).expect("args wire"), cleared["dispatches"][0]["args"]);
     let (_, request) = dialog_choices_request(Locale::En);
     shell.chrome.chrome_build.open_dialog(request);
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &modifiers, &mut input);
     assert!(!shell.chrome.chrome_build.dialog_open());
     assert_eq!(shell.settle.deferred_actions.pop().map(|event| event.action), Some("historyEditBack".to_string()));
 }
@@ -410,15 +410,15 @@ fn a_dialog_colour_field_stages_hex_and_opacity_like_the_recipe() {
         let mut input = InputState::<ActionDescriptor>::default();
         let modifiers = PointerModifiers::default();
         for _ in 0.."#ff000080".len() {
-            PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+            PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
         }
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("#0f0".into()), &modifiers, &mut input);
         let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("fill").map(dsl_value_as_json));
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.5])), "a typed hex without alpha keeps the opacity");
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Tab, &modifiers, &mut input);
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::ArrowRight, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Tab, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::ArrowRight, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.51])));
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Home, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Home, &modifiers, &mut input);
         assert_eq!(staged(&shell), Some(serde_json::json!([0.0, 1.0, 0.0, 0.0])));
     }
 }
@@ -439,15 +439,15 @@ fn a_dialog_vector_axis_honours_bounds_precision_and_detents() {
     shell.chrome.chrome_build.dialog_stack.last_mut().expect("dialog").focus_stop(ChromeDialogStop::Field(x));
     let staged = |shell: &ShellState| shell.chrome.chrome_build.dialog_stack.last().and_then(|request| request.effective().get("turn").map(dsl_value_as_json));
     let mut walk = Vec::new();
-    for action in [ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::PageUp, ui_wgpu::wgpu::KeyAction::ArrowDown, ui_wgpu::wgpu::KeyAction::PageDown] {
+    for action in [semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::PageUp, semio_framework_ui_wgpu_input::KeyAction::ArrowDown, semio_framework_ui_wgpu_input::KeyAction::PageDown] {
         PointerCtx::of(&mut shell).handle_keyboard(action, &modifiers, &mut input);
         walk.push(staged(&shell).and_then(|tuple| tuple[0].as_f64()).unwrap_or(f64::NAN));
     }
     assert_eq!(walk, [1.5, 2.5, 2.4, 1.5], "detent, ten rungs of the precision's step, one rung, detent");
     for _ in 0..3 {
-        PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Backspace, &modifiers, &mut input);
+        PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Backspace, &modifiers, &mut input);
     }
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Char("9".into()), &modifiers, &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Char("9".into()), &modifiers, &mut input);
     assert_eq!(staged(&shell).and_then(|tuple| tuple[0].as_f64()), Some(3.0), "a typed value is clamped to the vector's bounds");
 }
 

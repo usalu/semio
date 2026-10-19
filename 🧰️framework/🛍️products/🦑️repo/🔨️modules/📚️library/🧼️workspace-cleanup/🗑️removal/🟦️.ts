@@ -22,7 +22,9 @@ import {
   cleanManagedStoragePrefixes,
   type CleanRemoval,
   cleanIntersectsProtected,
+  cleanIsNativeImagePath,
   cleanIsProtected,
+  cleanOpenTicketGeneratedOutputProtection,
   cleanProjectRemovals,
   cleanProtectedPrefixes,
   cleanRemovalProtection,
@@ -36,6 +38,7 @@ import {
 
 export function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketCleanup = false, allowWindowsIllegal = false, allowCargoIncremental = false): boolean {
   if(cleanIntersectsProtected(abs,cleanManagedStoragePrefixes(root)))return false;
+  if (cleanIsNativeImagePath(abs) || (!allowCargoIncremental && cleanOpenTicketGeneratedOutputProtection(root, abs).length !== 0)) return false;
   if (allowCargoIncremental) {
     if (!cleanIsRustIncrementalRemovalPath(root, abs, cleanRustIncrementalSearchRoots(root)) || cleanRustIncrementalHasWorkingSession(abs)) return false;
     if (dry) return true;

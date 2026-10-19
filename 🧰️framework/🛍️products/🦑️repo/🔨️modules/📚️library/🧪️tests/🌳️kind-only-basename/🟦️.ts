@@ -19,7 +19,7 @@ type Fixture = Readonly<{
   externalContracts: readonly Readonly<{ id: string; path: string; scope: string }>[];
   files: readonly Readonly<{ path: string; content: string }>[];
   expectedFindings: readonly Finding[];
-  topology: Readonly<{ packagesDirectory: string; targetsDirectory: string; packageLanguageDirectories: readonly string[]; semanticExecutionCollections: readonly string[]; obsoleteExecutionCollections: readonly string[] }>;
+  topology: Readonly<{ packagesDirectory: string; targetsDirectory: string; fixturesDirectory: string; packageLanguageDirectories: readonly string[]; semanticExecutionCollections: readonly string[]; obsoleteExecutionCollections: readonly string[] }>;
 }>;
 
 const owner = join(import.meta.dir, "../🧫️fixtures/🌳️kind-only-basename");
@@ -57,7 +57,7 @@ async function independentOracle(root: string): Promise<Finding[]> {
     const matches = fixture.fileKinds.flatMap((kind) => kind.extensionChains.filter((extension) => name.endsWith(extension)).map((extension) => ({ kind, extension })));
     const longest = Math.max(0, ...matches.map((match) => match.extension.length));
     const resolved = matches.filter((match) => match.extension.length === longest);
-    if (resolved.length !== 1 || !resolved[0]!.kind.implementation || fixed.has(path)) continue;
+    if (resolved.length !== 1 || !resolved[0]!.kind.implementation || fixed.has(path) || path.split("/").slice(0, -1).includes(fixture.topology.fixturesDirectory)) continue;
     const expectedBasename = `${resolved[0]!.kind.emoji}${resolved[0]!.extension}`;
     let validate = predicates.get(expectedBasename);
     if (!validate) {
@@ -79,7 +79,7 @@ async function independentOracle(root: string): Promise<Finding[]> {
 describe("kind-only implementation leaf taxonomy", () => {
   test("validates the portable filesystem contract and binds its kind records to taxonomy", () => {
     
-    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractId"]).toEqual("kind-only-implementation-leaf-v1");expect(fixture["semantics"]).toEqual({"implementationLeaf":"file-kind-emoji-and-longest-extension-chain","semanticConcern":"registered-directory","targetOwnership":"target-before-package","fixedAdmission":"exact-scope-only","unknownKind":"fail-closed"});expect(fixture["topology"]).toEqual({"packagesDirectory":"📦️packages","targetsDirectory":"🎯️targets","packageLanguageDirectories":["🦀️rust","🟦️typescript","🟨️javascript","🐹️go","🐍️python","🔷️dotnet"],"semanticExecutionCollections":["🏭️generator","🔬️probes","🔮️oracles"],"obsoleteExecutionCollections":["🏗️generator"]});
+    expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["contractId"]).toEqual("kind-only-implementation-leaf-v1");expect(fixture["semantics"]).toEqual({"implementationLeaf":"file-kind-emoji-and-longest-extension-chain","semanticConcern":"registered-directory","targetOwnership":"target-before-package","fixedAdmission":"exact-scope-only","unknownKind":"fail-closed"});expect(fixture["topology"]).toEqual({"packagesDirectory":"📦️packages","targetsDirectory":"🎯️targets","fixturesDirectory":"🧫️fixtures","packageLanguageDirectories":["🦀️rust","🟦️typescript","🟨️javascript","🐹️go","🐍️python","🔷️dotnet"],"semanticExecutionCollections":["🏭️generator","🔬️probes","🔮️oracles"],"obsoleteExecutionCollections":["🏗️generator"]});
     
     for (const kind of fixture.fileKinds) {
       expect(taxonomy.fileKinds[kind.id]).toEqual<Pick<typeof kind, "emoji" | "extensionChains" | "role">>({ emoji: kind.emoji, extensionChains: kind.extensionChains, role: kind.role });
@@ -87,6 +87,7 @@ describe("kind-only implementation leaf taxonomy", () => {
     }
     expect(taxonomy.packagesDirName).toBe(fixture.topology.packagesDirectory);
     expect(taxonomy.targetsDirName).toBe(fixture.topology.targetsDirectory);
+    expect(taxonomy.testFixturesDirName).toBe(fixture.topology.fixturesDirectory);
     expect(Object.keys(taxonomy.ecosystems)).toEqual<readonly string[]>(fixture.topology.packageLanguageDirectories);
     expect(taxonomy.fixedFilenameContracts[fixture.externalContracts[0]!.id]?.scope).toEqual({ kind: "package-root", ecosystemId: "🦀️rust" });
   });
@@ -100,6 +101,24 @@ describe("kind-only implementation leaf taxonomy", () => {
       expect(observed).toEqual(expected);
       expect(await independentOracle(root)).toEqual(expected);
       expect(progress).toContain("complete");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("exempts fixtures as data while the same leaves outside fixtures still breach", async () => {
+    const root = materialize();
+    try {
+      const fixtureLeaves = fixture.files.map((file) => file.path).filter((path) => path.split("/").slice(0, -1).includes(fixture.topology.fixturesDirectory));
+      expect(fixtureLeaves).toEqual(["🧰️languages/🐹️go/🧫️fixtures/🗄️sample.go", "🧰️languages/🟦️typescript/🧫️fixtures/📚️nested/🟦️sample.ts"]);
+      const observed = new Set((await taxonomyImplementationFilesystemFindings(root, taxonomy)).map((finding) => finding.path));
+      for (const leaf of fixtureLeaves) {
+        expect(observed.has(leaf), leaf).toBe(false);
+        expect(implementationLeafBasenameFinding(leaf, taxonomy), leaf).toBeNull();
+        const outside = leaf.replace(`/${fixture.topology.fixturesDirectory}/`, "/");
+        expect(implementationLeafBasenameFinding(outside, taxonomy), outside).toMatchObject({ breachId: "taxonomy/kind-only-basename" });
+      }
+      expect(implementationLeafBasenameFinding(`🧰️owner/${fixture.topology.fixturesDirectory}`, taxonomy)).toBeNull();
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

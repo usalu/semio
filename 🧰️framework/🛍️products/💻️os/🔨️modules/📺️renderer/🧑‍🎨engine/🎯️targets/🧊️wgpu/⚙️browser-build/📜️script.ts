@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️m
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { assertGeneratedSources, readSourceInputContract } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs";
+import { assertGeneratedSources, readSourceInputContract } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📇️inventory/🟨️.mjs";
 import { renderBrowserBoot } from "./🟦️.ts";
 
 /** 🚀️ Materializes the browser boot bundle after the build tool prepares its generated data inputs. */

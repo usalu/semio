@@ -15,6 +15,6 @@ pub mod mutations {
     pub use semio_s_artifact_stdio_svg_mutations_2::standards::v1_1::subsets::base::io::binary::mutations::set_view_box;
 }
 
-pub use semio_s_artifact_stdio_svg_snapshot::standards::v1_1::subsets::base::io::binary::diff;
+pub use semio_s_artifact_stdio_svg_diff::standards::v1_1::subsets::base::io::binary::diff;
 
 

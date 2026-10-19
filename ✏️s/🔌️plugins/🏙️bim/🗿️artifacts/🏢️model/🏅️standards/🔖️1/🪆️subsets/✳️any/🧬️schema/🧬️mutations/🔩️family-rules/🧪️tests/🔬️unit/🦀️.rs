@@ -1,8 +1,9 @@
-use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::standards::v1::subsets::any::schema::snapshot::{Family, FamilySolid, ModelSnapshot, ParametricProfile, Profile, SolidShape};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Family, FamilySolid, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ParametricProfile, Profile, SolidShape};
 use protocol::OutcomeCode;
-use crate::standards::v1::subsets::any::schema::mutations::family_rules::*;
-use crate::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType, ExprPoint, ExprPoint3, FamilyCategory, FamilyParameter, ParameterKind};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::{family_record_fault, formula_fault, name_fault, solid_fault, shape_fault, profile_user, parameter_user, reference_fault, cycle_fault, parameters_in_order};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType, FamilyParameter};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ExprPoint, ExprPoint3, FamilyCategory, ParameterKind};
 
 fn base() -> ModelSnapshot {
     let mut base = ModelSnapshot::default();
@@ -11,7 +12,7 @@ fn base() -> ModelSnapshot {
 }
 
 fn parameter(base: &mut ModelSnapshot, name: &str, value: &str) {
-    base.family_parameters.insert(formula::parameter_id("fam", name), FamilyParameter { family: "fam".into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
+    base.family_parameters.insert(semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula::parameter_id("fam", name), FamilyParameter { family: "fam".into(), name: name.into(), kind: ParameterKind::Length, value: value.into() });
 }
 
 fn solid(shape: SolidShape) -> FamilySolid {

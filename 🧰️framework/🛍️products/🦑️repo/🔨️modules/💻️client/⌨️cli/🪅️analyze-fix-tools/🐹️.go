@@ -13,6 +13,7 @@ import (
 	"fmt"
 	command "github.com/usalu/semio/repo/client/internal/command"
 	repopkg "github.com/usalu/semio/repo/go"
+	"sort"
 	"strings"
 	"time"
 )
@@ -73,38 +74,6 @@ var analyzeCmd = &command.Command{
 	},
 }
 
-// 🔧️Fix command implementation for automatic policy breach repair.
-// 🔧️autofixCmd holds the data fields for a autofixCmd record.
-var autofixCmd = &command.Command{
-	Use:   "autofix [scope]",
-	Short: "Apply autofixes for breachs",
-	RunE: func(cmd *command.Command, args []string) error {
-		var scope *string
-		if len(args) > 0 {
-			scope = &args[0]
-		}
-		variables := map[string]interface{}{}
-		if scope != nil {
-			variables["scope"] = *scope
-		}
-		return printGQL(`
-			mutation Fix($scope: String) {
-				fix(scope: $scope) {
-					fixed
-					remaining
-					breachs {
-						id
-						summary
-						scope
-						excerpt
-						line
-					}
-				}
-			}
-		`, variables)
-	},
-}
-
 // 🔬️ToolAnalyze MUST complete the operation successfully.
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	repopkg.Emit(repopkg.EventAnalyzeStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
@@ -137,25 +106,17 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	return ToolResult{Output: *output, Data: report}
 }
 
-// 🔧️ToolFix MUST complete the operation successfully.
-func ToolFix(scopeRaw string) ToolResult {
-	repopkg.Emit(repopkg.EventFixStarting, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
-	ctx := NewRepoContext(rootDir)
-	res, err := ctx.Fix(&scopeRaw)
-	if err != nil {
-		return ToolResult{Error: err.Error()}
-	}
-	output := NewOutput()
-	repopkg.Emit(repopkg.EventFixEnded, "repo-cli", repopkg.FolderPayload{Path: scopeRaw})
-	bytes, _ := json.MarshalIndent(res, "", "  ")
-	output.Plain(string(bytes))
-	return ToolResult{Output: *output, Data: res}
+// 🔠️sortedRegisteredPolicies returns the registered policies ordered by identifier, the order every surface renders.
+func sortedRegisteredPolicies() []PolicyDef {
+	policies := append([]PolicyDef(nil), GetRegisteredPolicies()...)
+	sort.SliceStable(policies, func(left, right int) bool { return policies[left].ID < policies[right].ID })
+	return policies
 }
 
 // 📜️ToolPolicyList MUST complete the operation successfully.
 // Uses registered policy metadata only — avoids building the monorepo tree.
 func ToolPolicyList() ToolResult {
-	allPolicies := GetRegisteredPolicies()
+	allPolicies := sortedRegisteredPolicies()
 	var sb strings.Builder
 	for _, p := range allPolicies {
 		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
@@ -168,7 +129,7 @@ func ToolPolicyList() ToolResult {
 
 // 🌳️ToolPolicyTree MUST complete the operation successfully.
 func ToolPolicyTree() ToolResult {
-	allPolicies := GetRegisteredPolicies()
+	allPolicies := sortedRegisteredPolicies()
 	var sb strings.Builder
 	for _, p := range allPolicies {
 		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}

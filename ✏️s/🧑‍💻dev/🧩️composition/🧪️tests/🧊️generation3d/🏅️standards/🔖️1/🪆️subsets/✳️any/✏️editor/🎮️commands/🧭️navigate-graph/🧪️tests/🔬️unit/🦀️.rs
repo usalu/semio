@@ -123,7 +123,7 @@ async fn an_arrow_verb_moves_the_framework_owned_graph_selection() {
     );
     dispatch(&mut app, Generation3dCommand::SelectUpstreamNode(select_upstream_node::SelectUpstreamNode {})).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.clone()), Some(vec!["height".to_string()]), "arrow-left walked back");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 /// ⏎️ LAW (end to end): activate opens the selected node's ports, and an arrow afterwards closes the
@@ -143,5 +143,5 @@ async fn activate_opens_the_selected_nodes_ports_and_an_arrow_closes_them() {
         Some(vec!["column-preview".to_string()]),
         "an arrow from an opened node steps from the node that owns the ports"
     );
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

@@ -8,7 +8,7 @@
 //! ⚫ special case of the same fit). First/last profile's own edges are mutated in place to their
 //! harmonized NURBS form (parameter-preserving, so their EXISTING pcurves stay valid unchanged)
 //! and reused directly as the solid's two caps — the same "reuse, don't rebuild" trick
-//! `🧮️core::build_prism` uses for extrude's caps. Interior profiles are fully consumed (deleted).
+//! `🧮️sweep-machinery::build_prism` uses for extrude's caps. Interior profiles are fully consumed (deleted).
 //!
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
@@ -25,7 +25,7 @@ use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
 use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2};
 
-use super::core::{build_face, finish_solid, LoopSpec};
+use super::sweep_machinery::{build_face, finish_solid, LoopSpec};
 
 /// 🥞 Converts `curve` over `range` to a homogeneous-weight-packed control net (`[x·w,y·w,z·w,w]`
 /// per control), elevating to `target_degree` first if its own degree is lower.
@@ -204,7 +204,7 @@ impl StagedOperation for LoftJob {
         }
         let bottom = profiles[0];
         let top = profiles[n - 1];
-        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(semio_framework_3d_brep_vector::Vec3::Z);
+        let n0 = super::sweep_machinery::planar_outward_normal(body, bottom).unwrap_or(semio_framework_3d_brep_vector::Vec3::Z);
         let bottom_origin = body
             .faces
             .get(bottom)

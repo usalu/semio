@@ -1,6 +1,7 @@
 //! 🎢️ `set-element-storey` payload. Stands a storey-placed element (wall, curtain wall, column, beam, slab, ceiling, roof, stair, railing, ramp, space) on another storey of its building. Hosted openings follow their host by reference; refused while the top constraint would no longer lie above the base or a hosted opening would rise above the new height.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

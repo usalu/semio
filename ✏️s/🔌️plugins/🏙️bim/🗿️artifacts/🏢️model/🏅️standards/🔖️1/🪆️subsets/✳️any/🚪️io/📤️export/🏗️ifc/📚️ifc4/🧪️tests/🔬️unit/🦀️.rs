@@ -1,30 +1,32 @@
-use crate::standards::v1::subsets::any::io::export::ifc::export_ifc4;
-use crate::standards::v1::subsets::any::io::export::ifc::codec;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::Schema;
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc4;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, PropertyKind, TemplateTarget};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate};
 use semio_framework::io_schema::IoPayload;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::Export;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::data::property_value;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::property_value;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, quote};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, list, opt_text, refs, rf, text, unset, Ifc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, list, opt_text, refs, rf, text, unset, Ifc};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
 #[allow(unused_imports)]
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::ifc::ifc4::*;
-use crate::standards::v1::subsets::any::io::export::ifc::model_to_part21;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document_in, psets, rows, string};
-use crate::standards::v1::subsets::any::schema::snapshot::{template_problem, PropertyValue};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, template_type, measure_type, definition_text, escape, COUNTED, library_report, ModelIntoIfc4};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::model_to_part21;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{document_in, psets, rows, string};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::template_problem;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue;
 use std::collections::BTreeSet;
 
 fn document() -> Part21Document {
@@ -53,7 +55,7 @@ fn every_target_names_one_distinct_ifc4_entity_and_type_targets_name_type_entiti
 
 #[test]
 fn the_template_type_follows_the_kinds_a_template_applies_to() {
-    use TemplateTarget::*;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TemplateTarget::*;
     assert_eq!(template_type(&[]), "NOTDEFINED");
     assert_eq!(template_type(&[Wall, Slab]), "PSET_OCCURRENCEDRIVEN");
     assert_eq!(template_type(&[WallType, DoorType]), "PSET_TYPEDRIVENONLY");
@@ -212,10 +214,10 @@ fn the_bytes_are_an_ifc4_file_that_the_stdio_reader_decodes_back_to_the_same_gra
     let (bytes, notes) = export_ifc4(&psets()).expect("the file exports");
     assert!(notes.is_empty(), "{notes:?}");
     assert!(bytes.starts_with(b"ISO-10303-21"));
-    let decoded = codec::decode_ifc4(&bytes).expect("the reader decodes it");
+    let decoded = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(&bytes).expect("the reader decodes it");
     assert_eq!(decoded.instances, document().instances);
     assert!(codec::decode_document(&bytes).is_err(), "the IFC2X3 reader refuses it");
-    assert!(codec::decode_ifc4(&crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&psets()).expect("the 2x3 file").0).is_err(), "and the IFC4 reader refuses an IFC2X3 file");
+    assert!(codec::decode_ifc4(&semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&psets()).expect("the 2x3 file").0).is_err(), "and the IFC4 reader refuses an IFC2X3 file");
 }
 
 #[test]

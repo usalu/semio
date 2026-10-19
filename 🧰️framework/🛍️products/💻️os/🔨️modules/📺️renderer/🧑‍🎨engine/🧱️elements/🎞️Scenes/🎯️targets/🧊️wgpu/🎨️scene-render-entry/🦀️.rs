@@ -15,9 +15,9 @@ use super::*;
  * pointer resolver already re-derives. */
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SceneContextMenuTarget {
-    pub hits: Vec<ui_wgpu::wgpu::ContextMenuHit>,
-    pub selection: Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>,
-    pub text: Option<ui_wgpu::wgpu::ContextMenuTextContext>,
+    pub hits: Vec<semio_framework_ui_declaration::ui::ContextMenuHit>,
+    pub selection: Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>,
+    pub text: Option<semio_framework_ui_declaration::ui::ContextMenuTextContext>,
 }
 
 /** 🖱️ Resolves `(x, y)` inside `scene` into that kind's own context-menu surface target.
@@ -88,12 +88,12 @@ fn table_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, y: f32, 
         let scroll = scroll_offset(&scene.host_id, "body");
         if let Ok(index) = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64) {
             if let Some(row) = rows.get(index) {
-                hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "row".into(), id: table_row_id(row, index), label: None });
+                hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "row".into(), id: table_row_id(row, index), label: None });
             }
         }
     }
     let ids: Vec<String> = table.selection_json.as_deref().and_then(|json| serde_json::from_str::<Value>(json).ok()).and_then(|value| value.get("selectedIds").cloned()).and_then(|value| serde_json::from_value(value).ok()).unwrap_or_default();
-    let selection = if ids.is_empty() { Vec::new() } else { vec![ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "row".into(), ids }] };
+    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "row".into(), ids }] };
     SceneContextMenuTarget { hits, selection, text: None }
 }
 
@@ -113,12 +113,12 @@ fn vfs_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, y: f32, th
         let scroll = scroll_offset(&scene.host_id, "vfs");
         if let Ok(index) = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64) {
             if let Some(entry) = visible.get(index) {
-                hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "row".into(), id: vfs_row_id(&entry.row), label: None });
+                hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "row".into(), id: vfs_row_id(&entry.row), label: None });
             }
         }
     }
     let ids: Vec<String> = vfs.selected_row_ids_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    let selection = if ids.is_empty() { Vec::new() } else { vec![ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "row".into(), ids }] };
+    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "row".into(), ids }] };
     SceneContextMenuTarget { hits, selection, text: None }
 }
 
@@ -137,7 +137,7 @@ fn event_feed_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x:
     for entry in &entries {
         let entry_h = event_feed_row_height(entry, &layout);
         if Rect::new(layout.inner.x, top, layout.inner.w, entry_h).contains(x, y) {
-            return SceneContextMenuTarget { hits: vec![ui_wgpu::wgpu::ContextMenuHit { domain: "entry".into(), id: entry.id.clone(), label: None }], selection: Vec::new(), text: None };
+            return SceneContextMenuTarget { hits: vec![semio_framework_ui_declaration::ui::ContextMenuHit { domain: "entry".into(), id: entry.id.clone(), label: None }], selection: Vec::new(), text: None };
         }
         top += entry_h + layout.card_gap;
     }
@@ -168,14 +168,14 @@ fn ink_canvas_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, x: 
         }
         let Some(id) = block.get("id").and_then(Value::as_str) else { continue };
         if ink_hits_point(block, world_x, world_y, INK_CONTEXT_MENU_HIT_THRESHOLD) {
-            hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "block".into(), id: id.to_string(), label: None });
+            hits.push(semio_framework_ui_declaration::ui::ContextMenuHit { domain: "block".into(), id: id.to_string(), label: None });
         }
     }
     let ids = match hits.first() {
         Some(top) if !selected.iter().any(|id| id == &top.id) => vec![top.id.clone()],
         _ => selected,
     };
-    let selection = if ids.is_empty() { Vec::new() } else { vec![ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "block".into(), ids }] };
+    let selection = if ids.is_empty() { Vec::new() } else { vec![semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "block".into(), ids }] };
     SceneContextMenuTarget { hits, selection, text: None }
 }
 
@@ -231,13 +231,13 @@ pub fn render_component_scene_step(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+    cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
     hosts: &mut SceneEngineHosts<'_>,
     driver_drag: UiDriverDrag,
     document_generation: u64,
-) -> ui_wgpu::wgpu::ScenePaintStep {
+) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     if cursor.phase() == 0 && scene.component_kind == SurfaceKind::Canvas2d && cancel_stale_canvas_authority(hosts.window_id, &scene.host_id, document_generation, ctx.input).is_err() {
-        return ui_wgpu::wgpu::ScenePaintStep::Fault;
+        return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
     }
     if cursor.phase() >= ENGINE_PHASE {
         match scene.component_kind {
@@ -252,95 +252,95 @@ pub fn render_component_scene_step(
     match cursor.phase() {
         0 => {
             if scene.surface_id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if cursor.byte() < scene.surface_id.len() {
                 if cursor.advance_byte().is_err() {
-                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                    return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                 }
-                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         1 => {
             if scene.controller_id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if cursor.byte() < scene.controller_id.len() {
                 if cursor.advance_byte().is_err() {
-                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                    return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                 }
-                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         2 => {
             ctx.draw.set_screen_height(bounds.y + bounds.h);
             remember_scene_theme(ctx.theme);
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         3 => {
             if ctx.draw.try_reserve_retained_items(1).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
             if cursor.advance_item().is_err() || cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         4 => {
             if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::sync_engine_scene(scene, hosts.window_id, bounds, ctx.theme) {
                 return cursor.finish();
             }
             let Some(token) = semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::engine_surface_token(&scene.host_id) else {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             };
             if !bind_scene_engine_token(&scene.host_id, token) {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         5 => {
             let progress = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::advance_raster_composite(scene);
             if cursor.observe_external_progress(progress.completed).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             if !progress.done {
-                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if !semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::stage_engine_scene_paint(scene, bounds, engine_surface_clear(scene.component_kind, ctx.theme)) {
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         6 => {
             let Some(key) = semio_framework_os_renderer_wgpu_engine_attach::engine_surface_attach::engine_raster_key(&scene.host_id) else {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             };
             if ctx.draw.try_reserve_retained_items(1).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             ctx.draw.push_raster_quad(&key, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
             if cursor.advance_item().is_err() || cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         7 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
@@ -351,9 +351,9 @@ pub fn render_component_scene_step(
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         8 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
@@ -365,9 +365,9 @@ pub fn render_component_scene_step(
                 ctx.draw.pop_scissor();
             }
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         9 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
@@ -375,15 +375,15 @@ pub fn render_component_scene_step(
                 let Some(item) = graph.find_items.get(cursor.item()) else { return cursor.finish() };
                 let find = ShellFindItem { id: item.id.clone(), label: item.label.clone(), description: None, category: Some(item.category.clone()), surface_id: scene.surface_id.clone(), node_id: item.id.clone() };
                 if try_push_find_item(find).is_err() || cursor.advance_item().is_err() {
-                    return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                    return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
                 }
-                return ui_wgpu::wgpu::ScenePaintStep::Pending;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending;
             }
             if scene.component_kind != SurfaceKind::TextEditor {
                 return cursor.finish();
             }
             if ctx.draw.try_reserve_retained_items(TEXT_EDITOR_OVERLAY_ITEMS).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             render_text_editor_overlays(scene, bounds, ctx);
             cursor.finish()
@@ -407,16 +407,16 @@ fn render_list_scene_step(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+    cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor,
     chrome_labels: SceneChromeLabels,
     window_id: &str,
     driver_drag: UiDriverDrag,
     document_generation: u64,
-) -> ui_wgpu::wgpu::ScenePaintStep {
+) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     cancel_scene_list_transfer_if_stale(window_id, &scene.host_id, document_generation, driver_drag);
     let capacity = list_visible_row_capacity(bounds, ctx.theme.control_height);
     if !reserve_list_rows(ctx, capacity) {
-        return ui_wgpu::wgpu::ScenePaintStep::Fault;
+        return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
     }
     match scene.component_kind {
         SurfaceKind::Table => render_table(scene, bounds, ctx, driver_drag),
@@ -425,7 +425,7 @@ fn render_list_scene_step(
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx, driver_drag, chrome_labels.block_list),
         SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
         SurfaceKind::EventFeed => render_event_feed(scene, bounds, ctx),
-        _ => return ui_wgpu::wgpu::ScenePaintStep::Fault,
+        _ => return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault,
     }
     cursor.finish()
 }
@@ -436,17 +436,17 @@ fn render_list_scene_step(
  * surface hit target the generic pointer dispatch is admitted through.
  *
  * @see `🧱️elements/📐️Canvas2dHost/🟦️.tsx` — `drawSceneNode` */
-fn render_canvas_2d_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
+fn render_canvas_2d_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
         ENGINE_PHASE => {
             if ctx.draw.try_reserve_retained_items(canvas_2d_reserve_items(scene)).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             render_canvas_2d(scene, bounds, ctx);
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         _ => cursor.finish(),
     }
@@ -466,17 +466,17 @@ const CANVAS_2D_ITEMS_PER_LAYER: usize = 8;
  * strokes, grid, block cards and the live marquee rectangle, all under the surface's own scissor.
  *
  * @see `🧱️elements/🖋️InkCanvasHost/🟦️.tsx` */
-fn render_ink_canvas_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor) -> ui_wgpu::wgpu::ScenePaintStep {
+fn render_ink_canvas_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
         ENGINE_PHASE => {
             if ctx.draw.try_reserve_retained_items(INK_CANVAS_RESERVE_ITEMS).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             render_ink_canvas(scene, bounds, ctx);
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         _ => cursor.finish(),
     }
@@ -491,17 +491,17 @@ const INK_CANVAS_RESERVE_ITEMS: usize = 8192;
  * and the aspect-fit frame, size/shape badge and footer caption paint on top of it.
  *
  * @see `🧱️elements/🖼️IconRenderHost/🟦️.tsx` — `IconShotFrame` */
-fn render_icon_render_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
+fn render_icon_render_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     match cursor.phase() {
         ENGINE_PHASE => {
             if ctx.draw.try_reserve_retained_items(ICON_RENDER_RESERVE_ITEMS).is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
             render_icon_render(scene, bounds, ctx, hosts);
             if cursor.advance_phase().is_err() {
-                return ui_wgpu::wgpu::ScenePaintStep::Fault;
+                return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
             }
-            ui_wgpu::wgpu::ScenePaintStep::Pending
+            semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending
         }
         _ => cursor.finish(),
     }
@@ -513,7 +513,7 @@ const ICON_RENDER_RESERVE_ITEMS: usize = 256;
 /// 🎨️ The colour a composited engine texture clears to before its host paints — the panel behind a
 /// node graph, the canvas ground behind a map or a board, exactly as each React host's own
 /// `clear_color` resolves it.
-fn engine_surface_clear(kind: SurfaceKind, theme: &ui_wgpu::wgpu::Theme) -> ui_wgpu::wgpu::Rgba {
+fn engine_surface_clear(kind: SurfaceKind, theme: &semio_framework_ui_theme::Theme) -> semio_framework_ui_theme::Rgba {
     match kind {
         SurfaceKind::TiledMap | SurfaceKind::Board2d | SurfaceKind::Paint2d => theme.canvas_clear,
         _ => theme.panel,
@@ -529,12 +529,12 @@ fn engine_surface_clear(kind: SurfaceKind, theme: &ui_wgpu::wgpu::Theme) -> ui_w
 ///
 /// 🎥️ The one point per frame that holds both the surface id and its LIVE orbit — `dumpMeshStats`
 /// reaches only the interpreter's `UI_ENGINE`, never the shell's `world3d_states`.
-fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut ui_wgpu::wgpu::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> ui_wgpu::wgpu::ScenePaintStep {
+fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, cursor: &mut semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor, hosts: &mut SceneEngineHosts<'_>) -> semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep {
     let created = !hosts.world3d_states.contains_key(&scene.host_id);
     let surface_id = scene.surface_id.clone();
     let controller_id = scene.controller_id.clone();
     let Some(state) = hosts.world3d_states.get_or_insert_with(scene.host_id.clone(), || infinite_world::world::World3dState::new(surface_id, controller_id)) else {
-        return ui_wgpu::wgpu::ScenePaintStep::Fault;
+        return semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault;
     };
     if state.trace.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
         state.trace.tool_run_trace_window_id = Some(hosts.window_id.to_string());

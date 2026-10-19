@@ -6,7 +6,7 @@
 //! interiors form an X join, which trims nothing. The functions are pure geometry over bands and never read the snapshot.
 
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{JoinEnd, JoinKind, WallJoin};
-use crate::standards::v1::subsets::any::schema::snapshot::{EndJoin, Point2};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{EndJoin, Point2};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::vector::{angle_between, cross};

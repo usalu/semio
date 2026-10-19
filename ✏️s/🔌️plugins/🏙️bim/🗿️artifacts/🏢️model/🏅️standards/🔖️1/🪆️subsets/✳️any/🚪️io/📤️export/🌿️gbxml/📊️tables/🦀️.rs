@@ -4,7 +4,7 @@
 
 use crate::standards::v1::subsets::any::io::export::gbxml::{zones, spaces, material, constructions, surfaces};
 use crate::standards::v1::subsets::any::io::export::gbxml::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 #[derive(value_derive::ToValue)]

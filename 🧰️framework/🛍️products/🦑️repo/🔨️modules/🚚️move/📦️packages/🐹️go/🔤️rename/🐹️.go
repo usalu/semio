@@ -107,10 +107,10 @@ func ToolRename(oldToken, newToken, scope string) workspace.ToolResult {
 	if strings.EqualFold(oldToken, newToken) {
 		return workspace.ToolErrorMsg("Old and new token are identical")
 	}
-	walkRoot := workspace.RootDir
+	walkRoot := workspace.GetRootDir()
 	scope = strings.Trim(filepath.ToSlash(scope), "/")
 	if scope != "" {
-		walkRoot = filepath.Join(workspace.RootDir, filepath.FromSlash(scope))
+		walkRoot = filepath.Join(workspace.GetRootDir(), filepath.FromSlash(scope))
 		info, statErr := os.Stat(walkRoot)
 		if statErr != nil || !info.IsDir() {
 			return workspace.ToolErrorMsg(fmt.Sprintf("Scope is not a directory: %s", scope))
@@ -122,7 +122,7 @@ func ToolRename(oldToken, newToken, scope string) workspace.ToolResult {
 		if err != nil {
 			return nil
 		}
-		rel, relErr := filepath.Rel(workspace.RootDir, path)
+		rel, relErr := filepath.Rel(workspace.GetRootDir(), path)
 		if relErr != nil {
 			return nil
 		}
@@ -191,7 +191,7 @@ func ToolRename(oldToken, newToken, scope string) workspace.ToolResult {
 	filesChanged := 0
 	filesSealed := 0
 	for _, rel := range files {
-		abs := filepath.Join(workspace.RootDir, filepath.FromSlash(rel))
+		abs := filepath.Join(workspace.GetRootDir(), filepath.FromSlash(rel))
 		data, readErr := os.ReadFile(abs)
 		if readErr != nil {
 			continue
@@ -233,8 +233,8 @@ func ToolRename(oldToken, newToken, scope string) workspace.ToolResult {
 		} else {
 			newRel = parent + "/" + newBase
 		}
-		absSrc := filepath.Join(workspace.RootDir, filepath.FromSlash(e.rel))
-		absDst := filepath.Join(workspace.RootDir, filepath.FromSlash(newRel))
+		absSrc := filepath.Join(workspace.GetRootDir(), filepath.FromSlash(e.rel))
+		absDst := filepath.Join(workspace.GetRootDir(), filepath.FromSlash(newRel))
 		if _, statErr := os.Stat(absDst); statErr == nil {
 			return workspace.ToolErrorMsg(fmt.Sprintf("Rename target already exists: %s", newRel))
 		}

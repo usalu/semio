@@ -10,7 +10,6 @@ package client
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 )
@@ -83,9 +82,7 @@ func TestExhaustiveStatuteCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statute commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("statute list returns results", func(t *testing.T) {
 		output, err := executeTreeCommand("list", "--only-statute", "--json")
@@ -136,9 +133,7 @@ func TestExhaustiveCheckpointCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow checkpoint commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("checkpoint list returns results", func(t *testing.T) {
 		output, err := executeTreeCommand("list", "--only-checkpoint", "--json", "--limit", "5")

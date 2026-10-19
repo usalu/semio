@@ -805,7 +805,7 @@
     "thirdpartyPinsSha256": "a367122416034649e13a7651f1a0459645cd32ada7a37f045b53fa8a9346efe4"
   },
   {
-    "path": "✏️s/🔌️plugins/🪐️space/🫀️core/Cargo.lock",
+    "path": "✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/Cargo.lock",
     "beforeSha256": "d0ba099eec7f6a601abd0880afd2ca7a13dc6c43ab4e8bd932c063830f7072a3",
     "thirdpartyPinsSha256": "0f39d9873f154107bf60c872e2fd7c0783bf597337423a13db445b75c665966f"
   },

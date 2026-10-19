@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import {receiveScriptProcessInvocation,scriptInvocationBudget} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {admitReadinessDeclarationV1,readinessMarkerV1,resolveReadinessV1,watchReadinessV1} from "../../../../🏗️build/🟢️readiness/🟦️.ts";
 import schema from "./🧬️schema/📥️source.json" with {type:"json"};
 import {readFile} from "node:fs/promises";

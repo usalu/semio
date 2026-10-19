@@ -5,19 +5,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { face, mesh } from "@semio-tech/cad-engine-ts/brepjs";
-import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import { ModelSpace } from "@semio-tech/s-spatial-kernel-ts/geometry/model-space";
-import { defaultModelDefinitionId } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog";
-import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
-import { kernelGeometry, type MeshTransfer, solidRef } from "@semio-tech/framework-3d-js";
-import { boxModelDiff } from "@semio-tech/s-spatial-kernel-ts/preview";
-import { aabbDifferencePieces, aabbIntersect, modelObjectAabb } from "@semio-tech/s-spatial-kernel-ts/preview/aabb";
-import { faceCentroid, fuseSolidsToExternalFaces } from "@semio-tech/s-spatial-kernel-ts/preview/face-geometry";
-import { geom } from "@semio-tech/s-spatial-kernel-ts/preview/brep-records";
+import { kernelGeometry, type MeshTransfer } from "@semio-tech/framework-3d-js";
 import { meshTransferTransferables } from "./🧱️entity-maps/🟦️.ts";
 import { BrepjsWasmEngine } from "./⚙️wasm-engine/🟦️.ts";
-import { BrepjsKernel, type BrepjsWorkerRequest, type BrepjsWorkerResponse, deserializeWorkerArg, deserializeWorkerValue, serializeWorkerValue } from "./📨️worker-and-kernel/🟦️.ts";
+import { type BrepjsWorkerRequest, type BrepjsWorkerResponse, deserializeWorkerArg } from "./📨️worker-and-kernel/🟦️.ts";
 export { kernelGeometry };
 
 // #endregion 🔌️Adapters
@@ -73,31 +64,3 @@ if (isBrepjsDedicatedWorker()) {
 }
 
 // #endregion 🌐️BrepjsWorkerEntry
-// #region 🧪️Tests
-/** 🎒️ The values this module hands its extracted suite `./🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts`. */
-export type BrepjsTestDependencies = {
-  readonly BrepjsKernel: typeof BrepjsKernel;
-  readonly Model: typeof Model;
-  readonly ModelSpace: typeof ModelSpace;
-  readonly aabbDifferencePieces: typeof aabbDifferencePieces;
-  readonly aabbIntersect: typeof aabbIntersect;
-  readonly applyModelDiff: typeof applyModelDiff;
-  readonly boxModelDiff: typeof boxModelDiff;
-  readonly defaultModelDefinitionId: typeof defaultModelDefinitionId;
-  readonly deserializeWorkerValue: typeof deserializeWorkerValue;
-  readonly face: typeof face;
-  readonly faceCentroid: typeof faceCentroid;
-  readonly fuseSolidsToExternalFaces: typeof fuseSolidsToExternalFaces;
-  readonly geom: typeof geom;
-  readonly kernelGeometry: typeof kernelGeometry;
-  readonly mesh: typeof mesh;
-  readonly modelObjectAabb: typeof modelObjectAabb;
-  readonly serializeWorkerValue: typeof serializeWorkerValue;
-  readonly solidRef: typeof solidRef;
-};
-
-if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-cad-js-brepjs/🟦️.ts");
-  await registerTests1(import.meta.vitest, { BrepjsKernel, Model, ModelSpace, aabbDifferencePieces, aabbIntersect, applyModelDiff, boxModelDiff, defaultModelDefinitionId, deserializeWorkerValue, face, faceCentroid, fuseSolidsToExternalFaces, geom, kernelGeometry, mesh, modelObjectAabb, serializeWorkerValue, solidRef }, { url: import.meta.url });
-}
-// #endregion 🧪️Tests

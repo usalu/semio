@@ -33,7 +33,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     let mut app = app().await;
     let placeholder_vertex_count = mesh_vertex_count(&app.snapshot().expect("materialize projection"));
     assert!(placeholder_vertex_count > 0, "the seeded placeholder box must have vertices");
-    artifact_app_laws::assert_undo_redo_round_trip(&mut *app, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, RemodelingCommand::ClearResult(clear_result::ClearResult {}), |app| mesh_vertex_count(&app.snapshot().expect("materialize projection")), placeholder_vertex_count, 0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]

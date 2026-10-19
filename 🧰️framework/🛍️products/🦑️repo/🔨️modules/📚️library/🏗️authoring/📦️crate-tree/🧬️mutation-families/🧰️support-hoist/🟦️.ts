@@ -1,9 +1,14 @@
 /** 🧬️ Support hoist: module exporting `SupportHoist`, `inherentSelf`, `hoistAggregateSupport`. */
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { rustTokens } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { parseRustSourceTree, type RustSourceItem } from "../../🌳️module-tree/🟦️.ts";
-import type { AggregateScope } from "../🟦️.ts";
+
+/** 🔭️ One name an aggregate module puts in scope: an import, a public child module or an item of its own. */
+export type AggregateName = { readonly kind: "import" | "module"; readonly statement: string } | { readonly kind: "item" };
+
+/** 🔭️ What the namespace of an aggregate module offers to a leaf below it: its imports (as absolute statements), its public child modules and its own items. */
+export type AggregateScope = { readonly names: ReadonlyMap<string, AggregateName>; readonly glob: boolean };
 
 /** 🧰️ A support module cut out of an aggregate file: the new aggregate text, the new file and the names it now hosts. */
 export type SupportHoist = { readonly aggregateText: string; readonly supportFile: string; readonly supportText: string; readonly moved: readonly string[] };

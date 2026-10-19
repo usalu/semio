@@ -1,5 +1,5 @@
 /** 🔭️ The universal retained session ownership and the layout export and cold relay retained ownership checks. */
-import { toolJobUniversalRetainedOwnershipExact, toolJobLayoutColdRelayRetainedExact } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔁️live-replay/🧊️retained-ownership/🟦️.ts";
+import { toolJobUniversalRetainedOwnershipExact, toolJobLayoutColdRelayRetainedExact } from "@semio-tech/repo-lib/laws";
 
 /** 🌐 Checks the job, native I/O, wgpu and animate retained session ownership and every single-edit mutation of them. */
 export function universalRetainedOwnershipChecks() {

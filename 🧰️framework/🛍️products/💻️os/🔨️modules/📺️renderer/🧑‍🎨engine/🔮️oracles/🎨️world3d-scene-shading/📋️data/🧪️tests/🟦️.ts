@@ -30,8 +30,8 @@ test("oracle DATA agrees with Ajv and SQLite, including generated browser prelud
  }finally{db.close();}
 });
 test("actual oracle consumes validated DATA and self-contained browser prefix",()=>{
- const source=readFileSync(new URL("../../📜️script.ts",import.meta.url),"utf8"),syntax=ts.createSourceFile("oracle.ts",source,ts.ScriptTarget.Latest,true);
- const calls:string[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))calls.push(node.expression.text);ts.forEachChild(node,visit);};visit(syntax);
+ const oracles=["📜️script.ts","📐️scene-shading-oracle/🟦️.ts","🔭️reference-visual-oracle/🟦️.ts","🪟️authored-surface-oracle/🟦️.ts","🕸️grid-visual-oracle/🟦️.ts"].map(path=>readFileSync(new URL("../../"+path,import.meta.url),"utf8")),source=oracles.join("\n");
+ const calls:string[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))calls.push(node.expression.text);ts.forEachChild(node,visit);};for(const [index,text] of oracles.entries())visit(ts.createSourceFile("oracle"+index+".ts",text,ts.ScriptTarget.Latest,true));
  expect(calls.filter(name=>name==="oraclePixelDeltaV1").length).toBe(4);
  expect(calls).toContain("oracleSamplerV1");expect(calls).toContain("oracleSurfaceCasesV1");expect(calls).toContain("oracleBrowserDataPreludeV1");
  expect(source).toContain('/// <reference types="@webgpu/types" />');

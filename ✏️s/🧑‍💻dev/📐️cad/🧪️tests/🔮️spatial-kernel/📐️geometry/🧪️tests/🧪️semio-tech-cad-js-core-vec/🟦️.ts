@@ -1,4 +1,4 @@
-import type { GeometryTestDependencies } from "../../🟦️.ts";
+import type { GeometryTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTargets, modelDefinitionActionRegistry, runRegisteredAction } from "@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/actions";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";

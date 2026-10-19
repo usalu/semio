@@ -14,10 +14,7 @@ import { TICKET_GENERATED_OUTPUT_DIRECTORY } from "../../../🗂️workspaces/�
 
 const vectors = JSON.parse(readFileSync(new URL("../🧫️fixtures/🚪️source-admission/🧪️io/🔣️.json", import.meta.url), "utf8")) as { readonly cases: readonly { readonly id: string; readonly law: string; readonly input: Record<string, unknown>; readonly expected: Record<string, unknown> }[] };
 const cases = vectors.cases;
-const sourcePath = fileURLToPath(new URL("../../🟦️.ts", import.meta.url));
-const source = readFileSync(sourcePath, "utf8");
-const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
-const providers = [syntax, ...["🛣️path", "📁️input", "🏃️operation", "🔣️taxonomy", "🚪️source-admission", "🚪️source-admission/📁️io"].map((owner) => {
+const providers = [...["🛣️path", "📁️input", "🏃️operation", "🔣️taxonomy", "🚪️source-admission", "🚪️source-admission/📁️io", "🔍️inventory-planning", "📸️repository-capture"].map((owner) => {
   const path = fileURLToPath(new URL(`../../${owner}/🟦️.ts`, import.meta.url));
   return ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
 })];

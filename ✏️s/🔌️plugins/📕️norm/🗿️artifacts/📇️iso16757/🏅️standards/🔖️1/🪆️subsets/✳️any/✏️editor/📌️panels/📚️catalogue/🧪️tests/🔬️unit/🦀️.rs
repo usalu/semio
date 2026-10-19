@@ -49,7 +49,7 @@ fn reference_tables_are_populated_from_evaluate_constants() {
     match cell {
         semio_s_plugin_norm_app_surface::CatalogueCell::Number { value, .. } => {
             assert!(
-                (*value - semio_s_artifact_norm_iso16757_checks_common::helpers::part_2::INSTALL_CLEARANCE_M).abs() < 1e-12,
+                (*value - semio_s_artifact_norm_iso16757_checks_common::part_libraries::part_2::INSTALL_CLEARANCE_M).abs() < 1e-12,
                 "clearance cell must equal evaluate() INSTALL_CLEARANCE_M limit"
             );
         }

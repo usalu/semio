@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_ui_contract_values::*;
+use semio_framework_ui_contract_values::testkit::*;
+use std::mem::size_of;
+use semio_framework_ui_contract_budget::*;
+use semio_framework_ui_contract_text::{UiText, UI_TEXT_CLIP_MARK};
 use semio_framework_test_fixtures::fixture_text;
 
 fn ui_text(value: &str) -> UiText {
@@ -144,7 +148,7 @@ fn ui_text_clipped_keeps_short_values_and_marks_long_ones_on_a_char_boundary() {
 /// non-finite and an in-range number write exactly that text; a float past it reads back as the same `f64`.
 #[test]
 fn a_ui_number_serializes_as_its_json_text() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🌱️value/🧪️tests/🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the shared json-projection vectors");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🌱️value/🧪️tests/🧫️fixtures/🔣️json-projection/🔣️.json")).expect("the shared json-projection vectors");
     for case in fixture["numbers"].as_array().expect("numbers") {
         let literal = case["literal"].as_str().expect("literal");
         let value: f64 = literal.parse().expect("an f64 literal");

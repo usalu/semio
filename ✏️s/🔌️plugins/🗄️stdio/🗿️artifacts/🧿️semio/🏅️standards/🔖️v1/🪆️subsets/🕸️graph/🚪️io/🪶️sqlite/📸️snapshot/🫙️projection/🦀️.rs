@@ -1,6 +1,7 @@
 //! 🕸️ Original Graph projection retains source-name ordinals and shared property tree pages.
 use super::{SemioGraphSnapshot,SemioGraphPortKind,SemioValueEntry,number,float_columns,VALUES};
-use {crate::base_foundation::io::sqlite::snapshot::projection::NameIndex, crate::standards::v1::subsets::value::io::sqlite::snapshot::projection::{TreeScratch, visit_tree}};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::NameIndex;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::projection::{TreeScratch,visit_tree};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,RowWriter,ProjectionStorage,project_owned,owned_workspace}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 

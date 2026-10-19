@@ -1,8 +1,10 @@
 //! 🔺️ Diff constructor for `DeleteDoorType`: one deleted door type entry together with the properties and classifications keyed by the type; refused while openings or curtain panels still use it.
 
-use crate::standards::v1::subsets::any::schema::mutations::cascade;
 use crate::standards::v1::subsets::any::schema::mutations::delete_door_type::DeleteDoorType;
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot, OpeningKind}, diff::{Entry, KeyedDelta, ModelDiff}};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{CurtainPanel, OpeningKind};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, KeyedDelta};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
@@ -16,7 +18,7 @@ pub fn diff(payload: &DeleteDoorType, base: &ModelSnapshot) -> MutationOutcome<M
     if base.curtain_wall_types.values().any(|row| panel(&row.panel)) || base.curtain_panel_overrides.values().any(|row| panel(&row.panel)) {
         return MutationOutcome::refuse(OutcomeCode::TargetReferenced, format!("Door type \"{}\" is still used by curtain panels.", payload.id), [payload.id.clone()]);
     }
-    let mut removal = cascade::data_diff(base, &payload.id);
+    let mut removal = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::data_diff(base, &payload.id);
     removal.door_types = Some(KeyedDelta::one(payload.id.clone(), Entry::Deleted));
     MutationOutcome::new(removal)
 }

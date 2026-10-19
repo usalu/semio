@@ -29,7 +29,7 @@ fn marquee_crossing_includes_partial_overlap_window_does_not() {
     let mut max_x = f32::NEG_INFINITY;
     let mut max_y = f32::NEG_INFINITY;
     for corner in [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]] {
-        let screen = ui_wgpu::wgpu::project_point(view_proj, Vec3::from_array(corner), inner.w, inner.h).expect("screen");
+        let screen = ui_scene::math::project_point(view_proj, Vec3::from_array(corner), inner.w, inner.h).expect("screen");
         min_x = min_x.min(screen[0]);
         min_y = min_y.min(screen[1]);
         max_x = max_x.max(screen[0]);
@@ -94,7 +94,7 @@ fn marquee_face_preview_and_overlay_use_logical_face_ids() {
     update_marquee_preview(&mut state.camera, &mut state.selection, &mut state.scene, bounds);
     assert!(state.selection.marquee_preview_ids.iter().any(|id| id == "10" || id == "11"), "preview ids: {:?}", state.selection.marquee_preview_ids);
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &ui_wgpu::wgpu::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(!lines.is_empty(), "face marquee preview should draw triangle edge lines");
 }
 
@@ -177,13 +177,13 @@ fn preview_survives_sync_when_scene_json_unchanged() {
 #[test]
 fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing() {
     let mut scene = scene_with_selection("{}");
-    let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
+    let mut page = semio_framework_ui_declaration::ui::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
     page.push_item(World3dSnapshotItem { numbers: [4.0, 4.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 45.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 12, ..Default::default() }).unwrap();
     page.seal().unwrap();
-    let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
-    let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor).unwrap();
-    ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page).unwrap();
-    let lease = ui_wgpu::wgpu::world3d_snapshot_seal(token).unwrap();
+    let descriptor = semio_framework_ui_declaration::ui::World3dSnapshotDescriptor { revision: 5, generation: 7, page_count: 1, item_count: 1, byte_count: 0, draw_count: 0, draw_instance_count: 0, draw_byte_count: 0 };
+    let token = semio_framework_ui_declaration::ui::world3d_snapshot_begin(descriptor).unwrap();
+    semio_framework_ui_declaration::ui::world3d_snapshot_admit_page(token, page).unwrap();
+    let lease = semio_framework_ui_declaration::ui::world3d_snapshot_seal(token).unwrap();
     scene.world_3d.as_mut().unwrap().snapshot = Some(lease);
 
     let bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
@@ -204,9 +204,9 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
         target: vector("target"),
         up: vector("up"),
         fov_y: oracle["fov"].as_f64().unwrap() as f32 * std::f32::consts::PI / 180.0,
-        near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
-        far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
-        projection: ui_wgpu::wgpu::CameraProjection3d::Perspective,
+        near: ui_scene::math::WORLD_ORBIT_CAMERA_NEAR,
+        far: ui_scene::math::WORLD_ORBIT_CAMERA_MIN_FAR,
+        projection: ui_scene::math::CameraProjection3d::Perspective,
         zoom: oracle["zoom"].as_f64().unwrap_or(1.0) as f32,
     })
     .to_camera();
@@ -217,9 +217,9 @@ fn typed_camera_snapshot_matches_current_camera_fixture_without_production_parsi
     assert_eq!(actual.fov_y, expected.fov_y);
     assert_eq!(typed.bridge.snapshot_lease, Some(lease));
 
-    ui_wgpu::wgpu::world3d_snapshot_begin_close(lease).unwrap();
-    assert!(!ui_wgpu::wgpu::world3d_snapshot_close_step(lease).unwrap());
-    assert!(ui_wgpu::wgpu::world3d_snapshot_close_step(lease).unwrap());
+    semio_framework_ui_declaration::ui::world3d_snapshot_begin_close(lease).unwrap();
+    assert!(!semio_framework_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
+    assert!(semio_framework_ui_declaration::ui::world3d_snapshot_close_step(lease).unwrap());
 }
 
 /// 🗑️ A url the renderer's decoder refused is offered ONCE. Both request loops re-derive their
@@ -360,7 +360,7 @@ fn pick_viewport_uses_render_bounds_not_pick_clip_offset() {
     state.session.bounds = bounds;
     state.session.pick_bounds = clip;
     let camera = state.camera.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, bounds.w, bounds.h), Vec3::ZERO, bounds.w, bounds.h).expect("vertex projects");
     let global_x = bounds.x + screen[0];
     let global_y = bounds.y + screen[1];
     let picked = pick_component_at(&state.session, &state.camera, &state.selection, &state.scene, global_x, global_y, bounds).expect("vertex pick respects render viewport");
@@ -378,7 +378,7 @@ fn append_component_face_overlay_lines_include_hovered_face() {
     state.scene.meshes.insert("mesh-1".into(), mesh);
     state.scene.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { component_source: None, id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     let mut lines = Vec::new();
-    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &ui_wgpu::wgpu::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
+    append_component_overlays(&state.selection, &state.gumball, &state.scene, &state.overlay, &semio_framework_ui_theme::Theme::default(), &state.camera.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 6, "hovered face should emit triangle edge lines, got {}", lines.len());
 }
 
@@ -397,7 +397,7 @@ fn pick_component_at_face_mode_uses_ray_pick() {
     let mesh_ref = state.scene.meshes.get("mesh-1").expect("mesh");
     let tri = world_mesh_triangle(*mesh_ref, 0).expect("triangle");
     let centroid = mesh_vertex(*mesh_ref, tri[0]).expect("first vertex").add(mesh_vertex(*mesh_ref, tri[1]).expect("second vertex")).add(mesh_vertex(*mesh_ref, tri[2]).expect("third vertex")).scale(1.0 / 3.0);
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), centroid, inner.w, inner.h).expect("face centroid projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), centroid, inner.w, inner.h).expect("face centroid projects");
     let picked = pick_component_at(&state.session, &state.camera, &state.selection, &state.scene, screen[0], screen[1], inner).expect("face pick");
     assert_eq!(picked.0, "face");
     assert_eq!(picked.2, "obj-1");
@@ -418,7 +418,7 @@ fn pick_component_at_edge_mode_uses_ray_pick() {
     let a = Vec3::new(edge[0][0], edge[0][1], edge[0][2]);
     let b = Vec3::new(edge[1][0], edge[1][1], edge[1][2]);
     let mid = a.add(b).scale(0.5);
-    let screen = ui_wgpu::wgpu::project_point(ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), mid, inner.w, inner.h).expect("edge midpoint projects");
+    let screen = ui_scene::math::project_point(ui_scene::math::projection_spec_view_proj(&camera, state.camera.projection_spec, inner.w, inner.h), mid, inner.w, inner.h).expect("edge midpoint projects");
     let picked = pick_component_at(&state.session, &state.camera, &state.selection, &state.scene, screen[0], screen[1], inner).expect("edge pick");
     assert_eq!(picked.0, "edge");
     assert_eq!(picked.2, "obj-1");

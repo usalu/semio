@@ -3,16 +3,7 @@ import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import type { PdfColorSpace, PdfFunction } from "../../🌈️color/🟦️.ts";
 import type { PdfDictEntry } from "../../🧩️cos/🟦️.ts";
 import type { PdfOp } from "../../🖋️content/🟦️.ts";
-
-export type PdfLineJoin =
-  | "miter"
-  | "round"
-  | "bevel";
-
-export type PdfLineCap =
-  | "butt"
-  | "round"
-  | "square";
+import type { PdfLineJoin, PdfLineCap } from "../../🖊️line-style/🟦️.ts";
 
 export interface PdfExtGState {
   id: string;

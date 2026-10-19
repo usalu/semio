@@ -1,6 +1,7 @@
 //! 🪓️ `delete-opening` payload. Removes a opening together with its properties and classifications.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,7 +13,7 @@ pub struct DeleteOpening {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for DeleteOpening
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteOpening> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteOpening> + semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "opening", kind: "delete-opening", record: "DeleteOpening" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

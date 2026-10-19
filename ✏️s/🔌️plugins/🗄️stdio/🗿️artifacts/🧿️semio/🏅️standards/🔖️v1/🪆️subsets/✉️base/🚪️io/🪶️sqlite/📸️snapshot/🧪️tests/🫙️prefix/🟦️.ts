@@ -7,6 +7,8 @@ import Ajv from "ajv/dist/2020";
 import corpus from "../🧫️fixtures/🫙️prefix/🔣️.json";
 import forest from "../🧫️fixtures/🫙️prefix/🌳️forest.json";
 import projection from "../🧫️fixtures/🫙️prefix/🧮️projection.json";
+import utf8 from "../🧫️fixtures/🧵️hex-utf8/🔣️.json";
+import hex from "../🧫️fixtures/🧵️hex-octets/🔣️.json";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 test("Graph properties retain actual original source indices and shared value pages",()=>{
  const root=new URL("../../../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/",import.meta.url);expect(readFileSync(new URL("🦀️.rs",root),"utf8").includes("projection::project(self")).toBe(true);const source=readFileSync(new URL("🫙️projection/🦀️.rs",root),"utf8");expect({names:source.includes("NameIndex"),tree:source.includes("TreeScratch"),values:source.includes("visit_tree(&entry.value,VALUES,None,tree,out)"),original:source.includes("project_owned")}).toEqual({names:true,tree:true,values:true,original:true});
@@ -67,8 +69,8 @@ test("relational envelope retains the exact selected child and original recipien
  const source=readFileSync(new URL("../../💰️reconstruction/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("struct Prefix");expect(source).toContain("SchemaValidationStorage");expect(source).toContain("NativeDecodeRetirementRecipient");expect(source).toContain("with_retirement_child");expect(source).not.toContain("Owned::new(");
 });
 test("link pin original variants preserve authored metadata and expose controlled custody",()=>{
- const owner=frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store");const f=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"),"utf8")) as {pins:unknown[]};const shape=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧬️schema/🔣️.json"),"utf8")),blob=JSON.parse(readFileSync(resolve(owner,"📦️blob/🧬️schema/🔣️.json"),"utf8"));const pinShape=shape.$defs.LinkPin;pinShape.oneOf[2].properties.blob=blob;delete blob.$schema;const validate=new Ajv({strict:true}).compile(pinShape);for(const pin of f.pins)expect(validate(pin)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE pins(id INTEGER PRIMARY KEY,value TEXT NOT NULL)");for(const[index,pin]of f.pins.entries())db.run("INSERT INTO pins VALUES(?,?)",[index,JSON.stringify(pin)]);expect((db.query("SELECT value FROM pins ORDER BY id").all() as {value:string}[]).map(row=>JSON.parse(row.value))).toEqual(f.pins);}finally{db.close();}
- const source=readFileSync(resolve(owner,"🔗️link/🧬️schema/🦀️.rs"),"utf8");expect(source.slice(source.indexOf("/// 📌️"),source.indexOf("pub enum LinkPin"))).toContain("semio_framework_value::RetireOwned");
+ const owner=frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store"),reference=frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference");const f=JSON.parse(readFileSync(resolve(owner,"🔗️link/🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"),"utf8")) as {pins:unknown[]};const shape=JSON.parse(readFileSync(resolve(reference,"🔗️link/🧬️schema/🔣️.json"),"utf8")),blob=JSON.parse(readFileSync(resolve(reference,"📦️blob/🧬️schema/🔣️.json"),"utf8"));const pinShape=shape.$defs.LinkPin;pinShape.oneOf[2].properties.blob=blob;delete blob.$schema;const validate=new Ajv({strict:true}).compile(pinShape);for(const pin of f.pins)expect(validate(pin)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE pins(id INTEGER PRIMARY KEY,value TEXT NOT NULL)");for(const[index,pin]of f.pins.entries())db.run("INSERT INTO pins VALUES(?,?)",[index,JSON.stringify(pin)]);expect((db.query("SELECT value FROM pins ORDER BY id").all() as {value:string}[]).map(row=>JSON.parse(row.value))).toEqual(f.pins);}finally{db.close();}
+ const source=readFileSync(resolve(reference,"🔗️link/🧬️schema/🦀️.rs"),"utf8");expect(source.slice(source.indexOf("/// 📌️"),source.indexOf("pub enum LinkPin"))).toContain("semio_framework_value::RetireOwned");
 });
 
 test("native encoder keeps original output and admission children through cancellation",()=>{
@@ -80,4 +82,16 @@ test("native encoder keeps original output and admission children through cancel
   expect(expected).toBe(independent);expect(expected.length).toBeGreaterThan(262144);
  }finally{db.close();}
  const source=readFileSync(new URL("../../🛫️native/🦀️.rs",import.meta.url),"utf8");expect(source).toContain("struct EncodingPrefix");expect(source).toContain("owned_workspace");expect(source).toContain("with_retirement_child");expect(source).toContain("output:Some(&mut prefix.bytes)");expect(source).not.toContain("let mut bytes=native.allocate_vec");
+});
+test("shared native hexadecimal vectors agree with independent SQLite and platform decoders",()=>{
+ const db=new Database(":memory:");const strict=new TextDecoder("utf-8",{fatal:true,ignoreBOM:true});const pairs=/^(?:[0-9a-fA-F]{2})*$/;
+ try{
+  for(const row of utf8.positive){expect((db.query("SELECT lower(hex(CAST(x'"+row.hex+"' AS TEXT))) AS value").get() as {value:string}).value).toBe(row.hex.toLowerCase());expect(strict.decode(Buffer.from(row.hex,"hex"))).toBe(row.text);expect((db.query("SELECT CAST(x'"+row.hex+"' AS TEXT) AS value").get() as {value:string}).value).toBe(row.text);}
+  for(const row of utf8.negative){if(row.kind==="hex")expect(pairs.test(row.hex)).toBe(false);else{expect(pairs.test(row.hex)).toBe(true);expect(()=>strict.decode(Buffer.from(row.hex,"hex"))).toThrow();}}
+  for(const row of hex.octets){expect(pairs.test(row.hex)).toBe(true);expect(Array.from(Buffer.from(row.hex,"hex"))).toEqual(row.octets);expect((db.query("SELECT lower(hex(?)) AS value").get(Uint8Array.from(row.octets)) as {value:string}).value).toBe(row.hex.toLowerCase());}
+  for(const row of hex.refusedOctets)expect(pairs.test(row.hex)).toBe(false);
+  for(const row of hex.words){const word=Buffer.from(row.hex,"hex").toString("utf8");if("value" in row)expect(Number(word)).toBe(row.value as number);else{expect(word.startsWith("nan64_")).toBe(true);const view=new DataView(new ArrayBuffer(8));view.setBigUint64(0,BigInt("0x"+word.slice(6)));expect(Number.isNaN(view.getFloat64(0))).toBe(true);}}
+ }finally{db.close();}
+ expect(hex.stack).toBe(384);expect(hex.cancelled.stop).toBeLessThan(hex.cancelled.repeat);
+ const source=readFileSync(new URL("../../🛬️native/🦀️.rs",import.meta.url),"utf8");for(const name of ["with_body","hex_text_into","hex_bytes_into","hex_float","binary_list_into","text_list_into","reader_text_into","reader_bytes_into","empty_child","empty_reference"])expect(source).toContain("pub fn "+name);expect(source).toContain("let mut word=[0u8;"+hex.stack+"]");
 });

@@ -348,7 +348,7 @@ impl MemberOpenRequest {
         }
         if self.closing_identity_field == 0 {
             if self.actor.0.has_owner() {
-                if grant.maximum_release_bytes<semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>(){return Ok(RetainedCloneStep::Progress(empty));}
+                if grant.maximum_release_bytes<semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>(){return Ok(RetainedCloneStep::Progress(empty));}
                 let original=std::mem::take(&mut self.actor.0);
                 match original.close_original_lease(grant) {
                     Ok((value,progress))=>{self.closing_actor=value;return Ok(RetainedCloneStep::Progress(progress));},
@@ -399,7 +399,7 @@ impl MemberOpenRequest {
     pub fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         if self.detached { return Ok(0); }
         if let Some(pages) = self.pages.as_ref() { return Ok(if pages.page_count() == 0 { pages.allocation_byte_demand() } else { 0 }); }
-        if self.closing_identity_field==0{return Ok(if self.actor.0.has_owner(){semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<String>()}else{self.closing_actor.as_ref().map_or(0,String::capacity)});}
+        if self.closing_identity_field==0{return Ok(if self.actor.0.has_owner(){semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>()}else{self.closing_actor.as_ref().map_or(0,String::capacity)});}
         let expected = self.expected.as_ref();
         let owner = self.owner.as_ref();
         let field = match self.closing_identity_field {

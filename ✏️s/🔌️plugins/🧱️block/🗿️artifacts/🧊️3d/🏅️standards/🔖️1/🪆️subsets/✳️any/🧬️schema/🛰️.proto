@@ -1,6 +1,6 @@
 syntax = "proto3";
 package semio.s.block.block3d.artifact;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 // 🧬️ Block3d artifact schema — every field with its state class.
 
@@ -12,7 +12,7 @@ message Block3dArtifact {
   // @state artifact
   repeated BlockRepresentation representations = 3;
   // @state artifact
-  semio.os.store.ArtifactChild catalog = 4;
+  semio.framework.schema.artifact_child.ArtifactChild catalog = 4;
   // @state artifact
   repeated Block3dVortexKindExtra vortex_kind_extra = 5;
   // @state artifact

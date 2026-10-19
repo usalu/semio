@@ -10,7 +10,7 @@ use super::*;
 /// a path folds into `framework.display.layout.group.<a/b>` folders minted on first use. A user
 /// layout additionally carries React's `framework.display.delete.<id>` action — a row CONTROL here,
 /// because this renderer's panel tree projects a row's control and not its `actions` menu.
-pub fn named_layout_rows(layouts: &[ui_wgpu::wgpu::NamedLayout], deletable: bool, is_de: bool) -> Vec<UiTreeItemNode> {
+pub fn named_layout_rows(layouts: &[semio_framework_ui_declaration::layout::NamedLayout], deletable: bool, is_de: bool) -> Vec<UiTreeItemNode> {
     let mut root: Vec<UiTreeItemNode> = Vec::new();
     for entry in layouts {
         let leaf = UiTreeItemNode {
@@ -18,7 +18,7 @@ pub fn named_layout_rows(layouts: &[ui_wgpu::wgpu::NamedLayout], deletable: bool
             label: Label::data(entry.label.clone()),
             action: Some(ActionDescriptor { controller_id: "framework".into(), action: "applyNamedLayout".into(), args: semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "layoutId": entry.id.clone() }) }),
             control: deletable.then(|| {
-                ui_wgpu::wgpu::component::ui::UiControlNode::Button(UiButtonNode {
+                semio_framework_ui_declaration::ui::UiControlNode::Button(UiButtonNode {
                     id: Some(format!("framework.display.delete.{}", entry.id)),
                     icon_id: IconName::Trash2,
                     label: Label::data(shell_chrome_string("display.deleteLayout", is_de)),

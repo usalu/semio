@@ -6,8 +6,8 @@ import {captureOwnedProcess,type OwnedProcessCaptureOptions,type OwnedProcessCap
 import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
-import policySchema from "./📋️policy/🧬️schema/🔣️.json";
-import configuredPolicy from "./📋️policy/🔣️.json";
+import policySchema from "./📋️policy/🧬️schema/🔣️.json" with { type: "json" };
+import configuredPolicy from "./📋️policy/🔣️.json" with { type: "json" };
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "../../../🧭️routing/📥️invocation/🟦️.ts";
 import {requestedCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../🏗️build/🎟️capacity/🟦️.ts";

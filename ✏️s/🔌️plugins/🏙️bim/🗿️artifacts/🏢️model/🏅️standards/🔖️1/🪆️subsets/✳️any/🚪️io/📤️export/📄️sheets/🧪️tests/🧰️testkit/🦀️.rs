@@ -1,9 +1,11 @@
 //! 🧰️ Shared helpers of the sheet export tests: English headings, and the committed house with a sheet set placed on it (two plans, a section and two elevations over three sheets) together with the inference of that model.
 
-use crate::standards::v1::subsets::any::io::export::sheets::TitleLabels;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::schema::{snapshot::{IsoSize, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport}, inferences::ModelInference};
+use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink::TitleLabels;
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::house;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Sheet, SheetRevision, Viewport};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 📄️ The committed room with its sheet set: three sheets (A3 landscape, A4 portrait, custom paper), seven cropped viewports and two revision rows.
@@ -69,5 +71,5 @@ pub fn texts(document: &str) -> Vec<String> {
 
 /// 🔮️ The inference of `model` through the shared session.
 pub fn inferred(model: &ModelSnapshot) -> ModelInference {
-    inference::with_inference(None, model, |inference| inference.clone())
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, model, |inference| inference.clone())
 }

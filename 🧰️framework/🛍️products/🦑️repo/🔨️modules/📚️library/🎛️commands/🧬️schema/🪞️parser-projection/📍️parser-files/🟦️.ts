@@ -1,8 +1,9 @@
-/** 📍️ Where the projected parsers of a schema leaf live: in the leaf itself, or in the `🚪️parsers` folder next to the file that declares the type of the export, so a leaf split into component files keeps one parser file per component. The leaf stays the public face: it re-exports every parser its folders hold.
+/** 📍️ Where the projected parsers of a schema leaf live: in the leaf itself, or in the `🚪️parsers` folder next to the file that declares the type of the export, so a leaf split into component files keeps one parser file per component. The leaf re-exports nothing: whoever needs a parser imports it from the file that holds it, and a parser stays in the leaf wherever a folder would close an import cycle with the leaf's guard helpers.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { codePointOrder, escapeRegExp } from "../🔡️json-text/🟦️.ts";
+import { parserRange } from "../📖️declared-types/🟦️.ts";
 import { PARSER_REGION, PARSER_REGION_END } from "../🚪️guard-helpers/🟦️.ts";
 
 //#region 🔖️Files
@@ -32,9 +33,9 @@ export function specifierBetween(from: string, to: string): string {
   return path.startsWith(".") ? path : `./${path}`;
 }
 
-/** 📍️ The files of one leaf that may hold its parsers, and where each parser belongs: the file that already defines it, else the parser folder of the file that declares its type, else the leaf. */
+/** 📍️ The files of one leaf that may hold its parsers, and where each parser belongs: the file that already defines it, else the parser folder of the file that declares its type, else the leaf (always the leaf for a `pinned` parser). A parser the leaf holds but a run is `moving` out of it belongs where a new one would go. */
 export class ParserFiles {
-  constructor(private readonly sources: SourceTree, readonly leaf: string) {}
+  constructor(private readonly sources: SourceTree, readonly leaf: string, private readonly pinned: (name: string) => boolean = () => false) {}
 
   get files(): readonly string[] {
     return this.sources.owned(this.leaf);
@@ -50,8 +51,67 @@ export class ParserFiles {
 
   placementOf(name: string): string {
     const file = this.typeFile(name);
-    return file === this.leaf ? this.leaf : join(dirname(file), PARSER_DIRECTORY, TYPESCRIPT_LEAF);
+    return file === this.leaf || this.pinned(name) ? this.leaf : join(dirname(file), PARSER_DIRECTORY, TYPESCRIPT_LEAF);
   }
+
+  homeOf(name: string, moving: ReadonlySet<string> = new Set()): string {
+    const defined = this.definingFile(name);
+    return defined !== undefined && (defined !== this.leaf || !moving.has(name)) ? defined : this.placementOf(name);
+  }
+}
+
+/** 📌️ The file a parser lives in, for any leaf of a run: importers name this file, never the leaf. A shared leaf (named by a package specifier) keeps every parser itself. */
+export class ParserHomes {
+  constructor(private readonly sources: SourceTree, private readonly pins: ReadonlyMap<string, ReadonlySet<string>>, private readonly shared: ReadonlySet<string>, private readonly moving: ReadonlyMap<string, ReadonlySet<string>>) {}
+
+  files(leaf: string): ParserFiles {
+    return new ParserFiles(this.sources, leaf, (name) => this.shared.has(leaf) || (this.pins.get(leaf)?.has(name) ?? false));
+  }
+
+  home(leaf: string, name: string): string {
+    return this.files(leaf).homeOf(name, this.moving.get(leaf));
+  }
+}
+
+const CALL = /\bparse([A-Z][A-Za-z0-9]*)\(/gu;
+
+/** 📌️ The parsers of one leaf that must stay in the leaf because a parser folder would close an import cycle: folders import the leaf's guard helpers, so the leaf may not import a folder. A parser stays when its type is declared in the leaf or the leaf's own code calls it, when a parser that stays calls it, and when it sits in a cycle of calls between folders. `local` holds the callees of the parsers rendered in this run, the others are read from their text; `moving` are the parsers of the leaf a run moves into folders. */
+export function pinnedParsers(sources: SourceTree, leaf: string, names: readonly string[], local: ReadonlyMap<string, ReadonlySet<string>>, moving: ReadonlySet<string>): ReadonlySet<string> {
+  const files = new ParserFiles(sources, leaf);
+  const text = sources.read(leaf);
+  const region = text.indexOf(PARSER_REGION);
+  const called = identifiersOf(withoutModuleLines(region < 0 ? text : text.slice(0, region)), false);
+  const known = new Set(names);
+  const callees = (name: string): readonly string[] => {
+    const rendered = local.get(name);
+    if (rendered !== undefined) return [...rendered].filter((callee) => known.has(callee));
+    const file = files.definingFile(name);
+    const source = file === undefined ? undefined : sources.read(file);
+    const range = source === undefined ? undefined : parserRange(source, name);
+    return range === undefined ? [] : [...source!.slice(range[0], range[1]).matchAll(CALL)].map((match) => match[1]!).filter((callee) => callee !== name && known.has(callee));
+  };
+  const pinned = new Set(names.filter((name) => files.typeFile(name) === leaf || called.has(`parse${name}`)));
+  const home = (name: string): string => files.homeOf(name, moving);
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const name of [...pinned]) for (const callee of callees(name)) if (!pinned.has(callee)) { pinned.add(callee); changed = true; }
+    const edges = new Map<string, Set<string>>();
+    for (const name of names) {
+      if (pinned.has(name)) continue;
+      for (const callee of callees(name)) if (!pinned.has(callee) && home(callee) !== home(name)) edges.set(home(name), (edges.get(home(name)) ?? new Set()).add(home(callee)));
+    }
+    const closes = (from: string): boolean => {
+      const seen = new Set<string>();
+      const stack = [...(edges.get(from) ?? [])];
+      for (let at = stack.pop(); at !== undefined; at = stack.pop()) {
+        if (at === from) return true;
+        if (!seen.has(at)) { seen.add(at); stack.push(...(edges.get(at) ?? [])); }
+      }
+      return false;
+    };
+    for (const name of names) if (!pinned.has(name) && closes(home(name))) { pinned.add(name); changed = true; }
+  }
+  return pinned;
 }
 //#endregion 🔖️Files
 
@@ -67,16 +127,6 @@ export function appendParsers(source: string, parsers: string): string {
   if (!source.includes(PARSER_REGION)) return `${source.trimEnd()}\n\n${PARSER_REGION}\n${parsers}\n${PARSER_REGION_END}\n`;
   if (end < source.indexOf(PARSER_REGION)) return `${source.trimEnd()}\n\n${parsers}\n`;
   return `${source.slice(0, end).trimEnd()}\n\n${parsers}\n${source.slice(end)}`;
-}
-
-/** 🔗️ `source` with the statement that re-exports `names` from `specifier`: an existing statement for that specifier is rewritten, otherwise one is appended. */
-export function withReexport(source: string, specifier: string, names: readonly string[]): string {
-  const quoted = JSON.stringify(specifier);
-  const statement = `export { ${[...names].sort(codePointOrder).join(", ")} } from ${quoted};`;
-  const existing = new RegExp(`^export \\{[^}]*\\} from ${escapeRegExp(quoted)};[ \\t]*$`, "m");
-  if (existing.test(source)) return source.replace(existing, () => statement);
-  const tail = source.trimEnd();
-  return `${tail}${/\nexport \{[^}]*\} from "[^"\n]+";$/u.test(tail) ? "\n" : "\n\n"}${statement}\n`;
 }
 //#endregion 🔖️Regions
 

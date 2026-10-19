@@ -104,11 +104,11 @@ fn a_published_immediate_select_owns_wheel_without_parsing_its_option_id() {
     shell.input.open_selects.insert(id.into(), true);
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 160.0, 100.0), event: None, control_id: Some("outer".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     let widget =
-        ui_wgpu::wgpu::WidgetNode::Select { id: id.into(), value: "0".into(), items: (0..20).map(|index| ui_wgpu::wgpu::SelectItem { value: format!("option.item.{index}"), label: index.to_string() }).collect(), placeholder: None, on_change: None };
-    ui_wgpu::wgpu::render_widget(
+        semio_framework_ui_wgpu_widget_kit::WidgetNode::Select { id: id.into(), value: "0".into(), items: (0..20).map(|index| semio_framework_ui_wgpu_widget_kit::SelectItem { value: format!("option.item.{index}"), label: index.to_string() }).collect(), placeholder: None, on_change: None };
+    semio_framework_ui_wgpu_widgets::render_widget(
         &widget,
         Rect::new(8.0, 62.0, 120.0, 22.4),
-        &mut ui_wgpu::wgpu::WidgetContext {
+        &mut semio_framework_ui_wgpu_widget_kit::WidgetContext {
             draw: &mut draw,
             overlay: None,
             atlas: &mut atlas,

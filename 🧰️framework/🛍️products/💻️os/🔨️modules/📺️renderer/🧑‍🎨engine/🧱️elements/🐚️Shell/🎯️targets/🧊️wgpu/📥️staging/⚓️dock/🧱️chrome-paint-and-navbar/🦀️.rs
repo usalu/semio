@@ -6,7 +6,7 @@ use super::*;
 
 pub fn retained_panel_chrome_item_width(atlas: &mut FontAtlas, theme: &Theme, item: &ChromeGroupItem<'_>) -> Option<f32> {
     let label = item.label.unwrap_or("");
-    if label.len() > ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES {
+    if label.len() > semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES {
         return None;
     }
     let leading = item.icon_id.map_or(0.0, |_| PANEL_CHROME_ICON_TINY + theme.gap_standard);

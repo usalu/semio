@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 import {receiveScriptProcessInvocation} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 /** 🔌️ Rewriting public TypeScript package and its explicit semantic snapshot laws. */
-import {runArtifactTypeScriptPackageMain} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 import {readdirSync} from "node:fs";
 import {join,resolve} from "node:path";
-import {runRepositoryCommand} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { runRepositoryCommand } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
 if(process.argv[2]==="verify"&&process.argv[3]==="snapshot-sqlite-source"){
  await receiveScriptProcessInvocation(process.env,async original=>{
  const workspace=resolve(import.meta.dir,"../../../../../../.."),files:string[]=[],pending=[resolve(import.meta.dir,"../../🏅️standards")];

@@ -1,21 +1,21 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{brep_definition, mesh_where};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::en;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::en;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::filler_cell;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::filler_cell;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, BTreeSet};
-use crate::standards::v1::subsets::any::io::export::ifc::curtain::*;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, framed, house, real, rows, string};
+use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::curtain::{WALL_ROW, TYPE_ID_ROW, TYPE_ROW, OVERRIDES_ROW};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, framed, house, real, rows, string};
 
 #[test]
 fn a_curtain_wall_aggregates_its_mullions_and_its_panels() {
@@ -38,7 +38,8 @@ fn the_curtain_wall_reports_its_length_height_and_side_area() {
     assert!((values[0] - 6.0).abs() < 1e-9 && (values[1] - 2.8).abs() < 1e-9 && (values[2] - 6.0 * 2.8).abs() < 1e-9);
 }
 
-use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainPanelOverride, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::CurtainPanel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, ModelSnapshot};
 
 #[test]
 fn a_door_panel_is_an_ifc_door_of_the_curtain_wall_and_an_open_cell_adds_nothing() {

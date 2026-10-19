@@ -1,16 +1,13 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { discoverPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🌐️rust-module-graph/🟦️.ts";
-import { isDiscoverySkipDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
-import { schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "@semio-tech/repo-lib/inventory";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🎯️native-selection/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
-import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import type { SemanticFacetPrimaryFileProjectionContract } from "@semio-tech/repo-lib/inventory";
 
 
 //#endregion 🎮️PlaygroundSession
@@ -116,7 +113,7 @@ export const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
  * from every `🎚️config`/`👥️presence`/artifact schema facet contradicts the taxonomy that defines them.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts `schemaFacetFormatEntries` */
 export function taxonomySchemaFilenames(facetAbs: string): string[] {
-  const facetRel = relative(getWorkspaceRoot(), facetAbs).replaceAll("\\", "/");
+  const facetRel = relative(findWorkspaceRoot(), facetAbs).replaceAll("\\", "/");
   return schemaFacetFormatEntries(facetRel, TAXONOMY).map(([, format]) => primaryFilenameForKind(format.fileKindId));
 }
 

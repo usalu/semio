@@ -1,19 +1,21 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::render::envelope::{self, Mode};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_modify::render::envelope;
+use semio_s_artifact_bim_model_modify::render::envelope::Mode;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dText};
-use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
 #[allow(unused_imports)]
-use crate::render::envelope::Part;
+use semio_s_artifact_bim_model_modify::render::envelope::Part;
 #[allow(unused_imports)]
 use semio_framework_plugin::{DslValue, World3dAnnotationLayer, World3dScalarField, World3dScalarRange, WORLD3D_ANNOTATIONS_MAX};
-use crate::editor::bim::modes::edit::windows::world::envelope::{instance, marker};
-use crate::editor::bim::modes::edit::windows::world::envelope::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::envelope::{instance, marker};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::envelope::{mode, overlay, legend, surface_text};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 
 fn corner(x: f64, y: f64, z: f64) -> Vec3 {
     Vec3 { x, y, z }
@@ -76,9 +78,9 @@ async fn by_boundary_the_vertex_colours_decide_and_there_is_no_heatmap() {
     let layer = overlay.annotations.expect("markers");
     assert!(layer.title.as_ref().is_some_and(|title| title.en.contains("boundary") && title.de.contains("Randbedingung")));
     let (snapshot, inference) = model();
-    let parts = envelope::parts(&snapshot, &inference, &|_| true);
-    let mesh = envelope::mesh_of(&parts, Mode::Boundary);
-    let [r, g, b] = envelope::boundary_rgb(Boundary::Exterior);
+    let parts = semio_s_artifact_bim_model_modify::render::envelope::parts(&snapshot, &inference, &|_| true);
+    let mesh = semio_s_artifact_bim_model_modify::render::envelope::mesh_of(&parts, Mode::Boundary);
+    let [r, g, b] = semio_s_artifact_bim_model_modify::render::envelope::boundary_rgb(Boundary::Exterior);
     assert_eq!(mesh.colors[..3], [f32::from(r) / 255.0, f32::from(g) / 255.0, f32::from(b) / 255.0]);
 }
 
@@ -102,7 +104,7 @@ async fn the_marker_sits_at_the_world_position_of_the_centre_of_the_polygon() {
     let (snapshot, inference) = model();
     let layer = overlay(&snapshot, &inference, &on("u_value")).and_then(|overlay| overlay.annotations).expect("markers");
     let World3dAnnotation::Marker(first) = &layer.items[0] else { panic!("a marker") };
-    let parts = envelope::parts(&snapshot, &inference, &|_| true);
+    let parts = semio_s_artifact_bim_model_modify::render::envelope::parts(&snapshot, &inference, &|_| true);
     assert_eq!(first.position, envelope::to_world(parts[0].placement, [2.0, 0.0, 1.5]));
 }
 
@@ -132,15 +134,15 @@ async fn an_unknown_mode_key_falls_back_to_the_u_value_and_no_text_keeps_a_place
 
 #[semio_framework_async_macros::async_test]
 async fn the_world_scene_gains_the_overlay_only_while_the_setting_is_on_and_still_renders() {
-    use crate::editor::bim::modes::edit::windows::world;
+    use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world;
     let (snapshot, inference) = model();
-    let off = world::scene(&snapshot, &inference, &BimWorldWindowConfig::default(), &[], &[], 1);
+    let off = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene(&snapshot, &inference, &BimWorldWindowConfig::default(), &[], &[], 1);
     assert!(!off.meshes_json.contains("bim-energy-envelope") && off.annotations.is_none() && off.scalar_field.is_none());
-    let scene = world::scene(&snapshot, &inference, &on("u_value"), &[], &[], 1);
+    let scene = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene(&snapshot, &inference, &on("u_value"), &[], &[], 1);
     assert!(scene.meshes_json.contains("bim-energy-envelope/0") && scene.instances_json.contains("bim-energy-envelope/0"));
     assert!(scene.instances_json.contains("w-south"), "the model itself is still drawn");
     assert!(scene.annotations.is_some() && scene.scalar_field.is_some());
-    let boundary = world::scene(&snapshot, &inference, &on("boundary"), &[], &[], 1);
+    let boundary = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::scene(&snapshot, &inference, &on("boundary"), &[], &[], 1);
     assert!(boundary.annotations.is_some() && boundary.scalar_field.is_none());
     for config in [on("u_value"), on("boundary")] {
         assert!(world::render(&snapshot, &inference, &config, &[], &[], 1).is_ok(), "the scene with the overlay is a valid surface");

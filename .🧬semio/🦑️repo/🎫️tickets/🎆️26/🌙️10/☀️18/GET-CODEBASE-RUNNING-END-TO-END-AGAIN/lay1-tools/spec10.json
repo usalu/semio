@@ -1,0 +1,5 @@
+[
+{"parent":"/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧱️brepjs/🟦️.ts","base":".","leaf":"🎒️test-dependencies","names":["BrepjsTestDependencies"],"typeImports":true,"allowExportStar":true,"doc":"🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/📐️geometry/🟦️.ts","base":".","leaf":"🎒️test-dependencies","names":["GeometryTestDependencies"],"typeImports":true,"allowExportStar":true,"doc":"🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back."},
+{"parent":"/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/🧪️tests/🔮️spatial-kernel/🧠️semio/🟦️.ts","base":".","leaf":"🎒️test-dependencies","names":["SemioTestDependencies"],"typeImports":true,"allowExportStar":true,"doc":"🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back."}
+]

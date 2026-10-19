@@ -69,7 +69,7 @@ impl MenuState {
 }
 
 /// 📐️ The overlay's size for `viewport`: widest label plus shortcut inside a one-cell border and padding.
-pub(crate) fn menu_size(m: &MenuState, viewport: Size) -> Size {
+pub fn menu_size(m: &MenuState, viewport: Size) -> Size {
     let widest = m.items.iter().map(|i| display_width(&i.label) + if i.shortcut.is_empty() { 0 } else { SHORTCUT_GAP + display_width(&i.shortcut) }).max().unwrap_or(0);
     let width = (widest + 4).max(8).min(viewport.width.max(2));
     let height = (m.items.len() as u16 + 2).min(viewport.height.max(2));
@@ -102,7 +102,7 @@ fn row_at(m: &MenuState, rect: Rect, pos: Pos) -> Option<usize> {
     (index < m.items.len()).then_some(index)
 }
 
-pub(crate) fn menu_on_key(m: &mut MenuState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn menu_on_key(m: &mut MenuState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let moved = match ev.key {
         Key::Down | Key::Tab => m.step(m.selected, true),
         Key::Up | Key::BackTab => m.step(m.selected, false),
@@ -116,7 +116,7 @@ pub(crate) fn menu_on_key(m: &mut MenuState, ev: &KeyEvent) -> Option<WidgetSign
     changed.then_some(WidgetSignal::SelectionChanged(moved?))
 }
 
-pub(crate) fn menu_on_mouse(m: &mut MenuState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn menu_on_mouse(m: &mut MenuState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     match event.kind {
         MouseKind::Down(MouseButton::Left) => {
             let index = row_at(m, rect, event.pos)?;
@@ -135,7 +135,7 @@ pub(crate) fn menu_on_mouse(m: &mut MenuState, rect: Rect, event: &MouseEvent) -
     }
 }
 
-pub(crate) fn menu_set_hover(m: &mut MenuState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn menu_set_hover(m: &mut MenuState, rect: Rect, pos: Option<Pos>) -> bool {
     let Some(index) = pos.and_then(|p| row_at(m, rect, p)) else { return false };
     if m.items[index].selectable() && m.selected != Some(index) {
         m.selected = Some(index);
@@ -144,7 +144,7 @@ pub(crate) fn menu_set_hover(m: &mut MenuState, rect: Rect, pos: Option<Pos>) ->
     false
 }
 
-pub(crate) fn paint_menu(m: &MenuState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_menu(m: &MenuState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     paint_frame(buf, rect, theme, Surface::Menu, "");
     if rect.width < 6 || rect.height < 3 {
         return;

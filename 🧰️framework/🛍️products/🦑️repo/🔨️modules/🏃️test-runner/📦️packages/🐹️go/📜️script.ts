@@ -5,9 +5,7 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-test-runner-go` router: `bun ./📜️script.ts build|test`. */
 import { join } from "node:path";
-import { goCoverageArgs } from "../../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
-import { goLevelTestArgs } from "../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
-import { runCanonicalGoBuild, runCanonicalGoTests } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
+import { goCoverageArgs, goLevelTestArgs, runCanonicalGoBuild, runCanonicalGoTests } from "../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

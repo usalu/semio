@@ -1,16 +1,16 @@
 import * as ModuleUnderTest from "../../📥️installation/🟦️.ts";
-import * as Dep0 from "../../../📇️registry/📦️deployment/🟦️.ts";
+import * as Dep0 from "@semio-tech/plugin-registry/deployment";
 import * as Dep1 from "../../🟦️.ts";
 import * as Dep2 from "@semio-tech/framework-os";
 import * as Dep3 from "node:fs";
-import * as Dep4 from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import * as Dep4 from "@semio-tech/framework/identity/installation";
 import * as Dep5 from "node:path";
 import * as Dep6 from "node:os";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("../../../📇️registry/📦️deployment/🟦️.ts"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_INSTALL_PATH" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "createExtensionStore" | "semioExtensionStoreVitePlugin" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("@semio-tech/framework/identity/installation"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("@semio-tech/plugin-registry/deployment"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_INSTALL_PATH" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "createExtensionStore" | "semioExtensionStoreVitePlugin" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
   const { EXTENSION_COMPONENT_FILE, EXTENSION_INSTALL_PATH, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope } = dependencies;
   type ExtensionPackageManifestRecord = import("../../📥️installation/🟦️.ts").ExtensionPackageManifestRecord;
 
@@ -68,7 +68,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("agrees with JSON Schema and independent emoji identity checks", async () => {
       const { default: Ajv } = await import("ajv");
       const emojiRegex = (await import("emoji-regex")).default;
-      const { parseInstallationDirectoryV1, installationDirectoryEmoji, installationDirectoryCollision } = await import("../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts");
+      const { parseInstallationDirectoryV1, installationDirectoryEmoji, installationDirectoryCollision } = await import("@semio-tech/framework/identity/installation");
       const validate = new Ajv({ strict: true }).compile({ type: "string", pattern: "^(?=.*[^\\x00-\\x7F]).+$" });
       const cases = { validDirectories: ["🧩️fixture", "🧪️probe"], invalidDirectories: ["fixture", ""] };
       for (const name of [...cases.validDirectories, ...cases.invalidDirectories]) {
@@ -149,7 +149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
    * mount and every request to the store's own endpoint was a 404 (ticket 26/09/23 U5, measured on :6580). Real plugins,
    * vite's ordering rule, one request through the resulting middleware chain. */
   describe("extension store route precedence", () => {
-    const devStreams = async () => ((await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts")).devStreamMuxServer;
+    const devStreams = async () => ((await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🔀️stream-mux-server/🟦️.ts", source.url).href)) as typeof import("@semio-tech/framework-os-dev/vite-plugins/stream-mux-server")).devStreamMuxServer;
 
     it("answers its install endpoint before the static extension mount, which still 404s a missing module file", async () => {
       const { staticDirVitePlugin } = (await import(new URL("../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts", source.url).href)) as { staticDirVitePlugin: (repoRoot: string, spec: { readonly kind: "static-dir"; readonly route: string; readonly root: string }) => RoutePlugin[] };

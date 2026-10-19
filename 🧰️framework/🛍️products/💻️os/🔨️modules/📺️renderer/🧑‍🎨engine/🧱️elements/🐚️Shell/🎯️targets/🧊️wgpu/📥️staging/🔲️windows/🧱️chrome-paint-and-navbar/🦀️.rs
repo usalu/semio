@@ -212,7 +212,7 @@ impl WindowState {
             return world_projection_template(selected).id;
         }
         match surfaces.world3d_state_for_window(window_id).map(|world| infinite_world::world::world3d_camera_projection(&world.camera)) {
-            Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic) => "orthographic",
+            Some(ui_scene::math::CameraProjection3d::Orthographic) => "orthographic",
             _ => WORLD_PROJECTION_DEFAULT_TEMPLATE_ID,
         }
     }

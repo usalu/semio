@@ -9,7 +9,7 @@ fn authored_glyph_family_selects_original_catalog_face() {
         let name=row["name"].as_str().unwrap();let text=row["character"].as_str().unwrap();let character=text.chars().next().unwrap();
         let face=TextFace::from_catalog_family(name).unwrap();assert_eq!(face.family(),name);
         assert_eq!(serde_json::from_value::<TextFace>(serde_json::json!(name)).unwrap(),face);
-        let sources:Vec<&[u8]>=match face{TextFace::Sans=>vec![crate::wgpu::text::ANTA_LATIN],TextFace::Serif=>vec![crate::wgpu::text::KELLY_SLAB_LATIN],TextFace::Mono=>vec![crate::wgpu::text::SHARE_TECH_MONO_LATIN],TextFace::Emoji=>crate::wgpu::text::NOTO_EMOJI_BUCKETS.to_vec()};
+        let sources:Vec<&[u8]>=match face{TextFace::Sans=>vec![semio_framework_ui_text::ANTA_LATIN],TextFace::Serif=>vec![semio_framework_ui_text::KELLY_SLAB_LATIN],TextFace::Mono=>vec![semio_framework_ui_text::SHARE_TECH_MONO_LATIN],TextFace::Emoji=>semio_framework_ui_text::NOTO_EMOJI_BUCKETS.to_vec()};
         let font=sources.iter().filter_map(|bytes|swash::FontRef::from_index(bytes,0)).find(|font|font.charmap().map(character)!=0).unwrap();
         let oracle=font.glyph_metrics(&[]).advance_width(font.charmap().map(character))*size/f32::from(font.metrics(&[]).units_per_em);
         let actual=atlas.measure_text_face(face,text,size).0;assert!((actual-oracle).abs()<0.01,"{name} {actual} != {oracle}");
@@ -33,7 +33,7 @@ fn authored_glyph_runs_transform_the_actual_font_atlas_quads() {
         let transformed:Vec<_>=transformed.layers.iter().flat_map(|layer|layer.ui_instances.iter()).copied().collect();
         assert_eq!(plain.len(),transformed.len());
         for (source,target) in plain.iter().zip(transformed.iter()) {
-            assert_eq!(target.params[2],crate::wgpu::draw_types::KIND_AFFINE_GLYPH);
+            assert_eq!(target.params[2],semio_framework_ui_draw_contract::KIND_AFFINE_GLYPH);
             assert_eq!(source.color,target.color);
             assert_eq!(source.uv_rect,target.uv_rect);
             for [x,y] in [[0.0,0.0],[1.0,0.0],[1.0,1.0],[0.0,1.0]] {
@@ -94,7 +94,7 @@ fn authored_glyph_image_shader_paints_the_actual_affine_quad() {
     let pipeline_layout=device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {label:Some("affine_pipeline_layout"),bind_group_layouts:&[Some(&layout)],immediate_size:0});
     let pipeline=device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {label:Some("affine_pipeline"),layout:Some(&pipeline_layout),vertex:wgpu::VertexState {module:&shader,entry_point:Some("vs_main"),compilation_options:Default::default(),buffers:&[
         wgpu::VertexBufferLayout {array_stride:8,step_mode:wgpu::VertexStepMode::Vertex,attributes:&wgpu::vertex_attr_array![0=>Float32x2]},
-        wgpu::VertexBufferLayout {array_stride:std::mem::size_of::<crate::wgpu::draw_types::UiInstance>() as u64,step_mode:wgpu::VertexStepMode::Instance,attributes:&wgpu::vertex_attr_array![1=>Float32x4,2=>Float32x4,3=>Float32x4,4=>Float32x4,5=>Float32x4]},
+        wgpu::VertexBufferLayout {array_stride:std::mem::size_of::<semio_framework_ui_draw_contract::UiInstance>() as u64,step_mode:wgpu::VertexStepMode::Instance,attributes:&wgpu::vertex_attr_array![1=>Float32x4,2=>Float32x4,3=>Float32x4,4=>Float32x4,5=>Float32x4]},
     ]},primitive:Default::default(),depth_stencil:None,multisample:Default::default(),fragment:Some(wgpu::FragmentState {module:&shader,entry_point:Some("fs_main"),compilation_options:Default::default(),targets:&[Some(wgpu::ColorTargetState {format:wgpu::TextureFormat::Rgba8Unorm,blend:None,write_mask:wgpu::ColorWrites::ALL})]}),multiview_mask:None,cache:None});
     let vertices=device.create_buffer_init(&wgpu::util::BufferInitDescriptor {label:Some("affine_vertices"),contents:bytemuck::cast_slice(&[[0.0_f32,0.0],[1.0,0.0],[0.0,1.0],[0.0,1.0],[1.0,0.0],[1.0,1.0]]),usage:wgpu::BufferUsages::VERTEX});
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/↗️affine/🔣️.json")).unwrap();
@@ -103,7 +103,7 @@ fn authored_glyph_image_shader_paints_the_actual_affine_quad() {
         let mut matrix=std::array::from_fn(|index|sample["matrix"][index].as_f64().unwrap() as f32);
         matrix[4]+=0.125;
         matrix[5]+=0.125;
-        let item=crate::wgpu::draw_types::UiInstance::raster_affine(rect,[0.0,0.0,1.0,1.0],1.0,matrix);
+        let item=semio_framework_ui_draw_contract::UiInstance::raster_affine(rect,[0.0,0.0,1.0,1.0],1.0,matrix);
         let items=device.create_buffer_init(&wgpu::util::BufferInitDescriptor {label:Some("affine_instances"),contents:bytemuck::bytes_of(&item),usage:wgpu::BufferUsages::VERTEX});
         let target=device.create_texture(&wgpu::TextureDescriptor {label:Some("affine_target"),size:wgpu::Extent3d {width:32,height:32,depth_or_array_layers:1},mip_level_count:1,sample_count:1,dimension:wgpu::TextureDimension::D2,format:wgpu::TextureFormat::Rgba8Unorm,usage:wgpu::TextureUsages::RENDER_ATTACHMENT|wgpu::TextureUsages::COPY_SRC,view_formats:&[]});
         let target_view=target.create_view(&wgpu::TextureViewDescriptor::default());

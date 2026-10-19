@@ -1,14 +1,14 @@
-use crate::editor::flow::base::FLOW_INTERACTION_GRAPH;
+use crate::editor::flow::editor_vocabulary::FLOW_INTERACTION_GRAPH;
 use crate::editor::flow::modes::edit::windows::main::options;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::WindowMeasure;
-use ui_wgpu::wgpu::NodeGraphScene;
+use semio_framework_ui_declaration::ui::NodeGraphScene;
 #[allow(unused_imports)]
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 #[allow(unused_imports)]
 use crate::editor::flow::host::{with_host_from_snapshot, with_live_host_snapshot};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_PLAY_WINDOW_MAIN};
+use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_PLAY_WINDOW_MAIN};
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::FlowPlayLabels;
 #[allow(unused_imports)]
@@ -33,8 +33,7 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_ui_contract::SurfaceKind as ContractSurfaceKind;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::Viewport2d;
-#[allow(unused_imports)]
-use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord};
+#[allow(unused_imports)] use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphInteractionDomain, NodeGraphNodeRecord, NodeGraphPortRecord};
 use crate::editor::flow::modes::edit::windows::main::*;
 use crate::editor::flow::unit_tests::context::{flow_app, flow_app_closing, main_window_measures, render as render_body, select_graph};
 
@@ -78,8 +77,8 @@ async fn framework_graph_selection_projects_back_to_raw_scene_node_ids() {
     select_graph(&mut app, &["add"], &[]).await;
     let selected = app.interaction_state().await;
     assert_eq!(
-        selected.selection.get(crate::editor::flow::base::FLOW_INTERACTION_GRAPH).map(|selection| selection.ids.as_slice()),
-        Some([crate::editor::flow::base::flow_graph_node_target_id("add")].as_slice()),
+        selected.selection.get(crate::editor::flow::editor_vocabulary::FLOW_INTERACTION_GRAPH).map(|selection| selection.ids.as_slice()),
+        Some([crate::editor::flow::editor_vocabulary::flow_graph_node_target_id("add")].as_slice()),
         "the settled reserved job must publish the app-scoped target before render"
     );
     let rendered = render_body(&mut app, FLOW_PLAY_BODY_MAIN).await;

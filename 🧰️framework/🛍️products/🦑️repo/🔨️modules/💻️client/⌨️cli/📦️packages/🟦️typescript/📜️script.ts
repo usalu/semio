@@ -5,14 +5,11 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 /** 🧭️ Repo CLI task router. */
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { FileLinter } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { defineLint } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
-import { goLevelTestArgs } from "../../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
-import { resolveCliBin } from "../../../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
-import { runCanonicalGoBuild, runCanonicalGoTests } from "../../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
-import { runCmd } from "../../../../📚️library/🏃️process/🟦️.ts";
+import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { defineLint, resolveCliBin } from "../../../../📚️library/📦️packages/🟦️typescript/🚨️policy/🟦️.ts";
+import { goLevelTestArgs, runCanonicalGoBuild, runCanonicalGoTests } from "../../../../📚️library/📦️packages/🟦️typescript/🧪️testing/🟦️.ts";
+import { runCmd, runRepoScriptMain } from "../../../../📚️library/📦️packages/🟦️typescript/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { readEntityCatalog } from "../../../../../../../🔨️modules/🧬️schema/📦️packages/🟦️typescript/🏷️entity-kinds/📥️source/🟦️.ts";
 import { writeGeneratedFileIfChanged } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🗂️files/🟦️.ts";

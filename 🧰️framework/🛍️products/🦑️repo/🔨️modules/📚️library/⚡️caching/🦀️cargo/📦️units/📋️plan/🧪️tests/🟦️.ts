@@ -8,16 +8,17 @@ import{readFileSync}from"node:fs";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{captureRustUnitPlanV1,requireRustUnitPlanV1,captureRustUnitInputsV1}from"../🟦️.ts";
-import{planRustUnitsV1,readRustUnitV1}from"../../🟦️.ts";
+import{ planRustUnitsV1 }from"../../🟦️.ts";
+import { readRustUnitV1 } from "../../🧬️definition/🟦️.ts";
 import{bindRustUnitDependencyArtifactsV1}from"../../📤️receipt/🟦️.ts";
 import fixtures from"../../🧪️tests/🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import unitSchema from"../../🧬️schema/🔣️.json";
 import contextSchema from"../../🧭️context/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 function ordinary(){return structuredClone(planRustUnitsV1(fixtures.units,"cache/units")[0]!);}
 function frozen(value:unknown):boolean{if(!value||typeof value!=="object")return true;return Object.isFrozen(value)&&Object.values(value).every(frozen);}
 test("neutral immutable Rust plan vectors and finite policy stay closed",()=>{expect(new Ajv({strict:true}).validate(corpusSchema,corpus)).toBe(true);const validate=new Ajv({strict:true}).compile(corpusSchema.definitions.MutationCase);for(const row of corpus.mutations)expect(validate(row)).toBe(true);expect(validate({...corpus.mutations[0],owner:true})).toBe(false);expect(schema.definitions.Policy.const.maximumDepth).toBe(64);});

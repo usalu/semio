@@ -1,10 +1,12 @@
 //! 🕰️ The phase and storey rows of the entity table: the pickers of the construction phase of a phasable element and of the storey of a storey-placed element, and how a picked value becomes the
 //! `set-element-phase` or `set-element-storey` mutation. One definition serves every kind that carries the field, so the properties panel offers the same combobox on a wall, a slab or a space.
 
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Phase}};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_103::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
+use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 
 //#region 🔖️Phase
 /// 🕰️ The four construction phases by their localized names, in the order of a project's life.

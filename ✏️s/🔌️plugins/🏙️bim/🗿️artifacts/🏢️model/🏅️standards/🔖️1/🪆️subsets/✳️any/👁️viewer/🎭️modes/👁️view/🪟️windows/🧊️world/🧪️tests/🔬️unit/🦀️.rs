@@ -1,14 +1,15 @@
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::render::world::{scene, WorldView};
+use semio_s_artifact_bim_model_tests_5::render::world::{scene, WorldView};
 #[allow(unused_imports)]
-use crate::viewer::bim::terminology::BimViewerLabels;
+use semio_s_artifact_bim_model_tests::viewer::bim::terminology::BimViewerLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::{scene_surface, world3d_projection_measures, ActionDescriptor, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
-use crate::viewer::bim::modes::view::windows::world::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
-use crate::viewer::bim::terminology::bim_viewer_labels;
+use semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::{config, measures, definition, WINDOW_KIND_ID, BODY_KEY, render, Marks};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_s_artifact_bim_model_tests::viewer::bim::terminology::bim_viewer_labels;
 use crate::viewer::bim::viewer_action;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
@@ -18,10 +19,10 @@ fn demo() -> ModelSnapshot {
 }
 
 fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
 }
 
-fn measures_of(config: &config::BimViewerWorldWindowConfig, locale: Locale) -> serde_json::Value {
+fn measures_of(config: &semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::BimViewerWorldWindowConfig, locale: Locale) -> serde_json::Value {
     let labels = bim_viewer_labels(&ViewModel::new(locale, Terminology::Native));
     serde_json::to_value(measures(&demo(), config, labels, viewer_action)).expect("measures serialise")
 }
@@ -44,7 +45,7 @@ fn an_empty_and_a_demo_model_render() {
 
 #[test]
 fn the_chrome_offers_the_projection_tree_and_one_visibility_toggle_per_storey() {
-    let rows = measures_of(&config::BimViewerWorldWindowConfig::default(), Locale::En);
+    let rows = measures_of(&semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::BimViewerWorldWindowConfig::default(), Locale::En);
     let rows = rows.as_array().expect("measures");
     assert_eq!(rows.len(), 2);
     let storeys = &rows[1];
@@ -60,7 +61,7 @@ fn the_chrome_offers_the_projection_tree_and_one_visibility_toggle_per_storey() 
 
 #[test]
 fn a_hidden_storey_is_an_unpressed_toggle() {
-    let rows = measures_of(&config::BimViewerWorldWindowConfig::default().with_storey_visible("st-first", false), Locale::En);
+    let rows = measures_of(&semio_s_artifact_bim_model_family_tests::viewer::bim::modes::view::windows::world::config::BimViewerWorldWindowConfig::default().with_storey_visible("st-first", false), Locale::En);
     let toggles = rows[1]["children"].as_array().expect("storey toggles").clone();
     assert_eq!(toggles.iter().map(|toggle| toggle["pressed"].as_bool().expect("pressed")).collect::<Vec<_>>(), vec![true, false]);
 }

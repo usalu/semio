@@ -34,7 +34,7 @@ fn peer_editing_row_text(name: &str, tongue: BandTongue) -> String {
 /// notes by history-body node key, sorted by key with one key's lines joined by ` · `.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TimeTravelPeerPresence {
-    pub activities: Vec<(String, ui_wgpu::wgpu::PresenceActivity)>,
+    pub activities: Vec<(String, semio_framework_ui_wgpu_light::presence_bar::PresenceActivity)>,
     pub notes: Vec<(String, String)>,
 }
 
@@ -57,7 +57,7 @@ pub fn time_travel_peer_presence<'a>(editing: impl IntoIterator<Item = (&'a str,
                 notes.entry(format!("{HISTORY_ROW_KEY_PREFIX}{}", entry.seq)).or_default().push(note.clone());
             }
             notes.entry(format!("{HISTORY_MUTATION_ROW_KEY_PREFIX}{mutation_id}")).or_default().push(note);
-            (actor.to_string(), ui_wgpu::wgpu::PresenceActivity { text: peer_editing_text(name, target.as_deref(), tongue), badge: TIME_TRAVEL_PEER_BADGE.to_string() })
+            (actor.to_string(), semio_framework_ui_wgpu_light::presence_bar::PresenceActivity { text: peer_editing_text(name, target.as_deref(), tongue), badge: TIME_TRAVEL_PEER_BADGE.to_string() })
         })
         .collect();
     TimeTravelPeerPresence { activities, notes: notes.into_iter().map(|(key, lines)| (key, lines.join(" · "))).collect() }

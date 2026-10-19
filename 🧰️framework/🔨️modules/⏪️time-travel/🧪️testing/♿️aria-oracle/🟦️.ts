@@ -1,6 +1,6 @@
 /** ♿️ The structural ARIA oracle run over the band, the history panel and the prompt. */
 import { join } from "node:path";
-import { evalSafe } from "../📄️page/🟦️.ts";
+import { evalSafe } from "../🔬️probe/🟦️.ts";
 import { page, renderer } from "../🧠️state/🟦️.ts";
 import { log, verdict } from "../🧾️report/🟦️.ts";
 

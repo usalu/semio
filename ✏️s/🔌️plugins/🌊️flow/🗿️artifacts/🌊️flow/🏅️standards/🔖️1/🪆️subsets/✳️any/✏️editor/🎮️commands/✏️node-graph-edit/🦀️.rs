@@ -8,7 +8,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use crate::editor::flow::edit_rules::ContentEdit;
 use crate::editor::flow::host::{apply_canvas_options, flow_content_leaves_emit, seed_host_catalogue, sync_host_selection_domains};
-use crate::editor::flow::base::FLOW_GRAPH_OPERATION_RAW_BYTES;
+use crate::editor::flow::editor_vocabulary::FLOW_GRAPH_OPERATION_RAW_BYTES;
 use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

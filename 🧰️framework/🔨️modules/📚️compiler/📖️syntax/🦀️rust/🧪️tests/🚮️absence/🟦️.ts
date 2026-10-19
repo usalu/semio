@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 import { runOwnedCommand } from "../../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
@@ -19,7 +19,7 @@ test("actual neutral Rust syntax laws execute without products, S, Hub, DSL, Sch
     const target = resolve(workspace, fixture.owner);
     mkdirSync(resolve(target, ".."), { recursive: true });
     cpSync(resolve(root, fixture.owner), target, { recursive: true, dereference: false, filter: path => {
-      if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path);
+      if (basename(path) === "node_modules") return false; if (lstatSync(path).isSymbolicLink()) throw Error("linked projection input: " + path);
       return true;
     } });
     for (const path of fixture.absentRoots) expect(existsSync(resolve(workspace, path)), path).toBe(false);

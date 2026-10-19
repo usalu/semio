@@ -1,7 +1,7 @@
-//! 🃏️ The solution-free sheet assembly laws and the fixtures the other laws share.
+//! 🃏️ The solution-free sheet assembly laws.
 pub use quiz::sheet::*;
 use crate::randomness::{Mt19937, shuffle};
-use quiz_schema::{Challenge, MatchingTask, Quiz, Sheet, SheetAxis, SheetItem, SheetTask, SortingItem, Task, Text};
+use quiz_schema::{Challenge, Quiz, Sheet, SheetAxis, SheetItem, SheetTask, SortingItem, Task};
 
 #[path = "../../../🔨️modules/🃏️sheet/🧪️tests/🔬️unit/🦀️.rs"]
-pub mod tests;
+mod tests;

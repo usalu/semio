@@ -6,12 +6,12 @@ import * as TOML from "@iarna/toml";
 import { classifyPackageSource } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
-type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string }>;
+type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string; reference: string }>;
 type NodePackage = Readonly<{ manifest: string; entry: string; name: string; maximumEntryLines: number; testOwner: string; vitestConfig: string }>;
 type Fixture = Readonly<{
   version: number;
   moves: readonly Move[];
-  packages: Readonly<{ rust: Readonly<{ manifest: string; entry: string; name: string; feature: string; maximumEntryLines: number }>; typescript: NodePackage }>;
+  packages: Readonly<{ rust: Readonly<{ manifest: string; entry: string; name: string; feature: string; featureManifest: string; maximumEntryLines: number }>; typescript: NodePackage }>;
   directoryContexts: readonly Readonly<{ name: string; parentKind: string; kind: string }>[];
 }>;
 
@@ -38,7 +38,7 @@ describe("framework root source topology", () => {
       expect(existsSync(owner), row.owner).toBe(true);
       expect(basename(owner), row.owner).toBe(basenames[row.kind]);
       expect(readFileSync(owner, "utf8"), row.anchor).toContain(row.anchor);
-      expect(source, row.owner).toContain(row.owner.split("/").slice(-3).join("/"));
+      expect(source, row.owner).toContain(row.reference);
       expect(existsSync(resolve(repoRoot, row.consumer)), row.consumer).toBe(true);
     }
   });
@@ -50,7 +50,7 @@ describe("framework root source topology", () => {
     const rustEntry = readFileSync(resolve(repoRoot, rust.entry), "utf8");
     expect(cargo.package?.name).toBe(rust.name);
     expect(cargo.lib?.path).toBe("🦀️.rs");
-    expect(cargo.features?.[rust.feature]).toBeDefined();
+    expect((TOML.parse(readFileSync(resolve(repoRoot, rust.featureManifest), "utf8")) as { readonly features?: Readonly<Record<string, unknown>> }).features?.[rust.feature], rust.featureManifest).toBeDefined();
     expect(rustEntry.trimEnd().split("\n").length).toBeLessThanOrEqual(rust.maximumEntryLines);
     expect(classifyPackageSource(rustEntry, taxonomy.packageGlueGrammar.rust).role).toBe("declaration");
     for (const node of [fixture.packages.typescript]) {

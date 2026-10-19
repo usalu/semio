@@ -219,7 +219,7 @@ export async function registerBrowserActorReservationTests(vitest: Vitest, depen
           const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
           const bodyProgress = new Set<string>();
           census.read = () => JSON.stringify({ name: row.name, bodies, loads, describes, activated, statuses: statuses.map((status) => status.diagnostic ?? status.code ?? status.progress?.stage ?? "?") });
-          const describeApi = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🟦️.ts");
+          const describeApi = await import("@semio-tech/framework-plugin/browser-bundle/describe");
           const originalVerify = describeApi.verifyBrowserActorDescribeV1;
           const verifySpy = ["client-change-after-describe", "socket-close-after-describe"].includes(row.name)
             ? vi.spyOn(describeApi, "verifyBrowserActorDescribeV1").mockImplementation((guest, staged, codec) => {

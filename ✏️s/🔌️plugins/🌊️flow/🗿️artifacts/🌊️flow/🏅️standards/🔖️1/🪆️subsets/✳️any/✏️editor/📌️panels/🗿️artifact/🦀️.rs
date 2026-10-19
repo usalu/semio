@@ -1,7 +1,7 @@
 //! 📄️ Flow play app panel — the document tree: widgets and synapses of the current snapshot.
 
 use crate::editor::flow::terminology::FlowPlayLabels;
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, pick_item, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID};
 use crate::editor::flow::host::with_live_host_snapshot;
 use crate::schema::{widget_id, widget_kind_label, widget_tree_label};
 use crate::FlowSnapshot;

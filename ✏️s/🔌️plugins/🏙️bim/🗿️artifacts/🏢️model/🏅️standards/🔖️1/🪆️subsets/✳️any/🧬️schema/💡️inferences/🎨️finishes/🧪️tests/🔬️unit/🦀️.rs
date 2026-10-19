@@ -1,10 +1,14 @@
-use crate::standards::v1::subsets::any::schema::inferences::finishes::{FinishSurface, area_of, finish_rows, on_boundary, rings_of, table_json};
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Vertex};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CeilingPatch, SpacePatch}, Entry, ModelDiff};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::{FinishSurface, area_of, finish_rows, on_boundary, rings_of, table_json};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Vertex;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::CeilingPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::SpacePatch;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
@@ -237,7 +241,7 @@ async fn without_authored_ceilings_the_finish_falls_back_to_the_soffit() {
 async fn a_ceiling_that_does_not_reach_the_room_leaves_the_soffit_ceiling() {
     let mut snapshot = load((*ROOMS));
     let kitchen = snapshot.ceilings.get_mut("ce-kitchen").expect("the kitchen ceiling");
-    let corner = |x: f64, y: f64| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge: 0.0 };
+    let corner = |x: f64, y: f64| Vertex { point: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x, y }, bulge: 0.0 };
     kitchen.boundary = vec![corner(4.2, 0.2), corner(5.0, 0.2), corner(5.0, 0.8), corner(4.2, 0.8)];
     kitchen.holes.clear();
     let inferred = infer(&snapshot);

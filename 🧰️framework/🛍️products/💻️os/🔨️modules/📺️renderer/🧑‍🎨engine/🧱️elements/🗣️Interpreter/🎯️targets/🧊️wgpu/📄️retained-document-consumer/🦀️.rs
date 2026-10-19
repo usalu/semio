@@ -8,7 +8,7 @@ use crate::scene_interaction::{drive_mounted_layout_text_one, layout_step_is_win
 use crate::element_contracts::{FrameworkWidgetContext, ScenePointerTarget};
 use std::sync::atomic::{AtomicBool, Ordering};
 use ui_contract::UiDocumentLease;
-use ui_wgpu::wgpu::Rect;
+use semio_framework_ui_theme::geometry::Rect;
 
 //#region 📄️RetainedDocumentConsumer
 static DOCUMENT_PAGE_OPPORTUNITY_CONSUMED: AtomicBool = AtomicBool::new(false);
@@ -127,9 +127,9 @@ pub fn document_debug_log(line: &str) {
     eprintln!("{line}");
 }
 
-pub fn apply_retained_document_page(engine: &mut ui_wgpu::wgpu::Ui, cursor: &mut UiDocumentFrameCursor, window_id: &str, page: ui_contract::UiDocumentNodePage, step: &mut semio_framework_job::StepContext<'_>) {
+pub fn apply_retained_document_page(engine: &mut semio_framework_ui_wgpu_engine::Ui, cursor: &mut UiDocumentFrameCursor, window_id: &str, page: ui_contract::UiDocumentNodePage, step: &mut semio_framework_job::StepContext<'_>) {
     if let Err(rejection) = engine.apply_document_page(window_id, page, step) {
-        if rejection.fault == ui_wgpu::wgpu::tree::UiDocumentTreeFault::Generation && (step.is_cancelled() || step.should_yield()) {
+        if rejection.fault == semio_framework_ui_retained_tree::tree::UiDocumentTreeFault::Generation && (step.is_cancelled() || step.should_yield()) {
             return;
         }
         document_debug_log(&format!("[TRACE] ui-doc page fault window={window_id} generation={} index={} fault={:?} cancelled={} yielded={}", rejection.generation, rejection.index, rejection.fault, step.is_cancelled(), step.should_yield()));
@@ -192,7 +192,7 @@ pub fn render_ui_document_step(
     ctx: &mut FrameworkWidgetContext<'_>,
     window_id: &str,
     controller_id: &str,
-    driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    driver_drag: semio_framework_ui_wgpu_layout::chrome::UiDriverDrag,
     hosts: &mut semio_framework_os_renderer_wgpu_scene_state::SceneEngineHosts<'_>,
     step:&mut semio_framework_job::StepContext<'_>,
 ) -> bool {
@@ -226,34 +226,34 @@ pub fn render_ui_document_step(
             UiDocumentFramePhase::Ingress if step.is_cancelled() || step.should_yield() => {}
             UiDocumentFramePhase::Ingress => match {
                 let status = engine.document_status(window_id, generation);
-                if status == ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant {
+                if status == semio_framework_ui_wgpu_engine_surface::UiDocumentIngressStatus::Vacant {
                     document_debug_log(&format!("[TRACE] ui-doc ingress window={window_id} generation={generation} nodes={}", header.node_count));
                 }
                 status
             } {
-                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Vacant => {
+                semio_framework_ui_wgpu_engine_surface::UiDocumentIngressStatus::Vacant => {
                     if let Err((_fault, _header)) = engine.begin_document(window_id, header, step) {
                         document_debug_log(&format!("[TRACE] ui-doc begin refused window={window_id} generation={generation} nodes={} fault={_fault:?}", _header.node_count));
                         if !matches!(
                             _fault,
-                            ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending
+                            semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::Cancelled
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::Deadline
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::InterruptedClose
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::ValidationPending
                         ) {
                             cursor.phase = UiDocumentFramePhase::Fault;
                         }
                     }
                 }
-                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Pending { next_page, node_count } => {
+                semio_framework_ui_wgpu_engine_surface::UiDocumentIngressStatus::Pending { next_page, node_count } => {
                     if next_page == node_count {
                         match engine.finish_document(window_id, generation, step) {
                             Ok(()) => cursor.phase = UiDocumentFramePhase::Reconcile,
                             Err(
-                                ui_wgpu::wgpu::engine::UiDocumentIngressFault::ValidationPending
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::InterruptedClose
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Cancelled
-                                | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline,
+                                semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::ValidationPending
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::InterruptedClose
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::Cancelled
+                                | semio_framework_ui_wgpu_engine_surface::UiDocumentIngressFault::Deadline,
                             ) => {}
                             Err(_fault) => {
                                 document_debug_log(&format!("[TRACE] ui-doc finish fault window={window_id} generation={generation} fault={_fault:?}"));
@@ -272,12 +272,12 @@ pub fn render_ui_document_step(
                         }
                     }
                 }
-                ui_wgpu::wgpu::engine::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Reconcile,
+                semio_framework_ui_wgpu_engine_surface::UiDocumentIngressStatus::Published => cursor.phase = UiDocumentFramePhase::Reconcile,
             },
             UiDocumentFramePhase::Reconcile => match engine.step_document_reconcile(window_id, controller_id, step) {
-                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => cursor.phase = UiDocumentFramePhase::Viewport,
-                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => {}
-                ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Fault(fault) => {
+                semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Complete => cursor.phase = UiDocumentFramePhase::Viewport,
+                semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Pending => {}
+                semio_framework_ui_retained_tree::reconcile::UiDocumentReconcileStep::Fault(fault) => {
                     document_debug_log(&format!("[TRACE] ui-doc reconcile fault window={window_id} fault={fault:?}"));
                     cursor.phase = UiDocumentFramePhase::Fault;
                 }
@@ -290,7 +290,7 @@ pub fn render_ui_document_step(
             UiDocumentFramePhase::Layout => {
                 let layout = drive_mounted_layout_text_one(&mut engine,ctx.atlas,step);
                 cursor.own_work = layout_step_is_window_work(&layout, window_id);
-                if let ui_wgpu::wgpu::UiLayoutStep::Refused { refusal, .. } = layout {
+                if let semio_framework_ui_wgpu_engine_surface::UiLayoutStep::Refused { refusal, .. } = layout {
                     document_debug_log(&format!("[TRACE] ui-doc retained layout refusal window={window_id} stage={} kind={}", refusal.stage, refusal.kind.as_str()));
                     cursor.phase = UiDocumentFramePhase::Fault;
                 } else if engine.layout_is_dirty(window_id) {
@@ -317,17 +317,17 @@ pub fn render_ui_document_step(
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
-                let paint = engine.frame_into_step(window_id, ui_wgpu::wgpu::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw);
+                let paint = engine.frame_into_step(window_id, semio_framework_ui_theme::geometry::Rect { x: bounds.x, y: bounds.y, w: viewport_w, h: viewport_h }, ctx.atlas, ctx.icons, Some(&mut scene_host), ctx.draw);
                 match paint {
-                    ui_wgpu::wgpu::UiFrameStep::Ready | ui_wgpu::wgpu::UiFrameStep::Missing => {
+                    semio_framework_ui_wgpu_engine_surface::UiFrameStep::Ready | semio_framework_ui_wgpu_engine_surface::UiFrameStep::Missing => {
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Complete;
                     }
-                    ui_wgpu::wgpu::UiFrameStep::Pending if engine.layout_is_dirty(window_id) => {
+                    semio_framework_ui_wgpu_engine_surface::UiFrameStep::Pending if engine.layout_is_dirty(window_id) => {
                         cursor.stalled = 0;
                         cursor.phase = UiDocumentFramePhase::Layout;
                     }
-                    ui_wgpu::wgpu::UiFrameStep::Pending => {
+                    semio_framework_ui_wgpu_engine_surface::UiFrameStep::Pending => {
                         if engine.paint_frame_progress(window_id) != progress_before {
                             cursor.stalled = 0;
                         } else {
@@ -337,7 +337,7 @@ pub fn render_ui_document_step(
                             document_debug_log(&format!("[TRACE] ui-doc paint stalled window={window_id} opportunities={} {}", cursor.stalled, engine.paint_stall_census(window_id)));
                         }
                     }
-                    ui_wgpu::wgpu::UiFrameStep::Fault => {
+                    semio_framework_ui_wgpu_engine_surface::UiFrameStep::Fault => {
                         document_debug_log(&format!(
                             "[TRACE] ui-doc paint fault window={window_id} phase={:?} sync-line={} nodes={:?} {}",
                             engine.paint_frame_phase(window_id),

@@ -2,15 +2,16 @@
 //! a real sweep, and both top offsets must be finite. The beam top lies the signed `top_offset` above (positive) or below (negative) the storey top at the start and the
 //! `end_top_offset` at the end: no elevation is stored, it is inferred.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, offsets_flaw};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, offsets_flaw};
 use crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBeam;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateBeam, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let beam = &payload.beam;
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if !base.storeys.contains_key(&beam.storey) {

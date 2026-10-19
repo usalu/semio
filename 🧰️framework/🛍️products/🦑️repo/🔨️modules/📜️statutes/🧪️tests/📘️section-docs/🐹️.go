@@ -7,15 +7,14 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 📘️Section Docs Tests
 
 func TestSectionMissingSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// 💻️src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
@@ -42,9 +41,7 @@ func TestSectionMissingSummaryAndRequirements(t *testing.T) {
 
 func TestSectionWithSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// 💻️src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖️Functions\n"
@@ -69,9 +66,7 @@ func TestSectionWithSummaryAndRequirements(t *testing.T) {
 
 func TestDefinitionMissingSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// 💻️src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// Function declarations.\n\nexport function doWork(): void {}\n\n// #endregion 🔖️Functions\n"
@@ -98,9 +93,7 @@ func TestDefinitionMissingSummaryAndRequirements(t *testing.T) {
 
 func TestDefinitionWithSummaryAndRequirements(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// 💻️src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// Function declarations.\n\n// Processes work items.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖️Functions\n"
@@ -125,9 +118,7 @@ func TestDefinitionWithSummaryAndRequirements(t *testing.T) {
 
 func TestSectionDocLinesExemptsDocComments(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// 💻️src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n// Function declarations.\n// Functions MUST be exported.\n\n// Processes work items.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖️Functions\n"
@@ -215,9 +206,7 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			oldRoot := workspace.RootDir
-			workspace.RootDir = tmpDir
-			defer func() { workspace.RootDir = oldRoot }()
+			sandbox.BindRoot(t, tmpDir)
 			dir := filepath.Dir(filepath.Join(tmpDir, tt.file))
 			os.MkdirAll(dir, 0o755)
 			absPath := filepath.Join(tmpDir, tt.file)
@@ -249,9 +238,7 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 
 func TestPythonTripleQuoteDocstringExemptFromCommentBan(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "# #region 🔖️Header\n\n# [💻️src/app.py](repo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖️Header\n\n# #region 🔖️Functions\n\n# [🔖️src/app.py#Functions](repo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](repo://definition/src/app.py/functions/do_work)\n    \"\"\"\n    pass\n\n# #endregion 🔖️Functions\n"
@@ -278,9 +265,7 @@ func TestPythonTripleQuoteDocstringExemptFromCommentBan(t *testing.T) {
 
 func TestDefinitionJSDocExemptFromCommentBan(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
 	content := "// #region 🔖️Header\n\n// [💻️src/app.ts](repo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖️Header\n\n// #region 🔖️Functions\n\n// [🔖️src/app.ts#Functions](repo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](repo://definition/src/app.ts/functions/dowork)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖️Functions\n"

@@ -1,6 +1,7 @@
-use crate::examples::house::{ASSET_DIR, PRIMARY_TEXT};
+use semio_s_artifact_bim_model_examples::examples::house::{ASSET_DIR, PRIMARY_TEXT};
 use crate::examples::checks::Asset;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, OpeningKind, SpaceBoundary};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, OpeningKind, SpaceBoundary};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_test_fixtures::fixture_text;
 static SNAPSHOT_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🖼️assets/🏡️house/📸️snapshot.json"));
 static DERIVATIONS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🖼️assets/🏡️house/🧬️derivations.json"));
@@ -46,8 +47,8 @@ async fn the_house_schedules_list_every_door_window_room_and_finish_of_the_build
     let items = |id: &str| inferred.schedules[id].items as usize;
     assert_eq!((items("sch-doors"), items("sch-windows"), items("sch-rooms")), (9, 25, 12), "a door, a window and a room schedule list every one of them");
     assert_eq!(items("sch-finishes"), 3 * model.spaces.len(), "a floor, a wall and a ceiling row for every room");
-    use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{phase_of, storey_of};
-    let ground_new_doors = model.openings.iter().filter(|(id, opening)| matches!(opening.kind, OpeningKind::Door { .. }) && storey_of(&model, id).is_some_and(|storey| storey == "st-ground") && phase_of(&model, id) == crate::standards::v1::subsets::any::schema::snapshot::Phase::New).count();
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::rows::{phase_of, storey_of};
+    let ground_new_doors = model.openings.iter().filter(|(id, opening)| matches!(opening.kind, OpeningKind::Door { .. }) && storey_of(&model, id).is_some_and(|storey| storey == "st-ground") && phase_of(&model, id) == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New).count();
     assert!(ground_new_doors > 0 && ground_new_doors < items("sch-doors"), "the ground floor has some of the doors");
     assert_eq!(items("sch-doors-ground"), ground_new_doors, "the scoped door schedule lists the new doors of the ground floor only");
     assert!(model.schedules["sch-doors-ground"].storeys == ["st-ground"], "its scope is authored");
@@ -78,7 +79,7 @@ async fn the_house_infers_levels_heights_and_valid_openings() {
     assert!(heights("st-upper").iter().all(|height| near(*height, 2.7)));
     let attic: Vec<_> = model.walls.iter().filter(|(_, wall)| wall.storey == "st-attic").collect();
     assert_eq!(attic.len(), 4, "the attic is walled by four walls");
-    assert!(attic.iter().all(|(_, wall)| matches!(&wall.top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { roof, .. } if roof == "rf-main")), "the attic walls end at the underside of the main roof");
+    assert!(attic.iter().all(|(_, wall)| matches!(&wall.top, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Roof { roof, .. } if roof == "rf-main")), "the attic walls end at the underside of the main roof");
     assert!(heights("st-attic").iter().all(|height| *height > 0.9 && *height < 2.4 + 1e-9), "attached attic walls rise into the roof, not to the knee wall height");
     assert!(attic.iter().all(|(id, _)| inferred.wall_layout[*id].top_profile.len() >= 2), "an attached top is an authored-derived elevation outline");
     let south = &inferred.wall_layout["w-g-south"];
@@ -95,7 +96,7 @@ async fn a_storey_height_edit_moves_every_storey_above_it() {
     use protocol::Inference;
     let mut model = ASSET.model();
     model.storeys.get_mut("st-ground").expect("the ground storey").height = 3.0;
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&model).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&model).expect("infers");
     assert!(near(inferred.storey_levels["st-upper"].elevation, 3.0) && near(inferred.storey_levels["st-attic"].elevation, 5.7));
     assert!(near(inferred.wall_layout["w-g-south"].height, 3.0) && near(inferred.wall_layout["w-u-south"].base_z, 3.0) && near(inferred.wall_layout["w-a-south"].base_z, 5.7));
     assert!(near(inferred.wall_layout["w-b-south"].top_z, 0.0), "the basement below does not move");
@@ -140,12 +141,12 @@ async fn the_attic_north_and_west_walls_are_the_mirror_images_of_the_south_and_e
 
 #[semio_framework_async_macros::async_test]
 async fn the_basement_is_existing_the_wc_partition_demolished_and_the_rest_new() {
-    use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
     let model = ASSET.model();
-    assert!(model.walls.values().filter(|wall| wall.storey == "st-basement").all(|wall| wall.phase == crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing), "the basement walls are existing");
-    assert_eq!((model.slabs["sl-b"].phase, model.stairs["sr-cellar"].phase, model.spaces["sp-b1"].phase), (crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing, crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing, crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing));
-    assert_eq!(model.walls["w-g-wc"].phase, crate::standards::v1::subsets::any::schema::snapshot::Phase::Demolished);
-    assert_eq!(model.walls["w-g-south"].phase, crate::standards::v1::subsets::any::schema::snapshot::Phase::New);
+    assert!(model.walls.values().filter(|wall| wall.storey == "st-basement").all(|wall| wall.phase == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Existing), "the basement walls are existing");
+    assert_eq!((model.slabs["sl-b"].phase, model.stairs["sr-cellar"].phase, model.spaces["sp-b1"].phase), (semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Existing, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Existing, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Existing));
+    assert_eq!(model.walls["w-g-wc"].phase, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::Demolished);
+    assert_eq!(model.walls["w-g-south"].phase, semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New);
     let inferred = crate::examples::checks::infer(&model);
     assert_eq!(inferred.phase_visibility["st-ground"].ids(ViewPhase::Demolished), ["w-g-wc"]);
     assert!(inferred.phase_visibility["st-basement"].ids(ViewPhase::New).is_empty(), "nothing new stands in the basement");
@@ -197,7 +198,7 @@ async fn the_house_dimensions_tags_notes_and_leaders_print_what_the_geometry_say
 
 #[semio_framework_async_macros::async_test]
 async fn the_entrance_ramp_is_a_compliant_bent_ramp_that_meets_the_front_door_and_hosts_two_railings() {
-    use crate::standards::v1::subsets::any::schema::snapshot::HostSide;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::HostSide;
     let model = ASSET.model();
     assert_eq!(model.ramps.keys().collect::<Vec<_>>(), ["rp-entry"]);
     let hosted: Vec<_> = model.railings.iter().filter(|(_, railing)| railing.host.as_ref().is_some_and(|host| host.element == "rp-entry")).collect();
@@ -222,7 +223,7 @@ async fn raising_the_ground_floor_height_does_not_move_the_entrance_ramp() {
     let mut model = ASSET.model();
     model.storeys.get_mut("st-ground").expect("the ground storey").height = 3.0;
     use protocol::Inference;
-    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&model).expect("infers");
+    let inferred = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&model).expect("infers");
     assert!(near(inferred.ramp_runs["rp-entry"].rise, 0.5) && near(inferred.ramp_runs["rp-entry"].base_z, -0.5), "an unconnected ramp keeps its authored rise and foot");
 }
 
@@ -246,7 +247,7 @@ async fn the_house_zones_area_schemes_and_room_finishes_add_up() {
 async fn the_ceiling_finish_of_a_room_follows_the_authored_hung_ceiling() {
     let model = ASSET.model();
     let inferred = crate::examples::checks::infer(&model);
-    let ceiling = |room: &str| inferred.quantities.elements[room].finishes.iter().find(|row| row.surface == crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface::Ceiling).expect("a ceiling row").area;
+    let ceiling = |room: &str| inferred.quantities.elements[room].finishes.iter().find(|row| row.surface == semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface::Ceiling).expect("a ceiling row").area;
     assert_eq!(inferred.spaces["sp-g4"].ceiling, "ce-g-living");
     assert!(near(ceiling("sp-g4"), inferred.spaces["sp-g4"].net_floor_area), "a flat ceiling under a flat slab covers the net floor once");
     let master = &inferred.spaces["sp-u3"];
@@ -267,12 +268,12 @@ async fn the_house_hangs_four_ceilings_of_two_types_and_one_of_them_is_raked() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_house_wall_type_states_the_properties_its_walls_inherit_and_its_data_raises_no_finding() {
-    use crate::standards::v1::subsets::any::schema::inferences::effective_properties::Source;
+    use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::Source;
     let model = ASSET.model();
     let inferred = crate::examples::checks::infer(&model);
     let south = &inferred.effective_properties["w-g-south"];
     let fire = south.get("Pset_WallCommon", "FireRating").expect("the south wall inherits the fire rating of its type");
-    assert_eq!((fire.source, &fire.value), (Source::Type, &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::Text { value: "REI 60".into() }));
+    assert_eq!((fire.source, &fire.value), (Source::Type, &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue::Text { value: "REI 60".into() }));
     assert_eq!(south.get("Pset_WallCommon", "LoadBearing").map(|row| row.source), Some(Source::Default));
     assert_eq!(model.classifications["w-g-south"].len(), 2, "the south wall is classified in two systems");
     assert!(inferred.diagnostics.iter().all(|found| found.code.category() != "property" && found.code.category() != "classification"), "{:?}", inferred.diagnostics);
@@ -285,8 +286,8 @@ async fn the_house_has_a_sheet_set_of_plans_sections_and_elevations_without_find
     let sheet = |id: &str| model.sheets.get(id).unwrap_or_else(|| panic!("the sheet {id}"));
     assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).number.as_str()), ["A-101", "A-201", "A-301"], "plans, sections and elevations");
     assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).paper.name()), ["A2", "A3", "A2"], "the smallest paper on which the windows fit");
-    let drawn = |kinds: &[crate::standards::v1::subsets::any::schema::snapshot::ViewKind]| model.viewports.values().filter(|viewport| model.views.get(&viewport.view).is_some_and(|view| kinds.contains(&view.kind))).count();
-    assert_eq!(drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan]) + drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Section]) + drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Elevation]), model.viewports.len());
+    let drawn = |kinds: &[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind]| model.viewports.values().filter(|viewport| model.views.get(&viewport.view).is_some_and(|view| kinds.contains(&view.kind))).count();
+    assert_eq!(drawn(&[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Plan]) + drawn(&[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Section]) + drawn(&[semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ViewKind::Elevation]), model.viewports.len());
     let inferred = crate::examples::checks::infer(&model);
     assert_eq!(inferred.sheet_layouts.len(), model.sheets.len());
     for (id, layout) in &inferred.sheet_layouts {
@@ -297,7 +298,7 @@ async fn the_house_has_a_sheet_set_of_plans_sections_and_elevations_without_find
 
 #[semio_framework_async_macros::async_test]
 async fn debug_stages() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds};
     let model = ASSET.model();
     macro_rules! stage {
         ($name:expr, $mask:expr) => {{

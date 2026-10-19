@@ -1,6 +1,7 @@
 #[allow(unused_imports)]
 use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId, semio_framework_plugin::ArtifactKindSpec, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability};
 use crate::standards::v1::subsets::any::schema::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::bim_model_artifact_schema_descriptor;
 
 fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).unwrap_or_else(|error| panic!("a facet leaf is not JSON: {error}"))

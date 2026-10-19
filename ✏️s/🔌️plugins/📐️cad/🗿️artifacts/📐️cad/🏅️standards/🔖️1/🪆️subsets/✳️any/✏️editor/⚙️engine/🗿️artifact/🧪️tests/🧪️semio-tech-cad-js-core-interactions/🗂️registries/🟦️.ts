@@ -11,7 +11,7 @@ import { listActionDefs, registerActionDef, runSelectionApply } from "../../../.
 import { executeSelectionApply, selectionTargetsPointTransformDiff } from "../../../../🎬️actions/🧲️selection-targets/🟦️.ts";
 import { interactionNumericEntryCommitEvent, interactionNumericEntryExplicitLockValue, interactionNumericEntryLockedValue, interactionStepFinalizeEvent } from "../../../../🎬️actions/🎰️interaction-state/🟦️.ts";
 import { preciseSpatialKernelMath } from "@semio-tech/s-spatial-kernel-ts/preview";
-import type { ArtifactTestDependencies } from "../../../🟦️.ts";
+import type { ArtifactTestDependencies } from "../../../🎒️test-dependencies/🟦️.ts";
 import type { InteractionEvent, SelectionTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
 import type { SpatialKernel, SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
 import type { Vec3 } from "@semio-tech/framework/3d";

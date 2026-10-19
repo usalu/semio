@@ -1,9 +1,9 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::SolidAxis;
-use crate::editor::bim::modes::edit::windows::family::vocabulary::*;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::SolidAxis;
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::{category_label, kind_label, shape_label, axis_label, value_text};
 use crate::editor::bim::modes::edit::windows::family::edit::{AXES, CATEGORIES, KINDS, SHAPES};
 
 #[test]

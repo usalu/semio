@@ -412,13 +412,13 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
-        &semio_framework_ui::wgpu::World3dScene {
+        &semio_framework_ui_declaration::ui::World3dScene {
             status_json,
             fit_json: Some(fit_json),
             domain_id: Some(GENERATION3D_VIEW_INTERACTION_DOMAIN.into()),
             domain_granularity_id: Some(GENERATION3D_VIEW_INTERACTION_GRANULARITY.into()),
             ..world3d_scene(
-                semio_framework_ui::wgpu::world3d_camera_json(config.preview_camera.position, config.preview_camera.target, config.preview_camera.fov),
+                semio_framework_ui_declaration::ui::world3d_camera_json(config.preview_camera.position, config.preview_camera.target, config.preview_camera.fov),
                 payload.meshes_json,
                 payload.instances_json,
                 selection_json,

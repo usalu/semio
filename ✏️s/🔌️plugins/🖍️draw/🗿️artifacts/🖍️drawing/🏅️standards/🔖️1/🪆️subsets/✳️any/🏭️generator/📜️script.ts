@@ -29,9 +29,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -58,7 +58,7 @@ async function sha256(path: string): Promise<string> {
 //#region 🚪️Commands
 function generate(outRoot: string): number {
   build();
-  const result = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
+  const result = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
   return result.status ?? 1;
 }
 

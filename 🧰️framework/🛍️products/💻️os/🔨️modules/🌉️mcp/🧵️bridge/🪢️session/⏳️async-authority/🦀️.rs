@@ -3,25 +3,25 @@
 use super::*;
 
 //#region 🔖️BridgeHandle
-struct BridgeAsyncState {
+pub(crate) struct BridgeAsyncState {
     pub(crate) broadcasts: Box<[Option<BridgeBroadcastCursor>]>,
-    broadcast_head: usize,
+    pub(crate) broadcast_head: usize,
     pub(crate) broadcast_len: usize,
     pub(crate) broadcast_reserved: usize,
-    broadcast_driving: bool,
-    completions: Box<[Option<BridgeBroadcastCompletion>]>,
-    completion_head: usize,
-    completion_len: usize,
-    completion_reserved: usize,
-    retirements: Box<[Option<BridgeRetirementCursor>]>,
-    retirement_head: usize,
+    pub(crate) broadcast_driving: bool,
+    pub(crate) completions: Box<[Option<BridgeBroadcastCompletion>]>,
+    pub(crate) completion_head: usize,
+    pub(crate) completion_len: usize,
+    pub(crate) completion_reserved: usize,
+    pub(crate) retirements: Box<[Option<BridgeRetirementCursor>]>,
+    pub(crate) retirement_head: usize,
     pub(crate) retirement_len: usize,
-    retirement_reserved: usize,
-    retirement_generation: u64,
+    pub(crate) retirement_reserved: usize,
+    pub(crate) retirement_generation: u64,
 }
 
 impl BridgeAsyncState {
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             broadcasts: semio_framework_async::boxed_slots(BRIDGE_BROADCAST_MAX_PENDING, || None),
             broadcast_head: 0,
@@ -45,7 +45,7 @@ impl BridgeAsyncState {
     }
 }
 
-pub(super) struct BridgeAsyncAuthority {
+pub(crate) struct BridgeAsyncAuthority {
     pub pool: WorkerPool,
     pub state: Mutex<BridgeAsyncState>,
     pub scheduled: AtomicBool,
@@ -57,7 +57,7 @@ pub(super) struct BridgeAsyncAuthority {
 }
 
 impl BridgeAsyncAuthority {
-    pub(super) fn new(pool: WorkerPool) -> Arc<Self> {
+    pub(crate) fn new(pool: WorkerPool) -> Arc<Self> {
         Arc::new(Self {
             pool,
             state: Mutex::new(BridgeAsyncState::new()),
@@ -80,7 +80,7 @@ impl BridgeAsyncAuthority {
         Ok(())
     }
 
-    pub(super) fn cancel_broadcast_reservation(&self) {
+    pub(crate) fn cancel_broadcast_reservation(&self) {
         let mut state = self.state.lock().expect("bridge async lock poisoned");
         state.broadcast_reserved = state.broadcast_reserved.saturating_sub(1);
         state.completion_reserved = state.completion_reserved.saturating_sub(1);
@@ -95,14 +95,14 @@ impl BridgeAsyncAuthority {
         Ok(BridgeRetirementGrant { generation: state.retirement_generation })
     }
 
-    pub(super) fn cancel_retirement(&self, grant: BridgeRetirementGrant) {
+    pub(crate) fn cancel_retirement(&self, grant: BridgeRetirementGrant) {
         let mut state = self.state.lock().expect("bridge async lock poisoned");
         if grant.generation == state.retirement_generation {
             state.retirement_reserved = state.retirement_reserved.saturating_sub(1);
         }
     }
 
-    pub(super) fn enqueue_broadcast(self: &Arc<Self>, cursor: BridgeBroadcastCursor) {
+    pub(crate) fn enqueue_broadcast(self: &Arc<Self>, cursor: BridgeBroadcastCursor) {
         let mut state = self.state.lock().expect("bridge async lock poisoned");
         state.broadcast_reserved = state.broadcast_reserved.saturating_sub(1);
         let index = (state.broadcast_head + state.broadcast_len) % BRIDGE_BROADCAST_MAX_PENDING;
@@ -119,7 +119,7 @@ impl BridgeAsyncAuthority {
         state.completion_len += 1;
     }
 
-    pub(super) fn publish_retirement(self: &Arc<Self>, grant: BridgeRetirementGrant, pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES]) {
+    pub(crate) fn publish_retirement(self: &Arc<Self>, grant: BridgeRetirementGrant, pages: [Option<Box<[u8; BRIDGE_OUTBOX_PAGE_BYTES]>>; BRIDGE_OUTBOX_MAX_PAGES]) {
         let mut state = self.state.lock().expect("bridge async lock poisoned");
         if grant.generation != state.retirement_generation || state.retirement_reserved == 0 {
             drop(state);
@@ -236,7 +236,7 @@ impl BridgeAsyncAuthority {
         }
     }
 
-    pub(super) fn take_terminal_job(&self) -> Option<(WorkerSubmitErrorKind, Job)> {
+    pub(crate) fn take_terminal_job(&self) -> Option<(WorkerSubmitErrorKind, Job)> {
         self.terminal_job.lock().expect("bridge terminal lock poisoned").take()
     }
 

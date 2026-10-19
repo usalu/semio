@@ -761,7 +761,7 @@ describe("package boundary glue-content classification", () => {
       writeFileSync(join(packageRoot, "📜️script.ts"), 'import { runArtifactRustPackageMain } from "./owner/🟦️.ts";\nawait runArtifactRustPackageMain(import.meta.dir, "fixture");\n');
       clearDiscoveryCache();
       expect(discoverPackageProblems(root, loadCatalogTaxonomy()).some((row) => row.path.endsWith("/📜️script.ts"))).toBe(false);
-      const pluginRouter = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts"), "utf8");
+      const pluginRouter = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/📜️script.ts"), "utf8");
       writeFileSync(join(packageRoot, "📜️script.ts"), pluginRouter);
       clearDiscoveryCache();
       expect(discoverPackageProblems(root, loadCatalogTaxonomy()).some((row) => row.path.endsWith("/📜️script.ts"))).toBe(false);
@@ -781,7 +781,7 @@ describe("package boundary glue-content classification", () => {
     expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts", "vitest-config-entry")).toBe("tool-metadata");
     expect(classify("🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/📜️script.ts", "root-script")).toBe("tool-metadata");
-    expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("tool-metadata");
+    expect(classify("🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("tool-metadata");
     expect(classify("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts", "root-script")).toBe("unresolved");
   });
 
@@ -802,10 +802,10 @@ describe("package boundary glue-content classification", () => {
     expect(libraryPackage.scripts["test-package-body-policy"]).toBe("bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-package-body-policy");
   });
 
-  test("the remaining package-purity fixture stays registered as frozen history", () => {
-    const contract = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"];
-    expect(contract?.path).toBe("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json");
-    const fixture = JSON.parse(readFileSync(join(repoRoot, contract!.path), "utf8"));
+  test("the remaining package-purity fixture stays a non-authoritative testing example outside production coordinate metadata", () => {
+    const path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json";
+    expect(Object.values(loadCatalogTaxonomy().frozenCoordinateEvidenceContracts).some((row) => row.path === path)).toBe(false);
+    const fixture = JSON.parse(readFileSync(join(repoRoot, path), "utf8"));
     expect(fixture.authority).toBe("remaining-package-purity-owner-projection");
     expect(fixture.decisionState).toBe("non-authoritative-concurrent-source-byte-drift");
   });

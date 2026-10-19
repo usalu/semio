@@ -3,7 +3,7 @@ import { core } from "../../../../../📦️packages/🟦️typescript/🟦️.t
 import { BrepjsKernel } from "../../../🧱️brepjs/📨️worker-and-kernel/🟦️.ts";
 import { Model } from "@semio-tech/s-spatial-kernel-ts/geometry/model";
 import { applyModelDiff } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import type { SemioTestDependencies } from "../../🟦️.ts";
+import type { SemioTestDependencies } from "../../🎒️test-dependencies/🟦️.ts";
 import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };

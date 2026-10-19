@@ -5,6 +5,7 @@ package cli
 import (
 	json "encoding/json"
 	os "os"
+	exec "os/exec"
 	filepath "path/filepath"
 	strings "strings"
 	testing "testing"
@@ -12,19 +13,11 @@ import (
 	codebase "github.com/usalu/semio/repo/codebase"
 	model "github.com/usalu/semio/repo/model"
 	move "github.com/usalu/semio/repo/move"
+	providers "github.com/usalu/semio/repo/providers"
 	todos "github.com/usalu/semio/repo/todos"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
-
-func setupToolTest(t *testing.T) {
-	t.Helper()
-	cwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get cwd: %v", err)
-	}
-	workspace.RootDir = findTestRepoRoot(cwd)
-	codebase.InvalidateTechnologyCache()
-}
 
 const fixtureSectionedTypeScript = `// #region 🔖️Header
 // [💻️js/index.ts](repo://file/💻️index)
@@ -72,13 +65,75 @@ func withMonorepoFixture(t *testing.T) string {
 	write("compose/go/main.go", fixtureSectionedGo)
 	write("repo/client/AGENTS.md", "---\nbundle:\n  emoji: ⌨️\n---\n")
 	write("repo/client/main.go", fixtureSectionedGo)
-	previous := workspace.RootDir
-	workspace.RootDir = root
+	previous := workspace.GetRootDir()
+	workspace.SetRootDir(root)
 	codebase.InvalidateTechnologyCache()
 	t.Cleanup(func() {
-		workspace.RootDir = previous
+		workspace.SetRootDir(previous)
 		codebase.InvalidateTechnologyCache()
 	})
+	return root
+}
+
+const exhaustiveModelsGo = `// #region 🔖️Header
+// [💻️compose/compose.go](repo://file/💻️compose)
+
+package compose
+
+// #region 🧩️Models
+// Kit holds the parts of one assembly.
+type Kit struct {
+	Name string
+}
+// #endregion 🧩️Models
+`
+
+// 🧫️withExhaustiveRepo extends the monorepo fixture with the bundles, files, git history, goals and ticket the exhaustive
+// suites query, so every exhaustive test answers from a repository it owns and never from the checkout it runs in.
+func withExhaustiveRepo(t *testing.T) string {
+	t.Helper()
+	root := withMonorepoFixture(t)
+	write := func(rel, content string) {
+		abs := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", rel, err)
+		}
+		if err := os.WriteFile(abs, []byte(content), 0o644); err != nil {
+			t.Fatalf("write %s: %v", rel, err)
+		}
+	}
+	for name, emoji := range map[string]string{"compose/engine": "⚙️", "compose/antlr": "🔤️", "compose/desktop": "🖥️", "repo/server": "🌍️", "repo/go": "🐹️", "repo/cli": "⌨️", "coda/notes": "📝️"} {
+		write(name+"/AGENTS.md", "---\nbundle:\n  emoji: "+emoji+"\n---\n")
+		write(name+"/main.go", fixtureSectionedGo)
+	}
+	write("compose/go/compose.go", exhaustiveModelsGo)
+	write("compose/go/search.go", fixtureSectionedGo)
+	write(".🧬semio/🦑️repo/🧑️‍💻️devs/usalu/🧑️‍💻️contributor.json", "{\n  \"alias\": \"usalu\",\n  \"github\": \"usalu\",\n  \"name\": \"usalu\"\n}\n")
+	write(".🧬semio/🦑️repo/🧑️‍💻️devs/ueli/🧑️‍💻️contributor.json", "{\n  \"alias\": \"ueli\",\n  \"github\": \"ueli\",\n  \"name\": \"ueli\"\n}\n")
+	write("repo/client/package.json", "{\n  \"name\": \"client\"\n}\n")
+	environment := append(os.Environ(), "GIT_AUTHOR_NAME=usalu", "GIT_AUTHOR_EMAIL=usalu@example.com", "GIT_COMMITTER_NAME=usalu", "GIT_COMMITTER_EMAIL=usalu@example.com", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_CONFIG_SYSTEM="+os.DevNull)
+	for _, arguments := range [][]string{
+		{"init", "-q", "-b", "main"}, {"add", "-A"}, {"commit", "-q", "-m", "Initial fixture"},
+		{"checkout", "-q", "-b", "side"}, {"commit", "-q", "--allow-empty", "-m", "Side change"},
+		{"checkout", "-q", "main"}, {"commit", "-q", "--allow-empty", "-m", "Main change"},
+		{"merge", "-q", "--no-ff", "-m", "Merge side into main", "side"},
+	} {
+		command := exec.Command("git", append([]string{"-c", "commit.gpgsign=false"}, arguments...)...)
+		command.Dir = root
+		command.Env = environment
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git %v failed: %v\n%s", arguments, err, output)
+		}
+	}
+	codebase.InvalidateTechnologyCache()
+	for _, title := range []string{"Sketchpad", "AI Optimized Repo"} {
+		if result := ToolGoalCreate(title, "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", ""); result.Error != "" {
+			t.Fatalf("failed to seed goal %q: %s", title, result.Error)
+		}
+	}
+	if result := ToolTicketOpen("🎫️", "Seed Ticket", "Seed prompt", "sonnet-4-5", "", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "", providers.McpClientGeneric, "", ""); result.Error != "" {
+		t.Fatalf("failed to seed ticket: %s", result.Error)
+	}
 	return root
 }
 
@@ -101,7 +156,7 @@ func TestToolTechnologyList(t *testing.T) {
 }
 
 func TestToolContributorList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolContributorList()
 	if result.Error != "" {
 		t.Errorf("ToolContributorList returned error: %s", result.Error)
@@ -112,7 +167,7 @@ func TestToolContributorList(t *testing.T) {
 }
 
 func TestToolGoalList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolGoalList()
 	if result.Error != "" {
 		t.Errorf("ToolGoalList returned error: %s", result.Error)
@@ -123,7 +178,7 @@ func TestToolGoalList(t *testing.T) {
 }
 
 func TestToolDraftList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolDraftList()
 	if result.Error != "" {
 		t.Errorf("ToolDraftList returned error: %s", result.Error)
@@ -131,7 +186,7 @@ func TestToolDraftList(t *testing.T) {
 }
 
 func TestToolFolderList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolFolderList(".")
 	if result.Error != "" {
 		t.Errorf("ToolFolderList returned error: %s", result.Error)
@@ -142,7 +197,7 @@ func TestToolFolderList(t *testing.T) {
 }
 
 func TestToolFileList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolFileList("repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolFileList returned error: %s", result.Error)
@@ -161,7 +216,7 @@ func TestToolSectionTree(t *testing.T) {
 }
 
 func TestToolPolicyList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolPolicyList()
 	if result.Error != "" {
 		t.Errorf("ToolPolicyList returned error: %s", result.Error)
@@ -169,7 +224,7 @@ func TestToolPolicyList(t *testing.T) {
 }
 
 func TestToolPolicyCheck(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolPolicyCheck("code", "repo/client")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyCheck returned error: %s", result.Error)
@@ -177,7 +232,7 @@ func TestToolPolicyCheck(t *testing.T) {
 }
 
 func TestToolAnalyzeScope(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolAnalyze("repo/client", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze returned error: %s", result.Error)
@@ -185,11 +240,9 @@ func TestToolAnalyzeScope(t *testing.T) {
 }
 
 func TestToolFolderCRUD(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	result := move.ToolFolderCreate("test-folder")
 	if result.Error != "" {
@@ -213,11 +266,9 @@ func TestToolFolderCRUD(t *testing.T) {
 }
 
 func TestToolDraftLifecycle(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	result := ToolDraftCreate("test-mcp-draft", nil)
 	if result.Error != "" {
@@ -236,14 +287,14 @@ func TestToolDraftLifecycle(t *testing.T) {
 }
 
 func TestToolGoalUri(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 	result := ToolGoalList()
 	if result.Error != "" {
 		t.Fatalf("ToolGoalList returned error: %s", result.Error)
 	}
 	goals, ok := result.Data.([]*model.Goal)
 	if !ok || len(goals) == 0 {
-		t.Skip("no goals to verify URI")
+		t.Fatal("no goals to verify URI")
 	}
 	for _, g := range goals {
 		uri := g.GetURI()
@@ -257,7 +308,7 @@ func TestToolGoalUri(t *testing.T) {
 }
 
 func TestParityDraftList(t *testing.T) {
-	setupToolTest(t)
+	withExhaustiveRepo(t)
 
 	t.Run("uses event rendering format", func(t *testing.T) {
 		toolResult := ToolDraftList()
@@ -288,4 +339,40 @@ func TestParityDraftList(t *testing.T) {
 			t.Errorf("output mismatch:\nexpected:\n%s\nactual:\n%s", expected, actual)
 		}
 	})
+}
+
+func TestToolPolicyListIsSortedByIdentifier(t *testing.T) {
+	result := ToolPolicyList()
+	if result.Error != "" {
+		t.Fatalf("ToolPolicyList returned error: %s", result.Error)
+	}
+	policies := sortedRegisteredPolicies()
+	if len(policies) < 2 {
+		t.Fatalf("expected at least two registered policies, got %d", len(policies))
+	}
+	for index := 1; index < len(policies); index++ {
+		if policies[index].ID < policies[index-1].ID {
+			t.Errorf("policy %q is listed after %q", policies[index].ID, policies[index-1].ID)
+		}
+	}
+}
+
+func TestAutofixCommandRunsTheFixMutation(t *testing.T) {
+	root := withMonorepoFixture(t)
+	file := filepath.Join(root, "compose", "go", "bare.go")
+	original := "package main\n\nfunc bare() {}\n"
+	if err := os.WriteFile(file, []byte(original), 0o644); err != nil {
+		t.Fatalf("failed to write the bare source: %v", err)
+	}
+	stdout, stderr, err := executeCommand("autofix", "compose/go/bare.go")
+	if err != nil {
+		t.Fatalf("autofix failed: %v\nStdout: %s\nStderr: %s", err, stdout, stderr)
+	}
+	content, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatalf("failed to read the fixed source: %v", err)
+	}
+	if string(content) == original {
+		t.Error("autofix must repair the header of a bare source")
+	}
 }

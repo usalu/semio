@@ -11,7 +11,8 @@ export class ValueError extends Error {
   get retainedProgress(): ValueErrorRetainedProgress { return this.retainedReceipt; }
   /** 📥️ Attach the receipt of this original failed turn. */
   withRetainedProgress(progress: ValueErrorRetainedProgress): this { this.retainedReceipt = progress; return this; }
-  constructor(public readonly kind: ValueRefusalKind, message: string) { super(message); this.name = "ValueError"; }
+  public readonly kind: ValueRefusalKind;
+  constructor(kind: ValueRefusalKind, message: string) { super(message); this.kind = kind; this.name = "ValueError"; }
   /** 🪆️ Decorates the dotted display path without changing the semantic identity. */
   under(segment: string | number | bigint): ValueError { return new ValueError(this.kind, `${segment}.${this.message}`).withRetainedProgress(this.retainedReceipt); }
   /** 🗣️ Projects prose only at a declared terminal text boundary. */

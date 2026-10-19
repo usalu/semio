@@ -1,5 +1,5 @@
 # 📸️ Jack owns complete inline manifests, exact camera words and one composed child.
-# import ArtifactChild, ArtifactChildInput from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild, ArtifactChildInput from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import Binary64Word, Binary64WordInput, ValueType, ValueTypeInput from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 type JackSnapshot {
  schema: String! @state(class: ARTIFACT)

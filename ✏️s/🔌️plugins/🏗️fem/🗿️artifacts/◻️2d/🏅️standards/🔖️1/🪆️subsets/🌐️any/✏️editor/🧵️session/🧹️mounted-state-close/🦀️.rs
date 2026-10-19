@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🧰️FixedArena
 impl MountedState {
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    pub(super) fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> PluginLifecycleStep {
         let (maximum_items, maximum_bytes) = (grant.maximum_items.min(1), grant.maximum_release_bytes);
         let child = RetainedCloneGrant { maximum_items, ..grant };
         if maximum_items == 0 {
@@ -27,10 +27,10 @@ impl MountedState {
                         return session_pending(1, plan_bytes);
                     }
                     if let Some(graph) = self.graph.as_mut() {
-                        let step = InteractiveJob::close_step(graph, child);
-                        if let Some(blocked) = session_child_failure(step) {
-                            return blocked;
-                        }
+                        let step = match session_child_step(cx.with_retained_loan(child, |same| InteractiveJob::close_step(graph, same))) {
+                            Ok(step) => step,
+                            Err(blocked) => return blocked,
+                        };
                         if !InteractiveJob::terminal_is_empty(graph) {
                             return PluginLifecycleStep::Progress(step.progress());
                         }
@@ -41,10 +41,10 @@ impl MountedState {
                 }
                 1 => {
                     if let Some(mesh) = self.mesh.as_mut() {
-                        let step = InteractiveJob::close_step(mesh, child);
-                        if let Some(blocked) = session_child_failure(step) {
-                            return blocked;
-                        }
+                        let step = match session_child_step(cx.with_retained_loan(child, |same| InteractiveJob::close_step(mesh, same))) {
+                            Ok(step) => step,
+                            Err(blocked) => return blocked,
+                        };
                         if !InteractiveJob::terminal_is_empty(mesh) {
                             return PluginLifecycleStep::Progress(step.progress());
                         }
@@ -99,10 +99,10 @@ impl MountedState {
                 }
                 6 => {
                     if let Some(pcg_build) = self.pcg_build.as_mut() {
-                        let step = pcg_build.close_step(child);
-                        if let Some(blocked) = session_child_failure(step) {
-                            return blocked;
-                        }
+                        let step = match session_child_step(pcg_build.close_step(child)) {
+                            Ok(step) => step,
+                            Err(blocked) => return blocked,
+                        };
                         if !matches!(step, InteractiveJobCloseStep::Complete { .. }) {
                             return PluginLifecycleStep::Progress(step.progress());
                         }
@@ -113,10 +113,10 @@ impl MountedState {
                 }
                 7 => {
                     if let Some(pcg) = self.pcg.as_mut() {
-                        let step = InteractiveJob::close_step(pcg, child);
-                        if let Some(blocked) = session_child_failure(step) {
-                            return blocked;
-                        }
+                        let step = match session_child_step(cx.with_retained_loan(child, |same| InteractiveJob::close_step(pcg, same))) {
+                            Ok(step) => step,
+                            Err(blocked) => return blocked,
+                        };
                         if !InteractiveJob::terminal_is_empty(pcg) {
                             return PluginLifecycleStep::Progress(step.progress());
                         }

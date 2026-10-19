@@ -8,7 +8,6 @@ import { assertActionAvailableInModelDefinition } from "@semio-tech/s-spatial-ke
 import { Expr, ExprEnv, clearPathTarget, evalExpr, evalGuard, readPathTarget, writePathTarget } from "@semio-tech/s-spatial-kernel-ts/geometry/expressions";
 import { InteractionEvent, SelectionEvent } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
 import { KernelQueryContext, SpatialKernel, SpatialPreviewKernel } from "@semio-tech/s-spatial-kernel-ts/spatial";
-import type { InteractionRuntime } from "../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
 import { type ActionRegistry, applyActionPatchToContext } from "../🧬️action-contract/🟦️.ts";
 import { modelDefinitionActionRegistry, runRegisteredAction } from "../🏃️action-execution/🟦️.ts";
 
@@ -568,13 +567,6 @@ export function listKeyedInteractionTransitions(spec: InteractionSpec, state: st
     }
   }
   return out;
-}
-
-/** ⎋️ Hard-aborts the active interaction session when `capabilities.canCancel`. */
-export function abortActiveInteractionSession(rt: InteractionRuntime): boolean {
-  if (!rt.getSnapshot().capabilities.canCancel) return false;
-  rt.cancel();
-  return true;
 }
 
 /** 🎬️ Minimal async statechart runner for `InteractionSpec.machine`. */

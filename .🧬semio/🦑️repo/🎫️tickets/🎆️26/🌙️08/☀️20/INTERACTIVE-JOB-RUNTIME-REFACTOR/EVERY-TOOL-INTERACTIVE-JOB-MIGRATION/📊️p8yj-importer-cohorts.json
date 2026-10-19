@@ -17,15 +17,15 @@
   ],
   "importers": [
     {
-      "owner": "Procedural2dPlayApp",
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️procedural2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "Generation2dPlayApp",
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "params:in"
       ],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<Procedural2dMutation, Procedural2dConfigMutation, Self::DraftMutation>",
-      "currentMonolith": true,
+      "output": "Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>",
+      "currentMonolith": false,
       "workBound": {
         "maxRawWireBytes": 8388608,
         "maxDecodedItems": 8192,
@@ -35,12 +35,12 @@
       "cohort": "A"
     },
     {
-      "owner": "Procedural3dPlayApp",
-      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️procedural3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "Generation3dPlayApp",
+      "file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<Procedural3dMutation, Procedural3dConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -52,11 +52,11 @@
     },
     {
       "owner": "Gis3dPlayApp",
-      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<GisTerrainMutation, Gis3dConfigMutation, Self::DraftMutation>",
+      "output": "Emit<GisTerrainMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -68,11 +68,11 @@
     },
     {
       "owner": "Gis2dPlayApp",
-      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<GisMapMutation, Gis2dConfigMutation, Self::DraftMutation>",
+      "output": "Emit<GisMapMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -83,15 +83,15 @@
       "cohort": "A"
     },
     {
-      "owner": "AnimatePresentPlayApp",
-      "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "AnimatePresentationPlayApp",
+      "file": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "frames:in"
       ],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<PresentMutation, PresentConfigMutation, Self::DraftMutation>",
-      "currentMonolith": true,
+      "output": "Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>",
+      "currentMonolith": false,
       "workBound": {
         "maxRawWireBytes": 8388608,
         "maxDecodedItems": 8192,
@@ -102,7 +102,7 @@
     },
     {
       "owner": "ShootingPlayApp",
-      "file": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "document:in"
@@ -120,13 +120,13 @@
     },
     {
       "owner": "SequencePlayApp",
-      "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎹️app/🦀️.rs",
       "route": "import-media",
       "ports": [
         "steps:in"
       ],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<SequenceMutation, SequenceConfigMutation, Self::DraftMutation>",
+      "output": "Emit<SequenceMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -138,11 +138,11 @@
     },
     {
       "owner": "Fem2dPlayApp",
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<Fem2dMutation, Fem2dConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Fem2dMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -154,11 +154,11 @@
     },
     {
       "owner": "Fem3dPlayApp",
-      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<Fem3dMutation, Fem3dConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Fem3dMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -170,7 +170,7 @@
     },
     {
       "owner": "Process3dPlayApp",
-      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
@@ -186,7 +186,7 @@
     },
     {
       "owner": "LowpolyPlayApp",
-      "file": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
@@ -202,12 +202,12 @@
     },
     {
       "owner": "LayoutPlayApp",
-      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<LayoutMutation, LayoutConfigMutation, Self::DraftMutation>",
-      "currentMonolith": true,
+      "output": "Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>",
+      "currentMonolith": false,
       "workBound": {
         "maxRawWireBytes": 8388608,
         "maxDecodedItems": 8192,
@@ -218,7 +218,7 @@
     },
     {
       "owner": "CadPlayApp",
-      "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "geometry:in",
@@ -237,11 +237,11 @@
     },
     {
       "owner": "Iso16757PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<Iso16757Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Iso16757Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -253,11 +253,11 @@
     },
     {
       "owner": "Vdi3805PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<Vdi3805Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Vdi3805Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -269,11 +269,11 @@
     },
     {
       "owner": "Din4108PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<Din4108Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Din4108Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -285,11 +285,11 @@
     },
     {
       "owner": "Din16798PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<Din16798Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Din16798Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -301,11 +301,11 @@
     },
     {
       "owner": "En1990PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1990Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1990Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -317,11 +317,11 @@
     },
     {
       "owner": "En1991PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1991Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1991Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -333,11 +333,11 @@
     },
     {
       "owner": "En1992PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1992Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1992Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -349,11 +349,11 @@
     },
     {
       "owner": "En1993PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1993Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1993Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -365,11 +365,11 @@
     },
     {
       "owner": "En1994PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1994Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1994Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -381,11 +381,11 @@
     },
     {
       "owner": "En1995PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1995Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1995Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -397,11 +397,11 @@
     },
     {
       "owner": "En1996PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1996Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1996Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -413,11 +413,11 @@
     },
     {
       "owner": "En1997PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1997Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1997Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -429,11 +429,11 @@
     },
     {
       "owner": "En1998PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1998Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1998Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -445,11 +445,11 @@
     },
     {
       "owner": "En1999PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<En1999Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<En1999Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -461,11 +461,11 @@
     },
     {
       "owner": "Din18599PlayApp",
-      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(media-envelope) + immutable snapshot",
-      "output": "Emit<Din18599Mutation, NormConfigMutation, Self::DraftMutation>",
+      "output": "Emit<Din18599Mutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -477,7 +477,7 @@
     },
     {
       "owner": "PlaybookPlayApp",
-      "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "chapters:in"
@@ -494,12 +494,12 @@
       "cohort": "C"
     },
     {
-      "owner": "RemodelPlayApp",
-      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "RemodelingPlayApp",
+      "file": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<RemodelMutation, RemodelConfigMutation, Self::DraftMutation>",
+      "output": "Emit<RemodelingMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -510,12 +510,12 @@
       "cohort": "C"
     },
     {
-      "owner": "TrinityRewritePlayApp",
-      "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "TrinityRewritingPlayApp",
+      "file": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<RewriteRuleMutation, RewriteConfigMutation, Self::DraftMutation>",
+      "output": "Emit<RewriteRuleMutation, NoConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,
@@ -527,14 +527,14 @@
     },
     {
       "owner": "RasterPlayApp",
-      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "image:in"
       ],
       "input": "port + Media(structured-json) + immutable snapshot",
       "output": "Emit<RasterMutation, RasterConfigMutation, Self::DraftMutation>",
-      "currentMonolith": true,
+      "currentMonolith": false,
       "workBound": {
         "maxRawWireBytes": 8388608,
         "maxDecodedItems": 8192,
@@ -563,7 +563,7 @@
     },
     {
       "owner": "Puzzle5dPlayApp",
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "kit:in"
@@ -581,7 +581,7 @@
     },
     {
       "owner": "Puzzle3dPlayApp",
-      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "kit:in"
@@ -598,14 +598,14 @@
       "cohort": "C"
     },
     {
-      "owner": "SourcingCurateApp",
-      "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+      "owner": "SourcingCurationApp",
+      "file": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
       "route": "import-media",
       "ports": [
         "document:in"
       ],
       "input": "port + Media(structured-json) + immutable snapshot",
-      "output": "Emit<SourcingMutation, SourcingCurateConfigMutation, Self::DraftMutation>",
+      "output": "Emit<SourcingMutation, SourcingCurationConfigMutation, Self::DraftMutation>",
       "currentMonolith": true,
       "workBound": {
         "maxRawWireBytes": 8388608,

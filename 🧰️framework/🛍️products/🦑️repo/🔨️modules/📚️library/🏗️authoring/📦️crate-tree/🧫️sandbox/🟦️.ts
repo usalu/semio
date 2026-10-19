@@ -1,7 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, relative, resolve } from "node:path";
-import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { carveWrites } from "../🟦️.ts";
 import { allItems } from "../🗺️plan/🧰️tree-helpers/🟦️.ts";
 import { crateIdent } from "../🗺️plan/🏷️naming/🟦️.ts";

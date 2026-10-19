@@ -1,8 +1,8 @@
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
 import {readFileSync,lstatSync} from "node:fs";
 import {resolve,join} from "node:path";
 import {checkScriptInvocation,createIssuedResourceControlV1,type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {checkResourceLeaseControl} from "../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {checkResourceLeaseControl} from "@semio-tech/process/leases";
 import {readRustBuildIntentV1,rustBuildIntentArgumentsV1,readRustBuildFallbackDecisionV1,type RustBuildIntentV1,type RustBuildFallbackDecisionV1} from "../🟦️.ts";
 
 /** 🚦️ Refuses a task that reached its old aggregate command without selected compiler graft consumption. */

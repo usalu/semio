@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rust String Collection Join Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "ownership",
+    "retention",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "rust-standard-string-collection-join-v1"
+    },
+    "ownership": {
+      "const": "source-local-standard-vec-with-string-elements-and-no-shadow-or-escape"
+    },
+    "retention": {
+      "const": {
+        "parentSegments": [
+          "📓️rust-join-provenance",
+          "🧪️runs"
+        ],
+        "disposition": "retain-all-until-reviewed"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 31,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "expected",
+          "allArguments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]+$"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allArguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "compiler": {
+            "type": "string",
+            "minLength": 1
+          },
+          "compilerOutput": {
+            "enum": [
+              "delimiter",
+              "path"
+            ]
+          }
+        },
+        "dependencies": {
+          "compiler": [
+            "compilerOutput"
+          ],
+          "compilerOutput": [
+            "compiler"
+          ]
+        }
+      }
+    }
+  }
+}

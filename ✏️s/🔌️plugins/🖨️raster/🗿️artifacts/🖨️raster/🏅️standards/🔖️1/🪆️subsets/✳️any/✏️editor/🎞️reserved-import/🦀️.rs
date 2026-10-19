@@ -177,8 +177,9 @@ impl RasterImportJob {
     }
 }
 
-impl InteractiveJob for RasterImportJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl RasterImportJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.delivered {
             let step = self.publication.close_step(cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
@@ -208,6 +209,10 @@ impl InteractiveJob for RasterImportJob {
         }
         Ok(result)
     }
+}
+
+impl InteractiveJob for RasterImportJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -222,52 +227,53 @@ impl InteractiveJob for RasterImportJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
-        let demand = match self.close_demands(grant.maximum_copy_bytes) {
-            Ok(demand) => demand,
-            Err(error) => return refused(error),
-        };
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        macro_rules! owned {
-            ($slot:expr) => {
-                if $slot.is_some() {
-                    return match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut $slot, &mut self.active, child) {
-                        Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                        Err(error) => refused(error),
-                    };
-                }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            let demand = match self.close_demands(grant.maximum_copy_bytes) {
+                Ok(demand) => demand,
+                Err(error) => return Err(error),
             };
-        }
-        if !self.publication.terminal_is_empty() {
-            return match self.publication.close_step(grant) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => refused(error),
-            };
-        }
-        if self.delivered {
-            self.delivered = false;
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        if self.active.is_some() {
-            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => refused(error),
-            };
-        }
-        owned!(self.pending_completion_rejection);
-        owned!(self.mutations);
-        owned!(self.media_json);
-        owned!(self.port);
-        owned!(self.snapshot);
-        owned!(self.completion);
-        InteractiveJobCloseStep::Complete { progress: Default::default() }
+            if self.terminal_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
+            }
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+            macro_rules! owned {
+                ($slot:expr) => {
+                    if $slot.is_some() {
+                        return Ok(match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut $slot, &mut self.active, child) {
+                            Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                            Err(error) => return Err(error),
+                        });
+                    }
+                };
+            }
+            if !self.publication.terminal_is_empty() {
+                return Ok(match self.publication.close_step(grant) {
+                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                    Err(error) => return Err(error),
+                });
+            }
+            if self.delivered {
+                self.delivered = false;
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            if self.active.is_some() {
+                return Ok(match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child) {
+                    Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
+                    Err(error) => return Err(error),
+                });
+            }
+            owned!(self.pending_completion_rejection);
+            owned!(self.mutations);
+            owned!(self.media_json);
+            owned!(self.port);
+            owned!(self.snapshot);
+            owned!(self.completion);
+            Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

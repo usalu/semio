@@ -8,6 +8,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const require = createRequire(import.meta.url), parse = require("yargs-parser"), jsonc = require("jsonc-parser");
   const repository = new URL("../../../../", import.meta.url), read = (path: string): string => readFileSync(new URL(path, repository), "utf8");
+  const protocolEnvironment = JSON.parse(read(fixture.environmentProtocol)).definitions.Protocol.const.environment;
   const { describe, expect, it } = vitest;
   describe("fresh Play release", () => {
     it("is one uncached release driver task whose jobs bundle before any component links and assemble pages after every module", () => {
@@ -40,7 +41,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const entries = jsonc.parse(read(file)).configurations.filter((entry: any) => entry.name === fixture.launch.name);
         expect(entries, file).toHaveLength(1);
         expect(entries[0].command, file).toBe(`${fixture.launch.runner} ${args.join(" ")}`);
-        expect(entries[0].env, file).toEqual(dependencies.playFreshBuildEnvironment());
+        expect(entries[0].env, file).toEqual({ ...dependencies.playFreshBuildEnvironment(), ...protocolEnvironment });
       }
       const parsed = parse(args, { boolean: ["skip-cache", "skip-remote-cache"] });
       expect(parsed._).toEqual(["run", fixture.target]);
@@ -86,7 +87,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const file of fixture.launch.files) {
         const entries = jsonc.parse(read(file)).configurations.filter((entry: any) => entry.name === fixture.driver.freshLaunch);
         expect(entries, file).toHaveLength(1);
-        expect(entries[0].env, file).toEqual({ [fixture.driver.generationEnvironment]: "fresh" });
+        expect(entries[0].env, file).toEqual({ [fixture.driver.generationEnvironment]: "fresh", ...protocolEnvironment });
       }
     });
     it("bounds parallel build tasks by cores and by memory", () => {

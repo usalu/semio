@@ -1,6 +1,7 @@
 use crate::editor::bim::fixture::{room, Rig};
-use crate::editor::bim::marks::Shape;
-use crate::standards::v1::subsets::any::schema::{snapshot::Axis, mutations::ModelMutation};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 fn ends(rig: &Rig, wall: &str) -> ([f64; 2], [f64; 2]) {
     let (Axis::Line { start, end } | Axis::Arc { start, end, .. }) = &rig.snapshot.walls[wall].axis;

@@ -96,7 +96,10 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
         if disposer.terminal_is_empty(&store) {
             break;
         }
-        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+        let demand = disposer.retirement_demands(&store, 1 << 20).expect("the store quotes its close");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(1 << 20), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let step = disposer.close_step(&mut store, grant).expect("the store retires");
+        assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "every close receipt fits its grant");
     }
     assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }
@@ -104,7 +107,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
 /// ⏪️ One `historyEdit*` verb from the Model window; a refused verb fails the law.
 async fn history_edit(app: &mut crate::context::LowpolyApp, verb: &str, args: serde_json::Value) {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = app.0.handle_action(verb, Some(&args), &crate::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, verb, Some(args), &crate::context::action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
     assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
 }
 
@@ -115,7 +118,7 @@ async fn pump(app: &mut crate::context::LowpolyApp, done: impl Fn(Option<semio_f
         if done(stage) {
             return;
         }
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("a driver turn");
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("a driver turn");
         while app.0.take_typed_operation_ui_progress().is_some() {}
     }
     panic!("the history edit never settled");

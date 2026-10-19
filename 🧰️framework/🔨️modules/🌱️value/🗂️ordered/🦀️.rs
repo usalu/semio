@@ -9,9 +9,9 @@ use crate::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedClo
 pub mod set;
 pub use set::OrderedSet;
 
-#[path = "🔗️shared/🦀️.rs"]
-mod shared;
-pub use shared::{SharedOwner, SharedRelease};
+#[path = "🔗️immutable-alias/🦀️.rs"]
+mod immutable_alias;
+pub use immutable_alias::{SharedOwner, SharedRelease};
 
 //#region 🌳️PersistentNodes
 type Root<V> = Option<Arc<Node<V>>>;

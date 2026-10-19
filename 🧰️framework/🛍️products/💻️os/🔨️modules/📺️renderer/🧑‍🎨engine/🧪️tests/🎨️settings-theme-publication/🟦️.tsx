@@ -6,12 +6,12 @@ import Ajv from "ajv";
 import { fireEvent, render } from "@testing-library/react";
 import { createElement as h, useState } from "react";
 import { describe, expect, test } from "vitest";
-import { Button } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️.tsx";
-import { Input } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔽️Select/🟦️.tsx";
-import { Tree } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx";
-import { parseUiTheme } from "../../../../../../../🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { Button } from "@semio-tech/ui-react";
+import { Input } from "@semio-tech/ui-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@semio-tech/ui-react";
+import { Tree } from "@semio-tech/ui-react";
+import { parseUiTheme } from "@semio-tech/ui-styling";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🎨️settings-theme-publication", "🔣️.json"), "utf8"));

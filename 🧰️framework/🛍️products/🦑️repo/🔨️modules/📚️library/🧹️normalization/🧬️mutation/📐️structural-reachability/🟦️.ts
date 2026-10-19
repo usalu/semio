@@ -10,7 +10,7 @@ import { jsonDocumentDuplicateKeys } from "../../../🧬️schema/🔣️json-do
 import { mutationOwnerIdentity } from "../../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
 import { mutationPayloadSchemaProblems } from "../../../🔍️discovery/📄️implementation-findings/🟦️.ts";
 import { mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyStructuralSourceView } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";
 import { POLICY_MUTATIONS_FACET, POLICY_RS_COMPONENT_LEAF_NAME, POLICY_TS_COMPONENT_LEAF, policyArtifactRootOfMutationsDir, policyLeadingEmojiPrefix, policyStripEmoji, policyStructuralRelativeLocator } from "../🪪️identity/🟦️.ts";

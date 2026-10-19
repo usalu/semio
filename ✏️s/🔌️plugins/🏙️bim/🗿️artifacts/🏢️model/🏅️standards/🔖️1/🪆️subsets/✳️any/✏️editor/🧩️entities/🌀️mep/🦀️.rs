@@ -1,11 +1,19 @@
 //! 🌀️ The MEP element rows of the entity table: how a routed duct, pipe or cable tray reads off the snapshot (its system, its section as text, its path as `x, y, z` vertices), how an edited value becomes a `set-mep-element`
 //! mutation, and what a new element is. What an element shows (its length, its volume, the findings that name it) is read off the inference.
 
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::editor::bim::entities::components::{system_choices, system_of};
-use crate::editor::bim::entities::{container, keys, number, parse_number, partial, phasing, rename_element, size_pair, Created, EntityKind, FieldRow, InferredRow};
-use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{container, Created};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{keys, number, parse_number, partial, size_pair};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::phasing;
+use crate::editor::bim::entities::rename_element;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow, InferredRow};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_123::standards::v1::subsets::any::schema::mutations::delete_mep_element;
+use semio_s_artifact_bim_model_mut_any_158::standards::v1::subsets::any::schema::mutations::set_mep_element;
 
 /// 📏️ How far a new element runs beside the previous ones of its storey, in metres.
 const ROW_PITCH: f64 = 0.5;
@@ -127,7 +135,7 @@ pub fn create_mep(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let row = snapshot.mep_elements.values().filter(|element| element.storey == storey).count() as f64 * ROW_PITCH;
     let system = MepSystem::Supply;
-    Ok(ModelMutation::CreateMepElement(crate::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement {
+    Ok(ModelMutation::CreateMepElement(semio_s_artifact_bim_model_mut_any_157::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement {
         id: id.into(),
         mep: MepElement { storey, system, shape: default_shape(system), path: vec![Point3 { x: 0.0, y: row, z: ELEVATION }, Point3 { x: LENGTH, y: row, z: ELEVATION }], name: name.into() },
     }))

@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import { BundleScript, checkScriptInvocation, type ScriptInvocation } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
+import { BundleScript, checkScriptInvocation, type ScriptInvocation } from "@semio-tech/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import { exactCargoStageEnvironments } from "../../../../../🏗️build/🛂staging-environment/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../🧾️fixture-verification/🟦️.ts";
 import { assertSocketGrantNativeLawSources, socketGrantNativeLawPlan, type SocketGrantNativeStage } from "../📋️native-law-plan/🟦️.ts";

@@ -1,4 +1,5 @@
 import type { DocumentScope } from "@semio-tech/framework/document/scope";
+import type { InferencePortUiAction, InstalledServicePresentationV1 } from "@semio-tech/framework/inference/service";
 import type { ArtifactBootstrapWorkerEvent, BackboneWorkerResponse } from "@semio-tech/framework/backbone";
 import { DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1 } from "@semio-tech/framework/directory/schema";
 import { documentRuntimeKeyV1 } from "@semio-tech/framework/backbone";
@@ -207,18 +208,8 @@ export function shellHistoryUndoRouteV1(
   return remote?.canUndo ? "remote" : "none";
 }
 
-export type InferencePortUiAction = Readonly<{ kind: string; payload?: unknown }>;
-
-/** 🪟 Owner-supplied presentation; the host never decodes domain payloads. */
-export interface InstalledServicePresentationV1 {
-  readonly owner: string;
-  readonly serviceId: string;
-  probe?(source: import("../🟦️.tsx").ServiceMountedViewV1 | null): unknown;
-  render(payload: unknown, locale: "en" | "de", onAction: (action: InferencePortUiAction) => void): React.ReactNode;
-}
-
 /** ♿ Mounts the installed owner's accessible view without interpreting its status. */
-export function InstalledServicePanelV1({ status, presentation, locale, onAction }: { readonly status: import("@semio-tech/framework/inference/service").InstalledServiceStatusV1; readonly presentation: InstalledServicePresentationV1; readonly locale: "en" | "de"; readonly onAction: (action: InferencePortUiAction) => void }) {
+export function InstalledServicePanelV1({ status, presentation, locale, onAction }: { readonly status: import("@semio-tech/framework/inference/service").InstalledServiceStatusV1; readonly presentation: InstalledServicePresentationV1<React.ReactNode>; readonly locale: "en" | "de"; readonly onAction: (action: InferencePortUiAction) => void }) {
   if (status.owner !== presentation.owner || status.serviceId !== presentation.serviceId) throw new Error("installed-service.foreign-presentation");
   return <>{presentation.render(status.payload, locale, onAction)}</>;
 }

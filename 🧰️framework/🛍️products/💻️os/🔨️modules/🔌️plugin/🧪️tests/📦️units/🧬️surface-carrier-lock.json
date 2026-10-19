@@ -4,9 +4,6 @@
   "additionalProperties": false,
   "required": [
     "path",
-    "beforeSha256",
-    "afterSha256",
-    "thirdpartyPinsSha256",
     "package",
     "dependencies",
     "missingDirectFirstparty"
@@ -14,18 +11,6 @@
   "properties": {
     "path": {
       "type": "string"
-    },
-    "beforeSha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
-    },
-    "afterSha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
-    },
-    "thirdpartyPinsSha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
     },
     "package": {
       "type": "string"

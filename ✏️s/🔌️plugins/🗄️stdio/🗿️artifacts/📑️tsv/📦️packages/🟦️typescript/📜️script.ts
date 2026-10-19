@@ -1,4 +1,4 @@
 #!/usr/bin/env bun
 /** 📦️ tsv TypeScript artifact package router. */
-import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
 await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-tsv", { suites: ["🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

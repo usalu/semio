@@ -3,9 +3,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, type BrowserFrameUiMessage } from "../../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️asset-cancellation/🟦️.ts";
+import { FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, type BrowserFrameUiMessage } from "@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract";
+import { BrowserAssetCancellationCursor, assertBrowserAssetResponseContinuation } from "@semio-tech/framework-renderer-wgpu/frame-worker/asset-cancellation";
 import { FakeWorker, transport } from "../🧰️transport-test-support/🟦️.ts";
+import { readFrameWorkerSource } from "../📖️frame-worker-source/🟦️.ts";
 
 describe("browser frame worker transport", () => {
   it("routes an introspection dump across the Worker seam behind a flushed frame", async () => {
@@ -145,7 +146,7 @@ describe("browser frame worker transport", () => {
 
   it("keeps asset polling closed while the exact retired response handback remains busy", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const workerSource = readFileSync(join(root, "../../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const workerSource = readFrameWorkerSource(root);
     const frameTurn = workerSource.slice(workerSource.indexOf("function runFrameTurn"), workerSource.indexOf("function runAssetDecodeTurn"));
     expect(frameTurn).toContain('if (assetCancellationStep === "idle") scheduleAssetPump()');
     expect(frameTurn).toContain('assetCancellationStep === "returned" && !assetPumping');

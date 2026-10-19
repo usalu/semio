@@ -9,7 +9,7 @@ import { build } from "esbuild";
 /** 🏷 Checks current defining owners and independently bundles the neutral installed-inventory entries. */
 export async function sDevCompositionOwnershipV1(repoRoot: string): Promise<void> {
   const neutral = "✏️s/🧑‍💻dev", specific = `${neutral}/🎭️variants/🌍️gis`;
-  const schemaPath = `${neutral}/🚀️entry/🧬️schema`, discovery = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts");
+  const schemaPath = `${neutral}/🚀️entry/🧬️schema`, discovery = await import("@semio-tech/repo-lib/inventory");
   const inventory = discovery.inventorySchemaScopes(repoRoot), scope = inventory.catalog.scopes["s.dev.entry"];
   assert.equal(scope?.path, schemaPath);
   assert(scope);

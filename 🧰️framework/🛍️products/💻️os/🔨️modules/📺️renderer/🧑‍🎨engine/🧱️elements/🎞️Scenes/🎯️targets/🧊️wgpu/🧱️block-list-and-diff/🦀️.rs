@@ -3,7 +3,7 @@
 use super::*;
 
 //#region BlockList
-use ui_wgpu::wgpu::{BlockListSelectionTarget,BlockListBlock,BlockListStep,BlockListPaletteEntry};
+use semio_framework_ui_declaration::ui::{BlockListSelectionTarget, BlockListBlock, BlockListStep, BlockListPaletteEntry};
 
 /** 🧩️ What one laid-out block-list target paints as. Keeping the geometry (`BlockListTarget`)
  * and the appearance apart is what lets the paint and the pointer path share ONE layout pass: the
@@ -472,7 +472,7 @@ pub fn block_list_accessibility_action_is_current(scene: &UiComponentSceneNode, 
     }
 }
 
-pub fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+pub fn block_list_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Option<Result<(), semio_framework_ui_action::BoundedActionFault>> {
     if scene.component_kind != SurfaceKind::BlockList {
         return None;
     }
@@ -547,7 +547,7 @@ fn diff_view_metrics(bounds: Rect, theme: &Theme) -> DiffViewMetrics {
     let split_right_x = split_divider_x + split_divider_width + gap;
     DiffViewMetrics {
         inner,
-        row_height: ui_wgpu::wgpu::text::line_height(theme.font_size_small),
+        row_height: semio_framework_ui_text::line_height(theme.font_size_small),
         unified_before_right_x,
         unified_after_right_x,
         unified_marker_x,

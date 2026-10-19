@@ -1,11 +1,11 @@
 import{requireIssuedResourceControlInvocationV1,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {mkdirSync,writeFileSync,rmSync,lstatSync} from "node:fs";
 import {join} from "node:path";
-import type {ResourceLeaseControl} from "./../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import {captureOwnedCommandV1} from "./../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import type {ResourceLeaseControl} from "@semio-tech/process/leases";
+import {captureOwnedCommandV1} from "@semio-tech/process/execution";
 import {withNativeImageStorageV1} from "./../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts";
-import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "./../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {runCargoTestsV1,type CargoTestPolicyV1} from "./../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {acquireNativeStorageV1,nativeStorageRetirementPortV1} from "@semio-tech/process/artifacts/native-build/storage";
+import {runCargoTestsV1,type CargoTestPolicyV1} from "@semio-tech/process/cargo-test";
 import {withRepositoryCargoInputsV1} from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 

@@ -27,7 +27,7 @@ semio-hub-space-operations = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️core/📦️packages/🦀️rust" }
+semio-s-space-core = { path = "../../../../../../../../../✏️s/🔌️plugins/🪐️space/🫀️catalog-documents/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["canvas-runtime-assets"] }
 semio-framework-artifact-workflow-workflow = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust" }

@@ -11,12 +11,12 @@ import {openRepositoryCachePartitionV1} from "../📦️budget/📥️opening/�
 import {randomBytes} from "node:crypto";
 import {existsSync,lstatSync,mkdirSync,readFileSync,writeFileSync,openSync,fsyncSync,closeSync,renameSync,rmSync} from "node:fs";
 import {join} from "node:path";
-import {acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{acquireNativeStorageV1,recoverNativeStorageReservationV1,requireNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type{NativeStoragePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
+import {acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import{acquireNativeStorageV1,recoverNativeStorageReservationV1,requireNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1,type NativeImageStorageV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import {readBuildMode,type BuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import type {CargoSourceBoundaryPolicyV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {repositoryStrictStorageV1} from "../🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

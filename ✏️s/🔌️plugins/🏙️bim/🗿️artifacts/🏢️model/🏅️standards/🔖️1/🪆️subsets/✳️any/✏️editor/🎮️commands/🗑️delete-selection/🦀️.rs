@@ -4,13 +4,14 @@
 //! they use. An entity whose container is deleted too leaves with the container's cascade. A selection whose parts exceed one gesture is streamed: the parts that fit are deleted
 //! and the rest stays selected, so the next press continues. Kinds without a delete mutation are skipped and reported only when nothing could be deleted.
 
-use crate::editor::bim::entities::{kind_holding, ENTITIES};
-use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
-use crate::editor::bim::kit::{fault, select_effect};
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::cascade::{closure, INVERSE_ROWS};
-use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, ENTITIES};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{fault, select_effect};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::{closure, INVERSE_ROWS};
+use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::OutcomeCode;
 use std::collections::HashSet;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
@@ -118,7 +119,7 @@ pub fn plan(snapshot: &ModelSnapshot, ids: &[String]) -> Plan {
 
 pub fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     if payload.ids.is_empty() && ctx.gestures.is_some() {
-        if let Some(emit) = crate::editor::bim::gestures::run_key(ctx, doc, crate::editor::bim::gestures::session::GestureKey::Back)? {
+        if let Some(emit) = crate::editor::bim::gestures::run_key(ctx, doc, semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::GestureKey::Back)? {
             return Ok(emit);
         }
     }

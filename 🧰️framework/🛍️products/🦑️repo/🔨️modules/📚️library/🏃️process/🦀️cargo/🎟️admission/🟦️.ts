@@ -9,13 +9,13 @@ import {packageTestBudgetMs} from "../⏱️budget/🟦️.ts";
 import {TEST_LEVELS,testLevelBudgetMs,type TestLevel} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {scriptInvocationEnvironment,createIssuedResourceControlV1,createRequestedIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../📥️dependencies/🟦️.ts";
-import {readBuildMode} from "./../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
-import {OwnedCommandFailure} from "./../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import {OwnedCommandFailure} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1} from "../🚪️launcher/🟦️.ts";
 import {join} from "node:path";
 import {runCargoTestsV1,runCargoLintV1,cargoTestCompilerArgumentsV1,cargoLintPlanV1,type CargoTestPolicyV1,type CargoTestRequestV1} from "./../../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import type {ScriptInvocation} from "./../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {withRepositoryCompilerStoreV1} from "./../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 
 async function execute(request:CargoTestRequestV1,policy:CargoTestPolicyV1,workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,lint:boolean):Promise<void>{

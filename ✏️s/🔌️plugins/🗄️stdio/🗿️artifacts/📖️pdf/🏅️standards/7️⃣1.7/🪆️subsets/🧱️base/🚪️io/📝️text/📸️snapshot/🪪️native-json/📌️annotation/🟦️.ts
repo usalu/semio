@@ -1,17 +1,16 @@
 /** 📌️ Explicit native annotation admission into the owned scalar model. */
 import type { PdfAnnotation, PdfMarkupAnnotation, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🟦️.ts";
 import type { PdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🏷️kind/🟦️.ts";
-import type { PdfDate } from "../../../../../🧬️schema/📸️snapshot/📇️metadata/🟦️.ts";
-import { record,array,text,boolean,integer,real,reals,four,pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { record, array, text, boolean, integer, real, reals, four } from "../🧰️scalars/🟦️.ts";
 import { pdfActionFromNativeJson,pdfDestinationFromNativeJson,pdfFileFromNativeJson } from "../🎯️navigation/🟦️.ts";
+import { pdfDateFromNativeJson } from "../🗓️date/🟦️.ts";
 
 const optionalText=(value:unknown)=>value==null?null:text(value);
 const optionalReals=(value:unknown)=>value==null?null:reals(value);
 const optionalFour=(value:unknown)=>value==null?null:four(value);
 function wide(value:unknown):bigint|null{if(value==null)return null;const result=integer(value);if(result<0)throw new Error("PDF annotation index must be unsigned");return BigInt(result);}
 function endings(value:unknown):[string,string]|null{if(value==null)return null;const parts=array(value);if(parts.length!==2)throw new Error("PDF line endings require two entries");return [text(parts[0]),text(parts[1])];}
-/** 📆️ Admit native date fields without narrowing their signed or unsigned widths. */
-export function pdfDateFromNativeJson(input:unknown):PdfDate{const row=record(input);return {year:integer(row.year),month:integer(row.month??1),day:integer(row.day??1),hour:integer(row.hour??0),minute:integer(row.minute??0),second:integer(row.second??0),offsetMinutes:row.offsetMinutes==null?null:integer(row.offsetMinutes)};}
 /** 🎭️ Admit an explicitly named appearance state. */
 export function pdfAppearanceStateFromNativeJson(input:unknown):PdfAppearanceState{const row=record(input);return {state:text(row.state),form:text(row.form)};}
 /** 🎭️ Admit single forms and ordered appearance state entries. */

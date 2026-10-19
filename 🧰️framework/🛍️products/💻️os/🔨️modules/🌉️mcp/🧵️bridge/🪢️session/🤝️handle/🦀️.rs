@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️BridgeHandle
-struct BridgeInner {
+pub(crate) struct BridgeInner {
     pub next_id: AtomicU64,
     pub connections: Mutex<HashMap<ShellConnectionId, ConnectionEntry>>,
     pub(crate) asynchronous: Arc<BridgeAsyncAuthority>,

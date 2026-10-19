@@ -68,7 +68,6 @@ semio-framework-number = { workspace = true }
 # "semio-framework-os-kernel-dsl" }`). So the renamed internal aliases below stay plain `path`+`package`
 # deps; only the four whose local name already equals the workspace key use `workspace = true`.
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-ui_wgpu = {path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }

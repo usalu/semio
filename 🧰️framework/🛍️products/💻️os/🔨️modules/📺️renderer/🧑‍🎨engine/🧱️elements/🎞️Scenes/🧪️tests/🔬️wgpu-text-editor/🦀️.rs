@@ -2,8 +2,11 @@ use semio_framework_os_renderer_wgpu_contracts::{FrameworkWidgetContext, framewo
 use semio_framework_os_renderer_wgpu_scene_state::text_editor_ui;
 use std::collections::HashMap;
 use super::{cursor_from_click, identifier_prefix_start, line_col_at, multi_span_replace, render_text_editor_overlays, text_editor_cancel_rename, text_editor_close_completions, text_editor_completions, text_editor_completions_open, text_editor_line_range, text_editor_local_menu_action, text_editor_move_completion, text_editor_open_completions, text_editor_popup_key, text_editor_popup_pointer, text_editor_queue_menu_action, text_editor_rename_active, text_editor_rename_info, text_editor_start_rename};
-use ui_wgpu::wgpu::{ActionDescriptor, Rect, SurfaceKind, Theme, UiComponentSceneNode};
-use ui_wgpu::wgpu::input::KeyAction;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiComponentSceneNode};
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_wgpu_input::KeyAction;
 use semio_framework_ui_layout::layout::UiPresence;
 
 fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
@@ -68,7 +71,7 @@ pub struct Fixture {
     draw: semio_framework_ui_draw_contract::DrawList,
     atlas: semio_framework_ui_text::FontAtlas,
     theme: Theme,
-    input: ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    input: semio_framework_ui_wgpu_input::InputState<ActionDescriptor>,
     scroll_offsets: HashMap<String, f32>,
     collapsed_sections: HashMap<String, bool>,
     open_selects: HashMap<String, bool>,
@@ -80,7 +83,7 @@ impl Fixture {
             draw: semio_framework_ui_draw_contract::DrawList::default(),
             atlas: semio_framework_ui_text::FontAtlas::builtin(),
             theme: Theme::default(),
-            input: ui_wgpu::wgpu::InputState::<ActionDescriptor>::default(),
+            input: semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default(),
             scroll_offsets: HashMap::new(),
             collapsed_sections: HashMap::new(),
             open_selects: HashMap::new(),
@@ -167,7 +170,7 @@ fn text_editor_rename_info_parses_name_and_occurrences() {
 
 /// 🧪️ Drains the bounded action authority — the only way out of an `InputState`, since an action is
 /// taken (not read) and materializes through `into_descriptor`.
-pub fn drain_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+pub fn drain_actions(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("action authority remains live") {
         actions.push(action.into_descriptor().expect("bounded action materializes"));
@@ -230,11 +233,11 @@ fn completion_highlight_wraps_in_both_directions() {
 #[test]
 fn ctrl_space_opens_completions_and_escape_closes_them() {
     let scene = text_editor_scene("editor.popup.keys", "", Some(r#"[{"label":"alpha"}]"#), None);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let accelerator = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let accelerator = semio_framework_ui_wgpu_input::PointerModifiers { ctrl: true, ..Default::default() };
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::Space(true), &accelerator, &mut input), Ok(true));
     assert!(text_editor_completions_open(&scene.surface_id));
-    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &semio_framework_ui_wgpu_input::PointerModifiers::default(), &mut input), Ok(true));
     assert!(!text_editor_completions_open(&scene.surface_id));
 }
 
@@ -243,8 +246,8 @@ fn ctrl_space_opens_completions_and_escape_closes_them() {
 #[test]
 fn popup_keys_are_declined_when_no_popup_is_open() {
     let scene = text_editor_scene("editor.popup.decline", "", Some(r#"[{"label":"alpha"}]"#), None);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let plain = semio_framework_ui_wgpu_input::PointerModifiers::default();
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::Space(true), &plain, &mut input), Ok(false));
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowDown, &plain, &mut input), Ok(false));
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::Enter, &plain, &mut input), Ok(false));
@@ -256,8 +259,8 @@ fn popup_keys_are_declined_when_no_popup_is_open() {
 fn open_completions_claim_the_arrow_keys() {
     let scene = text_editor_scene("editor.popup.arrows", "", Some(r#"[{"label":"a"},{"label":"b"}]"#), None);
     assert!(text_editor_open_completions(&scene));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let plain = semio_framework_ui_wgpu_input::PointerModifiers::default();
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowDown, &plain, &mut input), Ok(true));
     assert_eq!(text_editor_ui(&scene.surface_id).completion_index, 1);
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::ArrowUp, &plain, &mut input), Ok(true));
@@ -273,7 +276,7 @@ fn a_press_outside_the_dropdown_dismisses_it_and_falls_through() {
     let scene = text_editor_scene("editor.popup.pointer", "", Some(r#"[{"label":"alpha"}]"#), None);
     assert!(text_editor_open_completions(&scene));
     let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(text_editor_popup_pointer(&scene, inner, 280.0, 280.0, false, &mut input), Ok(false));
     assert!(!text_editor_completions_open(&scene.surface_id));
 }
@@ -283,7 +286,7 @@ fn a_press_outside_the_dropdown_dismisses_it_and_falls_through() {
 fn alt_press_opens_the_completions_dropdown() {
     let scene = text_editor_scene("editor.popup.alt", "", Some(r#"[{"label":"alpha"}]"#), None);
     let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(text_editor_popup_pointer(&scene, inner, 40.0, 40.0, true, &mut input), Ok(true));
     assert!(text_editor_completions_open(&scene.surface_id));
     text_editor_close_completions(&scene.surface_id);
@@ -296,8 +299,8 @@ fn alt_press_opens_the_completions_dropdown() {
 #[test]
 fn f2_starts_a_rename_only_with_rename_info() {
     let bare = text_editor_scene("editor.rename.none", "count", None, None);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    let plain = semio_framework_ui_wgpu_input::PointerModifiers::default();
     assert_eq!(text_editor_popup_key(&bare, &KeyAction::Function(2), &plain, &mut input), Ok(false));
     assert!(!text_editor_rename_active(&bare.surface_id));
 
@@ -314,11 +317,11 @@ fn f2_starts_a_rename_only_with_rename_info() {
 #[test]
 fn an_armed_rename_focuses_its_input_and_consumes_every_key() {
     let scene = text_editor_scene("editor.rename.focus", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(text_editor_start_rename(&scene, &mut input));
     assert_eq!(input.focused_id.as_deref(), Some("editor.rename.focus.editor.rename"));
     assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").text, "count");
-    let plain = ui_wgpu::wgpu::PointerModifiers::default();
+    let plain = semio_framework_ui_wgpu_input::PointerModifiers::default();
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::Char("s".into()), &plain, &mut input), Ok(true));
     assert_eq!(text_editor_ui(&scene.surface_id).rename.expect("draft").text, "counts");
     assert_eq!(text_editor_popup_key(&scene, &KeyAction::Backspace, &plain, &mut input), Ok(true));
@@ -332,14 +335,14 @@ fn an_armed_rename_focuses_its_input_and_consumes_every_key() {
 #[test]
 fn enter_commits_the_rename_and_escape_cancels_it() {
     let scene = text_editor_scene("editor.rename.commit", "count", None, Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#));
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(text_editor_start_rename(&scene, &mut input));
-    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Escape, &semio_framework_ui_wgpu_input::PointerModifiers::default(), &mut input), Ok(true));
     assert!(!text_editor_rename_active(&scene.surface_id));
     assert!(drain_actions(&mut input).is_empty(), "a cancelled rename must dispatch nothing");
 
     assert!(text_editor_start_rename(&scene, &mut input));
-    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Enter, &ui_wgpu::wgpu::PointerModifiers::default(), &mut input), Ok(true));
+    assert_eq!(text_editor_popup_key(&scene, &KeyAction::Enter, &semio_framework_ui_wgpu_input::PointerModifiers::default(), &mut input), Ok(true));
     assert!(!text_editor_rename_active(&scene.surface_id));
     let actions = drain_actions(&mut input);
     let commit = actions.iter().find(|action| action.action == "commitRename").unwrap_or_else(|| panic!("expected commitRename, got {:?}", actions.iter().map(|action| action.action.clone()).collect::<Vec<_>>()));
@@ -369,7 +372,7 @@ fn only_the_editors_own_menu_rows_are_claimed() {
 fn a_claimed_row_runs_against_the_surface() {
     let scene = text_editor_scene("editor.menu.run", "hello", None, None);
     let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert_eq!(text_editor_local_menu_action(&scene, inner, "selectAll", 4.0, 4.0, &mut input), Ok(true));
     assert_eq!(text_editor_local_menu_action(&scene, inner, "somePluginVerb", 4.0, 4.0, &mut input), Ok(false));
 }
@@ -421,7 +424,7 @@ fn rename_input_paints_only_while_a_draft_is_armed() {
         }
         assert!(idle.input.staged_hits().iter().all(|target| target.control_id.as_deref() != Some("editor.rename.paint.editor.rename")));
     }
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     assert!(text_editor_start_rename(&scene, &mut input));
     let mut fixture = Fixture::new();
     {

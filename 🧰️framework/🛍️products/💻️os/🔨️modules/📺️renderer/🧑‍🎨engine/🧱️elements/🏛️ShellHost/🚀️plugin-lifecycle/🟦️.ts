@@ -45,7 +45,7 @@ import { buildActiveUtilityByWindowId, sessionWindowInstances } from "../../🛠
 import { buildSpacePanelState, panelJsonFromState, parsePanelState } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 // #endregion 🔌️Adapters
 import { onPluginInstancesLost, PluginBootShardLostError, type PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
+import { isShardLostError } from "@semio-tech/framework-actor/shard-client/heartbeat";
 import { streamMuxWatchV1 } from "@semio-tech/framework/io/stream-mux";
 import type { HubPluginSourceV1 } from "@semio-tech/framework/plugin-module/hub-source/port";
 import { hubCatalogClosureV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1 } from "@semio-tech/framework/plugin-module/hub-source/resolution";

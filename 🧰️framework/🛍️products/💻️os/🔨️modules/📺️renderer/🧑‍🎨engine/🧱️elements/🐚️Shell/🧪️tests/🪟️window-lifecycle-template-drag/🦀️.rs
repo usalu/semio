@@ -165,7 +165,7 @@ fn template_pointer_drag_promotes_and_escape_cancels_without_mutating_the_dock()
     assert!(shell.dock.pending_dock_drag.as_ref().is_some_and(|(payload, _)| payload.kind == DockDragKind::NewWindow));
     PointerCtx::of(&mut shell).handle_pointer_move(40.0, 15.0, true, &mut input, &Theme::default());
     assert!(shell.dock.dock_drag.is_some());
-    PointerCtx::of(&mut shell).handle_keyboard(ui_wgpu::wgpu::KeyAction::Escape, &PointerModifiers::default(), &mut input);
+    PointerCtx::of(&mut shell).handle_keyboard(semio_framework_ui_wgpu_input::KeyAction::Escape, &PointerModifiers::default(), &mut input);
     assert!(shell.dock.pending_dock_drag.is_none() && shell.dock.dock_drag.is_none());
     assert_eq!(shell.dock.dock.root, before);
 }

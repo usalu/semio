@@ -7,7 +7,7 @@ import {builtinFontLocations} from "@semio-tech/framework/2d/text/font/catalog";
 import {unicodeSourceBytes} from "../../../../../🧪️tests/🧫️fixtures/🟦️.ts";
 import ancestryRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🔣️.json";
 import addressRows from "../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🧭️ancestry/🛂️addresses/🔣️.json";
-import {validateSceneSourceAddress} from "../../🟦️.ts";
+import { validateSceneSourceAddress } from "../../../🗺️plan-model/🟦️.ts";
 import Ajv from "ajv/dist/2020.js";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with {type:"json"};
 import sharp from "sharp";

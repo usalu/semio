@@ -1,4 +1,4 @@
-import { artifactReferenceSchema as artifactReferenceSchema } from "@semio-tech/framework/schema/artifact-reference";
+import { artifactReferenceSchema as artifactReferenceSchema, artifactChildSchema as childSchema, artifactLinkSchema as linkSchema, blobRefSchema as blobSchema } from "@semio-tech/framework/schema/artifact-reference";
 import {parseNoteArtifactJson,parseNoteDiffJson,parseNoteSnapshotJson} from "../../../🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
 /** 🧪️ Note document boundaries preserve native block payloads and shared link identity. */
 import assert from "node:assert/strict";
@@ -8,9 +8,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
-import { storeChildSchema as childSchema } from "@semio-tech/framework-os/modules/store/child/schema";
-import { storeLinkSchema as linkSchema } from "@semio-tech/framework-os/modules/store/link/schema";
-import { storeBlobSchema as blobSchema } from "@semio-tech/framework-os/modules/store/blob/schema";
 import vectors from "../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json" with { type: "json" };
 import {binary64Value} from "@semio-tech/framework/value/ieee754";
 import type { NoteBlockNode, NoteImageAsset, NoteArtifact } from "../../🟦️.ts";

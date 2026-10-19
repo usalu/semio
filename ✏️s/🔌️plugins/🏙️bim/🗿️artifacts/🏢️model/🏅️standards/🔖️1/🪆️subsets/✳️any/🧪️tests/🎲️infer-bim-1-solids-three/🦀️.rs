@@ -15,9 +15,8 @@ const CASES: [(&str, &str); 7] = [("straight-openings", "🚪️straight-opening
 mod subject {
     use super::CASES;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 
     fn row(solid: &ElementSolid) -> String {
         let (min, max) = (solid.bounds.min, solid.bounds.max);
@@ -41,7 +40,7 @@ mod subject {
         for (name, directory) in CASES {
             let document = ctx.input_json(&format!("shared://💡️inferences/🧊️element-solids/{directory}/🔣️.json"))?;
             let snapshot = decode_model_snapshot_json(&document.get("snapshot").ok_or_else(|| format!("{name}: the case has no snapshot"))?.to_string())?;
-            let solids = inference::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
+            let solids = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &snapshot, |inferred| inferred.element_solids.clone()).map_err(|error| error.to_string())?;
             let rows: Vec<String> = solids.iter().map(|(id, solid)| format!("\"{id}\":{}", row(solid))).collect();
             cases.push(format!("\"{name}\":{{{}}}", rows.join(",")));
         }

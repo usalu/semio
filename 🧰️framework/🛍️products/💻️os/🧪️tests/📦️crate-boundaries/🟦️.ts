@@ -6,7 +6,7 @@ import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { readRustSourceClosureV1, selectRustSourceV1 } from "@semio-tech/process/artifacts/native-build/source";
 import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
-import { sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const os = resolve(import.meta.dir, "../.."), workspace = resolve(os, "../../.."), read = (path: string) => readFileSync(resolve(os, path), "utf8");
 const cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix"];
@@ -65,7 +65,7 @@ test("neutral kernel cuts retain exactly one authored owner and producer-facing 
   for (const law of cuts.cuts) {
     const producer = corpus.crates.find(row=>row.package===law.producer)!;
     expect(producer).toBeDefined();
-    expect(read(producer.entry)).toContain(law.definition);
+    expect(readModuleTreeSource(resolve(os, producer.entry))).toContain(law.definition);
     expect(read(law.consumer)).toContain(law.canonical);
     expect(read(law.consumer)).not.toContain(law.definition);
   }

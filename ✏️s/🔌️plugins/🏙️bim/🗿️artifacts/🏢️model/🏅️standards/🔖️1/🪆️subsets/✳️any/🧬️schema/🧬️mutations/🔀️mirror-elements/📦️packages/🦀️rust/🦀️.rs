@@ -15,14 +15,8 @@ pub mod standards {
             pub mod any {
                 #[path = "."]
                 pub mod schema {
-                    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod mutations {
-                        pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify;
-                        pub use semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements;
-                        pub use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements;
-                        pub use semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join;
                         #[path = "../../🦀️.rs"]
                         pub mod mirror_elements;
                     }

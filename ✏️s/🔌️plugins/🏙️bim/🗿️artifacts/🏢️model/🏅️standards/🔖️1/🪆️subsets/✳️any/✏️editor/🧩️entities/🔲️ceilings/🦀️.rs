@@ -1,10 +1,18 @@
 //! 🔲️ The ceiling rows of the entity table: how a ceiling and a ceiling type read off the snapshot, how an edited value becomes a `set-ceiling`, `set-ceiling-boundary` or `set-ceiling-type` mutation,
 //! what a new ceiling or ceiling type is, and the picker of the ceiling type row.
 
-use crate::editor::bim::entities::{container, first, parse_slope, slope_text, holes_text, layers, loop_text, number, parse_holes, parse_loop, parse_number, parse_text, partial, rectangle, rename_element, Created, FieldRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::{ModelSnapshot, Slope}};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::{container, layers, rectangle, Created};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{first, parse_slope, slope_text, holes_text, loop_text, number, parse_holes, parse_loop, parse_number, parse_text, partial};
+use crate::editor::bim::entities::rename_element;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::FieldRow;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Slope;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
+use semio_s_artifact_bim_model_mut_any_27::standards::v1::subsets::any::schema::mutations::set_ceiling;
+use semio_s_artifact_bim_model_mut_any_25::standards::v1::subsets::any::schema::mutations::set_ceiling_type;
 
 /// 📏️ How far a drawn ceiling hangs below the storey top, in metres.
 pub const DEFAULT_DROP: f64 = 0.3;
@@ -18,15 +26,15 @@ pub fn type_choices(snapshot: &ModelSnapshot, _: &BimLabels) -> Vec<(String, Str
 
 //#region 🔖️Writes
 fn write_slope(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling, _>(id, "slope", &Assigned::new(parse_slope(value)?)).map(ModelMutation::SetCeiling)
+    partial::<semio_s_artifact_bim_model_mut_any_27::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling, _>(id, "slope", &Assigned::new(parse_slope(value)?)).map(ModelMutation::SetCeiling)
 }
 
 fn write_boundary(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetCeilingBoundary(crate::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary { id: id.into(), boundary: parse_loop(value)?, holes: snapshot.ceilings.get(id)?.holes.clone() }))
+    Some(ModelMutation::SetCeilingBoundary(semio_s_artifact_bim_model_mut_any_26::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary { id: id.into(), boundary: parse_loop(value)?, holes: snapshot.ceilings.get(id)?.holes.clone() }))
 }
 
 fn write_holes(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetCeilingBoundary(crate::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary { id: id.into(), boundary: snapshot.ceilings.get(id)?.boundary.clone(), holes: parse_holes(value)? }))
+    Some(ModelMutation::SetCeilingBoundary(semio_s_artifact_bim_model_mut_any_26::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary { id: id.into(), boundary: snapshot.ceilings.get(id)?.boundary.clone(), holes: parse_holes(value)? }))
 }
 //#endregion 🔖️Writes
 
@@ -55,9 +63,9 @@ pub static CEILING_TYPE_FIELDS: &[FieldRow] = &[
 pub fn create_ceiling(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let ceiling_type = first(&snapshot.ceiling_types).ok_or("bim.create.ceiling-type-missing")?;
-    Ok(ModelMutation::CreateCeiling(crate::standards::v1::subsets::any::schema::mutations::create_ceiling::CreateCeiling {
+    Ok(ModelMutation::CreateCeiling(semio_s_artifact_bim_model_mut_any_135::standards::v1::subsets::any::schema::mutations::create_ceiling::CreateCeiling {
         id: id.into(),
-        ceiling: crate::standards::v1::subsets::any::schema::snapshot::Ceiling { storey, ceiling_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: DEFAULT_DROP, slope: None, name: name.into() },
+        ceiling: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling { storey, ceiling_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: DEFAULT_DROP, slope: None, name: name.into() },
     }))
 }
 
@@ -65,6 +73,6 @@ pub fn create_ceiling(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &s
 pub fn create_ceiling_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let mut stack = layers(snapshot)?;
     stack.iter_mut().for_each(|layer| layer.thickness = 0.0125);
-    Ok(ModelMutation::CreateCeilingType(crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType { id: id.into(), ceiling_type: crate::standards::v1::subsets::any::schema::snapshot::CeilingType { name: name.into(), layers: stack } }))
+    Ok(ModelMutation::CreateCeilingType(semio_s_artifact_bim_model_mut_any_89::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType { id: id.into(), ceiling_type: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CeilingType { name: name.into(), layers: stack } }))
 }
 //#endregion 🔖️Create

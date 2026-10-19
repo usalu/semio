@@ -1,5 +1,5 @@
-import {parseCatalogContributionV1,parseCatalogPublicationV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🟦️.ts";
-import type {CatalogBuildSourceV1} from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts";
+import {parseCatalogContributionV1,parseCatalogPublicationV1} from "@semio-tech/plugin-registry/publication";
+import type {CatalogBuildSourceV1} from "@semio-tech/plugin-registry/publication/build";
 /** 🧩️ The application selects its plugins and the independent Hub contribution. */
 export function specificCatalogPublicationV1(readText:CatalogBuildSourceV1["readText"]){const specific=JSON.parse(readText("✏️s/🧑‍💻dev/🧩️catalog/📣️publication/🔣️.json")),hub=JSON.parse(readText("🌎️hub/📇️catalog/🔣️.json"));return parseCatalogPublicationV1({...specific,contributions:[...specific.contributions,parseCatalogContributionV1(hub)]});}
 

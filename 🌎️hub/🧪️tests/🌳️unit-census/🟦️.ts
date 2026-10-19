@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { componentWorkspacesV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { componentWorkspacesV1 } from "@semio-tech/repo-lib/cargo";
 
 /** 🧱️ The fields of one `cargo build --unit-graph` unit the census reads (https://doc.rust-lang.org/cargo/reference/unstable.html#unit-graph). */
 export type CargoUnitV1 = { readonly pkg_id: string; readonly target: { readonly name: string; readonly kind: readonly string[] }; readonly mode: string; readonly platform: string | null; readonly features: readonly string[]; readonly dependencies: readonly { readonly index: number }[] };

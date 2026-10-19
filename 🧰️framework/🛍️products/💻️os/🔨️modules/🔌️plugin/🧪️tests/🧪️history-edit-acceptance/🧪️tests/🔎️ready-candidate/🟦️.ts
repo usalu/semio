@@ -2,6 +2,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("history acceptance search discards blocked trials before selecting a ready draft",()=>{
  const read=(path:string)=>readFileSync(resolve(import.meta.dir,path),"utf8");const fixture=JSON.parse(read("🧫️fixtures/🔣️.json"));
  for(const row of fixture.cases){
@@ -13,7 +14,7 @@ test("history acceptance search discards blocked trials before selecting a ready
   }
   expect(selected).toBe(row.expected);expect(db.query("SELECT trial FROM committed").all()).toEqual(row.expected===null?[]:[{trial:row.expected}]);db.close();
  }
- const source=read("../../🦀️.rs");const start=source.indexOf("for candidate in changes {");const end=source.indexOf("let Some(drafted) = drafted",start);const search=source.slice(start,end);
+ const source=readModuleTreeSource(resolve(import.meta.dir,"../../🦀️.rs"));const start=source.indexOf("for candidate in changes {");const end=source.indexOf("let Some(drafted) = drafted",start);const search=source.slice(start,end);
  expect(search).toContain("change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked))");
  expect(search).toContain("HISTORY_EDIT_EXIT_ACTION_ID");expect(search).toContain("discarding a blocked trial left a supersession of the mutation");
 });

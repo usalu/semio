@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { BufferGeometry, EdgesGeometry, Float32BufferAttribute } from "three";
 import { describe, expect, it } from "vitest";
-import { resolveIconRenderStroke } from "../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx";
+import { resolveIconRenderStroke } from "@semio-tech/ui-react";
 import { world3dGlbOutlineFixtureUrl } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));

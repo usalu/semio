@@ -9,7 +9,7 @@ use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfi
 use crate::editor::flow::modes::edit::windows::{compiled, main};
 use crate::editor::flow::panels::{catalogue as catalogue_panel, document as document_panel};
 use crate::editor::flow::terminology::flow_play_labels;
-use crate::editor::flow::base::{FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_SCENE_ITEMS};
+use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_OPERATION_RAW_BYTES, FLOW_PLAY_WINDOW_MAIN, FLOW_STORE_MAX_SCENE_ITEMS};
 use crate::FlowSnapshot;
 use flow::FlowEvalSession;
 use semio_framework_plugin::ArtifactEditor;
@@ -34,9 +34,9 @@ use crate::editor::flow::presence::{FlowPresence, FlowPresenceMutation};
 #[allow(unused_imports)]
 use crate::editor::flow::terminology::FlowPlayLabels;
 #[allow(unused_imports)]
-use crate::editor::flow::base::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
+use crate::editor::flow::editor_vocabulary::{flow_graph_edge_target_id, flow_graph_node_target_id, flow_graph_selection_domains, FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_APP_ID, FLOW_STORE_MAX_MUTATION_ITEMS, FLOW_STORE_MAX_TEXT_BYTES};
 #[allow(unused_imports)]
-use crate::editor::flow::base::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
+use crate::editor::flow::editor_vocabulary::{FLOW_PLAY_WINDOW_GENERATIONS, FLOW_PLAY_WINDOW_GENERATE_FORM, FLOW_PLAY_WINDOW_GENERATE_PREVIEW};
 #[allow(unused_imports)]
 use crate::editor::flow::host::{cold_grant, flow_content_leaves_emit, flow_removal_leaves, focus_selection_camera, seed_host_catalogue, value_fault};
 #[allow(unused_imports)]
@@ -279,7 +279,7 @@ async fn flow_play_app_boots_through_the_real_registry_without_a_catalog_authori
     assert!(!semio_framework_plugin::PluginApp::has_pending_typed_operations(&*app), "a freshly booted flow app owns no in-flight typed operation");
     let demand = semio_framework_plugin::PluginApp::maintenance_retirement_demands(&*app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("a booted flow app quotes its own maintenance turn");
     let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-    assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut *app, grant), Ok(_)), "a booted flow app runs its own maintenance turn");
+    assert!(matches!(semio_framework_plugin::PluginApp::maintenance_step(&mut app.0, app.1.cx(), grant), Ok(_)), "a booted flow app runs its own maintenance turn");
 }
 
 /// ⚖️ LAW: every graph-operation route is admitted by `FlowGraphOperationJobFactory` and returns a

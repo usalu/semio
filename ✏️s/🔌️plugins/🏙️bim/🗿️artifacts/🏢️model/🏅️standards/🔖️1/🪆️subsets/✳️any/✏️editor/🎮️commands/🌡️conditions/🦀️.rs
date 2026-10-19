@@ -2,11 +2,12 @@
 //! one ordinary `set-space-conditions` (a field the source leaves unstated is cleared on the target, so the target ends up with exactly the source's conditions); clearing is one `remove-space-conditions` per space that has
 //! conditions. Both are one gesture and so one history row, and both refuse as a whole instead of touching part of the targets.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
-use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
+use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

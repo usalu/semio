@@ -7,6 +7,7 @@ import (
 
 	model "github.com/usalu/semio/repo/model"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 // #region 🎼️Compose Policy Tests
@@ -33,9 +34,7 @@ func TestComposePolicyRegistered(t *testing.T) {
 
 func TestComposePolicyNoUiDependency(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 	t.Run("detects tailwind-merge import", func(t *testing.T) {
 		relPath := "compose.ts"
 		os.WriteFile(filepath.Join(tmpDir, relPath), []byte("import { twMerge } from \"tailwind-merge\";\n"), 0644)

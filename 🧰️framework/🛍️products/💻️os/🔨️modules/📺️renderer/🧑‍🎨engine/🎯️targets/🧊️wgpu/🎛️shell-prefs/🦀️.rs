@@ -16,7 +16,12 @@ use semio_framework_value::{DslValue, ToValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use ui_wgpu::wgpu::{ActionDescriptor, FontAtlas, HitKind, Rect, Rgba, Theme, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::HitKind;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::{Rgba, Theme};
+use semio_framework_ui_declaration::ui::{UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/🎛️prefs/🧬️component/🦀️.rs"]
 mod staged_prefs__component;

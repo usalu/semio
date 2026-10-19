@@ -47,7 +47,7 @@ export class GoTestScript extends BundleScript {
       if (!canonicalGoPlan(root).packages.includes(".")) throw new Error("Go test binary has no canonical root package");
       const owner = mkdtempSync(join(realpathSync(artifacts), "go-test-binary-"));
       try {
-        await runRepositoryTestCommand(executable, ["-test.v", "-test.count=1", `-test.run=^${segments[3]}$`], { cwd: root, env: { ...process.env, SEMIO_GO_OVERLAY_OWNER: owner }, throwOnFailure: true });
+        await runRepositoryTestCommand(executable, ["-test.v", "-test.count=1", `-test.run=^${segments[3]}$`], { cwd: root, env: { ...process.env, SEMIO_GO_OVERLAY_OWNER: owner, SEMIO_TOOLCHAIN_ROOT: this.repoRoot }, throwOnFailure: true });
       } finally {
         rmSync(owner, { recursive: true, force: true });
       }
@@ -55,6 +55,6 @@ export class GoTestScript extends BundleScript {
     }
     if (segments.length < 2) throw new Error("Expected go-test <module-root> <input-path|-> [go-test-args...]");
     const selection = projectGoInputPackages(segments[0]!, segments[1]!);
-    await runCanonicalGoTests(selection.moduleRoot, segments.slice(2), { env: process.env, packages: selection.packages });
+    await runCanonicalGoTests(selection.moduleRoot, segments.slice(2), { env: { ...process.env, SEMIO_TOOLCHAIN_ROOT: this.repoRoot }, packages: selection.packages });
   }
 }

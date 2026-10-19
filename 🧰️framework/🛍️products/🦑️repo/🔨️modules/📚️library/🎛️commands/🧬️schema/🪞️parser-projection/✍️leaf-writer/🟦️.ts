@@ -1,25 +1,25 @@
-/** ✍️ Applies the parsers one projection run settled for a leaf to the files of its module tree: appends them to the leaf or to the parser folder of their component, restates them in the file that defines them, moves fresh ones out of the leaf, supplies the imports every file needs, re-exports the parser folders from the leaf and drops the imports a move left unused.
+/** ✍️ Applies the parsers one projection run settled for a leaf to the files of its module tree: appends them to the leaf or to the parser folder of their component, restates them in the file that defines them, moves fresh ones out of the leaf, supplies the imports every file needs (a parser is imported from the file that holds it, never through the leaf) and drops the imports a move left unused.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
 import { existsSync, mkdirSync } from "node:fs";
-import { dirname, relative } from "node:path";
+import { dirname } from "node:path";
 import { codePointOrder, escapeRegExp, jsonString } from "../🔡️json-text/🟦️.ts";
-import { definesParser, existingHelper, importsParser, parserRange } from "../📖️declared-types/🟦️.ts";
+import { existingHelper, importsParser, parserRange } from "../📖️declared-types/🟦️.ts";
 import { PARSER_REGION, helpersBlock, withClosedHelper } from "../🚪️guard-helpers/🟦️.ts";
-import { ParserFiles, appendParsers, identifiersOf, importStatements, ownedParserNames, ownsParser, parserFileText, pruneImports, specifierBetween, symbolTable, withReexport, withoutModuleLines, type Binding } from "../📍️parser-files/🟦️.ts";
+import { ParserFiles, appendParsers, identifiersOf, importStatements, ownsParser, parserFileText, pruneImports, specifierBetween, symbolTable, type Binding, type ParserHomes } from "../📍️parser-files/🟦️.ts";
 import { parserKeyParts, type ParserKey } from "../🧾️parser-render/🟦️.ts";
 import { portable, type SourceStore } from "../🗂️documents/🟦️.ts";
 
 //#region 🔖️Source
-/** 🔗️ The import statements of the parsers that sibling documents declare, one per owning leaf (a framework leaf by its package specifier). */
-export const importLines = (target: string, wanted: ReadonlyMap<string, ReadonlySet<string>>, specifiers: ReadonlyMap<string, string>): string =>
-  [...wanted.keys()]
+/** 🔗️ The import statements of the parsers that sibling documents declare, one per file that holds them (a framework leaf by its package specifier). */
+export function importLines(target: string, wanted: ReadonlyMap<string, ReadonlySet<string>>, specifiers: ReadonlyMap<string, string>, homes: ParserHomes): string {
+  const byFile = new Map<string, Set<string>>();
+  for (const [owner, names] of wanted) for (const name of names) byFile.set(homes.home(owner, name), (byFile.get(homes.home(owner, name)) ?? new Set()).add(name));
+  return [...byFile.keys()]
     .sort(codePointOrder)
-    .map((owner) => {
-      const specifier = specifiers.get(owner) ?? specifierBetween(target, owner);
-      return `import { ${[...wanted.get(owner)!].sort(codePointOrder).map((name) => `parse${name}`).join(", ")} } from ${jsonString(specifier, false)};`;
-    })
+    .map((file) => `import { ${[...byFile.get(file)!].sort(codePointOrder).map((name) => `parse${name}`).join(", ")} } from ${jsonString(specifiers.get(file) ?? specifierBetween(target, file), false)};`)
     .join("\n");
+}
 
 /** 🔗️ `source` with `lines` after its leading doc comment (or in front of it when it has none). */
 export function withImports(source: string, lines: string): string {
@@ -71,8 +71,9 @@ export class LeafWriter {
     private readonly helper: string,
     private readonly apply: boolean,
     private readonly specifiers: ReadonlyMap<string, string>,
+    private readonly homes: ParserHomes,
   ) {
-    this.files = new ParserFiles(sources, leaf);
+    this.files = homes.files(leaf);
   }
 
   private text(file: string): string {
@@ -106,7 +107,6 @@ export class LeafWriter {
     const home = this.files.placementOf(name);
     this.placed.set(name, home);
     this.touch(home);
-    if (home !== this.leaf) this.touch(this.leaf);
     this.closed ||= closed;
     if (home === this.leaf) this.leafBlocks.push(text);
     else this.parsers.set(home, [...(this.parsers.get(home) ?? []), text]);
@@ -143,8 +143,14 @@ export class LeafWriter {
 
   /** 📍️ Writes every edited file (when applying) and returns the repository-relative paths that were or would be touched. */
   finish(): string[] {
+    if (this.parsers.size > 0 && this.helpersMissing()) this.touch(this.leaf);
     if (this.apply && this.touched.size > 0) this.write();
     return [...this.touched].map((file) => portable(this.root, file));
+  }
+
+  private helpersMissing(): boolean {
+    const text = this.text(this.leaf);
+    return !text.includes(PARSER_REGION) || (this.closed && withClosedHelper(text, this.helper) !== text);
   }
 
   private write(): void {
@@ -156,27 +162,22 @@ export class LeafWriter {
     const table = symbolTable(this.sources, this.files.files);
     for (const [name, home] of this.placed) table.set(`parse${name}`, { from: home, type: false } satisfies Binding);
     for (const suffix of HELPER_NAMES) table.set(`${this.helper}${suffix}`, { from: this.leaf, type: false } satisfies Binding);
-    const lines = (file: string, current: string, texts: readonly string[], extra: Iterable<string> = []): string => {
+    const lines = (file: string, current: string, texts: readonly string[]): string => {
       const wanted = this.foreign.get(file) ?? new Map<string, Set<string>>();
       const provided = new Set([...wanted.values()].flatMap((names) => [...names].map((name) => `parse${name}`)));
-      const own = importStatements(file, current, new Set([...identifiersOf(texts.join("\n"), false), ...extra]), table, provided);
-      const foreign = importLines(file, wanted, this.specifiers);
+      const own = importStatements(file, current, identifiersOf(texts.join("\n"), false), table, provided);
+      const foreign = importLines(file, wanted, this.specifiers, this.homes);
       return [...own, ...(foreign === "" ? [] : [foreign])].join("\n");
     };
     const block = this.leafBlocks.join("\n").trimEnd();
     if (block !== "") leafText = `${leafText.trimEnd()}\n\n${block}\n`;
-    const remaining = identifiersOf(withoutModuleLines(leafText), true);
-    const outward = [...this.placed].filter(([name, home]) => home !== this.leaf && remaining.has(`parse${name}`)).map(([name]) => `parse${name}`);
-    leafText = withImports(leafText, lines(this.leaf, this.text(this.leaf), this.leafBlocks, outward));
+    leafText = withImports(leafText, lines(this.leaf, this.text(this.leaf), this.leafBlocks));
     leafText = pruneImports(leafText, identifiersOf(this.taken.join("\n"), true));
-    const created: string[] = [];
     for (const [file, texts] of this.parsers) {
       const current = this.sources.read(file);
       const joined = texts.join("\n").trimEnd();
       const next = existsSync(file) && current !== "" ? appendParsers(current, joined) : parserFileText(joined);
       this.working.set(file, withImports(next, lines(file, current, texts)));
-      created.push(file);
-      leafText = withReexport(leafText, specifierBetween(this.leaf, file), ownedParserNames(this.text(file)).map((name) => `parse${name}`));
     }
     this.working.set(this.leaf, leafText);
     for (const file of this.touched) {

@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { hubConnectionSummaryV1 } from "../../🧱️elements/🔄️ShellSync/🟦️.tsx";
 import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🔌️connection-contract/🟦️.ts";
 import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));

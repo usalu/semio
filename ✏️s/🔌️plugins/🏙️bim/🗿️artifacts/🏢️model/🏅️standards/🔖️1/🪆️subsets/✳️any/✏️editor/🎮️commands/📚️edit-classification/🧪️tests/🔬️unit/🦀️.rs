@@ -1,18 +1,21 @@
-use crate::editor::bim::kit::fault;
-use crate::standards::v1::subsets::any::schema::{snapshot::ClassificationItem, mutations::ModelMutation};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationItem;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 #[allow(unused_imports)]
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::patches::ClassificationSystemPatch};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::ClassificationSystemPatch;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use value_derive::{FromValue, ToValue};
-use crate::editor::bim::commands::edit_classification::*;
-use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
-use crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::edit_classification::{EditClassification, apply, normalised, handle};
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::support::{applied, ctx, demo, run};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
 
 fn edit(op: &str, code: &str, title: &str, parent: &str) -> EditClassification {
     EditClassification { id: "cs-uni".into(), op: op.into(), code: code.into(), title: title.into(), parent: parent.into() }

@@ -1,12 +1,13 @@
 /** 🚚️ The deployed vendor transport cases of the ticket-owned browser host staging suite. */
-import { runtimeCatalogBuildInventoryV1 } from "../../../../🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts";
+import { runtimeCatalogBuildInventoryV1 } from "@semio-tech/plugin-registry/catalog-view";
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { createTestKit, type ContractValidator, type TestDependencies, type TestSource } from "../🧰️test-kit/🟦️.ts";
 
 export async function registerVendorTransportTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: TestDependencies, source: TestSource): Promise<void> {
-  const { DISTRIBUTION_LAYOUT, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, basename, checkDistributionBundle, cpSync, createHash, createReadStream, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, existsSync, fileURLToPath, join, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, parseDistributionManifest, parseDistributionStaticInputs, pluginOutRoot, publishDistributionBundle, readFileSync, readdirSync, relative, repoRoot, resolve, rmSync, statSync, tmpdir, unlinkSync, writeFileSync } = dependencies;
+  const { builtPluginModulesRootIn, DISTRIBUTION_LAYOUT, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, basename, checkDistributionBundle, cpSync, createHash, createReadStream, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, existsSync, fileURLToPath, join, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, parseDistributionManifest, parseDistributionStaticInputs, publishDistributionBundle, readFileSync, readdirSync, relative, repoRoot, resolve, rmSync, statSync, tmpdir, unlinkSync, writeFileSync } = dependencies;
   const { describe, expect, it } = vitest;
-  const { contractModuleExport, devContractModule, itLong } = createTestKit(vitest, dependencies, source);
+  const pluginModulesRoot = builtPluginModulesRootIn(repoRoot, "prototype");
+  const { contractModuleExport, devContractModule, itLong, underBun } = createTestKit(vitest, dependencies, source);
 
   const devDistributionContractModule = (exportId: string): Promise<ContractValidator> => contractModuleExport("../../🚚️distribution/🧬️schema/🔣️.json", exportId);
   const ownedRelativeFiles = (root: string): string[] => {
@@ -30,7 +31,8 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       const fixture = JSON.parse(readFileSync(join(authority, "🕸️input-graph.json"), "utf8"));
       const sandbox = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "distribution-input-graph-"));
       for (const [path, source] of Object.entries(fixture.files)) writeFileSync(join(sandbox, path), source as string);
-      expect(await distributionStaticSourcePaths(sandbox, [fixture.entry])).toEqual(fixture.expected);
+      const closure = underBun<{ paths: string[]; rejected: boolean[] }>(`const { distributionStaticSourcePaths } = await import(process.argv[1]); const [sandbox, entry, rejectedEntries] = JSON.parse(process.argv[2]); const rejected = []; for (const bad of rejectedEntries) rejected.push(await distributionStaticSourcePaths(sandbox, [bad]).then(() => false, () => true)); console.log(JSON.stringify({ paths: await distributionStaticSourcePaths(sandbox, [entry]), rejected }));`, join(authority, "📥️source/🟦️.ts"), JSON.stringify([sandbox, fixture.entry, fixture.rejectedEntries]));
+      expect(closure.paths).toEqual(fixture.expected);
       const oracle = new Set<string>();
       const visit = (path: string) => {
         if (oracle.has(path)) return;
@@ -44,7 +46,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       };
       visit(fixture.entry);
       expect([...oracle].sort(distributionPathOrder)).toEqual(fixture.expected);
-      for (const entry of fixture.rejectedEntries) await expect(distributionStaticSourcePaths(sandbox, [entry])).rejects.toThrow();
+      expect(closure.rejected).toEqual(fixture.rejectedEntries.map(() => true));
       const input = JSON.parse(readFileSync(join(authority, "🔗️inputs.json"), "utf8"));
       const validate = await devDistributionContractModule("DistributionStaticInputs");
       expect(validate(input), JSON.stringify(validate.errors)).toBe(true);
@@ -56,7 +58,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
     });
 
     it.runIf(Boolean(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH))("checks actual compiled distribution bytes and preserves the entire old primary distribution", async () => {
-      const { loadTaxonomy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts");
+      const { loadTaxonomy } = await import("@semio-tech/repo-lib/inventory");
       const compiled = resolve(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH!), artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
       expect(relative(artifacts, compiled)).toMatch(/^distribution-compiled-[A-Za-z0-9]+$/u);
       const manifest = parseDistributionManifest(JSON.parse(readFileSync(join(compiled, DISTRIBUTION_LAYOUT.manifest), "utf8")), DISTRIBUTION_LAYOUT);
@@ -169,7 +171,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       expect(() => parseDistributionLayout({ ...fixture.layout, assets: [...fixture.layout.assets, { kind: "name", source: "collision.css", output: "🚀️collision-[hash].css" }] })).toThrow();
       const actual = parseDistributionLayout(catalog), names = new Map<string, string>();
       for (const row of [...actual.chunks, ...actual.assets]) {
-        if (row.kind !== "name") expect(existsSync(join(repoRoot, row.source)), row.source).toBe(true);
+        if (row.kind !== "name" && !row.source.startsWith("@engine/")) expect(existsSync(join(repoRoot, row.source)), row.source).toBe(true);
         const parts = row.output.split("/");
         for (let index = 0; index < parts.length; index++) {
           const name = parts[index]!, emojis = [...name.matchAll(emojiRegex())];
@@ -329,7 +331,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       const routes: string[] = [];
       const environment = {
         mkdirSync() {}, watch(path: string) { watched.push(path); }, join, moduleRoutePath,
-        devStreamMuxServer: () => ({ route: (name: string) => { routes.push(name); return () => undefined; }, publish() {} }), DEV_STREAM_ROUTES: { extensionModules: "extension-modules.watch" },
+        DEV_STREAM_ROUTES: { extensionModules: "extension-modules.watch" },
         EXTENSION_WATCH_MARKER: "👀️extension-watch.json", EXTENSION_INSTALL_PATH: `${MODULE_EXTENSION_ROUTE}/install`,
         createExtensionStore: () => ({ installRoot: "fixture-install", listInstalled: async () => [], installFromBytes: async () => ({ installed: true }) }),
         readRequestBody: async () => Buffer.from([1]),
@@ -343,7 +345,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
         if (!node) throw new Error(`missing production function ${spec.name}`);
         const emitted = ts.transpileModule(node.getText(source), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
         const create = new Function("exports", ...Object.keys(environment), emitted + `\nreturn exports.${spec.name};`)({}, ...Object.values(environment));
-        create({ moduleRoot: pluginOutRoot, installRoot: "fixture-install", repoRoot, materializer: async () => ({}) }).configureServer({ middlewares: { use(handler: Function) { handlers.set(spec.owner, handler); } } });
+        create({ moduleRoot: pluginModulesRoot, installRoot: "fixture-install", repoRoot, materializer: async () => ({}), streams: () => ({ route: (name: string) => { routes.push(name); return () => undefined; }, publish() {} }) }).configureServer({ middlewares: { use(handler: Function) { handlers.set(spec.owner, handler); } } });
       }
       expect(watched).toEqual(["fixture-install"]);
       expect(routes).toEqual(["extension-modules.watch"]);
@@ -363,7 +365,8 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       }
     });
 
-    itLong("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
+    itLong("serves every declared component import and tool-fixed vendor file byte-identically", async (context) => {
+      context.skip(!existsSync(join(pluginModulesRoot, JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8")).vendorPath)), "needs the prototype activation to have materialized the plugin modules");
       const ts = await import("typescript"), { PassThrough } = await import("node:stream");
       const { isAbsolute } = await import("node:path");
       const styling = ts.createSourceFile("styling.ts", [readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/📤️file-serving/🟦️.ts"), "utf8"), readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"), "utf8")].join("\n"), ts.ScriptTarget.Latest, true);
@@ -374,9 +377,9 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       });
       const emitted = ts.transpileModule(sourceFunctions.join("\n"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
       const staticDirVitePlugin = new Function("exports", "resolve", "relative", "isAbsolute", "existsSync", "statSync", "createReadStream", "mkdirSync", "cpSync", "process", emitted + "\nreturn exports.staticDirVitePlugin;")({}, resolve, relative, isAbsolute, existsSync, statSync, createReadStream, mkdirSync, cpSync, process);
-      const { loadCatalogTaxonomy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { fixedFilenameContractIdsForPath } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts");
+      const { loadCatalogTaxonomy } = await import("@semio-tech/repo-lib/inventory"), { fixedFilenameContractIdsForPath } = await import("@semio-tech/repo-lib/inventory");
       const taxonomy = loadCatalogTaxonomy(), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8"));
-      const vendorRoot = join(pluginOutRoot, fixture.vendorPath), urls = new Map<string, string>();
+      const vendorRoot = join(pluginModulesRoot, fixture.vendorPath), urls = new Map<string, string>();
       expect(readdirSync(vendorRoot).filter((name) => name !== ".semio-artifact.json").sort()).toEqual(fixture.vendorFiles);
       for (const filename of fixture.vendorFiles) {
         const file = join(vendorRoot, filename), relativeFile = relative(repoRoot, file).replace(/\\/g, "/");
@@ -397,7 +400,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
         urls.set(`${MODULE_PLUGIN_ROUTE}/${fixture.vendorPath}/${filename}`, file);
       }
       for (const spec of fixture.moduleRoots) {
-        const root = spec.route === MODULE_EXTENSION_ROUTE ? defaultExtensionInstallRoot(repoRoot) : join(dirname(pluginOutRoot), spec.directory);
+        const root = spec.route === MODULE_EXTENSION_ROUTE ? defaultExtensionInstallRoot(repoRoot) : pluginModulesRoot;
         let components = 0, imports = 0;
         for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && moduleIdForDirectoryName(entry.name, runtimeCatalogBuildInventoryV1().moduleDirectories))) {
           const files = readdirSync(join(root, directory.name)).filter((name) => name.endsWith("_component.js"));
@@ -416,10 +419,10 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
         expect(components).toBe(spec.components);
         expect(imports).toBe(spec.imports);
       }
-      urls.set(`${MODULE_PLUGIN_ROUTE}/${fixture.fontPath}`, join(pluginOutRoot, fixture.fontPath));
-      urls.set(`${MODULE_PLUGIN_ROUTE}/${fixture.sharedWorker}`, join(pluginOutRoot, fixture.sharedWorker));
+      urls.set(`${MODULE_PLUGIN_ROUTE}/${fixture.fontPath}`, join(pluginModulesRoot, fixture.fontPath));
+      urls.set(`${MODULE_PLUGIN_ROUTE}/${fixture.sharedWorker}`, join(pluginModulesRoot, fixture.sharedWorker));
       let middleware: any;
-      const serve = staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: relative(repoRoot, pluginOutRoot) })[0]!;
+      const serve = staticDirVitePlugin(repoRoot, { kind: "static-dir", route: MODULE_PLUGIN_ROUTE, root: relative(repoRoot, pluginModulesRoot) })[0]!;
       (serve.configureServer as Function)({ middlewares: { use(value: unknown) { middleware = value; } } });
       for (const [url, file] of urls) {
         const response = new PassThrough(), chunks: Buffer[] = [];

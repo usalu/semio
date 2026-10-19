@@ -1,14 +1,17 @@
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of as seg;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of as seg;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::axis_length;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::mark;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::mark;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{LocationLine, Point2, Vertex, Wall};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{LocationLine, Point2, Vertex};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall;
 #[allow(unused_imports)]
 use semio_framework_geometry::bulge::BulgeSeg;
 #[allow(unused_imports)]
@@ -20,14 +23,18 @@ use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::{Band, JOIN_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::target_of;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{StoreyPatch, WallPatch}}, snapshot::TopConstraint};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::{Band, JOIN_TOLERANCE};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::{WallLayout, JoinKind, offsets_of, layout_of, storey_bands};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::target_of;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use semio_framework_test_fixtures::fixture_text;
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
@@ -134,7 +141,7 @@ async fn changing_a_storey_height_re_infers_exactly_what_depends_on_it() {
 }
 
 fn compute_storey_levels_for_test(snapshot: &ModelSnapshot) -> BTreeMap<String, (f64, f64)> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(snapshot).into_iter().map(|(id, level)| (id, (level.elevation, level.top_elevation))).collect()
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(snapshot).into_iter().map(|(id, level)| (id, (level.elevation, level.top_elevation))).collect()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -247,7 +254,7 @@ async fn changing_one_wall_type_thickness_moves_its_neighbours_footprints_but_no
 #[semio_framework_async_macros::async_test]
 async fn degenerate_walls_get_no_footprint() {
     let mut snapshot = joins();
-    snapshot.walls.get_mut("w-loc-center").expect("wall").axis = Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 1.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 1.0 } };
+    snapshot.walls.get_mut("w-loc-center").expect("wall").axis = Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 1.0, y: 1.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 1.0, y: 1.0 } };
     snapshot.walls.get_mut("w-loc-interior").expect("wall").wall_type = "no-such-type".into();
     let layouts = compute_wall_layout(&snapshot);
     let flat = &layouts["w-loc-center"];
@@ -259,7 +266,7 @@ async fn degenerate_walls_get_no_footprint() {
 #[semio_framework_async_macros::async_test]
 async fn a_wall_is_resolved_by_its_storeys_and_the_bands_of_the_walls_it_touches() {
     let snapshot = house();
-    let steps = plan::build(&snapshot, kinds::closure(kinds::LAYOUTS));
+    let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LAYOUTS));
     let parents = |wall: &str| steps.iter().find(|step| step.key == ModelNode::WallLayout(wall.into())).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents("w-ground-south")[0], ModelNode::Storey("st-ground".into()));
     assert_eq!(parents("w-ground-arc")[..2], [ModelNode::Storey("st-ground".into()), ModelNode::Storey("st-first".into())]);
@@ -280,9 +287,9 @@ async fn moving_a_wall_into_contact_makes_its_band_a_parent_of_the_other() {
     let before = joins();
     let mut after = before.clone();
     let wall = after.walls.get_mut("w-loc-center").expect("wall");
-    wall.axis = Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: -3.0 } };
+    wall.axis = Axis::Line { start: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: 0.0 }, end: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: 4.0, y: -3.0 } };
     wall.storey = "st-ground".into();
-    let parents = |snapshot: &ModelSnapshot, wall: &str| plan::build(snapshot, kinds::closure(kinds::LAYOUTS)).into_iter().find(|step| step.key == ModelNode::WallLayout(wall.into())).expect("planned").parents;
+    let parents = |snapshot: &ModelSnapshot, wall: &str| semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LAYOUTS)).into_iter().find(|step| step.key == ModelNode::WallLayout(wall.into())).expect("planned").parents;
     let band = ModelNode::Band("w-loc-center".into());
     assert!(!parents(&before, "w-l-b").contains(&band) && parents(&after, "w-l-b").contains(&band), "a wall that starts touching becomes a parent");
     assert_eq!(parents(&before, "w-ll-a"), parents(&after, "w-ll-a"), "an unrelated wall keeps its parents");

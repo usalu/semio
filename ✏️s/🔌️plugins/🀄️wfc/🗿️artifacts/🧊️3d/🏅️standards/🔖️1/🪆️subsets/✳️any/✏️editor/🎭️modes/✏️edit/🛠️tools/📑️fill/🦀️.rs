@@ -806,11 +806,8 @@ impl Wfc3dFillRunJob {
     /// 🤝️ Closes the lent tick turn by turn from the next step's own wallet.
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         let publication = self.publication.as_mut().expect("a delivered fill publication is staged");
-        let step = publication.close_step(cx.retained_grant());
+        let step = match publication.close_step(cx.retained_grant()) { Ok(step) => step, Err(error) => { cx.consume_retained(error.retained_progress())?; return Err(error) } };
         cx.consume_retained(step.progress())?;
-        if let InteractiveJobCloseStep::Refused { kind, progress } = step {
-            return Err(semio_framework_value::ValueError::literal(kind, "fill publication close was refused").with_retained_progress(progress));
-        }
         if publication.terminal_is_empty() {
             self.publication = None;
         }
@@ -829,8 +826,9 @@ impl Wfc3dFillRunJob {
     }
 }
 
-impl InteractiveJob for Wfc3dFillRunJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+impl Wfc3dFillRunJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
             return self.retire_delivered(cx);
         }
@@ -860,6 +858,10 @@ impl InteractiveJob for Wfc3dFillRunJob {
             FillRun::Cancelled => JobOutcomeBorrow::admit_cancelled(cx),
         }
     }
+}
+
+impl InteractiveJob for Wfc3dFillRunJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -879,48 +881,50 @@ impl InteractiveJob for Wfc3dFillRunJob {
         }
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.begin_close();
-        let demand = match self.close_demands() {
-            Ok(demand) => demand,
-            Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
-        if self.terminal_is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        }
-        if let Some(publication) = self.publication.as_mut() {
-            let step = publication.close_step(grant);
-            if publication.terminal_is_empty() {
-                self.publication = None;
-            }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                step => step,
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_nested_step(cx,|cx,grant|{
+            self.begin_close();
+            let demand = match self.close_demands() {
+                Ok(demand) => demand,
+                Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx)),
             };
-        }
-        if self.settled.take().is_some() {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        }
-        if let FillPhase::Run { child, .. } = &mut self.phase {
-            if let Some(child_job) = child.as_mut() {
-                let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-                let step = InteractiveJob::close_step(child_job.as_mut(), child_grant);
-                if InteractiveJob::terminal_is_empty(child_job.as_ref()) {
-                    *child = None;
-                    self.phase = FillPhase::Closed;
-                    return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } };
+            if self.terminal_is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
+            }
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            }
+            if let Some(publication) = self.publication.as_mut() {
+                let step = publication.close_step(grant)?;
+                if publication.terminal_is_empty() {
+                    self.publication = None;
                 }
-                return match step {
+                return Ok(match step {
                     InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
                     step => step,
-                };
+                });
             }
-        }
-        self.phase = FillPhase::Closed;
-        InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
+            if self.settled.take().is_some() {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            }
+            if let FillPhase::Run { child, .. } = &mut self.phase {
+                if let Some(child_job) = child.as_mut() {
+                    let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                    let step = cx.with_retained_loan(child_grant, |same| InteractiveJob::close_step(child_job.as_mut(), same))?;
+                    if InteractiveJob::terminal_is_empty(child_job.as_ref()) {
+                        *child = None;
+                        self.phase = FillPhase::Closed;
+                        return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: step.progress().copied_items.max(1), ..step.progress() } });
+                    }
+                    return Ok(match step {
+                        InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
+                        step => step,
+                    });
+                }
+            }
+            self.phase = FillPhase::Closed;
+            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

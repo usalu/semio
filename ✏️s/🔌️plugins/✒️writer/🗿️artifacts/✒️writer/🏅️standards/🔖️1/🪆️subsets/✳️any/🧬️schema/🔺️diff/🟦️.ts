@@ -1,5 +1,5 @@
 /** 🔺️ Writer sparse durable document delta. */
-import type { ArtifactChild } from "@semio-tech/framework-os/modules/store/child/schema";
+import type { ArtifactChild } from "@semio-tech/framework/schema/artifact-reference";
 import type { WriterArtifact } from "../🟦️.ts";
 
 export interface WriterDiff {

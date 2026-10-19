@@ -6,8 +6,8 @@
 //! fixed-children cap.
 
 use crate::editor::architect::catalog::REGISTER_IDS;
-use crate::editor::architect::base::ui_label;
-use crate::editor::architect::base::{architect_action, ui_value_map, ui_value_text};
+use crate::editor::architect::editor_vocabulary::ui_label;
+use crate::editor::architect::editor_vocabulary::{architect_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

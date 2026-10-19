@@ -1,27 +1,29 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, LayerFunction, MaterialCategory, PropertyValue, Swing};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{DoorLeaves, LayerFunction, MaterialCategory, PropertyValue, Swing};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text, Doc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text, Doc};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::spatial::{number_of, single_values, string_of};
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::spatial::{number_of, single_values, string_of};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::Import;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::Import;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorType, Layer, Material, Profile, Rgb, RoofType, SlabType, WallType, WindowType};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyTemplate, BeamType, CeilingType, ClassificationSystem, ColumnType, DoorType, Material, RoofType, SlabType, WallType, WindowType};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, PropertyKind, TemplateTarget, ClassificationItem, Layer, Profile, Rgb};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::import::ifc::data::{category, function, door_operation};
-use crate::standards::v1::subsets::any::io::import::ifc::data::*;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::data::{category, function, door_operation};
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::data::property_value;
 use semio_s_artifact_stdio_contract::part21::Part21Decimal;
 
 fn typed(name: &str, item: Part21Value) -> Part21Value {

@@ -4,7 +4,7 @@ import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import schema from"../🧬️schema/🔣️.json";
 import specimen from"./🧫️fixtures/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { familyText } from "../../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 import {pluginSubtreeText} from "../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 test("original opening keeps its actual partial app and source until its issuer is ready",()=>{

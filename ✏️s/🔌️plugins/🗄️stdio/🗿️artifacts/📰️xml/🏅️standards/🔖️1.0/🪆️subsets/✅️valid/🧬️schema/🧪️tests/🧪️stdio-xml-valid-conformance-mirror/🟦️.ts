@@ -1,7 +1,32 @@
+import type { XmlDocument, XmlDoctype, XmlNode, XmlSnapshot } from "../../../../🧱️base/🧬️schema/📸️snapshot/🟦️.ts";
+import { CODE_BOUNDARY_KIND, CODE_DOCTYPE_MISSING, CODE_DOCTYPE_POSITION, CODE_DOCUMENT_ELEMENT_MISSING, CODE_ENCODING_NAME, CODE_ROOT_NAME_MISMATCH, CODE_STANDALONE_EXTERNAL_SUBSET, CODE_VALIDITY_NOT_VERIFIED, CODE_VERSION, type XmlValidDiagnostic } from "../../🚦️diagnostics/🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: typeof import("../../🟦️.ts"), source: TestSource): Promise<void> {
-  const { CODE_BOUNDARY_KIND, CODE_DOCTYPE_MISSING, CODE_DOCTYPE_POSITION, CODE_DOCUMENT_ELEMENT_MISSING, CODE_ENCODING_NAME, CODE_ROOT_NAME_MISMATCH, CODE_STANDALONE_EXTERNAL_SUBSET, CODE_VALIDITY_NOT_VERIFIED, CODE_VERSION, checkValidConformance, meta, snapshotWith } = dependencies;
+export type XmlValidTestDependencies = {
+  readonly checkValidConformance: (snapshot: XmlSnapshot) => XmlValidDiagnostic[];
+};
+
+/** 🧪 Build a minimal snapshot around one structured doctype for the conformance mirror tests. */
+function snapshotWith(
+  doctype: Pick<XmlDoctype, 'name' | 'externalId'> | undefined,
+  standalone: boolean | undefined,
+  rootName: string,
+): XmlSnapshot {
+  const root: XmlNode = { kind: 'element', name: rootName, attrs: [], children: [] };
+  const doc: XmlDocument = {
+    declaration:
+      standalone === undefined ? { version: '1.0' } : { version: '1.0', standalone },
+    doctype: doctype === undefined ? undefined : { ...doctype, declarations: [] },
+    root,
+    prolog: [],
+    epilog: [],
+  };
+  return { schema: 'stdio.xml', doc };
+}
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: XmlValidTestDependencies, source: TestSource): Promise<void> {
+  const { checkValidConformance } = dependencies;
 
   const { describe, expect, it } = vitest;
 

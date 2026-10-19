@@ -67,7 +67,7 @@ fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
     let mut h = WidgetHarness::new();
     let enabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: false, on_change: Some(action()) };
     render_widget(&enabled, VIEWPORT, &mut h.ctx());
-    let presentation = crate::wgpu::layout::slider_control_presentation(VIEWPORT, 0.5, 0.0, 1.0, None, Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let presentation = semio_framework_ui_wgpu_layout::layout::slider_control_presentation(VIEWPORT, 0.5, 0.0, 1.0, None, Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
     let meta = h.maps.slider_metas.get("sl").expect("enabled slider meta");
     assert_eq!((meta.bounds_x, meta.bounds_w), (presentation.track_cell.x, presentation.track_cell.w));
     assert!(h.maps.slider_live_values.contains_key("sl"));

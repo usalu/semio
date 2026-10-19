@@ -21,7 +21,6 @@ semio-framework-os-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-plugin = { workspace = true }
-semio-framework-ui = { workspace = true, features = ["wgpu"] }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -31,6 +30,7 @@ semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
 semio-s-artifact-procedural-3d-terminology = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-config = { workspace = true }
 semio-s-artifact-procedural-3d-viewer-transient = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

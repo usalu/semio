@@ -3,7 +3,7 @@ import { COPY } from "../🌍️copy/🟦️.ts";
 import { currentLocale, renderer } from "../🧠️state/🟦️.ts";
 import { presentKey, textOfKey } from "../🧱️chrome/🟦️.ts";
 import { mirrorFind, mirror } from "../🧊️wgpu-mirror/🟦️.ts";
-import { evalSafe, sleep } from "../📄️page/🟦️.ts";
+import { evalSafe, sleep } from "../🔬️probe/🟦️.ts";
 import { verdict, note } from "../🧾️report/🟦️.ts";
 
 //#region 🔖️Band

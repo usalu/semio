@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-os-flow-host-core = { path = "../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-os-flow-host-core = { path = "../../🧱️flow-host-model/📦️packages/🦀️rust" }
 semio-framework-os-flow-host-read = { path = "../../📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
 semio-framework-os-flow-host-session = { path = "../../🎞️session/📦️packages/🦀️rust" }
 semio-framework-os-flow-operators = { path = "../../../🗃️operators/📦️packages/🦀️rust" }
@@ -48,6 +48,6 @@ ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️con
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 serde_json = "1"
 semio-framework-os-flow-operators = { path = "../../../🗃️operators/📦️packages/🦀️rust", features = ["protocol-laws"] }

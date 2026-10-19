@@ -1,9 +1,9 @@
 /** ⚙️ Collaboration e2e constants, relay and recorder: the repository root, the port range and boot budgets, the admin token and user credentials, the step names, the link cut schedule, the severable link relay, the frame helpers, the locales and the step recorder with its verdict. */
 import { connect, createServer, type AddressInfo, type Socket } from "node:net";
-import { getWorkspaceRoot } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 //#region 🔖️CatalogSmokeVerify
-export const repoRoot = getWorkspaceRoot();
+export const repoRoot = findWorkspaceRoot();
 
 //#endregion 🔖️CatalogSmokeVerify
 //#region 🔖️CollabE2e

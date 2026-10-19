@@ -1,0 +1,15 @@
+{
+ "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/tsconfig.json",
+ "compilerOptions": {
+  "noEmit": true,
+  "incremental": false,
+  "tsBuildInfoFile": null,
+  "resolveJsonModule": true
+ },
+ "files": [
+  "/Users/ueli/Documents/semio/🌎️hub/🏗️bootstrap/🧾️provenance/📦️cargo/🧪️tests/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🎚️mode/🦀️profile/🧪️tests/📥️consumption/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🔗️relative-closure/🧪️tests/🟦️.ts"
+ ],
+ "include": []
+}

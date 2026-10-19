@@ -174,20 +174,22 @@ impl RetainedZlibEncoder {
         usize::from(!self.terminal_is_empty())
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
+    pub fn close_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
         if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+            return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
         }
         if next_backing_bytes(&[&self.raw, &self.frame, &self.literal_codes, &self.distance_codes]) == 0 {
-            return semio_framework_job::InteractiveJob::close_step(&mut self.job, grant);
+            return semio_framework_job::InteractiveJob::close_step(&mut self.job, cx);
         }
-        if !deflate_close_admits(grant, self.next_close_release_bytes(), false) {
-            return deflate_close_idle();
-        }
-        match release_next_backing(&mut [&mut self.raw, &mut self.frame, &mut self.literal_codes, &mut self.distance_codes]) {
-            Some(released_bytes) => deflate_close_receipt(1, released_bytes),
-            None => deflate_close_idle(),
-        }
+        semio_framework_job::close_original_granted_step(cx, |grant| {
+            if !deflate_close_admits(grant, self.next_close_release_bytes(), false) {
+                return Ok(deflate_close_idle());
+            }
+            Ok(match release_next_backing(&mut [&mut self.raw, &mut self.frame, &mut self.literal_codes, &mut self.distance_codes]) {
+                Some(released_bytes) => deflate_close_receipt(1, released_bytes),
+                None => deflate_close_idle(),
+            })
+        })
     }
 
     pub fn terminal_is_empty(&self) -> bool {

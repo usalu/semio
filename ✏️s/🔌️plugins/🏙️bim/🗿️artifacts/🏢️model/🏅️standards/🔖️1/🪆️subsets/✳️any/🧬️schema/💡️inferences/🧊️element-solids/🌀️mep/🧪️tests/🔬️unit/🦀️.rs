@@ -1,7 +1,9 @@
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, CHORD_TOLERANCE};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidBuilder;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
 #[allow(unused_imports)]
@@ -14,8 +16,9 @@ use semio_framework_geometry::vector::{add3, cross3, dot3, normalize3, scale3, s
 use semio_framework_geometry::Point;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::mep::*;
 use crate::standards::v1::subsets::any::schema::inferences::mep::mep_of;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{MepElement, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{MepShape, MepSystem, Point3};
 
 fn point(x: f64, y: f64, z: f64) -> Point3 {
     Point3 { x, y, z }

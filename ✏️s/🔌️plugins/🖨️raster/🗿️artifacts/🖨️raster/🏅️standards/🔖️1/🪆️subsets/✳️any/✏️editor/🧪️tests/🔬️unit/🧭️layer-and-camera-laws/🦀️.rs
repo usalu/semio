@@ -157,8 +157,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     let base_envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
     context::retire_raster_envelope(base_envelope);
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load a");
-    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load b");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("load a");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b.0, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("load b");
     let background_id = "bg".to_string();
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence").await;
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
@@ -172,8 +172,8 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     // anything in, so without these two ticks each instance still read only its own edit — the exact
     // exchange `artifact_app_laws::assert_two_registered_instances_converge` performs for the apps
     // whose genesis document is enough to carry both commands.
-    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
+    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
 
     let projection_a = instance_a.snapshot().expect("projection a");
     let projection_b = instance_b.snapshot().expect("projection b");
@@ -185,10 +185,10 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     // 🔀️ A replicated CHECKPOINT keeps both sides converged too — the second half of the framework's
     // own convergence law, run here against the shared seeded base.
     let local = artifact_app_laws::meta("local");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
-    semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut *instance_a, admitted).await.expect("a's checkpoint commit settles");
-    artifact_app_laws::settle_registered_typed_operation(&mut *instance_a, local.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_framework_plugin::plugin_app_close_prelude::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, local.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(instance_a.snapshot().expect("projection a").layers.len(), instance_b.snapshot().expect("projection b").layers.len(), "a replicated checkpoint keeps both instances converged");
 
     // 🧷️ Paired backbone ends block the fixtures' close ladder until both are released.
@@ -253,7 +253,7 @@ async fn raster_import_media_appends_layer_from_incoming_image() {
     };
     // 🔌️ A MOUNTED app's `InvocationResult.mutations` is always EMPTY (the host settles the typed
     // publication), so the import is read off the DOCUMENT, exactly as sequence/animate read theirs.
-    app.import_media("image:in", media, &artifact_app_laws::meta("local")).await.expect("import image:in");
+    app.0.import_media("image:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import image:in");
     // 🧹️ `ArtifactApp::snapshot` hands back an OWNED `RasterSnapshot`, and after the import that
     // snapshot owns a POPULATED asset pool: reading `.layers.len()` off the temporary dropped a
     // `RasterOwnedMap` that still held its page backing, which is exactly what its fail-closed `Drop`

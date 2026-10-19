@@ -19,10 +19,12 @@ import {
   type CleanRustIncrementalCrate,
   cleanIsMisplacedRepoDir,
   cleanIsMisplacedTicketsDir,
+  cleanIsNativeImagePath,
   cleanIsProtected,
   cleanIsRootTransientName,
   cleanIsSemioRootName,
   cleanIsTicketGeneratedOutputDir,
+  cleanOpenTicketGeneratedOutputProtection,
   cleanIsWindowsIllegalName,
   cleanTicketFolderForPath,
   cleanTicketManifestIsClosed,
@@ -220,6 +222,7 @@ export function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: s
     if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
     const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
     if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
+    if (!cleanTicketManifestIsClosed(ticketFolder, CLEAN_PROTECTION_VIEW)) return "skip";
     if (generatedOutputHasLiveLease(abs)) return "skip";
     out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
     return "skip";
@@ -301,6 +304,7 @@ export function cleanOversizedIgnoredRemovals(root: string, protectedPrefixes: r
     const abs = join(root, rel);
     const ticket = cleanTicketFolderForPath(root, abs);
     if (cleanIntersectsProtected(abs, protectedPrefixes) && !ticket) continue;
+    if (cleanIsNativeImagePath(abs) || cleanOpenTicketGeneratedOutputProtection(root, abs).length !== 0) continue;
     let st;
     try {
       st = lstatSync(abs);

@@ -4,7 +4,8 @@
 //!
 //! Related: IFC2x3 `IfcProcess`, the construction process an element belongs to, <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcprocessextension/lexical/ifcprocess.htm>.
 
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use std::collections::BTreeMap;
 
 /// 🗺️ The snapshot collections the view phases read: the storeys, the phase-bearing element kinds and the openings that follow their host.
@@ -132,17 +133,17 @@ fn elements_on(snapshot: &ModelSnapshot, storey: &str) -> BTreeMap<String, Phase
         };
     }
     on!(
-        walls => |row: &crate::standards::v1::subsets::any::schema::snapshot::Wall| row.phase,
-        curtain_walls => |row: &crate::standards::v1::subsets::any::schema::snapshot::CurtainWall| row.phase,
-        columns => |row: &crate::standards::v1::subsets::any::schema::snapshot::Column| row.phase,
-        beams => |row: &crate::standards::v1::subsets::any::schema::snapshot::Beam| row.phase,
-        slabs => |row: &crate::standards::v1::subsets::any::schema::snapshot::Slab| row.phase,
-        roofs => |row: &crate::standards::v1::subsets::any::schema::snapshot::Roof| row.phase,
-        stairs => |row: &crate::standards::v1::subsets::any::schema::snapshot::Stair| row.phase,
-        railings => |row: &crate::standards::v1::subsets::any::schema::snapshot::Railing| row.phase,
-        spaces => |row: &crate::standards::v1::subsets::any::schema::snapshot::Space| row.phase,
-        ceilings => |_: &crate::standards::v1::subsets::any::schema::snapshot::Ceiling| Phase::New,
-        ramps => |_: &crate::standards::v1::subsets::any::schema::snapshot::Ramp| Phase::New,
+        walls => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall| row.phase,
+        curtain_walls => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::CurtainWall| row.phase,
+        columns => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Column| row.phase,
+        beams => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Beam| row.phase,
+        slabs => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Slab| row.phase,
+        roofs => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Roof| row.phase,
+        stairs => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair| row.phase,
+        railings => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Railing| row.phase,
+        spaces => |row: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space| row.phase,
+        ceilings => |_: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ceiling| Phase::New,
+        ramps => |_: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp| Phase::New,
     );
     for (id, opening) in &snapshot.openings {
         let host = rows.get(&opening.host).filter(|_| snapshot.walls.contains_key(&opening.host) || snapshot.curtain_walls.contains_key(&opening.host));

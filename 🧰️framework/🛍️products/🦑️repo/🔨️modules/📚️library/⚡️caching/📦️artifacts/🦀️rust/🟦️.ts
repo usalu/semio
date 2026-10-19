@@ -1,4 +1,4 @@
-import {verifyCapturedCargoArtifactsV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
+import {verifyCapturedCargoArtifactsV1} from "@semio-tech/process/native-build";
 import {repositoryCargoNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -6,6 +6,7 @@ import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃�
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { relative, resolve } from "node:path";
+import type { ArtifactRustPackageOptions } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget, type ScriptCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { artifactRustCargoArguments, validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
@@ -26,15 +27,9 @@ export async function runArtifactRustPackagesTests(cargoNames: readonly string[]
   finally { stopProgress(); }
 }
 
-/**
- * 🔬️ One artifact's TypeScript twin: the second, independent implementation of a law whose fixture
- * the Rust suite also answers. Returns how many assertions it carried, so a twin that silently
- * stopped asserting is visible as a collapsing count rather than a passing run.
- */
-export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => number };
 
 /** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
-export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly packages?: readonly string[]; readonly testPackages?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] } = {}): Promise<void> {
+export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: ArtifactRustPackageOptions = {}): Promise<void> {
   return receiveScriptProcessInvocation(process.env, async original => {
   if (options.snapshotSqliteTestBudgetMs !== undefined && (!Number.isSafeInteger(options.snapshotSqliteTestBudgetMs) || options.snapshotSqliteTestBudgetMs <= 0)) throw new Error("Owned SQLite snapshot test budget must be a positive safe integer");
   const snapshotSources = options.snapshotSqliteTests?.map(path => resolve(packageRoot, path)) ?? [];

@@ -7,11 +7,8 @@ package cli
 import (
 	json "encoding/json"
 	fmt "fmt"
-	os "os"
 	strings "strings"
 	testing "testing"
-
-	workspace "github.com/usalu/semio/repo/workspace"
 )
 
 // 🔍️#region 🏂️Query
@@ -19,9 +16,7 @@ func TestExhaustiveQueryFlag(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query flag test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	tests := []struct {
 		name          string
@@ -225,9 +220,7 @@ func TestExhaustiveQueryFuzzyMatch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query fuzzy match test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("policy list fuzzy match with misspelling", func(t *testing.T) {
 		output, err := executeTreeCommand("list", "--only-policy", "--query", "headr", "--json")
@@ -274,9 +267,7 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow cache index test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	t.Run("tree query returns multiple resource kinds for shared keyword", func(t *testing.T) {
 		output, err := executeTreeCommand("search", "--query", "search", "--text")
@@ -328,9 +319,7 @@ func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 		if !strings.Contains(strings.ToLower(output), "cli") {
 			t.Errorf("expected 'cli' in output:\n%s", output)
 		}
-		hasComposeRepo := strings.Contains(output, "repo")
-		hasTechnologyOrBundle := strings.Contains(output, "bundle") || strings.Contains(output, "Technologies")
-		if !hasComposeRepo || !hasTechnologyOrBundle {
+		if !strings.Contains(output, "repo/cli") {
 			t.Errorf("tree --query cli should return technology/bundle document; got:\n%s", output)
 		}
 	})
@@ -373,9 +362,7 @@ func TestExhaustiveQueryEmptyReturnsAll(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query empty test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	workspace.SetRootDir(repoRoot)
+	withExhaustiveRepo(t)
 
 	tests := []struct {
 		name string

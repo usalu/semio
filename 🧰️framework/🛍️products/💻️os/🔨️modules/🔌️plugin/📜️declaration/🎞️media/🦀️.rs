@@ -67,8 +67,8 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunksInne
 }
 
 impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunks{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.inner))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactOutputChunksInner>>())}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.inner))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactOutputChunksInner>>())}
     fn controlled_retirement_supported()->bool{<ArtifactOutputChunksInner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
@@ -310,8 +310,8 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompl
  fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionSlot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompletion{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.inner))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactMediaExportCompletionInner>>())}
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.inner))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactMediaExportCompletionInner>>())}
  fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionInner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
@@ -362,8 +362,8 @@ impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCredi
  fn controlled_retirement_supported()->bool{<() as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCredit{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::shared::SharedControlledRetirement::lease(self.state))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactMediaExportCreditState>>())}
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.state))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactMediaExportCreditState>>())}
  fn controlled_retirement_supported()->bool{<ArtifactMediaExportCreditState as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 

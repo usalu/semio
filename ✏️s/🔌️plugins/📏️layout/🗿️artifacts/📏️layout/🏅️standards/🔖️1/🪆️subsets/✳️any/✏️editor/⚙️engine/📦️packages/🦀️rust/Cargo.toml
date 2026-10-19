@@ -41,4 +41,5 @@ semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
 semio-framework-io-ports = { workspace = true, features = ["testkit"] }
 semio-s-artifact-layout-layout-editor-commands = { workspace = true }
-semio-s-artifact-layout-layout-engine-export = { workspace = true }
+semio-s-artifact-layout-layout-engine-export = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

@@ -73,13 +73,19 @@ func ToolTicketList(year, month, day *int) workspace.ToolResult {
 		if started := t.GetDateStarted(); !started.IsZero() {
 			created = started.Format(time.RFC3339)
 		}
+		prompt := t.Description
+		if prompt == "" && len(t.Interactions) > 0 {
+			prompt = t.Interactions[0].Prompt
+		}
 		data := map[string]interface{}{
 			"slug":      t.Slug,
 			"year":      t.Year,
 			"month":     t.Month,
 			"day":       t.Day,
 			"title":     t.Title,
-			"status":    t.Status,
+			"status":    string(t.Status),
+			"prompt":    prompt,
+			"goalId":    t.Goal,
 			"createdAt": created,
 		}
 		sb.WriteString(model.RenderEntityMarkdown("ticket", data) + "\n")

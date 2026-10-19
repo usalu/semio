@@ -10,7 +10,6 @@ package client
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 )
@@ -167,11 +166,7 @@ func TestExhaustiveBuildMonorepoTree(t *testing.T) {
 		t.Skip("skipping slow tree build test in short mode")
 	}
 
-	cwd, _ := os.Getwd()
-	oldRoot := rootDir
-	rootDir = findTestRepoRoot(cwd)
-	defer func() { rootDir = oldRoot }()
-	InvalidateTechnologyCache()
+	withExhaustiveRepo(t)
 
 	ctx := context.Background()
 	treeNoSections := BuildMonorepoTreeCached(ctx)

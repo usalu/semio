@@ -1,0 +1,15 @@
+🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🧮️core|🧮️sweep-machinery
+🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/🤝️shared|🤝️intersection-numerics
+🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️shared|🔗️issuance-clone
+🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️shared|🔗️immutable-alias
+🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared|🔗️arc-custody
+🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🧰️shared|🧰️suite-build-server
+🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️core|🧱️cell-model
+🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧱️core|🧱️flow-host-model
+🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧱️base|🧱️catalog-codec
+🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core|🧱️store-components
+🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧱️core|🧱️invocation-catalog
+🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧪️tests/🎼️helpers|🎼️executor-harness
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🖼️assets/🌱️metabolism/🏙️base|🏙️metabolism-model
+🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🧱️bases/⬛️base|⬛️plain-shape
+🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/🧱️bases/⬛️base|⬛️plain-shape

@@ -13,8 +13,11 @@
     "check-types": "bun --cwd \"../../../..\" repo run @semio-tech/2d-compute:check-types"
   },
   "devDependencies": {
+    "@iarna/toml": "2.2.5",
     "@semio-tech/process": "workspace:*",
-    "@semio-tech/schema-validator-ts": "workspace:*"
+    "@semio-tech/schema-validator-ts": "workspace:*",
+    "ajv": "8.20.0",
+    "lru-cache": "11.5.3"
   },
   "dependencies": {
     "@semio-tech/framework": "workspace:*"

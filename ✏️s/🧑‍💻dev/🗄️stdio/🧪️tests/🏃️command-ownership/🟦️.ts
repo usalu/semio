@@ -1,12 +1,12 @@
-import{createIssuedResourceControlV1}from"../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{createIssuedResourceControlV1}from"@semio-tech/process/routing";
 import { describe, test, expect, spyOn } from "bun:test";
-import type { RepositoryCacheStoreV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import type { acquireQueuedResourceLease } from "../../../../../🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type { RepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import type { acquireQueuedResourceLease } from "@semio-tech/process/leases";
 import { verifyStdioCommandOwnership } from "../📦️artifact-package-graph/🟦️.ts";
 import fixture from "../🧫️fixtures/🏃️command-ownership/🔣️.json";
 import {stdioCargoMetadata} from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
-import {createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import * as nativePhases from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope,withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1} from "@semio-tech/process/routing";
+import * as nativePhases from "@semio-tech/repo-lib/artifacts";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {Database} from "bun:sqlite";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
@@ -21,7 +21,7 @@ describe("stdio command ownership", () => {
 });
 
 async function withStdioTestInvocationV1<T>(childMilliseconds:number,body:(original:any)=>Promise<T>,maximumElapsedMilliseconds=30000):Promise<T>{
- const root=process.cwd(),{createNativeBuildCallerCapabilitiesV1,readBuildAuthoringCapabilitiesV1}=await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️caller/🟦️.ts"),args=["show","projects"],declared=createNativeBuildCallerCapabilitiesV1(root,args,"nx",process.env),capabilities=readBuildAuthoringCapabilitiesV1(root,args,"nx",{...declared,native:{...declared.native,child:{maximumElapsedMilliseconds:childMilliseconds}}});
+ const root=process.cwd(),{createNativeBuildCallerCapabilitiesV1,readBuildAuthoringCapabilitiesV1}=await import("@semio-tech/repo-lib/build"),args=["show","projects"],declared=createNativeBuildCallerCapabilitiesV1(root,args,"nx",process.env),capabilities=readBuildAuthoringCapabilitiesV1(root,args,"nx",{...declared,native:{...declared.native,child:{maximumElapsedMilliseconds:childMilliseconds}}});
  return withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"stdio:original-control-fixture",maximumElapsedMilliseconds},capabilities,Date.now()),body);
 }
 

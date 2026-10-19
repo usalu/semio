@@ -7,7 +7,7 @@ import ts from"typescript";
 import{withRetainedOperationsV1}from"../🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"../../../../../🧪️testing/📥️invocation/🟦️.ts";
 import{withIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../🎛️owned-execution/📥️capture/🟦️.ts";
 test("neutral retained operation lifecycle policy and vectors stay closed",()=>{expect(typeof withRetainedOperationsV1).toBe("function");const validate=new Ajv({strict:true}).compile(schema.definitions.Case);for(const row of corpus.cases)expect(validate(row)).toBe(true);expect(schema.definitions.Policy.const).toEqual({maximumOperations:1024,maximumDepth:64});});

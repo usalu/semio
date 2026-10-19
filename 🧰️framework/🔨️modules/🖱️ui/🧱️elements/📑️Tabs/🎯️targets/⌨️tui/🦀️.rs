@@ -10,7 +10,7 @@ use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 use crate::widget::TabsState;
 use semio_framework_ui_tui_core::signal::WidgetSignal;
 
-pub(crate) fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn tabs_on_key(t: &mut TabsState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if t.tabs.is_empty() {
         return None;
     }
@@ -45,7 +45,7 @@ fn tab_at(t: &TabsState, rect: Rect, pos: Pos) -> Option<usize> {
 }
 
 /// 🖱️ A press selects the tab under it, a double press activates it, the wheel steps through the tabs without wrapping.
-pub(crate) fn tabs_on_mouse(t: &mut TabsState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn tabs_on_mouse(t: &mut TabsState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     match event.kind {
         MouseKind::Down(MouseButton::Left) => {
             let index = tab_at(t, rect, event.pos)?;
@@ -67,14 +67,14 @@ pub(crate) fn tabs_on_mouse(t: &mut TabsState, rect: Rect, event: &MouseEvent) -
     }
 }
 
-pub(crate) fn tabs_set_hover(t: &mut TabsState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn tabs_set_hover(t: &mut TabsState, rect: Rect, pos: Option<Pos>) -> bool {
     let hover = pos.and_then(|pos| tab_at(t, rect, pos));
     let changed = t.hover != hover;
     t.hover = hover;
     changed
 }
 
-pub(crate) fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_tabs(t: &TabsState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     let bg = theme.surface(Surface::Panel);
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     for (i, (tab, span)) in t.tabs.iter().zip(tab_spans(t, rect)).enumerate() {

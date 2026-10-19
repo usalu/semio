@@ -1,14 +1,17 @@
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::editor::bim::commands::attach_walls;
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::attach_walls;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::wall_sweeps::top_attach_text;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::wall_sweeps::top_attach_text;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{fields_of, kind_holding, property_text, EntityKind, FieldRow, PROJECT_FIELDS, PROJECT_ID};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{fields_of, kind_holding, property_text, PROJECT_FIELDS, PROJECT_ID};
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{EntityKind, FieldRow};
 #[allow(unused_imports)]
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 #[allow(unused_imports)]
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 #[allow(unused_imports)]
@@ -39,15 +42,15 @@ use crate::editor::bim::panels::properties::*;
 use semio_framework_ui_locale::Locale;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
-    let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let inference = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     (snapshot, inference)
 }
 
 fn text(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[&str], library: &[&str], locale: Locale) -> String {
     let own = |ids: &[&str]| ids.iter().map(|id| id.to_string()).collect::<Vec<_>>();
     let view = semio_framework_plugin::ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
-    let node = render(snapshot, inference, &own(elements), &own(library), crate::editor::bim::terminology::bim_labels(&view)).expect("the properties panel renders");
+    let node = render(snapshot, inference, &own(elements), &own(library), semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(&view)).expect("the properties panel renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
@@ -114,15 +117,15 @@ async fn nothing_selected_summarises_the_model_per_kind() {
 fn with_roof() -> ModelSnapshot {
     let (mut snapshot, _) = demo();
     for (kind, id, parent) in [("roof-type", "rf-1", ""), ("roof", "roof-1", "st-ground")] {
-        let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
+        let create = semio_s_artifact_bim_model_entities::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }
 
 fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,7 +138,7 @@ async fn walls_selected_with_a_roof_offer_to_attach_and_an_attached_wall_offers_
         let with_roof = text(&snapshot, &inference, &["w-south", "roof-1"], &[], locale);
         assert!(with_roof.contains("bim-properties.action.attach") && with_roof.contains(attach), "{with_roof}");
         assert!(!with_roof.contains("bim-properties.action.free-top"), "a free top has nothing to free");
-        let attached = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetWallTop(crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop { id: "w-south".into(), top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { roof: "roof-1".into(), offset: 0.0 } })).expect("attaches");
+        let attached = semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation::SetWallTop(semio_s_artifact_bim_model_mut_any_174::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop { id: "w-south".into(), top: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint::Roof { roof: "roof-1".into(), offset: 0.0 } })).expect("attaches");
         let rendered = text(&attached, &inferred(&attached), &["w-south"], &[], locale);
         assert!(rendered.contains("bim-properties.action.free-top") && rendered.contains(free), "{rendered}");
     }

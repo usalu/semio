@@ -19,7 +19,7 @@ impl<P> AdmittedArtifactGenesis<P>{
 
  /// 🎟️ Quotes the original typed snapshot and Pack Arc shells without constructing either owner.
  pub fn verified_pack_birth_demand()->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,ValueError>{
-  let capacity_bytes=semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<P>().checked_add(semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Vec<u8>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"verified genesis shared extent overflow"))?;
+  let capacity_bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>().checked_add(semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Vec<u8>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"verified genesis shared extent overflow"))?;
   Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand{capacity_bytes,depth:1})
  }
  /// 🫴️ Admits original verified payloads while returning both exact inputs on refusal.

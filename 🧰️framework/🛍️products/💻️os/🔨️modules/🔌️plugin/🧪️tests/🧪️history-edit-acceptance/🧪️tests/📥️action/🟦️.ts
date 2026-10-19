@@ -3,6 +3,7 @@ import {Database} from "bun:sqlite";
 import Ajv from "ajv";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import schema from "./🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {folderReloadRouteOracle,walkAuthor} from "../../../🧪️folder-reload-route/🟦️.ts";
@@ -19,6 +20,6 @@ test("history action source remains pending until its original receiving turn ac
   for(const turn of row.turns){db.exec("BEGIN");if(turn==="deferred"){db.exec("ROLLBACK");expect(db.query("SELECT * FROM input").get()).toEqual(row.input);expect(db.query("SELECT count(*) AS n FROM publication").get()).toEqual({n:0});continue}if(turn==="accepted"){db.exec("INSERT INTO publication SELECT * FROM input;DELETE FROM input;COMMIT");outcome="accepted"}else{db.exec("ROLLBACK");outcome="fault"}break}
   expect(outcome).toBe(row.expected);expect(db.query("SELECT * FROM publication").all()).toEqual(row.expected==="accepted"?[row.input]:[]);db.close();
  }
- const source=readFileSync(resolve(import.meta.dir,"../../🦀️.rs"),"utf8"),body=source.slice(source.indexOf("async fn acceptance_verb"),source.indexOf("async fn acceptance_pump"));
+ const source=readModuleTreeSource(resolve(import.meta.dir,"../../🦀️.rs")),body=source.slice(source.indexOf("async fn acceptance_verb"),source.indexOf("async fn acceptance_pump"));
  expect(body).toContain("handle_action(action,&mut args,&meta,&mut identity,cx)");expect(body).toContain("if let Some(result)=result");expect(body).toContain("OriginalFixtureCaller::maximum_turns()");expect(body).toContain("ControlledRetirement::new(args)");expect(body).toContain("close_original_retained_step(same");expect(body).toContain("original acceptance action remains pending");
 });

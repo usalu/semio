@@ -25,7 +25,7 @@ pub use tree_copy::BudgetedTreeCopy;
 use {topology::BudgetedEvalTopology};
 use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,shared::{SharedControlledRetirement,shared_retirement_birth_bytes}};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,arc_custody::{SharedControlledRetirement,shared_retirement_birth_bytes}};
 use std::{mem::ManuallyDrop,sync::Arc};
 use protocol::value::ordered::SharedOwner;
 use semio_framework_job::StepContext;
@@ -197,9 +197,9 @@ impl Default for NeuralCache {
     fn default()->Self {Self {state:ManuallyDrop::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(NeuralCacheState::default())),epoch:AtomicU64::new(0)}}
 }
 /// 🧹️ Keeps the original Arc and every final cache allocation until admitted physical closure.
-pub struct NeuralCacheRetirement {owner:semio_framework_value::retirement::shared::SharedControlledRetirement<NeuralCache>}
+pub struct NeuralCacheRetirement {owner:semio_framework_value::retirement::arc_custody::SharedControlledRetirement<NeuralCache>}
 impl NeuralCacheRetirement {
-    pub fn new(cache:Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::shared::SharedControlledRetirement::lease(cache)}}
+    pub fn new(cache:Arc<NeuralCache>)->Self {Self {owner:semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(cache)}}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_copy_byte_demand()}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.owner.next_capacity_byte_demand(copy)}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.owner.next_release_byte_demand()}

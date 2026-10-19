@@ -1,8 +1,9 @@
 import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 📇️ Explicit native metadata admission into canonical PDF ownership. */
 import type { PdfInfo, PdfEmbeddedFile, PdfOutputIntent, PdfEncryption, PdfViewerPreferences, PdfMarkInfo, PdfPageMode, PdfPageLayout } from "../../../../../🧬️schema/📸️snapshot/📇️metadata/🟦️.ts";
-import { record,array,text,integer,integers,boolean,pdfDictionaryFromNativeJson } from "../🟦️.ts";
-import { pdfDateFromNativeJson } from "../📌️annotation/🟦️.ts";
+import { pdfDictionaryFromNativeJson } from "../🟦️.ts";
+import { record, array, text, integer, integers, boolean } from "../🧰️scalars/🟦️.ts";
+import { pdfDateFromNativeJson } from "../🗓️date/🟦️.ts";
 const optionalText=(value:unknown)=>value==null?null:text(value);
 const optionalInteger=(value:unknown)=>value==null?null:integer(value);
 /** 🪟️ Admit one of the six explicitly declared page modes. */

@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetCurtainWallTypeOf`: an absolute `SetCurtainWallTypeOf` back to the base curtain wall type, none when the curtain wall is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type_of::SetCurtainWallTypeOf;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetCurtainWallTypeOf, base: &ModelSnapshot) -> Vec<Op>
 where

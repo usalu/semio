@@ -1,10 +1,33 @@
-import type { ArtifactBootstrapWorkerEvent } from "../../../../🟦️";
+import type { ArtifactBootstrapWorkerEvent, BackboneWorkerRequest, BackboneWorkerResponse } from "../../../../🟦️";
 import { type ArtifactState, artifactScope, artifacts, documentServices } from "../🧾️document-state/🟦️.ts";
-import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "../🚀️artifact-bootstrap/🟦️.ts";
+import type { DocumentArtifactBootstrapOwner, DocumentArtifactRebootstrapOwner } from "../🚀️artifact-bootstrap/🏷️owners/🟦️.ts";
 import { retireFolderCanonicalBootstrapMirror } from "../🌉️wire-bridge/🟦️.ts";
 import { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES } from "../⚙️constants/🟦️.ts";
-import type { DirectoryCommandTransportOperationV1, SpaceArtifactCreationOperationV1 } from "../📇️space-artifact-creation/🟦️.ts";
 import { dropDocumentExecutionTargetLease } from "../📥️execution-target-read/🟦️.ts";
+import type { DirectoryCommandRequestV1 } from "@semio-tech/framework/directory/schema";
+
+/** 🆔️ One retained command operation. `request` is sealed once and re-sent byte-identically by
+ * every transient retry — a retry that changed a single byte would be a different command to the
+ * hub's digest-keyed idempotency store. `sessionEpoch`/`workerEpoch` suppress delivery after an
+ * identity or worker replacement; such a request may later be explicitly resolved, never auto-replayed. */
+export type DirectoryCommandTransportOperationV1 = {
+  readonly request: DirectoryCommandRequestV1;
+  readonly abort: AbortController;
+  readonly sessionEpoch: number;
+  readonly workerEpoch: number;
+  settled: boolean;
+};
+
+export type SpaceArtifactCreationOperationV1 = {
+  readonly request: Extract<BackboneWorkerRequest, { readonly kind: "space-artifact-create" }>;
+  readonly abort: AbortController;
+  readonly workerEpoch: number;
+  lastAnsweredAtMs: number;
+  polls: number;
+  cancelRequested: boolean;
+  cancelSent: boolean;
+  latest: Extract<BackboneWorkerResponse, { readonly kind: "space-artifact-creation-status" }>;
+};
 
 export function clearArtifactRebootstrapDeadline(state: ArtifactState, owner: DocumentArtifactRebootstrapOwner | null): void {
   if (!owner) return;

@@ -2,7 +2,7 @@
 //! line ⟂axis → planar annulus, line crossing the axis → `Cone`; circle whose plane contains the
 //! axis → `Torus`/`Sphere`), a full-2π seam construction (mirrors `🧱️primitives::make_cylinder`'s
 //! own single-seam pattern, generalized to N profile edges) and a partial-angle two-cap
-//! construction (structurally the rotate-instead-of-translate mirror of `🧮️core::build_prism`,
+//! construction (structurally the rotate-instead-of-translate mirror of `🧮️sweep-machinery::build_prism`,
 //! with the profile edge itself playing the "rail" role and new rotation-arc edges playing the
 //! "cap boundary" role). `Surface::Cylinder`/`Cone`/`Torus`/`Sphere` are angle-linear in `u`, so a
 //! straight-line pcurve there is exact; `Surface::Plane` is Cartesian, so the annulus case's
@@ -30,7 +30,7 @@ use semio_framework_3d_brep_representation::topology::Body;
 use semio_framework_3d_brep_vector::matrix::{Affine3, Frame3};
 use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
 
-use super::core::{build_face, finish_solid, LoopSpec};
+use super::sweep_machinery::{build_face, finish_solid, LoopSpec};
 
 const ON_AXIS_TOL: f64 = 1e-7;
 
@@ -47,7 +47,7 @@ enum RevSurface {
     // `u = 0` position exactly — see `lateral_pcurves`) needs negating to be the correct outward-
     // from-SOLID direction for THIS particular profile edge. Computed here (where the edge's own
     // local geometry is available), consumed by the caller's `build_face(..., flip, ...)` — the
-    // same fact `🧮️core::build_prism`'s `lateral_flipped` reads off the profile loop's own winding.
+    // same fact `🧮️sweep-machinery::build_prism`'s `lateral_flipped` reads off the profile loop's own winding.
     AngleLinear { surface: Surface, v_at: Box<dyn Fn(f64) -> f64>, flip: bool },
     PlanarAnnulus { surface: Surface, uv_at: Box<dyn Fn(f64) -> (f64, f64)>, radius_at: Box<dyn Fn(f64) -> f64>, flip: bool },
 }
@@ -239,7 +239,7 @@ fn lateral_pcurves(body: &mut Body, rev: RevSurface, range: (f64, f64), angle: f
 }
 
 /// 🌀 Resumable revolve. A partial angle (`|angle| < 2π - ε`) builds two planar caps — the profile
-/// at the start and end angle, built exactly like `🧮️core::PrismBuilder`'s bottom/top — plus one
+/// at the start and end angle, built exactly like `🧮️sweep-machinery::PrismBuilder`'s bottom/top — plus one
 /// lateral face per profile edge, bounded by two new rotation-arc "rails" (one per profile vertex,
 /// shared between adjacent lateral faces) instead of straight lines: one setup unit, one unit per
 /// lateral, one closing unit. A full 2π revolve has no caps — one rotation-orbit circle (or
@@ -281,7 +281,7 @@ impl RevolveJob {
     /// 🌀 Flips the start cap, copies it to the end angle and pairs every start coedge with its twin.
     fn setup_partial(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<(), KernelError> {
         let map = Affine3::rotation_about(self.axis_origin, self.axis, self.angle);
-        let n0 = super::core::planar_outward_normal(body, self.profile)?;
+        let n0 = super::sweep_machinery::planar_outward_normal(body, self.profile)?;
         let start_frame = {
             let f = body.faces.get(self.profile).unwrap();
             match body.surfaces.get(f.surface).unwrap() {

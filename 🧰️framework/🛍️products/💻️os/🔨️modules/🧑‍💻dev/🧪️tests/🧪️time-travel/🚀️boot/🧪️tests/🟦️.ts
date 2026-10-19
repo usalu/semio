@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { playgroundCatalog } from "../../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 import { timeTravelServeVariantV1, type TimeTravelServeSelectionV1 } from "../🟦️.ts";
 import { playgroundActivationTargetV1 } from "../../../../♻️activation/🏃️execution/🟦️.ts";
 import { ensureDevServe } from "../../../../🚀️local-hub/🏃️execution/🟦️.ts";

@@ -178,7 +178,7 @@ pub mod editor {
         pub use semio_s_artifact_flow_flow_editor::editor::flow::*;
 pub use semio_s_artifact_flow_flow_inferences::editor::flow::demo_session;
 
-        pub use semio_s_artifact_flow_flow_inferences::editor::flow::base;
+        pub use semio_s_artifact_flow_flow_inferences::editor::flow::editor_vocabulary;
         pub use semio_s_artifact_flow_flow_mutations::editor::flow::host;
 
         #[path = "."]

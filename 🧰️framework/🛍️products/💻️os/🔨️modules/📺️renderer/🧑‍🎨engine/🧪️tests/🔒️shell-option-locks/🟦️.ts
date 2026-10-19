@@ -20,7 +20,7 @@ import exampleOfferSchema from "../../🧱️elements/🐚️Shell/📚️exampl
 import Ajv2020 from "ajv/dist/2020";
 import { manifestExamplePickerFixture as examplePickerFixture } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
-import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { describe, expect, it, vi } from "vitest";
 import { createMemoryStoragePort } from "@semio-tech/framework";
 import { leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1 } from "../../🧱️elements/🌐️World3dHost/🔗️instance-selection/🟦️.ts";

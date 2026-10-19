@@ -1,0 +1,219 @@
+{
+  "generatedBy": "lw2b",
+  "sdkKeys": [
+    {
+      "package": "@semio-tech/framework",
+      "packageJson": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "add": {
+        "./infinite/world/r3f": "./♾️infinite/🌍️world/🎨️r3f/🟦️.ts"
+      },
+      "glue": "🧰️framework/📦️packages/🟦️typescript/♾️infinite/🌍️world/🎨️r3f/🟦️.ts",
+      "module": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️.tsx",
+      "afterAdding": "rewrite the cad importers from the relative glue specifier to @semio-tech/framework/infinite/world/r3f",
+      "importersToRewrite": []
+    }
+  ],
+  "workspaceEntriesToRewrite": [
+    {
+      "file": "package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    },
+    {
+      "file": "♻️mit-bestand/package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    },
+    {
+      "file": "✏️s/package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    },
+    {
+      "file": "🌎️hub/package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    },
+    {
+      "file": "🎓️teaching/package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    },
+    {
+      "file": "🏢️semio-tech/package.json",
+      "oldEntryPresent": false,
+      "newEntryPresent": true,
+      "neededEntry": "../🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"
+    }
+  ],
+  "bunLockFiles": [
+    "bun.lock",
+    "♻️mit-bestand/bun.lock",
+    "✏️s/bun.lock",
+    "🌎️hub/bun.lock",
+    "🎓️teaching/bun.lock",
+    "🏢️semio-tech/bun.lock"
+  ],
+  "bunLockNote": "regenerate with bun install; the workspace key moves from the os product path to the framework module path, and node_modules/@semio-tech/infinite-world-r3f symlinks in each workspace root were relinked by hand to the new package directory.",
+  "derivedFilesToRegenerate": [
+    "🔒️dependencies.json (users paths of @react-three/drei, @react-three/fiber and the two Rust crates)"
+  ],
+  "packagesDeclaringInfiniteWorldR3f": [
+    {
+      "manifest": "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
+      "importsIt": false,
+      "importers": []
+    }
+  ],
+  "packagesDeclaringInfiniteWorldR3fCount": 22,
+  "packagesDeclaringWithoutImport": [
+    "✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎥️shooting/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🏛️architect/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🏭️process/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/💡️reasoning/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/📖️playbook/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🔱️trinity/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🕸️dag/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🪐️space/📦️packages/🟦️typescript/package.json",
+    "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
+    "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json"
+  ],
+  "orphanOsExportKeys": {
+    "package": "@semio-tech/framework-os",
+    "packageJson": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/package.json",
+    "remove": {
+      "./modules/store/blob/schema": "./🔨️modules/🏪️store/📦️blob/🧬️schema/🟦️.ts",
+      "./modules/store/child/schema": "./🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts",
+      "./modules/store/link/schema": "./🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts"
+    },
+    "deleteGlueFiles": [
+      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/📦️blob/🧬️schema/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts"
+    ],
+    "importersLeft": 0,
+    "replacement": "@semio-tech/framework/schema/artifact-reference"
+  }
+}

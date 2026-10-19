@@ -9,8 +9,8 @@ import schema from"../🧬️schema/🔣️.json";
 import{repositoryCacheBudgetV1}from"../../../🟦️.ts";
 import{repositoryCachePartitionRootDataV1}from"../../../📂️paths/🟦️.ts";
 import*as routing from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{requireMaterializedPathV1,checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{captureOwnedCommandV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import{requireMaterializedPathV1,checkResourceLeaseControl}from"@semio-tech/process/leases";
+import{captureOwnedCommandV1}from"@semio-tech/process/execution";
 
 test("cache opening creates only authored parents under exact live Original custody",async()=>{
  expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);const path=new URL("../../🟦️.ts",import.meta.url),source=readFileSync(path,"utf8"),tree=ts.createSourceFile("opening.ts",source,ts.ScriptTarget.Latest,true),names=["prepareRepositoryCacheParentsV1","openRepositoryLeasePartitionV1"],code=ts.transpileModule(tree.statements.filter(node=>ts.isFunctionDeclaration(node)&&names.includes(node.name?.text??"")).map(node=>node.getText(tree)).join("\n"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,root=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR!),"parents-"));

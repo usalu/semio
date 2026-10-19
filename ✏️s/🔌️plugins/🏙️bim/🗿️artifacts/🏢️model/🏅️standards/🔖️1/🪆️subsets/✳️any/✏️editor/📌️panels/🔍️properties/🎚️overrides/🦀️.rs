@@ -2,14 +2,16 @@
 //! the value the parameter evaluates to under that override and the issue the evaluation found, plus a reset row while the parameter is overridden. A commit is the `setOverride` command; the view here is a pure function of the
 //! snapshot, so the rows read the same in every locale and nothing derived is ever stored.
 
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text};
-use crate::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
 use crate::editor::bim::panels::properties::input_row;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
-use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
-use crate::standards::v1::subsets::any::schema::inferences::families::{parameters, IssueOwner};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ParameterKind};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::message;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::parameters;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ParameterKind;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::UiAssemblyResult;
@@ -44,7 +46,7 @@ pub fn overrides_of(snapshot: &ModelSnapshot, component: &str) -> BTreeMap<Strin
 pub fn rows(snapshot: &ModelSnapshot, component: &str, labels: &BimLabels) -> Vec<OverrideRow> {
     let Some(family) = snapshot.components.get(component).map(|row| row.family.as_str()) else { return Vec::new() };
     let overrides = overrides_of(snapshot, component);
-    let resolution = parameters::resolve(snapshot, family, &overrides);
+    let resolution = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::parameters::resolve(snapshot, family, &overrides);
     parameters_in_order(snapshot, family)
         .into_iter()
         .map(|parameter| {

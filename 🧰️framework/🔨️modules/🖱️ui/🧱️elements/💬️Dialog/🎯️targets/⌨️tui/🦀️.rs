@@ -30,7 +30,7 @@ impl DialogState {
 }
 
 /// 📜️ Greedy word wrap by display cells; over-long words break at the cell limit.
-pub(crate) fn wrap_cells(text: &str, width: u16) -> Vec<String> {
+pub fn wrap_cells(text: &str, width: u16) -> Vec<String> {
     let width = width.max(1);
     let mut lines = Vec::new();
     for paragraph in text.split('\n') {
@@ -70,7 +70,7 @@ pub(crate) fn wrap_cells(text: &str, width: u16) -> Vec<String> {
 }
 
 /// 🖼️ Paints a bordered surface with the title set into the top border; shared by every overlay element.
-pub(crate) fn paint_frame(buf: &mut CellBuffer, rect: Rect, theme: &Theme, surface: Surface, title: &str) {
+pub fn paint_frame(buf: &mut CellBuffer, rect: Rect, theme: &Theme, surface: Surface, title: &str) {
     if rect.width < 2 || rect.height < 2 {
         return;
     }
@@ -104,7 +104,7 @@ fn buttons_width(d: &DialogState) -> u16 {
 }
 
 /// 📐️ The overlay's size for `viewport`: wide enough for the title, body and buttons, capped to the terminal.
-pub(crate) fn dialog_size(d: &DialogState, viewport: Size) -> Size {
+pub fn dialog_size(d: &DialogState, viewport: Size) -> Size {
     let longest_body = d.body.split('\n').map(display_width).max().unwrap_or(0);
     let wanted = (display_width(&d.title) + 2).max(longest_body).max(buttons_width(d)) + 4;
     let width = wanted.clamp(DIALOG_MIN_WIDTH, DIALOG_MAX_WIDTH).min(viewport.width.saturating_sub(2).max(2));
@@ -114,7 +114,7 @@ pub(crate) fn dialog_size(d: &DialogState, viewport: Size) -> Size {
 }
 
 /// 🔘️ Button rectangles in paint order, centred on the bottom content row.
-pub(crate) fn dialog_button_rects(d: &DialogState, rect: Rect) -> Vec<Rect> {
+pub fn dialog_button_rects(d: &DialogState, rect: Rect) -> Vec<Rect> {
     if rect.height < 3 {
         return Vec::new();
     }
@@ -130,7 +130,7 @@ pub(crate) fn dialog_button_rects(d: &DialogState, rect: Rect) -> Vec<Rect> {
     out
 }
 
-pub(crate) fn dialog_on_key(d: &mut DialogState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn dialog_on_key(d: &mut DialogState, ev: &KeyEvent) -> Option<WidgetSignal> {
     if d.buttons.is_empty() {
         return None;
     }
@@ -157,14 +157,14 @@ pub(crate) fn dialog_on_key(d: &mut DialogState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn dialog_on_mouse(d: &mut DialogState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn dialog_on_mouse(d: &mut DialogState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     let MouseKind::Down(MouseButton::Left) = event.kind else { return None };
     let index = dialog_button_rects(d, rect).iter().position(|button| button.contains(event.pos))?;
     d.selected = index;
     Some(WidgetSignal::Activated(index))
 }
 
-pub(crate) fn dialog_set_hover(d: &mut DialogState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn dialog_set_hover(d: &mut DialogState, rect: Rect, pos: Option<Pos>) -> bool {
     let Some(pos) = pos else { return false };
     match dialog_button_rects(d, rect).iter().position(|button| button.contains(pos)) {
         Some(index) if index != d.selected => {
@@ -175,7 +175,7 @@ pub(crate) fn dialog_set_hover(d: &mut DialogState, rect: Rect, pos: Option<Pos>
     }
 }
 
-pub(crate) fn paint_dialog(d: &DialogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
+pub fn paint_dialog(d: &DialogState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {
     paint_frame(buf, rect, theme, Surface::Dialog, &d.title);
     if rect.width < 6 || rect.height < 4 {
         return;

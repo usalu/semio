@@ -86,4 +86,4 @@ semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-brep = { workspace = true }
 semio-s-artifact-stdio-semio-model = { workspace = true }
 serde_json = { workspace = true }
-ui_wgpu = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }

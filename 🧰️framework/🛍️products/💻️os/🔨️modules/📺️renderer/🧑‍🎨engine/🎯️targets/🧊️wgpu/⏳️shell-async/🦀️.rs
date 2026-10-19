@@ -5,7 +5,11 @@
 use semio_framework_os_config::opening_config::{UiLocale as OsUiLocale, UiPreferences};
 use semio_framework_ui_locale::{Locale, Terminology};
 use std::collections::HashMap;
-use ui_wgpu::wgpu::{DrawList, Rect, Theme, UtilityNode, push_chrome_group_border};
+use semio_framework_ui_draw_contract::DrawList;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::utilities::UtilityNode;
+use semio_framework_ui_wgpu_layout::chrome::push_chrome_group_border;
 
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/📥️staging/⏳️async/📨️command-dispatch/🦀️.rs"]
 mod staged_async__command_dispatch;

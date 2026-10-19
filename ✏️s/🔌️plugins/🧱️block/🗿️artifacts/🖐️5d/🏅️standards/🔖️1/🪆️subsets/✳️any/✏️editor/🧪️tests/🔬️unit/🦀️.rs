@@ -14,7 +14,8 @@ pub(crate) mod context {
     /// terminal-empty witness, so a plainly dropped app panics with "artifact store reached Drop
     /// without its exact terminal-empty shallow-shell witness". Dereferences to the app and drains the
     /// same retained close ladder (`PluginApp::close_step`) the runtime uses on the way out.
-    pub struct Block5dAppFixture(Block5dApp);
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the scope pays the caller's terminal retirement after the paid app close.
+    pub struct Block5dAppFixture(pub Block5dApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
     
     impl std::ops::Deref for Block5dAppFixture {
         type Target = Block5dApp;
@@ -31,19 +32,9 @@ pub(crate) mod context {
     
     impl Drop for Block5dAppFixture {
         fn drop(&mut self) {
-            for _ in 0..1_000_000 {
-                if self.0.close_terminal_is_empty() {
-                    return;
-                }
-                let Ok(demand) = self.0.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
-                    break;
-                };
-                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-                if self.0.close_step(grant).is_err() {
-                    break;
-                }
+            if !std::thread::panicking() {
+                semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
             }
-            assert!(std::thread::panicking() || self.0.close_terminal_is_empty(), "Block5d app fixture did not reach its terminal-empty close witness");
         }
     }
     
@@ -63,22 +54,23 @@ pub(crate) mod context {
     /// 🪪️ Bound to the `local` instance id, as the runtime mounts it — an unbound app refuses every
     /// retained typed command with `interactive-job.live-instance`.
     pub async fn app_with_registry() -> Block5dAppFixture {
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = new_app_with_registry::<EditorApp<Block5dPlayApp>>(block5d_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        Block5dAppFixture(app)
+        Block5dAppFixture(app, scope)
     }
     
     /// 🔁️ Admits one typed command and settles it through the same bounded continuation, maintenance
     /// and ACK protocol the plugin host drives — a fault in any of those turns fails the dispatch.
-    pub async fn dispatch(app: &mut Block5dApp, command: Block5dCommand) -> InvocationResult {
-        let result = app.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle typed operation");
+    pub async fn dispatch(app: &mut Block5dAppFixture, command: Block5dCommand) -> InvocationResult {
+        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
         result
     }
     
     /// 📚️ Runs the `setActiveExample` handler and lands its `LoadDocument` effect exactly like the runtime does: an example
     /// switch is a whole-document load, so the handler must emit no mutation and the app only changes through the load.
-    pub async fn load_example(app: &mut Block5dApp, id: &str) {
+    pub async fn load_example(app: &mut Block5dAppFixture, id: &str) {
         let snapshot = app.snapshot().expect("snapshot");
         let config = crate::config::Block5dConfig::default();
         let emit = crate::commands::set_active_example::handle(
@@ -90,13 +82,13 @@ pub(crate) mod context {
         assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
         for effect in emit.effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                semio_framework_plugin::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the example loads");
+                semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example loads");
             }
         }
     }
 
-    pub async fn render(app: &mut Block5dApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
+    pub async fn render(app: &mut Block5dAppFixture, body_key: &str) -> String {
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
 }
 
@@ -271,11 +263,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let kinds = app.snapshot().expect("snapshot").grip_kinds.len();
     crate::unit_tests::context::dispatch(&mut app, Block5dCommand::AddGripKind(add_grip_kind::AddGripKind {})).await;
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
-    let admitted = app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("undo settles");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("undo settles");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds);
-    let admitted = app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("redo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect("redo settles");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "redo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("redo");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("redo settles");
     assert_eq!(app.snapshot().expect("snapshot").grip_kinds.len(), kinds + 1);
 }
 
@@ -284,7 +276,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 async fn export_media_catalog_out_wraps_the_puzzle5d_fragment() {
     let mut app = new_app().await;
     crate::unit_tests::context::load_example(&mut app, set_active_example::BLOCK5D_EXAMPLE_FOREST_LEFT).await;
-    let media = ::semio_framework_async::poll::resolve_ready(app.export_media("catalog:out")).expect("export catalog");
+    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "catalog:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export catalog");
     assert_eq!(media.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
     match media.payload {
         MediaPayload::Structured { schema, json } => {
@@ -329,11 +321,11 @@ async fn mutation_commands_still_emit_artifact_mutations_under_the_real_registry
 async fn example_swaps_publish_and_keep_live_maintenance_within_its_contract() {
     use semio_framework_plugin::PluginLifecycleStep;
     const RUNTIME_LIVE_CLEANUP_BYTES: usize = 32 * 1_024;
-    fn drain(app: &mut Block5dApp, phase: &str) -> usize {
+    fn drain(app: &mut Block5dAppFixture, phase: &str) -> usize {
         for turn in 0..100_000 {
             let demand = PluginApp::maintenance_retirement_demands(app, RUNTIME_LIVE_CLEANUP_BYTES).unwrap_or_else(|error| panic!("{phase}: maintenance turn {turn} refused its quote: {error:?}"));
             let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RUNTIME_LIVE_CLEANUP_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            match PluginApp::maintenance_step(app, grant) {
+            match PluginApp::maintenance_step(&mut app.0, app.1.cx(), grant) {
                 Ok(PluginLifecycleStep::Progress(progress)) => {
                     assert!(progress.fits(grant), "{phase}: maintenance turn {turn} exceeded its supplied grant: {progress:?}");
                     if progress == Default::default() {

@@ -4,7 +4,7 @@
 import { createHash, webcrypto } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
+import { canonicalJson } from "@semio-tech/repo-lib/authoring";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";

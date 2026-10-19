@@ -1,0 +1,19 @@
+{
+  "crates": {
+    "semio-s-artifact-norm-iso16757-checks-common": "semio-s-artifact-norm-iso16757-checks-check-builders",
+    "semio-framework-ui-tui-core": "semio-framework-ui-tui-cell-model",
+    "semio-framework-os-flow-host-core": "semio-framework-os-flow-host-model",
+    "semio-framework-os-kernel-db-engine-base": "semio-framework-os-kernel-db-engine-catalog-codec",
+    "semio-framework-os-store-engine-core": "semio-framework-os-store-engine-components",
+    "semio-framework-repo-dashboard-core": "semio-framework-repo-dashboard-invocation-catalog",
+    "semio-s-space-core": "semio-s-space-catalog-documents"
+  },
+  "ids": {
+    "ui-tui-core": "ui-tui-cell-model",
+    "os-flow-host-core": "os-flow-host-model",
+    "os-db-engine-base": "os-db-engine-catalog-codec",
+    "os-store-engine-core": "os-store-engine-components",
+    "repo-dashboard-core": "repo-dashboard-invocation-catalog"
+  },
+  "libNames": { "db_engine_base": "db_engine_catalog_codec" }
+}

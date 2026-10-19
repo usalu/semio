@@ -2,9 +2,11 @@
 //! properties collection, otherwise its property set is patched. Refused: an unknown element, an empty set or property name, and a value
 //! whose measure is not finite. The value type itself makes a kind mismatch unrepresentable.
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty;
-use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, PropertySetPatch}, snapshot::{ModelSnapshot, PropertySet, PropertyValue}};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Entry, PropertySetPatch};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{PropertySet, PropertyValue};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -16,7 +18,7 @@ fn finite(value: &PropertyValue) -> bool {
 }
 
 pub fn diff(payload: &SetElementProperty, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if !elements::holds_data(base, &payload.id) {
+    if !semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::holds_data(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Element \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     if payload.pset.is_empty() {

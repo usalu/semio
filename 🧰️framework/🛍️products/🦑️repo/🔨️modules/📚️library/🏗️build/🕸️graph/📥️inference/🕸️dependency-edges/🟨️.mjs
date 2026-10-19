@@ -1,5 +1,5 @@
 /** 🕸️ Derives project dependency edges and publishes the complete module facts of one graph. */
-import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createRequire, isBuiltin } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";

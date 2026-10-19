@@ -1,0 +1,14 @@
+import { SchemaCatalog } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🗂️documents/🟦️.ts";
+import { auditLeaves, projectParsers } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts";
+import { loadUnowned, unownedKey } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🧱️unowned/🟦️.ts";
+const root = "/Users/ueli/Documents/semio";
+const module = "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
+const catalog = new SchemaCatalog(root, ["✏️s/🔌️plugins/🏛️architect", "🧰️framework"]);
+const registry = loadUnowned().parsers;
+const closing = projectParsers({ root, mode: "report", under: "✏️s/🔌️plugins/🏛️architect", catalog, formats: new Set(["🟦️typescript"]), closing: true, replace: new Set(), restate: new Set(), unowned: registry });
+const audit = auditLeaves({ root, under: "✏️s/🔌️plugins/🏛️architect", catalog });
+const listed = new Set(registry.map((row) => unownedKey(row.path, row.name)));
+const drift = audit.drift.filter((row) => !listed.has(unownedKey(row.path, row.name)));
+const drifted = new Set(audit.drift.map((row) => unownedKey(row.path, row.name)));
+const orphans = registry.filter((row) => row.path.startsWith("✏️s/🔌️plugins/🏛️architect") && !drifted.has(unownedKey(row.path, row.name)));
+console.log(JSON.stringify({ pending: closing.touched, refusedDangling: closing.refused.filter((r) => r.startsWith("dangling ") || /^parser \S+ \S+ needs /u.test(r)), helperless: audit.helperless, drift: drift.map((d) => `${d.reason} ${d.name} ${d.path}`), orphans: orphans.length, unowned: audit.drift.length - drift.length }, null, 1));

@@ -1,5 +1,5 @@
 import type{ScriptInvocation}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🕸️ Declares the actual JavaScript inference API while leaving dynamic result DATA untrusted. */
 export function prepareSourceAnalysesV1():Readonly<Record<string,unknown>>;
 export function createScriptInputCache(context?:ScriptInputContextV1):ScriptInputCacheV1;
@@ -30,7 +30,7 @@ export type ScriptInputContextV1=Readonly<Record<string,unknown>>&({readonly inv
 export type BuildInferenceContextV1=ScriptInputContextV1&Readonly<{workspaceRoot:string}>;
 /** 🔁️ Names the callable members of one revision of the inference module. */
 export interface BuildInferenceImplementationV1{readonly revision:string;readonly cacheInternals:BuildInferenceInternalsV1;readonly libraryBootstrap:Promise<unknown>;createScriptInputCache(context?:ScriptInputContextV1):ScriptInputCacheV1}
-export interface ScriptInputCacheV1{readonly files:Map<string,unknown>;readonly closures:Map<string,unknown>;readonly commandDependencies:Map<string,unknown>;readonly modules:Set<string>;readonly resources:Set<string>;readonly context:ScriptInputContextV1}
+export interface ScriptInputCacheV1{readonly files:Map<string,unknown>;readonly closures:Map<string,unknown>;readonly commandDependencies:Map<string,unknown>;readonly modules:Set<string>;readonly resources:Set<string>;readonly context:ScriptInputContextV1;readonly providerDesignation?:string}
 export interface BuildInferenceEdgeV1{readonly source:string;readonly target:string;readonly type:string;readonly sourceFile?:string}
 export interface BuildProjectFileV1{readonly file:string;readonly hash?:string}
 export interface BuildFileMapV1{readonly projectFileMap:Readonly<Record<string,readonly BuildProjectFileV1[]>>;readonly nonProjectFiles?:readonly BuildProjectFileV1[]}

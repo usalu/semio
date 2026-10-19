@@ -138,19 +138,19 @@ fn render_ui_image_step_paints_an_inline_data_url_instead_of_faulting() {
     let bounds = Rect::new(0.0, 0.0, 80.0, 40.0);
     let mut draw = semio_framework_ui_draw_contract::DrawList::default();
     let mut atlas = semio_framework_ui_text::FontAtlas::builtin();
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
     let theme = semio_framework_ui_theme::Theme::default();
     let mut scroll = std::collections::HashMap::new();
     let mut collapsed = std::collections::HashMap::new();
     let mut selects = std::collections::HashMap::new();
-    let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
+    let mut cursor = semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintCursor::default();
     {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         for _ in 0..4096 {
             match render_ui_image_step(&image, bounds, &mut ctx, &mut cursor) {
-                ui_wgpu::wgpu::ScenePaintStep::Pending => {}
-                ui_wgpu::wgpu::ScenePaintStep::Complete => break,
-                ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("an inline data:image/png source must paint, not fault"),
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Pending => {}
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Complete => break,
+                semio_framework_ui_wgpu_hosting::scene_slots::ScenePaintStep::Fault => panic!("an inline data:image/png source must paint, not fault"),
             }
         }
     }

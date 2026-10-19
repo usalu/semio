@@ -9,7 +9,7 @@ import corpus from "./🧫️fixtures/🔣️.json";
 import { parsePlaygroundBlock, type PlaygroundEntry } from "../../🔎️discovery/🟦️.ts";
 import { emitPlaygroundsTypeScript, renderCatalogFiles, validatePlaygroundSessions } from "../../../📽️projection/🟦️.ts";
 import { renderPlaygroundSessionTypeScript } from "../../🧭️session/🟦️.ts";
-import type { RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import type { RegistryCatalogInputView } from "@semio-tech/repo-lib/inventory";
 
 /** 🏃️Executes one emitted catalog in native Bun and independently compiled Node. */
 async function executeCatalogV1(source: string, directory: string, assertion: string): Promise<void> {

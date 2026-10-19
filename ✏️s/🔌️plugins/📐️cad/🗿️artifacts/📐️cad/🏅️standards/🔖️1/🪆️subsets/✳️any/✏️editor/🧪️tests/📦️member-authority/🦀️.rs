@@ -16,7 +16,7 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
             let pointer = original.as_ptr();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
             let (mutations,_) = MemberStoreOwnedBatch::try_new(original,grant).unwrap_or_else(|_| panic!("exact original imported mutation owner"));
-            let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope("stdio.semio","neutral-member",<$snapshot>::default(),None);
+            let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope("stdio.semio","neutral-member",<$snapshot>::default(),None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
             let mut store = ArtifactStore::<$snapshot,$mutation>::new(envelope,protocol::ActorId("fixture-member".into())).await.unwrap();
             store.install_document_store_owners_exact(<$snapshot as MemberStoreOwner<$mutation>>::member_store_owners());
             let (generation,revision) = store.one_item_publication_identity();

@@ -3,7 +3,7 @@ import{createHash}from"node:crypto";
 import{lstat,mkdir,opendir,writeFile}from"node:fs/promises";
 import{dirname,extname,isAbsolute,join,relative,resolve,sep}from"node:path";
 import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import{withArtifactDestinationTaskV1,type ArtifactDestinationV1}from"./../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
+import { withArtifactDestinationTaskV1, type ArtifactDestinationV1 } from "@semio-tech/repo-lib/artifacts";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,type ScriptInvocation}from"./../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
 import{readPrintMaterialFileV1}from"../../📦️artifacts/📥️material/📤️producer/🟦️.ts";

@@ -16,7 +16,7 @@ impl DocumentState {
     ///
     /// 🛡️ The reserved check is PER CHORD, exactly where React puts it (`if (reservedChords.has(chord))
     /// continue`), so a binding whose second chord is the shell's still fires on its first.
-    pub fn match_app_keybinding(&self, action: &ui_wgpu::wgpu::KeyAction, modifiers: &PointerModifiers, chrome: &ChromeState) -> Option<ActionDescriptor> {
+    pub fn match_app_keybinding(&self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers, chrome: &ChromeState) -> Option<ActionDescriptor> {
         let session = self.session.as_ref()?;
         let reserved = reserved_shell_chords_v1(&chrome.shortcut_table(), &[]);
         session

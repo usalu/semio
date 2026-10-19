@@ -21,7 +21,7 @@ pub struct FrameTransaction {
     finish_cursor: Option<FrameFinishCursor>,
     pub after_chrome: Option<AppFrameAfterChrome>,
     raster_uploads: Option<semio_framework_os_renderer_wgpu_scene_state::PendingRasterUploadCursor>,
-    raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
+    raster_rejected: Option<semio_framework_ui_prepared::PreparedRasterProducer>,
 }
 
 pub enum AppFrameTransactionStep {
@@ -476,7 +476,7 @@ impl FrameTransaction {
                                 self.board_authority_cursor += 1;
                                 AppFrameTransactionStep::Pending
                             }
-                            Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => {
+                            Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) => {
                                 self.phase = AppFrameTransactionPhase::InputEvents;
                                 AppFrameTransactionStep::Pending
                             }
@@ -487,7 +487,7 @@ impl FrameTransaction {
                                 AppFrameTransactionStep::Fault
                             }
                         },
-                        Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => {
+                        Err(semio_framework_ui_action::BoundedActionFault::ItemCredits | semio_framework_ui_action::BoundedActionFault::ByteCredits) => {
                             self.phase = AppFrameTransactionPhase::InputEvents;
                             AppFrameTransactionStep::Pending
                         }
@@ -601,7 +601,7 @@ impl FrameTransaction {
                     return AppFrameTransactionStep::Fault;
                 };
                 if modal && world3d_hover_clear_is_owed(&state.selection, &state.authority) && enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_leave(state.bounds.x - 1.0, state.bounds.y - 1.0)).is_err() {
-                    input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 }
                 let Some(generation) = world3d_interaction_front_generation(&state.camera, &state.authority) else {
                     self.world3d_authority_cursor += 1;
@@ -629,7 +629,7 @@ impl FrameTransaction {
                 }
             }
             AppFrameTransactionPhase::RasterUploads => {
-                if let Some(upload) = ui_wgpu::wgpu::take_ui_image_upload() {
+                if let Some(upload) = semio_framework_ui_wgpu_paint::take_ui_image_upload() {
                     semio_framework_os_renderer_wgpu_scene_canvas2d::queue_decoded_raster_upload("ui-image", upload.key, upload.width, upload.height, upload.pixels);
                     return AppFrameTransactionStep::Pending;
                 }
@@ -905,7 +905,7 @@ pub async fn boot_runtime(
     let presenter = AppPresenter {
         gpu,
         engine: semio_framework_os_renderer_wgpu_engine_registry::prepared_engine_canvas::EngineCanvasPresenter::default(),
-        gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+        gate: semio_framework_ui_prepared::PreparedRenderGate::default(),
         runtime: runtime.clone(),
         presentation_authority: runtime.presentation_authority(),
         raster_operation_authority: runtime.raster_operation_authority(),

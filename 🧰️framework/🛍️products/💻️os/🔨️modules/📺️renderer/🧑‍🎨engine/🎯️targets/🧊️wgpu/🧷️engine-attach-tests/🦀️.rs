@@ -25,7 +25,7 @@ mod scenes {
     use semio_framework_value::DslValue;
     use serde_json::{Value, json};
     use std::collections::BTreeMap;
-    use ui_wgpu::wgpu::InputState;
+    use semio_framework_ui_wgpu_input::InputState;
 
     include!("../../../🧱️elements/🎞️Scenes/🧪️tests/🧊️wgpu-standalone/🦀️.rs");
 

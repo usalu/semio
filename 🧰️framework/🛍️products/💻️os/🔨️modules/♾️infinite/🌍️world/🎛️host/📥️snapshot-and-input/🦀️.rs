@@ -57,7 +57,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         }
         if let Some(orbit) = cursor.staged_orbit.take() {
             state.camera.orbit = if state.camera.projection_selected {
-                OrbitController { projection: ui_wgpu::wgpu::projection_spec_family(state.camera.projection_spec), fov_y: ui_wgpu::wgpu::projection_spec_fov_degrees(state.camera.projection_spec).to_radians(), ..orbit }
+                OrbitController { projection: ui_scene::math::projection_spec_family(state.camera.projection_spec), fov_y: ui_scene::math::projection_spec_fov_degrees(state.camera.projection_spec).to_radians(), ..orbit }
             } else {
                 orbit
             };
@@ -232,8 +232,8 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 target: Vec3::new(item.numbers[3] as f32, item.numbers[4] as f32, item.numbers[5] as f32),
                 up: Vec3::new(item.numbers[6] as f32, item.numbers[7] as f32, item.numbers[8] as f32),
                 fov_y: item.numbers[9] as f32 * std::f32::consts::PI / 180.0,
-                near: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_NEAR,
-                far: ui_wgpu::wgpu::WORLD_ORBIT_CAMERA_MIN_FAR,
+                near: ui_scene::math::WORLD_ORBIT_CAMERA_NEAR,
+                far: ui_scene::math::WORLD_ORBIT_CAMERA_MIN_FAR,
                 projection,
                 zoom: item.numbers[10] as f32,
             }));
@@ -443,7 +443,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
     None
 }
 
-pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
+pub fn step_world3d_interaction(state: &mut World3dState, generation: u64, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionAuthorityStep {
     let Some(mut authority) = state.authority.interaction_authority.take() else {
         return WorldInteractionAuthorityStep::Fault;
     };

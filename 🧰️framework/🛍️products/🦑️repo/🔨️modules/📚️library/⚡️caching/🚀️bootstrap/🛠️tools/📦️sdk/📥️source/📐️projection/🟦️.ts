@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 /** 📐️ Captures exact dependency installation inputs separately from first-party SDK code. */
 export function nxDependencyInstallFilesV1(recipe:unknown,lock:unknown):Map<string,Buffer>{

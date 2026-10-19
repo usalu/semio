@@ -22,17 +22,18 @@
  * @see ../🧪️tests — the specs
  * https://playwright.dev/docs/test-cli */
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync } from "node:fs";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { createServer as createListener, type AddressInfo } from "node:net";
-import { join } from "node:path";
-import { repoToolCacheEnv } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { dirname, join } from "node:path";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { repoToolCacheEnv, runRepositoryCommand as runOwnedCommand } from "@semio-tech/process/execution";
 import { terminateOwnedChildTree } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { runRepositoryCommand as runOwnedCommand } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
-import type { ScriptInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { startNativeProgress } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { LAUNCHER_SIGNALS, PROCTOR_DEV_CATALOG, buildProctor, launchProctor, proctorReady, type ProctorProcess } from "../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
-import { siteArtifactProblems } from "../🚀️deploy/🟦️.ts";
+import { siteArtifactProblems, withQuizSiteArtifact } from "../🚀️deploy/🟦️.ts";
 import { SITE_FIRST_ANSWER_MS, awaitReady, httpAnswers, launchOwned, serveStaticSite } from "../🧱️stack/🟦️.ts";
 
 //#region 🗺️Topologies
@@ -71,6 +72,12 @@ export function endToEndPlan(segments: readonly string[]): { readonly topologies
   const own = new Set<string>([...QUIZ_E2E_TOPOLOGIES, "--serial", "--keep"]);
   return { topologies: named.length === 0 ? QUIZ_E2E_TOPOLOGIES : named, serial: rest.includes("--serial"), keep: rest.includes("--keep"), proctor, playwright: rest.filter((segment) => !own.has(segment)) };
 }
+/** 🧭️ The order the topologies boot in: the rehearsal first, because its release build needs the whole host and the dev
+ * site, once up, holds the whole host for as long as it runs. */
+export function bootOrder(topologies: readonly QuizTopology[]): readonly QuizTopology[] {
+  return [...topologies].sort((left, right) => Number(right === "rehearsal") - Number(left === "rehearsal"));
+}
+
 //#endregion 🗺️Topologies
 
 //#region 🧱️Stacks
@@ -81,6 +88,7 @@ function say(line: string): void {
 
 /** 🧰️ What every stack of one run shares. */
 interface Run {
+  readonly invocation: ScriptInvocation;
   readonly repoRoot: string;
   readonly bundleRoot: string;
   readonly script: string;
@@ -146,6 +154,20 @@ function serveControl(proctor: { stop(): Promise<unknown>; start(): Promise<unkn
   });
 }
 
+/** 👓️ Holds the site the last build published under the artifact reader's custody until `release`, which settles once the
+ * custody is returned. */
+function holdSiteArtifact(run: Run): Promise<{ readonly path: string; release(): Promise<void> }> {
+  return new Promise((accept, reject) => {
+    let finish!: () => void;
+    const finished = new Promise<void>((done) => (finish = done));
+    const custody: Promise<void> = withQuizSiteArtifact(run.invocation, run.repoRoot, run.bundleRoot, async (artifact) => {
+      accept({ path: artifact.path, release: () => (finish(), custody) });
+      await finished;
+    });
+    custody.catch(reject);
+  });
+}
+
 /** 🧱️ Boots one topology: its proctor (answering ready), its site (answering), and its control endpoint. Whatever was
  * started is stopped again when the boot fails. */
 async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
@@ -183,9 +205,10 @@ async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
       await awaitReady({ label: `the dev site at ${site}`, probe: () => httpAnswers(site, SITE_FIRST_ANSWER_MS), exited: server.exited, signal: run.signal, say });
       say(`dev: site ready at ${site}, proxying to ${proctor}`);
     } else {
-      const artifact = join(directory, "site");
+      const mode = readBuildMode(process.env.SEMIO_BUILD_MODE);
+      if (mode !== "release") throw new Error(`the rehearsal topology builds and verifies the release site, but SEMIO_BUILD_MODE is ${mode}; run the gate with SEMIO_BUILD_MODE=release, or name the dev topology only`);
       say(`rehearsal: building the release site for ${proctor} (log: site-build.log)`);
-      const build = launchOwned(process.execPath, [run.script, "build", "--outDir", artifact, "--emptyOutDir"], run.bundleRoot, { ...process.env, PROCTOR_URL: proctor }, join(directory, "site-build.log"));
+      const build = launchOwned(process.execPath, [run.script, "build"], run.bundleRoot, { ...process.env, PROCTOR_URL: proctor }, join(directory, "site-build.log"));
       const cancel = (): void => void build.stop();
       run.signal.addEventListener("abort", cancel, { once: true });
       const stopProgress = startNativeProgress("rehearsal site build");
@@ -194,6 +217,9 @@ async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
         run.signal.removeEventListener("abort", cancel);
       });
       if (status !== 0) throw new Error(`the release build of the site failed (${status}); see ${join(directory, "site-build.log")}`);
+      const held = await holdSiteArtifact(run);
+      closing.push(() => held.release());
+      const artifact = held.path;
       const problems = siteArtifactProblems(artifact, proctor);
       if (problems.length > 0) throw new Error(`the release build is not a site artifact:\n- ${problems.join("\n- ")}`);
       const served = await serveStaticSite(artifact, ports.site);
@@ -211,9 +237,12 @@ async function bootStack(topology: QuizTopology, run: Run): Promise<Stack> {
 //#endregion 🧱️Stacks
 
 //#region 🎬️Specs
-/** 🌐️ Makes sure the Chromium builds this Playwright version drives exist in `browsers`, downloading them once. */
+/** 🌐️ Makes sure the Chromium builds this Playwright version drives exist in `browsers`, downloading them once. The
+ * build list is read from the `playwright-core` the `playwright` package itself resolves (the isolated install links no
+ * `playwright-core` at the root). */
 async function ensureBrowser(invocation: ScriptInvocation, repoRoot: string, browsers: string): Promise<void> {
-  const manifest = JSON.parse(readFileSync(join(repoRoot, "node_modules", "playwright-core", "browsers.json"), "utf8")) as { readonly browsers: readonly { readonly name: string; readonly revision: string }[] };
+  const core = dirname(createRequire(realpathSync(join(repoRoot, ...PLAYWRIGHT_CLI))).resolve("playwright-core/package.json"));
+  const manifest = JSON.parse(readFileSync(join(core, "browsers.json"), "utf8")) as { readonly browsers: readonly { readonly name: string; readonly revision: string }[] };
   const installed = ["chromium", "chromium-headless-shell"].every((name) => existsSync(join(browsers, `${name.replaceAll("-", "_")}-${manifest.browsers.find((browser) => browser.name === name)?.revision}`, "INSTALLATION_COMPLETE")));
   if (installed) return;
   say(`installing Chromium for Playwright into ${browsers}`);
@@ -268,23 +297,19 @@ export async function runQuizEndToEnd(invocation: ScriptInvocation, repoRoot: st
     say(`topologies ${plan.topologies.join(", ")}${plan.serial ? " (one after the other)" : ""}; run directory ${work}`);
     await ensureBrowser(invocation, repoRoot, browsers);
     say(plan.proctor === undefined ? "building the proctor (a first build takes minutes)" : `running the proctor ${plan.proctor} as it is`);
-    const run: Run = { repoRoot, bundleRoot, script, portEnv, work, proctor: plan.proctor ?? (await buildProctor(repoRoot, process.env, interruption.signal)), signal: interruption.signal };
+    const run: Run = { invocation, repoRoot, bundleRoot, script, portEnv, work, proctor: plan.proctor ?? (await buildProctor(repoRoot, process.env, interruption.signal)), signal: interruption.signal };
     const statuses: number[] = [];
     const sharing = !plan.serial && plan.topologies.length > 1 && !plan.playwright.some((argument) => /^(?:--workers|-j)(?:=|$)/u.test(argument));
     const forwarded = sharing ? [...plan.playwright, "--workers", String(SHARED_WORKERS)] : plan.playwright;
-    const play = async (topology: QuizTopology): Promise<void> => {
-      const stack = await bootStack(topology, run);
-      stacks.push(stack);
-      say(`${topology}: running the specs against ${stack.site}`);
+    const play = async (stack: Stack): Promise<void> => {
+      say(`${stack.topology}: running the specs against ${stack.site}`);
       const status = await runSpecs(stack, run, browsers, join(work, "report"), forwarded);
-      say(`${topology}: specs ${status === 0 ? "passed" : `failed (${status})`}`);
+      say(`${stack.topology}: specs ${status === 0 ? "passed" : `failed (${status})`}`);
       statuses.push(status);
     };
-    if (plan.serial) for (const topology of plan.topologies) await play(topology);
-    else {
-      const outcomes = await Promise.allSettled(plan.topologies.map(play));
-      for (const outcome of outcomes) if (outcome.status === "rejected") throw outcome.reason;
-    }
+    for (const topology of bootOrder(plan.topologies)) stacks.push(await bootStack(topology, run));
+    if (plan.serial) for (const stack of stacks) await play(stack);
+    else await Promise.all(stacks.map(play));
     failure = interrupted !== undefined ? `stopped by ${interrupted}` : statuses.every((status) => status === 0) ? undefined : "specs failed";
   } catch (error) {
     failure = interrupted !== undefined ? `stopped by ${interrupted}` : error instanceof Error ? error.message : String(error);

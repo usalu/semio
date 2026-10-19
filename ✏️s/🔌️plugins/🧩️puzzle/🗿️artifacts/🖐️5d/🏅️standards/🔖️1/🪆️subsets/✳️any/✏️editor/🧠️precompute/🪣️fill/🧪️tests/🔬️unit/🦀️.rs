@@ -26,7 +26,7 @@ use semio_s_artifact_puzzle_3d_editor_config::Puzzle3dConfig;
 use std::collections::HashMap;
 use crate::editor::puzzle5d::modes::edit::tools::fill::run_definition;
 use crate::editor::puzzle5d::modes::edit::windows::{board2d, world3d as world3d_window};
-use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dApp};
+use crate::editor::puzzle5d::testkit::{app_with_registry, close_app, dispatch, meta, projection_of, render_body, window_view, Puzzle5dTestApp};
 use crate::editor::puzzle5d::entities::{capsule_dream_example_document, concrete_forest_example_document, nakagin_example_document};
 use crate::editor::puzzle5d::snapshot::Puzzle5dPlaySnapshot;
 use semio_framework_job::StepBudget;
@@ -463,10 +463,10 @@ fn fill_run_job_step_stays_below_the_interactive_ceiling_on_the_largest_examples
 //#endregion ⏱️Interactive
 
 //#region ⏯️App
-pub(crate) fn host_turn(app: &mut Puzzle5dApp) {
-    crate::puzzle_job::testing::maintain(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes).expect("maintenance step");
-    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut identity, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))).expect("advance one typed operation publication unit");
-    crate::puzzle_job::testing::drain_outboxes(app);
+pub(crate) fn host_turn(app: &mut Puzzle5dTestApp) {
+    crate::puzzle_job::testing::maintain(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance.maximum_copy_bytes, app.1.cx()).expect("maintenance step");
+    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.0.advance_typed_operation_publication(&mut identity, app.1.cx()))).expect("advance one typed operation publication unit");
+    crate::puzzle_job::testing::drain_outboxes(&mut app.0);
     if let Some(page) = app.take_typed_operation_result_page(1) {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page");
@@ -481,13 +481,13 @@ pub(crate) fn world_meta() -> ActionMeta {
     ActionMeta { view_state: Some(window_view(world3d_window::WINDOW_KIND_ID, world3d_window::WINDOW_KIND_ID)), ..meta("local") }
 }
 
-pub(crate) fn tool_run_action(app: &mut Puzzle5dApp, action: &str, args: serde_json::Value) -> serde_json::Value {
+pub(crate) fn tool_run_action(app: &mut Puzzle5dTestApp, action: &str, args: serde_json::Value) -> serde_json::Value {
     let args = semio_framework_value::DslValue::from(&args);
-    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(app.handle_action(action, Some(&args), &world_meta(), &mut identity))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
+    let result = semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(args.clone()), &world_meta(), &mut identity, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close))).unwrap_or_else(|fault| panic!("{action} faulted: {fault:?}"));
     serde_json::Value::from(&result.output)
 }
 
-fn start(app: &mut Puzzle5dApp) -> serde_json::Value {
+fn start(app: &mut Puzzle5dTestApp) -> serde_json::Value {
     // 🧊️ The app-driven laws run the planner through the LIVE tool-run ledger, not through `job()`, so they
     // need the same process-wide mesh identities seeded — see `seed_planner_meshes`. Without them every
     // candidate reads `mesh-unavailable` and the run completes having placed nothing
@@ -496,7 +496,7 @@ fn start(app: &mut Puzzle5dApp) -> serde_json::Value {
     tool_run_action(app, TOOL_RUN_START_ACTION_ID, serde_json::json!({ TOOL_RUN_ARG_TOOL_ID: TOOL_ID }))
 }
 
-fn pump(app: &mut Puzzle5dApp, what: &str, until: impl Fn(&protocol::PresenceToolRun) -> bool) -> usize {
+fn pump(app: &mut Puzzle5dTestApp, what: &str, until: impl Fn(&protocol::PresenceToolRun) -> bool) -> usize {
     for turn in 0..FILL_RUN_TURNS {
         if app.tool_run_presence().is_some_and(|presence| until(&presence)) {
             return turn;
@@ -507,24 +507,24 @@ fn pump(app: &mut Puzzle5dApp, what: &str, until: impl Fn(&protocol::PresenceToo
 }
 
 /// 🧭️ The live fill run's `{runId, generation}` exactly as the world window's Escape binding carries it.
-fn escape_identity(app: &mut Puzzle5dApp) -> Option<serde_json::Value> {
+fn escape_identity(app: &mut Puzzle5dTestApp) -> Option<serde_json::Value> {
     let view = window_view(world3d_window::WINDOW_KIND_ID, world3d_window::WINDOW_KIND_ID);
     let engagements = ::semio_framework_async::poll::resolve_ready(app.window_engagements(&view));
     let abort = engagements.get(world3d_window::WINDOW_KIND_ID)?.input.as_ref()?.on_abort.clone()?;
     (abort.action == TOOL_RUN_ABORT_ACTION_ID).then(|| serde_json::Value::from(abort.args.as_ref().expect("a tool run abort carries its identity")))
 }
 
-pub(crate) fn committed(app: &Puzzle5dApp) -> String {
+pub(crate) fn committed(app: &Puzzle5dTestApp) -> String {
     projection_of(app).to_string()
 }
 
-fn provisional_instances(app: &mut Puzzle5dApp) -> (usize, usize) {
+fn provisional_instances(app: &mut Puzzle5dTestApp) -> (usize, usize) {
     let body: serde_json::Value = serde_json::from_str(&render_body(app, world3d_window::BODY_KEY)).expect("world body");
     let instances: Vec<serde_json::Value> = serde_json::from_str(body["scene"]["instancesJson"].as_str().expect("instances json")).expect("instances parse");
     (instances.len(), instances.iter().filter(|instance| instance["provisional"] == serde_json::json!(true)).count())
 }
 
-fn set_fill_count(app: &mut Puzzle5dApp, count: u64) {
+fn set_fill_count(app: &mut Puzzle5dTestApp, count: u64) {
     dispatch(app, "setFillCount", Some(&semio_framework_pack_json::json!({ "value": count })), Some(board2d::WINDOW_KIND_ID)).expect("setFillCount");
 }
 

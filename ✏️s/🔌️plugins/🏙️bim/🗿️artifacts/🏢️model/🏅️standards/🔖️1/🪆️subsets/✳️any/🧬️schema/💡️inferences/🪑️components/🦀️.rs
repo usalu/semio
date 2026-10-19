@@ -9,13 +9,16 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Family_(building_information_modeling)>.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous, SolidBounds, SolidPoint};
-use crate::standards::v1::subsets::any::schema::inferences::families::{self, issues, FamilyIssue, FamilyValue, ResolvedParameter};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous, SolidBounds, SolidPoint};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::FamilyIssue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::{FamilyValue, ResolvedParameter};
 use crate::standards::v1::subsets::any::schema::inferences::mep;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2, Point3};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Component, ModelSnapshot};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, MepSystem, Point2, Point3};
 use semio_framework_geometry::vector::{cross, perp};
 use semio_framework_geometry::Vec2;
 use semio_framework_value::DslValue;
@@ -173,8 +176,8 @@ fn unit(vector: Vec2) -> Vec2 {
 }
 
 /// 🧱️ The fit of a position to the wall with `axis`, whose faces lie `left` and `right` metres from the axis: the projection on the axis, the side of the position, the point on the face of that side and the normal pointing away from the wall.
-pub fn fit_to_wall(wall: &str, axis: &crate::standards::v1::subsets::any::schema::snapshot::Axis, left: f64, right: f64, position: Point2) -> Option<HostFit> {
-    let segment = seg(axis);
+pub fn fit_to_wall(wall: &str, axis: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Axis, left: f64, right: f64, position: Point2) -> Option<HostFit> {
+    let segment = segment_of(axis);
     if segment.length() <= mep::EPS {
         return None;
     }
@@ -230,12 +233,12 @@ pub fn component_of(snapshot: &ModelSnapshot, id: &str, level: &StoreyLevel, bas
             issues.push(ComponentIssue { code: ComponentIssueCode::FamilyProfile, subject: component.family.clone(), detail: format!("the family {} is a profile and cannot be placed", component.family), family_issue: None });
             Arc::new(FamilyValue::default())
         }
-        Some(_) if overrides.is_empty() => base.cloned().unwrap_or_else(|| Arc::new(families::family_of(snapshot, &component.family, &BTreeMap::new()))),
+        Some(_) if overrides.is_empty() => base.cloned().unwrap_or_else(|| Arc::new(semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of(snapshot, &component.family, &BTreeMap::new()))),
         Some(_) => {
-            let own = Arc::new(families::family_of(snapshot, &component.family, &overrides));
-            let plain = base.map(|shared| shared.issues.clone()).unwrap_or_else(|| families::family_of(snapshot, &component.family, &BTreeMap::new()).issues);
+            let own = Arc::new(semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of(snapshot, &component.family, &overrides));
+            let plain = base.map(|shared| shared.issues.clone()).unwrap_or_else(|| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::family_of(snapshot, &component.family, &BTreeMap::new()).issues);
             for issue in own.issues.iter().filter(|issue| !plain.contains(issue)) {
-                issues.push(ComponentIssue { code: ComponentIssueCode::Override, subject: issue.subject.clone(), detail: issues::message(issue, "en"), family_issue: Some(issue.clone()) });
+                issues.push(ComponentIssue { code: ComponentIssueCode::Override, subject: issue.subject.clone(), detail: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::message(issue, "en"), family_issue: Some(issue.clone()) });
             }
             own
         }
@@ -274,7 +277,7 @@ pub fn component_of(snapshot: &ModelSnapshot, id: &str, level: &StoreyLevel, bas
 pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
     let Some(component) = snapshot.components.get(id) else { return DslValue::Null };
     let overrides = overrides_of(snapshot, id);
-    let family = if overrides.is_empty() { DslValue::Null } else { families::dependency(snapshot, &component.family) };
+    let family = if overrides.is_empty() { DslValue::Null } else { semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::dependency(snapshot, &component.family) };
     let host = component.host.as_ref().and_then(|wall| snapshot.walls.get(wall)).map(|wall| dep_object([("storey", dep_value(&wall.storey)), ("axis", dep_value(&wall.axis))]));
     dep_object([("component", dep_value(&component.anonymous())), ("overrides", dep_value(&overrides)), ("family", family), ("host", host.unwrap_or(DslValue::Null))])
 }

@@ -400,7 +400,7 @@ func bundleMatchesKinds(b model.Bundle, opts model.StreamOptions) bool {
 		return true
 	}
 
-	bundleRoot := filepath.Join(workspace.RootDir, b.Root)
+	bundleRoot := filepath.Join(workspace.GetRootDir(), b.Root)
 	hasIncluded := false
 	hasExcluded := false
 

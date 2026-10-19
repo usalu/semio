@@ -14,9 +14,9 @@
  * authoritatively via the `-32022` error's `data.supported` array instead — asserted below. */
 import { beforeEach, describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "../../🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
-const repoRoot = getWorkspaceRoot();
+const repoRoot = findWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);
 const META_KEY = "io.modelcontextprotocol/protocolVersion";
 const MODERN_VERSION = "2026-07-28";

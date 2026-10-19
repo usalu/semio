@@ -1,13 +1,13 @@
 import{withRepositoryRustUnitCodeReaderV1}from"../../../🦀️cargo/📦️units/🏗️compiler/🔏️code/📖️read/🟦️.ts";
 import{openRepositoryCachePartitionV1}from"../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 import{repositoryStrictStorageV1}from"../../../💾️storage/🔒️enforcement/🟦️.ts";
-import{recoverNativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{recoverNativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{readFile,lstat}from"node:fs/promises";
 import{createHash}from"node:crypto";
 import{join,resolve}from"node:path";
 import{withRequestedIssuedResourceControlV1,requireIssuedResourceControlV1,requireIssuedScriptInvocationV1,type ScriptInvocation}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{readScriptProcessJsonV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import{readScriptProcessJsonV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import{requireResourceLeaseWriterProofV1,type ResourceLeaseWriterProofV1,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import policy from"./🔣️policy.json"with{type:"json"};

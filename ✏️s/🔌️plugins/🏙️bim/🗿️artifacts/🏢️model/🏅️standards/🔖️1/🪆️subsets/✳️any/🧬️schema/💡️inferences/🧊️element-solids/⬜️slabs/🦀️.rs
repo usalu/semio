@@ -5,10 +5,11 @@
 //! counter-clockwise from `+X`), `Slope.angle` the fall angle; the top plane keeps the reference height at the uphill edge of the boundary, so the slab never rises above
 //! `storey elevation + offset`. A slab with no layers or an unknown type is absent.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Slab, SlabType};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, SolidFamily};
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Slab, SlabType};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
@@ -46,7 +47,7 @@ pub fn slab_solid(snapshot: &ModelSnapshot, slab: &Slab, own: &StoreyLevel) -> E
     let mut builder = SolidBuilder::new(SolidFamily::Slab);
     if let Some(kind) = snapshot.slab_types.get(&slab.slab_type) {
         for (index, (layer, mesh)) in kind.layers.iter().zip(slab_layers(slab, kind, own)).enumerate() {
-            builder.add(parts::LAYER, &layer.material, index as u32, &mesh);
+            builder.add(semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::parts::LAYER, &layer.material, index as u32, &mesh);
         }
     }
     builder.build()

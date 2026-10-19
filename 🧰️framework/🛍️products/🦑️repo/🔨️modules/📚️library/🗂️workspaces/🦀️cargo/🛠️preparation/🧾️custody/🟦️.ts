@@ -1,7 +1,7 @@
-import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import type{CargoPreparationControlV1}from"../../🟦️.ts";
-import custodySchema from "./🧬️schema/🔣️.json";
+import{requireIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptResourceProcessEnvironmentV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{captureOwnedCommandResultV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { type CargoPreparationControlV1 } from "../🎛️control/🟦️.ts";
+import custodySchema from "./🧬️schema/🔣️.json" with { type: "json" };
 import {createHash} from "node:crypto";
 import {existsSync,lstatSync,readFileSync,readdirSync,writeFileSync} from "node:fs";
 import {dirname,isAbsolute,relative,resolve,sep} from "node:path";

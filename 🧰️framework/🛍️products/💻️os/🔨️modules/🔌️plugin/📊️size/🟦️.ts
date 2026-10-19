@@ -1,18 +1,15 @@
-import {withRepositoryCacheStoreV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {withRepositoryArtifactGroupV1,withRepositoryArtifactGroupTaskV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📚️group/🟦️.ts";
-import {withArtifactScratchV1,withArtifactDestinationTaskV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🟦️.ts";
-import {withRepositoryArtifactDestinationV1,stageRepositoryArtifacts} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import { withRepositoryCacheStoreV1 } from "@semio-tech/repo-lib/storage";
+import { withRepositoryArtifactGroupV1, withRepositoryArtifactGroupTaskV1, withArtifactScratchV1, withArtifactDestinationTaskV1, withRepositoryArtifactDestinationV1, stageRepositoryArtifacts, readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import {BundleScript} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {runtimeCatalogBuildInventoryV1} from "../📇️registry/📖️catalog-view/🟦️.ts";
-import {builtPluginModulesRootIn} from "../../🧑‍💻dev/♻️activation/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
+import {runtimeCatalogBuildInventoryV1} from "@semio-tech/plugin-registry/catalog-view";
+import {builtPluginModulesRootIn} from "@semio-tech/framework-os-dev/activation";
 import {readArtifactBytesV1} from "../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
-import publicationSchema from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
+import { artifactsStorageSchema as publicationSchema } from "@semio-tech/repo-lib/artifacts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {join} from "node:path";
 import {writeFile} from "node:fs/promises";
-import {componentModuleOwnerV1} from "../📇️registry/📦️deployment/🟦️.ts";
+import {componentModuleOwnerV1} from "@semio-tech/plugin-registry/deployment";
 const policy=publicationSchema.definitions.Protocol.const,protocol=schema.definitions.Protocol.const;
 export interface PluginWasmSizeBreakdown{readonly totalBytes:number;readonly codeBytes:number;readonly dataBytes:number;readonly nameBytes:number;readonly otherCustomBytes:number;readonly functionCount:number;readonly memoryInitialPages:number|null;readonly memoryMaxPages:number|null}
 export type PluginWasmSizeRow=PluginWasmSizeBreakdown&Readonly<{pluginId:string;file:string}>;

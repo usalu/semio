@@ -8,9 +8,9 @@
 //! * `length`: that far from the anchor towards where the pointer last was (towards +X when it never was);
 //! * nothing: finish the gesture, as Enter does.
 
-use crate::editor::bim::gestures::session::Surface;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
 
 /// 🔬️ The metres one pixel reaches for a typed point: so small that a pick and a snap only find what lies exactly there.
 pub const REACH: f64 = 1e-4;

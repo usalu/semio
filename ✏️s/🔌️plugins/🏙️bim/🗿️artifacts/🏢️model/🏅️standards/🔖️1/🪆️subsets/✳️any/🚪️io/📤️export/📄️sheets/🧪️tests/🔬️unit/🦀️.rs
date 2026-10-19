@@ -1,14 +1,14 @@
 //! 🧪️ The sheet export as a whole: print order, file stems, which layouts an export takes, and the two writers over the house with its sheet set.
 
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 #[allow(unused_imports)]
@@ -17,14 +17,14 @@ use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, read_room, room, ROOM_DIR};
-use crate::standards::v1::subsets::any::io::export::sheets::*;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, read_room, room, ROOM_DIR};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::{ordered, file_stem, layouts, sheet_svg, sheets_pdf, PDF_DIALECT};
 
 #[test]
 fn sheets_print_in_the_order_of_their_numbers_then_ids() {
     let mut model = ModelSnapshot::default();
     for (id, number) in [("sh-b", "A-102"), ("sh-a", "A-102"), ("sh-c", "A-101"), ("sh-d", "B-001")] {
-        model.sheets.insert(id.into(), crate::standards::v1::subsets::any::schema::snapshot::Sheet::standard(number, "x"));
+        model.sheets.insert(id.into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Sheet::standard(number, "x"));
     }
     assert_eq!(ordered(&model), ["sh-c", "sh-a", "sh-b", "sh-d"]);
 }

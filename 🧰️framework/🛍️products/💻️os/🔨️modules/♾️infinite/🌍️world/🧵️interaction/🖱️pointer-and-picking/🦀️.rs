@@ -100,14 +100,14 @@ pub fn resolve_world_context_menu_target(selection_state: &WorldSelectionState) 
 /// the Rust twin of `world3dContextMenuSurfaceV1`
 /// (`🧱️elements/🌐️World3dHost/🟦️.tsx:1909`). The hit target rides THIS request; no separate
 /// target-recording dispatch precedes the menu.
-pub fn world3d_context_menu_surface(selection_state: &WorldSelectionState) -> (Vec<ui_wgpu::wgpu::ContextMenuHit>, Vec<ui_wgpu::wgpu::ContextMenuSelectionGroup>) {
-    let hits = resolve_world_context_menu_target(selection_state).map(|(domain, id)| ui_wgpu::wgpu::ContextMenuHit { domain: domain.to_string(), id, label: None }).into_iter().collect();
+pub fn world3d_context_menu_surface(selection_state: &WorldSelectionState) -> (Vec<semio_framework_ui_declaration::ui::ContextMenuHit>, Vec<semio_framework_ui_declaration::ui::ContextMenuSelectionGroup>) {
+    let hits = resolve_world_context_menu_target(selection_state).map(|(domain, id)| semio_framework_ui_declaration::ui::ContextMenuHit { domain: domain.to_string(), id, label: None }).into_iter().collect();
     let mut selection = Vec::new();
     if !selection_state.selected_ids.is_empty() {
-        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "object".into(), ids: selection_state.selected_ids.clone() });
+        selection.push(semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "object".into(), ids: selection_state.selected_ids.clone() });
     }
     if !selection_state.component_ids.is_empty() {
-        selection.push(ui_wgpu::wgpu::ContextMenuSelectionGroup { domain: "feature".into(), ids: selection_state.component_ids.clone() });
+        selection.push(semio_framework_ui_declaration::ui::ContextMenuSelectionGroup { domain: "feature".into(), ids: selection_state.component_ids.clone() });
     }
     (hits, selection)
 }
@@ -258,7 +258,7 @@ pub fn world_merge_code(shift: bool, ctrl: bool, meta: bool) -> u8 {
 pub fn apply_world_action_preview(session_state: &mut WorldSessionState, selection_state: &mut WorldSelectionState, gumball_state: &mut WorldGumballState, scene_state: &mut WorldSceneState, action: &ActionDescriptor) {
     let Some(args) = action.args.as_ref() else { return; };
     if args.get("domainId").and_then(|value| value.as_str()) != Some(resolved_domain_id(session_state)) || !matches!(action.action.as_str(), "interactionSelect" | "interactionHover") { return; }
-    let Some(text) = args.get("targets").and_then(|value| value.as_str()).filter(|text| text.len() <= ui_wgpu::wgpu::ACTION_STRING_BYTE_CAPACITY) else { return; };
+    let Some(text) = args.get("targets").and_then(|value| value.as_str()).filter(|text| text.len() <= semio_framework_ui_action::ACTION_STRING_BYTE_CAPACITY) else { return; };
     let Ok(targets) = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return; };
     let Some(targets) = targets.as_array() else { return; };
     let mut ids = Vec::new();
@@ -432,7 +432,7 @@ pub fn marquee_select_action(session_state: &mut WorldSessionState, camera_state
     }
     let camera = camera_state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, camera_state.projection_spec, inner.w, inner.h);
+    let view_proj = ui_scene::math::projection_spec_view_proj(&camera, camera_state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(selection_state, inner);
     let (meshes, draws) = scene_geometry(scene_state);
     let ids = if component_mode_active(selection_state) {
@@ -478,7 +478,7 @@ fn gumball_drag_update(camera_state: &mut WorldCameraState, selection_state: &mu
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, inner.w, inner.h);
     let pivot = gumball_state.gumball_pivot;
     let eye = gumball_eye(&camera, pivot);
     reset_gumball_preview(gumball_state);
@@ -528,7 +528,7 @@ pub fn start_gumball_drag(camera_state: &mut WorldCameraState, selection_state: 
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, inner.w, inner.h);
     let eye = gumball_eye(&camera, pivot);
     gumball_state.gumball_handle = Some(handle);
     gumball_state.gumball_pivot = pivot;
@@ -549,7 +549,7 @@ pub fn pick_component_at(session_state: &WorldSessionState, camera_state: &World
     let (local_x, local_y, rect) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (rect.w / rect.h.max(1.0)).max(0.1);
-    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, camera_state.projection_spec, rect.w, rect.h);
+    let view_proj = ui_scene::math::projection_spec_view_proj(&camera, camera_state.projection_spec, rect.w, rect.h);
     let granularity = selection_state.granularity.as_str();
     match granularity {
         "vertex" => {
@@ -566,7 +566,7 @@ pub fn pick_component_at(session_state: &WorldSessionState, camera_state: &World
                     for vertex_index in 0..schema.vertices {
                         let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                         let world = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                        let Some(screen) = ui_wgpu::wgpu::projection_spec_project_point(view_proj, camera_state.projection_spec, world, rect.w, rect.h) else {
+                        let Some(screen) = ui_scene::math::projection_spec_project_point(view_proj, camera_state.projection_spec, world, rect.w, rect.h) else {
                             continue;
                         };
                         let dx = screen[0] - local_x;
@@ -584,7 +584,7 @@ pub fn pick_component_at(session_state: &WorldSessionState, camera_state: &World
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
-            let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, f32, String, String)> = None;
             for draw in &scene_state.draws {
                 let Some(&mesh) = scene_state.meshes.get(&draw.mesh_key) else {
@@ -602,13 +602,13 @@ pub fn pick_component_at(session_state: &WorldSessionState, camera_state: &World
                         let Ok(edge) = mesh.edge(edge_index) else { continue };
                         let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                         let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                        let Some(segment) = ui_wgpu::wgpu::projection_spec_project_segment(view_proj, camera_state.projection_spec, a, b, rect.w, rect.h) else { continue; };
+                        let Some(segment) = ui_scene::math::projection_spec_project_segment(view_proj, camera_state.projection_spec, a, b, rect.w, rect.h) else { continue; };
                         let [screen_a, screen_b] = segment.screen;
-                        let screen_dist = ui_wgpu::wgpu::screen_segment_distance(local_x, local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
+                        let screen_dist = ui_scene::math::screen_segment_distance(local_x, local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
                         if screen_dist > PICK_EDGE_SCREEN_PX {
                             continue;
                         }
-                        let Some(closest) = ui_wgpu::wgpu::ray_segment_closest(origin, dir, segment.points[0], segment.points[1]) else { continue };
+                        let Some(closest) = ui_scene::math::ray_segment_closest(origin, dir, segment.points[0], segment.points[1]) else { continue };
                         let ray_dist = closest.distance;
                         let depth = closest.segment_point.sub(origin).dot(dir);
                         if !depth.is_finite() || depth < 0.0 { continue; }
@@ -626,7 +626,7 @@ pub fn pick_component_at(session_state: &WorldSessionState, camera_state: &World
             return best.map(|(_, _, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
-            let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &scene_state.draws {
                 let Some(&mesh) = scene_state.meshes.get(&draw.mesh_key) else {
@@ -657,7 +657,7 @@ pub fn pick_paint_hit(session_state: &WorldSessionState, camera_state: &WorldCam
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, f32, f32)> = None;
     for draw in &scene_state.draws {
         let Some(&mesh) = scene_state.meshes.get(&draw.mesh_key) else {
@@ -718,7 +718,7 @@ pub fn update_marquee_preview(camera_state: &mut WorldCameraState, selection_sta
     }
     let camera = camera_state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, camera_state.projection_spec, inner.w, inner.h);
+    let view_proj = ui_scene::math::projection_spec_view_proj(&camera, camera_state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(selection_state, inner);
     let (meshes, draws) = scene_geometry(scene_state);
     selection_state.marquee_preview_ids = if component_mode_active(selection_state) {
@@ -738,7 +738,7 @@ pub fn pick_instance_at(session_state: &WorldSessionState, camera_state: &WorldC
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for draw in &scene_state.draws {
         let Some(&mesh) = scene_state.meshes.get(&draw.mesh_key) else {
@@ -760,7 +760,7 @@ pub fn pick_surface_at(session_state: &WorldSessionState, camera_state: &WorldCa
     let (local_x, local_y, viewport) = pointer_in_pick_rect(session_state, x, y)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, Vec3, Vec3)> = None;
     for draw in &scene_state.draws {
         let Some(&mesh) = scene_state.meshes.get(&draw.mesh_key) else {

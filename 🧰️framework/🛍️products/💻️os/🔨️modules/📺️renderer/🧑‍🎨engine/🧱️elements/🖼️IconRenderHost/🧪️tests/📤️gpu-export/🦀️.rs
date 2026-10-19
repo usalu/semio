@@ -1,6 +1,6 @@
 use super::{IconGpuPngExport, IconGpuPngRejected};
 use ui_gpu::GpuContext;
-use ui_wgpu::wgpu::PreparedRenderPacket;
+use semio_framework_ui_prepared::PreparedRenderPacket;
 use semio_framework_job::{Generation, JobOutcomeKind, OperationId, OriginalJobFixtureCaller, RetainedCloneGrant};
 use semio_framework_ui_prepared::testing::{close_job_step, drain_abandoned_preparations, drive_preparation_until_terminal};
 use semio_framework_ui_draw_contract::DrawList;

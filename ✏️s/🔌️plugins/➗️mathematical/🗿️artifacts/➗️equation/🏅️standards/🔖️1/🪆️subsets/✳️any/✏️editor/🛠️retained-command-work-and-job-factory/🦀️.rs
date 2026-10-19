@@ -352,19 +352,21 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if !self.closing {
-            return InteractiveJobCloseStep::Blocked;
-        }
-        let Some((unit, bytes)) = self.next_close_unit() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
-        if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        if grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() };
-        }
-        self.close_unit(unit);
-        InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() } }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(InteractiveJobCloseStep::Blocked);
+            }
+            let Some((unit, bytes)) = self.next_close_unit() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() })};
+            if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes {
+                return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            if grant.maximum_depth == 0 {
+                return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "interactive job close exceeds its admitted depth"));
+            }
+            self.close_unit(unit);
+            Ok(InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() } })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

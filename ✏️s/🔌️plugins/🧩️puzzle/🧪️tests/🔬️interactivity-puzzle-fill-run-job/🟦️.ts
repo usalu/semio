@@ -1,6 +1,7 @@
-import { interactivityPuzzleFillRunJobFailures, type InteractivityPuzzleFillSources } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🪣️tool-run-and-history/🟦️.ts";
-
 /** 🧫️ A contract-conforming miniature of puzzle 3d fill as a framework tool run (`📋️tool-run-contract.md` §2.4, §3.7, §5 wave 1); shared with the trace self-test. */
+/** 🧫️ The role-to-source map of the puzzle fill tool-run fixture. */
+export type InteractivityPuzzleFillSources = Readonly<Record<string, string>>;
+
 export const PUZZLE_FILL_TOOL_RUN_FIXTURE: InteractivityPuzzleFillSources = {
   precompute: `//! ⏳️ Placement session: geometry caches only, the ledger owns the fill run.
 pub struct Puzzle3dPrecomputeSession {
@@ -213,7 +214,10 @@ const CASES: readonly (readonly [name: string, expect: "report" | "silent", edit
 ];
 
 /** 🧪️ Mutation self-test of the puzzle fill run-job law: the clean fixture passes, every planted regression is reported, and comment- or test-only mentions stay silent. Returns the executed case count. */
-export function interactivityPuzzleFillRunJobSelfTests(): number {
+/** 🧪️ The run-job fill law, injected by the caller that owns it. */
+export type PuzzleFillSourcesLaw = (sources: InteractivityPuzzleFillSources) => string[];
+
+export function interactivityPuzzleFillRunJobSelfTests(interactivityPuzzleFillRunJobFailures: PuzzleFillSourcesLaw): number {
   const clean = interactivityPuzzleFillRunJobFailures(PUZZLE_FILL_TOOL_RUN_FIXTURE);
   if (clean.length > 0) throw new Error(`[verify interactivity] Puzzle fill run-job clean fixture was falsely rejected: ${clean.join("; ")}`);
   for (const [name, expect, edits] of CASES) {

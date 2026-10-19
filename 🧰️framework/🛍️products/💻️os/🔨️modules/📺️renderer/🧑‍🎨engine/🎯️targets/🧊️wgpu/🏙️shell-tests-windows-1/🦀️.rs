@@ -56,9 +56,14 @@ use semio_framework_value::DslValue;
 use serde_json::Value;
 use std::collections::HashMap;
 use ui_contract::{SurfaceId, UiDocumentLease};
-use ui_wgpu::wgpu::{
-    ActionDescriptor, DrawList, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, KeyAction, PointerModifiers, Rect, Theme, UiNode, UiPresence, UtilityNode, WindowLayout,
-};
+use semio_framework_ui_declaration::layout::{ActionDescriptor, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, WindowLayout};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{HitKind, HitTarget, InputState, KeyAction, PointerModifiers};
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::ui::{UiNode, UiPresence};
+use semio_framework_ui_declaration::utilities::UtilityNode;
 
 #[path = "../../../🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-panel-anchor-model/🦀️.rs"]
 mod panel_anchor_model_tests;

@@ -1,15 +1,17 @@
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_s_artifact_stdio_contract::part21::Part21Document;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 #[allow(unused_imports)]
@@ -21,12 +23,14 @@ use semio_s_artifact_stdio_contract::part21::Part21Header;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document, document_in, house, psets, quantity, rows, string, tags};
-use crate::standards::v1::subsets::any::io::export::ifc::*;
-use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{document, document_in, house, psets, quantity, rows, string, tags};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Schema;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::{export_ifc4, StagedExport, STAGES, inferred_to_part21, export_ifc2x3, encode, model_to_part21};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
 use protocol::Inference;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
@@ -45,7 +49,7 @@ fn the_house_exports_to_ifc4_without_skipping_anything() {
     let (bytes, notes) = export_ifc4(&house()).expect("the house exports");
     assert!(notes.is_empty(), "nothing is skipped: {notes:?}");
     assert!(bytes.starts_with(b"ISO-10303-21"));
-    let decoded = codec::decode_ifc4(&bytes).expect("the reader decodes it");
+    let decoded = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec::decode_ifc4(&bytes).expect("the reader decodes it");
     assert_eq!(decoded.instances, house4().instances);
     assert!(codec::decode_document(&bytes).is_err(), "the 2x3 reader refuses an IFC4 file");
 }
@@ -135,18 +139,18 @@ fn door_and_window_types_replace_the_styles_and_carry_the_operation_and_partitio
     assert_eq!(document.by_type("IFCWINDOWTYPE").count(), model.window_types.len());
     for (id, kind) in &model.door_types {
         let (_, args) = rows(&document, "IFCDOORTYPE").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some(id.as_str())).expect("the door type");
-        assert_eq!(args[10].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::door_operation(kind)), "{id}");
+        assert_eq!(args[10].as_enum(), Some(semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::door_operation(kind)), "{id}");
         assert_eq!(args[9].as_enum(), Some("DOOR"));
     }
     for (id, kind) in &model.window_types {
         let (_, args) = rows(&document, "IFCWINDOWTYPE").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some(id.as_str())).expect("the window type");
-        assert_eq!(args[10].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::window_partitioning(kind.panes)), "{id}");
+        assert_eq!(args[10].as_enum(), Some(semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::window_partitioning(kind.panes)), "{id}");
     }
     for (_, args) in rows(&document, "IFCDOOR") {
         let tag = string(args, 7).expect("a tag");
         let opening = &model.openings[&tag];
-        let crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Door { door_type } = &opening.kind else { panic!("a door") };
-        assert_eq!(args[11].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::door_operation(&model.door_types[door_type])), "{tag}: the occurrence repeats the operation of its type");
+        let semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind::Door { door_type } = &opening.kind else { panic!("a door") };
+        assert_eq!(args[11].as_enum(), Some(semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::door_operation(&model.door_types[door_type])), "{tag}: the occurrence repeats the operation of its type");
     }
 }
 
@@ -219,7 +223,7 @@ fn the_psets_file_carries_the_templates_and_the_classification_chains_in_one_ifc
     assert_eq!(document.by_type("IFCPROPERTYSET").filter(|set| set.entity("IFCPROPERTYSET").is_some_and(|args| string(args, 2).as_deref() == Some("Semio_ClassificationParents"))).count(), 0, "IFC4 chains the parents instead");
 }
 
-fn model_after(schema: Schema, model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+fn model_after(schema: Schema, model: &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     match schema {
         Schema::Ifc2x3 => import_ifc2x3(&export_ifc2x3(model).expect("2x3 export").0).expect("2x3 import").0,
         Schema::Ifc4 => import_ifc4(&export_ifc4(model).expect("4 export").0).expect("4 import").0,
@@ -288,17 +292,17 @@ const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tes
 
 const ASSETS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets");
 
-fn decoded(file: &str) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+fn decoded(file: &str) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let text = std::fs::read_to_string(file).unwrap_or_else(|error| panic!("{file}: {error}"));
     semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{file} decodes: {error:?}"))
 }
 
-fn snapshot_at(path: &str) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+fn snapshot_at(path: &str) -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     decoded(&format!("{FIXTURES}/{path}/🔣️.json"))
 }
 
 /// 🗂️ The IFC4 fixture of a case: its folder below `🏢️ifc4` and the snapshot it is written from.
-fn case(name: &str) -> (&'static str, crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) {
+fn case(name: &str) -> (&'static str, semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) {
     match name {
         "house" => ("🏠️house", house()),
         "psets" => ("🏷️psets", psets()),
@@ -332,7 +336,7 @@ fn committed_export(name: &str) {
 }
 
 fn oracle_table(name: &str) {
-    use crate::standards::v1::subsets::any::io::export::ifc::projection::projection_in;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection_in;
     let (folder, model) = case(name);
     let measured = format!("{FIXTURES}/🏢️ifc4/{folder}/🔬️measure/🔣️.json");
     let oracle: serde_json::Value = serde_json::from_slice(&std::fs::read(&measured).unwrap_or_else(|error| panic!("{measured}: {error}. Run `python 🐍️.py write` of the export-bim-1-ifc4 case."))).expect("the oracle table");

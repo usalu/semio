@@ -2,7 +2,7 @@ import { type ColdDocumentPairFrontier, type ColdPairIngressStatus, coldDocument
 import type { ArtifactActorConfig } from "../../../../🟦️";
 import type { WireArtifactBootstrap } from "@semio-tech/framework-replication";
 import { type ActorInstanceLifetime, actorInstanceLifetimeEquals } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
-import type { BrowserActorChildValue } from "../../../🔌️plugin/🌐️browser-bundle/🧵️child/🟦️.ts";
+import type { BrowserActorChildValue } from "@semio-tech/framework-plugin/browser-bundle/child";
 import type { DocumentExecutionTargetLease } from "../🪪️execution-lease/🟦️.ts";
 import { type ArtifactState, artifacts } from "../🧾️document-state/🟦️.ts";
 import { executionTargetHex } from "../📥️execution-target-read/🟦️.ts";
@@ -13,9 +13,13 @@ const COLD_DOCUMENT_PAIR_PAGE_BYTES = 64 * 1024;
 const COLD_DOCUMENT_PAIR_MAXIMUM_PAGES = 64;
 const COLD_DOCUMENT_PAIR_MAXIMUM_BYTES = 4 * 1024 * 1024;
 
-export type DocumentExecutionTargetAssetV1 = "manifest" | "component" | "descriptor" | "browser-actor";
 export const verifiedColdDocumentPairMintToken = Symbol("semio.os.verified-cold-document-pair.mint/v1");
 let verifiedColdDocumentPairGeneration = 0n;
+
+/** 🧊️ This module owns the `verifiedColdPair` slot of the artifact state. */
+declare module "../🧾️document-state/🟦️.ts" {
+  interface ArtifactOwnerSlots { verifiedColdPair: VerifiedColdDocumentPair }
+}
 
 export class VerifiedColdDocumentPair {
   readonly transferGeneration: bigint;

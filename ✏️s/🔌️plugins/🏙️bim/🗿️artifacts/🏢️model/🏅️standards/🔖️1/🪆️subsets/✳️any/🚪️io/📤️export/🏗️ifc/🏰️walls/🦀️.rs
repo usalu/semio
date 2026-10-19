@@ -5,18 +5,18 @@
 //! connected to its targets by `IfcRelConnectsElements` (`TopAttach`, `BaseAttach`). An opening with an authored reveal carries its depth and material in `Semio_OpeningReveal`, and its filling sits back from the front face.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcrelconnectselements.htm>
 
-use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
-use crate::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
-use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
-use crate::standards::v1::subsets::any::io::export::ifc::frames::frame_at;
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, refs, rf, unset, Schema, V};
-use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
-use crate::standards::v1::subsets::any::io::export::ifc::data;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::wall_solid;
-use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
-use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, LayerFunction, ModelSnapshot, Opening, OpeningKind, TopConstraint, Wall, WallType};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item, mesh_where};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::{define, number, property_set};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::label;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames::frame_at;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{en, real, refs, rf, unset, Schema, V};
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::wall_solid;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Layer, LayerFunction, OpeningKind, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, Wall, WallType};
 use semio_framework_geometry::bulge::{band_loop, BulgeSeg};
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
@@ -218,8 +218,8 @@ pub fn filling_tail(x: &Export<'_>, kind: &OpeningKind, height: f64, width: f64)
     if x.schema() == Schema::Ifc4 {
         let model = x.model;
         match kind {
-            OpeningKind::Window { window_type } => tail.extend([en("WINDOW"), en(model.window_types.get(window_type).map_or("NOTDEFINED", |row| data::window_partitioning(row.panes))), unset()]),
-            OpeningKind::Door { door_type } => tail.extend([en("DOOR"), en(model.door_types.get(door_type).map_or("NOTDEFINED", data::door_operation)), unset()]),
+            OpeningKind::Window { window_type } => tail.extend([en("WINDOW"), en(model.window_types.get(window_type).map_or("NOTDEFINED", |row| semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::window_partitioning(row.panes))), unset()]),
+            OpeningKind::Door { door_type } => tail.extend([en("DOOR"), en(model.door_types.get(door_type).map_or("NOTDEFINED", semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data::door_operation)), unset()]),
             OpeningKind::Void { .. } => {}
         }
     }

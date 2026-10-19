@@ -1,9 +1,11 @@
 use semio_framework_plugin::{ArtifactEditor, DslValue, ViewModel};
-use crate::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
-use crate::editor::bim::commands::{analyse_model, apply_template, arm_utility, attach_walls, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, conditions, create_entity, cursor_keys, delete_selection, edit_classification, edit_template, engagement_input, engagement_submit, export_model, flip_walls, place_elements, place_grid_columns, remove_classification, remove_property, rename_entity, search_classification, select_findings, set_camera, set_classification, set_field, set_property, set_view, split_wall, world_pointer_down, world_pointer_move};
-use crate::editor::bim::panels::{diagnostics as diagnostics_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
-use crate::editor::bim::modes::edit::windows::{family, plan, schedule, section, world};
-use crate::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch, dispatch_in, history_verb, render_text, view, world_scene};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::{BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_bim_model_bim::editor::bim::commands::{analyse_model, canvas_double_click, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, export_model};
+use semio_s_artifact_bim_model_move_storey::editor::bim::commands::{apply_template, conditions, edit_classification, edit_template, place_elements, place_grid_columns, remove_classification, remove_property, search_classification, select_findings, set_classification, set_property, split_wall};
+use semio_s_artifact_bim_model_coordination::editor::bim::commands::{arm_utility, attach_walls, create_entity, flip_walls, rename_entity, set_camera, set_field, set_view};
+use semio_s_artifact_bim_model_gestures::editor::bim::commands::{canvas_commit_draft, canvas_escape, cursor_keys, delete_selection, engagement_input, engagement_submit, world_pointer_down, world_pointer_move};
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::context::{bim_app, canvas_scene, dispatch, dispatch_in, history_verb, render_text, view, world_scene};
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::PluginApp;
 use semio_framework_ui_locale::Locale;
@@ -35,13 +37,13 @@ async fn the_editor_starts_from_the_demo_model() {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_window_panel_domain_and_command() {
     let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
-    for window in [plan::WINDOW_KIND_ID, world::WINDOW_KIND_ID, section::WINDOW_KIND_ID, schedule::WINDOW_KIND_ID, family::WINDOW_KIND_ID, family::VIEW_KIND_ID] {
+    for window in [semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::WINDOW_KIND_ID, semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::WINDOW_KIND_ID, semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family::VIEW_KIND_ID] {
         assert!(json.contains(window), "window kind {window} missing from the manifest");
     }
-    for body in [outliner_panel::BODY_KEY, properties_panel::BODY_KEY, library_panel::BODY_KEY, diagnostics_panel::BODY_KEY] {
+    for body in [semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::BODY_KEY, semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::BODY_KEY, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::library::BODY_KEY, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::BODY_KEY] {
         assert!(json.contains(body), "panel body {body} missing from the manifest");
     }
-    for domain in [crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN, crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN] {
+    for domain in [semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN, semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN] {
         assert!(json.contains(&format!("\"{domain}\"")), "interaction domain {domain} missing from the manifest");
     }
     for id in BIM_TOOL_IDS {
@@ -195,7 +197,7 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
         bridge("setCamera", json!({ "windowId": "w1", "camera": { "x": 2, "y": -3, "zoom": 20 } })),
         BimCommand::SetCamera(set_camera::SetCamera { camera2d: Some(store::Viewport2d { x: 2.0, y: -3.0, zoom: 20.0 }), camera3d: None })
     );
-    let BimCommand::SetCamera(set_camera::SetCamera { camera2d: None, camera3d: Some(orbit) }) = bridge("setCamera", json!({ "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 })) else { panic!("an orbit pose bridges to camera3d") };
+    let BimCommand::SetCamera(semio_s_artifact_bim_model_coordination::editor::bim::commands::set_camera::SetCamera { camera2d: None, camera3d: Some(orbit) }) = bridge("setCamera", json!({ "position": [1, 2, 3], "target": [0, 0, 0], "zoom": 2 })) else { panic!("an orbit pose bridges to camera3d") };
     assert_eq!((orbit.position, orbit.zoom), ([1.0, 2.0, 3.0], 2.0));
     let BimCommand::CanvasPointerDown(press) = bridge("canvasPointerDown", json!({ "x": 5, "y": 6, "width": 800, "height": 600, "shift": true, "worldX": 1.5, "button": 0 })) else { panic!("a press bridges to canvasPointerDown") };
     assert_eq!((press.x, press.y, press.width, press.shift, press.ctrl), (5.0, 6.0, 800.0, true, false));
@@ -237,7 +239,7 @@ fn the_bridge_folds_host_arguments_into_typed_commands() {
 #[semio_framework_async_macros::async_test]
 async fn creating_a_storey_stacks_it_on_the_last_one_and_undo_redo_round_trips() {
     let mut app = bim_app().await;
-    let result = dispatch(&mut app, BimCommand::CreateEntity(create_entity::CreateEntity { kind: "storey".into(), parent: "bldg-1".into(), name: "Attic".into() })).await;
+    let result = dispatch(&mut app, BimCommand::CreateEntity(semio_s_artifact_bim_model_coordination::editor::bim::commands::create_entity::CreateEntity { kind: "storey".into(), parent: "bldg-1".into(), name: "Attic".into() })).await;
     assert!(result.edited_document(), "creating an entity writes the document lane");
     let snapshot = app.snapshot().expect("snapshot");
     assert_eq!(snapshot.storeys.len(), 3);
@@ -253,7 +255,7 @@ async fn creating_a_storey_stacks_it_on_the_last_one_and_undo_redo_round_trips()
 async fn a_default_name_comes_from_the_addressed_locale_and_an_unknown_kind_is_refused() {
     let mut app = bim_app().await;
     let german = view(Locale::De, &[], None);
-    let result = dispatch_in(&mut app, BimCommand::CreateEntity(create_entity::CreateEntity { kind: "storey".into(), parent: String::new(), name: String::new() }), &german).await;
+    let result = dispatch_in(&mut app, BimCommand::CreateEntity(semio_s_artifact_bim_model_coordination::editor::bim::commands::create_entity::CreateEntity { kind: "storey".into(), parent: String::new(), name: String::new() }), &german).await;
     assert!(result.edited_document());
     assert!(app.snapshot().expect("snapshot").storeys.values().any(|storey| storey.name == "Geschoss 3"), "the default name is the German kind label and the next ordinal");
 }
@@ -261,11 +263,11 @@ async fn a_default_name_comes_from_the_addressed_locale_and_an_unknown_kind_is_r
 #[semio_framework_async_macros::async_test]
 async fn resizing_a_storey_through_set_field_re_infers_the_walls_above_it() {
     let mut app = bim_app().await;
-    let result = dispatch(&mut app, BimCommand::SetField(set_field::SetField { ids: vec!["st-ground".into()], field: "height".into(), value: "3.6".into() })).await;
+    let result = dispatch(&mut app, BimCommand::SetField(semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field::SetField { ids: vec!["st-ground".into()], field: "height".into(), value: "3.6".into() })).await;
     assert!(result.edited_document());
     let snapshot = app.snapshot().expect("snapshot");
     assert!((snapshot.storeys["st-ground"].height - 3.6).abs() < 1e-12);
-    let height = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
+    let height = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, |inference| inference.wall_layout["w-south"].height);
     assert!((height - 3.6).abs() < 1e-9, "the wall follows its storey by inference, got {height}");
 }
 
@@ -298,7 +300,7 @@ const LEFT: &str = "bim-plan-left";
 const RIGHT: &str = "bim-plan-right";
 
 fn two_plans() -> (ViewModel, ViewModel) {
-    let windows = [(LEFT, plan::WINDOW_KIND_ID), (RIGHT, plan::WINDOW_KIND_ID), ("bim-world", world::WINDOW_KIND_ID)];
+    let windows = [(LEFT, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID), (RIGHT, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID), ("bim-world", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID)];
     (view(Locale::En, &windows, Some(LEFT)), view(Locale::En, &windows, Some(RIGHT)))
 }
 
@@ -342,9 +344,9 @@ fn two_plan_windows_keep_their_own_storey_and_camera_and_the_document_stays_unto
 #[semio_framework_async_macros::async_test]
 async fn the_world_window_renders_one_instance_per_wall_with_the_elements_domain() {
     let mut app = bim_app().await;
-    let world_view = view(Locale::En, &[("bim-world", world::WINDOW_KIND_ID)], Some("bim-world"));
+    let world_view = view(Locale::En, &[("bim-world", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID)], Some("bim-world"));
     let scene = world_scene(&mut app, &world_view).await;
-    assert_eq!(scene.domain_id.as_deref(), Some(crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN));
+    assert_eq!(scene.domain_id.as_deref(), Some(semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_ELEMENT_DOMAIN));
     let instances: Vec<serde_json::Value> = serde_json::from_str(&scene.instances_json).expect("instances");
     assert_eq!(instances.len(), 4);
 }
@@ -354,27 +356,27 @@ async fn the_world_window_renders_one_instance_per_wall_with_the_elements_domain
 #[semio_framework_async_macros::async_test]
 async fn the_outliner_nests_the_model_and_speaks_both_languages() {
     let mut app = bim_app().await;
-    let english = render_text(&mut app, outliner_panel::BODY_KEY, &plain(Locale::En)).await;
+    let english = render_text(&mut app, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::BODY_KEY, &plain(Locale::En)).await;
     for expected in ["Demo House", "Plot", "House", "Ground", "First", "Add Storey", "Add Wall"] {
         assert!(english.contains(expected), "the English outliner shows '{expected}': {english}");
     }
-    let german = render_text(&mut app, outliner_panel::BODY_KEY, &plain(Locale::De)).await;
+    let german = render_text(&mut app, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::BODY_KEY, &plain(Locale::De)).await;
     assert!(german.contains("Geschoss hinzufügen") && german.contains("Wand hinzufügen"), "the German outliner is German: {german}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_properties_panel_summarises_the_model_when_nothing_is_selected() {
     let mut app = bim_app().await;
-    let english = render_text(&mut app, properties_panel::BODY_KEY, &plain(Locale::En)).await;
+    let english = render_text(&mut app, semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::BODY_KEY, &plain(Locale::En)).await;
     assert!(english.contains("Nothing selected") && english.contains("s.bim.model@1"), "{english}");
-    let german = render_text(&mut app, properties_panel::BODY_KEY, &plain(Locale::De)).await;
+    let german = render_text(&mut app, semio_s_artifact_bim_model_gestures::editor::bim::panels::properties::BODY_KEY, &plain(Locale::De)).await;
     assert!(german.contains("Nichts ausgewählt"), "{german}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_library_lists_the_types_and_materials_of_the_model() {
     let mut app = bim_app().await;
-    let text = render_text(&mut app, library_panel::BODY_KEY, &plain(Locale::En)).await;
+    let text = render_text(&mut app, semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::library::BODY_KEY, &plain(Locale::En)).await;
     for expected in ["Materials", "Brick", "Mineral Wool", "Wall types", "Brick 300"] {
         assert!(text.contains(expected), "the library shows '{expected}': {text}");
     }
@@ -383,10 +385,10 @@ async fn the_library_lists_the_types_and_materials_of_the_model() {
 #[semio_framework_async_macros::async_test]
 async fn the_schedule_lists_the_walls_and_the_section_cuts_them() {
     let mut app = bim_app().await;
-    let schedule_text = render_text(&mut app, schedule::BODY_KEY, &plain(Locale::En)).await;
+    let schedule_text = render_text(&mut app, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::BODY_KEY, &plain(Locale::En)).await;
     assert!(schedule_text.contains("South") && schedule_text.contains("Volume"), "{schedule_text}");
-    let section_view = view(Locale::En, &[("bim-section", section::WINDOW_KIND_ID)], Some("bim-section"));
-    let section_scene = canvas_scene(&mut app, section::BODY_KEY, &section_view).await;
+    let section_view = view(Locale::En, &[("bim-section", semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID)], Some("bim-section"));
+    let section_scene = canvas_scene(&mut app, semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::BODY_KEY, &section_view).await;
     assert!(section_scene.layers_json.contains("level:st-ground"), "the section draws the storey datum lines");
 }
 
@@ -430,7 +432,7 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
 
 semio_framework_plugin::history_edit_acceptance_law!(
     "bim",
-    crate::editor::bim::BimModelApp,
+    semio_s_artifact_bim_model_bim::editor::bim::BimModelApp,
     context::bim_app_manifest_for_tests,
     "../../🏅️standards/🔖️1/🪆️subsets/✳️any"
 );

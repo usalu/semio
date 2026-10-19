@@ -15,7 +15,7 @@ const oracle = new Ajv({ strict: false }).compile(schema);
 test("actual session owner routes admit domain instances and never read test fixtures", async () => {
   const specificSource = read(specific + "/📜️script.ts");
   expect(specificSource).not.toContain("./🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json");
-  const { runtimeFixturePathV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts");
+  const { runtimeFixturePathV1 } = await import("@semio-tech/repo-lib/inventory");
   for (const script of [general + "/📦️packages/🟦️typescript/📜️script.ts", specific + "/📜️script.ts"]) {
     const syntax = ts.createSourceFile(script, read(script), ts.ScriptTarget.Latest, true);
     const owner = syntax.statements.find(node => ts.isClassDeclaration(node) && node.name?.text === "PlaygroundSessionScript"); expect(owner).toBeDefined();
@@ -31,7 +31,7 @@ test("actual session owner routes admit domain instances and never read test fix
   expect(generalRequest).toEqual(cases.cases.find(row => row.id === "explicit-empty")!.input);
   expect(specificRequest).toEqual(JSON.parse(read(specific + "/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json")).publication);
   for (const row of cases.cases) { expect(oracle(row.input), row.id).toBe(row.shape); if (row.accepted) expect(parsePlaygroundSessionPublicationRequestV1(row.input)).toEqual(row.input); else expect(() => parsePlaygroundSessionPublicationRequestV1(row.input)).toThrow(); }
-  const { loadCatalogTaxonomy } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { generatorPreviewExecution } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts");
+  const { loadCatalogTaxonomy } = await import("@semio-tech/repo-lib/inventory"), { generatorPreviewExecution } = await import("@semio-tech/repo-lib/inventory");
   const taxonomy = loadCatalogTaxonomy();
   for (const id of ["playground-session", "s-playground-session"]) {
     const contract = taxonomy.generatorContracts![id]!; expect(contract.inputPatterns!.every(path => !path.includes("🧪️tests/🧫️fixtures") && !path.includes("🧪️tests"))).toBe(true);
@@ -53,7 +53,7 @@ test("actual General read-only preview preserves bytes and output override with 
     expect(preview.contractId).toBe("playground-session"); expect(preview.schemaVersion).toBe(1);
     expect(file.path).toBe(output ? relative(root, join(output, "preview-output/🎮️playground-session/🟦️.ts")).replaceAll("\\", "/") : expectedPath);
     const bytes = Buffer.from(file.bytesBase64, "base64").toString("utf8");
-    const { renderPlaygroundSessionTypeScript } = await import("../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts");
+    const { renderPlaygroundSessionTypeScript } = await import("@semio-tech/plugin-registry/playground/session");
     expect(bytes).toBe(renderPlaygroundSessionTypeScript(undefined, { entries: [], playgrounds: [] }));
     const owned = new Bun.Transpiler({ loader: "ts" }).transformSync(bytes), independent = transformSync(bytes, { loader: "ts", format: "esm", target: "es2022" }).code;
     const modules = await Promise.all([owned, independent].map(code => import("data:text/javascript;base64," + Buffer.from(code).toString("base64"))));

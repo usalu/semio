@@ -30,6 +30,9 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 serde.workspace = true
 serde_json.workspace = true
+semio-s-artifact-bim-model-bim = { path = "../../../../../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-viewer = { path = "../../../../../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

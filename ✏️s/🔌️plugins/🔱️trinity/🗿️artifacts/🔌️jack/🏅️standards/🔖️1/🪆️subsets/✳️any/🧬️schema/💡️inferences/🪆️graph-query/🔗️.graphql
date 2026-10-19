@@ -1,5 +1,5 @@
 # 🪆️ Jack consumes retained graph behavior independently of its child serialization.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import JackFlatPositionUv from "../🔗️.graphql"
 interface JackGraphQuery {
   identity: ArtifactChild!

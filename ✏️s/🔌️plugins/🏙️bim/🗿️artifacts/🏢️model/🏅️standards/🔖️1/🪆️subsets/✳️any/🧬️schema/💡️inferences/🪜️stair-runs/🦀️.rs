@@ -10,8 +10,10 @@
 //! Related: Blondel's rule `2R + T`, <https://en.wikipedia.org/wiki/Stairs#Rise_and_run>.
 
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Stair, StairFlight, Turn};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, StairFlight, Turn};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Stair;
+#[cfg(test)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[cfg(test)] use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_PI_2, PI};
 

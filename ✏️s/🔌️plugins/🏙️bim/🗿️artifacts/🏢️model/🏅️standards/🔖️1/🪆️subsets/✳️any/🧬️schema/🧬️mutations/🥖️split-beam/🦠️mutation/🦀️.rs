@@ -1,6 +1,7 @@
 //! 🥖️ `split-beam` payload. Splits a beam at the fraction `t` of its length into the original beam, which keeps the first part, and a new beam that continues it with the same type, top offset, phase and name.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,7 +15,7 @@ pub struct SplitBeam {
 
 impl<Op> MutationKind<ModelSnapshot, Op> for SplitBeam
 where
-    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitBeam> + From<crate::standards::v1::subsets::any::schema::mutations::delete_beam::DeleteBeam> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements> + From<crate::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam>,
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SplitBeam> + From<semio_s_artifact_bim_model_mut_any_67::standards::v1::subsets::any::schema::mutations::delete_beam::DeleteBeam> + From<semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements> + From<semio_s_artifact_bim_model_mut_any_170::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam>,
 {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "split", entity: "beam", kind: "split-beam", record: "SplitBeam" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {

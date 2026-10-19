@@ -3,7 +3,7 @@
 //#region 🔖️FacadeTests
 #[test]
 fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_immediately() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
     let window_id = "retained-tooltip";
     let generation = 1;
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
@@ -29,7 +29,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
         assert!((resolved.x - placement["expected"]["left"].as_f64().expect("left") as f32).abs() < 0.01);
         assert!((resolved.y - placement["expected"]["top"].as_f64().expect("top") as f32).abs() < 0.01);
         let expected_side = placement["expected"]["side"].as_str().expect("side");
-        assert!(matches!((expected_side, resolved.side), ("top", crate::wgpu::events::OverlaySide::Top) | ("bottom", crate::wgpu::events::OverlaySide::Bottom)));
+        assert!(matches!((expected_side, resolved.side), ("top", semio_framework_ui_wgpu_events::OverlaySide::Top) | ("bottom", semio_framework_ui_wgpu_events::OverlaySide::Bottom)));
     }
 
     let placement = &fixture["placements"][0];
@@ -85,7 +85,7 @@ fn accepted_control_tooltip_reveals_after_dwell_paints_in_overlay_and_dismisses_
 
 #[test]
 fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replacement() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️retained-control-tooltip/🔣️.json")).expect("retained tooltip fixture");
     let window_id = "accepted-tooltip-text";
     let label = fixture["text"]["label"].as_str().expect("tooltip label");
     let shortcut = fixture["text"]["shortcut"].as_str().expect("tooltip shortcut");
@@ -127,10 +127,10 @@ fn tooltip_keeps_accepted_text_across_candidate_discard_and_retires_after_replac
     assert!(ui.windows.get(window_id).expect("tooltip window").presented_tooltip.is_none(), "accepting the replacement retires the old document label");
 }
 
-fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> crate::wgpu::tree::Node {
-    crate::wgpu::tree::Node::new(
-        crate::wgpu::tree::NodeKey::Positional(discriminant, ordinal),
-        crate::wgpu::tree::WidgetSpec(UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })),
+fn retained_walk_leaf(discriminant: u32, ordinal: u32, value: &str) -> semio_framework_ui_retained_tree::tree::Node {
+    semio_framework_ui_retained_tree::tree::Node::new(
+        semio_framework_ui_retained_tree::tree::NodeKey::Positional(discriminant, ordinal),
+        semio_framework_ui_retained_tree::tree::WidgetSpec(UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })),
     )
 }
 
@@ -154,7 +154,7 @@ fn drive_layout(ui: &mut Ui, window_id: &str, width: f32, height: f32, atlas: &m
 }
 
 fn accessibility_document() -> UiDocumentTree {
-    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json")).expect("accessibility projection fixture parses");
+    let law: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json")).expect("accessibility projection fixture parses");
     let source = &law["document"];
     let nodes = source["nodes"].as_array().expect("fixture nodes");
     let header = UiDocumentLeaseHeader {
@@ -230,7 +230,7 @@ fn publish_blur_commit_input_document(ui: &mut Ui, window_id: &str) {
 }
 
 fn select_accessibility_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json")).expect("retained Select accessibility fixture parses")
+    serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/♿️retained-select-accessibility/🔣️.json")).expect("retained Select accessibility fixture parses")
 }
 
 fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
@@ -283,7 +283,7 @@ fn publish_select_accessibility_document(ui: &mut Ui, law: &serde_json::Value) {
 }
 
 fn puzzle3d_settings_law() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
+    serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/⚙️puzzle3d-settings-document/🔣️.json")).expect("Puzzle3D Settings fixture parses")
 }
 
 fn puzzle3d_settings_document(law: &serde_json::Value) -> UiDocumentTree {
@@ -321,10 +321,10 @@ fn reconcile_puzzle3d_settings(ui: &mut Ui, window_id: &str, law: &serde_json::V
     panic!("Puzzle3D Settings reconcile exceeded its fixed budget");
 }
 
-fn explicit_node(tree: &UiTree, key: &str) -> crate::wgpu::arena::NodeId {
+fn explicit_node(tree: &UiTree, key: &str) -> semio_framework_ui_arena::NodeId {
     let mut pending = vec![tree.root.expect("mounted document root")];
     while let Some(id) = pending.pop() {
-        if matches!(tree.node(id).map(|node| &node.key), Some(crate::wgpu::tree::NodeKey::Explicit(found)) if found == key) {
+        if matches!(tree.node(id).map(|node| &node.key), Some(semio_framework_ui_retained_tree::tree::NodeKey::Explicit(found)) if found == key) {
             return id;
         }
         pending.extend(tree.children(id));

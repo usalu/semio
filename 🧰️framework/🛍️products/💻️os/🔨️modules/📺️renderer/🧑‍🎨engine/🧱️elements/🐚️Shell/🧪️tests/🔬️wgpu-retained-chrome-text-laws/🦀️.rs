@@ -18,7 +18,7 @@ fn dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant() {
 /// 🚫️ The retained Shell text boundary fails closed before shaping MAX + 1 bytes.
 #[test]
 fn dialog_and_tour_text_max_plus_one_fails_without_output() {
-    let value = "x".repeat(ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+    let value = "x".repeat(semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
     let identity = value.as_ptr();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -62,7 +62,7 @@ fn dynamic_chrome_group_retains_every_glyph_and_border_opportunity() {
 /// 🚫️ A MAX + 1 chrome label is rejected before a retained owner or output is staged.
 #[test]
 fn dynamic_chrome_group_max_plus_one_is_identity_preserving() {
-    let value = "x".repeat(ui_wgpu::wgpu::RETAINED_NODE_TEXT_MAX_BYTES + 1);
+    let value = "x".repeat(semio_framework_ui_wgpu_paint::RETAINED_NODE_TEXT_MAX_BYTES + 1);
     let identity = value.as_ptr();
     let mut atlas = FontAtlas::builtin();
     let theme = Theme::light();
@@ -185,7 +185,7 @@ fn every_chip_lays_out_at_least_its_labels_painted_width() {
                 let mut wrapped = DrawList::default();
                 let mut cursor = RetainedGlyphCursor::default();
                 for _ in 0..=label.chars().count() {
-                    if ui_wgpu::wgpu::paint_retained_glyph_step(label.as_str(), Rect::new(x, 0.0, box_w, theme.font_size_small), theme.font_size_small, color, &mut atlas, &mut wrapped, &mut cursor) == RetainedGlyphStep::Complete {
+                    if semio_framework_ui_wgpu_paint::paint_retained_glyph_step(label.as_str(), Rect::new(x, 0.0, box_w, theme.font_size_small), theme.font_size_small, color, &mut atlas, &mut wrapped, &mut cursor) == RetainedGlyphStep::Complete {
                         break;
                     }
                 }

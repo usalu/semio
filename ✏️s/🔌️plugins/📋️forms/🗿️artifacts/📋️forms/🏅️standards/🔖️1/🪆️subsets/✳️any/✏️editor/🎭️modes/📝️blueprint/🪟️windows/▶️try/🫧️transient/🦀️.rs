@@ -4,7 +4,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 use std::fmt;
 use std::sync::Arc;
-use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
+use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, arc_custody::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_framework_value::SharedUtf8;
 
 pub const MAX_TRY_VALUE_ENTRIES: usize = 64;

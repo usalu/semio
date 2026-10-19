@@ -1,5 +1,5 @@
-import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
-import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
@@ -30,7 +30,7 @@ export default defineOwnedBuildConfig({
     fs: { allow: [repoRoot] },
   },
   build: {
-    ...semioViteBuild(),
+    ...semioViteBuild(undefined, buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE))),
     outDir: resolve(dir, "📤️dist", readBuildMode(process.env.SEMIO_BUILD_MODE)),
     emptyOutDir: true,
   },

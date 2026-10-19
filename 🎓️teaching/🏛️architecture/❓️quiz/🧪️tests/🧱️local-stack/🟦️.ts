@@ -25,10 +25,10 @@ import { connect, createServer as createNetServer, type AddressInfo, type Socket
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer, preview } from "vite";
-import { destroySoon, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
+import { destroySoon, semioServeUpgradeVitePlugin } from "@semio-tech/ui-styling/builder/vite/status-serve";
 import { afterEach, describe, expect, it } from "vitest";
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
-import { QUIZ_E2E_PORTS, endToEndPlan } from "../../🎭️e2e/🟦️.ts";
+import { QUIZ_E2E_PORTS, bootOrder, endToEndPlan } from "../../🎭️e2e/🟦️.ts";
 import { SITE_MEDIA_TYPES, awaitReady, catalogFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
 import { cargoPackageClosure } from "../../../../🛂️proctor/🏗️bootstrap/🕸️manifest-closure/🟦️.ts";
 import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorBuildLaunch, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
@@ -90,6 +90,12 @@ describe("the command line of the end-to-end gate", () => {
     expect(endToEndPlan(["rehearsal"]).topologies).toEqual(["rehearsal"]);
     expect(endToEndPlan(["rehearsal", "dev"]).topologies).toEqual(["dev", "rehearsal"]);
     expect(endToEndPlan(["--serial", "--keep"])).toMatchObject({ serial: true, keep: true, playwright: [] });
+  });
+
+  it("boots the rehearsal before the dev site, which holds the whole host once it is up", () => {
+    expect(bootOrder(["dev", "rehearsal"])).toEqual(["rehearsal", "dev"]);
+    expect(bootOrder(["rehearsal", "dev"])).toEqual(["rehearsal", "dev"]);
+    expect(bootOrder(["dev"])).toEqual(["dev"]);
   });
 
   it("hands everything it does not know to Playwright and takes a proctor executable for itself", () => {

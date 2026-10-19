@@ -10,7 +10,6 @@ package client
 
 import (
 	"context"
-	"os"
 	"strings"
 	"testing"
 )
@@ -19,8 +18,7 @@ func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
@@ -72,12 +70,9 @@ func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 		"compose/js":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("📜️") + "js",
 		"compose/go":      emojiText(EmojiTechnologyUser) + "compose" + emojiText("🐹️") + "go",
 		"compose/engine":  emojiText(EmojiTechnologyUser) + "compose" + emojiText("⚙️") + "engine",
-		"asset":           emojiText(EmojiTechnologyUser) + "semio" + emojiText(EmojiBundleAssets) + "asset",
 		"compose/desktop": emojiText(EmojiTechnologyUser) + "compose" + emojiText("🖥️") + "desktop",
-		"compose/docs":    emojiText(EmojiTechnologyUser) + "compose" + emojiText(EmojiBundleSite) + "docs",
 		"repo/client":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("⌨️") + "client",
 		"repo/server":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🌍️") + "server",
-		"repo/vscode":     emojiText(EmojiTechnologyInfra) + "repo" + emojiText("🧩️") + "vscode",
 	}
 	allBundles := []*TreeNode{}
 	for _, technology := range []*TreeNode{composeTechnology, composeRepoTechnology, codaTechnology} {
@@ -117,8 +112,7 @@ func TestExhaustiveGoalTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	goalsNode := tree.Children[2]
 	goalCount := 0
@@ -160,8 +154,7 @@ func TestExhaustiveContributorTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
@@ -202,8 +195,7 @@ func TestExhaustiveCheckpointTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	cwd, _ := os.Getwd()
-	SetRootDir(findTestRepoRoot(cwd))
+	withExhaustiveRepo(t)
 	tree := BuildMonorepoTreeCached(context.Background())
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {

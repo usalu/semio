@@ -9,10 +9,7 @@ import (
 	fmt "fmt"
 	os "os"
 	exec "os/exec"
-	filepath "path/filepath"
 	regexp "regexp"
-	runtime "runtime"
-	strconv "strconv"
 	strings "strings"
 	testing "testing"
 	time "time"
@@ -20,35 +17,6 @@ import (
 	graphql "github.com/usalu/semio/repo/graphql"
 	workspace "github.com/usalu/semio/repo/workspace"
 )
-
-func findTestRepoRoot(start string) string {
-	for _, candidate := range []string{start, func() string {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			return ""
-		}
-		return filepath.Dir(file)
-	}()} {
-		dir := candidate
-		if dir == "" {
-			continue
-		}
-		for {
-			if _, err := os.Stat(filepath.Join(dir, "repo", "client", "main.go")); err == nil {
-				return dir
-			}
-			if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
-				return dir
-			}
-			parent := filepath.Dir(dir)
-			if parent == dir {
-				break
-			}
-			dir = parent
-		}
-	}
-	return start
-}
 
 func firstJSONLine(output string) (json.RawMessage, bool) {
 	for _, line := range strings.Split(strings.TrimSpace(output), "\n") {
@@ -97,24 +65,16 @@ func parseTicketOpenResult(t *testing.T, output string) (int, int, int, string) 
 	}
 	var resp struct {
 		TicketOpen struct {
-			Slug string `json:"slug"`
-			Path string `json:"path"`
+			Slug  string `json:"slug"`
+			Year  int    `json:"year"`
+			Month int    `json:"month"`
+			Day   int    `json:"day"`
 		} `json:"ticketOpen"`
 	}
-	if err := json.Unmarshal(data, &resp); err == nil && resp.TicketOpen.Path != "" {
-		normalized := filepath.ToSlash(resp.TicketOpen.Path)
-		parts := strings.Split(strings.TrimPrefix(normalized, "/"), "/")
-		for i := 0; i+3 < len(parts); i++ {
-			if parts[i] == "🎫️" {
-				y, _ := strconv.Atoi(parts[i+1])
-				m, _ := strconv.Atoi(parts[i+2])
-				d, _ := strconv.Atoi(parts[i+3])
-				return y, m, d, resp.TicketOpen.Slug
-			}
-		}
+	if err := json.Unmarshal(data, &resp); err != nil || resp.TicketOpen.Slug == "" || resp.TicketOpen.Year == 0 {
+		t.Fatalf("unable to parse ticket open response: %s", output)
 	}
-	t.Fatalf("unable to parse ticket open response: %s", output)
-	return 0, 0, 0, ""
+	return resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug
 }
 
 func parseGoalCreateID(t *testing.T, output string) string {
@@ -174,11 +134,7 @@ func parseTicketReopenStatus(t *testing.T, output string) string {
 func testEngineFactory(config Config) (*Engine, error) {
 	repoRoot := config.Repo
 	if repoRoot == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		repoRoot = findTestRepoRoot(cwd)
+		repoRoot = workspace.GetRootDir()
 	}
 	workspace.SetRootDir(repoRoot)
 	executor, err := graphql.NewExecutor(repoRoot)

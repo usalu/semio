@@ -7,28 +7,19 @@ import { resolveFrameworkOsCatalogConfigurationV1 } from "./🧩️catalog/🟦�
  * The rest of the former core shell module lives in the child folders beside this file: boot locks and
  * defaults (`🔒️boot-and-locks`), program sessions, peer interaction, the `ShellState` slice shapes, the
  * closed `ShellAction` union, the slice reducers and root store (`🕹️shell-store`, the `useReducer` store
- * that replaced ~38 independent `useState` calls). It also keeps the `ShellFaultBoundary` scoped React error
- * boundary: its importers load this module and, through it, the composition root that registers the hosts. */
+ * that replaced ~38 independent `useState` calls). The scoped React error boundary lives in `🧯️fault-boundary`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import React, { Component, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { Button, bootstrapElementsSurfaceChromeDocument, type UiLabel } from "@semio-tech/ui-react";
-import { createBrowserStoragePort, createMemoryStoragePort, SemioFaultError, type AppRole, type Fault, type ShellBrand } from "@semio-tech/framework";
-// 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
-// this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
-// a non-circular import; routing through the barrel indirection (cleared) hit the same
-// module-top-level circular-import initialization-order bug documented in ui-react's
-// 🧱️elements/🫀️core/Ports/🟦️.tsx header comment (see 📋️w0-status.md's "W3 follow-up" section).
-import { shellLabel } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { createBrowserStoragePort, createMemoryStoragePort, type AppRole, type ShellBrand } from "@semio-tech/framework";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import { readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { clearDurableShellStorage, type FrameworkOsDefaults, type FrameworkOsLocks, isEphemeralShellBrand, mergeShellLockSources, resolveBootAppRole, resolveShellDefaults, resolveShellLocks } from "./🔒️boot-and-locks/🟦️.ts";
 
 // #endregion 🔌️Adapters
 //#region 🔖️types
-export type { SpacePanelState, SpawnedAppEntry } from "../🛠️ShellHelpers/📌️panel/🟦️.ts";
 
 /** 🎬️ Owns host service and worker construction capabilities for one React mount. */
 export type FrameworkOsBootExecution = {
@@ -39,7 +30,7 @@ export type FrameworkOsBootExecution = {
 
 export type FrameworkOsBootOptions = {
   readonly catalog: PluginCatalogRowsV1;
-  readonly surfaceSessionFactories?: readonly import("../🪪️WasmSessionLoader/🟦️.tsx").AppSurfaceSessionFactory[];
+  readonly surfaceSessionFactories?: readonly import("@semio-tech/framework/canvas/react-renderer").AppSurfaceSessionFactory[];
   readonly rootId?: string;
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -75,50 +66,3 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions, execution
   return { dispose: () => mounted.unmount() };
 }
 //#endregion Boot
-//#region ErrorBoundary
-type ShellFaultBoundaryProps = {
-  readonly boundaryId: string;
-  readonly fallbackLabel: UiLabel;
-  readonly children: ReactNode;
-  readonly onFault?: (fault: Fault | null, error: Error, boundaryId: string) => void;
-  readonly retry?: () => void;
-};
-
-type ShellFaultBoundaryState = { readonly hasFault: boolean; readonly message: string; readonly fault: Fault | null };
-
-/** 🧯️ Scoped React fault boundary — logs `[TRACE] shell fault` and renders a localized fallback with optional retry. */
-export class ShellFaultBoundary extends Component<ShellFaultBoundaryProps, ShellFaultBoundaryState> {
-  constructor(props: ShellFaultBoundaryProps) {
-    super(props);
-    this.state = { hasFault: false, message: "", fault: null };
-  }
-
-  static getDerivedStateFromError(error: Error): ShellFaultBoundaryState {
-    const fault = error instanceof SemioFaultError ? error.fault : null;
-    return { hasFault: true, message: fault?.message ?? error.message, fault };
-  }
-
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    this.props.onFault?.(error instanceof SemioFaultError ? error.fault : null, error, this.props.boundaryId);
-  }
-
-  private readonly retry = () => {
-    this.setState({ hasFault: false, message: "", fault: null });
-    this.props.retry?.();
-  };
-
-  render() {
-    if (this.state.hasFault) {
-      return (
-        <div className="p-double" role="alert" data-shell-fault-boundary={this.props.boundaryId}>
-          <p className="text-sm text-destructive">
-            {this.props.fallbackLabel}: {this.state.message}
-          </p>
-          {this.props.retry ? <Button className="mt-single" icon="rotate-ccw" text={shellLabel("ui.common.retry")} onClick={this.retry} /> : null}
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-//#endregion ErrorBoundary

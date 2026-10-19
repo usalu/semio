@@ -60,20 +60,20 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
     let mut source = app_with_registry().await;
     context::dispatch(&mut source, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
-    let archive = PluginApp::document_archive(&source).await.expect("the open document exports as a framework archive");
+    let archive = PluginApp::document_archive(&mut source.0).await.expect("the open document exports as a framework archive");
     let expected: Vec<String> = context::snapshot_read(&source).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_2d_model::widget_id(widget).to_string()).collect();
     assert!(!expected.is_empty(), "the exported document carries widgets to compare");
     let mut target = app_with_registry().await;
-    PluginApp::begin_document_archive_load(&mut target, 91, archive).expect("archive admission");
+    PluginApp::begin_document_archive_load(&mut target.0, 91, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..200_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut target, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut target.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), target.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
-            PluginApp::acknowledge_document_archive_load(&mut target, 91).expect("archive acknowledgement");
+            PluginApp::acknowledge_document_archive_load(&mut target.0, 91).expect("archive acknowledgement");
             status = Some(polled);
             break;
         }
-        PluginApp::maintenance_step(&mut target, 1, 4_096).expect("archive maintenance step");
+        PluginApp::maintenance_step(&mut target.0, target.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
     }
     let status = status.expect("the archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));

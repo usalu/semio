@@ -150,7 +150,7 @@
     },
     {
       "package": "semio-framework-value-shared-issuance",
-      "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
       "edges": [
         {
           "scope": "normal",
@@ -370,7 +370,7 @@
         {
           "scope": "normal",
           "name": "semio-framework-value-shared-issuance",
-          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
         }
       ]
     },
@@ -412,7 +412,7 @@
         {
           "scope": "normal",
           "name": "semio-framework-value-shared-issuance",
-          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
         }
       ]
     },
@@ -479,7 +479,7 @@
         {
           "scope": "normal",
           "name": "semio-framework-value-shared-issuance",
-          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
+          "manifest": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml"
         }
       ]
     },

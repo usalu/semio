@@ -5,12 +5,12 @@
 
 import { SemioFaultError, type Effect, type Fault, type InvocationResponse } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework/packs";
-import { type SpawnedAppEntry } from "../../🐚️Shell/🟦️.tsx";
+import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
 import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
+import { isShardLostError } from "@semio-tech/framework-actor/shard-client/heartbeat";
 import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";
 import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 

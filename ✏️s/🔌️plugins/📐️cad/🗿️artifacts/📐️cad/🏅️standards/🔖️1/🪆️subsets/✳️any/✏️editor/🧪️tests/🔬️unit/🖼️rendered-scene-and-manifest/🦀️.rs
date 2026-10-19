@@ -81,7 +81,7 @@ async fn manifest_stitches_every_taxonomy_node_with_its_pre_migration_shape() {
     let windows: Vec<(&str, &str)> = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str())).collect();
     assert_eq!(windows, vec![(shape::WINDOW_KIND_ID, shape::BODY_KEY), (building::WINDOW_KIND_ID, building::BODY_KEY), (energy::WINDOW_KIND_ID, energy::BODY_KEY), (structure_classic::WINDOW_KIND_ID, structure_classic::BODY_KEY),]);
     for window in definition.window_kinds.iter() {
-        assert_eq!(window.surface_kind, ui_wgpu::wgpu::SurfaceKind::World3d, "window {} surface kind", window.id);
+        assert_eq!(window.surface_kind, semio_framework_ui_declaration::ui::SurfaceKind::World3d, "window {} surface kind", window.id);
         assert!(window.options.measures.is_empty(), "window {} must not freeze measures into the manifest", window.id);
     }
     let modes: Vec<&str> = definition.modes.iter().map(|mode| mode.id.as_str()).collect();

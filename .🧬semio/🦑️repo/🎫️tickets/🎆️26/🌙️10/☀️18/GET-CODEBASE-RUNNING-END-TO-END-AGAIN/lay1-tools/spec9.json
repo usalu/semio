@@ -1,0 +1,112 @@
+[
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "InferencesTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗿️artifact/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "ArtifactTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "ActionsTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "StatelyTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️.tsx",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "RendererTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "RuntimeTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "AecBuildingTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "SpatialShapeTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "AecBuildingStructureTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ },
+ {
+  "parent": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️.ts",
+  "base": ".",
+  "leaf": "🎒️test-dependencies",
+  "names": [
+   "AecBuildingEnergyTestDependencies"
+  ],
+  "typeImports": true,
+  "doc": "🎒️ The values the module hands its extracted suites, owned by the module directory so that the suites never import the module back.",
+  "allowExportStar": true
+ }
+]

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import contract from "../../🛂️descriptor-verification/🧬️schema/🔣️.json";
+import contract from "../../🛂️descriptor-verification/🧬️schema/🔣️.json" with { type: "json" };
 import { verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

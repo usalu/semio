@@ -14,7 +14,7 @@ use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewpor
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::playback::{run_command, stop_command};
 use crate::editor::sequence::commands::example::set_active_example;
-use crate::editor::sequence::base::{SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_working_scene_from_children};
+use crate::editor::sequence::editor_vocabulary::{SEQUENCE_INTERACTION_STEPS, sequence_child_leaves_emit, sequence_fault, sequence_working_scene_from_children};
 use crate::editor::sequence::persistent::{SequencePersistentWork, sequence_close_step, sequence_drain_retirement, sequence_owner_demand, sequence_push_params, sequence_push_pending, sequence_unit};
 use crate::editor::sequence::app::SequencePlayApp;
 
@@ -273,7 +273,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_artifact_command_admitted(command) {
@@ -305,6 +306,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         sequence_bounded_child_emit_bytes(&emit.child_emits, SEQUENCE_STORE_MAXIMUM_BYTES).map_err(|_| sequence_fault("sequence.editor.capacity", "sequence-retained-artifact-output-bytes"))?;
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -331,15 +335,17 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn begin_close(&mut self) {
         self.closing = true;
     }
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if grant.maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        self.replay_target = None;
-        sequence_close_step(self.scene_owner.release_one(grant))
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            if grant.maximum_items == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            self.replay_target = None;
+            sequence_close_step(self.scene_owner.release_one(grant))
+        })
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.scene_owner.close_demand()?.capacity_bytes) }
@@ -520,7 +526,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_MAXIMUM_UNITS || !sequence_retained_config_command_admitted(command) {
@@ -562,6 +569,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             }),
             _ => Err(sequence_fault("app.command.tool-mismatch", "sequence-window-route-rejected")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -589,15 +599,17 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if grant.maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        self.replay_target = None;
-        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            if grant.maximum_items == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            self.replay_target = None;
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -734,7 +746,8 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
     _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, .. } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.cursor >= SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS || !sequence_retained_example_command_admitted(command) {
@@ -761,6 +774,9 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
             SequenceCommand::SetActiveExample(payload) => set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete),
             _ => Err(sequence_fault("app.command.tool-mismatch", "sequence-example-route-rejected")),
         }
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
     fn checkpoint_byte(&self, index: usize) -> Option<u8> {
@@ -788,15 +804,17 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep {
-        if !self.closing {
-            return semio_framework_job::InteractiveJobCloseStep::Blocked;
-        }
-        if grant.maximum_items == 0 {
-            return semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        self.replay_target = None;
-        semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            if !self.closing {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            }
+            if grant.maximum_items == 0 {
+                return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: Default::default() });
+            }
+            self.replay_target = None;
+            Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
+        })
     }
 
     fn terminal_is_empty(&self) -> bool {

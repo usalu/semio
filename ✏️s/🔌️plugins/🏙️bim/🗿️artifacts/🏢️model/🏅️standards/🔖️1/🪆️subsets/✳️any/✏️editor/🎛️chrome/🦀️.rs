@@ -1,12 +1,13 @@
 //! 🎛️ BIM window chrome: the status line of every window and the measures that set its view parameters (the plan's and the section's view, the world's projection, storey isolation
 //! and section plane). Both are keyed by the window instance the view addresses, read that window's own config, and dispatch `setView`.
 
-use crate::editor::bim::entities::{ordered_storeys, storey_of, ENTITIES};
-use crate::editor::bim::kit::bim_window_action;
-use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
-use crate::editor::bim::terminology::{bim_labels, BimLabels};
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::ordered_storeys;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{storey_of, ENTITIES};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::bim_window_action;
+use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::{plan, section, sheet, world};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::{bim_labels, BimLabels};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::MeasureSelectItem;
@@ -76,7 +77,7 @@ pub fn engagements(snapshot: &ModelSnapshot, view_state: &ViewModel, plan_storey
     HashMap::from([(
         window.clone(),
         WindowEngagement {
-            session_active: Some(kind == Some(world::WINDOW_KIND_ID) && crate::editor::bim::utilities::draws(crate::editor::bim::utilities::active(view_state))),
+            session_active: Some(kind == Some(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID) && semio_s_artifact_bim_model_kit::editor::bim::utilities::draws(semio_s_artifact_bim_model_kit::editor::bim::utilities::active(view_state))),
             options: None,
             input,
             control: None,
@@ -113,8 +114,8 @@ fn view_items(snapshot: &ModelSnapshot, ids: Vec<String>) -> Vec<(String, String
     ids.into_iter().map(|id| (snapshot.views.get(&id).map_or_else(|| id.clone(), |row| row.name.clone()), id)).map(|(name, id)| (id, name)).collect()
 }
 
-fn plan_measures(snapshot: &ModelSnapshot, config: &plan::config::BimPlanWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
-    let view = plan::active_view(snapshot, config).unwrap_or_default();
+fn plan_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+    let view = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_view(snapshot, config).unwrap_or_default();
     vec![select("bim.measure.plan.view", labels.measure_view.as_str(), &view, view_items(snapshot, plan::plan_views(snapshot)), "view")]
 }
 
@@ -126,7 +127,7 @@ fn export_toggles(labels: &BimLabels) -> Vec<WindowMeasure> {
         .collect()
 }
 
-fn world_measures(snapshot: &ModelSnapshot, config: &world::config::BimWorldWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+fn world_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
     let projection = vec![
         ("threePoint".to_string(), labels.projection_three_point.as_str().to_string()),
         ("orthographic".to_string(), labels.projection_orthographic.as_str().to_string()),
@@ -165,12 +166,12 @@ fn world_measures(snapshot: &ModelSnapshot, config: &world::config::BimWorldWind
     ]
 }
 
-fn section_measures(snapshot: &ModelSnapshot, config: &section::config::BimSectionWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
-    let view = section::active_view(snapshot, config).unwrap_or_default();
+fn section_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+    let view = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::active_view(snapshot, config).unwrap_or_default();
     vec![select("bim.measure.section.view", labels.measure_view.as_str(), &view, view_items(snapshot, section::vertical_views(snapshot)), "view")]
 }
 
-fn schedule_measures(snapshot: &ModelSnapshot, config: &schedule::config::BimScheduleWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+fn schedule_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
     let mut items = vec![(String::new(), labels.sch_back.as_str().to_string())];
     items.extend(snapshot.schedules.iter().map(|(id, row)| (id.clone(), row.name.clone())));
     let mut measures = vec![select("bim.measure.schedule.shown", labels.kind_schedule.as_str(), &config.schedule, items, "schedule")];
@@ -181,9 +182,9 @@ fn schedule_measures(snapshot: &ModelSnapshot, config: &schedule::config::BimSch
     measures
 }
 
-fn sheet_measures(snapshot: &ModelSnapshot, config: &sheet::config::BimSheetWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
-    let shown = sheet::active_sheet(snapshot, config).unwrap_or_default();
-    let items = crate::editor::bim::entities::sheets::sheet_choices(snapshot, labels);
+fn sheet_measures(snapshot: &ModelSnapshot, config: &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig, labels: &BimLabels) -> Vec<WindowMeasure> {
+    let shown = semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::active_sheet(snapshot, config).unwrap_or_default();
+    let items = semio_s_artifact_bim_model_entities::editor::bim::entities::sheets::sheet_choices(snapshot, labels);
     let export = |format: &str, only: Option<&str>, label: &str, id: &str| {
         let mut args = vec![("format".to_string(), DslValue::String(format.to_string())), ("locale".to_string(), DslValue::String(labels.locale().as_str().to_string()))];
         if let Some(sheet) = only {
@@ -203,11 +204,11 @@ pub fn measures<C>(snapshot: &ModelSnapshot, cfg: &ConfigView<'_, C>, view_state
     let (Some(window), Some(kind)) = (view_state.window_id.clone(), addressed_kind(view_state)) else { return HashMap::new() };
     let labels = bim_labels(view_state);
     let measures = match kind {
-        plan::WINDOW_KIND_ID => plan_measures(snapshot, &plan::config::current(cfg), labels),
-        world::WINDOW_KIND_ID => world_measures(snapshot, &world::config::current(cfg), labels),
-        section::WINDOW_KIND_ID => section_measures(snapshot, &section::config::current(cfg), labels),
-        schedule::WINDOW_KIND_ID => schedule_measures(snapshot, &schedule::config::current(cfg), labels),
-        sheet::WINDOW_KIND_ID => sheet_measures(snapshot, &sheet::config::current(cfg), labels),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID => plan_measures(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::current(cfg), labels),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID => world_measures(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world::config::current(cfg), labels),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID => section_measures(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section::config::current(cfg), labels),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::WINDOW_KIND_ID => schedule_measures(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule::config::current(cfg), labels),
+        semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID => sheet_measures(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet::config::current(cfg), labels),
         _ => Vec::new(),
     };
     HashMap::from([(window, measures)])
@@ -215,7 +216,7 @@ pub fn measures<C>(snapshot: &ModelSnapshot, cfg: &ConfigView<'_, C>, view_state
 
 /// 🪜️ The storey the addressed plan window shows, for its status line.
 pub fn plan_storey<C>(snapshot: &ModelSnapshot, cfg: &ConfigView<'_, C>, view_state: &ViewModel) -> Option<String> {
-    (addressed_kind(view_state) == Some(plan::WINDOW_KIND_ID)).then(|| plan::active_storey(snapshot, &plan::config::current(cfg))).flatten()
+    (addressed_kind(view_state) == Some(semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID)).then(|| semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::active_storey(snapshot, &semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan::config::current(cfg))).flatten()
 }
 //#endregion 🔖️Measures
 

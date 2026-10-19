@@ -447,8 +447,9 @@ impl ReconstructionRunJob {
     }
 }
 
-impl InteractiveJob for ReconstructionRunJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+impl ReconstructionRunJob {
+    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
         if self.closing || cx.is_cancelled() {
             return JobOutcomeBorrow::admit_cancelled(cx);
         }
@@ -493,6 +494,10 @@ impl InteractiveJob for ReconstructionRunJob {
             }
         }
     }
+}
+
+impl InteractiveJob for ReconstructionRunJob {
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         borrow_remodel_outcome(&self.outbox, descriptor)
@@ -502,43 +507,45 @@ impl InteractiveJob for ReconstructionRunJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.closing = true;
-        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };
-        }
-        if let Some(step) = close_outbox_turn(&mut self.outbox, grant) {
-            return step;
-        }
-        if let Some(owner) = self.remnant.as_mut() {
-            let step = owner.step(grant);
-            if owner.terminal_is_empty() {
-                self.remnant = None;
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::close_original_granted_step(cx,|grant|{
+            self.closing = true;
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
             }
-            return match step {
-                Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
-                Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
-        }
-        if matches!(self.phase, RunPhase::Settled) && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };
-        }
-        let remnant = RunRemnant { phase: std::mem::replace(&mut self.phase, RunPhase::Settled), engine: self.engine.take(), scene: self.scene.take(), observations: std::mem::take(&mut self.observations), owed: std::mem::take(&mut self.owed) };
-        match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
-            Ok(owner) => {
-                self.remnant = Some(owner);
-                InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+            if let Some(step) = close_outbox_turn(&mut self.outbox, grant)? {
+                return Ok(step);
             }
-            Err((error, remnant)) => {
-                self.phase = remnant.phase;
-                self.engine = remnant.engine;
-                self.scene = remnant.scene;
-                self.observations = remnant.observations;
-                self.owed = remnant.owed;
-                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
+            if let Some(owner) = self.remnant.as_mut() {
+                let step = owner.step(grant);
+                if owner.terminal_is_empty() {
+                    self.remnant = None;
+                }
+                return Ok(match step {
+                    Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
+                    Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
+                    Err(error) => return Err(error),
+                });
             }
-        }
+            if matches!(self.phase, RunPhase::Settled) && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty() {
+                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
+            }
+            let remnant = RunRemnant { phase: std::mem::replace(&mut self.phase, RunPhase::Settled), engine: self.engine.take(), scene: self.scene.take(), observations: std::mem::take(&mut self.observations), owed: std::mem::take(&mut self.owed) };
+            Ok(match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+                Ok(owner) => {
+                    self.remnant = Some(owner);
+                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+                }
+                Err((error, remnant)) => {
+                    self.phase = remnant.phase;
+                    self.engine = remnant.engine;
+                    self.scene = remnant.scene;
+                    self.observations = remnant.observations;
+                    self.owed = remnant.owed;
+                    return Err(error)
+                }
+            })
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

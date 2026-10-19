@@ -2,14 +2,14 @@
 import{mkdtemp,rm}from"node:fs/promises";
 import{join}from"node:path";
 import{withRustUnitDescriptorNamespaceV2}from"../../🔒️namespace/🟦️.ts";
-import{resourceLeasePathV1}from"../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{resourceLeasePathV1}from"@semio-tech/process/leases";
 import{test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
 import ts from"typescript";
-import{readRustUnitV1,type RustUnitV1}from"../../../🟦️.ts";
+import { readRustUnitV1, type RustUnitV1 } from "../../../🧬️definition/🟦️.ts";
 import fixture from"../../../🧪️tests/🧫️fixtures/🔣️.json";
 import schema from"../🧬️schema/🔣️.json";
 import unitSchema from"../../../🧬️schema/🔣️.json";
@@ -17,9 +17,9 @@ import contextSchema from"../../../🧭️context/🧬️schema/🔣️.json";
 import planSchema from"../../../📋️plan/🧬️schema/🔣️.json";
 import corpus from"./🔣️.json";
 import corpusSchema from"./🧬️schema/🔣️.json";
-import{registerBuildTestLawV1}from"../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import{withIssuedResourceControlV1,withIssuedResourceOperationV1,scriptInvocationEnvironment}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{captureOwnedCommandResultV1}from"../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
+import{captureOwnedCommandResultV1}from"@semio-tech/process/execution";
 function values(rows:readonly{id:string;dependencies:readonly string[]}[]):RustUnitV1[]{return rows.map(row=>{const unit=readRustUnitV1(structuredClone(fixture.units[0]!));unit.id=row.id;unit.package=row.id;unit.manifest=row.id+"/Cargo.toml";unit.packageIdentity.id="path+file:///repo/"+row.id+"#0.1.0";unit.packageIdentity.provenance.identity=unit.manifest;unit.target.name=row.id;unit.target.entry=row.id+"/lib.rs";unit.inputs=unit.inputs.map(input=>({...input,path:input.kind==="source"?unit.target.entry:unit.manifest}));unit.outputs=["lib"+row.id+".rlib"];unit.dependencies=row.dependencies.map(id=>({unit:id,externName:id,public:false,noprelude:false,artifactDigest:null}));return unit;});}
 function frozen(value:unknown):boolean{return!value||typeof value!=="object"||Object.isFrozen(value)&&Object.values(value).every(frozen);}
 function edges(db:Database,rows:readonly{id:string;dependencies:readonly string[]}[]):void{db.exec("create table units(id text primary key);create table edges(predecessor text,consumer text)");for(const row of rows){db.query("insert into units values(?)").run(row.id);for(const id of row.dependencies)db.query("insert into edges values(?,?)").run(id,row.id);}}

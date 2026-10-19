@@ -3,7 +3,7 @@ import { test, expect } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
 import fixture from "../🧫️fixtures/🧩️history-partition.json" with { type: "json" };
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const pluginRoot = join(import.meta.dir, "../../..");
 type Item = { name: string; kind: string; crate: string };

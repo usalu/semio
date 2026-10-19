@@ -337,7 +337,7 @@ func (t *Ticket) GetDateStarted() time.Time {
 			return parsed
 		}
 	}
-	return time.Date(t.Year, time.Month(t.Month), t.Day, 0, 0, 0, 0, time.UTC)
+	return time.Date(2000+t.Year, time.Month(t.Month), t.Day, 0, 0, 0, 0, time.UTC)
 }
 
 // 🔖️GetDateFinished MUST return the stored value without modification.

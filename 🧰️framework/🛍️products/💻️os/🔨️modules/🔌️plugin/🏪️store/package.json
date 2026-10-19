@@ -6,13 +6,20 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./📥️installation/🟦️.ts"
+    ".": "./📥️installation/🟦️.ts",
+    "./installation/testing/fixtures.json": "./📥️installation/🧪️tests/🧫️fixtures/🔣️.json",
+    "./packaging/contract": "./📦️packaging/📋️contract/🟦️.ts",
+    "./packaging/schema.json": "./📦️packaging/🧬️schema/🔣️.json"
   },
   "dependencies": {
     "@semio-tech/framework-os": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "devDependencies": {
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/framework-os-dev": "workspace:*",
+    "@semio-tech/plugin-registry": "workspace:*",
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/repo-lib": "workspace:*",
+    "ajv": "8.20.0"
   }
 }

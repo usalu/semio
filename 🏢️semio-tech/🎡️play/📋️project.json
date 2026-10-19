@@ -288,7 +288,7 @@
               },
               {
                 "id": "flow-wasm",
-                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
                 "command": [
                   "bun",
                   "./📜️script.ts",

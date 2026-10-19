@@ -1,10 +1,13 @@
 //! 🔺️ Diff constructor for `SetWallBaseSlab`: a one-field wall patch assigning (or clearing) the slab the base of the wall is attached to. The slab must exist in the building of the wall and the chain of attach references must
 //! not loop (authored reads only); restating the current base slab is a no-op. The resolved base height follows by inference.
 
-use crate::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
-use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallBaseSlab, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -30,6 +30,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/�
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust", features = ["hot-path-census"] }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
@@ -45,7 +46,7 @@ semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

@@ -1,4 +1,4 @@
-import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
+import { inspectRustCompileReferences, type RustCompileReference } from "@semio-tech/compiler-syntax-rust-ts";
 import { expect, test } from "bun:test";
 import { writeRustLayerOracle } from "./🔮️oracle/🟦️.ts";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -496,4 +496,4 @@ test("unsupported compile expressions fail closed", () => {
   expect(rustSourceDirectionEdges("general/source.rs", inspectRustCompileReferences('include!(concat!(env!("OUT_DIR"), "/generated.rs"));'), fixture.rules)).toEqual([]);
 });
 
-import "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/📤️generation/🧪️tests/🟦️.ts";
+import "@semio-tech/compiler-syntax-rust-ts/generation/testing";

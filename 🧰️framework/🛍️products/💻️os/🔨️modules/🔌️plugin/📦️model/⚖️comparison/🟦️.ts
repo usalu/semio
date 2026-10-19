@@ -1,6 +1,6 @@
 import {requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
+import {type CompilerAdmissionControl} from "@semio-tech/process/compiler-capacity";
+import { readNativeCallerAuthorityV1 } from "@semio-tech/repo-lib/artifacts";
 import {componentStageTargetsV1,profileIndependenceSampleV1} from "../../🖨️describe/🧩️component-stage/🟦️.ts";
 import {withComponentModelV1} from "../👓️reading/🟦️.ts";
 /** ⚖️ Compares two previously produced actual model publications while both retained readers remain live. */

@@ -4,10 +4,10 @@ import { chromePanelSafeArea, type Anchor, type SafeAreaYield } from "@semio-tec
 import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json";
 import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️boot-example/🔣️.json";
-import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";
+import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "@semio-tech/framework-os-dev/boot-query";
 import { describe, expect, it } from "vitest";
 import { nodeGraphConnectionIsValid, portValueTypes, portValueTypesCompatible, wireRefusalLabelOptions, dagContentBounds, dagContentCoverage, dagEllipsizeByMeasure, dagFitCamera, dagStartupCamera, nodeGraphContentSignature, paintDagLabelOverlays, DAG_CONTENT_FIT_PADDING_PX, DAG_CONTENT_FRAMED_MIN_COVERAGE, DAG_CONTENT_REFIT_MAX_COVERAGE, DAG_LABEL_ELLIPSIS, resolveBootExampleId } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
-import { canvasCameraFitFixture as cameraFitFixture, canvasLabelFitFixture as labelFitFixture } from "../../../../../../../🔨️modules/🖼️canvas/🧪️tests/🧫️fixtures/🟦️.ts";
+import { canvasCameraFitFixture as cameraFitFixture, canvasLabelFitFixture as labelFitFixture } from "@semio-tech/framework-canvas-ts/testing/fixtures";
 import { flowPortTypesFixture as portTypesFixture } from "../../../../🌊️flow/🧪️tests/🧫️fixtures/🟦️.ts";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 

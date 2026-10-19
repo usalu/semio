@@ -14,7 +14,7 @@ function placedFacade(path:string):boolean{const targets=fixtureFacadeTargets(pa
 
 test("Actor and Job examples belong strictly to neutral tests",()=>{
  const all=owners.flatMap(owner=>files(join(modules,owner))),actual=all.filter(path=>path.split(/[\\/]/).includes("🧫️fixtures"));
- const independent=glob.sync(owners.map(owner=>`${owner}/**/🧫️fixtures/**/*`),{cwd:modules,absolute:true,onlyFiles:true});
+ const independent=glob.sync(owners.map(owner=>`${owner}/**/🧫️fixtures/**/*`),{cwd:modules,absolute:true,onlyFiles:true,followSymbolicLinks:false});
  expect(actual.map(path=>relative(modules,path)).sort()).toEqual(independent.map(path=>relative(modules,path)).sort());
  expect(actual.length).toBeGreaterThan(0);
  expect(actual.filter(path=>!belongsToTests(relative(modules,path))&&!placedFacade(path))).toEqual([]);

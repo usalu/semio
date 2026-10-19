@@ -47,7 +47,10 @@
 // #region 🔌️Adapters
 import * as THREE from "three";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
-import { digest } from "../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { sha256Hex } from "@semio-tech/framework/hash";
+
+/** #⃣ Stable content digest of a text or byte string: the leading 32 hex digits of its sha256. */
+const digest = (input: string | Uint8Array): string => sha256Hex(typeof input === "string" ? new TextEncoder().encode(input) : input).slice(0, 32);
 // #endregion 🔌️Adapters
 
 // #region 🧬️Model

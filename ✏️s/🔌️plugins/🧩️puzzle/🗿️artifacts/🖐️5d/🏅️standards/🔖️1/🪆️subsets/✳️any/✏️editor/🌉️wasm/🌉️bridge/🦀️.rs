@@ -8,7 +8,8 @@ pub use semio_s_artifact_puzzle_5d_document_records::editor::puzzle5d::wasm::bri
 
 use crate::editor::puzzle5d::Puzzle5dPlayApp;
 use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
-use std::cell::RefCell;
+use semio_s_plugin_puzzle_jobs::BrowserCaller;
+use std::cell::{Cell, RefCell};
 use wasm_bindgen::prelude::*;
 
 type Puzzle5dApp = VcsArtifactApp<EditorApp<Puzzle5dPlayApp>>;
@@ -21,6 +22,19 @@ const PUZZLE5D_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job::JOB_PA
 
 fn js_fault(error: impl ToString) -> JsValue {
     JsValue::from_str(&error.to_string())
+}
+
+/// 🧯️ Surfaces a value refusal to JavaScript as the structured fault its message names.
+fn value_to_js(error: semio_framework_value::ValueError) -> JsValue {
+    fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message()))
+}
+
+/// 🧯️ Surfaces a lifecycle failure to JavaScript: the original fault when the cause is one, else the whole cause.
+fn lifecycle_to_js(failure: semio_framework_plugin::PluginLifecycleFailure) -> JsValue {
+    match failure.primary {
+        semio_framework_plugin::PluginLifecyclePrimary::Fault(fault) => fault_bridge::fault_to_js(fault),
+        other => js_fault(format!("{other:?}")),
+    }
 }
 
 #[wasm_bindgen]
@@ -51,6 +65,8 @@ impl Puzzle5dEnvelopeLoadHandle {
 #[wasm_bindgen]
 pub struct Puzzle5dArtifactVcs {
     app: RefCell<Puzzle5dApp>,
+    caller: RefCell<BrowserCaller>,
+    closed: Cell<bool>,
 }
 
 #[wasm_bindgen]
@@ -67,7 +83,8 @@ impl Puzzle5dArtifactVcs {
             let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
             let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE5D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
             let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-            Ok(Self { app: RefCell::new(app) }.into())
+            let caller = BrowserCaller::admit(mounted_policy.maintenance).map_err(value_to_js)?;
+            Ok(Self { app: RefCell::new(app), caller: RefCell::new(caller), closed: Cell::new(false) }.into())
         })
     }
 
@@ -98,15 +115,24 @@ impl Puzzle5dArtifactVcs {
 
     #[wasm_bindgen(js_name = sealEnvelopeLoad)]
     pub fn seal_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-        self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)
+        let mut app = self.app.borrow_mut();
+        self.caller.borrow_mut().turn(|cx| app.seal_artifact_envelope_ingress(handle.runtime_handle(), cx)).map_err(value_to_js)?.map_err(fault_bridge::fault_to_js)
     }
 
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle5dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
         let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
-        app.maintenance_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)?;
-        match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)? {
+        let poll = self
+            .caller
+            .borrow_mut()
+            .turn(|cx| {
+                app.maintenance_step(cx, funded_turn(demand))?;
+                app.advance_artifact_envelope_load(handle.runtime_handle(), cx)
+            })
+            .map_err(value_to_js)?
+            .map_err(lifecycle_to_js)?;
+        match poll {
             ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
             ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
             ArtifactEnvelopeDecodeOperationPoll::Ready => {
@@ -133,12 +159,17 @@ impl Puzzle5dArtifactVcs {
 
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&self) -> Result<bool, JsValue> {
-        let mut app = self.app.borrow_mut();
-        let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
-        match app.close_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)? {
-            semio_framework_plugin::PluginLifecycleStep::Complete(_) => Ok(true),
-            semio_framework_plugin::PluginLifecycleStep::Progress(_) | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. } | semio_framework_plugin::PluginLifecycleStep::Blocked { .. } => Ok(false),
+        let mut caller = self.caller.borrow_mut();
+        if !self.closed.get() {
+            let mut app = self.app.borrow_mut();
+            let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(value_to_js)?;
+            let step = caller.turn(|cx| app.close_step(cx, funded_turn(demand))).map_err(value_to_js)?.map_err(lifecycle_to_js)?;
+            if !matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
+                return Ok(false);
+            }
+            self.closed.set(true);
         }
+        caller.retire_step().map_err(value_to_js)
     }
 }
 

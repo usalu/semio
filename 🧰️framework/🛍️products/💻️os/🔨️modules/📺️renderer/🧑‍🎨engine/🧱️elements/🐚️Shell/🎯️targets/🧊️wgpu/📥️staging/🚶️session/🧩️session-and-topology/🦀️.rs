@@ -439,8 +439,8 @@ pub fn panel_json(state: &SpacePanelState) -> Result<String, String> {
 /// own spelling, and the two are wire-identical by contract (`"viewer"`/`"editor"`).
 pub fn boot_app_role() -> semio_framework::manifest::AppRole {
     match semio_framework_os_renderer_wgpu_host_base::boot_app_role() {
-        ui_wgpu::wgpu::component::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
-        ui_wgpu::wgpu::component::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
+        semio_framework_ui_declaration::role_chrome::ChromeRole::Viewer => semio_framework::manifest::AppRole::Viewer,
+        semio_framework_ui_declaration::role_chrome::ChromeRole::Editor => semio_framework::manifest::AppRole::Editor,
     }
 }
 

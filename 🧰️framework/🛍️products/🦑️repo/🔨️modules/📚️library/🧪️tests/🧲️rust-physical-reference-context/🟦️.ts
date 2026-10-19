@@ -6,7 +6,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
-import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustManifestPathCandidates } from "../../🔍️discovery/🧷️rust-path-references/🟦️.ts";
 import { inspectRustModuleGraph } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦️.ts";

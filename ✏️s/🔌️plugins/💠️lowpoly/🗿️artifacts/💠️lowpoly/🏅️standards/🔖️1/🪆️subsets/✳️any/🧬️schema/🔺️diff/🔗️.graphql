@@ -1,6 +1,6 @@
 # import LowpolyMeshState,LowpolyMeshStateInput,LowpolyMeshAttribute from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ Lowpoly diff schema — sparse field delta.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import ArtifactChild from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔗️.graphql"
 # import LowpolyObject, LowpolyPaintLayer from "../🔗️.graphql"
 
 type LowpolyDiff {

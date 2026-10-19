@@ -250,3 +250,11 @@ func TestTicketGetEffort(t *testing.T) {
 		t.Errorf("emptyTicket.GetEffort() = %q, want ''", got)
 	}
 }
+
+func TestTicketDateStartedFallsBackToTheTicketDay(t *testing.T) {
+	ticket := &Ticket{Year: 26, Month: 10, Day: 18}
+	started := ticket.GetDateStarted()
+	if started.Year() != 2026 || int(started.Month()) != 10 || started.Day() != 18 {
+		t.Fatalf("a ticket without interactions must start on its own day (two-digit year 26 is 2026), got %s", started)
+	}
+}

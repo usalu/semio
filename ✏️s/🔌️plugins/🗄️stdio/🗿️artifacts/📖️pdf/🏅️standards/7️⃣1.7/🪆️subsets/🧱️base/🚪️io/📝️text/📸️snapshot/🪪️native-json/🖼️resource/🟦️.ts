@@ -1,12 +1,15 @@
 import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 🖼️ Explicit native JSON admission into the single owned PDF resource domain. */
-import type { PdfImage, PdfImageBody, PdfImageMask } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
+import type { PdfImage, PdfImageMask } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
 import type { PdfCcittParameters } from "../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
-import type { PdfExtGState, PdfSoftMask, PdfFormXObject, PdfTransparencyGroup, PdfLineCap, PdfLineJoin } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfExtGState, PdfSoftMask, PdfFormXObject, PdfTransparencyGroup } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfLineCap, PdfLineJoin } from "../../../../../🧬️schema/📸️snapshot/🖊️line-style/🟦️.ts";
 import type { PdfShading, PdfShadingKind, PdfPattern, PdfPatternKind } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🌈️shading/🟦️.ts";
 import type { Binary64 } from "@semio-tech/framework/value/ieee754";
-import { record,array,text,boolean,integer,integers,real,reals,four,pdfDictionaryFromNativeJson,pdfFunctionFromNativeJson,pdfColorFromNativeJson } from "../🟦️.ts";
+import { pdfDictionaryFromNativeJson, pdfFunctionFromNativeJson, pdfColorFromNativeJson } from "../🟦️.ts";
+import { record, array, text, boolean, integer, integers, real, reals, four } from "../🧰️scalars/🟦️.ts";
 import { pdfMatrixFromNativeJson,pdfOperationFromNativeJson } from "../🖋️content/🟦️.ts";
+import { pdfImageBodyFromNativeJson } from "../🧱️image-body/🟦️.ts";
 
 const optionalText=(value:unknown)=>value==null?null:text(value);
 const optionalInteger=(value:unknown)=>value==null?null:integer(value);
@@ -19,8 +22,6 @@ function join(input:unknown):PdfLineJoin|null{if(input==null)return null;switch(
 
 /** 📠️ Admit every CCITT parameter and its authored native default. */
 export function pdfCcittFromNativeJson(input:unknown):PdfCcittParameters{const row=record(input);return {k:integer(row.k??0),columns:integer(row.columns??1728),rows:integer(row.rows??0),blackIs1:boolean(row.blackIs1??false),encodedByteAlign:boolean(row.encodedByteAlign??false),endOfLine:boolean(row.endOfLine??false),endOfBlock:boolean(row.endOfBlock??true),damagedRowsBeforeError:integer(row.damagedRowsBeforeError??0)};}
-/** 🖼️ Admit logical sample words or an explicit foreign artifact reference. */
-export function pdfImageBodyFromNativeJson(input:unknown):PdfImageBody{const row=record(input);const kind=text(row.kind);switch(kind){case "samples":{const values=integers(row.values);if(values.some(value=>value<0||value>65535))throw new Error("PDF sample is outside its logical word width");return {kind,values};}case "artifact":return {kind,reference:parseArtifactRef(row.reference)};default:throw new Error("Unknown PDF image body");}}
 /** 🎭️ Admit stencil and ordered color-key image masks. */
 export function pdfImageMaskFromNativeJson(input:unknown):PdfImageMask{const row=record(input);const kind=text(row.kind);switch(kind){case "stencil":return {kind,image:text(row.image)};case "colorKey":return {kind,ranges:integers(row.ranges)};default:throw new Error("Unknown PDF image mask");}}
 /** 🖼️ Admit every image field into exact owned scalar and intrinsic byte types. */

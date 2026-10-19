@@ -207,7 +207,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		return ArtifactRef{Kind: "folder", Path: workspace.NormalizePath(strings.TrimSuffix(ref, "/"))}
 	}
 	normalized := workspace.NormalizePath(ref)
-	absPath := filepath.Join(workspace.RootDir, normalized)
+	absPath := filepath.Join(workspace.GetRootDir(), normalized)
 	if info, err := os.Stat(absPath); err == nil && info.IsDir() {
 		return ArtifactRef{Kind: "folder", Path: normalized}
 	}

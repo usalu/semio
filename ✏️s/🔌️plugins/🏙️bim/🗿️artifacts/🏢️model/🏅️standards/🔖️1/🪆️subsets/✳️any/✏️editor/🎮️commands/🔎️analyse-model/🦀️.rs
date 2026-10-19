@@ -3,11 +3,12 @@
 //! and a settled session afterwards, so the next read answers from memory. [`AnalyseWork`] is its retained-command shell, which honours `StepContext::is_cancelled`. The dispatch path [`handle`]
 //! settles the session in one go for callers that do not run jobs.
 
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::editor::bim::{BimCommand, BimModelApp};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
@@ -74,7 +75,7 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for AnalyseWork {
 
 /// 🔎️ The synchronous path: the session settled at the document in one go.
 pub fn handle(_payload: &AnalyseModel, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
-    crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|_|()).map_err(ended)?;
+    semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(ctx.gestures.as_ref(),doc.snapshot,|_|()).map_err(ended)?;
     Ok(Emit::default())
 }
 

@@ -36,7 +36,7 @@ semio-framework-value-native-decoding = { path="../../🛬️decode/📦️packa
 semio-framework-value-native-encoding = { path="../../🛫️encode/📦️packages/🦀️rust" }
 semio-framework-value-original-aliases = { path="../../♻️retirement/📦️aliases/📦️packages/🦀️rust" }
 semio-framework-value-retirement-queue = { path="../../♻️retirement/📋️queue/📦️packages/🦀️rust" }
-semio-framework-value-shared-issuance = { path="../../♻️retirement/🔗️shared/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-value-shared-issuance = { path="../../♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-value-factory = { path="../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-value-retirement = { path="../../♻️retirement/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path="../../📋️list/📦️packages/🦀️rust" }

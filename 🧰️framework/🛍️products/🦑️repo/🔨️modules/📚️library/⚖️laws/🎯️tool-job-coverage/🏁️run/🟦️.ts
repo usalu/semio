@@ -1,17 +1,18 @@
 /** 🏁️ Tool-job coverage: retained-command checkpoint laws and the census run behind `verify interactivity tool-jobs`.
  * @see 📜️script.ts
  */
-import { toolJobMemberStoreProducerExact, type ToolJobMemberStoreProducerSources } from "../../../../../../💻️os/🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts";
-import { readMcpGatewaySource } from "../../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
+import { toolJobMemberStoreProducerExact, type ToolJobMemberStoreProducerSources } from "@semio-tech/framework-os/modules/store/initialization/owners/member/source";
+import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
 import { policyReadFileSafe, policyReadModuleTreeSource, policyReadWitPackageSource, POLICY_SPLIT_SOURCE_ROOTS } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { relative } from "node:path";
+import { readSourceFamilySource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { policyReadMemberStoreProducerSources, policyReadOsStoreSource, policyReadRustPolicySource } from "../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
 import { toolJobArtifactEnvelopeOwnedCodecExact, toolJobChildContentRootExact, toolJobImmutableOperationRootsExact } from "../🗄️artifact-store/🟦️.ts";
 import { toolJobArtifactStoreStructuralOwnersExact, toolJobChildRetirementInventoryExact, toolJobPagedIngressExact, toolJobPeerInteractionRootsExact } from "../🗄️artifact-store/🏛️structural-owners/🟦️.ts";
 import { toolJobDrawingEnvelopeCallerRetainedExact, toolJobRasterEnvelopeCallerRetainedExact } from "../🗄️artifact-store/🖼️caller-retained-media/🟦️.ts";
 import { toolJobGisMapEnvelopeCallerRetainedExact, toolJobJackEnvelopeCallerRetainedExact, toolJobPresentationEnvelopeCallerRetainedExact, toolJobTrinityRewriteEnvelopeCallerRetainedExact, toolJobWriterEnvelopeCallerRetainedExact } from "../🗄️artifact-store/📄️caller-retained-documents/🟦️.ts";
-import { toolJobFrameworkReservedRoutesExact, toolJobMicrosecondWorkerExact, toolJobPluginProductionSources, toolJobProofCatalogFailures } from "../🏭️factory/🟦️.ts";
+import { toolJobFrameworkReservedRoutesExact, toolJobMicrosecondWorkerExact, toolJobPluginFamilySource, toolJobMicrosecondWorkerSources, toolJobExternalSchemaConstants, toolJobPluginProductionSources, toolJobProofCatalogFailures } from "../🏭️factory/🟦️.ts";
 import { type FixedOperationFixtureOutput, toolJobDrawingGestureOperationOwnerExact, toolJobFixedOperationFixtureRun, toolJobFixedOperationRegistryExact, toolJobFixedOperationRustFixtureSource, toolJobSharedFrameworkActionFixtureRun } from "../⚙️fixed-operation/🟦️.ts";
 import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, TOOL_JOB_PLUGIN_RESERVED_IDS, toolJobAppOwnedRows, type ToolJobCoverageReport, toolJobDispositions, toolJobGlobalPayloadStoreInventory, toolJobGlobalPayloadStoreIsSharedFixedAuthority, toolJobProductionSource, toolJobProofIdentity, toolJobProofs, toolJobRustBlock, toolJobScanThenMonolithRows, toolJobStaticRows } from "../📋️inventory/🟦️.ts";
 import { toolJobCancellationScopesBounded, toolJobDecodeAfterAdmission, toolJobDropCancellationBounded, toolJobExternalCancellationOwned, toolJobHardBoundedCloseExact, toolJobLiveInstanceIsolated, toolJobMediaExportBounded, toolJobOpaqueFutureProductionFailClosed, toolJobQualifiedProofBeforeDecode, toolJobReactorCloseBounded, toolJobReservedImporterOwners, toolJobRuntimeProofQualified, toolJobRuntimeRegistryFixedClose, toolJobTypedDispatchExact, toolJobWireDispatchExact } from "../🔒️lifecycle/🟦️.ts";
@@ -19,7 +20,7 @@ import { toolJobActorProgressOverlayExact } from "../🔁️live-replay/🟦️.
 import { toolJobFem2dMountedSessionExact } from "../🔁️live-replay/🪟️fem2d-mounted-session/🟦️.ts";
 import { toolJobFemNumericalMicrocursorExact } from "../🔁️live-replay/🧮️fem-numerical-microcursor/🟦️.ts";
 import { toolJobUniversalRetainedOwnershipExact } from "../🔁️live-replay/🧊️retained-ownership/🟦️.ts";
-import { toolJobEphemeralOneItemPublicationBounded, toolJobFullOperationBounded, toolJobImportPreparationBounded, toolJobMountedDispatchOneTurnExact, toolJobPublicationFreshnessBeforeEveryTurn, toolJobStoreBatchPublicationBounded, toolJobTypedPersistentFoundation, toolJobTypedRouteFailsClosedBeforePreparation } from "../📤️publication/🟦️.ts";
+import { toolJobEphemeralOneItemPublicationBounded, toolJobFullOperationBounded, toolJobImportPreparationBounded, toolJobMountedDispatchOneTurnExact, toolJobPluginInstanceSource, toolJobPublicationFreshnessBeforeEveryTurn, toolJobStoreBatchPublicationBounded, toolJobStoreSource, toolJobTypedPersistentFoundation, toolJobTypedRouteFailsClosedBeforePreparation } from "../📤️publication/🟦️.ts";
 import { toolJobPuzzle2dReservedRoutesExact, toolJobPuzzleReservedRoutesExact, toolJobSegmentedTerminalDrainExact } from "../🛣️routes/🟦️.ts";
 import type { SelfTestLanes } from "../../🧪️self-test-lanes/🟦️.ts";
 
@@ -146,16 +147,16 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
   const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
   const deletedRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Deleted").length;
-  const actionBus = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️.rs");
+  const actionBus = readSourceFamilySource(`${root}/🧰️framework/🔨️modules/🎯️action-bus`, { tests: true });
   const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️.rs");
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/🦀️.rs");
-  const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
+  const plugin = toolJobPluginFamilySource(root);
   const artifactRetainedCommand = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
   const store = policyReadOsStoreSource(root);
   const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs");
   const vcs = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs");
-  const channel = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs");
+  const channel = readSourceFamilySource(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel`);
   const actor = policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/🎭️actor/🦀️.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs");
   const pluginHost = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs");
@@ -171,31 +172,35 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const manifest = policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/🛂️manifest/🕹️actions/🦀️.rs");
   const componentWit = policyReadWitPackageSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema");
   const reactor = policyReadModuleTreeSource(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs");
-  const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️.rs");
+  const family = (relative: string): string => readSourceFamilySource(`${root}/${relative}`, { tests: true });
+  const reactorFamily = family("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor");
+  const valueSnapshotRead = policyReadFileSafe(root, "🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs");
+  const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📮️requests/🦀️.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️.rs");
-  const fem2dSession = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs");
-  const fem2dEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🦀️.rs");
-  const fem2dModel = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs");
+  const fem2dEditorFolder = "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor";
+  const fem2dSession = family(`${fem2dEditorFolder}/🧵️session`);
+  const fem2dEditor = family(fem2dEditorFolder);
+  const fem2dModel = family(`${fem2dEditorFolder}/🎭️modes/✏️edit/🪟️windows/🧱️model`);
   const femPluginRoot = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/🦀️.rs");
-  const femGlue = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/🦀️.rs");
-  const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs");
-  const femMesh = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs");
+  const femGlue = policyReadFileSafe(root, "🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml");
+  const femAnalyses = family("✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses");
+  const femMesh = family("✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh");
   const femSparse = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs");
   const femEngineModel = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️.rs");
   const femElements2d = policyReadModuleTreeSource(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/📏️elements2d/🦀️.rs");
   const presentationEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-  const presentationWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const presentationWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs");
   const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
-  const writerEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const writerEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+  const writerWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs");
   const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const jackEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs");
   const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs");
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs");
   const gisMapEditor = policyReadModuleTreeSource(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-  const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs");
   const rasterRetainedSource = (file: string): string => {
     const source = policyReadFileSafe(root, file);
     if (source.trim() === "") throw new Error(`[verify interactivity tool-jobs] retained Raster envelope source ${JSON.stringify(file)} is missing or empty; the Raster envelope law cannot be evaluated against a path that does not resolve.`);
@@ -206,10 +211,8 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖼️tiff/🔖️6.0/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🪟️bmp/🔖️v3/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📸️jpg/🔖️jfif-1.01/♾️any/🦀️.rs",
     "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs",
-    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dwg/🔖️ac1018/✳️any/🦀️.rs",
   ]
     .map(rasterRetainedSource);
   const rasterEnvelopeCodec = [
@@ -275,13 +278,13 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   if (!toolJobDrawingGestureOperationOwnerExact(drawingEditor, drawingConfig, drawingConfigProto, plugin)) failures.push("Drawing gesture operation state remains process-global or persisted through Config/Draft/document lanes instead of one instance-retained worker owner");
   if (staticRows.length < commandRows.length) failures.push(`literal registration census regressed below macro census (${staticRows.length} < ${commandRows.length})`);
   if (!plugin.includes("pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];")) failures.push("app_commands! does not generate the exact ToolCommandCatalog row list");
-  if ((plugin.match(/const TOOL_JOB_IDS: &'static \[&'static str\] = Self::TOOL_JOB_IDS;/g) ?? []).length !== 6) failures.push("app_commands! does not publish every generated row list through both typed catalog traits");
+  if ((plugin.match(/const TOOL_JOB_IDS: &'static \[&'static str\] = Self::TOOL_JOB_IDS;/g) ?? []).length !== 8) failures.push("app_commands! does not publish every generated row list through both typed catalog traits");
   if (!actionBus.includes("pub struct ActionBus {") || !actionBus.includes("trait ErasedToolJobFactory")) failures.push("ActionBus is not a heterogeneous erased-factory registry");
   if (actionBus.includes("NoToolJobFactories") || actionBus.includes("NoInteractiveJobs") || platform.includes("NoToolJobFactories") || glue.includes("NoToolJobFactories")) failures.push("a hard-coded no-factory sentinel remains in production framework wiring");
   if (!platform.includes("pub action_bus: ActionBus,") || !platform.includes("ActionBus::production()")) failures.push("Platform does not own the shared production heterogeneous ActionBus");
   if (!plugin.includes("ActionBus::production()") || /register_once\(AppCommandJobFactory/.test(plugin)) failures.push("generic AppCommandJobFactory registration remains or production ActionBus activation is absent");
   if (!plugin.includes("<A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS")) failures.push("production factory registration is not generated from the typed command schema");
-  if (!plugin.includes("ToolOperationSpec::new(") || !plugin.includes(".tool_jobs\n                .dispatch(")) failures.push("typed app commands do not dispatch a typed ToolOperationSpec through ActionBus");
+  if (!plugin.includes("ToolOperationSpec::new(") || !plugin.includes("self.tools.tool_jobs.dispatch(operation_spec)")) failures.push("typed app commands do not dispatch a typed ToolOperationSpec through ActionBus");
   if (!actionBus.includes("pub fn admit_exact_wire") || !plugin.includes(".admit_exact_wire(")) failures.push("typed command admission does not enforce the exact owner/tool/schema raw-wire contract before decoding");
   if (!toolJobTypedDispatchExact(actionBus) || !actionBus.includes('bus.dispatch(operation_spec("app", "alias"))')) failures.push("public typed ActionBus dispatch still permits alias fallback");
   if (!toolJobWireDispatchExact(actionBus) || !actionBus.includes('bus.dispatch_wire("app", "alias"')) failures.push("public wire ActionBus dispatch still permits alias fallback");
@@ -292,17 +295,19 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   const puzzle5dEvidence = policyReadRustPolicySource(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
   const puzzleReservedExact = toolJobPuzzleReservedRoutesExact(puzzle5dEvidence, plugin, puzzleJobs);
   const puzzle2dReservedExact = toolJobPuzzle2dReservedRoutesExact(puzzle2d, plugin, puzzleJobs);
-  const importPreparationBounded = toolJobImportPreparationBounded(plugin);
-  const fullToolOperationJobBounded = toolJobFullOperationBounded(plugin);
-  const storeOneItemPublicationBounded = toolJobStoreBatchPublicationBounded(store, plugin);
-  const ephemeralOneItemPublicationBounded = toolJobEphemeralOneItemPublicationBounded(store, plugin);
+  const instance = toolJobPluginInstanceSource(root);
+  const storeOwners = toolJobStoreSource(root);
+  const importPreparationBounded = toolJobImportPreparationBounded(instance);
+  const fullToolOperationJobBounded = toolJobFullOperationBounded(instance);
+  const storeOneItemPublicationBounded = toolJobStoreBatchPublicationBounded(storeOwners, instance);
+  const ephemeralOneItemPublicationBounded = toolJobEphemeralOneItemPublicationBounded(storeOwners, instance);
   const fullToolOperationBounded = fullToolOperationJobBounded && storeOneItemPublicationBounded && ephemeralOneItemPublicationBounded;
   if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
   if (!importPreparationBounded) failures.push("shared import submission serializes or clones the whole media envelope before resumable job construction");
   if (!fullToolOperationJobBounded) failures.push("shared typed-command preparation remains outside the resumable job protocol");
   if (!storeOneItemPublicationBounded) failures.push("shared one-item Store publication still enters whole replay/apply/outbound work instead of a domain-prepared persistent publication");
   if (!ephemeralOneItemPublicationBounded) failures.push("shared Presence/Transient one-item publication lacks retained preparation, displaced-root retirement, ACK, cancellation, or terminal-empty closure");
-  if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(plugin) || !toolJobTypedPersistentFoundation(plugin))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
+  if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(instance) || !toolJobTypedPersistentFoundation(instance))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
   if (!toolJobImmutableOperationRootsExact(store)) failures.push("document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots");
   if (!toolJobChildContentRootExact(store, plugin)) failures.push("typed command preparation lacks a fixed-width event-maintained immutable child-content root and no-default terminal-witnessed old-root retirement authority");
   if (!toolJobMemberStoreProducerExact(policyReadMemberStoreProducerSources(root))) failures.push("generated member create/open permits a missing, partial, default, or wrapper-bypassable snapshot/whole-store disposal owner");
@@ -320,7 +325,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
   if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
   if (!toolJobUniversalRetainedOwnershipExact(jobRuntime, nativeIo, wgpuHost, allRustFiles)) failures.push("universal retained job ownership still permits optional job close, post-work fault allocation, legacy drains/constructors, resizable Native I/O outputs, or future-driven mounted session progress");
-  if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactor, store, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
+  if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactorFamily, `${store}\n${valueSnapshotRead}`, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
   if (!toolJobFemNumericalMicrocursorExact(femSparse, femMesh, femAnalyses, femEngineModel, femElements2d, fem2dSession, jobRuntime)) failures.push("P6h FEM numerical LDLT, subspace, constraint recovery, or fixed-schema stiffness loops lack exact persistent microcursors, owner credit, identity, or hostile laws");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!puzzle2dReservedExact) failures.push("Puzzle2d clipboard/import routes lack an app-owned fragment vocabulary, the four reserved route branches, or a cancellable complete-before-output clipboard step");
@@ -334,16 +339,16 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   if (!toolJobOpaqueFutureProductionFailClosed(reactorJobs)) failures.push("production reactor jobs still carry an opaque Future path, a cfg-split admission, or an undeclared builtin set instead of one bounded state-machine registry");
   if (!toolJobSegmentedTerminalDrainExact(`${plugin}\n${componentWit}`)) failures.push("segmented download authority lacks its exact WIT guest bridge or is removed before the host observes terminal None");
   if (!toolJobLiveInstanceIsolated(plugin)) failures.push("typed operation/cancellation scope does not distinguish live app instances from static owner/controller identity");
-  failures.push(...toolJobProofCatalogFailures(allRustFiles, staticRows, dispositions, proofs));
+  failures.push(...toolJobProofCatalogFailures(productionFiles, staticRows, dispositions, proofs, toolJobExternalSchemaConstants(allRustFiles)));
   if (proofIdentities.size !== proofs.length) failures.push("bounded reducer proof identities are not unique");
   if (!toolJobRuntimeProofQualified(plugin)) failures.push("runtime activation or public DFF admission drops the compiler-derived owner witness or exact controller/owner/factory/tool/schema proof identity");
   if (proofs.some((proof, index) => proofs.slice(index + 1).some((other) => other.controllerId === proof.controllerId && other.toolId === proof.toolId && other.values[0] !== proof.values[0]))) failures.push("same-controller/tool qualified proofs disagree on their public raw-wire limit");
-  const innerStart = plugin.lastIndexOf("async fn dispatch_typed_command_inner");
-  const innerOpen = innerStart < 0 ? -1 : plugin.indexOf("{", innerStart);
-  const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
+  const innerStart = instance.lastIndexOf("async fn dispatch_typed_command_inner");
+  const innerOpen = innerStart < 0 ? -1 : instance.indexOf("{", innerStart);
+  const inner = innerOpen < 0 ? undefined : toolJobRustBlock(instance, innerOpen);
   if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
-  if (!toolJobMountedDispatchOneTurnExact(plugin)) failures.push("production typed dispatch is not one explicitly admitted WorkerJobSession turn");
-  if (!toolJobMicrosecondWorkerExact(plugin, jobRuntime, policyReadModuleTreeSource(root, "🧰️framework/🔨️modules/⏱️trace/🦀️.rs"), policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs"))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
+  if (!toolJobMountedDispatchOneTurnExact(instance)) failures.push("production typed dispatch performs a worker turn, or the mounted operation does not admit its pending worker session and pump it once through the exact work loan");
+  if (!toolJobMicrosecondWorkerExact(toolJobMicrosecondWorkerSources(root))) failures.push("bounded command worker does not enforce decoded, work, exact microsecond step-time, and output contract limits");
   const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
   const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
   const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
@@ -355,7 +360,7 @@ export async function toolJobCoverageRun(root: string, lanes: SelfTestLanes): Pr
   if (appOwnedRows.some((row) => row.publicationLanes.length === 0)) failures.push(`${appOwnedRows.filter((row) => row.publicationLanes.length === 0).length} app-owned retained route(s) lack an exact nonempty publication-lane contract`);
   if (appOwnedRows.some((row) => row.publicationLanes.length > 0 && !row.publicationReady)) failures.push(`${appOwnedRows.filter((row) => row.publicationLanes.length > 0 && !row.publicationReady).length} app-owned retained route(s) declare Store publication lanes without their exact app-owned preparation authority`);
   if (/"typed-command"\.to_string\(\)/.test(inner?.body ?? "")) failures.push("typed-command dispatch fallback remains");
-  if (!toolJobPublicationFreshnessBeforeEveryTurn(plugin))
+  if (!toolJobPublicationFreshnessBeforeEveryTurn(instance))
     failures.push("commit freshness is not validated before every pending or newly begun result-publication turn");
   const remainingCommands = staticRows
     .filter((row) => {

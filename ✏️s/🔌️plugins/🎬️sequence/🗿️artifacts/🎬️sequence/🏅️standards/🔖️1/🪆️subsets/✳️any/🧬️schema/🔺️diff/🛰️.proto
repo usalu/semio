@@ -1,9 +1,9 @@
 syntax = "proto3";
 package semio.s.sequence.sequence.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message SequenceDiff {
   // @state artifact
   optional string schema = 1;
   // @state artifact
-  optional semio.os.store.ArtifactChild content = 2;
+  optional semio.framework.schema.artifact_child.ArtifactChild content = 2;
 }

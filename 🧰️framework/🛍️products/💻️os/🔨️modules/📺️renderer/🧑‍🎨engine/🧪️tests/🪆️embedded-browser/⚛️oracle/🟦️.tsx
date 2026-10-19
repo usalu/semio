@@ -4,8 +4,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { FrameworkOsShell } from "../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import { EMPTY_SHELL_LOCKS } from "../../../🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts";
-import type { AppSurfaceSessionFactory } from "../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { activeShellRoot } from "@semio-tech/ui-react";
+import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 type EmbeddedReactOptions = {
   readonly catalog: PluginCatalogRowsV1;

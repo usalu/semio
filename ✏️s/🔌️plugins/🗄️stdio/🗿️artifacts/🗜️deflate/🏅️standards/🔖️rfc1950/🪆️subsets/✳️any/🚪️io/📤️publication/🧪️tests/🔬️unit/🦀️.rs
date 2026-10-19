@@ -25,7 +25,7 @@ fn close(publication: &mut Publication) {
         if publication.terminal_is_empty() {
             return;
         }
-        assert!(!matches!(publication.close_step(unbounded), InteractiveJobCloseStep::Refused { .. }), "publication close refused");
+        assert!(publication.close_step(unbounded).is_ok(), "publication close refused");
     }
     panic!("publication close must terminate");
 }

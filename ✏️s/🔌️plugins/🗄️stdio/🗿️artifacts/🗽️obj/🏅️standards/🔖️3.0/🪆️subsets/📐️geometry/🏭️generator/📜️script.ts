@@ -36,9 +36,9 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -46,13 +46,13 @@ const HERE = import.meta.dir;
 const FIXTURES_DIR = join(HERE, "..", "🧪️tests/🧫️fixtures");
 
 const REFERENCE_ENGINE_DIR = join(HERE, "🧪️tests", "🧰️support", "📦️packages", "🦀️rust");
-const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
+const LEGACY_ENGINE_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "generate.exe" : "generate");
 const LEGACY_RECIPE = "pattern-shell";
 const LEGACY_DIRECTORY = "🐚️pattern-shell";
 const LEGACY_FIXTURE_FILE = "🐚️pattern-shell.obj";
 
 const READER_MANIFEST = join(HERE, "📖️reader", "📦️packages", "🦀️rust", "Cargo.toml");
-const READER_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
+const READER_BIN = join(cargoTargetDirectory(findWorkspaceRoot()), "release", process.platform === "win32" ? "tobj-obj-reader.exe" : "tobj-obj-reader");
 
 /** 🍳️ One entry per reader-oracle corpus recipe — mirrors `📖️reader/🦀️.rs`'s own
  *  `RECIPES` table (id + whether it has an `after.obj`), kept in sync by hand since this file never

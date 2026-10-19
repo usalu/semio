@@ -2,7 +2,7 @@
 //! is absent.
 
 use crate::standards::v1::subsets::any::schema::mutations::set_roof_shape::SetRoofShape;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 pub fn inverse<Op>(payload: &SetRoofShape, base: &ModelSnapshot) -> Vec<Op>
 where

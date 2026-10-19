@@ -6,6 +6,7 @@ import {resolve} from "node:path";
 import { jobWorkGrantSchema as grantSchema } from "@semio-tech/framework/job/testing/fixtures";
 import fixture from "../🧪️tests/🧫️fixtures/🔣️.json";
 import failureFixture from "../🧪️tests/🧫️fixtures/⚠️frontier.json";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("failed original frontiers author work without inventing copy or backing effects",()=>{
   const database=new Database(":memory:");
@@ -15,7 +16,7 @@ test("failed original frontiers author work without inventing copy or backing ef
     expect(()=>JSON.parse(failureFixture.sources[3])).toThrow();
     for(const row of failureFixture.refusals){expect(row.copiedItems).toBe(1);expect([row.copiedBytes,row.retainedCapacityBytes,row.releasedBytes]).toEqual([0,0,0]);}
   }finally{database.close();}
-  const source=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8"),start=source.indexOf("fn step_source<"),end=source.indexOf("fn advance<",start),body=source.slice(start,end);
+  const source=readModuleTreeSource(resolve(import.meta.dir,"../../../🦀️.rs")),start=source.indexOf("fn step_source<"),end=source.indexOf("fn advance<",start),body=source.slice(start,end);
   expect(body).toContain("operation_result?");
   expect(body).not.toContain("copied_bytes:demand.copy_bytes");
   expect(body).not.toContain("checked_add(error.retained_progress())");
@@ -48,7 +49,7 @@ test("post-effect cancellation receipts retain independently authored work",()=>
 });
 
 test("actual grammar publishes physical progress before the post-effect cancellation checkpoint",()=>{
-  const source=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");
+  const source=readModuleTreeSource(resolve(import.meta.dir,"../../../🦀️.rs"));
   const start=source.indexOf("fn step_source<"),end=source.indexOf("fn advance<",start);
   expect(start>=0&&end>start).toBe(true);
   const body=source.slice(start,end),receipt=body.indexOf("self.normal_step_progress=self.normal_step_progress.checked_add("),checkpoint=body.indexOf("control.step()?");

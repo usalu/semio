@@ -8,7 +8,7 @@ import {withNxCollectionAdmissionStoreV1,NX_COLLECTION_ADMISSION_MAXIMUM_BYTES_V
 import {repositoryCacheBudgetV1} from "../💾️storage/🔒️enforcement/📦️budget/🟦️.ts";
 import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {nativeNxChildEnvironmentV1,issueSelectedNxCallerEnvelopeV1} from "../📦️artifacts/📋️native-orchestration/📥️caller/🟦️.ts";
 import {resolveBuildSelectionV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
 import {withRepositoryNxStorageV1,boundedNxNamespaceV1,boundedNxSocketNamespaceV1,type BoundedNxNamespaceV1} from "../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
@@ -372,7 +372,7 @@ export class NxScript extends Script {
     const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/📥️caller/🟦️.ts");projectOwnedNxProcessEnvelopeV1(this.root,this.invocation,resolveNxInvocation(segments,{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode},this.root).args);
     await nxBootstrapServices().prepareNxToolingStorageV1(this.root,this.invocation,phaseControl);
     if(segments.length===1&&segments[0]==="--version")return this.runInStorage(segments,phaseControl);
-    const {prepareNxGraphCacheStorageV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(this.root,this.invocation,phaseControl,0);
+    const {prepareNxGraphCacheStorageV1}=await import("../💾️storage/🔒️enforcement/🔌️nx/📦️graph/🟦️.ts");await prepareNxGraphCacheStorageV1(this.root,this.invocation,phaseControl,0,process.env.SEMIO_BUILD_GRAPH_PATH?"inherited":"queued");
     return withRepositoryNxStorageV1(this.root,this.invocation,phaseControl,(bind,actualPhase)=>this.runInStorage(segments,actualPhase,bind));
   }
   private async runInStorage(segments:string[],phaseControl:ResourceLeaseControl,bind?:(toolingIdentity:string,graphIdentity:string|null,implementationIdentity:string)=>Promise<BoundedNxNamespaceV1>):Promise<void>{return nxBootstrapServices().withNxToolingHeadroomRecoveryV1(this.root,this.invocation,phaseControl,actualPhase=>withRepositoryToolingStoreV1(this.root,this.invocation,actualPhase,(store,storePhase)=>this.runWithToolingStore(segments,store,storePhase,bind)));}

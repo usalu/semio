@@ -1,6 +1,7 @@
-use crate::standards::v1::subsets::any::io::export::ifc::ramps::{ramp};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, rows, string, tags, target, vertex, with_ramp};
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, Ramp, TopConstraint, Vertex};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ramps::ramp;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, rows, string, tags, target, vertex, with_ramp};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Ramp};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, TopConstraint, Vertex};
 
 #[test]
 fn a_ramp_aggregates_a_flight_per_slope_and_a_landing_slab_per_landing() {
@@ -46,7 +47,7 @@ fn a_side_railing_adds_an_ifc_railing_part() {
 
 #[test]
 fn a_bent_ramp_writes_a_flight_per_slope_and_a_landing_per_landing_of_its_run() {
-    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let mut model = with_ramp(false);
     model.ramps.get_mut("rp-1").expect("the ramp").path = vec![vertex(0.0, -3.0, 0.0), vertex(6.0, -3.0, 0.0), vertex(6.0, 2.0, 0.0)];
@@ -72,8 +73,8 @@ fn read_ramps(name: &str) -> Vec<u8> {
 
 #[test]
 fn the_report_counts_one_ramp_with_its_flights_landings_and_railings_per_resolved_ramp() {
-    use crate::standards::v1::subsets::any::io::export::ifc::projection::projection;
-    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let model = ramps();
     let runs = ModelInference::infer(&model).expect("infers").ramp_runs;
@@ -87,7 +88,7 @@ fn the_report_counts_one_ramp_with_its_flights_landings_and_railings_per_resolve
 
 #[test]
 fn the_committed_ramps_file_is_the_current_export() {
-    let (bytes, notes) = crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&ramps()).expect("the ramps export");
+    let (bytes, notes) = semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&ramps()).expect("the ramps export");
     assert_eq!(notes.len(), 2, "exactly the ramp on a missing storey and the ramp without a path are skipped: {notes:?}");
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::write(format!("{RAMPS_DIR}/🛝️ramps.ifc"), &bytes).expect("the file is written");
@@ -97,7 +98,7 @@ fn the_committed_ramps_file_is_the_current_export() {
 
 #[test]
 fn the_ramps_subject_report_equals_the_table_the_ifcopenshell_oracle_measured_from_the_committed_file() {
-    use crate::standards::v1::subsets::any::io::export::ifc::projection::projection;
+    use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::projection::projection;
     let oracle: serde_json::Value = serde_json::from_slice(&read_ramps("🔬️measure/🔣️.json")).expect("the oracle table");
     let ours: serde_json::Value = serde_json::from_str(&projection(&ramps()).to_json()).expect("the report parses");
     assert_eq!(oracle["schema"], ours["schema"]);

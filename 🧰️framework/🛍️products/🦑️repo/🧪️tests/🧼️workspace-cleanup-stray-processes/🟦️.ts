@@ -5,7 +5,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import ts from"typescript";
 import fixture from"../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"with{type:"json"};
-import{validateJsonSchemaSubset}from"../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
 const root=process.cwd(),command=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts"),source=readFileSync(command,"utf8"),tree=ts.createSourceFile(command,source,ts.ScriptTarget.Latest,true);
 function declaration(name:string):string{const node=tree.statements.find(row=>(ts.isFunctionDeclaration(row)||ts.isClassDeclaration(row))&&row.name?.text===name);if(!node)throw Error("Actual cleanup owner declaration required: "+name);return node.getText(tree).replace(/^export /u,"");}
 function decoder():((segments:readonly string[])=>Readonly<{mode:string;dry:boolean;arguments:readonly string[]}>){const code=ts.transpileModule(declaration("readWorkspaceCleanupEntryV1"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;return new Function(code+";return readWorkspaceCleanupEntryV1;")();}

@@ -1,7 +1,7 @@
 /** 🪞️ Unmirror: removes the path-preserving re-export layers a carve leaves behind. Every `pub use` that forwards another carved crate's module or item under its old path is deleted, and every consumer (private imports, globs, inline paths, other crates) is re-pointed at the crate that owns the item. */
 import { parseRustSourceTree, type RustModuleNode } from "../🌳️module-tree/🟦️.ts";
 import { Universe, isKeywordHead, repText, type Bound, type FileInfo, type Hit, type ModNode, type Rep } from "./🔍️resolver/🟦️.ts";
-import { leafBinding, renderUseLeaves, type UseLeaf, type UseStatement } from "./🧵️use-tree/🟦️.ts";
+import { leafBinding, renderUseLeaves, type ScannedSource, type UseLeaf, type UseStatement } from "./🧵️use-tree/🟦️.ts";
 
 /** ⚙️ Options of one unmirror run: the crates whose root-level explicit re-exports are the designed artifact API, the crates being unmirrored (their re-export edges are deleted; other files only re-point paths that start in one of them) and which files may be edited. */
 export type UnmirrorOptions = Readonly<{ apiRoots: ReadonlySet<string>; targets: ReadonlySet<string>; editable: (path: string) => boolean }>;
@@ -17,7 +17,6 @@ export type UnmirrorReport = {
   unresolvedMirrors: string[];
   multiMounted: string[];
   invisible: string[];
-  referencedIdents: Map<string, Set<string>>;
 };
 
 type Edit = { start: number; end: number; text: string };
@@ -43,9 +42,20 @@ function rangeIndex(ranges: readonly (readonly [number, number])[]): (offset: nu
   };
 }
 
+/** 🧩️ The character ranges of the argument lists of macro invocations (`name!(…)`, `name![…]`, `name!{…}`); a `macro_rules!` definition is no invocation. */
+function macroInvocationRanges(source: ScannedSource): (readonly [number, number])[] {
+  const { tokens, pairs } = source;
+  const ranges: (readonly [number, number])[] = [];
+  for (let index = 1; index + 1 < tokens.length; index += 1) {
+    const close = pairs.get(index + 1);
+    if (tokens[index]!.text !== "!" || tokens[index - 1]!.kind !== "identifier" || tokens[index - 1]!.text === "macro_rules" || close === undefined) continue;
+    ranges.push([tokens[index + 1]!.start, tokens[close]!.end]);
+  }
+  return ranges;
+}
+
 /** 🪞️ Drives one unmirror run over the files of a universe. */
 export class Unmirror {
-  private readonly ownMemo = new Map<number, boolean>();
   readonly report: UnmirrorReport = { edits: new Map(), removedLeaves: 0, repointedLeaves: 0, repointedChains: 0, addedImports: 0, removedModules: 0, unresolvedMirrors: [], multiMounted: [], invisible: [] };
   constructor(private readonly universe: Universe, private readonly options: UnmirrorOptions) {
     universe.apiLeaf = (bound) => this.isApi(bound);
@@ -69,42 +79,20 @@ export class Unmirror {
 
   private primary(hits: readonly Hit[], value = false): Hit | undefined {
     const chosen = hits.find((hit) => hit.rep?.cut && (hit.kind === "item") === value) ?? hits.find((hit) => hit.rep?.cut) ?? hits[0];
-    if (chosen?.kind !== "module" || chosen.rep?.cut) return chosen;
+    if (chosen?.kind !== "module") return chosen;
     const forward = this.forwardOf(chosen.node);
     return forward ? ({ ...chosen, rep: forward } as Hit) : chosen;
   }
 
-  private readonly edgeMemo = new Map<string, boolean>();
-  private readonly activeDepths = new Map<string, number>();
-  private lowestActive = Number.POSITIVE_INFINITY;
-
-  private enterActive(marker: string): { depth: number; outer: number } {
-    const frame = { depth: this.activeDepths.size, outer: this.lowestActive };
-    this.lowestActive = Number.POSITIVE_INFINITY;
-    this.activeDepths.set(marker, frame.depth);
-    return frame;
-  }
-
-  private leaveActive(marker: string, frame: { depth: number; outer: number }): boolean {
-    this.activeDepths.delete(marker);
-    const inner = this.lowestActive;
-    this.lowestActive = inner < frame.depth ? Math.min(frame.outer, inner) : frame.outer;
-    return inner >= frame.depth;
-  }
-
   private isMirrorEdge(bound: Bound): boolean {
-    const known = this.edgeMemo.get(bound.key);
-    if (known !== undefined) return known;
-    const marker = `edge:${bound.key}`;
-    const active = this.activeDepths.get(marker);
-    if (active !== undefined) { this.lowestActive = Math.min(this.lowestActive, active); return false; }
-    const frame = this.enterActive(marker);
-    const result = this.computeMirrorEdge(bound);
-    if (this.leaveActive(marker, frame)) this.edgeMemo.set(bound.key, result);
-    return result;
+    return this.universe.cycles.compute(`edge:${bound.key}`, () => false, () => this.computeMirrorEdge(bound));
   }
 
   private forwardOf(node: ModNode): Rep | null {
+    return this.universe.cycles.compute(`forward:${node.id}`, () => null, () => this.computeForward(node));
+  }
+
+  private computeForward(node: ModNode): Rep | null {
     if (!node.inline || node.uses.length === 0 || this.ownNamespace(node)) return null;
     const reps = new Set<string>();
     let found: Rep | null = null;
@@ -136,17 +124,11 @@ export class Unmirror {
   }
 
   private ownNamespace(node: ModNode): boolean {
-    const known = this.ownMemo.get(node.id);
-    if (known !== undefined) return known;
-    const marker = `own:${node.id}`;
-    const active = this.activeDepths.get(marker);
-    if (active !== undefined) { this.lowestActive = Math.min(this.lowestActive, active); return false; }
-    const frame = this.enterActive(marker);
-    let alive = node.items.size > 0;
-    for (const children of node.children.values()) for (const child of children) if (!alive && (!child.inline || this.ownNamespace(child))) alive = true;
-    if (!alive) for (const bound of node.uses) if (!this.isMirrorEdge(bound)) { alive = true; break; }
-    if (this.leaveActive(marker, frame)) this.ownMemo.set(node.id, alive);
-    return alive;
+    return this.universe.cycles.compute(`own:${node.id}`, () => false, () => {
+      if (node.items.size > 0) return true;
+      for (const children of node.children.values()) for (const child of children) if ((!child.test || node.test) && (!child.inline || this.ownNamespace(child))) return true;
+      return node.uses.some((bound) => !this.isMirrorEdge(bound));
+    });
   }
 
   private regionIdentifiers(info: FileInfo, node: ModNode): Set<string> {
@@ -154,8 +136,13 @@ export class Unmirror {
     const inner = info.nodes.filter((other) => other !== node && other.inline && other.region[0] >= node.region[0] && other.region[1] <= node.region[1]);
     const nested = rangeIndex(inner.map((other) => other.region));
     const tokens = info.source.tokens;
+    const inMacroArguments = rangeIndex(macroInvocationRanges(info.source));
     for (let index = 0; index < tokens.length; index += 1) {
       const token = tokens[index]!;
+      if (token.kind === "string" && token.start >= node.region[0] && token.end <= node.region[1] && !nested(token.start) && inMacroArguments(token.start)) {
+        for (const capture of token.text.matchAll(/(?<!\{)\{([A-Za-z_]\w*)(?:[:!][^}]*)?\}(?!\})/gu)) names.add(capture[1]!);
+        continue;
+      }
       if (token.start < node.region[0] || token.end > node.region[1] || token.kind !== "identifier" || nested(token.start)) continue;
       const previous = tokens[index - 1]?.text;
       if (previous === "." || previous === "::" || previous === "$" || tokens[index + 1]?.text === ":") continue;
@@ -170,6 +157,15 @@ export class Unmirror {
     return names;
   }
 
+  private opaqueGlobTarget(node: ModNode): Rep | null {
+    const found = new Map<string, Rep>();
+    for (const bound of node.uses) {
+      if (!bound.leaf.glob || !this.isMirrorEdge(bound)) continue;
+      for (const hit of this.universe.leafHits(bound)) if (hit.kind === "module" && hit.rep && this.universe.opaqueModule(hit.node)) found.set(repText(hit.rep), { ...hit.rep, cut: true });
+    }
+    return found.size === 1 ? [...found.values()][0]! : null;
+  }
+
   private decide(info: FileInfo, bound: Bound, added: Set<string>): Planned[] {
     const { leaf, node } = bound;
     const hits = this.universe.leafHits(bound);
@@ -179,6 +175,12 @@ export class Unmirror {
       if (isPublic(bound.statement.visibility) && this.foreignHead(bound)) this.report.unresolvedMirrors.push(`${info.path}: ${leaf.path.join("::")}`);
       else {
         const partial = this.universe.resolvePath(node, leaf.path);
+        const prefix = partial && partial.consumed < leaf.path.length && !leaf.glob ? this.primary(partial.hits) : undefined;
+        const owner = prefix?.kind === "module" ? (prefix.rep?.cut ? prefix.rep : this.opaqueGlobTarget(prefix.node)) : null;
+        if (partial && owner && owner.ident !== node.crate.ident) {
+          this.report.repointedLeaves += 1;
+          return [{ leaf: { path: [owner.ident, ...owner.segs, ...leaf.path.slice(partial.consumed)], alias: leaf.alias, glob: false }, source: bound }];
+        }
         const last = partial?.hits[0];
         if (last?.kind === "module" && last.node.inline && !this.ownNamespace(last.node)) this.report.unresolvedMirrors.push(`${info.path}: ${leaf.path.join("::")} (path runs into a mirror module that is deleted; crate ${node.crate.ident}, mounted by ${info.mountedBy.join(", ")})`);
       }
@@ -239,10 +241,20 @@ export class Unmirror {
   private decideGlob(info: FileInfo, bound: Bound, hits: Hit[], added: Set<string>, drop: boolean): Planned[] {
     const { leaf, node } = bound;
     const target = hits.find((hit) => hit.kind === "module");
-    if (!target || target.kind !== "module" || (isPublic(bound.statement.visibility) && !drop)) return [{ leaf, source: bound }];
+    if (!target) {
+      const rep = this.crossing(bound, hits.find((hit) => hit.kind === "item"));
+      if (!rep || drop) return [{ leaf, source: bound }];
+      const path = [rep.ident, ...rep.segs];
+      if (samePath(path, leaf.path)) return [{ leaf, source: bound }];
+      this.report.repointedLeaves += 1;
+      return [{ leaf: { path, alias: null, glob: true }, source: bound }];
+    }
+    if (target.kind !== "module") return [{ leaf, source: bound }];
+    const publicKept = isPublic(bound.statement.visibility) && !drop;
     const mrep = target.rep?.cut && target.rep.ident !== node.crate.ident ? target.rep : null;
     const imports: Planned[] = [];
     const local = this.boundNames(node);
+    const keep = !drop && this.ownNamespace(target.node);
     for (const name of this.regionIdentifiers(info, node)) {
       if (local.has(name) || added.has(name)) continue;
       const sub = this.universe.member(target.node, name, node)[0];
@@ -250,29 +262,43 @@ export class Unmirror {
         const hidden = this.universe.memberIgnoringVisibility(target.node, name, node)[0];
         if (hidden && hidden.node.crate.ident !== node.crate.ident) this.report.invisible.push(`${info.path}: ${name} is not visible from ${node.crate.ident} (defined in ${hidden.node.crate.ident} ${hidden.node.file})`);
       }
-      if (!sub?.rep?.cut || sub.rep.ident === target.node.crate.ident) continue;
+      const through = sub?.rep?.cut && sub.rep.ident !== target.node.crate.ident ? sub.rep : null;
+      const found = through ?? (sub && mrep && !keep && !publicKept ? { ...mrep, segs: [...mrep.segs, name] } : null);
+      if (!found) continue;
       added.add(name);
-      const owned = [sub.rep.ident, ...sub.rep.segs];
+      const owned = [found.ident, ...found.segs];
       let alias: string | null = null;
       if (owned.at(-1) !== name) {
         const known = this.renames.get(info.path) ?? new Map<string, string>();
         if (local.has(owned.at(-1)!) || (known.has(name) && known.get(name) !== owned.at(-1))) alias = name;
         else { known.set(name, owned.at(-1)!); this.renames.set(info.path, known); }
       }
-      imports.push({ leaf: { path: owned, alias, glob: false }, source: null, ...(drop ? { visibility: "" } : {}) });
+      imports.push({ leaf: { path: owned, alias, glob: false }, source: null, ...(drop || publicKept ? { visibility: "" } : {}) });
     }
     this.report.addedImports += imports.length;
-    const keep = !drop && this.ownNamespace(target.node);
+    if (publicKept) return [{ leaf, source: bound }, ...imports];
     const path = mrep ? [mrep.ident, ...mrep.segs] : leaf.path;
     if (!keep) { if (!drop) this.report.removedLeaves += 1; }
     else if (!samePath(path, leaf.path)) this.report.repointedLeaves += 1;
     return keep ? [{ leaf: { path, alias: null, glob: true }, source: bound }, ...imports] : imports;
   }
 
+  private headSurvives(node: ModNode, names: readonly string[]): boolean {
+    const head = names[0]!;
+    if (isKeywordHead(head) || this.universe.crates.has(head)) return false;
+    const resolved = this.universe.resolvePath(node, [head]);
+    const hit = resolved ? this.primary(resolved.hits) : undefined;
+    if (hit?.rep?.cut !== true || hit.rep.ident === node.crate.ident) return false;
+    const full = this.universe.resolvePath(node, names);
+    const last = full ? this.primary(full.hits) : undefined;
+    return last?.rep === undefined || last.rep === null || last.rep.ident === hit.rep.ident;
+  }
+
   private chains(info: FileInfo, inStatement: (offset: number) => boolean): { edits: Edit[]; touched: Set<string> } {
     const edits: Edit[] = [];
     const touched = new Set<string>();
     const tokens = info.source.tokens;
+    const inMacroArguments = rangeIndex(macroInvocationRanges(info.source));
     for (let index = 0; index < tokens.length; index += 1) {
       const head = tokens[index]!;
       const previous = tokens[index - 1]?.text;
@@ -286,10 +312,11 @@ export class Unmirror {
       const node = this.universe.nodeAt(info.path, tokens[first]!.start);
       if (!node) continue;
       const names = last.map((token) => token.text);
+      if (inMacroArguments(tokens[first]!.start) && this.headSurvives(node, names)) continue;
       const result = this.universe.resolvePath(node, names);
       const chosen = result ? this.primary(result.hits, tokens[cursor + 1]?.text === "(" || tokens[cursor + 1]?.text === "!") : undefined;
       const rep = chosen?.rep;
-      if (!result || !chosen || !rep?.cut || rep.ident === node.crate.ident || (chosen.kind === "module" && result.consumed < names.length)) continue;
+      if (!result || !chosen || !rep?.cut || rep.ident === node.crate.ident) continue;
       if (!isKeywordHead(names[0]!) && !this.universe.crates.has(names[0]!) && result.consumed === 1) continue;
       const text = repText(rep);
       if (text === names.slice(0, result.consumed).join("::")) continue;
@@ -332,6 +359,8 @@ export class Unmirror {
     for (const node of info.nodes) for (const bound of node.uses) {
       const head = bound.leaf.path[0];
       if (!head || this.universe.leafHits(bound).length) continue;
+      const partial = this.universe.resolvePath(node, bound.leaf.path);
+      if (partial && partial.hits.some((hit) => hit.kind === "module" && this.universe.opaqueModule(hit.node))) continue;
       if (isKeywordHead(head) || this.universe.crates.has(head) || node.children.has(head)) failures.push(`use ${bound.leaf.path.join("::")}${bound.leaf.glob ? "::*" : ""}`);
     }
     const covered = rangeIndex(info.statements.map((statement) => [statement.start, statement.end] as const));
@@ -345,7 +374,7 @@ export class Unmirror {
       if (names.length < 2 || !(isKeywordHead(names[0]!) || this.universe.crates.has(names[0]!))) continue;
       const node = this.universe.nodeAt(path, head.start);
       const result = node ? this.universe.resolvePath(node, names) : null;
-      if (!result || (result.hits[0]!.kind === "module" && result.consumed < names.length)) failures.push(`path ${names.join("::")}`);
+      if (!result || (result.hits[0]!.kind === "module" && result.consumed < names.length && !result.hits.some((hit) => hit.kind === "module" && this.universe.opaqueModule(hit.node)))) failures.push(`path ${names.join("::")}`);
     }
     return failures;
   }

@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
-import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
-import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
+import { toolJobRustBlock } from "@semio-tech/repo-lib/laws";
 import { canonicalErrorProgressSelfTests } from "../🔬️canonical-error-progress/🟦️.ts";
 
 /** 🔢️ An edit's revision value: its members in declaration order without `sequenceNumber` (design §22.28) — where an edit sits in its history is not part of what it is. */
@@ -132,7 +132,7 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     const bind = method(child, /fn bind</);
     return parent.includes("pub trait ArtifactCanonicalJson: Sync")
       && bind.includes("self.root_address != address") && bind.includes("root.canonical_json_borrowed_root()")
-      && child.includes("pub(super) struct ArtifactCanonicalEditEncoder")
+      && child.includes("#[doc(hidden)]\npub struct ArtifactCanonicalEditEncoder") && child.includes("\nenum BorrowedFrame<'a> {") && /\n {4}root_address: usize,/.test(child)
       && child.includes("Iterator<Item = (ArtifactCanonicalJsonText<'a>, ArtifactCanonicalJsonValue<'a>)> + Send + 'a")
       && child.includes("values.values.next()") && child.includes("self.frames[top].take()")
       && parent.includes("demand.depth > self.maximum_depth") && child.includes("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top")
@@ -144,7 +144,8 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
     [source.replace("demand.depth > self.maximum_depth", "false"), borrowed],
     [source, borrowed.replace("self.root_address != address", "false")],
     [source, borrowed.replace("values.values.next()", "values.values.nth(0)")],
-    [source, borrowed.replace("pub(super) struct ArtifactCanonicalEditEncoder", "pub struct ArtifactCanonicalEditEncoder")],
+    [source, borrowed.replace("\nenum BorrowedFrame<'a> {", "\npub enum BorrowedFrame<'a> {")],
+    [source, borrowed.replace("\n    root_address: usize,", "\n    pub root_address: usize,")],
     [source, borrowed.replace("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top", "maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH")],
   ] as const;
   for (const [parent, child] of mapSourceHostiles) if (borrowedExact(parent, child)) throw new Error("borrowed map accepted hostile lifetime/source substitution");

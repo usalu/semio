@@ -1,6 +1,6 @@
 import {join,resolve} from "node:path";
 import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {scriptCompilerAdmissionControlV1} from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {withCompilerWriterCustodyV1} from "../../../../💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {withHistoricalCargoImageMaintenanceV1} from "../🟦️.ts";
 import {retireInactiveCargoStoreV1} from "../../⚙️execution/🟦️.ts";

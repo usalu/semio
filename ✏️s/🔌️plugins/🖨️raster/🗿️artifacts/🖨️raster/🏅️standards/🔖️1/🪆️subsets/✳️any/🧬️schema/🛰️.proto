@@ -2,14 +2,14 @@
 syntax = "proto3";
 package semio.s.raster.raster.artifact;
 import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 
 message RasterArtifact {
   string schema = 1;
   string id = 2;
   optional string title = 3;
   repeated RasterLayerNode layers = 4;
-  map<string, semio.os.store.ArtifactChild> assets = 5;
+  map<string, semio.framework.schema.artifact_child.ArtifactChild> assets = 5;
 }
 
 message RasterLayerNode {

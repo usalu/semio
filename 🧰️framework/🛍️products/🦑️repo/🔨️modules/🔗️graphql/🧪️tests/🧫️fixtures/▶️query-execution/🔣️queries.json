@@ -50,6 +50,10 @@
     { "id": "repo-tickets-argument", "source": "{ repo { tickets(status: OPEN) { slug status } } }" },
     { "id": "repo-breachs-scoped", "source": "{ repo { breachs(scope: \"repo/rust\") { id } } }" },
     { "id": "variables-in-arguments", "source": "query Tickets($year: Int, $status: TicketStatus) { tickets(year: $year, status: $status) { slug status } }", "variables": { "year": 2026, "status": "OPEN" } },
-    { "id": "nested-aliases", "source": "{ open: tickets(status: OPEN) { key: slug } closed: tickets(status: CLOSED) { key: slug } }" }
+    { "id": "nested-aliases", "source": "{ open: tickets(status: OPEN) { key: slug } closed: tickets(status: CLOSED) { key: slug } }" },
+    {"id": "node-resolves-a-bundle", "source": "{ node(id: \"🧰repo📚go\") { __typename } }"},
+    {"id": "node-ignores-presentation-selectors", "source": "{ node(id: \"🧰️repo📚️go\") { __typename } }"},
+    {"id": "node-bundle-by-variable", "source": "query Node($id: ID!) { node(id: $id) { __typename } }", "variables": {"id": "👤compose🖱️ui"}},
+    {"id": "node-unknown-bundle-is-null", "source": "{ node(id: \"🧰repo📚nothing\") { __typename } }"}
   ]
 }

@@ -15,7 +15,7 @@ test("Ordered mutable surface lookup matches independent SQLite ordinal semantic
   const ordinal=database.query("SELECT id FROM surfaces ORDER BY ordinal LIMIT 1 OFFSET ?");
   const selected=ordinal.get(fixture.mutate.index) as {id:string};database.query("UPDATE surfaces SET value = value + ? WHERE id = ?").run(fixture.mutate.delta,selected.id);
   expect(database.query("SELECT id, value FROM surfaces ORDER BY ordinal").values()).toEqual(fixture.expected);expect(ordinal.get(fixture.absentIndex)).toBeNull();
-  const source=readFileSync(new URL("../../🎯️targets/🧊️wgpu/🦀️.rs",import.meta.url),"utf8"),lookup=source.slice(source.indexOf("pub fn get_mut_at("),source.indexOf("pub fn len(",source.indexOf("pub fn get_mut_at(")));
+  const source=readFileSync(new URL("../../../../🎯️targets/🧊️wgpu/🤝️contracts/📥️lifted/🗃️scene-state/🦀️.rs",import.meta.url),"utf8"),lookup=source.slice(source.indexOf("pub fn get_mut_at("),source.indexOf("pub fn len(",source.indexOf("pub fn get_mut_at(")));
   expect(lookup).toContain("self.order.get(index).copied().flatten()");expect(lookup).toContain("self.slots.get_mut(slot)");expect(lookup).not.toMatch(/clone\(|to_owned\(|to_string\(|Box::|Vec::/u);
  }finally{database.close();}
 });

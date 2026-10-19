@@ -247,7 +247,7 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
     fn begin_close(&mut self){self.closing=true;self.reader=None;self.intent=None;}
-    fn close_step(&mut self,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->InteractiveJobCloseStep{if self.closing{InteractiveJobCloseStep::Complete{progress:Default::default()}}else{InteractiveJobCloseStep::Blocked}}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_granted_step(cx,|_grant|{Ok(if self.closing{InteractiveJobCloseStep::Complete{progress:Default::default()}}else{InteractiveJobCloseStep::Blocked})})}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.reader.is_none() && self.intent.is_none()

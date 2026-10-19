@@ -1,5 +1,5 @@
 import ts from"typescript";
-import{withBuildTestInvocationV1}from"../../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import{requireIssuedScriptInvocationV1,type ScriptInvocation}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{test,expect}from"bun:test";import{readFile}from"node:fs/promises";import Ajv from"ajv";import{Database}from"bun:sqlite";import schema from"../🧬️schema/🔣️.json";import corpus from"./🔣️.json";
 test("toolkit use expected refusal stays in a same-wire owned purpose child",async()=>{const own=await readFile(new URL("../../🟦️.ts",import.meta.url),"utf8"),db=new Database(":memory:"),admit=new Ajv({strict:true,allowUnionTypes:true}).compile(schema);try{for(const row of corpus.cases){expect(admit(row.input)).toBe(row.accepted);const oracle=db.query("SELECT ?1 IN ('toolkit-refusal','ledger-refusal') AND ?2=3 accepted").get(row.input.kind,Object.keys(row.input).length)as{accepted:number};expect(Boolean(oracle.accepted)).toBe(row.accepted);}}finally{db.close();}expect(own).toContain("captureNxToolingUseRefusalV1");expect(own).not.toContain('if(outcome==="refused")throw Error');});

@@ -1,6 +1,7 @@
 import "../📋️contract/🧪️tests/🟦️.ts";
 import "./📥️inputs/🟦️.ts";
-import { phaseCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { phaseCompilerAdmissionControlV1, scriptCompilerAdmissionControlV1 } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
+import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
@@ -64,13 +65,20 @@ function stubWorkspace(root: string, name: string, packages: readonly string[], 
 
 /** 🚀️ Runs the driver against a stub Cargo inside one original compiler reservation bound to its control (cache, target and build stores live in that
  * reservation); `inspect` reads the run's generation, whether it succeeded or failed, before the reservation retires. */
-async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
-  const control = overrides.control ?? phaseCompilerAdmissionControlV1(new AbortController().signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));
-  return withLawStorageV1(control, lawStoragePolicyV1.stubImageBytes, async (held, control) => {
-    let outcome: NativeBuildOutcomeV1 | undefined;
-    try { outcome = await runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...overrides }); return outcome; }
-    finally { await inspect?.({ outcome, held }); }
+async function runStub(root: string, plan: NativeBuildPlanV1, cargo: ReturnType<typeof stubCargo>, overrides: Partial<Parameters<typeof runNativeBuildDriverV1>[0]> & { cancel?: Readonly<{ signal: AbortSignal; milliseconds: number }> } = {}, mode = "ok", inspect?: (run: Readonly<{ outcome?: NativeBuildOutcomeV1; held: LawStorageV1 }>) => void | Promise<void>): Promise<NativeBuildOutcomeV1> {
+  const { cancel, ...driver } = overrides;
+  const settled = await withBuildTestInvocationV1(async (original): Promise<Readonly<{ failed: boolean; failure?: unknown; outcome?: NativeBuildOutcomeV1 }>> => {
+    const control = driver.control ?? scriptCompilerAdmissionControlV1(original, "test:component-pass", cancel?.milliseconds ?? 30000, cancel?.signal);
+    try {
+      return { failed: false, outcome: await withLawStorageV1(control, lawStoragePolicyV1.stubImageBytes, async (held, control) => {
+        let outcome: NativeBuildOutcomeV1 | undefined;
+        try { outcome = await runNativeBuildDriverV1({ plan, storage: held.storage, sourceBoundary: lawSourceBoundaryV1, cwd: root, cacheRoot: join(held.root, "cache"), shared: { target: join(held.root, "target"), build: join(held.root, "build") }, generation: "warm", leaseDirectory: artifacts, environment: { ...process.env, ...held.environment, CARGO_TARGET_DIR: join(held.root, "target"), STUB_MODE: mode }, control, tokens: fixture.stub.tokens, physicalBytes: fixture.stub.physicalGiB * 1024 ** 3, storageReserveBytes: lawStoragePolicyV1.reserveBytes, scheduler: process.execPath, cargo, log: () => undefined, ...driver }); return outcome; }
+        finally { await inspect?.({ outcome, held }); }
+      }) };
+    } catch (failure) { return { failed: true, failure }; }
   });
+  if (settled.failed) throw settled.failure;
+  return settled.outcome!;
 }
 
 test("the native build plan is schema-first, agrees with Ajv, and refuses duplicate passes and packages", () => {
@@ -166,7 +174,7 @@ test("a batch the free storage cannot cover above the hard reserve is refused be
 
 test("cancellation stops every Cargo tree, and the stall watchdog stops a pass in which nothing starts or finishes", async () => {
   const root = mkdtempSync(join(artifacts, "x-")), cargo = stubCargo(root), pass = stubWorkspace(root, "hub", ["comp-a"], "release"), controller = new AbortController();
-  const cancelled = runStub(root, { version: 1, passes: [pass] }, cargo, { control: phaseCompilerAdmissionControlV1(controller.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done))) }, "hang");
+  const cancelled = runStub(root, { version: 1, passes: [pass] }, cargo, { cancel: { signal: controller.signal, milliseconds: 30000 } }, "hang");
   const cancel=setInterval(()=>{if(existsSync(cargo.calls)){clearInterval(cancel);controller.abort(Error("cancelled by law"));}},fixture.stub.cancelAfterMs);
   try{await expect(cancelled).rejects.toThrow();}finally{clearInterval(cancel);}
   const pid = JSON.parse(readFileSync(cargo.calls, "utf8").trim().split("\n")[0]!).pid;
@@ -330,7 +338,7 @@ test("queued exclusive compiler cancellation drains rejected work and permits a 
 
 test("unit graph compilation cancellation stops its metadata child and releases admission",async()=>{
  const root=mkdtempSync(join(artifacts,"ug-")),cargo=stubCargo(root),pass=stubWorkspace(root,"metadata",["unit"],"release"),controller=new AbortController();
- const running=runStub(root,{version:1,passes:[pass]},cargo,{control:phaseCompilerAdmissionControlV1(controller.signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)))},"unit-hang");
+ const running=runStub(root,{version:1,passes:[pass]},cargo,{cancel: { signal: controller.signal, milliseconds: 30000 }},"unit-hang");
  const calls=join(root,"unit-calls.jsonl");while(!existsSync(calls))await new Promise(resolve=>setTimeout(resolve,10));
  const pid=JSON.parse(readFileSync(calls,"utf8").split("\n")[0]!).pid;controller.abort(Error("metadata cancellation"));try{await running;}catch(error){expect(controller.signal.aborted).toBe(true);}
  await new Promise(resolve=>setTimeout(resolve,50));let live=true;try{process.kill(pid,0);}catch{live=false;}
@@ -398,7 +406,7 @@ test("the original finite caller budget stops running metadata and returns admis
   const vector = fixture.finiteCallerBudget, root = mkdtempSync(join(artifacts, "d-")), cargo = stubCargo(root), pass = stubWorkspace(root, "deadline", ["unit"], "prototype"), controller = new AbortController();
   const safety = setTimeout(() => controller.abort(Error("Test safety cancellation")), vector.safetyMilliseconds);
   try {
-    await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { control: phaseCompilerAdmissionControlV1(controller.signal, vector.milliseconds, () => undefined, () => new Promise(done => setImmediate(done))) }, "unit-hang")).rejects.toThrow(vector.expectedError);
+    await expect(runStub(root, { version: 1, passes: [pass] }, cargo, { cancel: { signal: controller.signal, milliseconds: vector.milliseconds } }, "unit-hang")).rejects.toThrow(vector.expectedError);
   } finally { clearTimeout(safety); }
   const pid = JSON.parse(readFileSync(join(root, "unit-calls.jsonl"), "utf8").split("\n")[0]!).pid;
   expect(() => process.kill(pid, 0)).toThrow();
@@ -425,7 +433,7 @@ try {
 `);
   const job: NativeBuildJobV1 = { id: "same-state", cwd: root, command: [process.execPath, script], after: [], profile: vector.profile, target: "wasm32-wasip2", workerProtocol: "jobserver" };
   expect(new Ajv({ strict: true, allowUnionTypes: true }).compile(schema)({ version: 1, passes: [pass], jobs: [job] })).toBe(true);
-  const result = await runStub(root, { version: 1, passes: [pass], jobs: [job] }, cargo, { tokens: vector.tokens, control: phaseCompilerAdmissionControlV1(AbortSignal.timeout(vector.deadlineMs), vector.deadlineMs, () => undefined, () => new Promise(done => setImmediate(done))) });
+  const result = await runStub(root, { version: 1, passes: [pass], jobs: [job] }, cargo, { tokens: vector.tokens, cancel: { signal: AbortSignal.timeout(vector.deadlineMs), milliseconds: vector.deadlineMs } });
   expect(result.staged).toEqual(["order-component:" + vector.profile]);
   const observed = JSON.parse(readFileSync(marker, "utf8"));
   expect(observed.oracle).toBe(vector.oracle);

@@ -4,7 +4,7 @@ import{resolve}from"node:path";
 import ts from"typescript";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
-import{registerBuildTestLawV1}from"../../../../../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import{registerBuildTestLawV1}from"@semio-tech/process/testing/invocation";
 import*as routing from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import schema from"../../🧬️schema/🔣️.json";
 import cases from"./🔣️.json";

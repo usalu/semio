@@ -1,69 +1,73 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep::MepValue;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use std::sync::Arc;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use protocol::Inference;
-use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Opening, Point2, Wall}, diff::{Entry, ModelDiff, patches::WallPatch}};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Point2};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Opening, Wall};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
 use semio_framework_test_fixtures::fixture_text;
 use std::time::Instant;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -133,7 +137,7 @@ fn one_wall_move_in_511_walls_and_64_windows_updates_in_under_15_ms() {
     samples.sort();
     let median = samples[samples.len() / 2];
     let start = Instant::now();
-    let fresh = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
+    let fresh = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let fresh_time = start.elapsed();
     assert_eq!(session.inference(), &fresh, "the incremental result equals a fresh inference");
     println!("bench one wall move: nodes {nodes}, first update {first:?}, move min {:?} median {median:?} max {:?}, fresh infer {fresh_time:?}, last report {last:?}", samples[0], samples[samples.len() - 1]);
@@ -145,12 +149,19 @@ fn one_wall_move_in_511_walls_and_64_windows_updates_in_under_15_ms() {
 }
 
 mod annotations {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
-    use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, DimensionPatch, OpeningPatch, ProjectPatch, StoreyPatch, TextNotePatch, WallTypePatch}, Entry, ModelDiff}, snapshot::Point2};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::{AnnotationStylePatch, DimensionPatch, TextNotePatch};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::ColumnPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::OpeningPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{ProjectPatch, StoreyPatch};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::WallTypePatch;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     static ROOM: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json"));
@@ -252,12 +263,18 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 }
 
 mod ceilings {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
-    use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex}, diff::{patches::{CeilingPatch, CeilingTypePatch, ProjectPatch}, Entry, ModelDiff}};
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Layer, LayerFunction, Point2, Vertex};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::CeilingPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::CeilingTypePatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::ProjectPatch;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     static HOUSE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
@@ -352,12 +369,18 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 }
 
 mod wall_depth {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
-    use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::{ProjectPatch, RoofPatch, SlabPatch, WallPatch}}, snapshot::{RoofShape, Slope}};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{Assigned, Entry};
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::ProjectPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::ceilings_roofs_openings::RoofPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::SlabPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{RoofShape, Slope};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     static ATTIC: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json"));
@@ -460,12 +483,17 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 }
 
 mod sheets {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
-    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{ProjectPatch, SheetPatch, StoreyPatch, ViewportPatch}}, snapshot::{Point2, Sheet, Viewport}};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::{ProjectPatch, StoreyPatch};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::documentation::{SheetPatch, ViewportPatch};
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Sheet, Viewport};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     static FULL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
@@ -575,10 +603,16 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 }
 
 mod coordination {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
-use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-    use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Issue, IssuePriority, IssueStatus, Point2, Rule, RuleKind, RuleScope, RuleSeverity}, diff::{patches::{BeamPatch, ClashSetPatch, ProjectPatch}, Entry, ModelDiff}};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, kinds, plan, ModelNode};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, IssuePriority, IssueStatus, Point2, RuleKind, RuleScope, RuleSeverity};
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Issue, Rule};
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::columns_beams_slabs::BeamPatch;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::ClashSetPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::ProjectPatch;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     use protocol::Inference;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -682,8 +716,8 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     #[test]
     fn the_plan_is_topological_and_names_only_planned_parents_for_the_coordination_selections() {
         let snapshot = frame();
-        for wanted in [kinds::CLASHES, kinds::RULES, kinds::CLASHES | kinds::RULES] {
-            let steps = plan::build(&snapshot, kinds::closure(wanted));
+        for wanted in [semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::CLASHES, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::RULES, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::CLASHES | semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::RULES] {
+            let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&snapshot, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(wanted));
             let mut seen = std::collections::BTreeSet::new();
             for step in &steps {
                 assert!(step.parents.iter().all(|parent| seen.contains(parent)), "{:?} names a parent that is not planned before it", step.key);

@@ -73,8 +73,20 @@ func FilesIndexForRoot(repoRoot string) string {
 	return RepoMetaPathForRoot(repoRoot, FilesIndexName)
 }
 
-// 🧭️FindRepoRoot walks upwards from startDir and returns the first monorepo root it recognises.
+// 🧭️FindRepoRoot walks upwards from startDir, returns the first monorepo root it recognises and reports the resolution to the observer.
 func FindRepoRoot(startDir string) string {
+	resolved := ResolveRepoRoot(startDir)
+	rootStateMutex.RLock()
+	observe := rootResolutionObserver
+	rootStateMutex.RUnlock()
+	if observe != nil {
+		observe(resolved)
+	}
+	return resolved
+}
+
+// 🔍️ResolveRepoRoot walks upwards from startDir and returns the first monorepo root it recognises without reporting it.
+func ResolveRepoRoot(startDir string) string {
 	if strings.TrimSpace(startDir) == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -122,36 +134,62 @@ func ascend(dir string, match func(string) bool) (string, bool) {
 	}
 }
 
-var RootDir string
+var (
+	rootStateMutex         sync.RWMutex
+	rootDir                string
+	rootResolutionObserver func(resolved string)
+)
 
-var ExecutorOnce sync.Once
-
-// 💿️init holds the data fields for a init record.
-func init() {
-	wd, err := os.Getwd()
+// 🧷️BindWorkingDirectory binds the process to the repository containing the working directory; every entry point calls it once per invocation because no root is ever bound implicitly.
+func BindWorkingDirectory() error {
+	cwd, err := os.Getwd()
 	if err != nil {
-		RootDir = "."
-	} else {
-		RootDir = FindRepoRoot(wd)
+		return err
 	}
-	SetRootDir(RootDir)
+	SetRootDir(cwd)
+	return nil
 }
 
-// 🏪️GetRootDir MUST return the stored value without modification.
-// 📖️GetRootDir returns the root dir of the value.
+// 🔓️LookupRootDir returns the bound root and whether a root is bound, without refusing.
+func LookupRootDir() (string, bool) {
+	rootStateMutex.RLock()
+	defer rootStateMutex.RUnlock()
+	return rootDir, rootDir != ""
+}
+
+// 🏪️GetRootDir returns the explicitly bound root and refuses while none is bound, so no lookup can fall back to the repository the process happens to run in.
 func GetRootDir() string {
-	return RootDir
+	root, bound := LookupRootDir()
+	if !bound {
+		panic("workspace: the repository root is not bound; call BindWorkingDirectory or SetRootDir first")
+	}
+	return root
 }
 
-// 📥️SetRootDir MUST update the value on the receiver.
-// 🗺️SetRootDir sets the root dir on the value.
+// 📥️SetRootDir binds the monorepo root containing dir, drops the root-derived caches and notifies the watchers.
 func SetRootDir(dir string) {
-	RootDir = FindRepoRoot(dir)
+	resolved := FindRepoRoot(dir)
+	rootStateMutex.Lock()
+	rootDir = resolved
+	rootStateMutex.Unlock()
 	GitignoreMutex.Lock()
 	CachedGitignore = nil
 	GitignoreLoaded = false
 	GitignoreMutex.Unlock()
 	notifyRootDirWatchers()
+}
+
+// 🔭️ObserveRootResolution installs the observer that sees every root resolution and returns the function that restores the previous observer; it exists for the hermetic test guard of the nested sandbox module.
+func ObserveRootResolution(observer func(resolved string)) func() {
+	rootStateMutex.Lock()
+	previous := rootResolutionObserver
+	rootResolutionObserver = observer
+	rootStateMutex.Unlock()
+	return func() {
+		rootStateMutex.Lock()
+		rootResolutionObserver = previous
+		rootStateMutex.Unlock()
+	}
 }
 
 // 🔷️GetSemioRootDir MUST return the stored value without modification.
@@ -212,6 +250,24 @@ func WatchRootDir(reset func()) { rootDirWatchers = append(rootDirWatchers, rese
 func notifyRootDirWatchers() {
 	for _, reset := range rootDirWatchers {
 		reset()
+	}
+}
+
+// 🧱️CanonicalPath resolves symlinks of the deepest existing ancestor so that two spellings of one directory compare equal.
+func CanonicalPath(path string) string {
+	absolute, err := filepath.Abs(path)
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	remainder := ""
+	for existing := absolute; ; existing = filepath.Dir(existing) {
+		if resolved, err := filepath.EvalSymlinks(existing); err == nil {
+			return filepath.Join(resolved, remainder)
+		}
+		if filepath.Dir(existing) == existing {
+			return absolute
+		}
+		remainder = filepath.Join(filepath.Base(existing), remainder)
 	}
 }
 

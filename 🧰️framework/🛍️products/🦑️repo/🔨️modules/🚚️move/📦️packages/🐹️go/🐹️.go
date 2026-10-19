@@ -46,7 +46,7 @@ type sealedDocument struct {
 // 🔏️SealedDocumentPaths returns every live digest-sealed evidence document the workspace taxonomy registers; a path-renaming tool never rewrites, moves or relocates one.
 func SealedDocumentPaths() (map[string]bool, error) {
 	sealed := map[string]bool{}
-	data, err := os.ReadFile(filepath.Join(workspace.RootDir, filepath.FromSlash(SealedTaxonomyPath)))
+	data, err := os.ReadFile(filepath.Join(workspace.GetRootDir(), filepath.FromSlash(SealedTaxonomyPath)))
 	if errors.Is(err, fs.ErrNotExist) {
 		return sealed, nil
 	}
@@ -101,7 +101,7 @@ func refuseSealedMove(source string) *workspace.ToolResult {
 func ToolFolderCreate(path string) workspace.ToolResult {
 	events.Emit(events.EventFolderCreateStarting, "repo-cli", events.FolderPayload{Path: path})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, path)
+	absPath := filepath.Join(workspace.GetRootDir(), path)
 	if workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Folder already exists: %s", path))
 	}
@@ -117,8 +117,8 @@ func ToolFolderCreate(path string) workspace.ToolResult {
 func ToolFolderMove(source, target string) workspace.ToolResult {
 	events.Emit(events.EventFolderMoveStarting, "repo-cli", events.FolderPayload{Path: target, From: source})
 	output := workspace.NewOutput()
-	absSource := filepath.Join(workspace.RootDir, source)
-	absTarget := filepath.Join(workspace.RootDir, target)
+	absSource := filepath.Join(workspace.GetRootDir(), source)
+	absTarget := filepath.Join(workspace.GetRootDir(), target)
 	if !workspace.FileExists(absSource) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Source folder not found: %s", source))
 	}
@@ -144,7 +144,7 @@ func ToolFolderMove(source, target string) workspace.ToolResult {
 func ToolFolderDelete(path string) workspace.ToolResult {
 	events.Emit(events.EventFolderDeleteStarting, "repo-cli", events.FolderPayload{Path: path})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, path)
+	absPath := filepath.Join(workspace.GetRootDir(), path)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
@@ -160,7 +160,7 @@ func ToolFolderDelete(path string) workspace.ToolResult {
 func ToolFileCreate(path string) workspace.ToolResult {
 	events.Emit(events.EventFileCreateStarting, "repo-cli", events.FilePayload{Path: path})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, path)
+	absPath := filepath.Join(workspace.GetRootDir(), path)
 	if workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File already exists: %s", path))
 	}
@@ -189,8 +189,8 @@ func GenerateFileHeader(path string, language languages.LanguagePlugin) string {
 func ToolFileMove(source, target string) workspace.ToolResult {
 	events.Emit(events.EventFileMoveStarting, "repo-cli", events.FilePayload{Path: target, From: source})
 	output := workspace.NewOutput()
-	absSource := filepath.Join(workspace.RootDir, source)
-	absTarget := filepath.Join(workspace.RootDir, target)
+	absSource := filepath.Join(workspace.GetRootDir(), source)
+	absTarget := filepath.Join(workspace.GetRootDir(), target)
 	if !workspace.FileExists(absSource) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("Source file not found: %s", source))
 	}
@@ -216,7 +216,7 @@ func ToolFileMove(source, target string) workspace.ToolResult {
 func ToolFileDelete(path string) workspace.ToolResult {
 	events.Emit(events.EventFileDeleteStarting, "repo-cli", events.FilePayload{Path: path})
 	output := workspace.NewOutput()
-	absPath := filepath.Join(workspace.RootDir, path)
+	absPath := filepath.Join(workspace.GetRootDir(), path)
 	if !workspace.FileExists(absPath) {
 		return workspace.ToolErrorMsg(fmt.Sprintf("File not found: %s", path))
 	}

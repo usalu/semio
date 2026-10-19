@@ -1,8 +1,8 @@
-import{requireNativeStorageReservationV1,readNativeStorageReservationPolicyV1,readNativeStorageImageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import type{NativeStorageBackingV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
+import{requireNativeStorageReservationV1,readNativeStorageReservationPolicyV1,readNativeStorageImageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStorageBackingV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryCacheStoreV1,requireRepositoryCacheStoreV1,requireRepositoryCacheStoreReadCustodyV1,requireCurrentRepositoryCacheStoreV1,withRepositoryCacheStoreConsumerV1,type RepositoryCacheStoreV1} from "../📦️budget/📥️opening/🏪️store/🟦️.ts";
 import type {ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

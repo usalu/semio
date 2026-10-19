@@ -233,7 +233,7 @@ fn selection(t: &TreeState) -> Option<WidgetSignal> {
     t.selected_item().map(WidgetSignal::SelectionChanged)
 }
 
-pub(crate) fn tree_on_key(t: &mut TreeState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn tree_on_key(t: &mut TreeState, ev: &KeyEvent) -> Option<WidgetSignal> {
     let count = t.count();
     if count > 0 {
         if let Some(next) = navigate_to(ev.key, t.view.selected(), count, t.view.page()) {
@@ -298,7 +298,7 @@ pub(crate) fn tree_on_key(t: &mut TreeState, ev: &KeyEvent) -> Option<WidgetSign
     }
 }
 
-pub(crate) fn tree_on_paste(t: &mut TreeState, text: &str) -> Option<WidgetSignal> {
+pub fn tree_on_paste(t: &mut TreeState, text: &str) -> Option<WidgetSignal> {
     if !t.filterable {
         return None;
     }
@@ -307,7 +307,7 @@ pub(crate) fn tree_on_paste(t: &mut TreeState, text: &str) -> Option<WidgetSigna
     t.set_query(&query).then_some(WidgetSignal::ValueChanged(query))
 }
 
-pub(crate) fn tree_on_mouse(t: &mut TreeState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn tree_on_mouse(t: &mut TreeState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     let area = list_area(t, rect);
     let count = t.count();
     let on_marker = |t: &TreeState, position: usize| -> bool {
@@ -339,13 +339,13 @@ pub(crate) fn tree_on_mouse(t: &mut TreeState, rect: Rect, event: &MouseEvent) -
     }
 }
 
-pub(crate) fn tree_set_hover(t: &mut TreeState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn tree_set_hover(t: &mut TreeState, rect: Rect, pos: Option<Pos>) -> bool {
     let area = list_area(t, rect);
     let count = t.count();
     t.view.hover_at(area, pos, count)
 }
 
-pub(crate) fn tree_cursor(t: &TreeState, rect: Rect) -> Option<CursorSpec> {
+pub fn tree_cursor(t: &TreeState, rect: Rect) -> Option<CursorSpec> {
     if filter_rows(t, rect) == 0 || rect.width == 0 {
         return None;
     }
@@ -353,7 +353,7 @@ pub(crate) fn tree_cursor(t: &TreeState, rect: Rect) -> Option<CursorSpec> {
     Some(CursorSpec { pos: Pos { x, y: rect.y }, shape: CursorShape::Bar, blink: true })
 }
 
-pub(crate) fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_tree(t: &TreeState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

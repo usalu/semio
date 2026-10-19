@@ -12,7 +12,7 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
     describe("submitPluginTurn (TurnScheduler-backed turn dispatch replacing the old unbounded actorTurnQueue)", () => {
       it("validates fixed result page authority and preserves document and download effects", async () => {
         const { Buffer } = await import("node:buffer");
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const wire = (lane: number, text: string, receiver = fixture.wire.receiver): WireVariant => {
           const body = Buffer.alloc(30);
           body.writeUInt32LE(fixture.wire.receiver, 0);
@@ -119,7 +119,7 @@ export async function registerTypedOperationPagesTests(vitest: PluginRuntimeVite
       });
 
       it("keeps the command reply when publication supplies only an unsolicited UI scope", async () => {
-        const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json");
+        const { default: fixture } = await import("@semio-tech/framework-plugin/reactor/testing/fixtures.json");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         const frames = [
           { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },

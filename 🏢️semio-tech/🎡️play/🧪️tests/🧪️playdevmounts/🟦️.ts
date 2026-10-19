@@ -1,10 +1,11 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_VENDOR_DIRECTORY } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { FONT_ASSET } from "../../../../🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
+import { MODULE_PLUGIN_ROUTE, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
+import { FONT_ASSET } from "@semio-tech/framework-canvas-ts/fonts";
 import type { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 
 type Middleware = (request: IncomingMessage, response: ServerResponse, next: () => void) => void;
@@ -16,10 +17,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("claims every route once and serves the font pack, the shim and the extensions through one table", async () => {
       const workspace = mkdtempSync(join(tmpdir(), "play-dev-mounts-"));
       const mounts = dependencies.playDevStaticDirMounts(workspace, name => join(workspace, "📥️installed", name), "prototype");
+      const builtModules = relative(workspace, builtPluginModulesRootIn(workspace, "prototype"));
       const put = (route: string, file: string, content: string) => { const mount = mounts.find(row => row.route === route)!; mkdirSync(join(workspace, mount.root), { recursive: true }); writeFileSync(join(workspace, mount.root, file), content); };
       const vendor = `${MODULE_PLUGIN_ROUTE}/${MODULE_VENDOR_DIRECTORY}`;
       expect(mounts.filter(row => row.route === vendor).map(row => row.root)).toEqual([".cache/b/p/m/infinite/prototype/fonts"]);
-      const shim = mounts.find(row => row.route.startsWith(vendor + "/"))!, extension = mounts.find(row => row.root.startsWith("📥️installed/"))!, plugin = mounts.find(row => row.route.startsWith(MODULE_PLUGIN_ROUTE + "/") && !row.route.startsWith(vendor) && row.root.includes("🔌️plugin-modules/"))!;
+      const shim = mounts.find(row => row.route.startsWith(vendor + "/"))!, extension = mounts.find(row => row.root.startsWith("📥️installed/"))!, plugin = mounts.find(row => row.route.startsWith(MODULE_PLUGIN_ROUTE + "/") && !row.route.startsWith(vendor) && row.root.startsWith(builtModules + "/"))!;
       put(vendor, FONT_ASSET, "font-pack");
       put(shim.route, "cli.js", "export const cli = 1;");
       put(extension.route, "🌉️bridge.js", "export const extension = 1;");

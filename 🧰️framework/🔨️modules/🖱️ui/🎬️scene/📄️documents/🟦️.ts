@@ -1,5 +1,5 @@
 import type { IconName } from "@semio-tech/assets";
-import { type SceneLane, type SceneLaneRef, sceneFromLanes } from "../🛤️lanes/🟦️.ts";
+import { type SceneLane, type SceneLaneRef, sceneFromLanes } from "../🚚️lane-contract/🟦️.ts";
 
 /** 📋️ A table surface scene payload — mirrors the wasm `componentScene` node's `table` field. */
 export type TableScene = {

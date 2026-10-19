@@ -23,9 +23,7 @@ func TestExhaustiveSectionCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow section commands test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)
@@ -37,7 +35,6 @@ func TestExhaustiveSectionCommands(t *testing.T) {
 
 	testDir := filepath.Join(repoRoot, "temp", "section_tests")
 	os.MkdirAll(testDir, 0755)
-	defer os.RemoveAll(testDir)
 
 	tests := []struct {
 		name       string
@@ -141,9 +138,7 @@ func TestExhaustiveStreamingList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow streaming list test in short mode")
 	}
-	cwd, _ := os.Getwd()
-	repoRoot := findTestRepoRoot(cwd)
-	SetRootDir(repoRoot)
+	repoRoot := withExhaustiveRepo(t)
 
 	factory := func(config Config) (*Engine, error) {
 		executor, err := graphql.NewExecutor(repoRoot)

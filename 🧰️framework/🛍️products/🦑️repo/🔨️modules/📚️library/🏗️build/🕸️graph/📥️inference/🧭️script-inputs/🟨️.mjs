@@ -1,22 +1,23 @@
 /** 🧭️ Tracks the literal import closure of command scripts and the packages they consume. */
-import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
-import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createRequire, isBuiltin } from "node:module";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { memoizedObservedAsyncComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 const { existsSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "script-inputs";
-let buildPath, readPhysicalSource, prepareSourceAnalysesV1, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph;
+let buildPath, readPhysicalSource, prepareSourceAnalysesV1, LIBRARY_ROOT, POLICY, readToml, readBunLockGraph, SCRIPT_PROVIDER_LOADER_MODULE, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA;
 
 /** 🔌️ Binds this component's dependencies from the revision registry once its needs are wired. */
 export function wire(registry) {
-  ({ buildPath, readPhysicalSource, LIBRARY_ROOT, POLICY } = registry.coordinates);
+  ({ buildPath, readPhysicalSource, LIBRARY_ROOT, POLICY, SCRIPT_PROVIDER_LOADER_MODULE, SCRIPT_PROVIDER_DESIGNATION, SCRIPT_PROVIDER_DESIGNATION_SCHEMA } = registry.coordinates);
   ({ prepareSourceAnalysesV1 } = registry.sourceAnalyses);
   ({ readToml } = registry.nativeManifests);
   ({ readBunLockGraph } = registry.bunLock);
@@ -25,7 +26,15 @@ export function wire(registry) {
 /** 🗂️ Shares source reads and command closures only within one graph construction. */
 export function createScriptInputCache(context={}) {
   if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkResourceLeaseControl(context.phaseControl);}
-  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),context };
+  return { files: new Map(), closures: new Map(), commandDependencies: new Map(), modules:new Set(), resources:new Set(),context,providerDesignation:context.scriptProviderDesignation };
+}
+
+/** 🔌️ Names the declared provider modules a script loads at run time, which no literal import reaches: the designation, its schema and every designated module. */
+export function scriptProviderImportsV1(cache) {
+  const designation = cache.providerDesignation ?? join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION), schema = join(LIBRARY_ROOT, SCRIPT_PROVIDER_DESIGNATION_SCHEMA);
+  const declared = JSON.parse(readPhysicalSource(designation).toString("utf8"));
+  if (validateJsonSchemaSubset(JSON.parse(readPhysicalSource(schema).toString("utf8")), declared).length) throw Error("Complete repository script provider declaration required");
+  return [{ path: designation, source: false }, { path: schema, source: false }, ...Object.values(declared.providers).map(module => ({ path: resolve(dirname(designation), module), source: true }))];
 }
 
 /** 🧿️ Keeps a logical import's interpretation separate from its physical file identity. */
@@ -51,8 +60,9 @@ export async function relativeScriptInputs(entries, workspaceRoot, cache = creat
     if(!source||!/\.[cm]?[jt]sx?$/u.test(path)){cache.resources.add(path);if(!seen)readPhysicalSource(path);return;}
     if(compiled.has(path))return;
     compiled.add(path);cache.modules.add(path);
-    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources]),async()=>{
-      const imports = [];
+    const loadsProviders = path === join(LIBRARY_ROOT, SCRIPT_PROVIDER_LOADER_MODULE);
+    const imports = await memoizedObservedAsyncComputationV1(cache.files,JSON.stringify([path,requiredSources,loadsProviders?cache.providerDesignation??null:undefined]),async()=>{
+      const imports = loadsProviders ? scriptProviderImportsV1(cache) : [];
       for (const entry of observedSourceAnalysisV1(prepareSourceAnalysesV1().command,path)) {
         await checkpoint();
         const resource=buildImportResourceV1(path,entry);
@@ -169,5 +179,11 @@ export function genericCommandFallbackInputs(workspaceRoot) {
   ];
 }
 
-/** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control. */
-export async function yieldInferenceV1(context,phase,index,force=false){if(context.invocation){requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);if(force||index%16===0){await advanceScriptInvocation(context.invocation,phase,"running");checkResourceLeaseControl(context.phaseControl);}}}
+/** ⏳️ Delegates bounded inference work to the caller's original progress and continuation control; durable progress is published at most every 200 ms so its cost never scales with the number of inferred facts. */
+export async function yieldInferenceV1(context,phase,index,force=false){
+ if(!context.invocation)return;
+ const last=yieldInferenceV1.last??=new WeakMap(),now=performance.now();
+ if(!force&&now-(last.get(context)??-Infinity)<200){context.invocation.control.signal.throwIfAborted();return;}
+ last.set(context,now);
+ requireIssuedResourceControlInvocationV1(context.phaseControl,context.invocation);checkScriptInvocation(context.invocation);checkResourceLeaseControl(context.phaseControl);await advanceScriptInvocation(context.invocation,phase,"running");checkResourceLeaseControl(context.phaseControl);
+}

@@ -146,8 +146,9 @@ export class Base64DecodeCursor {
   private readonly end:number;
   private readonly length:number;
 
-  constructor(private text:string,range:Base64InputRange={start:0,end:text.length}){
-    this.start=range.start;this.end=range.end;
+  private text: string;
+  constructor(text:string,range:Base64InputRange={start:0,end:text.length}){
+    this.text = text; this.start=range.start;this.end=range.end;
     const boundary=(at:number)=>at===0||at===text.length||!(text.charCodeAt(at)>=0xdc00&&text.charCodeAt(at)<=0xdfff&&text.charCodeAt(at-1)>=0xd800&&text.charCodeAt(at-1)<=0xdbff);
     const valid=Number.isSafeInteger(this.start)&&Number.isSafeInteger(this.end)&&this.start>=0&&this.start<=this.end&&this.end<=text.length&&boundary(this.start)&&boundary(this.end);
     this.length=valid?this.end-this.start:0;

@@ -1,0 +1,2 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/Board2dHost/session-sync` entry: explicit re-exports of the source module that owns each member. */
+export { applyBoard2dHighlightedIds, beginBoardPeerGesture, board2dPeers, boardPeerOwnsGesture, endBoardPeerGesture, notifyBoardPeersGestureEnded, pushBoardDropPreview, pushBoardLiveMirrorMutations, registerBoard2dPeer, unregisterBoard2dPeer } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖥️Board2dHost/🔄️session-sync/🟦️.ts";

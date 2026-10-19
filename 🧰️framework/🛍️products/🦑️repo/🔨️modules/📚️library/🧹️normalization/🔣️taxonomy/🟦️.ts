@@ -1,5 +1,5 @@
 import { posix, relative, resolve } from "node:path";
-import { requireExactKeys, requireLiteral, requireRecord, requireString, requireStringArray, type UnknownRecord } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { requireExactKeys, requireLiteral, requireRecord, requireString, requireStringArray, type UnknownRecord } from "@semio-tech/schema-validator-ts";
 import type { LoadedTaxonomy, TaxonomyContentFacts, TaxonomyV7 } from "./📚️loaded/🟦️.ts";
 import { canonicalPrimaryFilenameForKind, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import type { Taxonomy as DiscoveryTaxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";

@@ -1,13 +1,14 @@
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
-use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::TreeWindows;
 #[allow(unused_imports)]
-use crate::editor::bim::entities::{kind_holding, kind_of};
+use semio_s_artifact_bim_model_entities::editor::bim::entities::{kind_holding, kind_of};
 #[allow(unused_imports)]
-use crate::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
 #[allow(unused_imports)]
-use crate::editor::bim::panels::outliner::{item, leaf};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner::{item, leaf};
 #[allow(unused_imports)]
 use semio_framework_plugin::BuiltNode;
 #[allow(unused_imports)]
@@ -22,9 +23,9 @@ use semio_framework_plugin::PanelTreeBuilder;
 use semio_framework_plugin::UiAssemblyResult;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::editor::bim::panels::diagnostics::{CLIP, clip};
-use crate::editor::bim::panels::diagnostics::*;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::{CLIP, clip};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics::{render, BODY_KEY, SEVERITIES, groups, groups_json, ROOT, category_label};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
@@ -41,7 +42,7 @@ fn model(text: &str) -> (ModelSnapshot, ModelInference) {
 }
 
 fn text_with(snapshot: &ModelSnapshot, inference: &ModelInference, view: &ViewModel) -> String {
-    let node = render(snapshot, inference, crate::editor::bim::terminology::bim_labels(view), &TreeWindows::for_body(view, BODY_KEY)).expect("the panel renders");
+    let node = render(snapshot, inference, semio_s_artifact_bim_model_tests::editor::bim::terminology::bim_labels(view), &TreeWindows::for_body(view, BODY_KEY)).expect("the panel renders");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("projects")
 }
 
@@ -50,7 +51,7 @@ fn text(snapshot: &ModelSnapshot, inference: &ModelInference, locale: Locale) ->
 }
 
 fn demo_with(found: Vec<Diagnostic>) -> (ModelSnapshot, ModelInference) {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
+    let snapshot = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     (snapshot, ModelInference { diagnostics: found, ..ModelInference::default() })
 }
 

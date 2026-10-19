@@ -91,7 +91,7 @@ impl Dictionary {
 /// 🧊️ Test-only oracle mirror of the hand-written `Deserialize` below; manual (not derived) for the
 /// same reason `Deserialize` is hand-written rather than delegating to `OrderedMap`'s own — see
 /// `Dictionary`'s struct docstring above. Serializes each entry directly over `Value: Serialize`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl Serialize for Dictionary {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
@@ -105,7 +105,7 @@ impl Serialize for Dictionary {
 
 /// 🧊️ Cold decoding stages every replacement and partial failure in a domain-aware builder.
 /// 🔮️ Test-only — production decoding routes through `FromValue` below.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de> Deserialize<'de> for Dictionary {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor;
@@ -205,8 +205,8 @@ pub type Key = String;
 
 /// 💎️ Atom or nested dictionary. `serde` is TEST-ONLY — see `Dictionary`'s docstring above.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(untagged))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(untagged))]
 pub enum Value {
     Atom(Atom),
     Dictionary(Dictionary),
@@ -276,8 +276,8 @@ impl FromValue for Value {
 
 /// ⚛️ Immutable non-dictionary value. `serde` is TEST-ONLY — see `Dictionary`'s docstring above.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(untagged))]
+#[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(untagged))]
 pub enum Atom {
     Null,
     Boolean(bool),

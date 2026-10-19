@@ -2,11 +2,11 @@
 //! selected elements or types. A search selects the matching entries in the framework `library` domain (command `searchClassification`); while some entries of a system are selected the tree shows them with their ancestors
 //! instead of the whole table, and an empty search shows the table again. A check marks an entry every selected holder carries. Everything is reachable from the keyboard: labelled inputs and rows, not gestures.
 
-use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
-use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+use semio_s_artifact_bim_model_interaction::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+use semio_s_artifact_bim_model_kit::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 use crate::editor::bim::panels::properties::input_row;
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::PanelGroup;
@@ -79,7 +79,7 @@ fn hits_row(system: &str, count: usize, labels: &BimLabels) -> UiAssemblyResult<
 /// 🗂️ Renders the classification browser: one windowed section per system, `elements` being the selected elements (the holders an assignment reaches) and `library` the selection of the library domain (the matches of a search).
 pub fn render(snapshot: &ModelSnapshot, labels: &BimLabels, elements: &[String], library: &[String], windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let mut builder = PanelTreeBuilder::new(ROOT)?;
-    let holders: Vec<&String> = elements.iter().filter(|id| crate::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, id)).collect();
+    let holders: Vec<&String> = elements.iter().filter(|id| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, id)).collect();
     for (id, system) in &snapshot.classification_systems {
         let matches = found(id, library);
         let mut rows: Vec<Row<'_>> = vec![Row::Search];

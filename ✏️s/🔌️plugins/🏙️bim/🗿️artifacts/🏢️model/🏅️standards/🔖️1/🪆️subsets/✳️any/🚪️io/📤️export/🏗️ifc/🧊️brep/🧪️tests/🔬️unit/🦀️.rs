@@ -1,10 +1,10 @@
-use crate::standards::v1::subsets::any::io::export::ifc::writer::Ifc;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::Ifc;
 use semio_framework_geometry::mesh::TriMesh;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, int, list, real, refs, rf, unset, Schema};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer::{flag, int, list, real, refs, rf, unset, Schema};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
-use crate::standards::v1::subsets::any::io::export::ifc::brep::*;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep::{faceted_brep, brep_definition};
 use semio_framework_geometry::mesh::extrude;
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::Point;

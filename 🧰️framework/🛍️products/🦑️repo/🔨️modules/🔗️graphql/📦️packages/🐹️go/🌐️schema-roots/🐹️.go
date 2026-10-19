@@ -139,6 +139,7 @@ func schemaMutation() []NamedType {
 		ResolvedField("sectionDelete", NN(Ty("Boolean")), "mutation.sectionDelete").Arg("file", NN(Ty("String"))).Arg("name", NN(Ty("String"))),
 		ResolvedField("integrate", Ty("File"), "mutation.integrate").Arg("source", NN(Ty("String"))).Arg("targetSection", NN(Ty("String"))).Arg("targetFile", NN(Ty("String"))).Arg("targetParent", Ty("String")),
 		ResolvedField("extract", Ty("File"), "mutation.extract").Arg("sourceFile", NN(Ty("String"))).Arg("sourceSection", NN(Ty("String"))).Arg("targetFile", NN(Ty("String"))),
+		ResolvedField("fix", NN(Ty("FixResult")), "mutation.fix").Arg("scope", Ty("String")),
 	}}}
 }
 

@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-svg-diff"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-stdio-svg: diff"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-svg-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }

@@ -3,10 +3,11 @@
 //! command; a template without defaults, or holders that already state every default, change nothing.
 
 use crate::editor::bim::commands::set_property::elements_of;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::inferences::effective_properties::target_of;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties::target_of;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -32,7 +33,7 @@ pub fn handle(payload: &ApplyTemplate, doc: &ArtifactView<'_, ModelSnapshot>, _c
         for definition in &template.properties {
             let stated = snapshot.properties.get(id).and_then(|sets| sets.get(&template.name)).is_some_and(|properties| properties.contains_key(&definition.name));
             if let (false, Some(value)) = (stated, &definition.default_value) {
-                mutations.push(ModelMutation::SetElementProperty(crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: template.name.clone(), property: definition.name.clone(), value: value.clone() }));
+                mutations.push(ModelMutation::SetElementProperty(semio_s_artifact_bim_model_mut_any_87::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: template.name.clone(), property: definition.name.clone(), value: value.clone() }));
             }
         }
     }

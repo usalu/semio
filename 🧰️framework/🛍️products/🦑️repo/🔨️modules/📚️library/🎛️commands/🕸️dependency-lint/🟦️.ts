@@ -1,4 +1,4 @@
-import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import { join } from "node:path";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { artifactIoArchitectureBreaches } from "../../🚪️io/🏛️architecture/🟦️.ts";
@@ -51,7 +51,7 @@ export class LintScript extends BundleScript {
     }
     if (segments.length === 1 && ["styling-pixels", "styling-colors"].includes(segments[0]!)) {
       const { loadWorkspaceStylingSourceV1 } = await import("../../🎨️styling/📇️source/🟦️.ts");
-      const { collectStylingViolationsV1 } = await import("../../../../../../🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts");
+      const { collectStylingViolationsV1 } = await import("@semio-tech/ui-styling/verification");
       const kind = segments[0] === "styling-pixels" ? "px" : "color";
       const violations = collectStylingViolationsV1(loadWorkspaceStylingSourceV1(this.repoRoot), kind);
       if (violations.length) throw Error(`Workspace styling found ${violations.length} ${kind} violations:\n${violations.map(row => `${row.file}:${row.line} [${row.kind}] ${row.text}`).join("\n")}`);

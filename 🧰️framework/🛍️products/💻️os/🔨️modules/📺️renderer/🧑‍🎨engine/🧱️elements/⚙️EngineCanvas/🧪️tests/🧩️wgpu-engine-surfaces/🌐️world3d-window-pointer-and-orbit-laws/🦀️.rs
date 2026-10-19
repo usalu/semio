@@ -54,14 +54,14 @@ fn world3d_pointer_down_law(surface_id: &str) {
 
     let camera = state.camera.orbit.to_camera();
     let point = &fixture["world3d"]["expect"]["pickWorldPosition"];
-    let point = ui_wgpu::wgpu::Vec3::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32);
+    let point = ui_scene::math::Vec3::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32);
     let screen = semio_framework_ui_scene_picking::project_point(camera.view_proj(bounds.w, bounds.h), point, bounds.w, bounds.h).expect("the original solid pick target projects");
     let tolerance = fixture["world3d"]["expect"]["pickEdgeScreenTolerancePx"].as_f64().unwrap() as f32;
     for mesh in fixture["world3d"]["meshesJson"].as_array().unwrap() {
         if mesh["data"]["indices"].as_array().is_some_and(|indices| !indices.is_empty()) { continue; }
         if let Some(edges) = mesh["data"]["edgePositions"].as_array() {
             for edge in edges.chunks_exact(6) {
-                let project = |index: usize| semio_framework_ui_scene_picking::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::new(edge[index].as_f64().unwrap() as f32, edge[index + 1].as_f64().unwrap() as f32, edge[index + 2].as_f64().unwrap() as f32), bounds.w, bounds.h).unwrap();
+                let project = |index: usize| semio_framework_ui_scene_picking::project_point(camera.view_proj(bounds.w, bounds.h), ui_scene::math::Vec3::new(edge[index].as_f64().unwrap() as f32, edge[index + 1].as_f64().unwrap() as f32, edge[index + 2].as_f64().unwrap() as f32), bounds.w, bounds.h).unwrap();
                 let (a, b) = (project(0usize), project(3usize));
                 let distance = semio_framework_ui_scene_picking::screen_segment_distance(screen[0], screen[1], a[0], a[1], b[0], b[1]);
                 assert!(distance > tolerance, "original solid aim intersects independent wire screen tolerance: {distance} <= {tolerance}");

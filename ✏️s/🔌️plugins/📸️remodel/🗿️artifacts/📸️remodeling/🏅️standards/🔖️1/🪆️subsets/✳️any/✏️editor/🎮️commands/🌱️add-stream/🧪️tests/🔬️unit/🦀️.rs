@@ -29,8 +29,8 @@ async fn a_settled_add_stream_appends_one_uncalibrated_stream_the_media_panel_co
 async fn an_unknown_camera_is_refused_before_the_publication() {
     let mut app = app_with_registry().await;
     let instance = artifact_app_laws::meta("local").instance_id;
-    app.dispatch_typed(RemodelingCommand::AddStream(AddStream { name: "Stream".into(), kind: "image-sequence".into(), camera_id: "cam-0".into() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the bounded route admits the command; the handler faults inside the publication");
-    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut *app, instance, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
+    app.0.dispatch_typed(RemodelingCommand::AddStream(AddStream { name: "Stream".into(), kind: "image-sequence".into(), camera_id: "cam-0".into() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the bounded route admits the command; the handler faults inside the publication");
+    let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         Err(fault) => fault,
         Ok(receipt) => panic!("an unknown camera is a lane fault, never a phantom edit: {:?}", receipt.lanes),
     };

@@ -2,7 +2,7 @@
 /// <reference types="vitest/importMeta" />
 /** 🖥️ `@semio-tech/framework` — element ids, presence, dock/pane persistence, and inspector helpers. */
 import type { IconName } from "@semio-tech/assets";
-import { type ActionDescriptor, type CanvasPickTarget, type CanvasHoverFocus, type NamedLayout, type UiPresence, type UiStatus, type Component, type LayoutSpec, type StyleSpec, type AccessibilitySpec, type BuiltNode, UI_INSPECTOR_MIXED_PLACEHOLDER } from "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import { type ActionDescriptor, type NamedLayout, type UiPresence, type UiStatus, type Component, type LayoutSpec, type StyleSpec, type AccessibilitySpec, type BuiltNode, UI_INSPECTOR_MIXED_PLACEHOLDER } from "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { WindowLayout, WindowLayoutWindowNode } from "../🛂️manifest/🗺️window-layout/🟦️.ts";
 import type { DockSkeleton, PersistedAnchor } from "../🖱️ui/🔨️modules/🐳️dock-skeleton/🟦️.ts";
 import type { StoragePort } from "../🖱️ui/🔨️modules/🗄️storage-port/🟦️.ts";
@@ -75,31 +75,6 @@ export function pendingPanelUiNode(): BuiltNode {
   return { ...builtNode("pending", { type: "tree", interactionDomain: null }), activity: "loading" };
 }
 //#endregion 🧭️UiPresence
-
-
-export function canvasPickTargetKey(target: CanvasPickTarget): string {
-  return `${target.domain}:${target.id}`;
-}
-
-/** 🪪️ Parses a pick target key into domain and id. */
-export function parseCanvasPickTargetKey(key: string): { readonly domain: string; readonly id: string } | null {
-  const colon = key.indexOf(":");
-  if (colon < 0) return null;
-  return { domain: key.slice(0, colon), id: key.slice(colon + 1) };
-}
-
-export function sortCanvasPickTargetsGeneralFirst(targets: readonly CanvasPickTarget[]): readonly CanvasPickTarget[] {
-  return [...targets].sort((left, right) => left.generality - right.generality || left.label.localeCompare(right.label));
-}
-
-export function pickMostSpecificCanvasTarget(targets: readonly CanvasPickTarget[]): CanvasPickTarget | null {
-  if (targets.length === 0) return null;
-  return [...targets].sort((left, right) => right.generality - left.generality)[0] ?? null;
-}
-
-export function canvasHoverFocusFromTarget(sourceId: string, target: CanvasPickTarget | null): CanvasHoverFocus {
-  return { sourceId, target };
-}
 
 export function createWindowLayout(windowKindId: string, title?: string, options?: { readonly instanceId?: string; readonly templateId?: string }): WindowLayoutWindowNode {
   return {

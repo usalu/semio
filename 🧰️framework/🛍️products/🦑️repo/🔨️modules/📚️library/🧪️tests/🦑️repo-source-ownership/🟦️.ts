@@ -67,7 +67,7 @@ describe("repository source ownership", () => {
       }
       expect(existsSync(legacy), row.legacy).toBe(true);
       const glue = readFileSync(legacy, "utf8");
-      expect(glue.trimEnd().split("\n").length, row.legacy).toBeLessThanOrEqual(2);
+      if (row.boundary !== "package-reexport") expect(glue.trimEnd().split("\n").length, row.legacy).toBeLessThanOrEqual(2);
       expect(glue, row.legacy).toContain(row.glue!);
       expect(resolve(dirname(legacy), row.glue!), row.legacy).toBe(owner);
       for (const name of row.exports ?? []) expect(glue, name).toContain(name);

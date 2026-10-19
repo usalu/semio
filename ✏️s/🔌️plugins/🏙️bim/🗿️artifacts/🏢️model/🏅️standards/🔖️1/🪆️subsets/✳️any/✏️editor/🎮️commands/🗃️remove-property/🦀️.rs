@@ -2,9 +2,10 @@
 //! gesture. An element that does not have the property is skipped; when none has it the command is refused instead of doing nothing silently.
 
 use crate::editor::bim::commands::set_property::elements_of;
-use crate::editor::bim::kit::fault;
-use crate::editor::bim::dispatch_context::BimDispatchCtx;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_kit::editor::bim::kit::fault;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context::BimDispatchCtx;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -23,7 +24,7 @@ pub fn handle(payload: &RemoveProperty, doc: &ArtifactView<'_, ModelSnapshot>, _
         return Err(fault("bim.property.missing", format!("no target has the property '{}.{}'", payload.pset, payload.property)));
     }
     Ok(Emit::mutations(
-        holders.into_iter().map(|id| ModelMutation::RemoveElementProperty(crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty { id: id.clone(), pset: payload.pset.clone(), property: payload.property.clone() })).collect(),
+        holders.into_iter().map(|id| ModelMutation::RemoveElementProperty(semio_s_artifact_bim_model_mut_any_87::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty { id: id.clone(), pset: payload.pset.clone(), property: payload.property.clone() })).collect(),
     ))
 }
 

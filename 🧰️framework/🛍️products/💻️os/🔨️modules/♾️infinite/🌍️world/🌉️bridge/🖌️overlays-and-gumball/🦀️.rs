@@ -49,9 +49,9 @@ pub fn vertex_marker_half_extent(camera: &Camera3d, viewport: Rect, centre: Vec3
 }
 
 /// 🖍️ Resolves the scene's sub-element highlight tokens through the live theme with the shared `world3d_sub_element_paint` table; a granularity without a token keeps the built-in palette.
-pub fn world3d_sub_element_paint_native(theme: &ui_wgpu::wgpu::Theme, highlight: Option<&ui_wgpu::wgpu::World3dHighlight>) -> WorldSubElementPaint {
-    let defaults = ui_wgpu::wgpu::World3dSubElementDefaults { select: None, hover: None, edge_hover: None, edge_width: 0.0, vertex_mark_px: 0.0 };
-    let paint = ui_wgpu::wgpu::world3d_sub_element_paint(highlight, |tone| Some(world3d_tone_rgba(theme, tone)), defaults);
+pub fn world3d_sub_element_paint_native(theme: &semio_framework_ui_theme::Theme, highlight: Option<&semio_framework_ui_declaration::ui::World3dHighlight>) -> WorldSubElementPaint {
+    let defaults = semio_framework_ui_declaration::ui::World3dSubElementDefaults { select: None, hover: None, edge_hover: None, edge_width: 0.0, vertex_mark_px: 0.0 };
+    let paint = semio_framework_ui_declaration::ui::world3d_sub_element_paint(highlight, |tone| Some(world3d_tone_rgba(theme, tone)), defaults);
     WorldSubElementPaint {
         face_select: paint.face_select,
         face_hover: paint.face_hover,
@@ -64,8 +64,8 @@ pub fn world3d_sub_element_paint_native(theme: &ui_wgpu::wgpu::Theme, highlight:
 }
 
 /// 🎨️ A theme tone token as an opaque colour: `neutral` is the foreground, `primary`/`secondary`/`tertiary` the celebration triad, the rest the outcome palette of the same name.
-pub fn world3d_tone_rgba(theme: &ui_wgpu::wgpu::Theme, tone: ui_wgpu::wgpu::World3dTone) -> [f32; 4] {
-    use ui_wgpu::wgpu::World3dTone;
+pub fn world3d_tone_rgba(theme: &semio_framework_ui_theme::Theme, tone: semio_framework_ui_declaration::ui::World3dTone) -> [f32; 4] {
+    use semio_framework_ui_declaration::ui::World3dTone;
     let color = match tone {
         World3dTone::Neutral => theme.text,
         World3dTone::Primary => theme.celebrate[0],
@@ -158,7 +158,7 @@ fn world_reference_state_id_matches(value: &str, id: &str) -> bool {
     value == id || value.strip_prefix("reference:") == Some(id)
 }
 
-pub fn world_reference_visual(selection_state: &WorldSelectionState, reference: &WorldReferenceRecord, theme: &ui_wgpu::wgpu::Theme) -> WorldReferenceVisual {
+pub fn world_reference_visual(selection_state: &WorldSelectionState, reference: &WorldReferenceRecord, theme: &semio_framework_ui_theme::Theme) -> WorldReferenceVisual {
     let id = reference.id.as_deref().or(reference.url.as_deref()).unwrap_or_default();
     let locked = reference.locked.unwrap_or(false);
     let selected = !locked && selection_state.selected_ids.iter().any(|value| world_reference_state_id_matches(value, id));
@@ -202,7 +202,7 @@ pub fn append_world_reference_outline(lines: &mut Vec<LineVertex3d>, origin: [f6
 /// `--color-changed-hovered`/`--accent-secondary` → the primary/secondary celebrate stops, the
 /// `--hover-*` grays → the one hover fill this theme carries. An unknown token falls back rather
 /// than painting black.
-fn world_pick_style_color(theme: &ui_wgpu::wgpu::Theme, reference: Option<&str>, fallback: [f32; 4]) -> [f32; 4] {
+fn world_pick_style_color(theme: &semio_framework_ui_theme::Theme, reference: Option<&str>, fallback: [f32; 4]) -> [f32; 4] {
     let rgba = |color: Rgba| [color.r, color.g, color.b, color.a];
     let Some(reference) = reference.filter(|value| !value.is_empty()) else { return fallback };
     if reference.starts_with('#') {
@@ -228,7 +228,7 @@ fn world_pick_style_color(theme: &ui_wgpu::wgpu::Theme, reference: Option<&str>,
 /// double the line budget of a Concrete-Forest pane for nothing. A vertex target draws the same
 /// screen-sized cross the component markers do; every other kind draws the wireframe of the box the
 /// hit test itself uses, so what the user sees IS what was hit.
-pub fn append_pick_target_hover_lines(selection_state: &WorldSelectionState, theme: &ui_wgpu::wgpu::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
+pub fn append_pick_target_hover_lines(selection_state: &WorldSelectionState, theme: &semio_framework_ui_theme::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
     let Some(key) = selection_state.pick_hover_key.as_deref() else { return };
     let Some(target) = selection_state.pick_targets.iter().find(|target| world_pick_keys_match(Some(target.key().as_str()), Some(key))) else { return };
     let style = target.style.as_ref();
@@ -295,7 +295,7 @@ pub fn append_engagement_preview_lines(scene_state: &WorldSceneState, lines: &mu
     }
 }
 
-pub fn append_component_overlays(selection_state: &WorldSelectionState, gumball_state: &WorldGumballState, scene_state: &WorldSceneState, overlay_state: &WorldOverlayState, theme: &ui_wgpu::wgpu::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
+pub fn append_component_overlays(selection_state: &WorldSelectionState, gumball_state: &WorldGumballState, scene_state: &WorldSceneState, overlay_state: &WorldOverlayState, theme: &semio_framework_ui_theme::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
     let wire_color = [0.55, 0.65, 0.8, 0.75];
     let outline_color = selection_state.show_edges.then(|| environment_outline_color(&scene_state.environment, theme)).flatten();
     let requested_wire = selection_state.interaction_mode == "paint" || component_mode_active(selection_state) || outline_color.is_some() || selection_state.selection_targets.edge || (selection_state.granularity == "mesh" && !selection_state.component_ids.is_empty());
@@ -450,7 +450,7 @@ pub fn pick_gumball_handle_at(session_state: &WorldSessionState, camera_state: &
     let pivot = selection_centroid(selection_state, gumball_state, scene_state)?;
     let camera = camera_state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_scene::math::projection_spec_ray_from_screen(&camera, camera_state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let extent = gumball_extent(camera.position.sub(pivot).length());
     let pick_radius = extent * 0.08;
     let eye = gumball_eye(&camera, pivot);

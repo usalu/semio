@@ -1,12 +1,12 @@
 //! 🧪️ The SVG of a sheet read back by a third-party XML reader (quick-xml): paper size and viewBox, one clipped group per viewport holding the primitives of its view, the title block and the revision table as text.
 
-use crate::standards::v1::subsets::any::io::export::svg::codec::text;
-use crate::standards::v1::subsets::any::io::export::sheets::svg::{group};
-use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, texts};
-use crate::standards::v1::subsets::any::io::export::sheets::*;
-use crate::standards::v1::subsets::any::io::export::svg::testkit::{tags, Tag};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec::text;
+use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::sheets::svg::group;
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, texts};
+use semio_s_artifact_bim_model_sheets::standards::v1::subsets::any::io::export::sheets::sheet_svg;
+use semio_s_artifact_bim_model_svg::standards::v1::subsets::any::io::export::svg::testkit::{tags, Tag};
 
-fn svg_of(sheet: &str) -> (String, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {
+fn svg_of(sheet: &str) -> (String, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference) {
     let model = house_with_sheets();
     let inferred = inferred(&model);
     (sheet_svg(&model, &inferred, sheet, &labels()).expect("a layout").expect("a document"), inferred)
@@ -51,7 +51,7 @@ fn a_viewport_holds_the_primitives_of_its_view() {
     let all = tags(&document);
     let regions = all.iter().filter(|tag| tag.name == "path" && tag.has_class("region")).count();
     let lines = all.iter().filter(|tag| tag.name == "path" && tag.has_class("line")).count();
-    let expected = |field: fn(&crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework) -> usize| ["v-plan-st-ground", "v-plan-st-first"].iter().map(|view| field(&inferred.view_linework[*view])).sum::<usize>();
+    let expected = |field: fn(&semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework) -> usize| ["v-plan-st-ground", "v-plan-st-first"].iter().map(|view| field(&inferred.view_linework[*view])).sum::<usize>();
     assert_eq!(regions, expected(|drawing| drawing.lines.regions.len()));
     assert_eq!(lines, expected(|drawing| drawing.lines.polylines.len()));
     assert!(regions > 0 && lines > 0);

@@ -1,0 +1,15 @@
+C="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/"
+def load(p): return open(p,encoding='utf8').read()
+def save(p,s): open(p,'w',encoding='utf8').write(s)
+def rep(s,old,new,count=1):
+    c=s.count(old)
+    if c!=count: raise SystemExit(f"expected {count} got {c}: {old[:100]}")
+    return s.replace(old,new)
+p=C+"💾️storage/🔒️enforcement/🔌️nx/🟦️.ts"; s=load(p)
+s=rep(s,'return await withRepositoryCacheStoreV1(workspace,"graph",original,control,(parent,actualPhase)=>withNxGraphCacheStoreV1(parent,async graph=>{const held:NxGraphNamespaceLeaseV1[]=[];','return await withRepositoryCacheStoreV1(workspace,"graph",original,control,(_graph,graphPhase)=>withNxGraphCacheStoreV1(workspace,original,graphPhase,async(graph,actualPhase)=>{const held:NxGraphNamespaceLeaseV1[]=[];')
+s=rep(s,'return await withRepositoryCacheStoreV1(repositoryRoot,"graph",original,control,(parent,actualPhase)=>withNxGraphCacheStoreV1(parent,async graph=>{const lease=','return await withRepositoryCacheStoreV1(repositoryRoot,"graph",original,control,(_graph,graphPhase)=>withNxGraphCacheStoreV1(repositoryRoot,original,graphPhase,async graph=>{const lease=')
+save(p,s)
+p=C+"🕸️graph/📤️publication/🟦️.ts"; s=load(p)
+s=rep(s,'await withRepositoryCacheStoreV1(workspace,"graph",original,control,parent=>withNxGraphCacheStoreV1(parent,async graph=>{','await withRepositoryCacheStoreV1(workspace,"graph",original,control,(_graph,graphPhase)=>withNxGraphCacheStoreV1(workspace,original,graphPhase,async graph=>{')
+save(p,s)
+print("ok")

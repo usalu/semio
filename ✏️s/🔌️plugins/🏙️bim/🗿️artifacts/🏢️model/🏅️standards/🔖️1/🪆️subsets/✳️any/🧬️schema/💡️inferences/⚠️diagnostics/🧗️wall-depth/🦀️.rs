@@ -2,10 +2,13 @@
 //! length, and a reveal that sets the frame of an opening back by more than the wall leaves room for. A missing attach target or host is a dangling reference, reported by `references`.
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_value, walls, wall_sweeps};
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachState;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_value};
+use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls;
+use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachState;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
 use semio_framework_value::DslValue;
 
 const TOLERANCE: f64 = 1e-9;
@@ -48,13 +51,13 @@ pub fn storey(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'_>) -> Ve
     }
     for (id, sweep) in snapshot.wall_sweeps.iter().filter(|(_, row)| snapshot.walls.get(&row.host).is_some_and(|wall| wall.storey == storey)) {
         let (Some(wall), Some(layout)) = (snapshot.walls.get(&sweep.host), inputs.layouts.get(sweep.host.as_str())) else { continue };
-        let rise = wall_sweeps::extents_of(sweep).1;
+        let rise = semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of(sweep).1;
         let ceiling = lowest(layout);
         if ceiling.is_finite() && sweep.height + rise > ceiling + TOLERANCE {
             found.push(Diagnostic::new(DiagnosticCode::WallSweepAboveWall, &[id, &sweep.host]).on(storey).with("height", sweep.height + rise).with("wall_height", ceiling));
         }
         let hosted = snapshot.openings.iter().filter(|(_, opening)| opening.host == sweep.host).filter_map(|(opening, _)| inputs.frames.get(opening.as_str()).copied());
-        if layout.length > TOLERANCE && wall_sweeps::runs(sweep, wall, layout, &walls::cuts_of(hosted)).is_empty() {
+        if layout.length > TOLERANCE && semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::runs(sweep, wall, layout, &semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of(hosted)).is_empty() {
             found.push(Diagnostic::new(DiagnosticCode::WallSweepNoRun, &[id, &sweep.host]).on(storey));
         }
     }

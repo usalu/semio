@@ -13,9 +13,9 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, relative } from "node:path";
-import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
+import { buildGraphPathV1 } from "@semio-tech/repo-lib/build";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import {readModuleTreeSource} from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { installedDashboard } from "../../📦️installation/🟦️.ts";
 import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
 
@@ -460,7 +460,7 @@ test("semio has only the dashboard verbs: nothing is forwarded to the root scrip
 
 // #region 🔖️Hash
 test("Bun's own XXH3 gives the vectors the registry pins for the Nx graph-reuse decision", () => {
-  const rust = readFileSync(join(dashboard, "🧱️core/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+  const rust = readFileSync(join(dashboard, "🧱️invocation-catalog/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
   for (const input of ["", "a", "abc"]) {
     const hash = (Bun.hash as any).xxHash3(input) as bigint;
     const literal = `0x${hash.toString(16).padStart(16, "0").match(/.{4}/gu)!.join("_")}`;

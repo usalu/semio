@@ -8,8 +8,8 @@ import Ajv from "ajv";
 import {launchRepositoryCargoV1,readRepositoryCargoLaunchV1,readRepositoryCargoCapturePolicyV1,readRepositoryCargoGeneratedCapturePolicyV1} from "../../🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
-import {receiveScriptProcessInvocation} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import {acquireCargoProfileMaintenanceLeaseV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import {receiveScriptProcessInvocation} from "@semio-tech/process/routing";
+import {acquireCargoProfileMaintenanceLeaseV1} from "@semio-tech/process/artifacts/native-build/lease";
 
 test("repository Cargo capture consumes actual JSON inside Original compiler and target custody",async()=>{
  const root=process.cwd(),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original ticket inputs required");const source=join(artifacts,"cc-"+randomUUID().slice(0,8)),mode=process.env.SEMIO_BUILD_MODE!;mkdirSync(source);writeFileSync(join(source,"Cargo.toml"),'[package]\nname="capture-original"\nversion="0.0.0"\nedition="2021"\ndefault-run="capture-original"\n[[bin]]\nname="capture-original"\npath="src/main.rs"\n[[bin]]\nname="unselected"\npath="src/sibling.rs"\n[workspace]\n[profile.prototype]\ninherits="dev"\n');writeFileSync(join(source,"Cargo.lock"),'version = 4\n[[package]]\nname="capture-original"\nversion="0.0.0"\n');mkdirSync(join(source,"src"));writeFileSync(join(source,"src/sibling.rs"),'compile_error!("unselected sibling must never compile");\n');writeFileSync(join(source,"src/main.rs"),'fn main(){let original=std::env::var("SEMIO_SCRIPT_PROCESS_INVOCATION").unwrap();assert!(original.contains("repo:private-cache-headroom"));assert_eq!(std::env::var("SEMIO_COMPILER_CAPACITY_HELD").unwrap(),"true");if let Ok(path)=std::env::var("SEMIO_TYPEGEN_OUT"){std::fs::write(path,b"export type Generated = \\"original\\";\\n").unwrap();}println!(r#"{{"cargo":"actual-json"}}"#);eprintln!("[DEBUG] actual finite Cargo capture");}\n');

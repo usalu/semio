@@ -162,10 +162,10 @@ fn BOARD_HOST_SOURCE() -> &'static str {
             };
             let under = [Some(RetainedCloneGrant { maximum_items: 0, ..exact }), Some(RetainedCloneGrant { maximum_depth: 0, ..exact }), (exact.maximum_release_bytes > 0).then(|| RetainedCloneGrant { maximum_release_bytes: exact.maximum_release_bytes - 1, ..exact })];
             for grant in under.into_iter().flatten() {
-                assert_eq!(job.close_step(grant), InteractiveJobCloseStep::Pending { progress: Default::default() });
+                assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Pending { progress: Default::default() });
                 assert_eq!(job.next_close_release_byte_demand().expect("job release demand"), exact.maximum_release_bytes, "a yield never mutates the job");
             }
-            match job.close_step(exact) {
+            match semio_framework_job::close_with_self_funded_context(exact, |cx| job.close_step(cx)).expect("original fixture close turn") {
                 InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(exact)),
                 InteractiveJobCloseStep::Complete { progress } => {
                     assert!(progress.fits(exact));

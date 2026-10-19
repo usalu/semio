@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::export::ifc::circulation::{stair, railing};
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::circulation::{stair, railing};
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
 
 #[test]
 fn a_stair_aggregates_flights_that_carry_the_inferred_riser_and_tread_counts() {
@@ -46,12 +46,12 @@ fn a_railing_is_a_brep_with_a_length_and_height_quantity_set() {
     assert_eq!(quantities, [4.0, 1.0]);
 }
 
-fn built() -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+fn built() -> semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let mut model = house();
-    model.stairs.get_mut("s-1").expect("stair").stringer = crate::standards::v1::subsets::any::schema::snapshot::StairStringer { kind: crate::standards::v1::subsets::any::schema::snapshot::StringerKind::Closed, width: 0.06, depth: 0.24 };
+    model.stairs.get_mut("s-1").expect("stair").stringer = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StairStringer { kind: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::StringerKind::Closed, width: 0.06, depth: 0.24 };
     let rail = model.railings.get_mut("rl-1").expect("railing");
-    rail.baluster = Some(crate::standards::v1::subsets::any::schema::snapshot::Baluster { profile: crate::standards::v1::subsets::any::schema::snapshot::Profile::Rectangle { width: 0.02, depth: 0.02 }, spacing: 0.12 });
-    rail.infill = crate::standards::v1::subsets::any::schema::snapshot::Infill::Panel { thickness: 0.02 };
+    rail.baluster = Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Baluster { profile: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Profile::Rectangle { width: 0.02, depth: 0.02 }, spacing: 0.12 });
+    rail.infill = semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Infill::Panel { thickness: 0.02 };
     model
 }
 

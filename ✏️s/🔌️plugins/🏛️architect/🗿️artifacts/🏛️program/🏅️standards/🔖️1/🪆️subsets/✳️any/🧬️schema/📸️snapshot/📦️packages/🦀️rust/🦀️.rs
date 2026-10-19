@@ -95,8 +95,8 @@ pub mod standards {
 pub mod editor {
     #[path = "."]
     pub mod architect {
-        #[path = "../../../../✏️editor/🧱️base/🦀️.rs"]
-        pub mod base;
+        #[path = "../../../../✏️editor/🧱️editor-vocabulary/🦀️.rs"]
+        pub mod editor_vocabulary;
         #[path = "."]
         pub mod presence {
             pub use semio_s_artifact_architect_program_presence::editor::architect::presence::*;

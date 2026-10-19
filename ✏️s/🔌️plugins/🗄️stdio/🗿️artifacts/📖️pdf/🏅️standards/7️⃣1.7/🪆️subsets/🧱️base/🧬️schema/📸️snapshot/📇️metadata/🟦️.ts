@@ -1,6 +1,7 @@
 /** 📇️ PDF 1.7 snapshot types of document information, encryption and viewer settings. */
 import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 import type { PdfDictEntry } from "../🧩️cos/🟦️.ts";
+import type { PdfDate } from "../📆️date/🟦️.ts";
 
 export interface PdfInfo {
   title?: string | null;
@@ -13,16 +14,6 @@ export interface PdfInfo {
   modificationDate?: PdfDate | null;
   trapped?: string | null;
   extra?: PdfDictEntry[];
-}
-
-export interface PdfDate {
-  year: number;
-  month?: number;
-  day?: number;
-  hour?: number;
-  minute?: number;
-  second?: number;
-  offsetMinutes?: number | null;
 }
 
 export interface PdfEncryption {

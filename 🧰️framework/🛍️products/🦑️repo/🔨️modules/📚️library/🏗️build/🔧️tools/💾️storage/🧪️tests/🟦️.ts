@@ -1,4 +1,4 @@
-import{checkResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{checkResourceLeaseControl}from"@semio-tech/process/leases";
 import{test,expect}from"bun:test";
 import{readFile}from"node:fs/promises";
 import ts from"typescript";
@@ -6,7 +6,7 @@ import{Database}from"bun:sqlite";
 import Ajv from"ajv";
 import{runInNewContext}from"node:vm";
 import{createHash,randomBytes}from"node:crypto";
-import{withBuildTestInvocationV1}from"../../../🧪️tests/📥️invocation/🟦️.ts";
+import{withBuildTestInvocationV1}from"@semio-tech/process/testing/invocation";
 import{checkScriptInvocation,createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import fixture from"./🔣️.json";
 import policySchema from"../../../../⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧬️schema/🔣️.json";
@@ -18,8 +18,8 @@ test("tool storage binds graph publication preparation to the artifact owner",as
 });
 
 test("graph headroom includes exact future snapshot allocation and existing metadata reserve",()=>{
- const api=owner as unknown as{nxGraphRequiredHeadroomV1:(request:unknown)=>number},definition=(policySchema.definitions as unknown as Record<string,unknown>).ParentHeadroom;expect(typeof api.nxGraphRequiredHeadroomV1).toBe("function");expect(definition).toBeDefined();const validate=new Ajv({strict:true}).compile(definition as object),db=new Database(":memory:"),policy=policySchema.definitions.Policy.const;
- try{for(const row of fixture.cases){const request={allocatedBytes:row.allocatedBytes,snapshotBytes:row.snapshotBytes,allocationUnitBytes:row.allocationUnitBytes};expect(validate(request)).toBe(true);const oracle=db.query("select ?1+max(0,?2-?3)+case when ?4=0 then 0 else ((?4+?5-1)/?5)*?5+?6 end value").get(policy.minimumFreeBytes,policy.maximumPoolBytes,row.allocatedBytes,row.snapshotBytes,row.allocationUnitBytes,policy.metadataReserveBytes)as{value:number};expect(oracle.value).toBe(row.expected);expect(api.nxGraphRequiredHeadroomV1(request)).toBe(oracle.value);}for(const request of fixture.invalid){expect(validate(request)).toBe(false);expect(()=>api.nxGraphRequiredHeadroomV1(request)).toThrow();}}finally{db.close();}
+ const api=owner as unknown as{nxGraphRequiredHeadroomV1:(request:unknown)=>number},definition=(policySchema.definitions as unknown as Record<string,unknown>).SnapshotHeadroom;expect(typeof api.nxGraphRequiredHeadroomV1).toBe("function");expect(definition).toBeDefined();const validate=new Ajv({strict:true}).compile(definition as object),db=new Database(":memory:"),policy=policySchema.definitions.Policy.const;
+ try{for(const row of fixture.cases){const request={snapshotBytes:row.snapshotBytes,allocationUnitBytes:row.allocationUnitBytes};expect(validate(request)).toBe(true);const oracle=db.query("select ?1+case when ?2=0 then 0 else ((?2+?3-1)/?3)*?3+?4 end value").get(policy.minimumFreeBytes,row.snapshotBytes,row.allocationUnitBytes,policy.metadataReserveBytes)as{value:number};expect(oracle.value).toBe(row.expected);expect(api.nxGraphRequiredHeadroomV1(request)).toBe(oracle.value);}for(const request of fixture.invalid){expect(validate(request)).toBe(false);expect(()=>api.nxGraphRequiredHeadroomV1(request)).toThrow();}}finally{db.close();}
 });
 
 test("graph artifact preparation charges actual missing bytes outside reader custody",async()=>withBuildTestInvocationV1(async original=>{

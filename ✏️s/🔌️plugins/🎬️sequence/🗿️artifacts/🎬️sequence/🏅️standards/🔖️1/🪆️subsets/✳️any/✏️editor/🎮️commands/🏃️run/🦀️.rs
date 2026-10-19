@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::sequence::host::{host_from_host_snapshot, retire_run_result_cold};
-use crate::editor::sequence::base::sequence_host_snapshot_from_children;
+use crate::editor::sequence::editor_vocabulary::sequence_host_snapshot_from_children;
 use crate::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

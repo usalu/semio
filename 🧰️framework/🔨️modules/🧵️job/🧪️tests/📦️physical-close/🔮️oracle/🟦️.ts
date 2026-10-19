@@ -37,7 +37,7 @@ test("fixed operation logical removals retain original capacity until an indepen
   const source=readFileSync(resolve(root,"🧪️tests/🔬️fixed-operation-registry/🦀️.rs"),"utf8");
   expect(source.includes("grant.maximum_copy_bytes")).toBe(true);
   expect(source.includes("self.bytes.capacity()")).toBe(true);
-  expect(source.includes("copied_bytes:1")).toBe(true);
+  expect(source.includes("copied_bytes:copied")).toBe(true);
   expect(source.includes("std::mem::take(&mut self.bytes)")).toBe(true);
   expect(source.includes("grant:RetainedCloneGrant)")).toBe(true);
 });

@@ -2,7 +2,7 @@
 
 #[allow(unused_imports)]
 use std::f64::consts::FRAC_PI_2;
-use crate::standards::v1::subsets::any::io::export::sheets::pdf::arcs::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs::{Point, Cubic, arc_cubics};
 
 fn at(start: Point, cubic: &Cubic, t: f64) -> Point {
     let (a, b, c) = (cubic.0, cubic.1, cubic.2);

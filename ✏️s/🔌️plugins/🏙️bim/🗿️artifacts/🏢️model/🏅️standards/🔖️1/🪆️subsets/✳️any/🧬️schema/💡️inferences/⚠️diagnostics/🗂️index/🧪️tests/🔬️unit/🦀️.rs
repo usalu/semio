@@ -1,11 +1,11 @@
 use std::collections::BTreeSet;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::index::*;
-use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{render, row_of, LOCALES};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::index::{DiagnosticIndex, ElementFindings, SeverityCounts, category_of, categories};
+use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::{render, row_of, LOCALES};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -145,9 +145,16 @@ async fn a_rendered_text_has_no_open_placeholder_once_its_numbers_are_given() {
 
 mod graph {
     use super::*;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds, plan, ModelInferenceSession, ModelNode, NodeKind};
-    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, inferences::ModelInference};
+    use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::index::DiagnosticIndex;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
+    use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds, ModelInferenceSession, ModelNode, NodeKind};
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::building_elements::walls_and_curtain_walls::WallPatch;
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]
@@ -165,7 +172,7 @@ mod graph {
     #[semio_framework_async_macros::async_test]
     async fn the_index_node_has_every_findings_node_as_parent_and_reads_nothing_else() {
         let model = snapshot((*DEFECTS));
-        let steps = plan::build(&model, kinds::closure(kinds::DIAGNOSTIC_INDEX));
+        let steps = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::plan::build(&model, semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::DIAGNOSTIC_INDEX));
         let index = steps.iter().find(|step| step.key == ModelNode::DiagnosticIndex).expect("the index node");
         let findings: Vec<&ModelNode> = steps.iter().filter(|step| step.key.kind() == NodeKind::Diagnostics).map(|step| &step.key).collect();
         assert_eq!(index.parents.iter().collect::<Vec<_>>(), findings, "the parents are exactly the findings nodes");
@@ -177,7 +184,7 @@ mod graph {
     #[semio_framework_async_macros::async_test]
     async fn the_selection_of_the_index_projects_it_and_the_selection_of_the_findings_alone_does_not() {
         let model = snapshot((*DEFECTS));
-        let with_index = infer_selected::<{ kinds::DIAGNOSTIC_INDEX }>(&model);
+        let with_index = infer_selected::<{ semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::DIAGNOSTIC_INDEX }>(&model);
         assert_eq!(with_index.diagnostic_index, DiagnosticIndex::of(&compute_diagnostics(&model)));
         assert_eq!(infer_selected::<{ kinds::DIAGNOSTICS }>(&model).diagnostic_index, DiagnosticIndex::default(), "an unwanted kind stays empty");
     }

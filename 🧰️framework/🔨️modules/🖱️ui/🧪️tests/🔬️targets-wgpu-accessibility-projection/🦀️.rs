@@ -12,8 +12,8 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 use super::*;
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
-use crate::wgpu::tree::UiDocumentTree;
+use semio_framework_ui_retained_tree::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
+use semio_framework_ui_retained_tree::tree::UiDocumentTree;
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeRecord, UiRevision};
 
 const PROJECTION_FIXTURE: &str = include_str!("../../🧬️contract/🧪️tests/🧫️fixtures/♿️accessibility-projection.json");
@@ -90,7 +90,7 @@ fn mounted_toggle_appearances_stamp_only_their_native_live_state_channel() {
             }
         }
         let mounted = tree.document_node(node_id).expect("toggle mounted");
-        let crate::wgpu::component::ui::UiNode::Toggle(toggle) = &mut tree.node_mut(mounted).expect("mounted toggle is live").spec.0 else { panic!("fixture toggle reconciles as UiNode::Toggle") };
+        let semio_framework_ui_declaration::ui::UiNode::Toggle(toggle) = &mut tree.node_mut(mounted).expect("mounted toggle is live").spec.0 else { panic!("fixture toggle reconciles as UiNode::Toggle") };
         toggle.presence.selected = !source_state;
         let projected = accessibility_projection(&tree).pop().expect("mounted toggle is projected");
         let live_state = !source_state;
@@ -129,9 +129,9 @@ fn an_editing_unit_slider_projects_its_live_spoken_value_and_numeric_spinbutton(
     }
     let mounted = tree.document_node(node_id).expect("mounted Slider");
     let node = tree.node_mut(mounted).expect("live Slider");
-    node.flags.set(crate::wgpu::tree::NodeFlags::FOCUSED, true);
+    node.flags.set(semio_framework_ui_retained_tree::tree::NodeFlags::FOCUSED, true);
     node.state.slider_draft_value = Some(4.5);
-    node.state.edit = Some(crate::wgpu::tree::EditState { text: "4.4".into(), caret: 3, anchor: 3, composition: None, scroll_x: 0.0 });
+    node.state.edit = Some(semio_framework_ui_retained_tree::tree::EditState { text: "4.4".into(), caret: 3, anchor: 3, composition: None, scroll_x: 0.0 });
 
     let projection = accessibility_projection(&tree);
     let thumb = projection.iter().find(|node| node.key == "gain").expect("live slider thumb");
@@ -200,21 +200,21 @@ fn a_segmented_select_projects_a_radio_group_with_one_tab_stop() {
     assert!(projection.iter().all(|node| node.role != "listbox" && node.role != "option"), "no popup is projected for a segmented select");
 
     let mounted = tree.document_node(UiNodeId(0)).expect("mounted Select");
-    let mut router = crate::wgpu::events::EventRouter::new("main");
-    let values = |commands: Vec<crate::wgpu::events::UiCommand>| -> Vec<semio_framework_value::DslValue> {
+    let mut router = semio_framework_ui_wgpu_events::EventRouter::new("main");
+    let values = |commands: Vec<semio_framework_ui_wgpu_events::UiCommand>| -> Vec<semio_framework_value::DslValue> {
         commands
             .into_iter()
             .filter_map(|command| match command {
-                crate::wgpu::events::UiCommand::App { intent, .. } => intent.payload(),
+                semio_framework_ui_wgpu_events::UiCommand::App { intent, .. } => intent.payload(),
                 _ => None,
             })
             .collect()
     };
     let picked = |value: &str| semio_framework_value::DslValue::Object(vec![("value".into(), semio_framework_value::DslValue::String(value.into()))]);
-    assert_eq!(values(router.dispatch_accessibility_select_option(&mut tree, mounted, "c", &crate::wgpu::events::AccessibilityUiEvent::Activate)), vec![picked("c")], "a radio chosen through the mirror dispatches its value with no popup open");
-    let _ = router.dispatch_accessibility(&mut tree, mounted, &crate::wgpu::events::AccessibilityUiEvent::Focus);
+    assert_eq!(values(router.dispatch_accessibility_select_option(&mut tree, mounted, "c", &semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate)), vec![picked("c")], "a radio chosen through the mirror dispatches its value with no popup open");
+    let _ = router.dispatch_accessibility(&mut tree, mounted, &semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus);
     for (key, value) in [("ArrowRight", "c"), ("ArrowLeft", "a")] {
-        let commands = router.dispatch(&mut tree, mounted, &crate::wgpu::events::UiEvent::KeyDown { key: key.into(), modifiers: Default::default() });
+        let commands = router.dispatch(&mut tree, mounted, &semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: key.into(), modifiers: Default::default() });
         assert_eq!(values(commands), vec![picked(value)], "{key} moves the choice from the published one");
     }
     assert!(!tree.node(mounted).expect("live Select").state.open, "no popup opened");
@@ -323,7 +323,7 @@ fn the_projection_carries_the_live_focus_and_laid_out_rect_from_the_arena() {
     let width_id = UiNodeId(2);
     let mounted = tree.document_node(width_id).expect("the numeric field mounted");
     assert!(accessibility_projection(&tree).iter().all(|node| !node.focused), "nothing is focused before anything takes focus");
-    tree.node_mut(mounted).expect("the mounted node is live").flags.set(crate::wgpu::tree::NodeFlags::FOCUSED, true);
+    tree.node_mut(mounted).expect("the mounted node is live").flags.set(semio_framework_ui_retained_tree::tree::NodeFlags::FOCUSED, true);
     let projection = accessibility_projection(&tree);
     let focused: Vec<u64> = projection.iter().filter(|node| node.focused).map(|node| node.node_id).collect();
     assert_eq!(focused, vec![width_id.0], "exactly the arena node holding FOCUSED is announced as focused");
@@ -342,7 +342,7 @@ fn a_mounted_progress_bar_announces_its_value_or_busy_and_mounts_as_a_retained_p
     assert_eq!((indeterminate.value_min, indeterminate.value_max, indeterminate.value_now, indeterminate.value_text.as_deref(), indeterminate.busy), (None, None, None, None, true));
     for (id, total) in [(UiNodeId(7), Some(100.0)), (UiNodeId(8), None)] {
         let mounted = tree.document_node(id).expect("the progress record mounted");
-        let crate::wgpu::component::ui::UiNode::Progress(node) = &tree.node(mounted).expect("the mounted node is live").spec.0 else { panic!("node {id:?} mounts as UiNode::Progress") };
+        let semio_framework_ui_declaration::ui::UiNode::Progress(node) = &tree.node(mounted).expect("the mounted node is live").spec.0 else { panic!("node {id:?} mounts as UiNode::Progress") };
         assert_eq!(node.total, total, "node {id:?}: the total survives reconcile verbatim");
     }
 }

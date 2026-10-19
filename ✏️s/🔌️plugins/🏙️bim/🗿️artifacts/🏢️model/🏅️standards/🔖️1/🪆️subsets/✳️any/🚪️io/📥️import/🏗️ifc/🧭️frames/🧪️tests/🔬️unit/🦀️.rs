@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::import::ifc::frames::*;
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames::{Rigid, bulge_of};
 
 fn close(a: [f64; 3], b: [f64; 3]) -> bool {
     (0..3).all(|index| (a[index] - b[index]).abs() < 1e-9)

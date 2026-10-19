@@ -1,11 +1,11 @@
-import type { ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import contractFixture from './🧫️fixtures/🔣️.json';
 import type { ValidateFunction } from 'ajv';
-import { getWorkspaceRoot } from '../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts';
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { semioSchemaAjvV1, addSemioMutationLeafSchemasV1 } from '@semio-tech/schema-ts/oracles/validator';
 import { runStdioTypeScriptCompiler } from '../../🏘️composition/🏗️build/🟦️.ts';
 import { parseDocxDiff } from '@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema/diff';
@@ -40,7 +40,7 @@ const valid = (validate: ValidateFunction, value: unknown, label: string): void 
 const invalid = (validate: ValidateFunction, value: unknown, label: string): void => assert(!validate(value), `${label}: stale stub unexpectedly passed`);
 
 /** 🧪️ Validates current OOXML snapshot/diff fixtures through Ajv and their complete TypeScript guards. */
-export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): void {
+export function testStdioOfficeSchemaFixtures(repoRoot = findWorkspaceRoot()): void {
   const artifacts = join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts');
   const addressRoot = join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧭️xml-address');
   const addresses = json(join(artifacts, '📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/🧬️mutations/🧭️xml-address/🔣️.json')) as { valid: Json[]; invalid: Json[] };
@@ -178,7 +178,7 @@ export function testStdioOfficeSchemaFixtures(repoRoot = getWorkspaceRoot()): vo
 }
 
 /** 🧪️ Runs current schema/parser laws before the original owned TypeScript compiler checks. */
-export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = getWorkspaceRoot()): Promise<void> {
+export async function testStdioOfficeSchemaContracts(invocation: ScriptInvocation, repoRoot = findWorkspaceRoot()): Promise<void> {
   testStdioOfficeSchemaFixtures(repoRoot);
   for (const row of cases) await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🔌️plugins/🗄️stdio/🗿️artifacts', row.artifact, '🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts'), invocation);
   await runStdioTypeScriptCompiler(join(repoRoot, '✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📚️office-schema-contract/🧬️public-facets/🟦️.ts'), invocation);

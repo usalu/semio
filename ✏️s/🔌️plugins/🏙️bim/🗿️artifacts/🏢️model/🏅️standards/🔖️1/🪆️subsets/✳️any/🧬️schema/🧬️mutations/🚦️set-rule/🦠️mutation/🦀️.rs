@@ -1,8 +1,10 @@
 //! 🚦️ `set-rule` payload. Sparsely changes a rule: its name, kind, limit, severity and scope (the scope is replaced as a whole). The findings are inferred and follow.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::standards::v1::subsets::any::schema::{snapshot::{RuleKind, RuleScope, RuleSeverity}, diff::patches::RulePatch};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{RuleKind, RuleScope, RuleSeverity};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::patches::coordination::RulePatch;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

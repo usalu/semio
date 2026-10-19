@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import fixture from "../🧫️fixtures/🪆️embedded-browser/🔣️.json";
-import { parseEmbeddedBrowserConfiguration } from "../../🎯️targets/🧊️wgpu/🧪️tests/🪆️embedded-browser/🟦️.ts";
+import { parseEmbeddedBrowserConfiguration } from "@semio-tech/framework-renderer-wgpu/testing/embedded-browser";
 
 describe("embedded physical browser authority", () => {
   it("independently validates neutral roots, physical offsets, locales and lifecycle phases", () => {

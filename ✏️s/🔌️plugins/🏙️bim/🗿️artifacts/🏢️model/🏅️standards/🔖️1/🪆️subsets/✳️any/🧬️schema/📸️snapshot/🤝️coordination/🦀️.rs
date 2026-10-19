@@ -3,7 +3,7 @@
 //! the record and carries the message.
 //! 📎 https://github.com/buildingSMART/BCF-XML
 
-use crate::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, OpeningKind, Phase, RuleScope};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, OpeningKind, Phase, RuleScope};
 use crate::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Issue, IssueComment, Rule};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
@@ -177,7 +177,7 @@ pub fn rule_problem(base: &ModelSnapshot, _id: &str, rule: &Rule) -> Option<Coor
     scope_problem(base, &rule.scope)
 }
 
-fn point_finite(point: &crate::standards::v1::subsets::any::schema::snapshot::values::Point3) -> bool {
+fn point_finite(point: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point3) -> bool {
     point.x.is_finite() && point.y.is_finite() && point.z.is_finite()
 }
 

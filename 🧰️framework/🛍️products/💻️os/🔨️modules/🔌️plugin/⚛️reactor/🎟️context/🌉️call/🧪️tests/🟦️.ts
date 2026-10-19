@@ -1,4 +1,4 @@
-import { readModuleTreeSource } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import {pluginSubtreeText} from "../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 /** 🌉️ Actual guest calls retain original admission and failure receipts independently of semantic success. */
 import{test,expect}from"bun:test";import Ajv from"ajv";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";import fixture from"./🧫️fixtures/🔣️.json";import schema from"../🧬️schema/🔣️.json";

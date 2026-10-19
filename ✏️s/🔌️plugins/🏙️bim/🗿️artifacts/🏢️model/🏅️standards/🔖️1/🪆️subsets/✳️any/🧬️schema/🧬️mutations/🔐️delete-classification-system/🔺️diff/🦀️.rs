@@ -1,9 +1,11 @@
 //! 🔺️ Diff constructor for `DeleteClassificationSystem`: the system leaves together with every classification that names it: an element or type that has no other classification loses its whole entry, one that has
 //! others is patched to no code in this system. The cascade is restorable (one `set-element-classification` per removed classification), so it never refuses except for more rows than one removal restores.
 
-use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade;
 use crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::{ClassificationSetPatch, Entry, KeyedDelta};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -11,11 +13,11 @@ pub fn diff(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Mutat
     if !base.classification_systems.contains_key(&payload.id) {
         return MutationOutcome::refuse(OutcomeCode::TargetMissing, format!("Classification system \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    let holders = cascade::classified_by(base, &payload.id);
-    if holders.len() > cascade::INVERSE_ROWS {
+    let holders = semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::classified_by(base, &payload.id);
+    if holders.len() > semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS {
         return MutationOutcome::refuse(OutcomeCode::InverseRefused, format!("Classification system \"{}\" classifies {} records where one removal restores at most {}; reclassify in parts.", payload.id, holders.len(), cascade::INVERSE_ROWS), [payload.id.clone()]);
     }
-    let classifications: BTreeMap<String, Entry<crate::standards::v1::subsets::any::schema::snapshot::ClassificationSet, ClassificationSetPatch>> = holders
+    let classifications: BTreeMap<String, Entry<semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::ClassificationSet, ClassificationSetPatch>> = holders
         .iter()
         .map(|(holder, _)| {
             let last = base.classifications.get(holder).is_some_and(|set| set.len() == 1);

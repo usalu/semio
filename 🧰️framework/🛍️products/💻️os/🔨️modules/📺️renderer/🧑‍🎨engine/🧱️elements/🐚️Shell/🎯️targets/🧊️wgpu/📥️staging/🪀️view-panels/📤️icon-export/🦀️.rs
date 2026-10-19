@@ -9,7 +9,7 @@ use semio_framework_os_renderer_wgpu_icon_host::icon_export::{IconExportFault, I
 use semio_framework::kernel::IconRenderExportItem;
 
 impl<'ctx> PanelsViewCtx<'ctx> {
-    pub fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, input: &mut ui_wgpu::wgpu::InputState<ui_wgpu::wgpu::ActionDescriptor>, theme: &ui_wgpu::wgpu::Theme, width: f32) -> bool {
+    pub fn render_icon_export_step(&mut self, cursor: &mut super::ShellChromeChildCursor, overlay: &mut semio_framework_ui_draw_contract::DrawList, atlas: &mut semio_framework_ui_text::FontAtlas, input: &mut semio_framework_ui_wgpu_input::InputState<semio_framework_ui_declaration::layout::ActionDescriptor>, theme: &semio_framework_ui_theme::Theme, width: f32) -> bool {
         let Some(batch) = self.opening.icon_export.as_ref() else { return true };
         let is_de = self.prefs.locale_id == "de";
         let action_label = shell_chrome_string(if batch.running() { "icon.export.cancel" } else { "common.close" }, is_de);
@@ -44,7 +44,7 @@ impl<'ctx> PanelsViewCtx<'ctx> {
             }
             7 => {
                 super::note_chrome_control_name(CONTROL_ID, Some(action_label));
-                input.register_hit(ui_wgpu::wgpu::HitTarget { rect: action, event: None, control_id: Some(CONTROL_ID.into()), kind: ui_wgpu::wgpu::HitKind::Button, drag_axis: None, drag_data: None });
+                input.register_hit(semio_framework_ui_wgpu_input::HitTarget { rect: action, event: None, control_id: Some(CONTROL_ID.into()), kind: semio_framework_ui_wgpu_input::HitKind::Button, drag_axis: None, drag_data: None });
             }
             8 => {
                 if self.chrome.chrome_build.clicked_this_frame && action.contains(input.pointer_x, input.pointer_y) { self.opening.cancel_icon_export(); }

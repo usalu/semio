@@ -5,15 +5,21 @@ import { dirname, join } from "node:path";
 /** 📂️ Repository-relative root every plugin directory lives directly below. */
 const PLUGINS_ROOT = "✏️s/🔌️plugins";
 
-/** 🗄️ What stdio's OWN component assembles: every artifact crate whose apps its `component-app-assembly` turns
- * on — the nine text/data subsets. Every other stdio subset ships in its family component under `🗄️stdio/🧩️extensions`,
+/** 📂️ Repository-relative root of the hub compositions: each plugin directory owns one `🧩️component` crate whose describe step commits `🔣️.json` beside the component. */
+const COMPOSITIONS_ROOT = "🌎️hub/🧩️compositions";
+
+/** 🛂️ The committed descriptor of the component a plugin directory ships. */
+const descriptorPathOf = (directory: string): string => join(COMPOSITIONS_ROOT, directory, "🧩️component", "🔣️.json");
+
+/** 🗄️ What stdio's OWN component assembles: every artifact crate the `semio-hub-stdio` composition links as a runtime
+ * dependency — the seven text/data subsets. Every other stdio subset ships in its family component under `🗄️stdio/🧩️extensions`,
  * because one component closing all 176 stdio apps exceeds wasmparser's 1 000 000-function ceiling
  * (`🗄️stdio/🧪️tests/🚢️shipped-fleet`). */
 const STDIO_COMPONENT_APP_CRATES: readonly string[] = ["csv", "html", "json", "md", "tsv", "txt", "xml"];
 
-/** 📂️ Every plugin directory name, in on-disk order. */
+/** 📂️ Every plugin directory name, in on-disk order: a directory below the plugins root that owns a hub component crate (the plugins root also holds test-only directories). */
 function pluginDirectories(repoRoot: string): readonly string[] {
-  return readdirSync(join(repoRoot, PLUGINS_ROOT)).filter(name => statSync(join(repoRoot, PLUGINS_ROOT, name)).isDirectory());
+  return readdirSync(join(repoRoot, PLUGINS_ROOT)).filter(name => statSync(join(repoRoot, PLUGINS_ROOT, name)).isDirectory() && existsSync(join(repoRoot, COMPOSITIONS_ROOT, name, "🧩️component", "📦️packages")));
 }
 
 /** 📂️ The plugin directory a registry row's crate lives under. */
@@ -44,7 +50,7 @@ function descriptorAppsByOwner(repoRoot: string, rows: readonly { readonly crate
 function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined> {
   const byDirectory = new Map<string, { readonly pluginId: string; readonly apps: readonly any[] } | undefined>();
   for (const directory of pluginDirectories(repoRoot)) {
-    const file = join(repoRoot, "🌎️hub/🧩️compositions", directory, "🔣️.json");
+    const file = join(repoRoot, descriptorPathOf(directory));
     if (!existsSync(file)) { byDirectory.set(directory, undefined); continue; }
     const manifest = JSON.parse(readFileSync(file, "utf8")).manifest;
     byDirectory.set(directory, { pluginId: manifest.pluginId, apps: manifest.apps ?? [] });
@@ -57,12 +63,12 @@ function descriptorAppsByDirectory(repoRoot: string): ReadonlyMap<string, { read
  * pin (`appRole`, a role-bearing `appId` lock), a chrome suppression or a filter that hides the pane's
  * own plugin would each make `…#viewer` unreachable while every other law here stays green. A new prop
  * therefore has to be added here deliberately, with the viewer law below re-run. */
-const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "hostPorts", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
+const PLAY_PANE_SHELL_PROPS: readonly string[] = ["appId", "brand", "catalog", "defaults", "hostPorts", "initialLocale", "locks", "pluginFilter", "plugins", "shellId", "storageNamespace", "suppressAutoIntroduction", "surfaceSessionFactories"];
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
   const { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName } = dependencies;
   const { describe, expect, it } = vitest;
-  const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("../../../../✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🧩️plugins/🟦️.ts");
+  const { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS, PLUGIN_HOST_CONFIGS } = await import("@semio-tech/s-dev-catalog-ts/generated/plugins");
   const { dialectCoordinate } = await import("../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts");
   const appsByDirectory = descriptorAppsByDirectory(repoRoot);
   const appsByOwner = descriptorAppsByOwner(repoRoot, PLUGIN_BUILD_TARGETS);
@@ -78,7 +84,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const host of PLUGIN_HOST_CONFIGS) {
       const row = PLUGIN_BUILD_TARGETS.find(entry => entry.pluginId === host.pluginId)!;
       const directory = pluginDirectoryOfCratePath(row.cratePath)!;
-      const descriptor = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🧩️compositions", directory, "🔣️.json"), "utf8")).manifest;
+      const descriptor = JSON.parse(readFileSync(join(repoRoot, descriptorPathOf(directory)), "utf8")).manifest;
       const matches = (descriptor.apps ?? []).filter((app: any) => app.role === "editor" && app.dialect?.artifactKind.split(".").at(-1) === host.hostAppId);
       if (matches.length !== 1) throw new Error(`host app "${host.hostAppId}" of ${host.pluginId} resolved to ${matches.length} editor apps`);
       ids.push(matches[0].id);
@@ -155,7 +161,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     /** 🛂️ The law above reads apps from committed descriptors, so a plugin that commits none
      * would pass it by being invisible to it. Every plugin directory therefore MUST commit its
-     * `🔣️.json` (`bun repo run workspace:components describe <plugin-id>` writes it beside `🛂️.descriptor.semio`): a missing
+     * `🔣️.json` (`bun repo run <component-package>:component` writes it beside `🛂️.descriptor.semio`): a missing
      * descriptor is a failure here, not an exemption. */
     it("reads a committed descriptor for every plugin directory", () => {
       expect([...appsByDirectory].filter(([, entry]) => entry === undefined).map(([directory]) => directory).sort()).toEqual([]);
@@ -172,15 +178,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("keeps stdio's component bounded to the app fleet it can link", () => {
       expect(PLAYGROUND_BUILD_TARGETS.find((row: any) => row.variant === "stdio").app).toBe("s.stdio.md@commonmark/*#editor");
       const cargo = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml"), "utf8");
-      const features = Object.fromEntries([...cargo.matchAll(/^([a-z0-9-]+) = \[(.*)\]$/gm)].map(row => [row[1]!, [...row[2]!.matchAll(/"([^"]+)"/g)].map(item => item[1]!)]));
-      const closure = new Set<string>(), pending = ["default"];
-      while (pending.length) {
-        const next = pending.pop()!;
-        if (closure.has(next)) continue;
-        closure.add(next);
-        for (const activation of features[next] ?? []) if (features[activation]) pending.push(activation);
-      }
-      expect([...closure].flatMap(name => features[name]!).flatMap(item => [...item.matchAll(/^semio-s-artifact-stdio-([a-z0-9]+)\/component-app-assembly$/g)].map(match => match[1]!)).sort()).toEqual([...STDIO_COMPONENT_APP_CRATES].sort());
+      const linked = cargo.slice(cargo.indexOf("\n[dependencies]"), cargo.indexOf("\n[dev-dependencies]"));
+      expect([...linked.matchAll(/^semio-s-artifact-stdio-([a-z0-9]+) = /gm)].map(match => match[1]!).filter(name => name !== "contract").sort()).toEqual([...STDIO_COMPONENT_APP_CRATES].sort());
     });
 
     it("keeps the host shell variant out of the grid", () => {

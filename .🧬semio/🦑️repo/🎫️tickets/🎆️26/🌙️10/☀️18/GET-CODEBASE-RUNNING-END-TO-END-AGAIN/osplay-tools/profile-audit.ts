@@ -1,0 +1,10 @@
+import { auditPluginCatalogSources } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🔎️source-audit/🟦️.ts";
+import { findPluginCargoFiles } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
+const root = process.cwd();
+let t = performance.now();
+const audit = auditPluginCatalogSources(root);
+console.log("[DEBUG] audit", (performance.now() - t).toFixed(0), "ms", audit.manifestCount, audit.entries.length, audit.sources.length);
+const by: Record<string, number> = {};
+for (const i of audit.issues) by[i.code] = (by[i.code] ?? 0) + 1;
+console.log("[DEBUG] issues", JSON.stringify(by));
+for (const i of audit.issues.slice(0, 20)) console.log("[DEBUG]", i.code, i.pluginId, i.path, String(i.diagnostic).slice(0, 300));

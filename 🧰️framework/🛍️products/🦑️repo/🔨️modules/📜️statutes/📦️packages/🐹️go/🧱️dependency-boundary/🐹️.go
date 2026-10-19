@@ -126,7 +126,7 @@ func loadThirdPartyDepsForFile(file string) (manifestDir string, deps map[string
 			break
 		}
 		seen[dir] = struct{}{}
-		root := filepath.Join(workspace.RootDir, dir)
+		root := filepath.Join(workspace.GetRootDir(), dir)
 		if workspace.FileExists(filepath.Join(root, "package.json")) {
 			dependencyBoundaryMergePackageJSON(filepath.Join(root, "package.json"), deps)
 			return dir, deps

@@ -5,15 +5,15 @@
 
 //#region 🔌️Adapters
 import { describe, expect, test } from "bun:test";
-import { withBuildTestInvocationV1 } from "../../../📚️library/🏗️build/🧪️tests/📥️invocation/🟦️.ts";
+import { withBuildTestInvocationV1 } from "@semio-tech/process/testing/invocation";
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { minimatch } from "minimatch";
 import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { isBlockingBreach } from "../../../📚️library/🚨️policy/🏃️runner/🟦️.ts";
-import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
+import { isBlockingBreach } from "@semio-tech/repo-lib/policy";
+import { repoTestArtifactEnvironment } from "@semio-tech/repo-lib/process";
 import oracleDirectoryCases from "../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import { type TestCasePlan, type FeatureScenario } from "@semio-tech/framework/test/adapter";
 import { CORE_COMPARISON_PROFILES, mutationVocabularyRequiresCatalog, discoverTestContributions, oracleImportsInProduction, cleanTestOutputs, discoverTestCases, isExcludedTestPath, markOutputDir, readOutputMarker, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, subjectRawInputsByScenario, makeAdapterContext } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -213,7 +213,7 @@ describe("🧭️ contribution directory ownership", () => {
   });
 
   test("root dependency discovery and classification honor the same neutral owner contract", async () => {
-    const inventory = await import("../../../📚️library/🕸️dependencies/📇️inventory/🟦️.ts");
+    const inventory = await import("@semio-tech/repo-lib/inventory");
     const api = { discover: inventory.dependencyDiscoverContributionManifests, classify: inventory.dependencyClassifyOracleEntry };
     const oracleOnlyDomain = { directoryNames: [oracleDirectoryCases.directoryName], domainPath: String(testTaxonomy(repoRoot).testDomainPath) };
     const root = mkdtempSync(join(tmpdir(), "root-contribution-directory-"));

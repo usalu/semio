@@ -12,7 +12,7 @@ import Ajv from "ajv";
 import fc from "fast-check";
 import definitionSchema from "../../📝️definition/🔣️.json" with { type: "json" };
 import leafSchema from "../../🧬️mutations/🎛️change-block-field/🧬️schema/🔣️.json" with { type: "json" };
-import type { FormQuestion, FormStep } from "../../🧬️mutations/🟦️.ts";
+import type { FormQuestion, FormStep } from "../../🧱️form-model/🟦️.ts";
 import { BLOCK_FIELDS, applyBlockField, diagnoseChangeBlockField, parseChangeBlockField, readBlockField } from "../../🧬️mutations/🎛️change-block-field/🦠️mutation/🟦️.ts";
 
 const FIXTURES = fileURLToPath(new URL("../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️change-block-field", import.meta.url));

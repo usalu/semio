@@ -1,5 +1,5 @@
-import { inspectRustCompileReferences, type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import referenceSchema from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🔣️.json";
+import { inspectRustCompileReferences, type RustCompileReference } from "@semio-tech/compiler-syntax-rust-ts";
+import referenceSchema from "@semio-tech/compiler-syntax-rust-ts/index.json";
 import { expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -11,7 +11,7 @@ import { inspectRustSourceInputs } from "../../../🕸️dependencies/🧭️dir
 
 type Case = Readonly<{ id: string; source: string; files: Readonly<Record<string, string>>; nativeInputs: readonly string[]; result: Readonly<{ state: "resolved"; references: readonly RustCompileReference[] } | { state: "unsupported-expression" }>; removal: Readonly<{ paths: readonly string[]; native: boolean }> | null }>;
 const library = resolve(import.meta.dir, "../../.."), read = (path: string): unknown => JSON.parse(readFileSync(join(library, path), "utf8"));
-const corpus = read("🧫️fixtures/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { readonly schemaVersion: 1; readonly featureCases:readonly Readonly<{id:string;source:string;modulePath:readonly string[];resolved:boolean;files:Readonly<Record<string,string>>;mountPath:readonly string[];mountResolved:boolean;native:boolean;diagnostic:string}>[]; readonly cases: readonly Case[] };
+const corpus = read("🧪️tests/🧫️fixtures/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { readonly schemaVersion: 1; readonly featureCases:readonly Readonly<{id:string;source:string;modulePath:readonly string[];resolved:boolean;files:Readonly<Record<string,string>>;mountPath:readonly string[];mountResolved:boolean;native:boolean;diagnostic:string}>[]; readonly cases: readonly Case[] };
 
 test("attribute input corpus follows its closed portable schema", () => {
   const schema = read("🧬️schema/🧱️rust-source-direction/🧾️attributes/🔣️.json") as { $schema: string; $defs: Record<string, unknown> };

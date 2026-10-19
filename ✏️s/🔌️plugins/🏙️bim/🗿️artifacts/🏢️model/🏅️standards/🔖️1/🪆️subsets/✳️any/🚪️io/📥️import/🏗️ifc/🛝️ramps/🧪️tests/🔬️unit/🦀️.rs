@@ -1,19 +1,18 @@
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::data::label;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::Import;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::Import;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Ramp;
 #[allow(unused_imports)]
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::io::import::ifc::ramps::*;
-use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-use crate::standards::v1::subsets::any::io::export::ifc::testkit::with_ramp;
-use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
+use semio_s_artifact_bim_model_ifc::standards::v1::subsets::any::io::export::ifc::testkit::with_ramp;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
 
 #[test]
 fn a_ramp_survives_the_round_trip_exactly() {

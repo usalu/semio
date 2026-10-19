@@ -52,9 +52,9 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     let value = after.host_snapshot.widgets.iter().find_map(|widget| if let Widget::InputSlider { id, value, .. } = widget { (id == case["widgetId"].as_str().unwrap()).then_some(*value) } else { None }).unwrap();
     assert_eq!(value, case["committedValue"].as_f64().unwrap());
     assert_eq!(after.host_snapshot.synapses, before.host_snapshot.synapses);
-    settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), before);
-    settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
-    close_registered_fixture_app(&mut *app);
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), before);
+    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), after);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -97,9 +97,9 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
         let graph = context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_MAIN, &view).await;
         let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
         assert_eq!(crate::editor_domain::editor_laws::node_eval_status(scene.status_json.as_ref().unwrap(), "construct"), "ok", "{}", case["id"]);
-        settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), before);
-        settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
-        close_registered_fixture_app(&mut *app);
+        settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), before);
+        settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), after);
+        close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
     }
 }
@@ -126,9 +126,9 @@ async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
     let after = context::snapshot(&app);
     let params = after.host_snapshot.widgets.iter().find_map(|widget| match widget { Widget::Neuron { id: candidate, params, .. } if candidate == &id => Some(params.to_value()), _ => None }).unwrap();
     assert_eq!(params.get("width").and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_f64), Some(2.5));
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "undo", 1).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), before);
-    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut *app, "redo", 1).await;
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), after);
 }
 
@@ -176,12 +176,12 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
         let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
         let statuses: serde_json::Value = serde_json::from_str(scene.status_json.as_ref().unwrap()).unwrap();
         assert_eq!(statuses["polyline"]["status"], "ok", "{}: {statuses}", case["id"]);
-        settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
+        settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         assert_eq!(context::snapshot(&app), before);
-        settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
+        settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         assert_eq!(context::snapshot(&app), after);
         context::drain_flow_eval_ticks_with_view(&mut app, &view).await;
-        close_registered_fixture_app(&mut *app);
+        close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 }
 
@@ -220,9 +220,9 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     let graph = context::render_with_view(&mut app, GENERATION_3D_PLAY_BODY_MAIN, &view).await;
     let scene = decode_fixture_scene_with_lanes::<semio_framework_plugin::NodeGraphScene>(&graph).unwrap();
     assert_eq!(crate::editor_domain::editor_laws::node_eval_status(scene.status_json.as_ref().unwrap(), "parameter"), "ok", "status={:?} evaluation={:?}",scene.status_json,scene.eval_json);
-    settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), before);
-    settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
+    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), after);
     context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_3d_add_widget::AddWidget { kind:"outputExport".into(), neuron_kind:None, format:None, action:None, x:None, y:None })).await;
     let before_export = context::snapshot(&app);
@@ -230,11 +230,11 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     context::act_with_view(&mut app, "setWidgetInput", serde_json::json!({"widgetId":id,"facet":"exportFormat","channel":"format","value":"obj"}), view.clone()).await.unwrap();
     let after_export = context::snapshot(&app);
     assert!(after_export.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::OutputExport { id: candidate, format } if candidate == &id && format == "obj")));
-    settle_history_verb(&mut *app, "undo", meta("local").instance_id).await;
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), before_export);
-    settle_history_verb(&mut *app, "redo", meta("local").instance_id).await;
+    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert_eq!(context::snapshot(&app), after_export);
-    close_registered_fixture_app(&mut *app);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -275,8 +275,8 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
     let source: serde_json::Value = serde_json::from_str(text).unwrap();
     assert_eq!(source["textures"]["image"], serde_json::json!({"mime":case["mime"],"bytes":case["bytes"]}));
     assert_eq!(source["materials"], fixture["meshAssets"]["mesh"]["materials"]); assert_eq!(after.host_snapshot.synapses, before.host_snapshot.synapses);
-    settle_history_verb(&mut *app, "undo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), original);
-    settle_history_verb(&mut *app, "redo", meta("local").instance_id).await; assert_eq!(context::snapshot(&app), after);
+    settle_history_verb(&mut app.0, "undo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), original);
+    settle_history_verb(&mut app.0, "redo", meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await; assert_eq!(context::snapshot(&app), after);
     }
-    close_registered_fixture_app(&mut *app);
+    close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
 }

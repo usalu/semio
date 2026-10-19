@@ -1,12 +1,13 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::*;
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::{parent_of, StoreyLevel, vertical_of};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::{ModelGraph, ModelNode};
 use semio_framework_test_fixtures::fixture_text;
 
 fn storey_id(node: &ModelNode) -> String {
@@ -16,7 +17,7 @@ fn storey_id(node: &ModelNode) -> String {
     }
 }
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 
 static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
@@ -49,7 +50,7 @@ async fn absolute_levels_add_site_and_building_elevation() {
 #[semio_framework_async_macros::async_test]
 async fn every_storey_has_at_most_one_parent_in_its_own_building() {
     let snapshot = house();
-    let plan = <ModelGraph<{ kinds::LEVELS }> as protocol::InferredField<ModelSnapshot>>::plan(&snapshot);
+    let plan = <ModelGraph<{ semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LEVELS }> as protocol::InferredField<ModelSnapshot>>::plan(&snapshot);
     assert_eq!(plan.len(), snapshot.storeys.len());
     for step in &plan {
         assert!(step.parents.len() <= 1);
@@ -68,7 +69,7 @@ async fn dependency_covers_exactly_what_compute_reads() {
     let mut after = before.clone();
     after.storeys.get_mut("st-ground").expect("ground").height = 3.4;
     let key = ModelNode::Storey("st-ground".to_string());
-    let read = |snapshot: &ModelSnapshot| <ModelGraph<{ kinds::LEVELS }> as protocol::InferredField<ModelSnapshot>>::dep_input(snapshot, &key, &[]);
+    let read = |snapshot: &ModelSnapshot| <ModelGraph<{ semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::kinds::LEVELS }> as protocol::InferredField<ModelSnapshot>>::dep_input(snapshot, &key, &[]);
     assert_ne!(read(&before), read(&after), "a height edit must change the dependency");
     after.storeys.get_mut("st-ground").expect("ground").name = "Renamed".into();
     after.storeys.get_mut("st-ground").expect("ground").height = 3.0;
@@ -77,8 +78,11 @@ async fn dependency_covers_exactly_what_compute_reads() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_height_edit_recomputes_the_storeys_above_and_nothing_else_and_a_material_edit_none() {
-    use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
+    use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
+    use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::library::MaterialPatch;
+    use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::StoreyPatch;
+    use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).storey_levels.clone();

@@ -1,13 +1,23 @@
 //! 🏘️ The zoning rows of the entity table: how a zone, an area scheme and the zone and finish references of a space read off the snapshot, how an edited value becomes a `set-zone`, `set-area-scheme`
 //! or `set-space` mutation, what a new zone or area scheme is, and the pickers (a zone, a finish material, an area measure) the properties panel offers for the reference rows.
 
-use crate::editor::bim::entities::{number, parse_number, parse_text, partial, rename_element, variant, Created, FieldRow, InferredRow};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::set_space::SetSpace;
-use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, diff::{Assigned, patches::SpacePatch}, inferences::ModelInference, mutations::ModelMutation};
+use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs::{number, parse_number, parse_text, partial, variant};
+use crate::editor::bim::entities::rename_element;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows::Created;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::{FieldRow, InferredRow};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_4::standards::v1::subsets::any::schema::mutations::set_space::SetSpace;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::AreaMeasure;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{AreaScheme, ModelSnapshot, Zone};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Assigned;
+use semio_s_artifact_bim_model_tests_2::standards::v1::subsets::any::schema::diff::patches::site_and_spaces::SpacePatch;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
-pub use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+use semio_s_artifact_bim_model_mut_any_100::standards::v1::subsets::any::schema::mutations::set_area_scheme;
+use semio_s_artifact_bim_model_mut_any_34::standards::v1::subsets::any::schema::mutations::set_zone;
 
 //#region 🔖️Choices
 /// 🏘️ The zones a space can join: every zone of the model by its id and name.
@@ -75,14 +85,14 @@ fn distinct(items: Vec<String>) -> Vec<String> {
 
 /// 🗃️ The mutation that sets the usages an area scheme counts to the comma separated list a text holds (duplicates dropped, empty counts every usage).
 pub fn write_scheme_usages(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "usages", &distinct(list(value))).map(ModelMutation::SetAreaScheme)
+    partial::<semio_s_artifact_bim_model_mut_any_100::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "usages", &distinct(list(value))).map(ModelMutation::SetAreaScheme)
 }
 
 /// 🗃️ The mutation that sets the zones an area scheme counts to the comma separated zone ids or zone names a text holds; a token that names no zone refuses the whole edit.
 pub fn write_scheme_zones(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
     let resolve = |token: String| snapshot.zones.get(&token).map(|_| token.clone()).or_else(|| snapshot.zones.iter().find(|(_, zone)| zone.name.to_lowercase() == token.to_lowercase()).map(|(zone, _)| zone.clone()));
     let zones = list(value).into_iter().map(resolve).collect::<Option<Vec<String>>>()?;
-    partial::<crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "zones", &distinct(zones)).map(ModelMutation::SetAreaScheme)
+    partial::<semio_s_artifact_bim_model_mut_any_100::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "zones", &distinct(zones)).map(ModelMutation::SetAreaScheme)
 }
 //#endregion 🔖️Writes
 
@@ -151,12 +161,12 @@ pub static AREA_SCHEME_INFERRED: &[InferredRow] = &[
 //#region 🔖️Create
 /// 🏘️ A new zone: named, with no category and no occupancy.
 pub fn create_zone(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateZone(crate::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone { id: id.into(), zone: Zone { name: name.into(), category: String::new(), occupancy_density: 0.0 } }))
+    Ok(ModelMutation::CreateZone(semio_s_artifact_bim_model_mut_any_142::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone { id: id.into(), zone: Zone { name: name.into(), category: String::new(), occupancy_density: 0.0 } }))
 }
 
 /// 🗃️ A new area scheme: a net area counting every space.
 pub fn create_area_scheme(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateAreaScheme(crate::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme { id: id.into(), area_scheme: AreaScheme { name: name.into(), measure: AreaMeasure::Net, usages: Vec::new(), zones: Vec::new() } }))
+    Ok(ModelMutation::CreateAreaScheme(semio_s_artifact_bim_model_mut_any_143::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme { id: id.into(), area_scheme: AreaScheme { name: name.into(), measure: AreaMeasure::Net, usages: Vec::new(), zones: Vec::new() } }))
 }
 //#endregion 🔖️Create
 

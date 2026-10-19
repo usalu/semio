@@ -1,6 +1,7 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🔣️.json";
@@ -11,7 +12,7 @@ test("Pending mounted render remains scheduled until original paid identity retr
  try{
   const readiness=database.query("SELECT (? AND NOT ? AND NOT ? AND ? AND ? >= ?) AS ready");
   for(const row of fixture.cases)expect(Boolean((readiness.get(Number(row.pending),Number(row.producer),Number(row.job),Number(row.reconciler),row.acknowledged,row.revision) as {ready:number}).ready)).toBe(row.expected);
-  const source=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+  const source=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url));
   for(const name of ["has_publishable_work","has_drivable_work","has_work"]){
    const start=source.lastIndexOf("fn "+name+"(");
    const end=source.indexOf("\n}",start);

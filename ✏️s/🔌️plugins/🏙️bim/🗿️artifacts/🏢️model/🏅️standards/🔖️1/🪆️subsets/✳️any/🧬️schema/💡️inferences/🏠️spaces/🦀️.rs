@@ -9,14 +9,16 @@
 //!
 //! Related: shapely `polygonize` is the third-party oracle, <https://shapely.readthedocs.io/en/stable/manual.html#shapely.ops.polygonize>.
 
-use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, seg};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous};
-use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::depth_of;
+use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan::segment_of;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous};
+use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Point2, SpaceBoundary, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{offset_regions, region_boolean, OffsetJoin, Region};
 use semio_framework_2d::Vec2;
@@ -125,7 +127,7 @@ pub fn obstacles_of(snapshot: &ModelSnapshot, storey: &str, layouts: &BTreeMap<&
     });
     let curtains = snapshot.curtain_walls.iter().filter(|(_, curtain)| curtain.storey == storey).filter_map(|(id, curtain)| {
         let depth = snapshot.curtain_wall_types.get(&curtain.curtain_wall_type).map_or(DEFAULT_MULLION_DEPTH, |kind| depth_of(&kind.interior_mullion));
-        let outline = band_loop(&seg(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
+        let outline = band_loop(&segment_of(&curtain.axis), depth / 2.0, depth / 2.0, None, None)?;
         let outline: Vec<loops::Vertex> = outline.iter().map(|(point, bulge)| loops::Vertex::new(*point, *bulge)).collect();
         Obstacle::new(id, flat(&outline))
     });
@@ -213,7 +215,7 @@ fn hung_ceiling(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, poi
         .ceilings
         .iter()
         .filter(|(_, ceiling)| ceiling.storey == storey)
-        .filter_map(|(id, ceiling)| ceilings::underside_at(snapshot, ceiling, level, point).map(|z| (id.clone(), z)))
+        .filter_map(|(id, ceiling)| semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::underside_at(snapshot, ceiling, level, point).map(|z| (id.clone(), z)))
         .min_by(|left, right| left.1.total_cmp(&right.1).then_with(|| left.0.cmp(&right.0)))
 }
 //#endregion 🔖️Arrangement
@@ -297,7 +299,7 @@ fn finish(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, shape: Sh
 
 /// 🏠️ The rooms of every space on a storey from the storey's level and the plan obstacles of its walls and curtain walls.
 pub fn rooms_from(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, obstacles: &[Obstacle]) -> StoreyRooms {
-    let spaces: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Space)> = snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).collect();
+    let spaces: Vec<(&String, &semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Space)> = snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).collect();
     let seeds: Vec<Vec2> = spaces.iter().filter_map(|(_, space)| if let SpaceBoundary::Bounded { seed } = &space.boundary { Some([seed.x, seed.y]) } else { None }).collect();
     let extent = bounds_of(obstacles.iter().flat_map(|obstacle| obstacle.ring.iter()).chain(seeds.iter())).map(|[x0, y0, x1, y1]| [x0 - OPEN_MARGIN, y0 - OPEN_MARGIN, x1 + OPEN_MARGIN, y1 + OPEN_MARGIN]);
     let faces = extent.filter(|_| !seeds.is_empty()).map(|[x0, y0, x1, y1]| run(&mut |_| true, BooleanOperation::Difference, &[Region::new(&[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], &[])], &regions_of(obstacles))).unwrap_or_default();
@@ -334,7 +336,7 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let slabs = snapshot.slabs.iter().filter(|(_, slab)| above.as_ref() == Some(&slab.storey)).map(|(id, slab)| {
         (id.clone(), dep_object([("boundary", dep_value(&slab.boundary)), ("holes", dep_value(&slab.holes)), ("offset", dep_value(&slab.offset)), ("thickness", dep_value(&slab_thickness(snapshot, &slab.slab_type)))]))
     });
-    let hung = snapshot.ceilings.iter().filter(|(_, ceiling)| ceiling.storey == storey).map(|(id, ceiling)| (id.clone(), ceilings::dependency(snapshot, &ceiling.anonymous())));
+    let hung = snapshot.ceilings.iter().filter(|(_, ceiling)| ceiling.storey == storey).map(|(id, ceiling)| (id.clone(), semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::dependency(snapshot, &ceiling.anonymous())));
     dep_object([("spaces", DslValue::object(spaces)), ("curtain_walls", DslValue::object(curtains)), ("columns", column_dependency(snapshot, storey)), ("above", dep_value(&above)), ("slabs", DslValue::object(slabs)), ("ceilings", DslValue::object(hung))])
 }
 //#endregion 🔖️Dependency

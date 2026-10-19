@@ -6,8 +6,8 @@ import {withResourceLeases,checkResourceLeaseControl,type ResourceLeaseControl} 
 import manifestSchema from "./🧬️schema/🔣️.json";
 const manifest=manifestSchema.definitions.Release.const;
 import type {RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
-import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
-import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
 
 export type BazelDistribution={readonly platform:string;readonly arch:string;readonly file:string;readonly bytes:number;readonly sha256:string};

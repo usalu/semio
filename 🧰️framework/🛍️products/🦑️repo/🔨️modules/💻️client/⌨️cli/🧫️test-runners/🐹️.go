@@ -304,12 +304,21 @@ func runExternalCommand(dir string, name string, args []string, cmd *command.Com
 	}
 }
 
+// 🧰️toolchainRoot returns the checkout whose canonical dispatcher runs Go tests: SEMIO_TOOLCHAIN_ROOT when the caller names one, else the bound repository root.
+func toolchainRoot() string {
+	if explicit := os.Getenv("SEMIO_TOOLCHAIN_ROOT"); explicit != "" {
+		return explicit
+	}
+	return rootDir
+}
+
 // 🐹️runCanonicalGoTestDispatch routes native scopes through the registered canonical compiler-input plan.
 func runCanonicalGoTestDispatch(moduleRoot string, inputPath string, goArgs []string, cmd *command.Command) error {
-	script := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "📦️packages", "🟦️typescript", "📜️script.ts")
+	toolchain := toolchainRoot()
+	script := filepath.Join(toolchain, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "📦️packages", "🟦️typescript", "📜️script.ts")
 	args := []string{script, "go-test", moduleRoot, inputPath}
 	args = append(args, goArgs...)
-	return runExternalCommand(rootDir, "bun", args, cmd)
+	return runExternalCommand(toolchain, "bun", args, cmd)
 }
 
 // ⬛️testCommand holds the data fields for a testCommand record.

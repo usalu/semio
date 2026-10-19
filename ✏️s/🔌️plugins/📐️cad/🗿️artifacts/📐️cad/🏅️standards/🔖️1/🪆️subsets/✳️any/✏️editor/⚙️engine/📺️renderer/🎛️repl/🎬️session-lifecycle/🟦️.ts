@@ -6,7 +6,7 @@ import { isShapeModelDefinition, defaultModelDefinitionId } from "@semio-tech/s-
 import { listSpatialInteractionsForModelDefinition, countViewObjectsForModelDefinition } from "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership";
 import { modelDefinitionSelectionEntityKinds } from "@semio-tech/s-spatial-kernel-ts/geometry/selection-operations";
 import { expandSelectionTargetsForAccept } from "@semio-tech/s-spatial-kernel-ts/geometry/selection";
-import { abortActiveInteractionSession } from "../../../🎬️actions/🎰️interaction-state/🟦️.ts";
+import { abortActiveInteractionSession } from "../../../🗿️artifact/🏃️interaction-runtime/🟦️.ts";
 import { scenePreview } from "../../🔌️ports/🟦️.ts";
 import { defaultSpatialPrimitiveToggles, defaultSpatialTypologyTogglesForModelDefinition } from "../../🧲️geometry-targets/🎯️pick-model/🟦️.ts";
 import { replGeometryPickLayerVisible, replHostGeometryPickingEnabled } from "../../🎯️pick-layer/🟦️.tsx";

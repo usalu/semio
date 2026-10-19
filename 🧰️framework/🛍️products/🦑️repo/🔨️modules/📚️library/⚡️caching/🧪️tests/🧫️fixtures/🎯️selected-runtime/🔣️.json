@@ -21,7 +21,7 @@
       "variant": "puzzle3d",
       "engines": [],
       "forbiddenProjects": [
-        "semio-framework-os-flow-core",
+        "semio-framework-os-flow-browser-package",
         "@semio-tech/framework-editor-rs",
         "@semio-tech/framework-surface-rs"
       ]
@@ -30,14 +30,14 @@
       "variant": "puzzle5d",
       "engines": [],
       "forbiddenProjects": [
-        "semio-framework-os-flow-core"
+        "semio-framework-os-flow-browser-package"
       ]
     },
     {
       "variant": "writer",
       "engines": [],
       "forbiddenProjects": [
-        "semio-framework-os-flow-core",
+        "semio-framework-os-flow-browser-package",
         "@semio-tech/puzzle-plugin"
       ]
     },
@@ -45,13 +45,13 @@
       "variant": "s",
       "engines": [],
       "forbiddenProjects": [
-        "semio-framework-os-flow-core"
+        "semio-framework-os-flow-browser-package"
       ]
     },
     {
       "variant": "flow",
       "engines": [
-        "semio-framework-os-flow-core:wasm"
+        "semio-framework-os-flow-browser-package:wasm"
       ],
       "forbiddenProjects": [
         "@semio-tech/puzzle-plugin"
@@ -63,7 +63,7 @@
         "@semio-tech/puzzle-plugin:wasm"
       ],
       "forbiddenProjects": [
-        "semio-framework-os-flow-core"
+        "semio-framework-os-flow-browser-package"
       ]
     }
   ],
@@ -82,9 +82,9 @@
       "project": "@semio-tech/puzzle-plugin"
     },
     {
-      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+      "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎁️browser-package/📦️packages/🦀️rust",
       "package": "@semio-tech/flow-core-build",
-      "project": "semio-framework-os-flow-core"
+      "project": "semio-framework-os-flow-browser-package"
     }
   ]
 }

@@ -12,14 +12,13 @@ import (
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
 	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func TestScanCommentsAutofix(t *testing.T) {
 	t.Run("python inline fix", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "# region Section\n\n# bad comment\n\ndef main(): pass\n\n# endregion Section\n"
 		expected := "# region Section\n\ndef main(): pass\n\n# endregion Section\n"
@@ -45,9 +44,7 @@ func TestScanCommentsAutofix(t *testing.T) {
 
 	t.Run("python trailing comment fix", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "# region Section\n\nx = 1  # trailing\n\ndef main(): pass\n\n# endregion Section\n"
 		testFile := "test_py_trailing.py"
@@ -75,9 +72,7 @@ func TestScanCommentsAutofix(t *testing.T) {
 
 	t.Run("go block comment fix", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "// #region 🔖️Section\n\n/* block comment */\n\nfunc main() {}\n\n// #endregion 🔖️Section\n"
 		expected := "// #region 🔖️Section\n\nfunc main() {}\n\n// #endregion 🔖️Section\n"
@@ -103,9 +98,7 @@ func TestScanCommentsAutofix(t *testing.T) {
 
 	t.Run("csharp inline fix", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "#region 🔖️Section\n\n// bad comment\n\npublic class C {}\n\n#endregion 🔖️Section\n"
 		expected := "#region 🔖️Section\n\npublic class C {}\n\n#endregion 🔖️Section\n"
@@ -133,9 +126,7 @@ func TestScanCommentsAutofix(t *testing.T) {
 func TestEmojiVariationAutofix(t *testing.T) {
 	t.Run("fix emoji variation to colorful", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 
 		content := "This is a test \U0001F4BB\uFE0E with emoji variation.\nAnd another line \u2699\uFE0F with VS16.\nAnd a plain \U0001F3D7 construction."
 		expected := "This is a test \U0001F4BB\uFE0F with emoji variation.\nAnd another line \u2699\uFE0F with VS16.\nAnd a plain \U0001F3D7\uFE0F construction.\n"
@@ -219,9 +210,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 	})
 	t.Run("section markers not flagged as inline comments", func(t *testing.T) {
 		tmpDir := t.TempDir()
-		oldRoot := workspace.RootDir
-		workspace.RootDir = tmpDir
-		defer func() { workspace.RootDir = oldRoot }()
+		sandbox.BindRoot(t, tmpDir)
 		fileContent := "// #region \U0001F516Header\n\n// \U0001F4BBcompose/test.tsx\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n//#region \U0001F516Action Hooks\nconst x = 1;\n//#endregion \U0001F516Action Hooks\n"
 		testFile := "test.tsx"
 		absPath := filepath.Join(tmpDir, testFile)
@@ -240,9 +229,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 
 func TestFixIdempotent(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Section\n\nconst x = 1;\n\n// #endregion 🔖️Section\n"
 	testFile := "test_clean.tsx"
@@ -268,9 +255,7 @@ func TestFixIdempotent(t *testing.T) {
 
 func TestFixNestedSections(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldRoot := workspace.RootDir
-	workspace.RootDir = tmpDir
-	defer func() { workspace.RootDir = oldRoot }()
+	sandbox.BindRoot(t, tmpDir)
 
 	content := "// #region 🔖️Outer\n\n// #region 🔖️Inner\n\nconst x = 1;\n\n// #endregion\n\nconst y = 2;\n\n// #endregion\n"
 	testFile := "test_nested.tsx"

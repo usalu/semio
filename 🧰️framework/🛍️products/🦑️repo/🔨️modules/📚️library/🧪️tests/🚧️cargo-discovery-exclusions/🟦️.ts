@@ -66,7 +66,7 @@ test("registry catalog filesystem excludes opaque names before metadata enumerat
   expect(nodes).toHaveLength(1);
   const helpers = ["retryOnEintr", "readdirVanishing"].map(name => markers.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name));
   for (const helper of helpers) expect(helper).toBeDefined();
-  const code = helpers.map(helper => helper!.getText(markers)).join("\n") + "\n" + nodes[0]!.getText(authority).replace(/^export /u, "");
+  const code = helpers.map(helper => helper!.getText(markers).replace(/^export /u, "")).join("\n") + "\n" + nodes[0]!.getText(authority).replace(/^export /u, "");
   for (const rootName of vector.virtualRoots) for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code]) {
     const root = join(repoRoot, rootName), fs = virtualFilesystem(root, true);
     const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", "isDiscoverySkipDirectory", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); }, () => new Set<string>(), isDiscoverySkipDirectory);

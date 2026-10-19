@@ -1,11 +1,14 @@
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, OpeningKind};
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, DoorType, WindowType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::DoorLeaves;
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{DoorType, WindowType};
 #[allow(unused_imports)]
 use semio_framework_geometry::mesh::{extrude, TriMesh};
 #[allow(unused_imports)]
@@ -14,9 +17,9 @@ use semio_framework_geometry::placement::{Affine3, ZPlane};
 use semio_framework_geometry::Point;
 #[allow(unused_imports)]
 use semio_framework_value::DslValue;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::*;
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use std::collections::BTreeMap;
 
 fn solids(name: &str) -> (ModelSnapshot, BTreeMap<String, ElementSolid>) {

@@ -32,7 +32,7 @@ impl ToggleState {
     }
 }
 
-pub(crate) fn toggle_on_key(t: &mut ToggleState, ev: &KeyEvent) -> Option<WidgetSignal> {
+pub fn toggle_on_key(t: &mut ToggleState, ev: &KeyEvent) -> Option<WidgetSignal> {
     match ev.key {
         Key::Char(' ') | Key::Enter => Some(t.flip()),
         Key::Left | Key::Home if t.on => Some(t.flip()),
@@ -41,16 +41,16 @@ pub(crate) fn toggle_on_key(t: &mut ToggleState, ev: &KeyEvent) -> Option<Widget
     }
 }
 
-pub(crate) fn toggle_on_mouse(t: &mut ToggleState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
+pub fn toggle_on_mouse(t: &mut ToggleState, rect: Rect, event: &MouseEvent) -> Option<WidgetSignal> {
     (matches!(event.kind, MouseKind::Down(MouseButton::Left)) && rect.contains(event.pos)).then(|| t.flip())
 }
 
-pub(crate) fn toggle_set_hover(t: &mut ToggleState, rect: Rect, pos: Option<Pos>) -> bool {
+pub fn toggle_set_hover(t: &mut ToggleState, rect: Rect, pos: Option<Pos>) -> bool {
     let hover = pos.is_some_and(|pos| rect.contains(pos));
     std::mem::replace(&mut t.hover, hover) != hover
 }
 
-pub(crate) fn paint_toggle(t: &ToggleState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
+pub fn paint_toggle(t: &ToggleState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
     if rect.width == 0 || rect.height == 0 {
         return;
     }

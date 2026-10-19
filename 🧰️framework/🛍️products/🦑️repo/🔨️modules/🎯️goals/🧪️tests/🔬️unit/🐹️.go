@@ -3,16 +3,35 @@
 package goals
 
 import (
+	os "os"
+	filepath "path/filepath"
 	testing "testing"
 
 	model "github.com/usalu/semio/repo/model"
+	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
-func TestComposeIDToGoalPath(t *testing.T) {
+func withGoalFixture(t *testing.T, ids ...string) {
+	t.Helper()
+	root := t.TempDir()
+	sandbox.BindRoot(t, root)
+	for _, id := range ids {
+		dir := filepath.Join(workspace.GetRepoGoalsDir(), filepath.FromSlash(id))
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "🎯️goal.json"), []byte("{}\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
+func TestComposeIDToGoalPath(t *testing.T) {
+	withGoalFixture(t, "AI-OPTIMIZED-REPO", "AI-OPTIMIZED-REPO/REPO-CLIENT", "ANIMATE")
 	goals, err := ListGoals()
-	if err != nil || len(goals) == 0 {
-		t.Skip("no goals available for round-trip test")
+	if err != nil || len(goals) != 3 {
+		t.Fatalf("expected the three fixture goals, got %d (%v)", len(goals), err)
 	}
 	for _, g := range goals {
 		composeID := model.GoalPathToComposeID(g.ID)

@@ -51,7 +51,7 @@ use semio_framework_value_snapshot_read::SnapshotReadLeaseRegistry;
 use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
 use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_value::ErasedSnapshotRetirement;
-    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
+    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for frontier in law["cancelAt"].as_array().unwrap(){
@@ -112,7 +112,7 @@ use semio_framework_os_store_replay::{EditReplay, ReplayOwnedState};
 use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
 use semio_framework_os_store_testing_fixtures::DemoSnapshot;
-    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::OwnedValueRetirementFactory};
+    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::OwnedValueRetirementFactory};
     use std::{mem::ManuallyDrop,sync::Arc};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for route in law["replayRetirementRoutes"].as_array().unwrap(){for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelAt"].as_array().unwrap(){
@@ -139,7 +139,7 @@ use semio_framework_value::ErasedSnapshotRetirement;
 use semio_framework_os_store_testing_fixtures::demo::DemoMutation;
 use semio_framework_os_store_testing_fixtures::DemoSnapshot;
 use semio_framework_os_vcs::VcsError;
-    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,retirement::{OwnedValueRetirementFactory,shared::factory::FactorySharedRetirement}};
+    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,factory::{OwnedValueRetirementFactory,FactorySharedRetirement}};
     use std::{mem::ManuallyDrop,sync::Arc,marker::PhantomData};
     let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap(){for cut in law["cancelAt"].as_array().unwrap(){

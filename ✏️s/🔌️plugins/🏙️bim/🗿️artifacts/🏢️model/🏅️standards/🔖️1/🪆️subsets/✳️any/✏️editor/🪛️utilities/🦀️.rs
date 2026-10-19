@@ -2,9 +2,9 @@
 //! window kinds that accept it and, for the tools with a hotkey, the key and the arming command (`arm-utility`) the keybinding table binds. Adding a tool is one row here and, for a
 //! gesture, one arm of `crate::editor::bim::gestures::build_tool`.
 
-use crate::editor::bim::entities::LabelOf;
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types::LabelOf;
 use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
-use crate::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::UtilityRef;
 

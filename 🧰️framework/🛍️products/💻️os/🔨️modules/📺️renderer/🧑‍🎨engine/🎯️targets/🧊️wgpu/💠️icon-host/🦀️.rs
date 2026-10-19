@@ -16,16 +16,16 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::OnceLock;
-use ui_wgpu::wgpu::Rect;
-use ui_wgpu::wgpu::Rgba;
-use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::draw_text;
-use ui_wgpu::wgpu::draw_text_face;
-use ui_wgpu::wgpu::TextFace;
-use ui_wgpu::wgpu::Theme;
-use ui_wgpu::wgpu::ActionDescriptor;
-use ui_wgpu::wgpu::SurfaceKind;
-use ui_wgpu::wgpu::UiComponentSceneNode;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_theme::Rgba;
+use semio_framework_ui_declaration::ui::UiPresence;
+use semio_framework_ui_wgpu_widget_kit::draw_text;
+use semio_framework_ui_wgpu_widget_kit::draw_text_face;
+use semio_framework_ui_text::TextFace;
+use semio_framework_ui_theme::Theme;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::SurfaceKind;
+use semio_framework_ui_declaration::ui::UiComponentSceneNode;
 use semio_framework_os_renderer_wgpu_scene_state::{IconRenderChromeLabels, SceneEngineHosts, total};
 
 #[path = "../../../🧱️elements/🖼️IconRenderHost/🎯️targets/🧊️wgpu/🦀️.rs"]

@@ -5,9 +5,9 @@ import { developmentRuntimeRoot, parseActivationReceipt, publishActivationReceip
 import { demonstratorRuntimeComponentIds } from "../📦️assets/🟦️.ts";
 import { demonstratorRuntimeBuildVariants, demonstratorRuntimePluginId } from "../🟦️.ts";
 import type { ActivationComponentSpec } from "@semio-tech/framework-os-dev/vite-plugins";
-import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
+import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
-import { moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { moduleDirectoryName, componentOwnerRootV1 } from "@semio-tech/plugin-registry/deployment";
 
 //#region 🔖️DemonstratorActivationLanes
 /** 🛣️ The pane whose own activation lane carries the Demonstrator's OWN component closure — the

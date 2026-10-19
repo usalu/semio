@@ -1,9 +1,9 @@
 // #region input
 //! 🖱️ Pointer and keyboard input state for hit testing.
 
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::geometry::Rect;
-use crate::wgpu::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, QueuedActionDescriptor, RetainedStringAction, RetainedStringActionStep, RETAINED_ACTION_STRING_PAGE_BYTES};
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_theme::geometry::Rect;
+use semio_framework_ui_action::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, QueuedActionDescriptor, RetainedStringAction, RetainedStringActionStep, RETAINED_ACTION_STRING_PAGE_BYTES};
 use std::rc::Rc;
 
 use std::collections::HashMap;
@@ -314,12 +314,12 @@ pub struct InputState<E> {
     pub text_buffer: ui_contract::TextEditAuthority,
     text_view: String,
     text_view_start: usize,
-    text_projection_pending: bool,
+    pub text_projection_pending: bool,
     text_fault: Option<ui_contract::TextEditFault>,
     action_fault: Option<BoundedActionFault>,
     pub cursor_pos: usize,
     hits: HitRegistry<E>,
-    pending_actions: BoundedActionQueue,
+    pub pending_actions: BoundedActionQueue,
     retained_action: Option<RetainedInputAction>,
     pending_keys: FixedKeyQueue,
     pub right_click_pos: Option<(f32, f32)>,
@@ -486,7 +486,7 @@ impl<E: Clone> InputState<E> {
     /// reserved — the host-side half of the admission React's runtime applies to a `UiIntent`. A
     /// caller that holds the live document passes its revision through
     /// [`crate::wgpu::BoundedActionQueue::admit_intent`] instead, which also refuses a stale one.
-    pub fn admit_intent(&mut self, intent: &crate::wgpu::UiIntentCommand) -> crate::wgpu::UiIntentAdmission {
+    pub fn admit_intent(&mut self, intent: &semio_framework_ui_action::UiIntentCommand) -> semio_framework_ui_action::UiIntentAdmission {
         self.pending_actions.admit_intent_seq(intent)
     }
 
@@ -494,35 +494,35 @@ impl<E: Clone> InputState<E> {
         self.pending_actions.reserve_batch(item_credits, byte_credits)
     }
 
-    pub fn claim_action(&mut self, byte_credits: usize) -> Result<crate::wgpu::BoundedActionClaim, BoundedActionFault> {
+    pub fn claim_action(&mut self, byte_credits: usize) -> Result<semio_framework_ui_action::BoundedActionClaim, BoundedActionFault> {
         self.pending_actions.claim(byte_credits)
     }
 
-    pub fn claim_actions(&mut self, byte_credits: &[usize]) -> Result<crate::wgpu::BoundedActionClaimBatch, BoundedActionFault> {
+    pub fn claim_actions(&mut self, byte_credits: &[usize]) -> Result<semio_framework_ui_action::BoundedActionClaimBatch, BoundedActionFault> {
         self.pending_actions.claim_batch(byte_credits)
     }
 
-    pub fn reserve_claimed_action<'a>(&'a mut self, claim: crate::wgpu::BoundedActionClaim, controller_id: &str, action: &str) -> Result<crate::wgpu::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
+    pub fn reserve_claimed_action<'a>(&'a mut self, claim: semio_framework_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_framework_ui_action::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
         self.pending_actions.reserve_claimed(claim, controller_id, action)
     }
 
-    pub fn draft_claimed_action(&self, claim: crate::wgpu::BoundedActionClaim, controller_id: &str, action: &str) -> Result<crate::wgpu::BoundedClaimedActionDraft, BoundedActionFault> {
+    pub fn draft_claimed_action(&self, claim: semio_framework_ui_action::BoundedActionClaim, controller_id: &str, action: &str) -> Result<semio_framework_ui_action::BoundedClaimedActionDraft, BoundedActionFault> {
         self.pending_actions.draft_claimed(claim, controller_id, action)
     }
 
-    pub fn publish_prepared_claimed_action(&mut self, prepared: crate::wgpu::PreparedClaimedAction) -> Result<(), BoundedActionFault> {
+    pub fn publish_prepared_claimed_action(&mut self, prepared: semio_framework_ui_action::PreparedClaimedAction) -> Result<(), BoundedActionFault> {
         self.pending_actions.publish_prepared_claimed(prepared)
     }
 
-    pub fn publish_prepared_claimed_actions(&mut self, prepared: crate::wgpu::PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
+    pub fn publish_prepared_claimed_actions(&mut self, prepared: semio_framework_ui_action::PreparedClaimedActionBatch) -> Result<(), BoundedActionFault> {
         self.pending_actions.publish_prepared_claimed_batch(prepared)
     }
 
-    pub fn release_action_claim(&mut self, claim: crate::wgpu::BoundedActionClaim) -> Result<(), BoundedActionFault> {
+    pub fn release_action_claim(&mut self, claim: semio_framework_ui_action::BoundedActionClaim) -> Result<(), BoundedActionFault> {
         self.pending_actions.release_claim(claim)
     }
 
-    pub fn publish_action(&mut self, controller_id: &str, action: &str, byte_credits: usize, build: impl FnOnce(&mut crate::wgpu::BoundedActionBuilder, &str) -> Result<(), BoundedActionFault>) -> Result<(), BoundedActionFault> {
+    pub fn publish_action(&mut self, controller_id: &str, action: &str, byte_credits: usize, build: impl FnOnce(&mut semio_framework_ui_action::BoundedActionBuilder, &str) -> Result<(), BoundedActionFault>) -> Result<(), BoundedActionFault> {
         let text_view = self.text_view.as_str();
         let mut reservation = self.pending_actions.reserve(controller_id, action, byte_credits)?;
         build(reservation.builder(), text_view)?;
@@ -711,7 +711,7 @@ impl<E: Clone> InputState<E> {
         self.close_step_with_receipt(|_| {})
     }
 
-    pub fn close_step_with_receipt(&mut self, on_receipt: impl FnOnce(crate::wgpu::ActionQueueReceipt)) -> Result<bool, ui_contract::TextEditFault> {
+    pub fn close_step_with_receipt(&mut self, on_receipt: impl FnOnce(semio_framework_ui_action::ActionQueueReceipt)) -> Result<bool, ui_contract::TextEditFault> {
         if self.hits.close_step() {
             return Ok(false);
         }
@@ -773,217 +773,6 @@ pub struct PointerCallbacks {
     pub on_context_menu: Rc<dyn Fn(f32, f32)>,
 }
 
-//#region 🎯️RetainedHitRegistry
-/// 🎯️ One interactive retained node, projected onto this region's flat pointer registry.
-///
-/// 🩸️ The shell's registry used to hold the chrome and NOTHING of any retained window body: a
-/// pointer inside a published `mounted_layout` row rect answered the WINDOW's
-/// `HitKind::ScrollRegion`, so no row action dispatched, no wheel reached a scene and no hover
-/// resolved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-/// `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md` §6). `rect` is minted by the SAME accumulated
-/// origin the retained paint walk paints at, so a row can never again be drawn at one rectangle and
-/// hit-tested at another.
-#[derive(Clone, Debug, PartialEq)]
-#[cfg(feature = "wgpu-engine")]
-pub struct RetainedSceneHit {
-    pub surface_id: String,
-    pub kind: crate::wgpu::component::ui::SurfaceKind,
-}
 
-/// 🎬️ Retained pointer geometry and the canonical scene identity that produced it.
-#[derive(Clone, Debug, PartialEq)]
-#[cfg(feature = "wgpu-engine")]
-pub struct RetainedHitRegistration {
-    pub node: crate::wgpu::arena::NodeId,
-    pub rect: Rect,
-    pub overlay: bool,
-    pub scene: Option<RetainedSceneHit>,
-    pub kind: HitKind,
-    pub control_id: String,
-    pub action: Option<ActionDescriptor>,
-    pub drag_axis: Option<DragAxis>,
-    pub drag_data: Option<HashMap<String, String>>,
-}
 
-#[cfg(feature = "wgpu-engine")]
-impl RetainedHitRegistration {
-    /// 🎯️ The registry entry a host pushes into its own `InputState`.
-    pub fn to_hit_target(&self) -> HitTarget<ActionDescriptor> {
-        HitTarget { rect: self.rect, event: self.action.clone(), control_id: Some(self.control_id.clone()), kind: self.kind, drag_axis: self.drag_axis, drag_data: self.drag_data.clone() }
-    }
-}
-
-/// 🌳️ Which row of its owning `Tree` a synthesized `Stack` is, re-derived from that tree's own
-/// still-intact spec by key — the same discriminator `mounted_layout::tree_row_kind` measures with,
-/// so the row a pointer resolves and the row the layout published are one classification.
-#[cfg(feature = "wgpu-engine")]
-enum RetainedTreeRow<'a> {
-    Section(&'a crate::wgpu::component::ui::UiTreeSectionNode),
-    Item(&'a crate::wgpu::component::ui::UiTreeItemNode),
-}
-
-#[cfg(feature = "wgpu-engine")]
-fn retained_tree_row<'a>(tree: &'a crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId) -> Option<RetainedTreeRow<'a>> {
-    let crate::wgpu::tree::NodeKey::Explicit(key) = &tree.node(id)?.key else { return None };
-    let owner = crate::wgpu::mounted_layout::owning_tree_spec(tree, id)?;
-    if let Some(section) = owner.sections.iter().find(|section| &section.id == key) {
-        return Some(RetainedTreeRow::Section(section));
-    }
-    owner.sections.iter().find_map(|section| crate::wgpu::mounted_layout::find_tree_item(&section.items, key, 0)).map(RetainedTreeRow::Item)
-}
-
-#[cfg(feature = "wgpu-engine")]
-pub(crate) fn retained_tree_section_header_band(rect: Rect, header_height: f32, reversed: bool) -> Rect {
-    crate::wgpu::layout::tree_section_header_band(rect, header_height, reversed)
-}
-
-/// 🖱️ The `HitKind`/control id an engine surface canvas registers under. `World3d` is its own kind;
-/// every other bespoke-dispatch surface reuses the `ScrollRegion` + `.pane`/`.map` convention
-/// `ShellState::scroll_region_is_scene_surface` already reads, so a wheel over one propagates to the
-/// scene instead of scrolling the window that hosts it.
-#[cfg(feature = "wgpu-engine")]
-pub(crate) fn retained_scene_hit(scene: &crate::wgpu::component::ui::UiComponentSceneNode) -> (HitKind, String) {
-    use crate::wgpu::component::ui::SurfaceKind;
-    match scene.component_kind {
-        SurfaceKind::World3d => (HitKind::World3d, scene.surface_id.clone()),
-        SurfaceKind::NodeGraph | SurfaceKind::Board2d => (HitKind::ScrollRegion, format!("{}.pane", scene.surface_id)),
-        SurfaceKind::TiledMap => (HitKind::ScrollRegion, format!("{}.map", scene.surface_id)),
-        _ => (HitKind::ComponentScene, scene.surface_id.clone()),
-    }
-}
-
-/// 🎯️ Projects one laid-out retained node onto the registry at the same band paint owns.
-#[cfg(feature = "wgpu-engine")]
-pub fn retained_hit_registration(
-    tree: &crate::wgpu::tree::UiTree,
-    id: crate::wgpu::arena::NodeId,
-    rect: Rect,
-    metrics: &crate::wgpu::layout::TreeRowMetrics,
-    driver_drag: crate::wgpu::chrome::UiDriverDrag,
-    reversed: bool,
-) -> Option<RetainedHitRegistration> {
-    use crate::wgpu::component::ui::UiNode;
-    let node = tree.node(id)?;
-    // 🕳️ A mounted-but-unplaced node (a collapsed branch's row, a `Tree` item action that the row
-    // geometry never gives a rect of its own) must never take the pointer from the node actually
-    // drawn there.
-    if !node.spec.0.presence().visible() || rect.w <= 0.0 || rect.h <= 0.0 {
-        return None;
-    }
-    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind, control_id, action, drag_axis: None, drag_data: None });
-    match &node.spec.0 {
-        UiNode::Stack(stack) => match retained_tree_row(tree, id) {
-            Some(RetainedTreeRow::Section(section)) => {
-                let band = retained_tree_section_header_band(rect, crate::wgpu::layout::tree_section_header_height(section, metrics), reversed);
-                if band.h <= 0.0 {
-                    return None;
-                }
-                entry(HitKind::TreeItem, format!("section.chevron.{}", section.id), stack.activate.clone(), band)
-            }
-            Some(RetainedTreeRow::Item(item)) => {
-                let band = retained_tree_section_header_band(rect, metrics.row_height, reversed);
-                if band.h <= 0.0 {
-                    return None;
-                }
-                let draggable = item.draggable.unwrap_or(false);
-                let surface_drag = draggable && driver_drag == crate::wgpu::chrome::UiDriverDrag::Surface;
-                Some(RetainedHitRegistration {
-                    node: id,
-                    rect: band,
-                    overlay: false,
-                    scene: None,
-                    kind: HitKind::TreeItem,
-                    control_id: format!("tree.label.{}", item.id),
-                    action: stack.activate.clone().or_else(|| item.action.clone()),
-                    drag_axis: surface_drag.then_some(DragAxis::Both),
-                    drag_data: surface_drag.then(|| item.drag_data.clone().unwrap_or_default()),
-                })
-            }
-            None => {
-                let activate = stack.activate.clone()?;
-                let control_id = stack.id.clone().filter(|id| !id.is_empty()).unwrap_or_else(|| activate.action.clone());
-                entry(HitKind::Button, control_id, Some(activate), rect)
-            }
-        },
-        UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
-        UiNode::Section(section) if section.label.is_some() => {
-            let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::mounted_layout::retained_section_title_height(tree, id).min(rect.h));
-            (band.h > 0.0).then(|| RetainedHitRegistration { node: id, rect: band, overlay: false, scene: None, kind: HitKind::Toggle, control_id: section.id.clone(), action: None, drag_axis: None, drag_data: None })
-        }
-        UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
-        UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
-        UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, if toggle.appearance == ui_contract::ToggleAppearance::Checkbox { crate::wgpu::layout::tree_checkbox_hit_rect(rect, metrics.inline) } else { rect }),
-        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
-        // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
-        // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
-        // router never saw the gesture at all, which is half of why those kinds could not commit
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
-        UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
-        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
-        UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),
-        UiNode::ComponentScene(scene) => {
-            let (kind, control_id) = retained_scene_hit(scene);
-            let mut registration = entry(kind, control_id, None, rect)?;
-            registration.scene = Some(RetainedSceneHit { surface_id: scene.surface_id.clone(), kind: scene.component_kind });
-            Some(registration)
-        }
-        _ => None,
-    }
-}
-
-#[cfg(feature = "wgpu-engine")]
-pub fn retained_tree_chevron_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, rect: Rect, metrics: &crate::wgpu::layout::TreeRowMetrics, reversed: bool) -> Option<RetainedHitRegistration> {
-    let RetainedTreeRow::Item(item) = retained_tree_row(tree, id)? else { return None };
-    item.items.as_deref().filter(|items| !items.is_empty())?;
-    let depth = tree.tree_item_depth(id)?;
-    let rect = crate::wgpu::layout::tree_item_chevron_rect(rect, depth, metrics, reversed);
-    (rect.w > 0.0 && rect.h > 0.0).then(|| RetainedHitRegistration { node: id, rect, overlay: false, scene: None, kind: HitKind::TreeItem, control_id: format!("tree.chevron.{}", item.id), action: None, drag_axis: None, drag_data: None })
-}
-
-#[cfg(feature = "wgpu-engine")]
-pub fn retained_tree_drag_handle_registration(
-    tree: &crate::wgpu::tree::UiTree,
-    id: crate::wgpu::arena::NodeId,
-    rect: Rect,
-    metrics: &crate::wgpu::layout::TreeRowMetrics,
-    driver_drag: crate::wgpu::chrome::UiDriverDrag,
-) -> Option<RetainedHitRegistration> {
-    use crate::wgpu::component::ui::UiNode;
-    use crate::wgpu::layout::{tree_drag_handle_rect, tree_drag_role, TreeDragRole};
-    if driver_drag != crate::wgpu::chrome::UiDriverDrag::Handle || rect.w <= 0.0 || rect.h <= 0.0 {
-        return None;
-    }
-    let node = tree.node(id)?;
-    if !node.spec.0.presence().visible() {
-        return None;
-    }
-    let UiNode::Stack(_) = &node.spec.0 else { return None };
-    let RetainedTreeRow::Item(item) = retained_tree_row(tree, id)? else { return None };
-    let role = tree_drag_role(item)?;
-    let relative = tree_drag_handle_rect(rect.w, metrics);
-    let handle = Rect::new(rect.x + relative.x, rect.y + relative.y, relative.w.min(rect.w), relative.h.min(metrics.row_height.min(rect.h)));
-    if handle.w <= 0.0 || handle.h <= 0.0 {
-        return None;
-    }
-    Some(RetainedHitRegistration {
-        node: id,
-        rect: handle,
-        overlay: false,
-        scene: None,
-        kind: HitKind::TreeDragHandle,
-        control_id: format!("tree.drag.{}.{}", if role == TreeDragRole::Transfer { "transfer" } else { "sort" }, item.id),
-        action: None,
-        drag_axis: Some(DragAxis::Both),
-        drag_data: Some(item.drag_data.clone().unwrap_or_default()),
-    })
-}
-//#endregion 🎯️RetainedHitRegistry
-
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️targets-wgpu-input-unit/🦀️.rs"]
-mod tests;
-
-#[cfg(all(test, feature = "wgpu-engine"))]
-#[path = "../../../🧪️tests/🎯️retained-hit-targets/🦀️.rs"]
-mod retained_hit_target_tests;
 // #endregion input

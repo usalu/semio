@@ -1,12 +1,13 @@
 //! 🔺️ Diff constructor for `CreateIssue`: one created issue entry. The id must be free across every collection, then the issue must be writable (see `issue_problem`).
 
-use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::create_issue::CreateIssue;
-use crate::standards::v1::subsets::any::schema::{snapshot::{issue_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{issue_problem, ModelSnapshot};
+use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra::Entry;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateIssue, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
-    if let Some(noun) = elements::taken(base, &payload.id) {
+    if let Some(noun) = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements::taken(base, &payload.id) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     if let Some(problem) = issue_problem(base, &payload.id, &payload.issue) {

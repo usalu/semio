@@ -12,7 +12,10 @@ use semio_framework_os_renderer_wgpu_scene_state::{publish_component_surface_clo
 use semio_framework_os_renderer_wgpu_shell_input::PointerCapture;
 use semio_framework_os_renderer_wgpu_shell_state::ShellState;
 use semio_framework_ui_locale::{Locale, Terminology};
-use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, PointerModifiers, Theme};
+use semio_framework_ui_draw_contract::{DrawList, IconAtlas};
+use semio_framework_ui_text::FontAtlas;
+use semio_framework_ui_wgpu_input::{InputState, PointerModifiers};
+use semio_framework_ui_theme::Theme;
 
 pub fn finish_retired_cpu_only_map_fixture_close() {
     finish_cpu_only_fixture_component_close(|owner| assert_eq!(owner.kind, semio_framework_ui_declaration::ui::SurfaceKind::TiledMap));
@@ -37,21 +40,21 @@ pub fn finish_cpu_only_fixture_component_close(close: impl FnOnce(&semio_framewo
 
 pub fn runtime_with_shell(shell: semio_framework_os_renderer_wgpu_shell_state::ShellState) -> AppMailbox {
     RuntimeMailbox::new(semio_framework_os_renderer_wgpu_app_runtime::AppRuntime {
-        atlas: ui_wgpu::wgpu::FontAtlas::builtin(),
-        icons: ui_wgpu::wgpu::IconAtlas::default(),
+        atlas: semio_framework_ui_text::FontAtlas::builtin(),
+        icons: semio_framework_ui_draw_contract::IconAtlas::default(),
         icon_rebuild: None,
         icon_raster_scale: 1.0,
         interaction: Some(semio_framework_os_renderer_wgpu_frame_actions::AppInteractionState {
             shell,
-            input: ui_wgpu::wgpu::InputState::default(),
-            theme: ui_wgpu::wgpu::Theme::default(),
+            input: semio_framework_ui_wgpu_input::InputState::default(),
+            theme: semio_framework_ui_theme::Theme::default(),
             theme_dark: false,
             last_pointer_x: 0.0,
             last_pointer_y: 0.0,
             pointer_down: false,
             pointer_button: 0,
             pointer_capture: semio_framework_os_renderer_wgpu_shell_input::PointerCapture::default(),
-            modifiers: ui_wgpu::wgpu::PointerModifiers::default(),
+            modifiers: semio_framework_ui_wgpu_input::PointerModifiers::default(),
             space_pressed: false,
             wheel_zoom_deadline_ms: 0.0,
             text_streams: std::array::from_fn(|_| None),
@@ -61,8 +64,8 @@ pub fn runtime_with_shell(shell: semio_framework_os_renderer_wgpu_shell_state::S
             last_sync_pump_ms: 0.0,
         }),
         checkout: Default::default(),
-        draw: ui_wgpu::wgpu::DrawList::default(),
-        overlay: ui_wgpu::wgpu::DrawList::default(),
+        draw: semio_framework_ui_draw_contract::DrawList::default(),
+        overlay: semio_framework_ui_draw_contract::DrawList::default(),
         pending_frame_deferred: None,
         frame_actions: semio_framework_os_renderer_wgpu_frame_actions::FrameActionOwners::default(),
         pending_frame_maintenance_refusal: None,

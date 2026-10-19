@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "../../../../../🟦️.ts";
+import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "@semio-tech/framework-os";
 
 type Case = Readonly<{ id: string; authored: PackValue; canonical: PackValue; expectedPackHex: string }>;
 type Fixture = Readonly<{ cases: readonly Case[] }>;

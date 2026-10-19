@@ -29,7 +29,7 @@ pub struct UtilityDefinition {
     pub cursor: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
+    pub category: Option<semio_framework_ui_declaration::utilities::UtilityCategory>,
     /// 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
     /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
     /// set `true` for passive view utilities (e.g. cad `cad.play.view.*`) that should not gate actions.

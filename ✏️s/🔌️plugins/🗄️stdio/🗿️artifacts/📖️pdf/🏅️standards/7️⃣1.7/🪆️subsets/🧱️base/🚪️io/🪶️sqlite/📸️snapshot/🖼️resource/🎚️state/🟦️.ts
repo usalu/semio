@@ -1,5 +1,6 @@
 /** 🎚️ Handwritten graphics state, soft masks, form resources and transparency groups. */
-import type { PdfExtGState, PdfSoftMask, PdfFormXObject, PdfTransparencyGroup, PdfLineCap, PdfLineJoin } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfExtGState, PdfSoftMask, PdfFormXObject, PdfTransparencyGroup } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfLineCap, PdfLineJoin } from "../../../../../🧬️schema/📸️snapshot/🖊️line-style/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type SqliteRow,type Binary64 } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfFunction,readPdfFunction,writePdfReals,readPdfReals } from "../../🌈️color/🟦️.ts";

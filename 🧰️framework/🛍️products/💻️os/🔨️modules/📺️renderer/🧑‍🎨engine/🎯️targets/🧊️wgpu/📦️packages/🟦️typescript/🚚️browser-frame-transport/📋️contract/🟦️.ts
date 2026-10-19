@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-renderer-wgpu/browser-frame-transport/contract` entry: explicit re-exports of the source module that owns each member. */
+export { FRAME_WORKER_ACCESSIBILITY_ID_BYTES, FRAME_WORKER_BYTE_CAPACITY, FRAME_WORKER_HUB_DOCUMENT_CAPACITY, FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY, FRAME_WORKER_INTROSPECTION_CAPACITY, FRAME_WORKER_LOSSLESS_ITEM_CAPACITY, FRAME_WORKER_MESSAGE_BYTE_CAPACITY, FRAME_WORKER_POINTER_CAPACITY } from "../../../../🚚️browser-frame-transport/📋️contract/🟦️.ts";
+export type { BrowserFrameFallbackState, BrowserFrameUiMessage, BrowserFrameWorkerMessage, BrowserFrameWorkerPort, BrowserFrameWorkerStepReport } from "../../../../🚚️browser-frame-transport/📋️contract/🟦️.ts";

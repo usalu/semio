@@ -1,14 +1,16 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Phase;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::reader::{reals, text, Doc};
+use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader::{reals, text, Doc};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::import::ifc::Import;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::Import;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::snapshot::{Building, Point2, Site, Storey};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Building, Site, Storey};
+#[allow(unused_imports)]
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
-use crate::standards::v1::subsets::any::io::import::ifc::spatial::*;
+use semio_s_artifact_bim_model_ifc_2::standards::v1::subsets::any::io::import::ifc::spatial::{degrees, number_of, string_of, phase};
 use semio_s_artifact_stdio_contract::part21::Part21Decimal;
 
 fn real(value: f64) -> Part21Value {

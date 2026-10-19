@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import Ajv2020 from "ajv/dist/2020";
 import draft7 from "ajv/dist/refs/json-schema-draft-07.json";
 import fixture from "../🧫️fixtures/🎬️presented-media-slots/🔣️.json";
-import contract from "../../🎯️targets/🧊️wgpu/🎬️media-slots/🧬️contract/🔣️.json";
-import mediaContract from "../../../../🔌️plugin/🪟️window-kits/🎬️media/🧬️contract/🔣️.json";
+import contract from "@semio-tech/framework-renderer-wgpu/media-slots/contract.json";
+import mediaContract from "@semio-tech/plugin-window-kits/media/contract.json";
 import { mediaTransportReservationFixture as reservation } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 describe("🎬️ presented media slots", () => {

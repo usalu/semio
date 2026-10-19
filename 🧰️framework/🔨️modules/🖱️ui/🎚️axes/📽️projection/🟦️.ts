@@ -1,12 +1,12 @@
 import type { UiAxes, UiAxisEntry } from "../📥️source/🟦️.ts";
 
 function emitRustEnum(name: string, entries: readonly UiAxisEntry[]): string {
-  const variants = entries.map((entry, index) => (index === 0 ? `    #[default]\n    ${entry.variant},` : `    ${entry.variant},`)).join("\n");
+  const variants = entries.map((entry) => `    ${entry.variant},`).join("\n");
   const asStrArms = entries.map((entry) => `            ${name}::${entry.variant} => ${JSON.stringify(entry.id)},`).join("\n");
   const indexArms = entries.map((entry, index) => `            ${name}::${entry.variant} => ${index},`).join("\n");
   const parseArms = entries.map((entry) => `            ${JSON.stringify(entry.id)} => Some(${name}::${entry.variant}),`).join("\n");
   const allList = entries.map((entry) => `${name}::${entry.variant}`).join(", ");
-  return `#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+  return `#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ${name} {
 ${variants}
@@ -44,7 +44,7 @@ impl std::fmt::Display for ${name} {
 `;
 }
 
-/** 🦀️ Projects the shared axes into the native enum registry. */
+/** 🦀️ Projects the shared axes into the native enum registry; the enums have no `Default` because no axis entry is the implicit language or terminology. */
 export function emitUiAxesRust(axes: UiAxes): string {
   return `// @generated from 🖱️ui/🎚️axes/🔣️.json — do not edit.
 

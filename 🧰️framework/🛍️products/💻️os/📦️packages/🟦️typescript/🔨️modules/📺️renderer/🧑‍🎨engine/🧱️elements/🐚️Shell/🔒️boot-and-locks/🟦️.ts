@@ -1,0 +1,3 @@
+/** 🧩️ Public `@semio-tech/framework-os/modules/renderer/engine/elements/Shell/boot-and-locks` entry: explicit re-exports of the source module that owns each member. */
+export { clearDurableShellStorage, isEphemeralShellBrand, mergeShellLockSources, resolveBootExampleId, resolveShellDefaults, resolveShellLocks, shouldPersistIntroductionSeen, shouldReplayIntroductionOnLoad } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts";
+export type { FrameworkOsDefaults, FrameworkOsLocks, ResolvedShellLocks } from "../../../../../../../../🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🔒️boot-and-locks/🟦️.ts";

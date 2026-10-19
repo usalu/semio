@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { WORKSPACE_ROOT } from "../../../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { WORKSPACE_ROOT } from "@semio-tech/repo-lib/inventory";
 import { valueOrderedRetirementSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 import { jobSnapshotSchemaUrl } from "@semio-tech/framework/job/testing/fixtures";
 
@@ -49,7 +49,7 @@ export function flowSelectedCopySelfTests(): number {
   const exact = (value: string) => value.includes("owned: ManuallyDrop<CopyState<R, T>>")
     && value.includes("source: Option<Arc<R>>") && value.includes("source_lease: Option<RetainedCloneSource<T,SnapshotRead<R>>>") && value.includes("unsafe impl<T: Sync> Send for Rooted<T>")
     && value.includes("maximum_bytes.min(source.len() - start)") && value.includes("if !state.started")
-    && value.includes("state.failed = true") && value.includes("!std::thread::panicking()")
+    && value.includes("state.failed=true") && value.includes("!std::thread::panicking()")
     && value.includes("state.tasks.pop_front()") && value.includes('expect("selected copy retirement factory").retire(root,grant)')
     && value.includes("admit_retained_clone_close(grant,step,terminal,owner)") && value.includes("state.root_retirement.is_none()") && value.includes("factory.preborn_factory_retirement(grant)")
     && value.includes("grant.maximum_release_bytes<d.release_bytes") && value.includes("released_bytes:bytes")
@@ -61,7 +61,7 @@ export function flowSelectedCopySelfTests(): number {
   const mutants = [
     source.replace("owned: ManuallyDrop<CopyState<R, T>>", "owned: CopyState<R, T>"),
     source.replace("maximum_bytes.min(source.len() - start)", "source.len() - start"),
-    source.replaceAll("state.failed = true", "state.failed = false"),
+    source.replaceAll("state.failed=true", "state.failed=false"),
     source.replaceAll("!std::thread::panicking()", "true"),
     source.replace('expect("selected copy retirement factory").retire(root,grant)', 'expect("selected copy retirement factory").drop(root,grant)'),
     source.replace("admit_retained_clone_close(grant,step,terminal,owner)", "false"),

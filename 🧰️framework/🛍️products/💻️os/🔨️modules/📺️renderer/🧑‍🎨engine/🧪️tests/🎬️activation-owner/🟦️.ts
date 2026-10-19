@@ -1,13 +1,13 @@
-import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/🟦️.ts";
+import { fixtureOriginalWorkStock } from "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures";
 /** 🎬️ The hub's cross-plugin open, as the shell composes it: a session holding only the host plugin
  * cannot route another plugin's artifact kind, resolves that kind's owner from the catalog's declared
  * `on-artifact-kind:` rows, installs it, and routes the SAME open against the rebuilt router. */
 
 import { describe, expect, it } from "vitest";
 import { ActivationRegistry, AppRouter, type AppRouterManifest, type OpeningPreferences, activationEventEnvelope, activationReasonForAppId, artifactKindActivationOwner, type PluginCatalog, type PluginCatalogTarget } from "@semio-tech/framework";
-import { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { type ShardBudget } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
-import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
+import { ShardClient } from "@semio-tech/framework-actor/shard-client";
+import { type ShardBudget } from "@semio-tech/framework-actor/shard-client";
+import { OwnedResidentLedger } from "@semio-tech/value-ts/resident";
 import { resolveArtifactOpeningRelay } from "@semio-tech/framework-os";
 
 const EMPTY_PREFERENCES: OpeningPreferences = { defaults: [] };

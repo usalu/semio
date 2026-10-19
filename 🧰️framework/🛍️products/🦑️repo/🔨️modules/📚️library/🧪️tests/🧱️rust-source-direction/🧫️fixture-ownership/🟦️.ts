@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 interface Consumer { readonly source: string; readonly fixtureReference: string }
 interface Owner { readonly id: string; readonly fixture: string; readonly schema: string; readonly former: string; readonly sha256: string; readonly consumers: readonly Consumer[] }
 const root = resolve(import.meta.dir, "../../../../../../../..");

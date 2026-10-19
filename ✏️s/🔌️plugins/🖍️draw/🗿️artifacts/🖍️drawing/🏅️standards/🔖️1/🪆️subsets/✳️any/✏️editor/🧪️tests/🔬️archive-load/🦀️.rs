@@ -9,13 +9,13 @@ use semio_s_artifact_draw_drawing_editor_commands::set_active_example;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp};
 
 /// 🔁️ Drives one dispatched command to its published `LoadDocument` effect the way the host does.
-async fn published_load(app: &mut super::unit_tests::context::DrawingApp, command: DrawingCommand, instance: u32) -> (Vec<u8>, Vec<u8>) {
+async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture, command: DrawingCommand, instance: u32) -> (Vec<u8>, Vec<u8>) {
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_laws::meta("fixture") };
-    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("example dispatch");
+    app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.maintenance_step(1, 4_096).unwrap();
-        app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap();
+        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         if let Some(page) = app.take_typed_operation_result_page(instance) {
             assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
         }
@@ -32,12 +32,12 @@ async fn published_load(app: &mut super::unit_tests::context::DrawingApp, comman
     loaded.expect("the example publishes a document load")
 }
 
-async fn settle_archive(app: &mut super::unit_tests::context::DrawingApp, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
-    PluginApp::begin_document_archive_load(&mut *app, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
+async fn settle_archive(app: &mut super::unit_tests::context::DrawingAppFixture, operation: u64, parent_pack: Vec<u8>, parent_spr: Vec<u8>) -> protocol::DocumentArchiveLoadStatus {
+    PluginApp::begin_document_archive_load(&mut app.0, operation, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     let mut last = String::new();
     for round in 0..20_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut *app, operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, operation, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         let line = format!("{:?} {}/{}", polled.state, polled.completed, polled.total);
         if round % 1 == 0 {
             let pack = app.document_pack().await.map(|files| files.pack.len()).unwrap_or(0);
@@ -51,11 +51,11 @@ async fn settle_archive(app: &mut super::unit_tests::context::DrawingApp, operat
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut *app, 1, 4_096).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
-    PluginApp::acknowledge_document_archive_load(&mut *app, operation).expect("archive acknowledgement");
+    PluginApp::acknowledge_document_archive_load(&mut app.0, operation).expect("archive acknowledgement");
     status
 }
 
@@ -81,7 +81,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         if app.close_terminal_is_empty() {
             break;
         }
-        app.close_step(1, 4_096).unwrap();
+        app.0.close_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
         std::thread::yield_now();
     }
     assert!(app.close_terminal_is_empty());

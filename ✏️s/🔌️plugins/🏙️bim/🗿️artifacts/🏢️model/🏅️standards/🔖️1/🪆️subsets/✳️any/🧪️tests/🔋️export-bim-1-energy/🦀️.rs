@@ -10,8 +10,8 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
+    use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
+    use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json;
 
     /// 🔋️ The table of the energy export of the committed case.
     pub fn export_energy(ctx: &Context) -> Result<Outcome, String> {

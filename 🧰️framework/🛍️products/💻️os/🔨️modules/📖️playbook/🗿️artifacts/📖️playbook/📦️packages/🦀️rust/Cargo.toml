@@ -28,7 +28,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
-ui_wgpu = { package = "semio-framework-ui", path = "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu"] }
+semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 

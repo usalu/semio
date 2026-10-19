@@ -1,12 +1,12 @@
 syntax = "proto3";
 package semio.s.gis.gismap;
 import "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📍️feature/🛰️.proto";
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🛰️.proto";
 message GisMapArtifact {
   repeated GisMapFeature positions = 1;
   repeated GisMapFeature routes = 2;
   repeated GisMapFeature regions = 3;
-  semio.os.store.ArtifactChild drawing = 4;
-  optional semio.os.store.ArtifactChild image = 5;
-  semio.os.store.ArtifactChild value = 6;
+  semio.framework.schema.artifact_child.ArtifactChild drawing = 4;
+  optional semio.framework.schema.artifact_child.ArtifactChild image = 5;
+  semio.framework.schema.artifact_child.ArtifactChild value = 6;
 }

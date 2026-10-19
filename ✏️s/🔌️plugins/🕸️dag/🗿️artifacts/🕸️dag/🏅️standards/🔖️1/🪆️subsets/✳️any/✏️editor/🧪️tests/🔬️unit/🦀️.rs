@@ -15,7 +15,22 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members as framework_new_app_with_registry;
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    /// Field `1` is the fixture's ONE original caller scope: every call that needs a `cx` threads `app.1.cx()`, and the
+/// scope pays the caller's terminal retirement after the app's paid close.
+pub struct DagApp(pub VcsArtifactApp<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
+
+impl std::ops::Deref for DagApp {
+    type Target = VcsArtifactApp<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for DagApp {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
     
     /// 🧪️ An app instance using its declared tool catalog and concrete factories, bound to the live
     /// runtime instance `meta("local")` addresses. Binding is mandatory now that every document verb
@@ -48,19 +63,21 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> DagApp {
-        framework_new_app_with_registry::<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(dag_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await
+        let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+        let app = framework_new_app_with_registry::<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(dag_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        DagApp(app, scope)
     }
     
     /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
     /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
     /// reading `app.snapshot()` straight afterwards would observe the pre-dispatch document.
     pub async fn settle(app: &mut DagApp) {
-        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settle the typed operation");
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
     }
 
     /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut DagApp, command: DagCommand) -> semio_framework_plugin::InvocationResult {
-        let result = app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("dispatch");
+        let result = app.0.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -68,13 +85,13 @@ pub(crate) mod context {
     /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
     /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
     pub fn close(app: &mut DagApp) {
-        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, app.1.cx()).expect("original caller paid app close");
     }
 
     /// 🖼️ Projects one rendered tree through the retained page transport — a bare `serde_json` of
     /// `tree.root` cannot see `BuiltChildren`, whose rows only exist on the retained transport.
     pub async fn render(app: &mut DagApp, body_key: &str) -> String {
-        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render")).expect("render json")
+        semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx()).await.expect("render json")
     }
 }
 
@@ -324,24 +341,24 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
     let receiver = meta("actor-a").instance_id;
-    instance_a.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
-    settle_registered_typed_operation(&mut instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b applies its edit");
-    settle_registered_typed_operation(&mut instance_b, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b's edit publishes");
-    instance_a.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a folds b's events");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's events");
+    instance_a.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
+    instance_b.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
+    instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "both instances must converge on the same snapshot");
     assert_eq!(probe(&instance_a).await, (true, true), "each instance holds both disjoint edits");
-    let admitted = instance_a.handle_action("commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a commits a checkpoint");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a, admitted).await.expect("a's checkpoint commit settles");
-    settle_registered_typed_operation(&mut instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's checkpoint publication settles");
-    instance_b.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("b folds a's checkpoint");
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut instance_a.0, "commitCheckpoint", None, &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("a commits a checkpoint");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut instance_a.0, admitted).await.expect("a's checkpoint commit settles");
+    settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's checkpoint publication settles");
+    instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's checkpoint");
     assert_eq!(probe(&instance_a).await, probe(&instance_b).await, "a replicated checkpoint keeps both instances converged");
     assert_ne!(probe(&instance_a).await, genesis, "the replicated edits must actually land, not converge on the untouched genesis");
     instance_a.detach_backbone().await.expect("a releases its backbone");
     instance_b.detach_backbone().await.expect("b releases its backbone");
-    close_registered_fixture_app(&mut instance_a, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-    close_registered_fixture_app(&mut instance_b, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut instance_a.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_a.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut instance_b.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, instance_b.1.cx()).expect("original caller paid app close");
 }
 
 /// 🔁️ `artifact_app_laws::assert_ingest_idempotent` over THIS crate's registered, bound harness: the
@@ -357,8 +374,8 @@ async fn ingest_operations_is_idempotent_for_dag() {
     let (near, mut far) = MemoryBackbone::pair("mem://dag-idempotent", "mem://dag-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     let genesis = crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len();
-    sender.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply command");
-    settle_registered_typed_operation(&mut sender, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the add publishes");
+    sender.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
+    settle_registered_typed_operation(&mut sender.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("the add publishes");
     assert_eq!(crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len(), genesis + 1, "the sender applied its edit");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
@@ -369,14 +386,14 @@ async fn ingest_operations_is_idempotent_for_dag() {
     assert!(!envelopes.is_empty(), "the add reached the backbone");
     let operations = protocol::encode_envelopes(&envelopes);
     let mut receiver = new_app().await;
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest once");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest once");
     let once = crate::editor::dag::unit_tests::context::live_scene(&receiver).await.nodes.len();
     assert_eq!(once, genesis + 1, "the replayed add applies");
-    receiver.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
+    receiver.0.ingest_operations(&operations, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), receiver.1.cx()).await.expect("ingest twice");
     assert_eq!(crate::editor::dag::unit_tests::context::live_scene(&receiver).await.nodes.len(), once, "feeding the same operation twice must not double-apply");
     sender.detach_backbone().await.expect("sender releases its backbone");
-    close_registered_fixture_app(&mut sender, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
-    close_registered_fixture_app(&mut receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
+    close_registered_fixture_app(&mut sender.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, sender.1.cx()).expect("original caller paid app close");
+    close_registered_fixture_app(&mut receiver.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, receiver.1.cx()).expect("original caller paid app close");
 }
 //#endregion 🔖️CrossCutting
 

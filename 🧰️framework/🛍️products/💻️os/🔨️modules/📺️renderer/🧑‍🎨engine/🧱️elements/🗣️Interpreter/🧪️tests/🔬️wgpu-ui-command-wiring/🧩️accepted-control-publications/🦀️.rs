@@ -47,11 +47,11 @@ fn accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_acti
     assert_eq!((folder.role.as_str(), folder.label.as_deref(), folder.focusable, folder.actionable), ("button", Some("Modelle"), true, true));
     assert_eq!((toggle.role.as_str(), toggle.label.as_deref(), toggle.expanded), ("button", Some("Einklappen"), Some(true)));
 
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(dispatch_accessibility_event(window_id, generation, toggle.node_id, &toggle.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
-    assert!(apply_focused_vfs_control_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input));
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation, toggle.node_id, &toggle.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Focus, &mut input).is_some());
+    assert!(apply_focused_vfs_control_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &mut input));
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty(), "chevron keyboard activation owns renderer-local expansion only");
-    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["selectRows"]);
 
     let successor = semio_framework_os_renderer_wgpu_scene_state::VfsAccessibilityControl {
@@ -65,14 +65,14 @@ fn accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_acti
     semio_framework_os_renderer_wgpu_scene_feeds::stage_vfs_accessibility_controls(&host_id, vec![successor]);
     semio_framework_os_renderer_wgpu_scene_feeds::seal_vfs_accessibility_candidates(802);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_vfs_accessibility_candidates(802);
-    assert!(!apply_focused_vfs_control_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input));
+    assert!(!apply_focused_vfs_control_key(&semio_framework_ui_wgpu_input::KeyAction::Enter, &mut input));
     assert!(FOCUSED_VFS_CONTROL.with(|cell| cell.borrow().is_none()), "a row missing from the newly accepted semantic frame retires focus");
-    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "the stale accepted address cannot dispatch");
+    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none(), "the stale accepted address cannot dispatch");
     begin_accessibility_visible_documents();
     note_accessibility_visible_document(window_id);
     publish_accessibility_visible_documents();
     let successor = published_accessibility_nodes_for_test(window_id).into_iter().find(|node| node.key == format!("{host_id}.vfs.successor")).expect("successor accepted row");
-    assert!(dispatch_accessibility_event(window_id, generation, successor.node_id, &successor.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, successor.node_id, &successor.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     assert_eq!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["selectRows"]);
 }
 
@@ -118,8 +118,8 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     assert_eq!((add_step_node.role.as_str(), add_step_node.label.as_deref(), add_step_node.tabbable, add_step_node.actionable), ("button", Some("Schritt hinzufügen"), true, true));
     assert_eq!((palette_node.role.as_str(), palette_node.label.as_deref()), ("button", Some("Filter")));
 
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(dispatch_accessibility_event(window_id, generation, palette_node.node_id, &palette_node.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation, palette_node.node_id, &palette_node.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].action, "addBlock");
@@ -129,7 +129,7 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     semio_framework_os_renderer_wgpu_scene_feeds::stage_block_list_accessibility_controls(&host_id, vec![add_step]);
     semio_framework_os_renderer_wgpu_scene_feeds::seal_block_list_accessibility_candidates(804);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_block_list_accessibility_candidates(804);
-    assert!(dispatch_accessibility_event(window_id, generation, palette_node.node_id, &palette_node.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(dispatch_accessibility_event(window_id, generation, palette_node.node_id, &palette_node.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 
@@ -205,8 +205,8 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
     let paragraph = published_accessibility_nodes_for_test(passive_window_id).into_iter().find(|entry| entry.key == passive_key).expect("accepted passive EventFeed text");
     assert_eq!((paragraph.role.as_str(), paragraph.focusable, paragraph.tabbable, paragraph.actionable), ("paragraph", false, false, false));
 
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(actions[0].controller_id, expected_action["controllerId"].as_str().unwrap());
@@ -217,7 +217,7 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
     semio_framework_os_renderer_wgpu_scene_feeds::stage_event_feed_accessibility_controls(&retained_host, Vec::new());
     semio_framework_os_renderer_wgpu_scene_feeds::seal_event_feed_accessibility_candidates(806);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_event_feed_accessibility_candidates(806);
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 
@@ -273,7 +273,7 @@ fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_sta
     semio_framework_os_renderer_wgpu_scene_state::remember_scene_theme(&Theme::default());
     let node = seed_scene_window_with(window_id, scene_node);
     let retained = retained_scene(window_id, node);
-    let controls = semio_framework_os_renderer_wgpu_scene_tables::table_button_accessibility_cells(&retained, Rect::new(0.0, 0.0, 400.0, 300.0), ui_wgpu::wgpu::UiDriverDrag::Handle);
+    let controls = semio_framework_os_renderer_wgpu_scene_tables::table_button_accessibility_cells(&retained, Rect::new(0.0, 0.0, 400.0, 300.0), semio_framework_ui_wgpu_layout::chrome::UiDriverDrag::Handle);
     assert_eq!(controls.len(), 1);
     let control = controls[0].clone();
     assert_eq!(control.key, rebased_scene_key(fixture["expected"]["key"].as_str().unwrap(), host_id, &retained.host_id), "the button key is the fixture's, scoped by the engine-minted host");
@@ -288,14 +288,14 @@ fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_sta
     let button = published_accessibility_nodes_for_test(window_id).into_iter().find(|entry| entry.key == control.key).expect("accepted Table row button");
     assert_eq!((button.role.as_str(), button.label.as_deref(), button.focusable, button.tabbable, button.actionable), ("button", fixture["expected"]["label"].as_str(), true, true, true));
 
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
     assert!(
-        dispatch_accessibility_event(window_id, generation, button.node_id, &rebased_scene_key("table-ax-host.row.stale.actions.0", host_id, &retained.host_id), ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(),
+        dispatch_accessibility_event(window_id, generation, button.node_id, &rebased_scene_key("table-ax-host.row.stale.actions.0", host_id, &retained.host_id), semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none(),
         "a stale key is inert"
     );
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), fixture["expected"]["action"]);
@@ -303,7 +303,7 @@ fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_sta
     semio_framework_os_renderer_wgpu_scene_feeds::stage_table_button_accessibility_cells(&retained.host_id, Vec::new());
     semio_framework_os_renderer_wgpu_scene_feeds::seal_table_button_accessibility_candidates(903);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_table_button_accessibility_candidates(903);
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 
@@ -336,14 +336,14 @@ fn accepted_graph_checkpoint_publishes_one_tabbable_exact_action_and_rejects_sta
     let button = published_accessibility_nodes_for_test(window_id).into_iter().find(|entry| entry.key == control.key).expect("accepted GraphTimeline checkpoint button");
     assert_eq!((button.role.as_str(), button.label.as_deref(), button.focusable, button.tabbable, button.actionable), (expected["role"].as_str().unwrap(), expected["accessibleName"].as_str(), true, true, true));
 
-    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
+    let mut input = semio_framework_ui_wgpu_input::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
     assert!(
-        dispatch_accessibility_event(window_id, generation, button.node_id, &rebased_scene_key("history-host.history.stale", host_id, &retained.host_id), ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(),
+        dispatch_accessibility_event(window_id, generation, button.node_id, &rebased_scene_key("history-host.history.stale", host_id, &retained.host_id), semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none(),
         "a stale key is inert"
     );
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_some());
     let actions = semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input);
     assert_eq!(actions.len(), 1);
     assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), expected["action"]);
@@ -351,7 +351,7 @@ fn accepted_graph_checkpoint_publishes_one_tabbable_exact_action_and_rejects_sta
     semio_framework_os_renderer_wgpu_scene_feeds::stage_graph_timeline_accessibility_controls(&retained.host_id, Vec::new());
     semio_framework_os_renderer_wgpu_scene_feeds::seal_graph_timeline_accessibility_candidates(923);
     semio_framework_os_renderer_wgpu_scene_feeds::acknowledge_graph_timeline_accessibility_candidates(923);
-    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, semio_framework_ui_wgpu_events::AccessibilityUiEvent::Activate, &mut input).is_none());
     assert!(semio_framework_os_renderer_wgpu_frame_actions::collect_fixture_actions(&mut input).is_empty());
 }
 //#endregion 🔖️SceneCommandTests

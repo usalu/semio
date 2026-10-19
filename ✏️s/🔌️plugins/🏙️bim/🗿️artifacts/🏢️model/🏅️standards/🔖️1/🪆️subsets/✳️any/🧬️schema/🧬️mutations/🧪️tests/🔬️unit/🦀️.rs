@@ -1,7 +1,8 @@
-use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use crate::standards::v1::subsets::any::schema::mutations::*;
+use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::{elements, placement};
 use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
 use protocol::{Mutation, OpText};
 use semio_framework_test_fixtures::fixture_text;
@@ -45,8 +46,8 @@ async fn every_committed_mutation_round_trips_text_and_binary() {
 
 #[semio_framework_async_macros::async_test]
 async fn delete_storey_declares_a_bounded_footprint_and_the_others_one_row() {
-    use crate::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey;
-    use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
+    use semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey;
+    use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
     assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 8191);
     assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::SetStoreyHeight(SetStoreyHeight { id: "st".into(), height: 3.0 })), 1);
 }
@@ -77,20 +78,20 @@ async fn every_id_of_every_collection_is_taken_by_its_kind() {
 #[semio_framework_async_macros::async_test]
 async fn the_pure_storey_elevation_equals_the_inference_engine() {
     let base = house();
-    let levels = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&base);
+    let levels = semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&base);
     assert!(base.storeys.values().any(|storey| storey.level < 0), "the house stacks downward too");
     for id in base.storeys.keys() {
-        assert_eq!(crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, id), Some(levels[id].elevation), "{id}");
+        assert_eq!(semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, id), Some(levels[id].elevation), "{id}");
     }
-    assert_eq!(crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-nowhere"), None);
+    assert_eq!(semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-nowhere"), None);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_rise_to_another_storey_is_the_elevation_gap() {
-    use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
+    use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::TopConstraint;
     let base = house();
-    let gap = crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-upper").unwrap() - crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-ground").unwrap();
-    let rise = placement::rise(&base, "st-ground", 0.1, &TopConstraint::Storey { storey: "st-upper".into(), offset: -0.2 }).expect("both storeys exist");
+    let gap = semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-upper").unwrap() - semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-ground").unwrap();
+    let rise = semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement::rise(&base, "st-ground", 0.1, &TopConstraint::Storey { storey: "st-upper".into(), offset: -0.2 }).expect("both storeys exist");
     assert!((rise - (gap - 0.2 - 0.1)).abs() < 1e-12);
     assert_eq!(placement::rise(&base, "st-ground", 0.0, &TopConstraint::Storey { storey: "st-nowhere".into(), offset: 0.0 }), None);
     assert_eq!(placement::rise(&base, "st-ground", 0.0, &TopConstraint::StoreyTop { offset: 0.0 }), Some(base.storeys["st-ground"].height));

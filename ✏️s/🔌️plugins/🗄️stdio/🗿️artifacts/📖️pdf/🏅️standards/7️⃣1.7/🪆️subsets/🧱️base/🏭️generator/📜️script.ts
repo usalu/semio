@@ -32,9 +32,9 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { currentPlatform } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoTargetDirectory } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { currentPlatform } from "../../../../../../../../../../🧰️framework/📦️packages/🟦️typescript/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -133,9 +133,9 @@ async function generate(outRoot: string): Promise<void> {
   build(REFERENCE_ENGINE);
   build(MUTATION_ENGINE);
   mkdirSync(join(outRoot, ASSET_DIRECTORY), { recursive: true });
-  const asset = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [join(outRoot, ASSET_DIRECTORY, ASSET_FILE)], { stdio: "inherit" });
+  const asset = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [join(outRoot, ASSET_DIRECTORY, ASSET_FILE)], { stdio: "inherit" });
   if (asset.status !== 0) throw new Error(`asset engine failed with status ${asset.status}`);
-  const mutations = spawnSync(join(cargoTargetDirectory(getWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
+  const mutations = spawnSync(join(cargoTargetDirectory(findWorkspaceRoot()), "release", "generate"), [outRoot], { stdio: "inherit" });
   if (mutations.status !== 0) throw new Error(`mutation engine failed with status ${mutations.status}`);
 }
 

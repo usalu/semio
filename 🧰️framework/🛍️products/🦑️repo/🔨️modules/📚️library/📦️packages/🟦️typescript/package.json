@@ -4,11 +4,28 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./package.json": "./package.json"
+    "./artifacts": "./📦️artifacts/🟦️.ts",
+    "./authoring": "./🏗️authoring/🟦️.ts",
+    "./build": "./🏗️build/🟦️.ts",
+    "./build/inference": "./🏗️build/🕸️graph/📥️inference/🟨️.mjs",
+    "./build/tooling": "./🏗️build/🟨️.mjs",
+    "./cargo": "./🦀️cargo/🟦️.ts",
+    "./dev": "./🎮️playground/🟦️.ts",
+    "./inventory": "./📇️inventory/🟦️.ts",
+    "./inventory/commonjs": "./📇️inventory/🟨️.cjs",
+    "./inventory/tooling": "./📇️inventory/🟨️.mjs",
+    "./laws": "./⚖️laws/🟦️.ts",
+    "./package.json": "./package.json",
+    "./policy": "./🚨️policy/🟦️.ts",
+    "./process": "./🏃️process/🟦️.ts",
+    "./storage": "./💾️storage/🟦️.ts",
+    "./testing": "./🧪️testing/🟦️.ts"
   },
   "scripts": {
+    "test-cad-presence-retirement": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-cad-presence-retirement",
     "test-go-executable-acceptance": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-go-executable-acceptance",
     "test-go-executable-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-go-executable-ownership",
+    "test-norm-definition-ownership": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-norm-definition-ownership",
     "test-tool-run-policy-source": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-tool-run-policy-source",
     "go-test": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:go-test",
     "test-kind-only-basename": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-kind-only-basename",
@@ -117,6 +134,7 @@
   },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*",
+    "@semio-tech/nx-bootstrap-tools": "workspace:*",
     "@types/node": "^22.19.6",
     "ajv": "8.20.0",
     "lodash": "4.18.1",

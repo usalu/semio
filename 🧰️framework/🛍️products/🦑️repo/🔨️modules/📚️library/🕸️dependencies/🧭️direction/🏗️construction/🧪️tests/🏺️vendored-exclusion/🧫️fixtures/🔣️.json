@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "shim": {
+    "🧰️framework/vendor/shim/index.js": "export * as http from \"./http.js\";\n",
+    "🧰️framework/vendor/shim/http.js": "import { client } from \"./in-memory-http.js\";\nexport { InMemoryHttpClient } from \"./in-memory-http.js\";\nexport const handle = () => client;\n",
+    "🧰️framework/vendor/shim/in-memory-http.js": "import { handle } from \"./http.js\";\nimport { MAX } from \"./common.js\";\nexport const client = handle ?? MAX;\nexport class InMemoryHttpClient {}\n",
+    "🧰️framework/vendor/shim/common.js": "export const MAX = 1n;\n"
+  },
+  "authored": {
+    "🧰️framework/app/main.js": "import \"../vendor/shim/index.js\";\n",
+    "🧰️framework/app/left.js": "import \"./right.js\";\n",
+    "🧰️framework/app/right.js": "import \"./left.js\";\n"
+  },
+  "cases": [
+    {
+      "id": "vendored-tree-keeps-its-upstream-cycle-and-grab-bag-names",
+      "vendoredPaths": [
+        "🧰️framework/vendor/shim"
+      ],
+      "excluded": [
+        "🧰️framework/vendor/shim/common.js",
+        "🧰️framework/vendor/shim/http.js",
+        "🧰️framework/vendor/shim/in-memory-http.js",
+        "🧰️framework/vendor/shim/index.js"
+      ],
+      "violations": [
+        "no-circular 🧰️framework/app/left.js > 🧰️framework/app/right.js"
+      ]
+    },
+    {
+      "id": "undeclared-tree-is-linted-like-authored-source",
+      "vendoredPaths": [],
+      "excluded": [],
+      "violations": [
+        "no-circular 🧰️framework/app/left.js > 🧰️framework/app/right.js",
+        "no-circular 🧰️framework/vendor/shim/http.js > 🧰️framework/vendor/shim/in-memory-http.js",
+        "no-core-path 🧰️framework/vendor/shim/in-memory-http.js"
+      ]
+    },
+    {
+      "id": "declaration-is-a-whole-segment-prefix",
+      "vendoredPaths": [
+        "🧰️framework/vendor/sh"
+      ],
+      "excluded": [],
+      "violations": [
+        "no-circular 🧰️framework/app/left.js > 🧰️framework/app/right.js",
+        "no-circular 🧰️framework/vendor/shim/http.js > 🧰️framework/vendor/shim/in-memory-http.js",
+        "no-core-path 🧰️framework/vendor/shim/in-memory-http.js"
+      ]
+    }
+  ]
+}

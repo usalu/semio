@@ -26,18 +26,21 @@ export class KernelOriginalResourcePool {
 /** 🏛️ Allocates canonical identities only after the defining kernel resource admission accepts. */
 export class KernelOriginalOperationIssuer {
  #next=1n;
- constructor(private readonly admitResources:(request:OriginalOperationResources)=>OriginalOperationResources){}
+ private readonly admitResources: (request:OriginalOperationResources)=>OriginalOperationResources;
+ constructor(admitResources:(request:OriginalOperationResources)=>OriginalOperationResources){ this.admitResources = admitResources; }
  admit(request:OriginalOperationResources):OriginalOperationAdmission{const operation=identity(this.#next);if(operation===U64)throw Error('original-turn.identity-exhausted');const admitted=this.admitResources(request);const owned=grant(admitted.grant),fuel=amount(admitted.fuel),elapsed=admitted.maximumElapsedUs;if(typeof elapsed!=='bigint'||elapsed<0n||elapsed>U64)throw Error('original-turn.invalid-duration');this.#next+=1n;return Object.freeze({operation,generation:1n,grant:owned,fuel,maximumElapsedUs:elapsed})}
 }
 /** ⚠️ A returned original receipt stays identifiable when its physical effects exceed authority. */
 export class OriginalOperationReceiptRefusal extends Error {
- constructor(readonly receipt:OriginalOperationReceipt){super('original-turn.receipt-refused')}
+ readonly receipt: OriginalOperationReceipt;
+ constructor(receipt:OriginalOperationReceipt){super('original-turn.receipt-refused'); this.receipt = receipt;}
 }
 /** 🧵️ One same-worker clock binding issues remaining authority after each exact original return. */
 export class OriginalOperationSource {
  readonly operation:bigint;readonly generation:bigint;readonly deadlineUs:bigint;
  #remaining:OriginalRetainedGrant;#fuel:number;#epoch=1n;#outstanding:OriginalOperationTurn|undefined;#cancelled=false;#closed=false;#receiptRefusal:OriginalOperationReceipt|undefined;#producerRefusal:unknown;#nativeRefusal:unknown;#lastClock:bigint;#physical:OriginalOperationPhysicalSpent=Object.freeze({copiedItems:0,copiedBytes:0,retainedCapacityBytes:0,releasedBytes:0,workUnitsSpent:0});
- constructor(admission:OriginalOperationAdmission,private readonly clock:()=>bigint){this.operation=identity(admission.operation);this.generation=identity(admission.generation);this.#remaining=grant(admission.grant);this.#fuel=amount(admission.fuel);const now=clock();if(typeof now!=='bigint'||now<0n||now>U64||typeof admission.maximumElapsedUs!=='bigint'||admission.maximumElapsedUs<0n||admission.maximumElapsedUs>U64-now)throw Error('original-turn.deadline-overflow');this.#lastClock=now;this.deadlineUs=now+admission.maximumElapsedUs}
+ private readonly clock: ()=>bigint;
+ constructor(admission:OriginalOperationAdmission,clock:()=>bigint){this.clock = clock; this.operation=identity(admission.operation);this.generation=identity(admission.generation);this.#remaining=grant(admission.grant);this.#fuel=amount(admission.fuel);const now=clock();if(typeof now!=='bigint'||now<0n||now>U64||typeof admission.maximumElapsedUs!=='bigint'||admission.maximumElapsedUs<0n||admission.maximumElapsedUs>U64-now)throw Error('original-turn.deadline-overflow');this.#lastClock=now;this.deadlineUs=now+admission.maximumElapsedUs}
  operationClockUs():bigint{const now=this.clock();if(typeof now!=='bigint'||now<this.#lastClock||now>U64)throw Error('original-turn.clock-refused');this.#lastClock=now;return now}
  get fuelRemaining():number{return this.#fuel}
  get retainedRemaining():OriginalRetainedGrant{return this.#remaining}

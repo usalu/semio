@@ -55,8 +55,9 @@ import {
 import { historyPatchShouldApplyV1 } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
 import declaredInstancesFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🪟️declared-instances.json";
 import contributionsReceiverFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🧩️contributions-receiver.json";
-import { resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { resolveAppSurfaceSessionFactory } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { type AppSurfaceSessionFactory } from "@semio-tech/framework/canvas/react-renderer";
 
 afterEach(cleanup);
 

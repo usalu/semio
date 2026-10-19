@@ -1,5 +1,5 @@
 #[cfg(test)]
-fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
+fn queue_surface_action(input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), semio_framework_ui_action::BoundedActionFault> {
     let bytes = semio_framework_ui_action::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
     let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
     let builder = reservation.builder();

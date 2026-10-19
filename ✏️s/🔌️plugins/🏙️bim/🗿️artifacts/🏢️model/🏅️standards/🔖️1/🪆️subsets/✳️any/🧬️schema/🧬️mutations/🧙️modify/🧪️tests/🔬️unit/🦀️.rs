@@ -1,8 +1,9 @@
-use crate::standards::v1::subsets::any::schema::snapshot::Point2;
-use crate::standards::v1::subsets::any::schema::mutations::modify::*;
-use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{cut_loop, offset_axis, trim_extend, TrimFlaw};
-use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, LayerFunction, ModelSnapshot, Vertex, WallType};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::{Map, map, WallEnd, cut, ArrayPattern};
+use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::cut::{cut_loop, offset_axis, trim_extend, TrimFlaw};
+use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, Layer, LayerFunction, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, WallType};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_test_fixtures::fixture_text;
@@ -77,7 +78,7 @@ async fn the_maps_send_points_and_directions_where_shapely_sends_them() {
 async fn a_mirrored_loop_keeps_its_area_runs_counter_clockwise_and_its_centroid_is_mirrored() {
     for case in cases()["loops"].as_array().expect("loops") {
         let (loop_, map) = (loop_of(&case["loop"]), map_of("mirror", case));
-        let image = map::loop_image(&loop_, &map);
+        let image = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::map::loop_image(&loop_, &map);
         assert!(near(loops::signed_area(&inner(&loop_)), number(&case["area"]), 1e-9), "the exact area of the loop");
         assert!(near(loops::signed_area(&inner(&image)), number(&case["image_area"]), 1e-5), "the image keeps the area");
         assert_eq!(loops::is_ccw(&inner(&image)), case["image_counter_clockwise"].as_bool().expect("flag"), "the image runs counter-clockwise");
@@ -151,13 +152,13 @@ fn joined_model(case: &Value) -> ModelSnapshot {
         let kind = format!("wt-{thickness}");
         snapshot.wall_types.insert(kind.clone(), WallType { name: kind.clone(), layers: vec![Layer { material: material.clone(), thickness, function: LayerFunction::Structure }] });
         let join = |key: &str| match wall[key].as_str() {
-            Some("Miter") => Some(crate::standards::v1::subsets::any::schema::snapshot::EndJoin::Miter),
-            Some("Butt") => Some(crate::standards::v1::subsets::any::schema::snapshot::EndJoin::Butt),
-            Some("None") => Some(crate::standards::v1::subsets::any::schema::snapshot::EndJoin::None),
+            Some("Miter") => Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::EndJoin::Miter),
+            Some("Butt") => Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::EndJoin::Butt),
+            Some("None") => Some(semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::EndJoin::None),
             _ => None,
         };
         let axis = Axis::Line { start: point(&wall["start"]), end: point(&wall["end"]) };
-        snapshot.walls.insert(wall["id"].as_str().expect("id").to_string(), crate::standards::v1::subsets::any::schema::snapshot::Wall { wall_type: kind, axis, location: crate::standards::v1::subsets::any::schema::snapshot::LocationLine::Center, start_join: join("start_join"), end_join: join("end_join"), ..template.clone() });
+        snapshot.walls.insert(wall["id"].as_str().expect("id").to_string(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { wall_type: kind, axis, location: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::LocationLine::Center, start_join: join("start_join"), end_join: join("end_join"), ..template.clone() });
     }
     snapshot
 }
@@ -182,7 +183,7 @@ async fn the_authored_preference_changes_only_the_walls_that_meet_at_the_end() {
     let case = &cases()["joins"][0];
     let mut model = joined_model(case);
     let before = compute_wall_layout(&model);
-    model.walls.insert("far".into(), crate::standards::v1::subsets::any::schema::snapshot::Wall { axis: Axis::Line { start: Point2 { x: 20.0, y: 0.0 }, end: Point2 { x: 25.0, y: 0.0 } }, start_join: None, end_join: None, ..model.walls["a"].clone() });
+    model.walls.insert("far".into(), semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Wall { axis: Axis::Line { start: Point2 { x: 20.0, y: 0.0 }, end: Point2 { x: 25.0, y: 0.0 } }, start_join: None, end_join: None, ..model.walls["a"].clone() });
     let with_far = compute_wall_layout(&model);
     assert_eq!(with_far["a"], before["a"], "a wall that touches nothing changes nothing");
     assert_eq!(with_far["b"], before["b"]);
@@ -197,7 +198,7 @@ async fn a_free_component_goes_where_shapely_sends_its_origin_and_its_family_fra
     for case in cases()["frames"].as_array().expect("frames") {
         let map = map_of(case["kind"].as_str().expect("kind"), case);
         for (instance, expected) in case["instances"].as_array().expect("instances").iter().zip(case["images"].as_array().expect("images")) {
-            let row = crate::standards::v1::subsets::any::schema::snapshot::Component {
+            let row = semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Component {
                 storey: "st".into(),
                 family: "fam".into(),
                 position: point(&instance["position"]),
@@ -208,7 +209,7 @@ async fn a_free_component_goes_where_shapely_sends_its_origin_and_its_family_fra
                 system: None,
                 name: "C".into(),
             };
-            let image = map::component(&row, &map);
+            let image = semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify::map::component(&row, &map);
             assert_point(image.position, &expected["position"], 1e-9, "component origin");
             assert!(same_direction(image.rotation, number(&expected["rotation"])), "{}: rotation {} turns to {}, not {}", case["kind"], instance["rotation"], expected["rotation"], image.rotation);
             assert_eq!(image.mirrored, expected["mirrored"].as_bool().expect("flag"), "{}: mirror flag of {instance}", case["kind"]);

@@ -336,3 +336,36 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 		}
 	})
 }
+
+func TestSearchIndexIsNotReusedAcrossSectionChoice(t *testing.T) {
+	tmpDir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".git"), 0755); err != nil {
+		t.Fatalf("mkdir .git: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo"), 0755); err != nil {
+		t.Fatalf("mkdir repo metadata directory: %v", err)
+	}
+	oldRoot := GetRootDir()
+	SetRootDir(tmpDir)
+	defer SetRootDir(oldRoot)
+
+	withoutSections := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{{Kind: TreeNodeFile, ID: "file:main", Label: "main"}}}
+	withSections := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{{Kind: TreeNodeFile, ID: "file:main", Label: "main", Children: []*TreeNode{
+		{Kind: TreeNodeSection, ID: "section:models", Label: "Models"},
+	}}}}
+
+	first, err := searchMonorepoTreeWithCache(context.Background(), withoutSections, "Models")
+	if err != nil {
+		t.Fatalf("search without sections failed: %v", err)
+	}
+	if len(first.Children) != 0 {
+		t.Fatalf("a tree without sections must not match a section name, got %d children", len(first.Children))
+	}
+	second, err := searchMonorepoTreeWithCache(context.Background(), withSections, "Models")
+	if err != nil {
+		t.Fatalf("search with sections failed: %v", err)
+	}
+	if len(second.Children) == 0 {
+		t.Fatal("the index built for a tree without sections must not answer a search over a tree with sections")
+	}
+}

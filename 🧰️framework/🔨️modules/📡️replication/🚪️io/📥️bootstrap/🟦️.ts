@@ -1,4 +1,4 @@
-import type { ArtifactBootstrapPair, WireArtifactBootstrap } from "../../🟦️.ts";
+import type { ArtifactBootstrapPair, WireArtifactBootstrap } from "../../🔖️sync-protocol/🟦️.ts";
 
 //#region 🔖️ArtifactBootstrap
 export const ARTIFACT_BOOTSTRAP_FORMAT_VERSION = 1;

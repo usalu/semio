@@ -12,7 +12,7 @@ import (
 	time "time"
 
 	model "github.com/usalu/semio/repo/model"
-	workspace "github.com/usalu/semio/repo/workspace"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
 )
 
 func setupTicketDir(t *testing.T) (string, string) {
@@ -85,7 +85,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 	}
 	tmpDir, ticketJSON := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"test-session-1","llm":"opus-4-6","transcript_path":"/tmp/transcript.jsonl"}`)
 	hctx := model.HookContext{
 		Event:    model.HookAgentPromptSubmitting,
@@ -185,7 +185,7 @@ func TestTrackHookAllEventsLogged(t *testing.T) {
 func TestTrackHookSearchingPattern(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"search-session"}`)
 	RunHook(model.HookContext{
 		Event:    model.HookAgentPromptSubmitting,
@@ -238,7 +238,7 @@ func TestTrackHookSearchingPattern(t *testing.T) {
 func TestTrackHookBlockedEvent(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigSession())
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"blocked-session"}`)
 	RunHook(model.HookContext{
 		Event:    model.HookAgentPromptSubmitting,
@@ -297,7 +297,7 @@ func TestTrackHookBlockedEvent(t *testing.T) {
 func TestTrackHookTerminalEvents(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	sessionInput := json.RawMessage(`{"session_id":"terminal-session"}`)
 	RunHook(model.HookContext{
 		Event:    model.HookAgentPromptSubmitting,
@@ -370,7 +370,7 @@ func TestTrackHookTerminalEvents(t *testing.T) {
 
 func TestTrackHookTranscriptInSession(t *testing.T) {
 	tmpDir, ticketJSON := setupTicketDir(t)
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	RunHook(model.HookContext{
 		Event:    model.HookAgentPromptSubmitting,
 		Client:   "copilot-chat",
@@ -391,7 +391,7 @@ func TestTrackHookTranscriptInSession(t *testing.T) {
 func TestTrackHookCodeEditedLogsToFile(t *testing.T) {
 	tmpDir, _ := setupTicketDir(t)
 	writeRepoLoggingConfig(t, tmpDir, testLoggingConfigFull())
-	workspace.SetRootDir(tmpDir)
+	sandbox.BindRoot(t, tmpDir)
 	tsContent := "// #region \U0001F516Functions\n\n// doWork MUST work.\nexport function doWork(): void {}\n\n// #endregion \U0001F516Functions\n"
 	tsFile := filepath.Join(tmpDir, "proj", "kit", "file.ts")
 	if err := os.MkdirAll(filepath.Dir(tsFile), 0755); err != nil {

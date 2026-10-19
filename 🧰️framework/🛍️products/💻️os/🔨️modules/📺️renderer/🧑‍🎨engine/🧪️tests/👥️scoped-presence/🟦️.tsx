@@ -21,7 +21,7 @@ import {
 } from "../../🧱️elements/🏛️ShellHost/🪪️host-bootstrap/🟦️.tsx";
 import fixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/👥️presence-scope/🔣️.json";
 import { storePresenceSchema as presenceSchema } from "../../../../🏪️store/🧪️tests/🧫️fixtures/🟦️.ts";
-import { presenceLivenessV1Fixture as presenceLiveness } from "../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/🟦️.ts";
+import { presenceLivenessV1Fixture as presenceLiveness } from "@semio-tech/framework-replication/testing/fixtures";
 import {
   PRESENCE_EPHEMERAL_SNAPSHOT_DEADLINE_MS,
   PRESENCE_HEARTBEAT_INTERVAL_MS,

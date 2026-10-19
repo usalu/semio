@@ -5,7 +5,7 @@ import nodeGraphSource from "../../🧱️elements/🕸️NodeGraph/🧭️wasm-
 import paintSource from "../../🧱️elements/🖌️Paint2dHost/🟦️.tsx?raw";
 import textEditorSource from "../../🧱️elements/✏️TextEditor/🟦️.tsx?raw";
 import fixture from "../🧫️fixtures/🛑️scene-pointer-cancellation/🔣️.json";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const engineSource = (path: string): string => readModuleTreeSource(fileURLToPath(new URL(path, import.meta.url)));
 const boardSource = engineSource("../../🧱️elements/🖥️Board2dHost/🟦️.tsx");

@@ -1,13 +1,15 @@
-use crate::editor::bim::entities::phasing::{phase_choices, storey_choices, write_phase, write_storey};
-use crate::editor::bim::terminology::BimLabels;
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
-use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
-use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
-use crate::standards::v1::subsets::any::schema::snapshot::{Building, Point2, Storey};
+use semio_s_artifact_bim_model_viewer::editor::bim::entities::phasing::{phase_choices, storey_choices, write_phase, write_storey};
+use semio_s_artifact_bim_model_tests::editor::bim::terminology::BimLabels;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase;
+use semio_s_artifact_bim_model_mut_any_103::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
+use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Building, Storey};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 
 fn demo() -> ModelSnapshot {
-    crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
 }
 
 #[semio_framework_async_macros::async_test]

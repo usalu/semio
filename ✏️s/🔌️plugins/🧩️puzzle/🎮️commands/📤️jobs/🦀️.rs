@@ -44,35 +44,35 @@ impl<T: RetireOwned + 'static> WorkClosing<T> {
         Ok(RetirementDemand { depth: usize::from(self.staged.is_some()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.is_empty() {
-            return InteractiveJobCloseStep::Complete { progress: empty };
+            return Ok(InteractiveJobCloseStep::Complete { progress: empty });
         }
         if grant.maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: empty };
+            return Ok(InteractiveJobCloseStep::Pending { progress: empty });
         }
         if let Some(owner) = self.retirement.as_mut() {
             let step = owner.step(grant);
             if owner.terminal_is_empty() {
                 self.retirement.take();
             }
-            return match step {
+            return Ok(match step {
                 Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
+                Err(error) => return Err(error),
+            });
         }
-        let Some(value) = self.staged.take() else { return InteractiveJobCloseStep::Complete { progress: empty } };
-        match ControlledRetirement::new(value) {
+        let Some(value) = self.staged.take() else { return Ok(InteractiveJobCloseStep::Complete { progress: empty }) };
+        Ok(match ControlledRetirement::new(value) {
             Ok(owner) => {
                 *self.retirement = Some(owner);
                 InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..empty } }
             }
             Err((error, value)) => {
                 *self.staged = Some(value);
-                InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }
+                return Err(error)
             }
-        }
+        })
     }
 }
 
@@ -255,12 +255,12 @@ impl JobOutbox {
 }
 
 /// ♻️ Closes a job: the outbox first, then the staged owner bundle.
-pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+pub fn job_close_step<T: RetireOwned + 'static>(outbox: &mut JobOutbox, owners: &mut WorkClosing<T>, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
     if !outbox.terminal_is_empty() {
-        return match outbox.close_step(grant) {
+        return Ok(match outbox.close_step(grant) {
             Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-            Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-        };
+            Err(error) => return Err(error),
+        });
     }
     owners.close_step(grant)
 }
@@ -272,6 +272,67 @@ pub fn job_close_demands<T: RetireOwned + 'static>(outbox: &JobOutbox, owners: &
     }
     owners.demands(copy)
 }
+
+//#region 🌐️BrowserCaller
+/// 🌐️ The original caller of a browser handle: the page's JavaScript is the outermost caller, so the handle owns one cancellation root, one payload authority and one source parent, lends a fresh scheduled context per exported call and pays their terminal retirement itself.
+pub struct BrowserCaller {
+    parent: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceParent>>,
+    sequence: u64,
+    turn_grant: RetainedCloneGrant,
+}
+
+impl BrowserCaller {
+    /// 🚪️ Admits the roots from `turn_grant`, the same physical authority every later call is scheduled under.
+    pub fn admit(turn_grant: RetainedCloneGrant) -> Result<Self, ValueError> {
+        let refused = |kind, message: &'static str| ValueError::literal(kind, message);
+        let (cancel, root) = semio_framework_job::CancelToken::admit_root(turn_grant)?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller cancellation root is not funded"))?;
+        let (authority, ledger) = semio_framework_job::JobPayloadAuthority::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), Self::remaining(turn_grant, root)?)?.ok_or_else(|| refused(semio_framework_value::ValueRefusalKind::OwnershipLimit, "browser caller payload authority is not funded"))?;
+        let (parent, _) = semio_framework_job::OriginalCallerSourceParent::admit(authority, cancel, Self::remaining(turn_grant, root.checked_add(ledger)?)?).map_err(|(error, authority, cancel)| {
+            std::mem::forget((authority, cancel));
+            error
+        })?;
+        Ok(Self { parent: std::mem::ManuallyDrop::new(Some(parent)), sequence: 0, turn_grant })
+    }
+
+    fn remaining(stock: RetainedCloneGrant, spent: RetainedCloneProgress) -> Result<RetainedCloneGrant, ValueError> {
+        if !spent.fits(stock) {
+            return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "browser caller admissions exceed their initiating grant"));
+        }
+        Ok(RetainedCloneGrant { maximum_items: stock.maximum_items - spent.copied_items, maximum_copy_bytes: stock.maximum_copy_bytes - spent.copied_bytes, maximum_capacity_bytes: stock.maximum_capacity_bytes - spent.retained_capacity_bytes, maximum_release_bytes: stock.maximum_release_bytes - spent.released_bytes, ..stock })
+    }
+
+    /// 🪢️ Lends one fresh maintenance-lane context to `run`; it ends before the call returns, so the next call starts from a new fuel, deadline and receipt.
+    pub fn turn<R>(&mut self, run: impl FnOnce(&mut StepContext<'_>) -> R) -> Result<R, ValueError> {
+        let refused = |message: &'static str| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
+        let parent = self.parent.as_ref().ok_or_else(|| refused("browser caller has already retired"))?;
+        let now = semio_framework_job::default_now_us().ok_or_else(|| refused("browser caller has no monotonic clock"))?;
+        let budget = semio_framework_job::StepBudget::from_duration(semio_framework_job::MAINTENANCE_LANE_FUEL, now, semio_framework_job::MAINTENANCE_LANE_WALL_US, self.turn_grant).ok_or_else(|| refused("browser caller deadline leaves the clock domain"))?;
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = parent.borrow_context(budget, semio_framework_job::default_now_us, &mut self.sequence, &mut receipt)?;
+        Ok(run(&mut cx))
+    }
+
+    /// 🧹️ Pays one terminal retirement turn quoted by the roots themselves; true once nothing remains.
+    pub fn retire_step(&mut self) -> Result<bool, ValueError> {
+        let Some(parent) = self.parent.as_mut() else { return Ok(true) };
+        if !parent.terminal_is_empty() {
+            let demand = parent.retirement_demands()?;
+            let _ = parent.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) })?;
+        }
+        if !parent.terminal_is_empty() {
+            return Ok(false);
+        }
+        self.parent.take();
+        Ok(true)
+    }
+}
+
+impl Drop for BrowserCaller {
+    fn drop(&mut self) {
+        assert!(std::thread::panicking() || self.parent.is_none(), "browser caller requires paid terminal retirement");
+    }
+}
+//#endregion 🌐️BrowserCaller
 
 /// 🧪️ Test seams that drive a puzzle job the way its production wiring does.
 #[cfg(any(test, feature = "testing"))]
@@ -293,7 +354,7 @@ pub mod testing {
     pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J) -> usize {
         job.begin_close();
         let mut turns = 0;
-        while !matches!(job.close_step(unbounded_grant()), InteractiveJobCloseStep::Complete { .. }) {
+        while !matches!(semio_framework_job::close_with_self_funded_context(unbounded_grant(), |cx| job.close_step(cx)).expect("original fixture close turn"), InteractiveJobCloseStep::Complete { .. }) {
             turns += 1;
             assert!(turns < 1_000_000, "a job closes in a bounded number of turns");
         }
@@ -362,15 +423,15 @@ pub mod testing {
     }
 
     /// 🧹️ One cooperative-maintenance unit of `app` over a `body`-byte body: the mounted policy's maintenance grant, widened to the owner's own quote on every axis the way the plugin runtime funds a lifecycle turn.
-    pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, items: usize, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
+    pub fn maintain_items<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, items: usize, body: usize, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
         let demand = app.maintenance_retirement_demands(body).map_err(|error| semio_framework_plugin::Fault::from(error.into_message()))?;
         let policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance;
-        app.maintenance_step(RetainedCloneGrant { maximum_items: policy.maximum_items.max(items), maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) })
+        app.maintenance_step(cx, RetainedCloneGrant { maximum_items: policy.maximum_items.max(items), maximum_copy_bytes: policy.maximum_copy_bytes.max(demand.copy_bytes), maximum_capacity_bytes: policy.maximum_capacity_bytes.max(demand.capacity_bytes), maximum_release_bytes: policy.maximum_release_bytes.max(demand.release_bytes), maximum_depth: policy.maximum_depth.max(demand.depth) }).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
     }
 
     /// 🧹️ One single-item cooperative-maintenance unit of `app`.
-    pub fn maintain<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, body: usize) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
-        maintain_items(app, 1, body)
+    pub fn maintain<A: semio_framework_plugin::PluginApp + ?Sized>(app: &mut A, body: usize, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::Fault> {
+        maintain_items(app, 1, body, cx)
     }
 }
 
@@ -399,8 +460,9 @@ mod tests {
         }
     }
 
-    impl InteractiveJob for EchoJob {
-        fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    impl EchoJob {
+        /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
+        fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
             match self.outbox.phase(cx)? {
                 OutboxPhase::Building => return self.outbox.advance(cx),
                 OutboxPhase::Delivered | OutboxPhase::Retiring => {
@@ -412,6 +474,10 @@ mod tests {
             let turn = self.turn();
             self.outbox.settle(turn, cx)
         }
+}
+
+impl InteractiveJob for EchoJob {
+        fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
             self.outbox.borrow_outcome(descriptor)
@@ -423,9 +489,11 @@ mod tests {
             }
         }
 
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-            self.begin_close();
-            job_close_step(&mut self.outbox, &mut self.owners, grant)
+        fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+            semio_framework_job::close_original_granted_step(cx,|grant|{
+                self.begin_close();
+                job_close_step(&mut self.outbox, &mut self.owners, grant)
+            })
         }
 
         fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -447,6 +515,24 @@ mod tests {
         fn terminal_is_empty(&self) -> bool {
             self.closing && self.outbox.terminal_is_empty() && self.owners.is_empty()
         }
+    }
+
+    /// 🌐️ A browser handle is its own original caller: every exported call is scheduled from a fresh context over the same roots, and the roots retire in quoted turns until nothing remains.
+    #[test]
+    fn a_browser_caller_lends_fresh_contexts_over_one_root_and_retires_in_quoted_turns() {
+        let grant = RetainedCloneGrant { maximum_items: 32, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 16_777_216, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mut caller = BrowserCaller::admit(grant).expect("the roots are funded by the mounted turn grant");
+        let first = caller.turn(|cx| (cx.operation(), cx.generation(), cx.fuel_remaining(), cx.retained_grant())).expect("first call context");
+        let second = caller.turn(|cx| (cx.operation(), cx.generation(), cx.fuel_remaining(), cx.retained_grant())).expect("second call context");
+        assert_eq!(first, second, "each call starts from the same identity, fuel and grant");
+        assert_eq!(first.3, grant);
+        let mut turns = 0;
+        while !caller.retire_step().expect("a quoted retirement turn") {
+            turns += 1;
+            assert!(turns < 1_024, "the roots retire in a bounded number of turns");
+        }
+        assert!(caller.retire_step().expect("retirement is idempotent"));
+        assert!(caller.turn(|_| ()).is_err(), "a retired caller lends no context");
     }
 
     /// 📎️ The host compares a reserved route's retained commit output with the wire it admitted: a job that holds the wire answers it back on completion, and an empty wire needs no output.

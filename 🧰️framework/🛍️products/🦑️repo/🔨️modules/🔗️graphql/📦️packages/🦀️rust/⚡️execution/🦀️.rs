@@ -263,6 +263,9 @@ impl Execution<'_> {
             }
             value.strip_prefix(&prefix).map(ToString::to_string)
         };
+        if let Some(bundle) = self.context.bundles().iter().find(|bundle| bundle_id(bundle, &self.technologies).replace(['\u{FE0E}', '\u{FE0F}'], "") == clean) {
+            return Ok(bundle_source(bundle, &self.technologies, &self.root_dir));
+        }
         for kind in ["technology-user", "technology-infrastructure", "technology-research", "technology-mono"] {
             if let Some(rest) = strip(&clean, entity(kind)) {
                 let matched = self.technologies.iter().find(|technology| flat(&technology.name) == rest || technology.name == rest);
@@ -677,6 +680,7 @@ impl Execution<'_> {
                 Ok(statute_source(&statute_meta_of(&Statute(id), &self.statutes)))
             }
             "query.analyze" => Ok(analyze_result_source(&self.context.analyze(optional_text("scope").as_deref())?, &self.statutes)),
+            "mutation.fix" => Ok(fix_result_source(&self.context.fix(optional_text("scope").as_deref())?, &self.statutes)),
             "mutation.syncManagement" => Ok(Json::Bool(self.context.sync_management()?)),
             "mutation.goalCreate" => Ok(goal_source(&self.context.goal_create(decode_input(&input())?)?)),
             "mutation.goalChange" => {

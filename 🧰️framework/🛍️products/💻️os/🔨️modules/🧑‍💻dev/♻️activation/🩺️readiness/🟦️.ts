@@ -1,4 +1,4 @@
-import {withPlaygroundSessionV1} from "../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/👓️reading/🟦️.ts";
+import {withPlaygroundSessionV1} from "@semio-tech/plugin-registry/playground/session/reading";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🧩️ Semantic activation readiness owner. */
@@ -13,20 +13,11 @@ import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, healthyPreparedCompone
 
 import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
 
-import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { playgroundCatalog } from "@semio-tech/framework-plugin/build/plan";
 
-import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
-import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { getRepoMetaDir } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadFrameworkOsPlaygroundCatalog } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
-import { wgpuDevPlayUrl } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
-import { runBunxStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
-import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
-import { runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
-import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
-import { runViteBunxDev } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
-import { frameworkOsLockedPrefsEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
+import { isDevPortInUse } from "@semio-tech/repo-lib/dev";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { type SpawnDaemonHandle } from "@semio-tech/repo-lib/process";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -152,7 +143,7 @@ class ColdBootCheckScript extends BundleScript {
     if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["prototype", "release"].includes(profile)) throw new Error("cold-boot-check <variant> react|wgpu <prototype|release>");
     const playground = playgroundCatalog().find((row) => row.variant === variant);
     if (!playground) throw new Error(`Missing generated playground ${variant}`);
-    const repoRoot = getWorkspaceRoot();
+    const repoRoot = findWorkspaceRoot();
     const moduleRoot = builtPluginModulesRootIn(repoRoot, profile);
     await withPlaygroundSessionV1(this.repoRoot,this.invocation,variant,async session=>{
     const receiptRoot = join(developmentRuntimeRoot(this.repoRoot, variant, profile, renderer), "activation");

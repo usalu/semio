@@ -1,4 +1,4 @@
-import type { IntroductionPoint } from "@semio-tech/framework";
+import type { IntroductionPoint } from "../../../../🎓️onboarding/🏷️declaration/🟦️.ts";
 import { elementIdSelector } from "../../../🧱️elements/🆔️ElementId/🟦️.tsx";
 import * as React from "react";
 import { reactHostPort } from "../../../🧱️elements/🔌️Ports/🟦️.tsx";

@@ -221,7 +221,7 @@ afterEach(() => {
 });
 
 beforeAll(async () => {
-  await Promise.all([import("../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"), import("../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx")]);
+  await Promise.all([import("@semio-tech/quiz-react/modules/run/.tsx"), import("@semio-tech/quiz-react/modules/results/.tsx")]);
 }, 180_000);
 
 describe("🧵️ the trail", () => {

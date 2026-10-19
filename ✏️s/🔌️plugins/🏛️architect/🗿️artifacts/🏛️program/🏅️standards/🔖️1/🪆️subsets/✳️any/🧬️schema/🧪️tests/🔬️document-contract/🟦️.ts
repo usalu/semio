@@ -58,7 +58,7 @@ export function testProgramDocumentContract(): void {
   const artifactSchema = readJson(join(schemaRoot, "🔣️.json"));
   const snapshotSchema = readJson(join(schemaRoot, "📸️snapshot/🔣️.json"));
   const diffSchema = readJson(join(schemaRoot, "🔺️diff/🔣️.json"));
-  const childSchema = readJson(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json"));
+  const childSchema = readJson(frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json"));
   const ioSchema = readJson(frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔣️.json"));
   const validateArtifact = compile(artifactSchema, [childSchema, ioSchema]);
   const validateSnapshot = compile(snapshotSchema, [childSchema, ioSchema]);

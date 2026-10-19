@@ -6,13 +6,13 @@
 //! ([`parameters`]), the framework geometry builds the solids ([`solids`]). In the model graph a family is one node without parents; the solids of the columns, beams, mullions and railings whose
 //! profile is `Profile::Family` have that node as a parent and read its outline through [`FamilyProfiles`]. See `r11-decision-families.md` and `r12-exec-w2-f1-expression.md` in the BIM-PLUGIN ticket.
 
-use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBounds};
-use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, ParameterKind, Profile, Railing, Vertex};
+use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBounds};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{FamilyCategory, ParameterKind, Profile, Vertex};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Railing};
 use semio_framework_value::DslValue;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues;
 #[path = "🧮️parameters/🦀️.rs"]
 pub mod parameters;
 #[path = "🩺️findings/🦀️.rs"]
@@ -22,7 +22,7 @@ pub mod metrics;
 #[path = "🧊️solids/🦀️.rs"]
 pub mod solids;
 
-pub use issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
 
 /// 🗺️ The snapshot collections a family reads.
 pub const READS: &[&str] = &["families", "family_parameters", "family_solids", "materials"];
@@ -95,7 +95,7 @@ impl FamilyValue {
 //#region 🔖️Evaluation
 /// 🔷️ The snapshot form of a geometry loop.
 fn marked(outline: &[semio_framework_geometry::loops::Vertex]) -> Vec<Vertex> {
-    outline.iter().map(|vertex| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: vertex.point.x, y: vertex.point.y }, bulge: vertex.bulge }).collect()
+    outline.iter().map(|vertex| Vertex { point: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: vertex.point.x, y: vertex.point.y }, bulge: vertex.bulge }).collect()
 }
 
 /// ▶️ The inferred value of family `id` with the override formulas of an instance (empty for the family itself). A family that does not exist is the default (empty) value.

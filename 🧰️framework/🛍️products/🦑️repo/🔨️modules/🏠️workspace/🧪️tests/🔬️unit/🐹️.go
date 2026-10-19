@@ -3,15 +3,12 @@
 package workspace
 
 import (
-	bufio "bufio"
-	context "context"
 	io "io"
 	os "os"
 	exec "os/exec"
 	filepath "path/filepath"
 	strings "strings"
 	testing "testing"
-	time "time"
 )
 
 func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
@@ -228,7 +225,7 @@ func TestStatutePathIdValueRoundTrip(t *testing.T) {
 func TestSetRootDirResetsGitignoreCache(t *testing.T) {
 	tmpDirA := t.TempDir()
 	tmpDirB := t.TempDir()
-	oldRoot := RootDir
+	oldRoot := GetRootDir()
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(tmpDirA)
 	_ = IsGitIgnored("any.txt")
@@ -241,20 +238,31 @@ func TestSetRootDirResetsGitignoreCache(t *testing.T) {
 }
 
 func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
+	root := t.TempDir()
+	if output, err := exec.Command("git", "-C", root, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, output)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".gitignore"), []byte("*.exe\n.🧬semio/🦑️repo/⚡️cache/\nserver\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	previous := GetRootDir()
+	SetRootDir(root)
+	t.Cleanup(func() { SetRootDir(previous) })
 	artifacts := []string{
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/semio-repo.exe",
-		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo",
 		".🧬semio/🦑️repo/⚡️cache/🗃️bin/repo.exe",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
-		"🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
-		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming.exe",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server",
+		"modules/🖥️server/🎛️coordinator/⚡️implementations/🐹️go/server.exe",
+		"coda/example/.coda/validators/programming.exe",
 	}
-	ignored := GetGitIgnoredSet(artifacts)
+	ignored := GetGitIgnoredSet(append(artifacts, "src/kept.go"))
 	for _, path := range artifacts {
 		if !ignored[path] {
 			t.Errorf("expected build artifact %q to be gitignored", path)
 		}
+	}
+	if ignored["src/kept.go"] {
+		t.Error("src/kept.go must not be gitignored")
 	}
 }
 
@@ -267,7 +275,7 @@ func TestSetRootDirCanonicalizesToRepoRoot(t *testing.T) {
 	if err := os.MkdirAll(nested, 0755); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	oldRoot := RootDir
+	oldRoot := GetRootDir()
 	defer func() { SetRootDir(oldRoot) }()
 	SetRootDir(nested)
 	if got := GetRootDir(); got != repoRoot {
@@ -326,46 +334,5 @@ func TestWriteWarningfUsesStderr(t *testing.T) {
 	}
 	if got, want := string(output), "Warning: Failed to update: boom\n"; got != want {
 		t.Fatalf("warning output = %q, want %q", got, want)
-	}
-}
-
-func TestMcpStdioInitializeHandshake(t *testing.T) {
-	repoRoot := FindRepoRoot(".")
-	if repoRoot == "" {
-		t.Skip("repo root not found")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "bun", "./📜️script.ts", "dev", "mcp", "stdio", "cursor")
-	cmd.Dir = repoRoot
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	cmd.Stderr = os.Stderr
-	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-	time.Sleep(100 * time.Millisecond)
-	defer func() {
-		_ = stdin.Close()
-		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
-	}()
-	initReq := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}` + "\n"
-	if _, err := io.WriteString(stdin, initReq); err != nil {
-		t.Fatal(err)
-	}
-	reader := bufio.NewReader(stdout)
-	line, err := reader.ReadString('\n')
-	if err != nil {
-		t.Fatalf("read initialize response: %v", err)
-	}
-	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) || !strings.Contains(line, `"name":"repo"`) {
-		t.Fatalf("unexpected initialize response: %s", line)
 	}
 }

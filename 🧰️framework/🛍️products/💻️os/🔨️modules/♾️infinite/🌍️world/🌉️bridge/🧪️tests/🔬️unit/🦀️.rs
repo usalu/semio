@@ -6,7 +6,7 @@ use semio_framework_os_infinite_world_bridge::{component_overlay_color, srgb_byt
 use semio_framework_test_fixtures::fixture_text;
 use std::collections::HashSet;
 use semio_framework_value::RetainedCloneGrant;
-use ui_wgpu::wgpu::{Rgba, Theme};
+use semio_framework_ui_theme::{Rgba, Theme};
 use serde_json::json;
 
 /// 📖️ Reads one test input at run time (relative to the package manifest) so it does not count as an embedded compile input.
@@ -37,7 +37,7 @@ fn tetrahedron() -> WorldMeshBuffers {
     data
 }
 
-fn field_named(name: &str, values: serde_json::Value) -> ui_wgpu::wgpu::World3dScalarField {
+fn field_named(name: &str, values: serde_json::Value) -> semio_framework_ui_declaration::ui::World3dScalarField {
     let entry = modelling_fixture()["valid"].as_array().unwrap().iter().find(|entry| entry["name"] == name).unwrap().clone();
     let mut value = entry["value"].clone();
     value["values"] = values;
@@ -82,17 +82,17 @@ fn a_face_scalar_field_becomes_one_constant_colour_attribute_per_triangle_and_re
 
 #[test]
 fn highlight_tokens_recolour_exactly_their_granularity_through_the_live_theme() {
-    let highlight: ui_wgpu::wgpu::World3dHighlight = serde_json::from_value(serde_json::json!({
+    let highlight: semio_framework_ui_declaration::ui::World3dHighlight = serde_json::from_value(serde_json::json!({
         "face": {"hover": "info", "selected": "secondary"},
         "edge": {"hover": "danger"},
         "vertex": {"selected": "success", "widthPx": 8}
     }))
     .unwrap();
-    let mut custom = ui_wgpu::wgpu::Theme::default();
-    custom.celebrate[1] = ui_wgpu::wgpu::Rgba::new(0.2, 0.4, 0.6, 1.0);
-    custom.error = ui_wgpu::wgpu::Rgba::new(0.9, 0.1, 0.1, 1.0);
-    custom.success = ui_wgpu::wgpu::Rgba::new(0.1, 0.9, 0.1, 1.0);
-    for theme in [ui_wgpu::wgpu::Theme::default(), custom] {
+    let mut custom = semio_framework_ui_theme::Theme::default();
+    custom.celebrate[1] = semio_framework_ui_theme::Rgba::new(0.2, 0.4, 0.6, 1.0);
+    custom.error = semio_framework_ui_theme::Rgba::new(0.9, 0.1, 0.1, 1.0);
+    custom.success = semio_framework_ui_theme::Rgba::new(0.1, 0.9, 0.1, 1.0);
+    for theme in [semio_framework_ui_theme::Theme::default(), custom] {
         let paint = world3d_sub_element_paint_native(&theme, Some(&highlight));
         assert_eq!(paint.face_select, Some([theme.celebrate[1].r, theme.celebrate[1].g, theme.celebrate[1].b, 1.0]));
         assert_eq!(paint.edge_hover, Some([theme.error.r, theme.error.g, theme.error.b, 1.0]));
@@ -106,19 +106,19 @@ fn highlight_tokens_recolour_exactly_their_granularity_through_the_live_theme() 
         assert_eq!(component_overlay_color("2", &none, &none, &hovered, (paint.edge_select, paint.edge_hover)).map(|(color, _)| color), Some([theme.error.r, theme.error.g, theme.error.b, 0.9]));
         assert_eq!(face_overlay_color(&paint, 2), [theme.celebrate[1].r, theme.celebrate[1].g, theme.celebrate[1].b, 0.62]);
     }
-    assert_eq!(world3d_sub_element_paint_native(&ui_wgpu::wgpu::Theme::default(), None), WorldSubElementPaint::default(), "no highlight leaves every default alone");
+    assert_eq!(world3d_sub_element_paint_native(&semio_framework_ui_theme::Theme::default(), None), WorldSubElementPaint::default(), "no highlight leaves every default alone");
     assert_eq!(face_overlay_color(&WorldSubElementPaint::default(), 1), [0.35, 0.75, 1.0, 0.48]);
 }
 
 #[test]
 fn every_tone_resolves_to_an_opaque_theme_colour() {
-    let theme = ui_wgpu::wgpu::Theme::default();
-    for tone in ui_wgpu::wgpu::World3dTone::ALL {
+    let theme = semio_framework_ui_theme::Theme::default();
+    for tone in semio_framework_ui_declaration::ui::World3dTone::ALL {
         let color = world3d_tone_rgba(&theme, *tone);
         assert_eq!(color[3], 1.0, "{tone:?}");
         assert!(color[..3].iter().all(|channel| (0.0..=1.0).contains(channel)));
     }
-    assert_eq!(world3d_tone_rgba(&theme, ui_wgpu::wgpu::World3dTone::Neutral), [theme.text.r, theme.text.g, theme.text.b, 1.0]);
+    assert_eq!(world3d_tone_rgba(&theme, semio_framework_ui_declaration::ui::World3dTone::Neutral), [theme.text.r, theme.text.g, theme.text.b, 1.0]);
 }
 
 fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
@@ -126,7 +126,7 @@ fn world_original_fixture_grant()->semio_framework_value::RetainedCloneGrant{
     semio_framework_value::RetainedCloneGrant{maximum_items:axes["items"].as_u64().unwrap()as usize,maximum_copy_bytes:axes["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:axes["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:axes["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:axes["depth"].as_u64().unwrap()as usize}
 }
 
-fn world3d_apply_scalar_field(data:&mut WorldMeshBuffers,field:&ui_wgpu::wgpu::World3dScalarField)->bool{
+fn world3d_apply_scalar_field(data:&mut WorldMeshBuffers,field:&semio_framework_ui_declaration::ui::World3dScalarField)->bool{
     if !world3d_scalar_field_fits(data,field){return false;}
     for slot in 0..data.attributes.slot_count(){let progress=data.attributes.retire_slot_if(slot,|_,attribute|attribute.semantic!=semio_framework::MeshAttributeSemantic::Color,world_original_fixture_grant()).unwrap();assert_eq!(progress.copied_items,1);}
     world3d_apply_scalar_field_colors(data,field);true

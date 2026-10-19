@@ -1,10 +1,12 @@
 //! 📍️ The point tools: the column (one click, a column of the selected library type standing on the storey), the space (one click inside a room: the click is the seed of a
 //! bounded space and the number is the next free one of the storey) and the stair (press the foot, drag the direction and release, or click the foot and click the direction).
 
-use crate::editor::bim::gestures::plane::{angle, dist, point2, same, P};
-use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
-use crate::editor::bim::marks::{Mark, Preview, Style};
-use crate::standards::v1::subsets::any::schema::{snapshot::{Column, Space, SpaceBoundary, Stair, StairFlight, TopConstraint}, mutations::ModelMutation};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::{angle, dist, point2, same, P};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::{Mark, Preview, Style};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{Column, Space, Stair};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{SpaceBoundary, StairFlight, TopConstraint};
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 🖱️ How many pixels a press must travel before it counts as a drag.
 const DRAG_PIXELS: f64 = 4.0;
@@ -24,7 +26,7 @@ pub enum Kind {
 /// 📍️ The state of one point tool: the snapped pointer and, for a stair, the foot already chosen and whether the press is still down.
 pub struct Point {
     kind: Kind,
-    hover: Option<crate::editor::bim::gestures::snap::SnapHit>,
+    hover: Option<semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap::SnapHit>,
     foot: Option<P>,
     held: bool,
 }
@@ -40,8 +42,8 @@ impl Point {
         let count = ctx.snapshot.columns.values().filter(|column| column.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_column, count);
         let id = ctx.mint("column");
-        let column = Column { storey, column_type, position: point2(at), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name };
-        Step::write(ctx, ModelMutation::CreateColumn(crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn { id, column }))
+        let column = Column { storey, column_type, position: point2(at), rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name };
+        Step::write(ctx, ModelMutation::CreateColumn(semio_s_artifact_bim_model_mut_any_159::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn { id, column }))
     }
 
     fn space(&self, ctx: &mut ToolContext<'_>, at: P) -> Step {
@@ -49,8 +51,8 @@ impl Point {
         let number = next_space_number(ctx, &storey);
         let name = ctx.name_of(|labels| labels.kind_space, number.parse::<usize>().unwrap_or_default().saturating_sub(1));
         let id = ctx.mint("space");
-        let space = Space { storey, number, name, boundary: SpaceBoundary::Bounded { seed: point2(at) }, usage: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None };
-        Step::write(ctx, ModelMutation::CreateSpace(crate::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace { id, space }))
+        let space = Space { storey, number, name, boundary: SpaceBoundary::Bounded { seed: point2(at) }, usage: String::new(), phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None };
+        Step::write(ctx, ModelMutation::CreateSpace(semio_s_artifact_bim_model_mut_any_128::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace { id, space }))
     }
 
     fn stair(&mut self, ctx: &mut ToolContext<'_>, foot: P, end: P) -> Step {
@@ -58,8 +60,8 @@ impl Point {
         let count = ctx.snapshot.stairs.values().filter(|stair| stair.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_stair, count);
         let id = ctx.mint("stair");
-        let stair = Stair { storey, start: point2(foot), direction: angle(foot, end), width: STAIR_WIDTH, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: STAIR_MAX_RISER, min_tread: STAIR_MIN_TREAD, stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: STAIR_WIDTH, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name };
-        let step = Step::write(ctx, ModelMutation::CreateStair(crate::standards::v1::subsets::any::schema::mutations::create_stair::CreateStair { id, stair }));
+        let stair = Stair { storey, start: point2(foot), direction: angle(foot, end), width: STAIR_WIDTH, flight: StairFlight::Straight, top: TopConstraint::StoreyTop { offset: 0.0 }, max_riser: STAIR_MAX_RISER, min_tread: STAIR_MIN_TREAD, stringer: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER, nosing: 0.0, tread_thickness: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS, riser: semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER, landing_depth: STAIR_WIDTH, phase: semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Phase::New, name };
+        let step = Step::write(ctx, ModelMutation::CreateStair(semio_s_artifact_bim_model_mut_any_131::standards::v1::subsets::any::schema::mutations::create_stair::CreateStair { id, stair }));
         if step.refused.is_none() {
             self.foot = None;
             self.held = false;

@@ -21,7 +21,7 @@
       "types": "./dist/🟦️.d.ts",
       "import": "./dist/🟦️.js"
     },
-    "./io/binary/snapshot/decoded-components/testing/fixtures/owned-exact-components": "./🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧪️testing/🧫️fixtures/🧮️owned-exact-components/🟦️.ts",
+    "./io/binary/snapshot/decoded-components/testing/fixtures/owned-exact-components": "./🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧪️tests/🧫️fixtures/🧮️owned-exact-components/🟦️.ts",
     "./jfif-1.01/subsets/document/io/binary/snapshot/decoded-components": "./🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🟦️.ts"
   },
   "dependencies": {},

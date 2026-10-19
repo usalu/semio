@@ -7,7 +7,7 @@ import { workerLawFakesV1, executionTargetBytes, WORKER_LAW_CAPABILITY_TWO, Fake
 import type { TestSource } from "@semio-tech/framework-os/testing/worker-law-fakes";
 import type { ServiceCompositionTestDependenciesV1, InferenceOperationV1 } from "../🧰️dependencies/🟦️.ts";
 
-type ActorInstanceLifetime = import("../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
+type ActorInstanceLifetime = import("@semio-tech/framework-actor/lifetime").ActorInstanceLifetime;
 type ArtifactEvent = import("@semio-tech/framework-os").ArtifactEvent;
 type ArtifactState = import("@semio-tech/framework-os/modules/store/worker").ArtifactState;
 type BackboneWorkerResponse = import("@semio-tech/framework-os").BackboneWorkerResponse;
@@ -124,10 +124,10 @@ export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies:
       const secondWindowVisible = (view: ResolvedPluginViewState) => ({ tag: "surface-visible", val: { surface: { instance: 0, surface: secondWindow.key }, bodyKey: secondWindow.bodyKey, viewState: encodePackValue(windowViewContext(view, secondWindow.key)!) } });
       const descriptor = encodePackValue(guest),
         descriptorByteSha256 = await executionTargetSha256Hex(descriptor);
-      const { UiDocumentStore } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
+      const { UiDocumentStore } = await import("@semio-tech/framework-os/modules/renderer/engine/elements/UiDocumentStore");
       const { decodeDocumentBackboneControlV1, encodeDocumentBackboneControlV1 } = await import("@semio-tech/framework/backbone/binding");
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
-      const { readActorBytePage } = await import("../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts");
+      const { readActorBytePage } = await import("@semio-tech/framework-actor/page");
       const { createBrowserActorAppCommandRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/command");
       const { createBrowserActorUiIntentRequestV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/intent");
       const { decodeBrowserActorHostEffectsV1 } = await import("@semio-tech/framework/browser-bundle/action-handoff/publication");

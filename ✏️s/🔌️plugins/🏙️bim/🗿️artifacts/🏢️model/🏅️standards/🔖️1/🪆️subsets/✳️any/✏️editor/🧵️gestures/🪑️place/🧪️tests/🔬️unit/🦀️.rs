@@ -1,16 +1,17 @@
-use crate::editor::bim::gestures::place::{FAMILY_MISSING, Frame, UTILITY, fit, length, next_system, normalized, system_word};
-use crate::editor::bim::gestures::session::{GestureKey, STOREY_MISSING, Step, ToolEvent};
-use crate::editor::bim::gestures::typed::INVALID;
-use crate::editor::bim::gestures::plane::point2;
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Component, MepSystem};
-use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::editor::bim::entities::components::SYSTEMS;
-use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::editor::bim::fixture::furnished;
-use crate::editor::bim::gestures::session::Modifiers;
-use crate::editor::bim::marks::Shape;
-use crate::editor::bim::fixture::Rig;
-use crate::standards::v1::subsets::any::schema::snapshot::Point2;
+use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place::{FAMILY_MISSING, Frame, UTILITY, fit, length, next_system, normalized, system_word};
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::{GestureKey, STOREY_MISSING, Step, ToolEvent};
+use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed::INVALID;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane::point2;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::{Axis, MepSystem};
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::Component;
+use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_s_artifact_bim_model_entities::editor::bim::entities::components::SYSTEMS;
+use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::furnished;
+use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Modifiers;
+use semio_s_artifact_bim_model_storey_levels::editor::bim::marks::Shape;
+use semio_s_artifact_bim_model_bim::editor::bim::fixture::Rig;
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
 use semio_framework_test_fixtures::fixture_text;
 use std::f64::consts::{FRAC_PI_2, PI};
 
@@ -193,11 +194,11 @@ async fn the_library_selection_chooses_the_family_and_escape_leaves_the_tool() {
 #[semio_framework_async_macros::async_test]
 async fn without_a_family_or_a_storey_the_click_is_refused() {
     let mut bare = furnished();
-    bare.families.retain(|_, family| family.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile);
+    bare.families.retain(|_, family| family.category == semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::FamilyCategory::Profile);
     let mut rig = Rig::plan(UTILITY, bare);
     assert_eq!(rig.down(2.0, 2.0).refused, Some(FAMILY_MISSING));
     assert!(rig.snapshot.components.is_empty());
-    let mut rig = Rig::on(UTILITY, furnished(), crate::editor::bim::gestures::session::Surface::Plan { storey: "nowhere".into() });
+    let mut rig = Rig::on(UTILITY, furnished(), semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session::Surface::Plan { storey: "nowhere".into() });
     assert_eq!(rig.down(2.0, 2.0).refused, Some(STOREY_MISSING));
 }
 

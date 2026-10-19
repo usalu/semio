@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { relative, sep } from "node:path";
 import type { TaxonomySourceInventory } from "../../🚪️source-admission/📁️io/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCancelled, mutationTaxonomyCapturedSchema, mutationTaxonomyCompare, mutationTaxonomyInputPath, mutationTaxonomyScope, mutationTaxonomySourceAdmission, mutationTaxonomySourceFileFacts, mutationTaxonomyStructuralDirectories, policyFindAllMutationsDirs, type MutationTaxonomyAssignmentRow, type MutationTaxonomyCapturedSchema, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord, type MutationTaxonomyStructuralDirectory } from "../📸️captured-source/🟦️.ts";
 import { getRepoMetaDir } from "../../../🗂️workspaces/🧬️metadata/🟦️.ts";
 import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";

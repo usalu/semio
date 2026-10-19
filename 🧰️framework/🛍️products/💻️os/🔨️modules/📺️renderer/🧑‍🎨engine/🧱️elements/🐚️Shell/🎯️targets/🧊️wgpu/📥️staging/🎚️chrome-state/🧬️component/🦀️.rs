@@ -30,7 +30,7 @@ pub struct ChromeState {
     /// `shellFloorPaints` (`🔨️modules/🏠️shell-floor-presentation/🟦️.ts:14`). `FrameSetup` fills the
     /// whole surface at [`Level::Base`], which makes the main window's own identical base fill a
     /// second paint of the same colour over the same pixels; React suppresses exactly that.
-    pub chrome_floor_scope: Option<ui_wgpu::wgpu::SurfaceScope>,
+    pub chrome_floor_scope: Option<semio_framework_ui_theme::SurfaceScope>,
     /// 🪪️ Who issued the dispatch currently crossing [`Self::dispatch_action`], for the chrome
     /// ledger's `origin` column — React's `InputOriginV1`. A chrome press, a keybinding, a palette
     /// entry and a panel row are all `user`; a pointer/camera stream an engine surface derived from
